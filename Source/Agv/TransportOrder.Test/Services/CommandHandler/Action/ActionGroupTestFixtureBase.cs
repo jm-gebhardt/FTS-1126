@@ -81,9 +81,9 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvDb.AddAgvData((AgvData?)null);
+        _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         return this;
     }
 
@@ -127,7 +127,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes)
     {
-        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
+        _agvDb.AddAgvData((AgvData?)null);
         RouteService.WithRoute(0f, nodes);
         return this;
     }

@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 
@@ -16,8 +15,7 @@ public class AgvDataEventHandlerTest
         var agvData = AgvDataGenerator.GenerateAgvData();
 
         await fixture.TestHarness.Bus.Publish(new AgvDataReceived(agvData.CorrelationId, "agvId", agvData));
-        (await fixture.ConsumerHarness.Consumed.Any<AgvDataReceived>()).ShouldBeTrue();
-
-        (await fixture.TestHarness.Published.Any<UpdateAgvData>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AgvDataReceived>();
+        await fixture.ShouldHavePublishedAsync<UpdateAgvData>();
     }
 }

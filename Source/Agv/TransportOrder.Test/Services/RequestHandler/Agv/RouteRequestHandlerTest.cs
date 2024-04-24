@@ -41,9 +41,9 @@ public class RouteRequestHandlerTest
             .ReserveChargerReturns(chargingNode)
             .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
 
-        await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId));
-
-        var nodeStateChanged = await fixture.GetFirstPublishedMessageAsync<NodeStateChanged>();
+        var nodeStateChanged = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, NodeStateChanged>(
+            new SendAgvToCharger(agv.CorrelationId));
+        
         nodeStateChanged.NodeState.NodeId.ShouldBe(chargingNode.Id);
         nodeStateChanged.NodeState.NodeState.ShouldBe(NodeLockState.Reserved);
     }
@@ -59,9 +59,9 @@ public class RouteRequestHandlerTest
             .ReserveChargerReturns(chargingNode)
             .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
 
-        await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId));
-
-        var startChargingActionGroup = await fixture.GetFirstPublishedMessageAsync<StartChargingActionGroup>();
+        var startChargingActionGroup = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, StartChargingActionGroup>(
+            new SendAgvToCharger(agv.CorrelationId));
+      
         startChargingActionGroup.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         startChargingActionGroup.ChargeStationId.ShouldBe(chargingNode.Id);
         startChargingActionGroup.Creator.ShouldBe(ActionGroupCreator.TransportOrderWebApi);

@@ -37,9 +37,9 @@ public class ActionCommandHandlerTest
         var startAction = new StartActionOfActionGroup(actionGroup.Actions.First(), agv.CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(startAction);
-        (await fixture.ConsumerHarness.Consumed.Any<StartActionOfActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<StartActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
     }
 
     [TestMethod]
@@ -55,10 +55,10 @@ public class ActionCommandHandlerTest
         var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(startAction);
-        (await fixture.ConsumerHarness.Consumed.Any<StartActionOfActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupStarted>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<StartActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupStarted>();
     }
 
     [TestMethod]
@@ -75,11 +75,11 @@ public class ActionCommandHandlerTest
         var startAction = new StartActionOfActionGroup(pickAction, anotherAgv.CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(startAction);
-        (await fixture.ConsumerHarness.Consumed.Any<StartActionOfActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupStarted>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<StartingActionForAgvFailed>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<StartActionOfActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
+        await fixture.ShouldHavePublishedAsync<StartingActionForAgvFailed>();
     }
 
     [TestMethod]
@@ -95,8 +95,8 @@ public class ActionCommandHandlerTest
 
         var command = new TryStartManualAction(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartManualAction>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<TryStartManualAction>();
+        await fixture.ShouldHavePublishedAsync<NodesSelectedForAction>();
     }
 
     [TestMethod]
@@ -111,8 +111,8 @@ public class ActionCommandHandlerTest
 
         var command = new TryStartNextActionInActionGroup(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartNextActionInActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<TryStartNextActionInActionGroup>();
+        await fixture.ShouldHavePublishedAsync<NodesSelectedForAction>();
     }
 
     [TestMethod]
@@ -127,8 +127,8 @@ public class ActionCommandHandlerTest
 
         var command = new TryStartNextActionInActionGroup(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartNextActionInActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<TryStartNextActionInActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<NodesSelectedForAction>();
     }
 
     [TestMethod]
@@ -142,9 +142,9 @@ public class ActionCommandHandlerTest
 
         var command = new CompleteActionOfActionGroup(actionGroup.Actions.First().CorrelationId, actionGroup.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
     }
 
     [TestMethod]
@@ -159,9 +159,9 @@ public class ActionCommandHandlerTest
 
         var command = new CompleteActionOfActionGroup(actionGroup.Actions.First().CorrelationId, actionGroup.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
     }
 
     [TestMethod]
@@ -172,9 +172,9 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup);
         var command = new CompleteActionOfActionGroup(actionGroup.Actions.First().CorrelationId, actionGroup.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
@@ -186,9 +186,9 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup);
         var command = new CompleteActionOfActionGroup(actionGroup.Actions.Last().CorrelationId, actionGroup.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CompleteActionOfActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCompleted>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
@@ -204,11 +204,11 @@ public class ActionCommandHandlerTest
 
         var command = new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<CancelActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCanceled>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCancelFailed>();
+        await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
     }
 
     [TestMethod]
@@ -223,8 +223,8 @@ public class ActionCommandHandlerTest
 
         Response<ActionGroupCanceled> response = await fixture.GetResponseAsync<ActionGroupCanceled, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
-        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCanceled>();
+        await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
     }
 
     [TestMethod]
@@ -237,9 +237,9 @@ public class ActionCommandHandlerTest
 
         var command = new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<CancelActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCanceled>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCancelFailed>();
     }
 
     [TestMethod]
@@ -253,7 +253,7 @@ public class ActionCommandHandlerTest
         Response<ActionGroupCancelFailed> response = await fixture.GetResponseAsync<ActionGroupCancelFailed, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         response.Message.ErrorCode.ShouldBe(HostOrderCancelFailedErrorCode.OrderDoesNotExist);
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCancelFailed>();
     }
 
     [TestMethod]
@@ -272,9 +272,9 @@ public class ActionCommandHandlerTest
 
         var command = new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<CancelActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCanceled>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCancelFailed>();
     }
 
     [TestMethod]
@@ -294,8 +294,8 @@ public class ActionCommandHandlerTest
         Response<ActionGroupCancelFailed> response = await fixture.GetResponseAsync<ActionGroupCancelFailed, CancelActionGroup>(new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         response.Message.ErrorCode.ShouldBe(error);
-        (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCanceled>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCancelFailed>();
     }
 
     [TestMethod]
@@ -327,15 +327,15 @@ public class ActionCommandHandlerTest
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
         var expectedAbortedAction = actionGroup.Actions.First(a => a.State == ActionState.Started);
 
-        await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
-        (await fixture.ConsumerHarness.Consumed.Any<AbortActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeTrue();
-        var abortedMessage = fixture.TestHarness.Published.Select<ActionAborted>().First().Context.Message;
+        var abortedMessage = await fixture.PublishAndGetFirstMessageAsync<AbortActionGroup, ActionAborted>(
+            new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
+        await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
         abortedMessage.CorrelationId.ShouldBe(agv.CorrelationId);
         abortedMessage.Action.ActionType.ShouldBe(expectedAbortedAction.ActionType);
         abortedMessage.Action.CorrelationId.ShouldBe(expectedAbortedAction.CorrelationId);
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeFalse();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
@@ -351,10 +351,10 @@ public class ActionCommandHandlerTest
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Charge);
 
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
-        (await fixture.ConsumerHarness.Consumed.Any<AbortActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
@@ -376,10 +376,10 @@ public class ActionCommandHandlerTest
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Park);
 
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
-        (await fixture.ConsumerHarness.Consumed.Any<AbortActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
@@ -394,8 +394,8 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup);
 
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
-        (await fixture.ConsumerHarness.Consumed.Any<AbortActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
@@ -410,8 +410,8 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup);
 
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
-        (await fixture.ConsumerHarness.Consumed.Any<AbortActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
@@ -423,27 +423,26 @@ public class ActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> {new("propertyName", failureReason)}));
 
-        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
+        var actionGroupCreatedEvent = await fixture.PublishAndGetFirstMessageAsync<QueueActionGroup, ActionGroupCreated>(
+            new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
 
-        (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
-
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
-        var actionGroupCreatedEvent = fixture.TestHarness.Published.Select<ActionGroupCreated>().First().Context.Message;
+        await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
         actionGroupCreatedEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupCreatedEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
 
-        var invalidEvent = fixture.TestHarness.Published.Select<ActionGroupInvalid>().First().Context.Message;
+        var invalidEvent = await fixture.GetFirstPublishedMessageAsync<ActionGroupInvalid>();
         invalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         invalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
 
-        (await fixture.TestHarness.Published.Any<ActionGroupInvalid>()).ShouldBeTrue();
-        var actionGroupInvalidEvent = fixture.TestHarness.Published.Select<ActionGroupInvalid>().First().Context.Message;
+        await fixture.ShouldHavePublishedAsync<ActionGroupInvalid>();
+        var actionGroupInvalidEvent = await fixture.GetFirstPublishedMessageAsync<ActionGroupInvalid>();
         actionGroupInvalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupInvalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroupInvalidEvent.ValidationErrors.ShouldBe(new List<string> {failureReason});
 
-        (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupStarted>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
 
         fixture.IsActionGroupSaved(Times.Once());
     }
@@ -457,14 +456,13 @@ public class ActionCommandHandlerTest
         fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> {new("propertyName", failureReason)}));
 
         await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
-        (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
-
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupInvalid>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<StartActionCommand>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupStarted>()).ShouldBeFalse();
-
+        
+        await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
+        await fixture.ShouldNotHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
         fixture.IsActionGroupSaved(Times.Never());
     }
 
@@ -478,11 +476,11 @@ public class ActionCommandHandlerTest
         fixture.AddAgv(agv);
 
         await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
-        (await fixture.ConsumerHarness.Consumed.Any<QueueActionGroup>()).ShouldBeTrue();
-
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupInvalid>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+        
+        await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreatedForAgv>();
 
         fixture.IsActionGroupSaved(Times.Once());
     }
@@ -500,8 +498,8 @@ public class ActionCommandHandlerTest
         var selectNodesForAction = new SelectNodesForAction(fixture.Mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionGroup.Actions.First()), agv.CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(selectNodesForAction);
-        (await fixture.ConsumerHarness.Consumed.Any<SelectNodesForAction>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<SelectNodesForAction>();
+        await fixture.ShouldHavePublishedAsync<NodesSelectedForAction>();
     }
 
     [TestMethod]
@@ -519,9 +517,10 @@ public class ActionCommandHandlerTest
 
         var command = new StartChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+        
+        await fixture.ShouldHaveConsumedAsync<StartChargingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreatedForAgv>();
     }
 
     [TestMethod]
@@ -539,9 +538,10 @@ public class ActionCommandHandlerTest
 
         var command = new StartChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<StartChargingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreatedForAgv>();
     }
 
     [TestMethod]
@@ -558,9 +558,10 @@ public class ActionCommandHandlerTest
 
         var command = new StartChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<StartChargingActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<StartChargingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreatedForAgv>();
     }
 
     [TestMethod]
@@ -577,9 +578,10 @@ public class ActionCommandHandlerTest
 
         var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, parkNodeName);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CreateParkingActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<ActionGroupCreatedForAgv>()).ShouldBeTrue();
+        
+        await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreatedForAgv>();
     }
 
     [TestMethod]
@@ -592,9 +594,9 @@ public class ActionCommandHandlerTest
         fixture.AddActionGroup(actionGroup, hasUnfinishedAction: false);
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
-
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartNewActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<TryStartNewActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<NodesSelectedForAction>();
     }
 
     [TestMethod]
@@ -608,9 +610,9 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup, hasUnfinishedAction: false);
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
-
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartNewActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<TryStartNewActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<NodesSelectedForAction>();
     }
 
     [TestMethod]
@@ -625,8 +627,8 @@ public class ActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
 
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartNewActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<TryStartNewActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<NodesSelectedForAction>();
     }
 
     [TestMethod]
@@ -640,9 +642,9 @@ public class ActionCommandHandlerTest
             .AddRoute(["A node", actionGroup.Actions.First().TargetNodeId]);
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
-
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartNewActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeTrue();
+        
+        await fixture.ShouldHaveConsumedAsync<TryStartNewActionGroup>();
+        await fixture.ShouldHavePublishedAsync<NodesSelectedForAction>();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
     }
 
@@ -657,9 +659,9 @@ public class ActionCommandHandlerTest
             .AddRoute(["A node", actionGroup.Actions.First().TargetNodeId]);
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
-
-        (await fixture.ConsumerHarness.Consumed.Any<TryStartNewActionGroup>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<NodesSelectedForAction>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<TryStartNewActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<NodesSelectedForAction>();
         actionGroup.AssignedAgv.ShouldNotBe(agv.CorrelationId);
     }
 
@@ -681,10 +683,9 @@ public class ActionCommandHandlerTest
         abortedMessage.CorrelationId.ShouldBe(agv.CorrelationId);
         abortedMessage.Action.ActionType.ShouldBe(expectedResetAction.ActionType);
         abortedMessage.Action.CorrelationId.ShouldBe(expectedResetAction.CorrelationId);
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<Success>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeFalse();
-
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<Success>();
+        await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
         actionGroup.State.ShouldBe(ActionGroupState.Created);
         actionGroup.AssignedAgv.ShouldBeNull();
         actionGroup.StartedDate.ShouldBeNull();
@@ -703,11 +704,11 @@ public class ActionCommandHandlerTest
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
 
         await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId));
-
-        (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<Success>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeFalse();
+        
+        await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<Success>();
+        await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
 
         actionGroup.State.ShouldBe(ActionGroupState.Created);
         actionGroup.AssignedAgv.ShouldBeNull();
@@ -724,11 +725,11 @@ public class ActionCommandHandlerTest
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Charge);
 
         await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId));
-
-        (await fixture.TestHarness.Published.Any<ActionAborted>()).ShouldBeFalse();
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<Success>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AutomaticActionWithdrawn>()).ShouldBeTrue();
+        
+        await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<Success>();
+        await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
 
         actionGroup.State.ShouldBe(ActionGroupState.Created);
         actionGroup.AssignedAgv.ShouldBeNull();

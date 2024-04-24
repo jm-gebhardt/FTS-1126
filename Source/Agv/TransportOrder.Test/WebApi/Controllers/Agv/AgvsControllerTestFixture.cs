@@ -1,12 +1,15 @@
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -16,6 +19,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
@@ -24,8 +28,10 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using ActionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvData = Gebhardt.Acc.Common.Domain.Models.AgvData;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
+using AgvPositionProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvPositionProfile;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Agv;
@@ -113,22 +119,21 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var correlationId = GetGuid(agvSerialNumber);
             var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
             var agvData = AgvDataGenerator.GenerateAgvData(ipV4Address: ip);
-            var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId,Guid.NewGuid(), agvSerialNumber, agvStatus);
+            var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);
 
             agvs.Add(agv);
             data[correlationId] = agvData;
         }
 
-        AgvDb.AddAgvsToMockRepository(agvs);
+        AgvDb.AddAgvs(agvs);
 
         AgvDb.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => data.ContainsKey(correlationId));
-        AgvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>()))
-            .ReturnsAsync((Guid correlationId) =>
-            {
-                data.TryGetValue(correlationId, out var agvData);
-                return agvData;
-            });
+        AgvDb.AddAgvData(correlationId =>
+        {
+            data.TryGetValue(correlationId, out var agvData);
+            return agvData;
+        });
         AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
             .Callback((AgvData agvData) => { data[agvData.CorrelationId] = agvData; });
 
@@ -216,6 +221,22 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         return controller;
     }
+    
+    protected override IEnumerable<Profile> GetProfiles() =>
+    [
+        new AgvProfile(), 
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvProfile(),
+        new AgvStatusProfile(),
+        new AgvSettingsProfile(),
+        new AgvGraphProfile(),
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvGraphProfile(),
+        new AgvPositionProfile(),
+        new AgvErrorProfile(),
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
+        new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
+        new ActionProfile(),
+        new CargoProfile()
+    ];
 
     public AgvsControllerTestFixture<TRequest, TRequestHandler> WithActiveAgvErrors(IList<AgvError> agvErrors)
     {

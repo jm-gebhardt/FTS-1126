@@ -33,9 +33,9 @@ public class AgvPositionReceivedConsumerTest
                 AgvSerialNumber1,
                 new AgvPosition(false, 0, 0, 0, 0)
             ));
-
-        (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
+        
+        await fixture.ShouldHavePublishedAsync<AgvPositionReceived>();
+        await fixture.ShouldHaveConsumedAsync<AgvPositionReceived>();
 
         var repository = fixture.Provider.GetRequiredService<IAgvPositionRepository>();
         repository.ShouldNotBeNull();
@@ -77,7 +77,7 @@ public class AgvPositionReceivedConsumerTest
                 new AgvPosition(init2, x2, y2, z2, theta2)
             ));
 
-        (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvPositionReceived>();
         fixture.ConsumerHarness.Consumed.Select<AgvPositionReceived>().Count().ShouldBe(2);
 
         var repository = fixture.Provider.GetRequiredService<IAgvPositionRepository>();
@@ -119,10 +119,10 @@ public class AgvPositionReceivedConsumerTest
                 AgvSerialNumber1,
                 new AgvPosition(false, 0, 0, 0, 0)
             ));
-
-        (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
-
+        
+        await fixture.ShouldHavePublishedAsync<AgvPositionReceived>();
+        await fixture.ShouldHaveConsumedAsync<AgvPositionReceived>();
+        
         agvPositionRepositoryMock.Verify(h => h.UpdatePositionAsync(
             It.Is<AgvPositionStatus>(o => o.SerialNumber == AgvSerialNumber1 && o.CorrelationId == AgvSerialNumber1.ToGuid())), Times.Once);
     }

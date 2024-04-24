@@ -67,22 +67,13 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvRepository()
     {
-        _agvDb.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        _agvDb.Setup(r => r.Agvs.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        _agvDb.Setup(r => r.Agvs.GetAgvAsync(It.IsAny<Guid>())).ThrowsAsync(new AgvNotFoundException(It.IsAny<Guid>()));
-        _agvDb.Setup(r => r.Agvs.Count).Returns(0);
-        _agvDb.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
-        _agvDb.Setup(r => r.Agvs.GetAllAgvsWithGraphAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        _agvDb.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        _agvDb.Setup(r => r.Agvs.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        _agvDb.Setup(r => r.Agvs.GetReadyAgvsAsync(It.IsAny<int>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        _agvDb.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>());
-        return this;
+        _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>());
+         return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvDataRepository()
     {
-        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
+        _agvDb.AddAgvData((AgvData?)null);
         return this;
     }
 
@@ -97,42 +88,21 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs, TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
-        _agvDb.AddAgvsToMockRepository(agvs);
+        _agvDb.AddAgvs(agvs);
         _actionGroupRepository.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
             .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup.ConvertFromActionGroupWithFakeNodeType()));
         _actionGroupRepository.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()));
         _actionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()));
-        _agvDb.Setup(r => r.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
-        {
-            try
-            {
-                return agvs.Single(a => a.CorrelationId == c);
-            }
-            catch (InvalidOperationException)
-            {
-                throw new AgvNotFoundException(c);
-            }
-        });
-        _agvDb.Setup(a => a.Agvs.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback((ICollection<Guid> ids) =>
-        {
-            List<Guid> notExistingAgvs = ids.Where(id => agvs.All(a => a.CorrelationId != id)).ToList();
-            if (notExistingAgvs.Any())
-            {
-                throw new AgvsNotFoundException(notExistingAgvs);
-            }
-        });
-        _agvDb.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
-        _actionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
+       _actionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         _actionGroupRepository.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
-        _agvDb.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> ids) => agvs.Where(a => ids.Contains(a.CorrelationId)).ToList());
         IEnumerable<AgvData> specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(correlationId: a.CorrelationId));
 
         _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
-
+        
         Dictionary<Guid, GraphNode?> nodes = agvs.ToDictionary(a => a.CorrelationId,
-            a => a.AgvStatus!.LastNodeId != null ? new GraphNode(a.AgvStatus!.LastNodeId!) { Id = a.AgvStatus!.LastNodeId!, Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f } : null);
+            a => a.AgvStatus!.LastNodeId != null ? NodeGenerator.GenerateNode(nodeId:a.AgvStatus!.LastNodeId!, x:1.0f, y:2.0f, z:0.0f, theta:0.0f, nodeType:AgvGraph.NodeType.WayPoint) : null);
 
         _agvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => nodes);
 

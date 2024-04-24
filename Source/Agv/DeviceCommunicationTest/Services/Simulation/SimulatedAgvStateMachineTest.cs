@@ -35,16 +35,10 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        // Publish RequestAgvGraph ...
-        await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, agvSerialNumber));
-        // ... wait for being consumed ...
+        var message = await fixture.PublishAndGetFirstMessageAsync<RequestAgvGraph, AgvGraphReceived>(new RequestAgvGraph(correlationId, agvSerialNumber));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
-        // ... expect AgvGraphReceived being published.
-        (await fixture.TestHarness.Published.Any<AgvGraphReceived>()).ShouldBeTrue();
-
-        var message = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
         message.CorrelationId.ShouldBe(correlationId);
-        message.SerialNumber.ShouldBe(agvSerialNumber);
+        message.SerialNumber.ShouldBe(agvSerialNumber); 
         message.Graph.ShouldBe(graph);
     }
 
@@ -70,7 +64,7 @@ public class SimulatedAgvStateMachineTest
         // ... but don't expect AgvGraphReceived being published.
         var token = new CancellationTokenSource();
         token.CancelAfter(100);
-        (await fixture.TestHarness.Published.Any<AgvGraphReceived>(token.Token)).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<AgvGraphReceived>();
     }
 
     [TestMethod]
@@ -112,15 +106,11 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        // Publish RequestAgvData ...
         string agvSerialNumber = agvSaga.SerialNumber;
-        await fixture.TestHarness.Bus.Publish(new RequestAgvData(correlationId, agvSerialNumber));
-        // ... wait for being consumed ...
+        var message = await fixture.PublishAndGetFirstMessageAsync<RequestAgvData, AgvDataReceived>(
+            new RequestAgvData(correlationId, agvSerialNumber));
         (await fixture.SagaHarness.Consumed.Any<RequestAgvData>()).ShouldBeTrue();
-        // ... expect AgvDataReceived being published.
-        (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeTrue();
-
-        var message = fixture.TestHarness.Published.Select<AgvDataReceived>().First().Context.Message;
+        
         message.CorrelationId.ShouldBe(correlationId);
         message.SerialNumber.ShouldBe(agvSerialNumber);
         message.Data.ShouldBe(agvSaga.AgvData);
@@ -141,9 +131,8 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        await fixture.PublishMessageAsync(new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
-
-        var actionStarted = await fixture.GetFirstPublishedMessageAsync<ActionStarted>();
+        var actionStarted = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStarted>(
+            new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
 
         var actionId = action.CorrelationId;
         actionStarted.CorrelationId.ShouldBe(actionId);
@@ -172,8 +161,8 @@ public class SimulatedAgvStateMachineTest
                 s.LastNodeId.ShouldBe(destination);
             });
 
-        (await fixture.TestHarness.Published.Any<ActionCompleted>()).ShouldBeTrue();
-        var actionCompleted = fixture.TestHarness.Published.Select<ActionCompleted>().First().Context.Message;
+        await fixture.ShouldHavePublishedAsync<ActionCompleted>();
+        var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompleted>();
         actionCompleted.CorrelationId.ShouldBe(actionId);
 
         // Last position message received should be the position of the last node
@@ -197,10 +186,10 @@ public class SimulatedAgvStateMachineTest
             .Build();
         var action = AgvActionGenerator.GenerateAction(startNodeId: node.Id, targetNodeId: node.Id, actionType: ActionType.Pick);
 
-        await fixture.PublishMessageAsync(new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
+        var agvLoadStatusReceived = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, AgvLoadStatusReceived>(
+            new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
 
         await fixture.WaitUntilAgvIdle(agvSaga);
-        var agvLoadStatusReceived = await fixture.GetFirstPublishedMessageAsync<AgvLoadStatusReceived>();
         agvLoadStatusReceived.Cargos.Count.ShouldBe(1);
     }
 
@@ -218,10 +207,10 @@ public class SimulatedAgvStateMachineTest
             .Build();
         var action = AgvActionGenerator.GenerateAction(startNodeId: node.Id, targetNodeId: node.Id, actionType: ActionType.Drop);
 
-        await fixture.PublishMessageAsync(new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
+        var agvLoadStatusReceived = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, AgvLoadStatusReceived>(
+            new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
 
         await fixture.WaitUntilAgvIdle(agvSaga);
-        var agvLoadStatusReceived = await fixture.GetFirstPublishedMessageAsync<AgvLoadStatusReceived>();
         agvLoadStatusReceived.Cargos.Count.ShouldBe(0);
     }
 
@@ -243,7 +232,7 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
 
-        (await fixture.TestHarness.Published.Any<ActionAbortionCompleted>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionAbortionCompleted>();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         agvSaga.LastActionAborted.ShouldBeTrue();
@@ -266,7 +255,7 @@ public class SimulatedAgvStateMachineTest
             .Build();
 
         await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
-        (await fixture.TestHarness.Published.Any<ActionAbortionCompleted>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionAbortionCompleted>();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         agvSaga.LastActionAborted.ShouldBeTrue();
@@ -284,13 +273,11 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        await fixture.PublishMessageAsync(new SimulateAgvError(correlationId, new List<AgvError> {agvError}));
+        var message = await fixture.PublishAndGetFirstMessageAsync<SimulateAgvError, AgvErrorStatusReceived>(
+            new SimulateAgvError(correlationId, new List<AgvError> {agvError}));
 
         (await fixture.SagaHarness.Consumed.Any<SimulateAgvError>()).ShouldBeTrue();
 
-        (await fixture.TestHarness.Published.Any<AgvErrorStatusReceived>()).ShouldBeTrue();
-
-        var message = fixture.TestHarness.Published.Select<AgvErrorStatusReceived>().First().Context.Message;
         message.CorrelationId.ShouldBe(correlationId);
         message.Errors.ShouldNotBeNull();
         message.Errors.Count.ShouldBe(1);

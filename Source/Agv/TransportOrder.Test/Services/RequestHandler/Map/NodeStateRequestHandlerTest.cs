@@ -17,6 +17,7 @@ public class NodeStateRequestHandlerTest
     {
         var nodeStates = new List<NodeLock> { new("nodeId", NodeLockState.Free, false, null, DateTime.UtcNow) };
         NodeStateRequestHandlerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new NodeStateRequestHandlerTestFixture<GetMapNodeStates, NodeStateRequestHandler>()
+            .WithEmptyRepository()
             .WithNodeStates(nodeStates)
             .Build();
 

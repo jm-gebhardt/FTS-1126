@@ -1,9 +1,10 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -37,16 +38,9 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         return this;
     }
 
-    public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> AddAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)
+    public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        _agvDb.Setup(x => x.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>())).Callback((Guid c) =>
-        {
-            if (agvs.FirstOrDefault(a => a.CorrelationId == c) != null)
-            {
-                return;
-            }
-            throw new AgvNotFoundException(c);
-        });
+        _agvDb.AddAgvs(agvs);
         return this;
     }
 

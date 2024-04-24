@@ -5,6 +5,7 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -17,7 +18,7 @@ public class MaintenanceServiceTestFixture
 
     public MaintenanceServiceTestFixture()
     {
-        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
+        _agvDb.AddAgvData((AgvData?)null);
         MaintenanceService = new MaintenanceService(_agvDb.Object, _nodeStateRepository.Object, RouteService.Object, new Mock<ILogger<MaintenanceService>>().Object);
     }
 

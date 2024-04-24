@@ -44,7 +44,7 @@ public class AgvSettingsRequestHandlerTest
             .Build();
 
         (await fixture.GetResponseAsync<Success>(new UpdateAgvSettings(agv.CorrelationId, EfAgvSettingsProvider.DefaultSettings))).ShouldNotBeNull();
-        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<UpdateAgvSettingsGroupReference>();
     }
 
     [TestMethod]
@@ -56,7 +56,7 @@ public class AgvSettingsRequestHandlerTest
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new UpdateAgvSettings("unknown".ToGuid(), EfAgvSettingsProvider.DefaultSettings)));
-        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<UpdateAgvSettingsGroupReference>();
     }
 
     [TestMethod]
@@ -68,7 +68,7 @@ public class AgvSettingsRequestHandlerTest
             .Build();
 
         (await fixture.GetResponseAsync<Success>(new UpdateAgvsSettings([agv.CorrelationId], EfAgvSettingsProvider.DefaultSettings))).ShouldNotBeNull();
-        (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<UpdateAgvSettingsGroupReference>();
     }
 
     [TestMethod]

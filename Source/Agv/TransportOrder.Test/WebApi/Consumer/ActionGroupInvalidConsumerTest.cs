@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -20,8 +19,8 @@ public class ActionGroupInvalidConsumerTest
 
         await fixture.TestHarness.Bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroup, new List<string> { "Error" }));
 
-        (await fixture.TestHarness.Published.Any<ActionGroupInvalid>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupInvalid>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionGroupInvalid>();
+        await fixture.ShouldHaveConsumedAsync<ActionGroupInvalid>();
 
         fixture.PublisherMock.Verify(h => h.SendActionGroupChangedAsync(
             It.IsAny<ActionGroupReadModel>()), Times.Once);

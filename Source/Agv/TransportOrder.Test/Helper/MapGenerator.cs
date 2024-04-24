@@ -10,7 +10,7 @@ public static class MapGenerator
         byte[]? mapValue = null,
         int width = 10,
         int height = 20,
-        int resolution = 2,
+        double resolution = 2,
         int xOffset = 0,
         int yOffset = 0,
         DateTime modificationDate = default,

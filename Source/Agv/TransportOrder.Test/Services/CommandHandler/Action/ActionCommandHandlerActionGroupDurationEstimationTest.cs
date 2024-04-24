@@ -19,8 +19,8 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
             .AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(duration: TimeSpan.FromMinutes(2)));
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.Last(), fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
-
-        (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeTrue();
+        
+        await fixture.ShouldHavePublishedAsync<ActionDurationEstimated>();
         fixture.VerifyActionGroupUpdate(Times.Never());
     }
 
@@ -32,7 +32,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), "another agv".ToGuid(), fixture.ActionGroup.CorrelationId));
 
-        (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<ActionDurationEstimated>();
         fixture.VerifyActionGroupUpdate(Times.Never());
     }
 
@@ -45,7 +45,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
 
-        (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionDurationEstimated>();
         var actionGroup = fixture.VerifyActionGroupUpdate(Times.Once());
         actionGroup.EstimatedDuration.ShouldNotBe(TimeSpan.Zero);
     }
@@ -60,7 +60,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
 
-        (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionDurationEstimated>();
         var actionGroup = fixture.VerifyActionGroupUpdate(Times.Once());
         actionGroup.EstimatedDuration.ShouldBe(TimeSpan.FromSeconds(deviation + actionGroup.Actions.Count * ActionCosts.SwitchingActions));
     }
@@ -76,7 +76,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
 
-        (await fixture.TestHarness.Published.Any<ActionDurationEstimated>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionDurationEstimated>();
         var actionGroup = fixture.VerifyActionGroupUpdate(Times.Once());
         actionGroup.EstimatedDuration.ShouldBe(TimeSpan.FromSeconds(routeCost + actionGroup.Actions.Count * ActionCosts.SwitchingActions));
     }

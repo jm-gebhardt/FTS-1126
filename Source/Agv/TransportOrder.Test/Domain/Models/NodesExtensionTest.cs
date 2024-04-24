@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,7 +13,7 @@ public class NodesExtensionTest
     [TestMethod]
     public void SelectById_ValidData_ReturnsNode()
     {
-        var node = new GraphNode("id");
+        var node = NodeGenerator.GenerateNode(nodeId:"id");
         var nodes = new List<GraphNode> { node };
         nodes.SelectById(node.Id).ShouldBe(node);
     }

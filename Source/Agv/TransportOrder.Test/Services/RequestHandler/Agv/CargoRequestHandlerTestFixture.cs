@@ -1,9 +1,9 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -15,7 +15,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
     where TConsumer : class, IConsumer
 {
     public readonly Mock<IAgvDb> AgvDb = new();
-    private readonly List<Guid> _existingAgvs = new();
+    private readonly List<TransportOrder.Domain.Models.Agv.Agv> _agvs = new();
     private readonly Dictionary<Guid, IReadOnlyCollection<Cargo>> _cargosByAgv = new();
 
     private static IEnumerable<Profile> Profiles => [new CargoProfile()];
@@ -24,8 +24,6 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     public CargoRequestHandlerTestFixture()
     {
-        SetupAgvRepositoryMock();
-
         SetupCargoRepositoryMock();
 
         AddServices(s => { s.AddTransient<IAgvDb>(_ => AgvDb.Object); });
@@ -44,27 +42,12 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     private void SetupAgvRepositoryMock()
     {
-        AgvDb.Setup(a => a.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>())).Callback<Guid>(correlationId =>
-        {
-            if (!_existingAgvs.Contains(correlationId))
-            {
-                throw new AgvNotFoundException(correlationId);
-            }
-        });
-
-        AgvDb.Setup(a => a.Agvs.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback<ICollection<Guid>>(requestedIds =>
-        {
-            List<Guid> notExistingAgvs = requestedIds.Except(_existingAgvs).ToList();
-            if (notExistingAgvs.Any())
-            {
-                throw new AgvsNotFoundException(notExistingAgvs);
-            }
-        });
+        AgvDb.AddAgvs(_agvs);
     }
-
-    private void WithAgvExisting(Guid correlationId)
+    
+    private void WithAgvExisting(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _existingAgvs.Add(correlationId);
+        _agvs.Add(agv);
     }
 
     public CargoRequestHandlerTestFixture<TRequest, TConsumer> WithCargo(Guid agvCorrelationId, ICollection<Common.Domain.Models.Cargo> cargos)
@@ -72,7 +55,10 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
         var domainCargo = Mapper.Map<IReadOnlyCollection<Cargo>>(cargos);
         _cargosByAgv[agvCorrelationId] = domainCargo;
         SetupIsAgvLoaded(agvCorrelationId, domainCargo.ToList());
-        WithAgvExisting(agvCorrelationId);
+        
+        var agv = AgvGenerator.GenerateRawAgv(agvCorrelationId.ToString());
+        WithAgvExisting(agv);
+        
         return this;
     }
 
@@ -93,6 +79,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     public override CargoRequestHandlerTestFixture<TRequest, TConsumer> Build()
     {
+        SetupAgvRepositoryMock();
         base.Build();
         return this;
     }

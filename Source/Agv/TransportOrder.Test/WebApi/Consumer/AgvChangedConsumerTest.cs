@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
@@ -24,7 +25,7 @@ public class AgvChangedConsumerTest
     [DataRow(false)]
     public async Task Receiving_AgvOnlineChanged_SendAgvStateToAllClients(bool alive)
     {
-        var agv = new TransportOrder.Domain.Models.Agv.Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber);
+        var agv = AgvGenerator.GenerateRawAgv(AgvSerialNumber.ToGuid(), AgvSerialNumber);
         agv.TransitionToDiscovered(true);
         agv.TransitionToIdle();
         agv.SetOnline(Guid.NewGuid());

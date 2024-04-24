@@ -66,7 +66,7 @@ public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<Reset
 
     public ResetAgvErrorsRequestHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.AddAgvsToMockRepository(agv);
+        _agvDb.AddAgvs(agv);
         return this;
     }
 }

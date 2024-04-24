@@ -31,7 +31,7 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_SourceNodeNotFound_ThrowsNodeNotFoundException()
     {
-        var targetNode = new GraphNode("a known target");
+        var targetNode = NodeGenerator.GenerateNode(nodeId:"a known target");
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([targetNode])
             .Build();
@@ -44,8 +44,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_SourceNodeNotPickStation_ThrowsInvalidNodeTypeException()
     {
-        var sourceNode = new GraphNode("a known source") { Type = AgvGraph.NodeType.Charge };
-        var targetNode = new GraphNode("a known target") { Type = AgvGraph.NodeType.Drop };
+        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Charge);
+        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .Build();
@@ -58,8 +58,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_TargetNodeNotFound_ThrowsNodeNotFoundException()
     {
-        var sourceNode = new GraphNode("a known source") { Type = AgvGraph.NodeType.Pick };
-        var targetNode = new GraphNode("a known target") { Type = AgvGraph.NodeType.Drop };
+        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .Build();
@@ -72,8 +72,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_TargetNodeNotDropStation_ThrowsInvalidNodeTypeException()
     {
-        var sourceNode = new GraphNode("a known source") { Type = AgvGraph.NodeType.Pick };
-        var targetNode = new GraphNode("a known target") { Type = AgvGraph.NodeType.Charge };
+        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Charge);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .Build();
@@ -86,8 +86,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_InvalidActionGroup_ThrowsActionGroupInvalidException()
     {
-        var sourceNode = new GraphNode("a known source") { Type = AgvGraph.NodeType.Pick };
-        var targetNode = new GraphNode("a known target") { Type = AgvGraph.NodeType.Drop };
+        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .WithValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", "reason") }))
@@ -102,8 +102,8 @@ public class CreateActionGroupRequestHandlerTest
     public async Task Consume_CreatePickDropActionGroup_ValidData_PublishesActionGroupCreatedWithAssignedAgv()
     {
         var agv = Guid.NewGuid();
-        var sourceNode = new GraphNode("a known source") { Type = AgvGraph.NodeType.Pick };
-        var targetNode = new GraphNode("a known target") { Type = AgvGraph.NodeType.Drop };
+        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithAgvExists(true)
             .WithNodes([sourceNode, targetNode])
@@ -130,8 +130,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_ValidData_PublishesActionGroupCreatedWithoutAssignedAgv()
     {
-        var sourceNode = new GraphNode("a known source") { Type = AgvGraph.NodeType.Pick };
-        var targetNode = new GraphNode("a known target") { Type = AgvGraph.NodeType.Drop };
+        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithAgvExists(true)
             .WithNodes([sourceNode, targetNode])

@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.BackgroundServices;
 
@@ -17,7 +16,7 @@ public class OfflineWatchdogInitializerTest
 
         await fixture.HostedService.StartAsync(CancellationToken.None);
 
-        (await fixture.TestHarness.Published.Any<ResetOfflineWatchdog>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ResetOfflineWatchdog>();
     }
 
     [TestMethod]
@@ -28,6 +27,6 @@ public class OfflineWatchdogInitializerTest
 
         await fixture.HostedService.StartAsync(CancellationToken.None);
 
-        (await fixture.TestHarness.Published.Any<ResetOfflineWatchdog>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<ResetOfflineWatchdog>();
     }
 }

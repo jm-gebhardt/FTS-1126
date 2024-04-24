@@ -37,15 +37,15 @@ public class AgvGraphConsumerTest
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
         // Did the test publish MqttGraph ...
-        (await fixture.TestHarness.Published.Any<MqttGraph>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<MqttGraph>();
         // ... and has the message been consumed?
         var consumed = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
         consumed.SerialNumber.ShouldBe(AgvSerialNumber);
 
         // Did the consumer forward a Graph message ...
-        (await fixture.TestHarness.Published.Any<InternalGraphReceived>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<InternalGraphReceived>();
         // ... with expected content?
-        var published = fixture.TestHarness.Published.Select<InternalGraphReceived>().First().Context.Message;
+        var published = await fixture.GetFirstPublishedMessageAsync<InternalGraphReceived>();
         published.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
         published.Graph.SerialNumber.ShouldBe(AgvSerialNumber);
         published.Graph.Nodes?.Length.ShouldBe(2);

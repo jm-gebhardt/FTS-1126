@@ -1,7 +1,6 @@
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.WCSCommunicationTest.Services;
 
@@ -19,6 +18,6 @@ public class SimulationHostOrderServiceTest
     {
         var fixture = new SimulationHostOrderFixture();
         await fixture.Pollable.Poll(It.IsAny<CancellationToken>());
-        (await fixture.TestHarness.Published.Any<CreateHostOrder>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<CreateHostOrder>();
     }
 }

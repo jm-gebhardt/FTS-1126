@@ -10,7 +10,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -38,9 +37,9 @@ public class AgvStateChangedConsumerTest
 
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
         await fixture.TestHarness.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
-
-        (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
+        
+        await fixture.ShouldHavePublishedAsync<AgvStateChanged>();
+        await fixture.ShouldHaveConsumedAsync<AgvStateChanged>();
 
         fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(It.Is<Messages.MessageContent.Agv>(x => x.CurrentState == currentState)), Times.Once);
     }
@@ -49,7 +48,7 @@ public class AgvStateChangedConsumerTest
     [DataRow(AgvState.Initial, null)]
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsInitial_SendAgvDiscoveredToAllClients(AgvState currentState, AgvState? previousState)
     {
-        var agv = new Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber);
+        var agv = AgvGenerator.GenerateRawAgv(AgvSerialNumber.ToGuid(), AgvSerialNumber);
         agv = AgvGenerator.SetAgvState(currentState, agv, false);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
@@ -60,9 +59,9 @@ public class AgvStateChangedConsumerTest
 
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
         await fixture.TestHarness.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
-
-        (await fixture.TestHarness.Published.Any<AgvStateChanged>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<AgvStateChanged>()).ShouldBeTrue();
+        
+        await fixture.ShouldHavePublishedAsync<AgvStateChanged>();
+        await fixture.ShouldHaveConsumedAsync<AgvStateChanged>();
 
         fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(
             It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId)), Times.Once);

@@ -1,6 +1,7 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -20,9 +21,9 @@ public class OfflineWatchdogInitializerTestFixture : BackgroundServiceTestFixtur
         Build();
     }
 
-    public OfflineWatchdogInitializerTestFixture AddAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)
+    public OfflineWatchdogInitializerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        _agvDbMock.Setup(x => x.Agvs.GetAllAgvsAsync()).ReturnsAsync(agvs);
+        _agvDbMock.AddAgvs(agvs);
         return this;
     }
 }

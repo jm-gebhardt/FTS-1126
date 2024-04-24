@@ -1,6 +1,7 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -32,10 +33,10 @@ public class UtilitiesTest
     public void NodeIdComparer()
     {
         var comparer = new GraphNodeComparer();
-        var node1 = new GraphNode("1") { X = 1f, Y = 2f, Z = 3f, Type = AgvGraph.NodeType.Charge };
-        var node2 = new GraphNode("2") { X = 1f, Y = 2f, Z = 3f, Type = AgvGraph.NodeType.Charge };
-        var node3 = new GraphNode("1") { X = 1f, Y = 2f, Z = 3f, Type = AgvGraph.NodeType.Charge };
-        var node4 = new GraphNode("1") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.Park };
+        var node1 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeId:"1");
+        var node2 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeId:"2");
+        var node3 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeId:"1");
+        var node4 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Park, 0f, 0f, nodeId:"1");
 
         comparer.Equals(node1, node2).ShouldBeFalse();
         comparer.GetHashCode(node2).ShouldNotBe(comparer.GetHashCode(node1));

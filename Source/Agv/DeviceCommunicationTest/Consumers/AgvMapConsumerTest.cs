@@ -52,14 +52,14 @@ public class AgvMapConsumerTest
         var fixture = new RequestAgvMapConsumerTestFixture();
 
         // Act
-        await fixture.TestHarness.Bus.Publish(new RequestAgvMap(AgvSerialNumber.ToGuid(), AgvSerialNumber, MapId.ToGuid(), MapId));
+        var message = await fixture.PublishAndGetFirstMessageAsync<RequestAgvMap, MqttRequestMap>(
+            new RequestAgvMap(AgvSerialNumber.ToGuid(), AgvSerialNumber, MapId.ToGuid(), MapId));
 
         // Assert
-        (await fixture.TestHarness.Published.Any<RequestAgvMap>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<RequestAgvMap>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<RequestAgvMap>();
+        await fixture.ShouldHaveConsumedAsync<RequestAgvMap>();
 
-        (await fixture.TestHarness.Published.Any<MqttRequestMap>()).ShouldBeTrue();
-        var message = fixture.TestHarness.Published.Select<MqttRequestMap>().First().Context.Message;
+        await fixture.ShouldHavePublishedAsync<MqttRequestMap>();
         message.SerialNumber.ShouldBe(AgvSerialNumber);
     }
 
@@ -76,9 +76,9 @@ public class AgvMapConsumerTest
         await fixture.TestHarness.Bus.Publish(_mqttMap);
 
         // Assert
-        (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<MqttMap>();
+        await fixture.ShouldHaveConsumedAsync<MqttMap>();
+        await fixture.ShouldHavePublishedAsync<AgvMapReceived>();
     }
 
     /// <summary>
@@ -113,10 +113,9 @@ public class AgvMapConsumerTest
         await fixture.TestHarness.Bus.Publish(_mqttMap);
 
         // Assert
-        (await fixture.TestHarness.Published.Any<MqttMap>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<MqttMap>()).ShouldBeTrue();
-
-        (await fixture.TestHarness.Published.Any<AgvMapReceived>()).ShouldBeFalse();
+        await fixture.ShouldHavePublishedAsync<MqttMap>();
+        await fixture.ShouldHaveConsumedAsync<MqttMap>();
+        await fixture.ShouldNotHavePublishedAsync<AgvMapReceived>();
     }
 }
 

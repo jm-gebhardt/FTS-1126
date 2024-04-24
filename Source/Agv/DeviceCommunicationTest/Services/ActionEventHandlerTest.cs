@@ -31,9 +31,9 @@ public class ActionEventHandlerTest
         var message = new ActionAborted(agvCorrelationId, action);
 
         await fixture.TestHarness.Bus.Publish(message);
-        (await fixture.ConsumerHarness.Consumed.Any<ActionAborted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<MqttOrder>()).ShouldBeTrue();
-        var mqttMessage = fixture.TestHarness.Published.Select<MqttOrder>().First().Context.Message;
+        await fixture.ShouldHavePublishedAsync<MqttOrder>();
+        await fixture.ShouldHaveConsumedAsync<ActionAborted>();
+        var mqttMessage = await fixture.GetFirstPublishedMessageAsync<MqttOrder>();
         mqttMessage.SerialNumber.ShouldBe(agvInformation.AgvStatusReceived!.SerialNumber);
         mqttMessage.OrderType.ShouldBe(OrderType.Pick);
         mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderCancel);
@@ -55,7 +55,7 @@ public class ActionEventHandlerTest
         var message = new ActionAborted(correlationId, action);
 
         await fixture.TestHarness.Bus.Publish(message);
-        (await fixture.ConsumerHarness.Consumed.Any<ActionAborted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<MqttOrder>()).ShouldBeFalse();
+        await fixture.ShouldHaveConsumedAsync<ActionAborted>();
+        await fixture.ShouldNotHavePublishedAsync<MqttOrder>();
     }
 }

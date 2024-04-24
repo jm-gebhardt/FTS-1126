@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -31,13 +31,13 @@ public class MathematicsTest
 
     [TestMethod]
     public void EuclideanDistance_ValidInput_CorrectResult()
-    {
-        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 1, Y = 0, Z = 0 }).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 0, Y = 0, Z = 0 }).ShouldBe(0, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 0, Y = 1, Z = 0 }).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 0 }, new GraphNode("") { X = 0, Y = 0, Z = 1 }).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 0, Z = 1 }, new GraphNode("") { X = 0, Y = 0, Z = -1 }).ShouldBe(2, 0.0001);
-        Mathematics.EuclideanDistance(new GraphNode("") { X = 0, Y = 1, Z = 0 }, new GraphNode("") { X = 1, Y = 0, Z = 0 }).ShouldBe(1.4142, 0.0001);
+    { 
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:1, y:0, z:0)).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0)).ShouldBe(0, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:0, y:1, z:0)).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:1)).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:1), NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:-1)).ShouldBe(2, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:1, z:0), NodeGenerator.GenerateNode(nodeId:"", x:1, y:0, z:0)).ShouldBe(1.4142, 0.0001);
     }
     
     [TestMethod]

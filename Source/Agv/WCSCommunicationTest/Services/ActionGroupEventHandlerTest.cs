@@ -22,8 +22,8 @@ public class ActionGroupEventHandlerTest
         var actionGroupInvalid = new ActionGroupInvalid(actionGroup.CorrelationId, actionGroup, new List<string> { "a validation error" });
 
         await fixture.TestHarness.Bus.Publish(actionGroupInvalid);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupInvalid>()).ShouldBeTrue();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupInvalid>();
         (await fixture.TestHarness.Published.Any<RemoveInvalidHostOrder>(f =>
             f.Context.Message == new RemoveInvalidHostOrder(actionGroupInvalid.CorrelationId))).ShouldBeTrue();
     }
@@ -37,8 +37,8 @@ public class ActionGroupEventHandlerTest
         var actionGroupStarted = new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupStarted);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupStarted>()).ShouldBeTrue();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupStarted>();
         (await fixture.TestHarness.Published.Any<HandleHostOrderStart>(f =>
             f.Context.Message == new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value.ToString(), actionGroupStarted.MessageCreatedDate))).ShouldBeTrue();
     }
@@ -52,9 +52,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupStarted = new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupStarted);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupStarted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<HandleHostOrderStart>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupStarted>();
+        await fixture.ShouldNotHavePublishedAsync<HandleHostOrderStart>();
     }
 
     [TestMethod]
@@ -66,9 +66,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupStarted = new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupStarted);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupStarted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<HandleHostOrderStart>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupStarted>();
+        await fixture.ShouldNotHavePublishedAsync<HandleHostOrderStart>();
     }
 
     [TestMethod]
@@ -83,10 +83,10 @@ public class ActionGroupEventHandlerTest
         var actionGroupCompleted = new ActionGroupCompleted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCompleted);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCompleted>()).ShouldBeTrue();
+        
         (await fixture.TestHarness.Published.Any<FinishHostOrder>(f =>
             f.Context.Message == new FinishHostOrder(actionGroup.CorrelationId, actionGroupCompleted.MessageCreatedDate))).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
     }
 
     [TestMethod]
@@ -98,9 +98,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupCompleted = new ActionGroupCompleted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCompleted);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCompleted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<FinishHostOrder>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<FinishHostOrder>();
     }
 
     [TestMethod]
@@ -112,9 +112,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupCompleted = new ActionGroupCompleted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCompleted);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCompleted>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<FinishHostOrder>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<FinishHostOrder>();
     }
 
     [TestMethod]
@@ -129,10 +129,10 @@ public class ActionGroupEventHandlerTest
         var actionGroupCanceled = new ActionGroupCanceled(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCanceled);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCanceled>()).ShouldBeTrue();
+        
         (await fixture.TestHarness.Published.Any<FinishHostOrderCancellation>(f =>
             f.Context.Message == new FinishHostOrderCancellation(actionGroup.CorrelationId, actionGroupCanceled.MessageCreatedDate))).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCanceled>();
     }
 
     [TestMethod]
@@ -144,9 +144,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupCanceled = new ActionGroupCanceled(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCanceled);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCanceled>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<FinishHostOrderCancellation>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCanceled>();
+        await fixture.ShouldNotHavePublishedAsync<FinishHostOrderCancellation>();
     }
 
     [TestMethod]
@@ -158,9 +158,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupCanceled = new ActionGroupCanceled(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCanceled);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCanceled>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<FinishHostOrderCancellation>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCanceled>();
+        await fixture.ShouldNotHavePublishedAsync<FinishHostOrderCancellation>();
     }
 
     [TestMethod]
@@ -176,9 +176,9 @@ public class ActionGroupEventHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionGroupCancelFailed);
 
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<HandleCancellationFailure>(f =>
             f.Context.Message == new HandleCancellationFailure(actionGroup.CorrelationId, actionGroupCancelFailed.ErrorCode))).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCancelFailed>();
     }
 
     [TestMethod]
@@ -190,9 +190,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupCancelFailed = new ActionGroupCancelFailed(actionGroup, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderDoesNotExist);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCancelFailed);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<HandleCancellationFailure>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCancelFailed>();
+        await fixture.ShouldNotHavePublishedAsync<HandleCancellationFailure>();
     }
 
     [TestMethod]
@@ -204,9 +204,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupCancelFailed = new ActionGroupCancelFailed(actionGroup, actionGroup.CorrelationId, HostOrderCancelFailedErrorCode.OrderDoesNotExist);
 
         await fixture.TestHarness.Bus.Publish(actionGroupCancelFailed);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupCancelFailed>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCancelFailed>();
+        await fixture.ShouldNotHavePublishedAsync<HandleHostOrderFailure>();
     }
 
     [TestMethod]
@@ -221,10 +221,10 @@ public class ActionGroupEventHandlerTest
         var actionGroupFailed = new ActionGroupFailed(actionGroup, actionGroup.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupFailed);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupFailed>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<ActionGroupFailed>();
         (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>(f =>
             f.Context.Message == new HandleHostOrderFailure(actionGroup.CorrelationId, actionGroupFailed.ErrorCode, actionGroupFailed.MessageCreatedDate))).ShouldBeTrue();
+        await fixture.ShouldNotHaveConsumedAsync<ActionGroupCancelFailed>();
     }
 
     [TestMethod]
@@ -236,9 +236,9 @@ public class ActionGroupEventHandlerTest
         var actionGroupFailed = new ActionGroupFailed(actionGroup, actionGroup.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupFailed);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupFailed>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupFailed>();
+        await fixture.ShouldNotHavePublishedAsync<HandleHostOrderFailure>();
     }
 
     [TestMethod]
@@ -250,8 +250,8 @@ public class ActionGroupEventHandlerTest
         var actionGroupFailed = new ActionGroupFailed(actionGroup, actionGroup.CorrelationId, HostOrderHandlingFailedErrorCode.FailedByTransportLayer, DateTime.UtcNow);
 
         await fixture.TestHarness.Bus.Publish(actionGroupFailed);
-
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupFailed>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<HandleHostOrderFailure>()).ShouldBeFalse();
+        
+        await fixture.ShouldHaveConsumedAsync<ActionGroupFailed>();
+        await fixture.ShouldNotHavePublishedAsync<HandleHostOrderFailure>();
     }
 }

@@ -1,16 +1,18 @@
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -24,6 +26,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
@@ -32,8 +35,10 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using ActionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvData = Gebhardt.Acc.Common.Domain.Models.AgvData;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
+using AgvPositionProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvPositionProfile;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -92,7 +97,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvControllerTestFixture()
     {
-        // _chargingPointManager.GetBestChargerAsync(agv, nodeId);
         AgvDb = new Mock<IAgvDb>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
@@ -106,8 +110,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
         ChargingPointManager = new Mock<IChargingPointManager>();
-        ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(new GraphNode("Charger-1"));
-        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(new GraphNode("Charger-1"));
+        ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId:"Charger-1"));
+        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId:"Charger-1"));
     }
 
     [UsedImplicitly]
@@ -125,31 +129,22 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var correlationId = GetGuid(agvSerialNumber);
             var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3");
             var agvData = AgvDataGenerator.GenerateAgvData(correlationId: correlationId, ipV4Address: ip);
-            var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus);
+            var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);
 
             agvs.Add(agv);
             data[correlationId] = agvData;
         }
 
-        AgvDb.AddAgvsToMockRepository(agvs);
+        AgvDb.AddAgvs(agvs);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        AgvDb.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => data.ContainsKey(correlationId));
-        AgvDb.Setup(x => x.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>()))
-            .Callback((Guid correlationId) =>
-            {
-                if (agvs.FirstOrDefault(a => a.CorrelationId == correlationId) == null)
-                {
-                    throw new AgvNotFoundException(correlationId);
-                }
-            });
-        AgvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>()))
-            .ReturnsAsync((Guid correlationId) =>
-            {
-                data.TryGetValue(correlationId, out var agvData);
-                return agvData;
-            });
+        AgvDb.AddAgvData(correlationId =>
+        {
+            data.TryGetValue(correlationId, out var agvData);
+            return agvData;
+        });
+
         AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
             .Callback((AgvData agvData) => { data[agvData.CorrelationId] = agvData; });
         return this;
@@ -265,6 +260,21 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
         return controller;
     }
+    
+    protected override IEnumerable<Profile> GetProfiles() =>
+        [
+            new AgvProfile(), 
+            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvProfile(),
+            new AgvStatusProfile(),
+            new AgvSettingsProfile(),
+            new AgvGraphProfile(),
+            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvGraphProfile(),
+            new AgvPositionProfile(),
+            new AgvErrorProfile(),
+            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
+            new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
+            new ActionProfile()
+        ];
 
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
     {

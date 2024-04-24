@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -14,9 +15,8 @@ public class GraphMergerTest
         var fixture = new GraphMergerTestFixture()
             .WithCurrentGraph(new Graph());
 
-        await fixture.PublishMessageAsync(fixture.AgvGraphReceived);
-
-        var graphChanged = await fixture.GetFirstPublishedMessageAsync<GraphChanged>();
+        var graphChanged = await fixture.PublishAndGetFirstMessageAsync<AgvGraphReceived, GraphChanged>(
+            fixture.AgvGraphReceived);
 
         graphChanged.CorrelationId.ShouldBe(fixture.AgvGraphReceived.CorrelationId);
     }
@@ -29,6 +29,6 @@ public class GraphMergerTest
 
         await fixture.PublishMessageAsync(fixture.AgvGraphReceived);
 
-        (await fixture.TestHarness.Published.Any<GraphChanged>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<GraphChanged>();
     }
 }

@@ -1,9 +1,12 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.RequestHandlers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -95,6 +98,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         return controller;
     }
 
+    protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile(), new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile()];
+    
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> AddActionGroup(ActionGroupReadModel actionGroup)
     {
         _actionGroupReadModels.Add(actionGroup);

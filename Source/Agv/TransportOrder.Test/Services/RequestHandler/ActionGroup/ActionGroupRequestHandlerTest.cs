@@ -190,7 +190,7 @@ public class ActionGroupRequestHandlerTest
                 .BuildAsync();
         Response<ActionGroupAbortionTriggered> response = await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.WebApi));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
-        (await fixture.TestHarness.Published.Any<AbortActionGroup>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AbortActionGroup>();
     }
 
     [TestMethod]
@@ -248,7 +248,7 @@ public class ActionGroupRequestHandlerTest
                 .BuildAsync();
         Response<ActionGroupResetTriggered> response = await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset(actionGroup.CorrelationId));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
-        (await fixture.TestHarness.Published.Any<ResetActionGroup>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ResetActionGroup>();
     }
 
     [TestMethod]

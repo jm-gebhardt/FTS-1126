@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
@@ -7,11 +9,11 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
-public static class AgvRepositoryExtensions
+public static class MockAgvDbExtensions
 {
-    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, List<Agv> agvs) => AddAgvsToMockRepository(repoMock, agvs.ToArray());
+    public static void AddAgvs(this Mock<IAgvDb> repoMock, List<Agv> agvs) => AddAgvs(repoMock, agvs.ToArray());
 
-    public static void AddAgvsToMockRepository(this Mock<IAgvDb> repoMock, params Agv[] agvs)
+    public static void AddAgvs(this Mock<IAgvDb> repoMock, params Agv[] agvs)
     {
         repoMock.Setup(s => s.Agvs.GetAllAgvsAsync()).ReturnsAsync(agvs);
 
@@ -57,5 +59,24 @@ public static class AgvRepositoryExtensions
                 throw new AgvsNotFoundException(notExistingAgvs);
             }
         });
+    }
+
+    public static void AddAgvGraph(this Mock<IAgvDb> repoMock, AgvGraph? agvGraph = null, bool graphExists = true)
+    {
+        repoMock.Setup(x => x.Graphs.GetAgvGraphAsync(It.IsAny<Guid>()))!.ReturnsAsync(agvGraph);
+        repoMock.Setup(x => x.Graphs.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
+        repoMock.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(graphExists);
+    }
+    
+    public static void AddAgvData(this Mock<IAgvDb> repoMock, AgvData? agvData)
+    {
+        repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
+        repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+    }
+
+    public static void AddAgvData(this Mock<IAgvDb> repoMock, Func<Guid, AgvData?> agvData)
+    {
+        repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
+        repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
     }
 }

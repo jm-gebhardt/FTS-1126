@@ -12,8 +12,8 @@ public class GraphEdgeTest
     [TestMethod]
     public void GetSections_DirectEdge_NoSectionsAndVirtualNodes()
     {
-        var source = new GraphNode("source");
-        var target = new GraphNode("target");
+        var source = NodeGenerator.GenerateNode(nodeId:"source");
+        var target = NodeGenerator.GenerateNode(nodeId:"target");
         var edge = GraphEdge.CreateDirect(source.Id, target.Id);
         (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(source, target);
         virtualNodes.ShouldBeEmpty();
@@ -23,8 +23,8 @@ public class GraphEdgeTest
     [TestMethod]
     public void GetSections_BezierEdge_NoSectionsAndVirtualNodes()
     {
-        var source = new GraphNode("source");
-        var target = new GraphNode("target");
+        var source = NodeGenerator.GenerateNode(nodeId:"source");
+        var target = NodeGenerator.GenerateNode(nodeId:"target");
         var bezier = new Bezier(new List<Vector2>
         {
             new(0, 0),
@@ -41,8 +41,8 @@ public class GraphEdgeTest
     public void GetSections_SlantedEdge_SectionsAndVirtualNodesCalculated()
     {
         const float west = 3f * (float)Math.PI / 2f;
-        var source = new GraphNode("source") { X = 0, Y = 0, Z = 0 };
-        var target = new GraphNode("target") { X = 1, Y = 1, Z = 0 };
+        var source = NodeGenerator.GenerateNode(nodeId:"source", x:0, y:0, z:0);
+        var target = NodeGenerator.GenerateNode(nodeId:"target", x:1, y:1, z:0);
 
         var edge = AgvGraphGenerator.CreateSlantedEdge(source.Id, target.Id, west, 1.0, [source, target]);
         (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(source, target);
@@ -61,8 +61,8 @@ public class GraphEdgeTest
     [TestMethod]
     public void GetSections_PolypathEdge_SectionsAndVirtualNodesCalculated()
     {
-        var source = new GraphNode("source") { X = 0, Y = 0, Z = 0 };
-        var target = new GraphNode("target") { X = 1, Y = 1, Z = 0 };
+        var source = NodeGenerator.GenerateNode(nodeId:"source", x:0, y:0, z:0);
+        var target = NodeGenerator.GenerateNode(nodeId:"target", x:1, y:1, z:0);
         var edge = AgvGraphGenerator.CreatePolypathEdge(source.Id, target.Id,
             [
                 new EdgeCoefficient(0, 1)

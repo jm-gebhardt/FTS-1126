@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -19,9 +18,9 @@ public class ActionGroupChangedConsumerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         await fixture.TestHarness.Bus.Publish(new ActionGroupChanged(actionGroup, actionGroup.CorrelationId));
-
-        (await fixture.TestHarness.Published.Any<ActionGroupChanged>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<ActionGroupChanged>()).ShouldBeTrue();
+        
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHaveConsumedAsync<ActionGroupChanged>();
 
         fixture.PublisherMock.Verify(h => h.SendActionGroupChangedAsync(
             It.IsAny<ActionGroupReadModel>()), Times.Once);

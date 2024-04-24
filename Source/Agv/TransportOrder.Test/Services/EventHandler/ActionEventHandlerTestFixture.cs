@@ -35,7 +35,7 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixture<Acti
 
     public ActionEventHandlerTestFixture AddAgvs(params TransportOrder.Domain.Models.Agv.Agv[] agvs)
     {
-        _agvDb.AddAgvsToMockRepository(agvs);
+        _agvDb.AddAgvs(agvs);
 
         return this;
     }

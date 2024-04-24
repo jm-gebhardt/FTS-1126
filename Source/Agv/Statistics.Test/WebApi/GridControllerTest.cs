@@ -15,14 +15,11 @@ public class GridControllerTest
     {
         var grids = new List<Grid>() { new("a grid", 1, 1, 1, 1, 1, 1) };
         var fixture = new GridControllerTestFixture()
-            .WithGrids(grids);
+            .WithGrids(grids)
+            .Build();
 
-        ActionResult<IEnumerable<GridDto>> response = await fixture.Controller.GetGrids();
+        List<GridDto> gridDtos = (await fixture.GetControllerResultValueAsync(c => c.GetGrids())).ToList();
 
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var gridDtos = result.Value as IList<GridDto>;
         gridDtos.ShouldNotBeNull();
         gridDtos.Count.ShouldBe(grids.Count);
     }
@@ -30,10 +27,9 @@ public class GridControllerTest
     [TestMethod]
     public async Task AddGrid_ValidData_GridAdded()
     {
-        var fixture = new GridControllerTestFixture();
-        var response = await fixture.Controller.AddGrid("name", 1, 1);
-        var result = response as OkResult;
-        result.ShouldNotBeNull();
+        var fixture = new GridControllerTestFixture()
+            .Build();
+        await fixture.GetControllerResultAsync<OkResult>(c => c.AddGrid("name", 1, 1));
         fixture.VerifyGridAdded();
     }
 
@@ -48,15 +44,11 @@ public class GridControllerTest
         var positionFrequency = new PositionFrequency(gridId, mapId, new List<ICollection<float>>());
 
         var fixture = new GridControllerTestFixture()
-            .WithPositionFrequency(positionFrequency);
+            .WithPositionFrequency(positionFrequency)
+            .Build();
+        
+        var positionFrequencyDto = await fixture.GetControllerResultValueAsync(c => c.GetPositionFrequency(gridId, mapId, fromDate, toDate));
 
-        ActionResult<PositionFrequencyDto> response = await fixture.Controller.GetPositionFrequency(gridId, mapId, fromDate, toDate);
-
-        var result = response.Result as OkObjectResult;
-        result.ShouldNotBeNull();
-
-        var positionFrequencyDto = result.Value as PositionFrequencyDto;
-        positionFrequencyDto.ShouldNotBeNull();
         positionFrequencyDto.GridId.ShouldBe(gridId);
         positionFrequencyDto.MapId.ShouldBe(mapId);
     }

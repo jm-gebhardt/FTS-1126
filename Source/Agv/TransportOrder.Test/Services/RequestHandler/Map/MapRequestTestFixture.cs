@@ -85,17 +85,13 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             var correlationId = _correlationIds[i];
             var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
 
-            var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus);
+            var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv);
 
             agvs.Add(agv);
         }
 
-        repositoryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-        repositoryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
-        repositoryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs));
-        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => agvs.Single(a => a.CorrelationId == correlationId));
-
+        repositoryMock.AddAgvs(agvs.ToArray());
         return repositoryMock;
     }
 

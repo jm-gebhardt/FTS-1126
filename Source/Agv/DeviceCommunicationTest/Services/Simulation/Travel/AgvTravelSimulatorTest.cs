@@ -33,15 +33,15 @@ public class AgvTravelSimulatorTest
     }
 
     private readonly AgvGraph _wikiExample = new(Guid.Empty,
-        new GraphNode[]
+        new []
         {
-            new("Nairobi") { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
-            new("Tokyo") { Type = AgvGraph.NodeType.PickDrop, X = 42f, Y = 80f, Z = 0f },
-            new("Marseille") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = 100f, Z = 0f },
-            new("Berlin") { Type = AgvGraph.NodeType.PickDrop, X = 96f, Y = 60f, Z = 0f },
-            new("Denver") { Type = AgvGraph.NodeType.PickDrop, X = 104f, Y = -10f, Z = 0f },
-            new("Helsinki") { Type = AgvGraph.NodeType.PickDrop, X = 150f, Y = 20f, Z = 0f },
-            new("Rio") { Type = AgvGraph.NodeType.PickDrop, X = 200f, Y = 92f, Z = 0f }
+            NodeGenerator.GenerateNode(nodeId:"Nairobi", nodeType:AgvGraph.NodeType.PickDrop, x:0f, y:0f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:"Tokyo", nodeType:AgvGraph.NodeType.PickDrop, x:42f, y:80f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:"Marseille", nodeType:AgvGraph.NodeType.PickDrop, x:104f, y:100f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:"Berlin", nodeType:AgvGraph.NodeType.PickDrop, x:96f, y:60f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:"Denver", nodeType:AgvGraph.NodeType.PickDrop, x:104f, y:-10f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:"Helsinki", nodeType:AgvGraph.NodeType.PickDrop, x:150f, y:20f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:"Rio", nodeType:AgvGraph.NodeType.PickDrop, x:200f, y:92f, z:0f)
         },
         new[]
         {

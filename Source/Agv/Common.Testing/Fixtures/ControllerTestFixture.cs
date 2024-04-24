@@ -1,17 +1,11 @@
-using AutoMapper;
-using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.TransportOrder.Domain.Profiles;
-using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Shouldly;
-using ActionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.ActionProfile;
-using AgvPositionProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvPositionProfile;
 
-namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers;
+namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
 public abstract class ControllerTestFixture<TRequest, TRequestHandler, TController> : MediatorTestFixture<TRequest, TRequestHandler>
     where TRequest : class
@@ -31,24 +25,6 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
     {
         return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>)GetRequestClient() : null!;
     }
-
-    protected override IEnumerable<Profile> GetProfiles() =>
-    [
-        new AgvProfile(),
-        new AgvStatusProfile(),
-        new AgvSettingsProfile(),
-            new CargoProfile(),
-        new AgvGraphProfile(),
-        new AgvPositionProfile(),
-        new MapProfile(),
-        new AgvErrorProfile(),
-        new ActionProfile(),
-        new Messages.Profiles.AgvProfile(),
-        new Messages.Profiles.AgvGraphProfile(),
-        new Messages.Profiles.AgvErrorProfile(),
-        new Messages.Profiles.MapProfile(),
-        new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile()
-    ];
 
     public override MediatorTestFixture<TRequest, TRequestHandler> Build()
     {

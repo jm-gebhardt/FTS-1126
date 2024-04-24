@@ -7,7 +7,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -79,7 +78,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        AgvDb.AddAgvsToMockRepository(agvs);
+        AgvDb.AddAgvs(agvs);
         AgvDb.Setup(r => r.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()))
             .ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv a) => agvs.Any(agv => agv.CorrelationId == a.CorrelationId))
             .Verifiable();
@@ -89,11 +88,11 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     }
 
     [PublicAPI]
-    public AgvCommandHandlerTestFixture SetupAgv(bool hasPendingActions = false, bool graphExists = true)
+    public AgvCommandHandlerTestFixture SetupAgv(bool hasPendingActions = false, bool exists = true)
     {
         _actionGroupRepository.Setup(x =>
             x.AgvHasPendingActions(It.IsAny<Guid>())).ReturnsAsync(hasPendingActions);
-        AgvDb.Setup(x => x.Graphs.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
+        AgvDb.AddAgvGraph(graphExists:exists);
 
         return this;
     }
@@ -129,13 +128,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithGraphExists(bool exists)
     {
-        AgvDb.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(exists);
+        AgvDb.AddAgvGraph(graphExists:exists);
         return this;
     }
 
     public AgvCommandHandlerTestFixture WithoutAgv()
     {
-        AgvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => throw new AgvNotFoundException(id));
+        AgvDb.AddAgvs();
         return this;
     }
 

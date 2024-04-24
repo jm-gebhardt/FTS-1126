@@ -71,22 +71,60 @@ public abstract class MassTransitTestFixture : FixtureBase
         return scheduledMessage;
     }
 
+    /// <summary>
+    /// Publish and consume the message.
+    /// </summary>
+    /// <param name="message">Message to be published.</param>
+    /// <param name="filter">Message filter.</param>
+    /// <typeparam name="T">Type of message to be published.</typeparam>
+    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class, CorrelatedBy<Guid>
+    {
+        await TestHarness.Bus.Publish(message);
+        (await (filter != null ? ConsumedMessages.Any(filter) : ConsumedMessages.Any<T>(s => s.Context.Message.CorrelationId == message.CorrelationId))).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Get the first published message.
+    /// </summary>
+    /// <typeparam name="T">Type of published message.</typeparam>
     public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class
     {
-        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
+        await ShouldHavePublishedAsync<T>();
         var message = TestHarness.Published.Select<T>().First().Context.Message;
         return message;
     }
 
     /// <summary>
-    /// Publish and consume the message
+    /// Publish and return the message.
     /// </summary>
-    /// <param name="message"></param>
-    /// <param name="filter"></param>
-    /// <typeparam name="T"></typeparam>
-    public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class, CorrelatedBy<Guid>
+    /// <param name="message">Message to be published.</param>
+    /// <param name="filter">Message filter.</param>
+    /// <typeparam name="TPublished">Type of message to be published.</typeparam>
+    /// <typeparam name="TReceived">Type of message to be received.</typeparam>
+    public async Task<TReceived> PublishAndGetFirstMessageAsync<TPublished, TReceived>(TPublished message,
+        FilterDelegate<IReceivedMessage<TPublished>>? filter = null)
+        where TPublished : class, CorrelatedBy<Guid>
+        where TReceived : class
     {
-        await TestHarness.Bus.Publish(message);
-        (await (filter != null ? ConsumedMessages.Any(filter) : ConsumedMessages.Any<T>(s => s.Context.Message.CorrelationId == message.CorrelationId))).ShouldBeTrue();
+        await PublishMessageAsync(message, filter);
+        return await GetFirstPublishedMessageAsync<TReceived>();
+    }
+
+    /// <summary>
+    /// Make sure the message has been published.
+    /// </summary>
+    /// <typeparam name="T">Type of published message.</typeparam>
+    public async Task ShouldHavePublishedAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Make sure the message has not been published.
+    /// </summary>
+    /// <typeparam name="T">Type of published message.</typeparam>
+    public async Task ShouldNotHavePublishedAsync<T>() where T : class
+    {
+        (await TestHarness.Published.Any<T>()).ShouldBeFalse();
     }
 }

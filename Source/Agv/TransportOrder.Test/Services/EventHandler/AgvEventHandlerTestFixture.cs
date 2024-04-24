@@ -63,13 +63,13 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithAgvGraph(AgvGraph agvGraph)
     {
-        _agvDb.Setup(x => x.Graphs.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(agvGraph);
+        _agvDb.AddAgvGraph(agvGraph);
         return this;
     }
 
     public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.AddAgvsToMockRepository(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
     }
 
     public void AddChargeAction(ActionGroup actionGroup = null!, bool existsPriorToTest = true)

@@ -51,7 +51,7 @@ public class SlantedEdgeTest
     {
         var slanted = new SlantedEdge(Edge, Source, Target);
         double entryAngle = Mathematics.ConvertToRadians(90);
-        slanted.SetAngles(entryAngle, Target, new GraphNode("") { X = 4, Y = 0 });
+        slanted.SetAngles(entryAngle, Target, NodeGenerator.GenerateNode(nodeId:"", x: 4, y:0));
         slanted.EntryAngle.ShouldBe(entryAngle);
         slanted.ExitAngle.ShouldBe(Mathematics.ConvertToRadians(45), tolerance: 0.001);
     }

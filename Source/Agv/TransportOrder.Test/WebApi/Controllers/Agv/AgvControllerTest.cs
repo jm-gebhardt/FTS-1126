@@ -386,7 +386,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task MoveAgv_Ok()
     {
-        var targetNode = new GraphNode("target");
+        var targetNode = NodeGenerator.GenerateNode(nodeId:"target");
         AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)
@@ -400,7 +400,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task ChargeAgvAtCharger_Ok()
     {
-        var targetNode = new GraphNode("charger") { Type = AgvGraph.NodeType.Charge };
+        var targetNode =  NodeGenerator.GenerateNode(nodeId:"target", nodeType:AgvGraph.NodeType.Charge);
         AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)

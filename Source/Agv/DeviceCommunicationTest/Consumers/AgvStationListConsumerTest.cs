@@ -35,15 +35,15 @@ public class AgvStationListConsumerTest
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
         // Did the test publish MqttStationList ...
-        (await fixture.TestHarness.Published.Any<MqttStationList>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<MqttStationList>();
         // ... and has the message been consumed?
-        var consumed = fixture.ConsumerHarness.Consumed.Select<MqttStationList>().First().Context.Message;
+        var consumed = await fixture.GetFirstConsumedMessageAsync<MqttStationList>();
         consumed.SerialNumber.ShouldBe(AgvSerialNumber);
 
         // Did the consumer forward a StationList message ...
-        (await fixture.TestHarness.Published.Any<InternalStationListReceived>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<InternalStationListReceived>();
         // ... with expected content?
-        var published = fixture.TestHarness.Published.Select<InternalStationListReceived>().First().Context.Message;
+        var published = await fixture.GetFirstPublishedMessageAsync<InternalStationListReceived>();
         published.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
         published.StationList.SerialNumber.ShouldBe(AgvSerialNumber);
         published.StationList.Stations.Length.ShouldBe(2);

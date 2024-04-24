@@ -20,7 +20,7 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
     public RouteRequestHandlerTestFixture<TRequestClient> WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         _agvs.Add(agv);
-        _agvDb.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync((AgvData?)null);
+        _agvDb.AddAgvData((AgvData?)null);
         return this;
     }
 
@@ -35,7 +35,7 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
     {
         AddServices(s => s.AddTransient(_ => _agvDb.Object));
         AddServices(s => s.AddTransient(_ => _routeServiceMock.Object));
-        _agvDb.AddAgvsToMockRepository(_agvs);
+        _agvDb.AddAgvs(_agvs);
         base.Build();
 
         return this;

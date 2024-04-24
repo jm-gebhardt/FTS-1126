@@ -23,7 +23,7 @@ public class AgvStateConsumerTest
         var fixture = new AgvStateConsumerTestFixture();
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState("", ""), null);
 
-        (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<AgvStatusReceived>();
     }
 
     /// <summary>
@@ -37,14 +37,14 @@ public class AgvStateConsumerTest
         const string orderId = "Order123";
 
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId), null);
-        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<MqttState>();
 
-        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();
         consumedState.SerialNumber.ShouldBe(agvTestIdentifier);
 
-        (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvStatusReceived>();
 
-        var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
+        var publishedStatus = await fixture.GetFirstPublishedMessageAsync<AgvStatusReceived>();
         publishedStatus.CorrelationId.ShouldBe(agvTestIdentifier.ToGuid());
         publishedStatus.SerialNumber.ShouldBe(agvTestIdentifier);
     }
@@ -67,15 +67,15 @@ public class AgvStateConsumerTest
             AgvPosition = null
         }, null);
 
-        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<MqttState>();
 
-        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();
         consumedState.LastNodeId.ShouldBe(sentLastNodeId);
 
-        var publishedStatus = fixture.TestHarness.Published.Select<AgvStatusReceived>().First().Context.Message;
+        var publishedStatus = await fixture.GetFirstPublishedMessageAsync<AgvStatusReceived>();
         publishedStatus.AgvStatus.LastNodeId.ShouldBe(receivedLastNodeId);
 
-        (await fixture.TestHarness.Published.Any<AgvPositionReceived>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<AgvPositionReceived>();
     }
 
     [TestMethod]
@@ -98,9 +98,9 @@ public class AgvStateConsumerTest
             }
         }, null);
 
-        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<MqttState>();
 
-        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();
         consumedState.AgvPosition.ShouldNotBeNull();
         if (deviationRange == null)
         {
@@ -115,7 +115,7 @@ public class AgvStateConsumerTest
         consumedState.AgvPosition.X.ShouldBe(x, 0.00001);
         consumedState.AgvPosition.Y.ShouldBe(y, 0.00001);
 
-        var publishedPos = fixture.TestHarness.Published.Select<AgvPositionReceived>().First().Context.Message;
+        var publishedPos = await fixture.GetFirstPublishedMessageAsync<AgvPositionReceived>();
         publishedPos.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
         publishedPos.SerialNumber.ShouldBe(AgvSerialNumber);
         publishedPos.AgvPosition.PositionInitialized.ShouldBe(positionInitialized);
@@ -152,10 +152,10 @@ public class AgvStateConsumerTest
             Errors = expectedErrors
         }, null);
 
-        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<MqttState>()).ShouldBeTrue();
-
-        var agvErrorStatus = fixture.TestHarness.Published.Select<AgvErrorStatusReceived>().First().Context.Message;
+        await fixture.ShouldHavePublishedAsync<MqttState>();
+        await fixture.ShouldHaveConsumedAsync<MqttState>();
+        
+        var agvErrorStatus = await fixture.GetFirstPublishedMessageAsync<AgvErrorStatusReceived>();
         agvErrorStatus.Errors.ShouldNotBeNull();
         agvErrorStatus.Errors.Count.ShouldBe(1);
         agvErrorStatus.Errors.First().ShouldSatisfyAllConditions(
@@ -187,15 +187,15 @@ public class AgvStateConsumerTest
         };
 
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId) { Loads = loadList }, null);
-        (await fixture.TestHarness.Published.Any<MqttState>()).ShouldBeTrue();
-
-        var consumedState = fixture.ConsumerHarness.Consumed.Select<MqttState>().First().Context.Message;
+        await fixture.ShouldHavePublishedAsync<MqttState>();
+        
+        var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();
         consumedState.SerialNumber.ShouldBe(agvTestIdentifier);
 
-        (await fixture.TestHarness.Published.Any<AgvStatusReceived>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<AgvLoadStatusReceived>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvStatusReceived>();
+        await fixture.ShouldHavePublishedAsync<AgvLoadStatusReceived>();
 
-        var publishedLoadStatus = fixture.TestHarness.Published.Select<AgvLoadStatusReceived>().First().Context.Message;
+        var publishedLoadStatus = await fixture.GetFirstPublishedMessageAsync<AgvLoadStatusReceived>();
         publishedLoadStatus.Cargos.Count.ShouldBe(2);
         publishedLoadStatus.Cargos.First().LoadId.ShouldBe(cargoId + "1");
         publishedLoadStatus.Cargos.First().Dimension!.Height.ShouldBe(dimensionHeight);

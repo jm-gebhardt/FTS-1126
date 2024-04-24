@@ -91,8 +91,8 @@ public class StartActionCommandConsumerTest
         var fixture = new StartActionCommandConsumerTestFixture();
         var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
         await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
-        (await fixture.TestHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-        (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.ShouldHavePublishedAsync<StartActionCommand>();
 
         IPublishedMessage<Fault<StartActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<StartActionCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e => e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);

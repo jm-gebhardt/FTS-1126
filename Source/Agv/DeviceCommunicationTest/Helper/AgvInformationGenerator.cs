@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Services;
 
@@ -71,13 +72,13 @@ public static class AgvInformationGenerator
     {
         return new[]
         {
-            new GraphNode(_sources[3]) { Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f },
-            new GraphNode(_sources[0]) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 0f, Z = 0f },
-            new GraphNode(_sources[1]) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 0f, Z = 0f },
-            new GraphNode(_destinations[0]) { Type = AgvGraph.NodeType.PickDrop, X = 0f, Y = 3f, Z = 0f },
-            new GraphNode(_destinations[1]) { Type = AgvGraph.NodeType.PickDrop, X = 4f, Y = 3f, Z = 0f },
-            new GraphNode(_sources[2]) { Type = AgvGraph.NodeType.Charge, X = 6f, Y = 9f, Z = 0f },
-            new GraphNode(_destinations[2]) { Type = AgvGraph.NodeType.PickDrop, X = 13f, Y = 5f, Z = 0f }
+            NodeGenerator.GenerateNode(nodeId:_sources[3], nodeType:AgvGraph.NodeType.Charge, x:-2f, y:-2f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:_sources[0], nodeType:AgvGraph.NodeType.PickDrop, x:0f, y:0f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:_sources[1], nodeType:AgvGraph.NodeType.PickDrop, x:4f, y:0f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:_destinations[0], nodeType:AgvGraph.NodeType.PickDrop, x:0f, y:3f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:_destinations[1], nodeType:AgvGraph.NodeType.PickDrop, x:4f, y:3f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:_sources[2], nodeType:AgvGraph.NodeType.Charge, x:6f, y:9f, z:0f),
+            NodeGenerator.GenerateNode(nodeId:_destinations[2], nodeType:AgvGraph.NodeType.PickDrop, x:13f, y:5f, z:0f)
         };
     }
 }

@@ -1,8 +1,11 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +49,12 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         return controller;
     }
+    
+    protected override IEnumerable<Profile> GetProfiles() =>
+    [
+        new MapProfile(),
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.MapProfile()
+    ];
 
     private Mock<IMapRepository> GetMapRepository()
     {
@@ -53,9 +62,9 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
         {
-            new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
-            new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
-            new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
+            MapGenerator.Generate(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
+            MapGenerator.Generate(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),  
+            MapGenerator.Generate(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
         }));
         mapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
 
@@ -76,17 +85,13 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var correlationId = _correlationIds[i];
             var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
 
-            var agv = new TransportOrder.Domain.Models.Agv.Agv(correlationId, Guid.NewGuid(),  agvSerialNumber, agvStatus);
+            var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);
 
             agvs.Add(agv);
         }
 
-        repositoryMock.SetupGet(x => x.Count).Returns(agvs.Count);
-        repositoryMock.Setup(x => x.GetIdleAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs.Where(x => x.CurrentAgvState == AgvState.Idle)));
-        repositoryMock.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv>(agvs));
-        repositoryMock.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => agvs.Single(a => a.CorrelationId == correlationId));
-
+        repositoryMock.AddAgvs(agvs.ToArray());
         return repositoryMock;
     }
 

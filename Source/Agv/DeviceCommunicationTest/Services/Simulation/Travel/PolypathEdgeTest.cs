@@ -51,7 +51,7 @@ public class PolypathEdgeTest
     {
         var polypath = new Polypath(Edge, Source, Target);
         double entryAngle = Mathematics.ConvertToRadians(90);
-        polypath.SetAngles(entryAngle, Target, new GraphNode("") { X = 4, Y = 0 });
+        polypath.SetAngles(entryAngle, Target, NodeGenerator.GenerateNode(nodeId:"", x:4, y:0));
         polypath.EntryAngle.ShouldBe(entryAngle);
         polypath.ExitAngle.ShouldBe(Mathematics.ConvertToRadians(45), tolerance: 0.001);
     }

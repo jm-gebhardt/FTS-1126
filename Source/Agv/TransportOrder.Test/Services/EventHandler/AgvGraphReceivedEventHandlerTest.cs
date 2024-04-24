@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -14,9 +15,8 @@ public class AgvGraphReceivedEventHandlerTest
         var fixture = new AgvGraphReceivedEventHandlerTestFixture()
             .WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns(true);
 
-        await fixture.PublishMessageAsync(fixture.AgvGraphReceived);
-
-        var agvGraphChanged = await fixture.GetFirstPublishedMessageAsync<AgvGraphChanged>();
+        var agvGraphChanged = await fixture.PublishAndGetFirstMessageAsync<AgvGraphReceived, AgvGraphChanged>(
+            fixture.AgvGraphReceived);
 
         agvGraphChanged.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.CorrelationId);
     }
@@ -27,9 +27,8 @@ public class AgvGraphReceivedEventHandlerTest
         var fixture = new AgvGraphReceivedEventHandlerTestFixture()
             .WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns(false);
 
-        await fixture.PublishMessageAsync(fixture.AgvGraphReceived);
-
-        var graphMissing = await fixture.GetFirstPublishedMessageAsync<GraphMissing>();
+        var graphMissing = await fixture.PublishAndGetFirstMessageAsync<AgvGraphReceived, GraphMissing>(
+            fixture.AgvGraphReceived);
 
         graphMissing.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.CorrelationId);
     }

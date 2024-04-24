@@ -4,54 +4,45 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
-using MassTransit;
-using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.ActionGroup;
 
 public class ActionGroupsControllerTestFixture : MockRequestClientControllerTestFixture<ActionGroupsController>
 {
-    private readonly Mock<IRequestClient<GetActionGroups>> _getAgvActionGroupsRequest = new();
-    private readonly Mock<IRequestClient<GetActionGroupCountsByState>> _getAgvActionGroupCountsByStateRequest = new();
-    private readonly Mock<IRequestClient<GetActionGroupStatistics>> _durationStatisticsRequest = new();
+    private GotActionGroupStatistics _gotActionGroupStatistics = null!;
+    private GotActionGroups _gotActionGroups = null!;
+    private GotActionGroupCountsByState _gotActionGroupCountsByState = null!;
 
     protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile()];
 
-    public ActionGroupsControllerTestFixture()
+    protected override void SetupController()
     {
-        AddRequestClientMock(_getAgvActionGroupsRequest);
-        AddRequestClientMock(_getAgvActionGroupCountsByStateRequest);
-        AddRequestClientMock(_durationStatisticsRequest);
-        Build();
+        AddRequestClient<GetActionGroupStatistics, GotActionGroupStatistics>(() => _gotActionGroupStatistics);
+        AddRequestClient<GetActionGroups, GotActionGroups>(() => _gotActionGroups);
+        AddRequestClient<GetActionGroupCountsByState, GotActionGroupCountsByState>(() => _gotActionGroupCountsByState);
     }
-
+    
+    public new ActionGroupsControllerTestFixture Build()
+    {
+        base.Build();
+        return this;
+    }
+    
     public ActionGroupsControllerTestFixture WithDurationStatistics(ICollection<DurationStatistics> durationStatistics)
     {
-        _durationStatisticsRequest.Setup(x => x.GetResponse<GotActionGroupStatistics>(
-                    It.IsAny<GetActionGroupStatistics>(),
-                    default,
-                    default)
-                .Result.Message)
-            .Returns(new GotActionGroupStatistics(durationStatistics));
+        _gotActionGroupStatistics = new GotActionGroupStatistics(durationStatistics);
         return this;
     }
 
     public ActionGroupsControllerTestFixture WithActionGroups(IReadOnlyCollection<ActionGroupReadModel> actionGroups)
     {
-        _getAgvActionGroupsRequest.Setup(x => x.GetResponse<GotActionGroups>(
-                It.IsAny<GetActionGroups>(), default, default).Result.Message)
-            .Returns(new GotActionGroups(actionGroups));
+        _gotActionGroups = new GotActionGroups(actionGroups);
         return this;
     }
 
     public ActionGroupsControllerTestFixture WithActionGroupCount(IList<AgvGroupCountByState> groupCount)
     {
-        _getAgvActionGroupCountsByStateRequest.Setup(x => x.GetResponse<GotActionGroupCountsByState>(
-                    It.IsAny<GetActionGroupCountsByState>(),
-                    default,
-                    default)
-                .Result.Message)
-            .Returns(new GotActionGroupCountsByState(groupCount));
+        _gotActionGroupCountsByState = new GotActionGroupCountsByState(groupCount);
         return this;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -13,9 +14,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsPickStation_PickTypes_True(AgvGraph.NodeType nodeType)
     {
-        var node = new GraphNode("id") { Type = nodeType };
-
-        node.IsPickStation().ShouldBeTrue();
+        NodeGenerator.GenerateNode(nodeId:"id", nodeType: nodeType).IsPickStation().ShouldBeTrue();
     }
 
     [DataTestMethod]
@@ -24,9 +23,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.WayPoint)]
     public void IsPickStation_NonPickTypes_False(AgvGraph.NodeType nodeType)
     {
-        var node = new GraphNode("id") { Type = nodeType };
-
-        node.IsPickStation().ShouldBeFalse();
+        NodeGenerator.GenerateNode(nodeId:"id", nodeType: nodeType).IsPickStation().ShouldBeFalse();
     }
 
     [DataTestMethod]
@@ -34,9 +31,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsDropStation_DropTypes_True(AgvGraph.NodeType nodeType)
     {
-        var node = new GraphNode("id") { Type = nodeType };
-
-        node.IsDropStation().ShouldBeTrue();
+        NodeGenerator.GenerateNode(nodeId:"id", nodeType: nodeType).IsDropStation().ShouldBeTrue();
     }
 
     [DataTestMethod]
@@ -45,8 +40,6 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.WayPoint)]
     public void IsDropStation_NonDropTypes_False(AgvGraph.NodeType nodeType)
     {
-        var node = new GraphNode("id") { Type = nodeType };
-
-        node.IsDropStation().ShouldBeFalse();
+        NodeGenerator.GenerateNode(nodeId:"id", nodeType: nodeType).IsDropStation().ShouldBeFalse();
     }
 }

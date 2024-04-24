@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Maps;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -59,8 +60,8 @@ public class GeneratedMapGeneratorTest
         var graph = new AgvGraph(Guid.Empty,
             new[]
             {
-                new GraphNode("S1") { Type = AgvGraph.NodeType.Pick, X = 1000f, Y = 1000f, Z = 0f },
-                new GraphNode("D1") { Type = AgvGraph.NodeType.Drop, X = 1010f, Y = 1010f, Z = 0f }
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.Pick, 1000f, 1000f, nodeId:"S1"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.Drop, 1010f, 1010f, nodeId:"D1")
             },
             new[]
             {

@@ -16,9 +16,8 @@ public class GraphEventHandlerTest
         var fixture = new GraphEventHandlerTestFixture();
         var graphChanged = new GraphChanged(Guid.NewGuid(), GraphGenerator.CreateDefaultGraph(), new List<Map>());
 
-        await fixture.PublishMessageAsync(graphChanged);
-
-        var updateGraph = await fixture.GetFirstPublishedMessageAsync<UpdateGraph>();
+        var updateGraph = await fixture.PublishAndGetFirstMessageAsync<GraphChanged, UpdateGraph>(
+            graphChanged);
 
         updateGraph.CorrelationId.ShouldBe(graphChanged.CorrelationId);
         updateGraph.Graph.ShouldBeEquivalentTo(graphChanged.Graph);

@@ -50,6 +50,12 @@ public static class AgvGenerator
     {
         return GenerateAgv(serialNumber, agvName);
     }
+    
+    [UsedImplicitly]
+    public static Agv GenerateRawAgv(Guid correlationId, string serialNumber, AgvStatus? agvStatus = null)
+    {
+        return GenerateAgv(correlationId, serialNumber, agvStatus);
+    }
 
     private static Agv GenerateAgv(
         AgvState agvState,
@@ -76,6 +82,12 @@ public static class AgvGenerator
     private static Agv GenerateAgv(string serialNumber, string? agvName = null)
     {
         var agv = new Agv(serialNumber, Guid.NewGuid(), agvName);
+        return agv;
+    }
+    
+    private static Agv GenerateAgv(Guid correlationId, string serialNumber, AgvStatus? agvStatus = null)
+    {
+        var agv = new Agv(correlationId, Guid.NewGuid(), serialNumber, agvStatus);
         return agv;
     }
 

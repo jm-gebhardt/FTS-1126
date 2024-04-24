@@ -14,39 +14,39 @@ namespace Gebhardt.Acc.Statistics.Test.WebApi;
 
 public class GridControllerTestFixture : MockRequestClientControllerTestFixture<GridController>
 {
-    private Mock<IRequestClient<GetPositionFrequencies>> GetPositionFrequencyClient { get; } = new();
-
-    private Mock<IRequestClient<GetGrids>> GetGridsClient { get; } = new();
-
-    private Mock<IRequestClient<AddGrid>> AddGridClient { get; } = new();
+    private Mock<IRequestClient<AddGrid>> _addGridClient = null!;
+    private GotPositionFrequencies _gotPositionFrequencies = null!;
+    private GotGrids _gotGrids = null!;
 
     protected override IEnumerable<Profile> GetProfiles() => [new GridProfile(), new PositionFrequencyProfile()];
 
-    public GridControllerTestFixture()
+    protected override void SetupController()
     {
-        AddGridClient.Setup(x => x.GetResponse<Success>(It.IsAny<AddGrid>(), default, default)).Verifiable();
-        AddRequestClientMock(GetPositionFrequencyClient);
-        AddRequestClientMock(GetGridsClient);
-        AddRequestClientMock(AddGridClient);
-        Build();
+        AddRequestClient<GetPositionFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
+        AddRequestClient<GetGrids, GotGrids>(() => _gotGrids);
+        _addGridClient = AddRequestClient<AddGrid, Success>(new Success());
+    }
+
+    public new GridControllerTestFixture Build()
+    {
+        base.Build();
+        return this;
     }
 
     public GridControllerTestFixture WithGrids(List<Grid> grids)
     {
-        GetGridsClient.Setup(x => x.GetResponse<GotGrids>(It.IsAny<GetGrids>(), default, default)
-            .Result.Message).Returns(new GotGrids(grids));
+        _gotGrids = new GotGrids(grids);
         return this;
     }
 
     public GridControllerTestFixture WithPositionFrequency(PositionFrequency positionFrequency)
     {
-        GetPositionFrequencyClient.Setup(x => x.GetResponse<GotPositionFrequencies>(It.IsAny<GetPositionFrequencies>(), default, default)
-            .Result.Message).Returns(new GotPositionFrequencies(positionFrequency));
+        _gotPositionFrequencies = new GotPositionFrequencies(positionFrequency);
         return this;
     }
 
     public void VerifyGridAdded()
     {
-        AddGridClient.Verify(x => x.GetResponse<Success>(It.IsAny<AddGrid>(), default, default), Times.Once);
+        _addGridClient.Verify(x => x.GetResponse<Success>(It.IsAny<AddGrid>(), default, default), Times.Once);
     }
 }

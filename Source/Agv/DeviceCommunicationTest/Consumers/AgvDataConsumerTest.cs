@@ -30,7 +30,7 @@ public class AgvDataConsumerTest
 
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
-        (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<AgvDataReceived>();
     }
 
     /// <summary>
@@ -49,11 +49,11 @@ public class AgvDataConsumerTest
         };
         var message = new MqttAgvData(AgvSerialNumber, "Karis", "BF1", "127.0.0.1", "v3.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
-        (await fixture.TestHarness.Published.Any<MqttAgvData>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<MqttAgvData>();
 
         var consumedMessage = fixture.ConsumerHarness.Consumed.Select<MqttAgvData>().First().Context.Message;
         consumedMessage.SerialNumber.ShouldBe(AgvSerialNumber);
-        (await fixture.TestHarness.Published.Any<AgvDataReceived>()).ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvDataReceived>();
 
         var publishedData = fixture.TestHarness.Published.Select<AgvDataReceived>().First().Context.Message;
         publishedData.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());

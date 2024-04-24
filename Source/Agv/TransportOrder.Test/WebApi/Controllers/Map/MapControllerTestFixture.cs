@@ -1,7 +1,10 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +39,12 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         var controller = new MapController(Mapper, getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient);
         return controller;
     }
+    
+    protected override IEnumerable<Profile> GetProfiles() =>
+    [
+        new MapProfile(),
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.MapProfile()
+    ];
 
     private Mock<IMapRepository> GetMapRepository()
     {

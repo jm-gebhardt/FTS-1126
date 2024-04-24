@@ -50,7 +50,7 @@ public class MapControllerTest
         actualNodeStates.ShouldNotBeNull();
         actualNodeStates.Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState })
             .ShouldBe(fixture.Mapper.Map<ICollection<NodeStateDto>>(nodeStates).Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState }));
-
+        
         (await fixture.MediatorTestHarness.Published.Any<GetMapNodeStates>()).ShouldBeTrue();
         (await fixture.MediatorTestHarness.Consumed.Any<GotMapNodeStates>()).ShouldBeTrue();
     }

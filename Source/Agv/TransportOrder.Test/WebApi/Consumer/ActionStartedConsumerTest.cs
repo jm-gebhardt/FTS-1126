@@ -6,7 +6,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -24,9 +23,9 @@ public class ActionStartedConsumerTest
         var action = AgvActionGenerator.GenerateMoveAction();
 
         await fixture.TestHarness.Bus.Publish(new ActionStarted(action.CorrelationId, agvCorrelationId));
-
-        (await fixture.TestHarness.Published.Any<ActionStarted>()).ShouldBeTrue();
-        (await fixture.ConsumerHarness.Consumed.Any<ActionStarted>()).ShouldBeTrue();
+        
+        await fixture.ShouldHavePublishedAsync<ActionStarted>();
+        await fixture.ShouldHaveConsumedAsync<ActionStarted>();
         agvRouteRetrievalService.Verify(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string>()), Times.Once);
         fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(agvRoute), Times.Once);
     }

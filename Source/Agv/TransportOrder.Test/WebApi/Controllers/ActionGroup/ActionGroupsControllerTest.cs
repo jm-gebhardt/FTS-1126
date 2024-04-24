@@ -39,7 +39,9 @@ public class ActionGroupsControllerTest
                         null)
                 ], false, false, [])
         };
-        var fixture = new ActionGroupsControllerTestFixture().WithActionGroups(actionGroups);
+        var fixture = new ActionGroupsControllerTestFixture()
+            .WithActionGroups(actionGroups)
+            .Build();
 
         List<ActionGroupDto> actionGroupDtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroups([ActionGroupState.Created], null, null, null, 100))).ToList();
 
@@ -53,7 +55,8 @@ public class ActionGroupsControllerTest
         var actionGroupCounts = new AgvGroupCountByState(ActionGroupState.Created, 1);
 
         var fixture = new ActionGroupsControllerTestFixture()
-            .WithActionGroupCount([actionGroupCounts]);
+            .WithActionGroupCount([actionGroupCounts])
+            .Build();
 
         List<AgvGroupCountByStateDto> dtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroupCountsByState())).ToList();
 
@@ -76,7 +79,8 @@ public class ActionGroupsControllerTest
                 22)
         };
         var fixture = new ActionGroupsControllerTestFixture()
-            .WithDurationStatistics(durationStatistics);
+            .WithDurationStatistics(durationStatistics)
+            .Build();
 
         List<ActionDurationStatisticsDto> durationStatisticsDtos = (await fixture.GetControllerResultValueAsync(c => c.GetDurationStatistics("source", "target"))).ToList();
 
