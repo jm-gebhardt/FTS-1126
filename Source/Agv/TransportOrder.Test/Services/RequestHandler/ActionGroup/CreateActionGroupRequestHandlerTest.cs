@@ -25,7 +25,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup("a known source", "a known target", "unknown agv".ToGuid())));
+                new CreatePickDropActionGroup("a known source", "a known target", "unknown agv".ToGuid(), false, ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
@@ -38,7 +38,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup("an unknown source", targetNode.Id, null)));
+                new CreatePickDropActionGroup("an unknown source", targetNode.Id, null, false, ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
@@ -52,7 +52,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null, false, ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
@@ -66,7 +66,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, "an unknown target", null)));
+                new CreatePickDropActionGroup(sourceNode.Id, "an unknown target", null, false, ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
@@ -80,7 +80,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null, false, ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
@@ -95,7 +95,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupInvalidException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null, false, ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
@@ -110,9 +110,11 @@ public class CreateActionGroupRequestHandlerTest
             .WithValidationResult(new ValidationResult())
             .Build();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, agv));
+        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, agv, false, ActionGroupCreator.TransportOrderWebApi));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBe(agv);
+        response.Message.ActionGroup.HasPriority.ShouldBeFalse();
+        response.Message.ActionGroup.IsManual.ShouldBeTrue();
         var pickAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).First();
         pickAction.ActionType.ShouldBe(ActionType.Pick);
         pickAction.TargetNodeId.ShouldBe(sourceNode.Id);
@@ -136,9 +138,41 @@ public class CreateActionGroupRequestHandlerTest
             .WithValidationResult(new ValidationResult())
             .Build();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null));
+        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, null, false, ActionGroupCreator.TransportOrderWebApi));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBeNull();
+        response.Message.ActionGroup.HasPriority.ShouldBeFalse();
+        response.Message.ActionGroup.Creator.ShouldBe(ActionGroupCreator.TransportOrderWebApi);
+        response.Message.ActionGroup.IsManual.ShouldBeTrue();
+        var pickAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).First();
+        pickAction.ActionType.ShouldBe(ActionType.Pick);
+        pickAction.TargetNodeId.ShouldBe(sourceNode.Id);
+        var dropAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).Last();
+        dropAction.ActionType.ShouldBe(ActionType.Drop);
+        dropAction.TargetNodeId.ShouldBe(targetNode.Id);
+        (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.ActionGroups.Events.ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+
+        fixture.ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_CreatePickDropActionGroup_WithPriority_PublishesActionGroupCreatedWithHasPriorityTrue()
+    {
+        var agv = Guid.NewGuid();
+        var sourceNode = new GraphNode("a known source") { Type = AgvGraph.NodeType.Pick };
+        var targetNode = new GraphNode("a known target") { Type = AgvGraph.NodeType.Drop };
+        var fixture = new CreateActionGroupRequestHandlerTestFixture()
+            .WithAgvExists(true)
+            .WithNodes([sourceNode, targetNode])
+            .WithValidationResult(new ValidationResult())
+            .Build();
+
+        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, agv, true, ActionGroupCreator.TransportOrderWebApi));
+
+        response.Message.ActionGroup.AssignedAgv.ShouldBe(agv);
+        response.Message.ActionGroup.HasPriority.ShouldBeTrue();
+        response.Message.ActionGroup.IsManual.ShouldBeTrue();
         var pickAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).First();
         pickAction.ActionType.ShouldBe(ActionType.Pick);
         pickAction.TargetNodeId.ShouldBe(sourceNode.Id);

@@ -80,7 +80,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
             .NotEmpty()
             .WithReason(Reasons.ActionsMustBeSet);
 
-        When(p => p.IsManual, () =>
+        When(p => p.IsManual && p.HasPriority, () =>
         {
             RuleFor(p => p.Actions)
                 .Must(actions => actions.Count == 1)

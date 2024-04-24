@@ -87,6 +87,11 @@ public class ActionGroup
     public TimeSpan? EstimatedDuration { get; set; }
 
     /// <summary>
+    /// If true, then this ActionGroup has priority over others (starts immediately).
+    /// </summary>
+    public bool HasPriority { get; init; }
+
+    /// <summary>
     /// Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
     /// </summary>
     [UsedImplicitly]
@@ -100,10 +105,12 @@ public class ActionGroup
     /// <param name="creator">The creator of this <see cref="ActionGroup"/>.</param>
     /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/>.</param>
     /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system.</param>
-    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false) : this(correlationId, orderId)
+    /// <param name="hasPriority">If true, then this <see cref="ActionGroup"/> has priority over others.</param>
+    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false, bool hasPriority=false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
+        HasPriority = hasPriority;
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
         Actions = actions.ToList();
         Creator = creator;

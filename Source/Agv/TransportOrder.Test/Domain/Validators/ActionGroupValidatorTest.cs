@@ -69,7 +69,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenIsManualIsTrueAndActionsCountIsMoreThanOne_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(hasPriority: true);
         actionGroup.IsManual = true;
 
         var fixture = new ActionGroupValidatorTestFixture()

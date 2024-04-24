@@ -15,7 +15,7 @@ public class ActionGroupHubTest
     public async Task SendActionGroupCreatedAsync_SendsActionGroupChanged_To_ActionGroupCreated()
     {
         PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
-        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, new List<Reason>());
+        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, false, new List<Reason>());
         var expectedDto = Mock.Of<ActionGroupDto>();
 
         fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
@@ -29,7 +29,7 @@ public class ActionGroupHubTest
     public async Task SendActionGroupChangedAsync_SendsActionGroupChanged_To_ActionGroupChanged()
     {
         PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
-        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, new List<Reason>());
+        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, false, new List<Reason>());
         var expectedDto = Mock.Of<ActionGroupDto>();
 
         fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);

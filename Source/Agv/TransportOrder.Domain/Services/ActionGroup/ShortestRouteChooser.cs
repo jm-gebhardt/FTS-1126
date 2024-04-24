@@ -70,7 +70,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     {
         IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
 
-        var manualActionGroup = notStartedActionGroups.FirstOrDefault(g => g.IsManual);
+        var manualActionGroup = notStartedActionGroups.OrderByDescending(g => g.HasPriority).FirstOrDefault(g => g.IsManual);
 
         if (manualActionGroup != null)
         {

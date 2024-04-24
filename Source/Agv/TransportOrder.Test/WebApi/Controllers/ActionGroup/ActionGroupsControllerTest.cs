@@ -37,7 +37,7 @@ public class ActionGroupsControllerTest
                         DateTime.UtcNow,
                         null,
                         null)
-                ], false, [])
+                ], false, false, [])
         };
         var fixture = new ActionGroupsControllerTestFixture().WithActionGroups(actionGroups);
 

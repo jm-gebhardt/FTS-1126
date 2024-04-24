@@ -54,9 +54,9 @@ public class CreateActionGroupRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (string sourceNode, string targetNode, Guid? agvCorrelationId) = await ValidateMessageContent(context);
+        (string sourceNode, string targetNode, Guid? agvCorrelationId, bool hasPriority, var creator) = await ValidateMessageContent(context);
 
-        var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, agvCorrelationId);
+        var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, agvCorrelationId, hasPriority, creator);
         await _actionGroupRepository.AddAsync(actionGroup);
         _logger.LogOrderInformation(LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(), actionGroup.CorrelationId, "Order created", $"Order {actionGroup.OrderId} was created successfully");
 
@@ -66,7 +66,7 @@ public class CreateActionGroupRequestHandler :
 
     private async Task<CreatePickDropActionGroup> ValidateMessageContent(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (string source, string target, Guid? agvCorrelationId) = context.Message;
+        (string source, string target, Guid? agvCorrelationId, _, _) = context.Message;
 
         // validate agv existence 
         if (agvCorrelationId != null)
@@ -105,7 +105,7 @@ public class CreateActionGroupRequestHandler :
         return (nodes.SelectById(source), nodes.SelectById(target));
     }
 
-    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(string sourceNode, string targetNode, Guid? agvCorrelationId)
+    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(string sourceNode, string targetNode, Guid? agvCorrelationId, bool hasPriority, ActionGroupCreator creator)
     {
         var correlationId = Guid.NewGuid();
 
@@ -117,8 +117,10 @@ public class CreateActionGroupRequestHandler :
                 new(Guid.NewGuid(), ActionType.Pick, sourceNode, correlationId) {Sequence = 0},
                 new(Guid.NewGuid(), ActionType.Drop, targetNode, correlationId) {Sequence = 1}
             },
-            creator: ActionGroupCreator.TransportOrderWebApi,
-            assignedAgv: agvCorrelationId
+            creator: creator,
+            assignedAgv: agvCorrelationId,
+            isManual: creator == ActionGroupCreator.TransportOrderWebApi,
+            hasPriority: hasPriority
         );
 
         var validationResult = await _actionGroupValidationService.ValidateAsync(actionGroup);

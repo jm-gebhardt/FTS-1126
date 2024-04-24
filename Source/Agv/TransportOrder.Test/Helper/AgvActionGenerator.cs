@@ -75,7 +75,8 @@ public static class AgvActionGenerator
         DateTime createdDate = default,
         DateTime? completedDate = null,
         DateTime? startedDate = null,
-        TimeSpan? duration = null
+        TimeSpan? duration = null,
+        bool hasPriority = false
     )
     {
         const string orderId = "orderId";
@@ -105,7 +106,8 @@ public static class AgvActionGenerator
         var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
         {
             AssignedAgv = assignedAgv,
-            EstimatedDuration = duration
+            EstimatedDuration = duration,
+            HasPriority = hasPriority
         };
         actionGroup.UpdateActionGroupState();
         if (createdDate != default)
@@ -133,7 +135,7 @@ public static class AgvActionGenerator
             moveAction.Nodes = [targetNodeId];
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration };
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, hasPriority: true, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration };
 
         return actionGroup;
     }

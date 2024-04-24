@@ -69,6 +69,12 @@ public record ActionGroup : CorrelatedBy<Guid>
     public bool IsManual { get; set; }
 
     /// <summary>
+    /// If true, then this ActionGroup has priority over others (starts immediately).
+    /// </summary>
+    [UsedImplicitly]
+    public bool HasPriority { get; set; }
+
+    /// <summary>
     /// The creator of the <see cref="ActionGroup"/>.
     /// </summary>
     [UsedImplicitly]
@@ -88,10 +94,12 @@ public record ActionGroup : CorrelatedBy<Guid>
     /// <param name="creator">The creator of this <see cref="ActionGroup"/></param>
     /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/></param>
     /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system</param>
-    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false) : this(correlationId, orderId)
+    /// <param name="hasPriority">If true, then this <see cref="ActionGroup"/> has priority over others.</param>
+    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
+        HasPriority = hasPriority;
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
         Actions = actions;
         Creator = creator;

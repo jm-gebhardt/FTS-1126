@@ -349,7 +349,8 @@ public class ActionCommandHandler :
             string.Empty,
             actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, parkNode, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
-            creator: ActionGroupCreator.TransportOrder
+            creator: ActionGroupCreator.TransportOrder,
+            hasPriority: false
         );
         _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId, "Order created", $"Order {actionGroup.OrderId} was created successfully");
         _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId, "Agv was assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
@@ -410,7 +411,8 @@ public class ActionCommandHandler :
                 },
                 assignedAgv: agv.CorrelationId,
                 creator: initiator,
-                isManual: triggeredByWebApi
+                isManual: triggeredByWebApi,
+                hasPriority: triggeredByWebApi
             );
 
             await _actionGroupRepository.AddAsync(actionGroup);

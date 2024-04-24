@@ -117,7 +117,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
-        actionGroups = actionGroups.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.IsManual);
+        actionGroups = actionGroups.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.HasPriority);
 
         List<ActionGroup> actionGroupsAsync = await actionGroups
             .AsNoTracking()
