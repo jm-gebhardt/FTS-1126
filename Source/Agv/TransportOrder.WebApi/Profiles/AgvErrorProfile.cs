@@ -12,7 +12,8 @@ public class AgvErrorProfile : WebApiProfile
     /// <inheritdoc cref="AgvErrorProfile" />
     public AgvErrorProfile()
     {
-        CreateMap<AgvError, AgvErrorDto>();
+        CreateMap<AgvError, AgvErrorDto>()
+            .ForSourceMember(s => s.ErrorFlag, opt => opt.DoNotValidate());
         CreateMap<Messages.Requests.Agv.Queries.AgvError, AgvErrorDto>();
         CreateMap<List<AgvError>, AgvErrorStatusDto>()
             .ForMember(c => c.Errors, c => c.MapFrom(s => s))

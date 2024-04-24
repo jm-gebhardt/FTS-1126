@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Common.Testing.Helpers;
 /// </summary>
 public static class AgvErrorGenerator
 {
-    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General)
+    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General, ErrorFlag errorFlag = ErrorFlag.Agv)
     {
         var errors = new List<AgvError>();
         for (int i = 0; i < errorItems; i++)
@@ -22,14 +22,15 @@ public static class AgvErrorGenerator
                 $"error type#{i}",
                 errorCategory,
                 new List<ErrorReference>(),
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                errorFlag
             ));
         }
 
         return new AgvErrorStatusReceived(agvCorrelationId, errors);
     }
 
-    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General)
+    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General, ErrorFlag errorFlag = ErrorFlag.Agv)
     {
         agvCorrelationId ??= Guid.NewGuid();
         return new AgvError(agvCorrelationId.Value,
@@ -40,6 +41,6 @@ public static class AgvErrorGenerator
             $"ErrorType({agvCorrelationId})",
             errorCategory,
             errorReferences ?? [new ErrorReference { ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}" }],
-            DateTime.UtcNow);
+            DateTime.UtcNow, errorFlag);
     }
 }

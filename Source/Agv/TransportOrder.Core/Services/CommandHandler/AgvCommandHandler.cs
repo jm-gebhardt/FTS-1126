@@ -207,10 +207,20 @@ public class AgvCommandHandler :
 
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Fatal))
         {
+            if (agvError.ErrorFlag == ErrorFlag.Battery)
+            {
+                _logger.LogBatteryError(LogCodes.BatteryError, agv.CorrelationId, agvError.ErrorCode, "Battery Error", $"Battery of AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}");
+                continue;
+            }
             _logger.LogAgvError(LogCodes.AgvError, agv.CorrelationId, agvError.ErrorCode, "AGV Error", $"AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}");
         }
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Warning))
         {
+            if (agvError.ErrorFlag == ErrorFlag.Battery)
+            {
+                _logger.LogBatteryWarning(LogCodes.BatteryWarning, agv.CorrelationId, agvError.ErrorCode, "Battery Warning", $"Battery of AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}");
+                continue;
+            }
             _logger.LogAgvWarning(LogCodes.AgvWarning, agv.CorrelationId, agvError.ErrorCode, "AGV Warning", $"AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}");
         }
 

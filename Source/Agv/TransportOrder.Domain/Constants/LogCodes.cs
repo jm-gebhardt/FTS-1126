@@ -13,7 +13,9 @@ public static class LogCodes
     public const int BatteryMinChargeLevel = 203;
     public const int BatteryMaxChargeLevel = 204;
     public const int BatteryFullyCharged = 205;
-    
+    public const int BatteryError = 206;
+    public const int BatteryWarning = 207;
+
     // Agv 
     public const int AgvDiscovered = 300;
     public const int AgvInformationReceived = 301;

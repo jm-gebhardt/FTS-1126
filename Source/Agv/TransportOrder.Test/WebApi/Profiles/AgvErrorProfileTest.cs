@@ -16,7 +16,7 @@ public class AgvErrorProfileTest
         var agvCorrelationId = Guid.NewGuid();
         var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId);
 
-        var errorMessageContent = new AgvError(agvError.AgvCorrelationId, agvError.ErrorTitle, agvError.ErrorDescription, agvError.ErrorCode, agvError.ErrorLevel, agvError.ErrorType, agvError.ErrorCategory, agvError.ErrorReferences, agvError.ErrorReceived);
+        var errorMessageContent = new AgvError(agvError.AgvCorrelationId, agvError.ErrorTitle, agvError.ErrorDescription, agvError.ErrorCode, agvError.ErrorLevel, agvError.ErrorType, agvError.ErrorCategory, agvError.ErrorReferences, agvError.ErrorReceived, errorFlag: ErrorFlag.Agv);
         var mapper = MappingHelper.GetMapper(new AgvErrorProfile());
         var agvErrorDto = mapper.Map<AgvErrorDto>(errorMessageContent);
 

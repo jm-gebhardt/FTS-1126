@@ -19,7 +19,8 @@ public class MqttErrorProfile : Profile
             .ForMember(nameof(AgvError.ErrorTitle), opt => opt.Ignore())
             .ForMember(nameof(AgvError.ErrorCode), opt => opt.Ignore())
             .ForMember(nameof(AgvError.ErrorResolved), opt => opt.Ignore())
-            .ForMember(nameof(AgvError.ErrorCategory), opt => opt.Ignore());
+            .ForMember(nameof(AgvError.ErrorCategory), opt => opt.Ignore())
+            .ForMember(nameof(AgvError.ErrorFlag), opt => opt.MapFrom(src => src.ErrorDescription!.ToUpper().Contains(nameof(ErrorFlag.Battery).ToUpper()) ? ErrorFlag.Battery : ErrorFlag.Agv));
         // Map only AgvCorrelationId to AgvError
         CreateMap<Guid, AgvError>(MemberList.None)
             .ForMember(nameof(AgvError.AgvCorrelationId), opt => opt.MapFrom(src => src));

@@ -25,7 +25,8 @@ public static class ErrorGenerator
                 "Distance sensor dirty",
                 ErrorCategory.Dirt,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
             ),
             1 => new AgvError(
                 correlationId,
@@ -36,7 +37,8 @@ public static class ErrorGenerator
                 "Battery temperature",
                 ErrorCategory.Temperature,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Battery
             ),
             2 => new AgvError(
                 correlationId,
@@ -47,7 +49,8 @@ public static class ErrorGenerator
                 "Predictive Maintenance",
                 ErrorCategory.General,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
             ),
             _ => new AgvError(
                 correlationId,
@@ -58,7 +61,8 @@ public static class ErrorGenerator
                 "Motor temperature",
                 ErrorCategory.Temperature,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
             )
         };
     }
@@ -69,7 +73,7 @@ public static class ErrorGenerator
     /// <param name="correlationId">The correlation id of the agv to generate the error for.</param>
     public static AgvError CreateError(Guid correlationId)
     {
-        int errorPos = Random.Shared.Next(0, 5);
+        int errorPos = Random.Shared.Next(0, 6);
         return errorPos switch
         {
             0 => new AgvError(
@@ -81,7 +85,8 @@ public static class ErrorGenerator
                 "Distance sensor offline",
                 ErrorCategory.General,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
             ),
             1 => new AgvError(
                 correlationId,
@@ -92,7 +97,8 @@ public static class ErrorGenerator
                 "Camera offline",
                 ErrorCategory.General,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
             ),
             2 => new AgvError(
                 correlationId,
@@ -103,7 +109,8 @@ public static class ErrorGenerator
                 "Emergency stop",
                 ErrorCategory.General,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
             ),
             3 => new AgvError(
                 correlationId,
@@ -114,7 +121,20 @@ public static class ErrorGenerator
                 "Motor malfunction",
                 ErrorCategory.General,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
+            ),
+            4 => new AgvError(
+                correlationId,
+                "Battery temperature limit exceeded",
+                "Critical: Battery temperature exceeded safe operating limit.",
+                "4242",
+                ErrorLevel.Fatal,
+                "Battery temperature",
+                ErrorCategory.Temperature,
+                null,
+                DateTime.UtcNow,
+                ErrorFlag.Battery
             ),
             _ => new AgvError(
                 correlationId,
@@ -125,7 +145,8 @@ public static class ErrorGenerator
                 "Weight limit exceeded",
                 ErrorCategory.General,
                 null,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                ErrorFlag.Agv
             )
         };
     }

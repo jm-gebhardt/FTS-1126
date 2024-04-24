@@ -64,8 +64,13 @@ public record AgvError : CorrelatedBy<Guid>
     /// </summary>
     public DateTime? ErrorResolved { get; set; }
 
+    /// <summary>
+    /// The flag of the error.
+    /// </summary>
+    public ErrorFlag ErrorFlag { get; init; } = ErrorFlag.Agv;
+
     /// <inheritdoc cref="AgvError"/>>
-    public AgvError(Guid agvCorrelationId, string?  errorTitle, string? errorDescription, string? errorCode, ErrorLevel errorLevel, string errorType, ErrorCategory errorCategory, List<ErrorReference>? errorReferences, DateTime errorReceived)
+    public AgvError(Guid agvCorrelationId, string?  errorTitle, string? errorDescription, string? errorCode, ErrorLevel errorLevel, string errorType, ErrorCategory errorCategory, List<ErrorReference>? errorReferences, DateTime errorReceived, ErrorFlag errorFlag)
     {
         AgvCorrelationId = agvCorrelationId;
         ErrorTitle = errorTitle;
@@ -79,6 +84,7 @@ public record AgvError : CorrelatedBy<Guid>
         {
             ErrorReceived = errorReceived;
         }
+        ErrorFlag = errorFlag;
     }
 
     /// <summary>
@@ -91,12 +97,28 @@ public record AgvError : CorrelatedBy<Guid>
     }
 
     /// <summary>
-    /// Compares two errors according to their type, category, and level.
+    /// Compares two errors according to their type, category, flag, and level.
     /// </summary>
     /// <param name="error2">The error to compare to.</param>
     /// <returns>True if the error type, category, and level is the same.</returns>
     public bool IsSameError(AgvError error2)
     {
-        return ErrorType == error2.ErrorType && ErrorLevel == error2.ErrorLevel && ErrorCategory == error2.ErrorCategory;
+        return ErrorType == error2.ErrorType && ErrorLevel == error2.ErrorLevel && ErrorCategory == error2.ErrorCategory && error2.ErrorFlag == ErrorFlag;
     }
+}
+
+/// <summary>
+/// Provides a flag to distinguish agv and battery errors.
+/// </summary>
+public enum ErrorFlag
+{
+    /// <summary>
+    /// Agv error.
+    /// </summary>
+    Agv,
+
+    /// <summary>
+    /// Battery error.
+    /// </summary>
+    Battery
 }

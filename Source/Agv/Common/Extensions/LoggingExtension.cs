@@ -21,6 +21,34 @@ public static class LoggingExtension
     }
 
     /// <summary>
+    /// Log messages for batteries with error severity.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    /// <param name="code">The log message code.</param>
+    /// <param name="agvId">The correlation id of the agv.</param>
+    /// <param name="errorCode">The error code of the agv error.</param>
+    /// <param name="title">The title.</param>
+    /// <param name="message">The message.</param>
+    public static void LogBatteryError(this ILogger logger, int code, Guid agvId, string? errorCode, string title, string message)
+    {
+        logger.LogError("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {AgvCorrelationId} {LogCategory} {ErrorCode} {Title} {Message}", DateTime.UtcNow, code, agvId, nameof(Categories.Battery), errorCode, title, message);
+    }
+
+    /// <summary>
+    /// Log messages for batteries with warning severity.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    /// <param name="code">The log message code.</param>
+    /// <param name="agvId">The correlation id of the agv.</param>
+    /// <param name="errorCode">The error code of the agv error.</param>
+    /// <param name="title">The title.</param>
+    /// <param name="message">The message.</param>
+    public static void LogBatteryWarning(this ILogger logger, int code, Guid agvId, string? errorCode, string title, string message)
+    {
+        logger.LogWarning("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {AgvCorrelationId} {LogCategory} {ErrorCode} {Title} {Message}", DateTime.UtcNow, code, agvId, nameof(Categories.Battery), errorCode, title, message);
+    }
+
+    /// <summary>
     /// Log messages for agvs with information severity.
     /// </summary>
     /// <param name="logger">The logger.</param>
