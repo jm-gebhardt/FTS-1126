@@ -1,20 +1,21 @@
 {
-  "SerialNumber": "AGV-01",
-  "Model": "Karis-2",
-  "RequestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
-  "Type": "P",
-  "MaxVelocityStraight": 0.123,
-  "BatteryCapacity": 60.00,
-  "IpV4Address": "000.000.000.000",
-  "Length": 0.80,
-  "Width": 0.60,
-  "Payload": 35,
-  "MaxVelocityTurn": 0.01,
-  "MaxVelocityTurnOnSpot": 0.02,
-  "TurnOnSpotThreshold": 1.57,
-  "Acceleration": 0.34,
-  "Sensors": [
-    { "SensorIdentifier": "Gyro" },
-    { "SensorIdentifier": "Temp"}
-  ]
+    "serialNumber": "AGV-01",
+    "model": "Karis-2",
+    "requestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
+    "type": "P",
+    "maxVelocityStraight": 0.123,
+    "batteryCapacity": 60.00,
+    "ipV4Address": "000.000.000.000",
+    "length": 0.80,
+    "width": 0.60,
+    "payload": 35,
+    "maxVelocityTurn": 0.01,
+    "maxVelocityTurnOnSpot": 0.02,
+    "turnOnSpotThreshold": 1.57,
+    "acceleration": 0.34,
+    "sensors": [
+        { "sensorIdentifier": "Gyro" },
+        { "sensorIdentifier": "Temp" }
+    ],
+    "softwareVersison": "v0"
 }

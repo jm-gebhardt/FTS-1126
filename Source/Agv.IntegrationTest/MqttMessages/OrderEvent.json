@@ -1,5 +1,5 @@
 {
-  "SerialNumber": "AGV-01",
-  "OrderId": "ORD_01",
-  "OrderEventType": "Completed"
+  "serialNumber": "AGV-01",
+  "orderId": "ORD_01",
+  "orderEventType": "Completed"
 }

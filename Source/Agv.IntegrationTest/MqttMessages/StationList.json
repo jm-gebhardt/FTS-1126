@@ -1,57 +1,57 @@
 {
-  "SerialNumber": "AGV-01",
-  "ModificationDate": "2022-07-06T13:14:15",
-  "RequestId": "ccc7afc4-4682-44f2-8f03-2e5866574e67",
-  "Stations": [
-    {
-      "Function": "Pick",
-      "Identifier": "SRC_01",
-      "Position": {
-        "Theta": 90.0,
-        "X": 10.0,
-        "Y": 0.0
-      },
-      "typeId": "T1"
-    },
-    {
-      "Function": "Both",
-      "Identifier": "STN_01",
-      "Position": {
-        "Theta": 90.0,
-        "X": 40.0,
-        "Y": 0.0
-      },
-      "typeId": "T2"
-    },
-    {
-      "Function": "Charge",
-      "Identifier": "CRG_01",
-      "Position": {
-        "Theta": 180.0,
-        "X": 0.0,
-        "Y": 30.0
-      },
-      "typeId": "C1"
-    },
-    {
-      "Function": "Drop",
-      "Identifier": "DST_01",
-      "Position": {
-        "Theta": 270.0,
-        "X": 30.0,
-        "Y": 40.0
-      },
-      "typeId": "T2"
-    },
-    {
-      "Function": "Drop",
-      "Identifier": "DST_02",
-      "Position": {
-        "Theta": 270.0,
-        "X": 40.0,
-        "Y": 40.0
-      },
-      "typeId": "T1"
-    }
-  ]
+    "serialNumber": "AGV-01",
+    "modificationDate": "2024-04-01T13:14:15",
+    "requestId": "c2db5d8b-4802-4d9c-81e5-f7da9ca26893",
+    "stations": [
+        {
+            "function": "Pick",
+            "identifier": "SRC_01",
+            "position": {
+                "theta": 90.0,
+                "x": 10.0,
+                "y": 0.0
+            },
+            "typeId": "T1"
+        },
+        {
+            "function": "Both",
+            "identifier": "STN_01",
+            "position": {
+                "theta": 90.0,
+                "x": 40.0,
+                "y": 0.0
+            },
+            "typeId": "T2"
+        },
+        {
+            "function": "Charge",
+            "identifier": "CRG_01",
+            "position": {
+                "theta": 180.0,
+                "x": 0.0,
+                "y": 30.0
+            },
+            "typeId": "C1"
+        },
+        {
+            "function": "Drop",
+            "identifier": "DST_01",
+            "position": {
+                "theta": 270.0,
+                "x": 30.0,
+                "y": 40.0
+            },
+            "typeId": "T2"
+        },
+        {
+            "function": "Drop",
+            "identifier": "DST_02",
+            "position": {
+                "theta": 270.0,
+                "x": 40.0,
+                "y": 40.0
+            },
+            "typeId": "T1"
+        }
+    ]
 }

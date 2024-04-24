@@ -5,7 +5,7 @@
     "subtopic": "/agvData",
     "type": "object",
     "properties": {
-        "SerialNumber": {
+        "serialNumber": {
             "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
@@ -13,11 +13,11 @@
                 "AGV2034"
             ]
         },
-        "RequestId": {
+        "requestId": {
             "type": "string",
             "description": "The unique ID replied from the request."
         },
-        "Model": {
+        "model": {
             "type": "string",
             "description": "The model name of the agv.",
             "examples": [
@@ -25,7 +25,7 @@
                 "GridSkitter"
             ]
         },
-        "Type": {
+        "type": {
             "type": "string",
             "description": "The type of the agv.",
             "examples": [
@@ -33,7 +33,7 @@
                 "BF1"
             ]
         },
-        "IpV4Address": {
+        "ipV4Address": {
             "type": "string",
             "description": "The IP Address of the agv.",
             "examples": [
@@ -41,54 +41,54 @@
                 "192.168.178.123"
             ]
         },
-        "SoftwareVersion": {
+        "softwareVersion": {
             "type": "string",
             "description": "The software version for the agv."
         },
-        "Length": {
+        "length": {
             "type": "number",
             "description": "The length of the agv in [m]."
         },
-        "Width": {
+        "width": {
             "type": "number",
             "description": "The width of the agv in [m]."
         },
-        "Payload": {
+        "payload": {
             "type": "integer",
             "description": "The max. payload of the agv in [kg]."
         },
-        "BatteryCapacity": {
+        "batteryCapacity": {
             "type": "number",
             "description": "The capacity of the agvs battery in [Ah]."
         },
-        "MaxVelocityStraight": {
+        "maxVelocityStraight": {
             "type": "number",
             "description": "The maximum velocity of the agv in straight direction [m/s]."
         },
-        "MaxVelocityTurn": {
+        "maxVelocityTurn": {
             "type": "number",
             "description": "The maximum velocity of the agv in while turning [m/s]."
         },
-        "MaxVelocityTurnOnSpot": {
+        "maxVelocityTurnOnSpot": {
             "type": "number",
             "description": "The maximum velocity of the agv while turning on spot [rad/s]."
         },
-        "TurnOnSpotThreshold": {
+        "turnOnSpotThreshold": {
             "type": "number",
             "description": "Threshold angle by which the agv will stop and turn on spot [rad]."
         },
-        "Acceleration": {
+        "acceleration": {
             "type": "number",
             "description": "The maximum velocity of the agv while turning on spot [m/s^2]."
         },
-        "Sensors": {
+        "sensors": {
             "type": "array",
             "description": "The list of sensors in the agv.",
             "items": [
                 {
                     "type": "object",
                     "properties": {
-                        "SensorIdentifier": {
+                        "sensorIdentifier": {
                             "type": "string",
                             "description": "The identifier of the sensor."
                         }
@@ -98,19 +98,19 @@
         }
     },
     "required": [
-        "SerialNumber",
-        "RequestId",
-        "Model",
-        "Type",
-        "IpV4Address",
-        "Length",
-        "Width",
-        "Payload",
-        "BatteryCapacity",
-        "MaxVelocityStraight",
-        "MaxVelocityTurn",
-        "MaxVelocityTurnOnSpot",
-        "TurnOnSpotThreshold",
-        "Acceleration"
+        "serialNumber",
+        "requestId",
+        "model",
+        "type",
+        "ipV4Address",
+        "length",
+        "width",
+        "payload",
+        "batteryCapacity",
+        "maxVelocityStraight",
+        "maxVelocityTurn",
+        "maxVelocityTurnOnSpot",
+        "turnOnSpotThreshold",
+        "acceleration"
     ]
 }

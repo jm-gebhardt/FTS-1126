@@ -1,9 +1,11 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
@@ -72,7 +74,15 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<PrepareChargingOfAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvSettingsGroupReference, AgvCommandHandler>(c);
         });
-        busRegistrationConfigurator.AddConsumer<AgvEventHandler>();
+
+        busRegistrationConfigurator.AddConsumer<AgvEventHandler>(c =>
+            c.Message<AgvMapReceived>(o => o.UseMessageRetry(r =>
+                {
+                    // AgvMapReceived may be consumed before AgvGraph is stored in database.
+                    r.Interval(3, TimeSpan.FromSeconds(5));
+                    r.Handle<AgvGraphNotDefinedException>();
+                }
+            )));
 
         busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
         busRegistrationConfigurator.AddRequestClient<LockAgv>();

@@ -5,7 +5,7 @@
   "subtopic": "/graph",
   "type": "object",
   "properties": {
-    "SerialNumber": {
+    "serialNumber": {
       "description": "Serial number of the agv.",
       "type": "string",
       "examples": [
@@ -13,7 +13,7 @@
         "AGV2034"
       ]
     },
-    "ModificationDate": {
+    "modificationDate": {
       "type": "string",
       "description": "The modification date of the graph. Timestamp in ISO8601 format.",
       "format": "date-time",
@@ -21,18 +21,18 @@
         "1991-03-11T11:40:03.12Z"
       ]
     },
-    "RequestId": {
+    "requestId": {
       "type": "string",
       "description": "The unique ID replied from the request."
     },
-    "RelatedMapId": {
+    "relatedMapId": {
       "type": "string",
       "description": "The unique ID of the map that belongs to the graph.",
       "examples": [
            "Area51_Floor1_Compartment47"
       ]
     },
-    "Nodes": {
+    "nodes": {
       "type": "array",
       "description": "The list of nodes in the graph.",
       "items": [
@@ -40,23 +40,23 @@
           "type": "object",
           "description": "The Node representation.",
           "properties": {
-            "NodeId": {
+            "nodeId": {
               "type": "integer",
               "description": "The unique ID of the node."
             },
-            "X": {
+            "x": {
               "type": "number",
               "description": "The x coordinate of the node."
             },
-            "Y": {
+            "y": {
               "type": "number",
               "description": "The y coordinate of the node."
             },
-            "Z": {
+            "z": {
               "type": "number",
               "description": "The z coordinate of the node. For example if there is a another floor. This field is not required."
             },
-            "Attributes": {
+            "attributes": {
               "type": "array",
               "description": "The list of attributes attached to the node.",
               "items": [
@@ -64,32 +64,32 @@
                   "type": "object",
                   "description": "The node attribute.",
                   "properties": {
-                    "Key": {
+                    "key": {
                       "type": "string",
                       "description": "The key (name) of the attribute."
                     },
-                    "Value": {
+                    "value": {
                       "type": "string",
                       "description": "The value of the attribute."
                     }
                   },
                   "required": [
-                    "Key",
-                    "Value"
+                    "key",
+                    "value"
                   ]
                 }
               ]
             }
           },
           "required": [
-            "NodeId",
-            "X",
-            "Y"
+            "nodeId",
+            "x",
+            "y"
           ]
         }
       ]
     },
-    "Edges": {
+    "edges": {
       "type": "array",
       "description": "The list of edges in the graph.",
       "items": [
@@ -97,19 +97,19 @@
           "type": "object",
           "description": "The Edge representation.",
             "properties": {
-                "EdgeId": {
+                "edgeId": {
                     "type": "integer",
                     "description": "The unique ID of the edge."
                 },
-                "StartId": {
+                "startId": {
                     "type": "integer",
                     "description": "The ID of the node where the edge starts."
                 },
-                "EndId": {
+                "endId": {
                     "type": "integer",
                     "description": "The ID of the node where the edge ends."
                 },
-                "Bidirectional": {
+                "bidirectional": {
                     "type": "boolean",
                     "description": "true/false. The edge can be traveled in both directions. If false, only from start to end is allowed.",
                     "examples": [
@@ -117,11 +117,11 @@
                         false
                     ]
                 },
-                "MaxVelocity": {
+                "maxVelocity": {
                     "type": "integer",
                     "description": "The maximum allowed velocity on that edge [m/s]."
                 },
-                "EdgeType": {
+                "edgeType": {
                     "type": "string",
                     "description": "The edge type (DIRECT/SLANTED/BEZIER1/BEZIER2/POLYPATH).",
                     "enum": [
@@ -132,7 +132,7 @@
                         "POLYPATH"
                     ]
                 },
-                "ControlPoints": {
+                "controlPoints": {
                     "type": "array",
                     "description": "The list of control points (absolute locations). BEZIER1 has one, BEZIER2 has two and SLANTED at least one control points.",
                     "items": [
@@ -154,15 +154,15 @@
 
                     ]
                 },
-                "ExitAngle": {
+                "exitAngle": {
                     "type": "number",
                     "description": "The exit angle of a curve of type 'SLANTED'."
                 },
-                "ExitDistance": {
+                "exitDistance": {
                     "type": "number",
                     "description": "The exit distance of a curve of type 'SLANTED'."
                 },
-                "Attributes": {
+                "attributes": {
                     "type": "array",
                     "description": "The list of attributes attached to the edge.",
                     "items": [
@@ -170,31 +170,31 @@
                             "type": "object",
                             "description": "Node attribute",
                             "properties": {
-                                "Key": {
+                                "key": {
                                     "type": "string",
                                     "description": "The key (name) of the attribute."
                                 },
-                                "Value": {
+                                "value": {
                                     "type": "string",
                                     "description": "The value of the attribute."
                                 }
                             },
                             "required": [
-                                "Key",
-                                "Value"
+                                "key",
+                                "value"
                             ]
                         }
                     ]
                 }
             },
           "required": [
-            "EdgeId",
-            "StartId",
-            "EndId",
-            "Bidirectional",
-            "MaxVelocity",
-            "EdgeType",
-            "ControlPoints"
+            "edgeId",
+            "startId",
+            "endId",
+            "bidirectional",
+            "maxVelocity",
+            "edgeType",
+            "controlPoints"
           ]
         }
       ]

@@ -5,7 +5,7 @@
     "subtopic": "/requestMap",
     "type": "object",
     "properties": {
-        "SerialNumber": {
+        "serialNumber": {
             "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
@@ -13,13 +13,13 @@
                 "AGV2034"
             ]
         },
-        "RequestId": {
+        "requestId": {
             "type": "string",
             "description": "A unique ID for that request."
         }
     },
     "required": [
-        "SerialNumber",
-        "RequestId"
+        "serialNumber",
+        "requestId"
     ]
 }

@@ -1,8 +1,8 @@
 {
-  "headerId": 43,
-  "timestamp": "2023-07-03T16:16:15",
+  "headerId": 1,
+  "timestamp": "2024-04-01T16:16:15",
   "version": "1.3.2",
-  "manufacturer": "TAR",
+  "manufacturer": "Gebhardt",
   "serialNumber": "AGV-01",
   "orderId": "ORD_01",
   "orderUpdateId": 0,
@@ -14,46 +14,48 @@
   "actionStates": [],
   "batteryState": {
     "batteryCharge": 81.25,
+    "batteryCurrent": 1.2,
     "charging": false,
     "batteryVoltage": 43.5,
     "batteryHealth": 93.4,
+    "batteryTemperature": 30.3,
     "reach": 190.25
   },
   "operatingMode": "SEMIAUTOMATIC",
   "errors": [
       {
-          "ErrorDescription": "TestError1",
-          "ErrorLevel": 0,
-          "ErrorReferences": [
+          "errorDescription": "TestError1",
+          "errorLevel": 0,
+          "errorReferences": [
               {
-                  "ReferenceKey": "A",
-                  "ReferenceValue": "aaaaa"
+                  "referenceKey": "A",
+                  "referenceValue": "Aaaaa"
               },
               {
-                  "ReferenceKey": "BBB",
-                  "ReferenceValue": "bbbbbbb"
+                  "referenceKey": "BBB",
+                  "referenceValue": "Bbbbbbb"
               }
           ],
-          "ErrorType": "SomeErrorType"
+          "errorType": "SomeErrorType"
       },
       {
-          "ErrorDescription": "TestError2",
-          "ErrorLevel": 0,
-          "ErrorReferences": [
+          "errorDescription": "TestError2",
+          "errorLevel": 0,
+          "errorReferences": [
               {
-                  "ReferenceKey": "A",
-                  "ReferenceValue": "aaaaa"
+                  "referenceKey": "A",
+                  "referenceValue": "Aaaaa"
               },
               {
-                  "ReferenceKey": "cccc",
-                  "ReferenceValue": "CCCCC"
+                  "referenceKey": "Cccc",
+                  "referenceValue": "CCCCC"
               }
           ],
-          "ErrorType": "OtherErrorType"
+          "errorType": "OtherErrorType"
       }
   ],
   "safetyState": {
-    "eStop": "none",
+    "eStop": "NONE",
     "fieldViolation": false
   },
   "zoneSetId": "",
@@ -64,7 +66,7 @@
     "x": -26.5,
     "y": 371.75,
     "theta": 86.5,
-    "mapId": "base",
+    "mapId": "H05",
     "positionInitialized": false,
     "mapDescription": "Base Map",
     "localizationScore": -62.5,

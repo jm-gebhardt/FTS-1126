@@ -22,7 +22,7 @@
   "operatingMode": "SEMIAUTOMATIC",
   "errors": [],
   "safetyState": {
-    "eStop": "none",
+    "eStop": "NONE",
     "fieldViolation": false
   },
   "zoneSetId": "",
@@ -30,8 +30,8 @@
   "newBaseRequest": true,
   "distanceSinceLastNode": 306.5,
   "agvPosition": {
-    "x": -26.5,
-    "y": 371.75,
+    "x": 5.0,
+    "y": -30.0,
     "theta": 86.5,
     "mapId": "base",
     "positionInitialized": false,

@@ -5,7 +5,7 @@
     "subtopic": "/order",
     "type": "object",
     "properties": {
-        "SerialNumber": {
+        "serialNumber": {
             "description": "Serial number of the agv.",
             "type": "string",
             "examples": [
@@ -13,11 +13,11 @@
                 "AGV2034"
             ]
         },
-        "OrderId": {
+        "orderId": {
             "type": "string",
             "description": "The unique ID of the order."
         },
-        "OrderType": {
+        "orderType": {
             "type": "string",
             "description": "The type of the order (PICK/DROP/TRANSPORT/MOVE/CHARGE).",
             "enum": [
@@ -28,7 +28,7 @@
                 "CHARGE"
             ]
         },
-        "RecordType": {
+        "recordType": {
             "type": "string",
             "description": "The type of the order (ORDER/ORDERUPDATE/ORDERCANCEL).",
             "enum": [
@@ -40,7 +40,7 @@
         "stations": {
             "type": "object",
             "properties": {
-                "FromStationIdentifier": {
+                "fromStationIdentifier": {
                     "type": "string",
                     "description": "The unique identifier of the station where to pick from.",
                     "examples": [
@@ -48,7 +48,7 @@
                         "Source31"
                     ]
                 },
-                "ToStationIdentifier": {
+                "toStationIdentifier": {
                     "type": "string",
                     "description": "The unique identifier of the station where to drop.",
                     "examples": [
@@ -60,12 +60,12 @@
             "oneOf": [
                 {
                     "required": [
-                        "FromStationIdentifier"
+                        "fromStationIdentifier"
                     ]
                 },
                 {
                     "required": [
-                        "ToStationIdentifier"
+                        "toStationIdentifier"
                     ]
                 }
             ]
@@ -74,46 +74,46 @@
             "type": "object",
             "description": "The coordinates of the point where to go to.",
             "properties": {
-                "ToX": {
+                "toX": {
                     "type": "number"
                 },
-                "ToY": {
+                "toY": {
                     "type": "number"
                 },
-                "ToTheta": {
+                "toTheta": {
                     "type": "number"
                 }
             },
             "required": [
-                "ToX",
-                "ToY",
-                "ToTheta"
+                "toX",
+                "toY",
+                "toTheta"
             ]
         },
         "route": {
             "type": "object",
             "description": "The route to travel set by the master control expressed in nodes and edges.",
             "properties": {
-                "Nodes": {
+                "nodes": {
                     "type": "array",
                     "items": {}
                 },
-                "Edges": {
+                "edges": {
                     "type": "array",
                     "items": {}
                 }
             },
             "required": [
-                "Nodes",
-                "Edges"
+                "nodes",
+                "edges"
             ]
         }
     },
     "required": [
-        "SerialNumber",
-        "OrderId",
-        "RecordType",
-        "OrderType"
+        "serialNumber",
+        "orderId",
+        "recordType",
+        "orderType"
     ],
     "oneOf": [
         {

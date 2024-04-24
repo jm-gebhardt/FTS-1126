@@ -5,7 +5,7 @@
     "subtopic": "/orderEvent",
     "type": "object",
     "properties": {
-        "SerialNumber": {
+        "serialNumber": {
             "description": "The unique identifier of the agv.",
             "type": "string",
             "examples": [
@@ -13,11 +13,11 @@
                 "AGV2"
             ]
         },
-        "OrderId": {
+        "orderId": {
             "type": "string",
             "description": "The unique ID of the order."
         },
-        "OrderEventType": {
+        "orderEventType": {
             "type": "string",
             "description": "The type of the order event (STARTED/COMPLETED/CANCELED/CANCELFAILED/UPDATED/UPDATEFAILED/FAILED).",
             "enum": [
@@ -32,8 +32,8 @@
         }
     },
     "required": [
-        "SerialNumber",
-        "OrderId",
-        "OrderEventType"
+        "serialNumber",
+        "orderId",
+        "orderEventType"
     ]
 }

@@ -5,107 +5,107 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 
-namespace Gebhardt.Acc.IntegrationTest
+namespace Gebhardt.Acc.IntegrationTest;
+
+/// <summary>
+/// CompleteOrderTest
+/// </summary>
+[TestClass]
+public class CompleteOrderTestVirtualAgv
 {
+    private DockerCompose? _dockerCompose;
+    private DockerCompose? _dockerComposeVirtualAgv;
+
+    private const string DockerRegistry = "registry.gitlab.com";
+    private const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
+
+    private const string DockerRegistryUser = "gebhardt";
+
+    private readonly string _dockerRegistryPassword =
+        Environment.GetEnvironmentVariable(EnvVars.DockerRegistryPassword)
+        ?? throw new InvalidOperationException($"Environment variable {EnvVars.DockerRegistryPassword} must be set.");
+
     /// <summary>
-    /// CompleteOrderTest
+    /// Start all docker services before each test
     /// </summary>
-    [TestClass]
-    public class CompleteOrderTestVirtualAgv
+    [TestInitialize]
+    public void StartServices()
     {
-        private DockerCompose? _dockerCompose;
-        private DockerCompose? _dockerComposeVirtualAgv;
+        _dockerCompose.ShouldBeNull();
+        _dockerComposeVirtualAgv.ShouldBeNull();
 
-        private const string DockerRegistry = "registry.gitlab.com";
-        private const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
+        _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
+        _dockerComposeVirtualAgv = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
+            DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
+        _dockerCompose.AreRemoved().ShouldBeTrue();
+        _dockerComposeVirtualAgv.AreRemoved().ShouldBeTrue();
 
-        private const string DockerRegistryUser = "gebhardt";
+        //Start Leitsteuerung
+        _dockerCompose.Up().ShouldBeTrue();
+        _dockerCompose.AreRunning().ShouldBeTrue();
 
-        private readonly string _dockerRegistryPassword =
-            Environment.GetEnvironmentVariable(EnvVars.DockerRegistryPassword)
-            ?? throw new InvalidOperationException($"Environment variable {EnvVars.DockerRegistryPassword} must be set.");
+        //Start Virtual AGV
+        _dockerComposeVirtualAgv.Login().ShouldBeTrue();
+        _dockerComposeVirtualAgv.Pull().ShouldBeTrue();
+        _dockerComposeVirtualAgv.Up("karis0 mongo-provisioning").ShouldBeTrue();
+        _dockerComposeVirtualAgv.AreRunning().ShouldBeTrue();
+    }
 
-        /// <summary>
-        /// Start all docker services before each test
-        /// </summary>
-        [TestInitialize]
-        public void StartServices()
-        {
-            _dockerCompose.ShouldBeNull();
-            _dockerComposeVirtualAgv.ShouldBeNull();
+    /// <summary>
+    /// Remove all docker services after test
+    /// </summary>
+    [TestCleanup]
+    public void StopServices()
+    {
+        _dockerComposeVirtualAgv.ShouldNotBeNull();
+        _dockerComposeVirtualAgv.Down().ShouldBeTrue();
+        _dockerComposeVirtualAgv.AreRemoved().ShouldBeTrue();
+        _dockerCompose.ShouldNotBeNull();
+        _dockerCompose.Down().ShouldBeTrue();
+        _dockerCompose.AreRemoved().ShouldBeTrue();
+        _dockerCompose = null;
+        _dockerComposeVirtualAgv = null;
+    }
 
-            _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
-            _dockerComposeVirtualAgv = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
-                DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
-            _dockerCompose.AreRemoved().ShouldBeTrue();
-            _dockerComposeVirtualAgv.AreRemoved().ShouldBeTrue();
+    /// <summary>
+    /// Add one agv and process one order 
+    /// </summary>
+    [TestMethod]
+    public async Task SingleVirtualAgvAdd_OrderProcessedSuccessful()
+    {
+        const string agvSerialNumber = "karis0";
+        const string orderId = "Order#1";
+        const string leNo = "123";
+        const string source = "PVB02";
+        const string destination = "PVB03";
 
-            //Start Leitsteuerung
-            _dockerCompose.Up().ShouldBeTrue();
-            _dockerCompose.AreRunning().ShouldBeTrue();
+        var restApi = new RestApi();
+        var restAgv = await restApi.WaitForAgv(agvSerialNumber);
+        restAgv.ShouldNotBeNull();
 
-            //Start Virtual AGV
-            _dockerComposeVirtualAgv.Login().ShouldBeTrue();
-            _dockerComposeVirtualAgv.Pull().ShouldBeTrue();
-            _dockerComposeVirtualAgv.Up("karis0 mongo-provisioning").ShouldBeTrue();
-            _dockerComposeVirtualAgv.AreRunning().ShouldBeTrue();
-        }
+        var agvCorrelationId = restAgv["correlationId"]?.ToString();
+        agvCorrelationId.ShouldNotBeNullOrEmpty();
 
-        /// <summary>
-        /// Remove all docker services after test
-        /// </summary>
-        [TestCleanup]
-        public void StopServices()
-        {
-            _dockerComposeVirtualAgv.ShouldNotBeNull();
-            _dockerComposeVirtualAgv.Down().ShouldBeTrue();
-            _dockerComposeVirtualAgv.AreRemoved().ShouldBeTrue();
-            _dockerCompose.ShouldNotBeNull();
-            _dockerCompose.Down().ShouldBeTrue();
-            _dockerCompose.AreRemoved().ShouldBeTrue();
-            _dockerCompose = null;
-            _dockerComposeVirtualAgv = null;
-        }
+        (await restApi.WaitForAgvData(agvCorrelationId)).ShouldNotBeNull();
+        (await restApi.WaitForAgvGraph(agvCorrelationId)).ShouldNotBeNull();
+        var restMaps = await restApi.WaitForMaps();
+        var restMap = restMaps!.FirstOrDefault();
+        restMap.ShouldNotBeNull();
+        (await restApi.WaitForMap(restMap["correlationId"]?.ToString()!, restAgv["correlationId"]?.ToString()!)).ShouldNotBeNull();
 
-        /// <summary>
-        /// Add one agv and process one order 
-        /// </summary>
-        [TestMethod]
-        public async Task SingleVirtualAgvAdd_OrderProcessedSuccessful()
-        {
-            const string agvSerialNumber = "karis0";
-            const string orderId = "Order#1";
-            const string leNo = "123";
-            const string source = "PVB02";
-            const string destination = "PVB03";
 
-            var restApi = new RestApi();
-            var restAgv = await restApi.WaitForAgv(agvSerialNumber);
-            restAgv.ShouldNotBeNull();
+        (await restApi.SetAgvIdle(agvCorrelationId)).ShouldBeTrue();
 
-            var agvCorrelationId = restAgv["correlationId"]?.ToString();
-            agvCorrelationId.ShouldNotBeNullOrEmpty();
+        var context = new WcsDbContext();
 
-            (await restApi.WaitForAgvData(agvCorrelationId)).ShouldNotBeNull();
-            (await restApi.WaitForAgvGraph(agvCorrelationId)).ShouldNotBeNull();
-            (await restApi.WaitForMap(agvCorrelationId)).ShouldNotBeNull();
+        (await context.Database.CanConnectAsync()).ShouldBeTrue();
 
-            (await restApi.SetAgvIdle(agvCorrelationId)).ShouldBeTrue();
+        await context.AddNewOrder(orderId, leNo, source, destination);
+        await context.SaveChangesAsync();
 
-            var context = new WcsDbContext();
+        var actionGroup = await restApi.WaitForFinishedActionGroupForOrder(orderId);
+        actionGroup.ShouldNotBeNull();
 
-            (await context.Database.CanConnectAsync()).ShouldBeTrue();
-
-            await context.AddNewOrder(orderId, leNo, source, destination);
-            await context.SaveChangesAsync();
-
-            var order = await restApi.WaitForOrder(orderId);
-            order.ShouldNotBeNull();
-
-            order = await restApi.WaitForOrder(orderId, "Final", true);
-            order.ShouldNotBeNull();
-
-            context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();
-        }
+        context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();
     }
 }
