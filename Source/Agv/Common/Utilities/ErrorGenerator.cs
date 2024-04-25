@@ -13,7 +13,7 @@ public static class ErrorGenerator
     /// <param name="correlationId">The agv correlation id to generate the warning for.</param>
     public static AgvError CreateWarning(Guid correlationId)
     {
-        int warningPos = Random.Shared.Next(0, 4);
+        int warningPos = Random.Shared.Next(0, 5);
         return warningPos switch
         {
             0 => new AgvError(
@@ -47,6 +47,18 @@ public static class ErrorGenerator
                 "8232",
                 ErrorLevel.Warning,
                 "Predictive Maintenance",
+                ErrorCategory.General,
+                null,
+                DateTime.UtcNow,
+                ErrorFlag.Agv
+            ),
+            3 => new AgvError(
+                correlationId,
+                "Field violation",
+                "Safety state warning: field violation",
+                "FVE-4242",
+                ErrorLevel.Warning,
+                "Field violation",
                 ErrorCategory.General,
                 null,
                 DateTime.UtcNow,
