@@ -564,7 +564,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private async Task PublishAgvError<T>(BehaviorContext<SimulatedAgvSaga, T> context) where T : class
     {
         _logger.LogDebug("Publish {Message} for Agv with Correlation Id: {AgvCorrelationId}", nameof(AgvErrorStatusReceived), context.Saga.CorrelationId);
-        await context.Publish(new AgvErrorStatusReceived(context.Saga.CorrelationId, context.Saga.Errors), context.CancellationToken);
+        await context.Publish(new AgvErrorStatusReceived(context.Saga.CorrelationId, context.Saga.Errors, context.Saga.Position!), context.CancellationToken);
     }
 
     private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity)

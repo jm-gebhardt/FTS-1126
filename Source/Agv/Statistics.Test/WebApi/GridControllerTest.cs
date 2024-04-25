@@ -41,10 +41,10 @@ public class GridControllerTest
         DateTime? fromDate = DateTime.UtcNow;
         DateTime? toDate = DateTime.UtcNow;
         
-        var positionFrequency = new PositionFrequency(gridId, mapId, new List<ICollection<float>>());
+        var positionFrequency = new CountHeatmap(gridId, mapId, new List<ICollection<float>>());
 
         var fixture = new GridControllerTestFixture()
-            .WithPositionFrequency(positionFrequency)
+            .WithCountHeatmap(positionFrequency)
             .Build();
         
         var positionFrequencyDto = await fixture.GetControllerResultValueAsync(c => c.GetPositionFrequency(gridId, mapId, fromDate, toDate));

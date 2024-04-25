@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using JetBrains.Annotations;
 

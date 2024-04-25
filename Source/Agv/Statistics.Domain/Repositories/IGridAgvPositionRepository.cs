@@ -16,11 +16,22 @@ public interface IGridAgvPositionRepository : IRepository<GridAgvPosition>
     /// <param name="mapId">The CorrelationId of the Map.</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater Timestamp will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less Timestamp will be considered.</param>
-    Task<PositionFrequency> GetPositionFrequency(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate);
+    Task<CountHeatmap> GetPositionFrequency(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate);
 
     /// <summary>
     /// Deletes any agv positions older than the given timestamp.
     /// </summary>
     /// <param name="timestamp">The timestamp</param>
     Task DeleteAgvPositionsOlderThan(DateTime timestamp);
+    
+    /// <summary>
+    /// Get the grid position matching parameters. 
+    /// </summary>
+    /// <param name="gridId">The grid id.</param>
+    /// <param name="xPosition">The grid index in x-direction.</param>
+    /// <param name="yPosition">The grid index in y-direction.</param>
+    /// <param name="z">The z position.</param>
+    /// <param name="agvSerialNumber">The agv serial number.</param>
+    /// <returns></returns>
+    Task<GridAgvPosition> GetPositionAsync(Guid gridId, int xPosition, int yPosition, float z, string agvSerialNumber);
 }

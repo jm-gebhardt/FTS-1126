@@ -1,8 +1,10 @@
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Statistics.Domain.Exceptions;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Services.CommandHandler;
 using JetBrains.Annotations;
 using MassTransit;
+using ErrorEventHandler = Gebhardt.Acc.Statistics.Services.EventHandler.ErrorEventHandler;
 
 namespace Gebhardt.Acc.Statistics.Configuration;
 
@@ -26,6 +28,14 @@ public static class BusRegistrationExtension
             var partitioner = c.CreatePartitioner(PartitionCount);
             c.Message<AgvPositionReceived>(x => x.UsePartitioner(partitioner, p => p.Message.SerialNumber));
         });
+        cfg.AddConsumer<ErrorEventHandler>(c =>
+            c.Message<AgvErrorReceived>(o => o.UseMessageRetry(r =>
+            {
+                // Corresponding GridAgvPositions may not have been saved yet (e.g. due to filtering). Retry in that case. 
+                r.Interval(3, TimeSpan.FromSeconds(15));
+                r.Handle<GridAgvPositionNotFoundException>();
+            })));
+        cfg.AddConsumer<ErrorCommandHandler>();
         return cfg;
     }
 }

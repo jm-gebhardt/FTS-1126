@@ -12,7 +12,9 @@ namespace Gebhardt.Acc.Statistics.Services.RequestResponseHandler;
 [UsedImplicitly]
 public class GridRequestHandler :
     IConsumer<GetGrids>,
-    IConsumer<GetPositionFrequencies>
+    IConsumer<GetPositionFrequencies>,
+    IConsumer<GetErrorFrequencies>
+
 {
     private readonly IStatisticsDb _db;
 
@@ -42,7 +44,29 @@ public class GridRequestHandler :
         DateTime? toDate = context.Message.ToDate;
 
         var positionFrequency = await _db.GridAgvPositions.GetPositionFrequency(gridId, mapId, fromDate, toDate);
+        if (positionFrequency.Frequencies.Count == 0)
+        {
+            await _db.Grids.ThrowIfNotExistAsync(gridId);
+            await _db.Maps.ThrowIfNotExistAsync(mapId);
+        }
 
         await context.RespondAsync(new GotPositionFrequencies(positionFrequency));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetErrorFrequencies"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetErrorFrequencies> context)
+    {
+        (var gridId, var mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers, var errorLevel, string? errorCode) = context.Message;
+
+        var errorFrequency = await _db.GridAgvErrors.GetErrorOccurence(gridId, mapId, fromDate, toDate, agvSerialNumbers, errorLevel, errorCode);
+        if (errorFrequency.Frequencies.Count == 0)
+        {
+            await _db.Grids.ThrowIfNotExistAsync(gridId);
+            await _db.Maps.ThrowIfNotExistAsync(mapId);
+        }
+
+        await context.RespondAsync(new GotPositionFrequencies(errorFrequency));
     }
 }

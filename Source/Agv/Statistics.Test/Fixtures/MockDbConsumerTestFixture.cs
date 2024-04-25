@@ -45,4 +45,25 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
         StatisticsDbMock.Setup(x => x.Maps.GetMapsForGridAsync(It.IsAny<Guid>())).ReturnsAsync(maps);
         return this;
     }
+
+    public MockDbConsumerTestFixture<TConsumer> WithGridPositions(List<GridAgvPosition> positions)
+    {
+        StatisticsDbMock.Setup(x => x.GridAgvPositions.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => positions.Single(p => p.PositionId == id));
+        StatisticsDbMock.Setup(x => x.GridAgvPositions.GetPositionAsync(It.IsAny<Guid>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<float>(),
+                It.IsAny<string>()))
+            .ReturnsAsync((Guid id,
+                int x,
+                int y,
+                float z,
+                string agv) => positions.Single(p =>
+                p.GridId == id &&
+                p.XIndex == x &&
+                p.YIndex == y &&
+                Math.Abs(p.Z - z) <= float.Epsilon &&
+                p.SerialNumber == agv));
+        return this;
+    }
 }

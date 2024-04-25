@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 namespace Gebhardt.Acc.Common.Exceptions;
 
 /// <summary>
-/// Assigned Agv was not found in <see cref="AgvAction"/>
+/// Assigned Agv was not found in AgvAction
 /// </summary>
 public class AssignedAgvNotFoundException : Exception
 {

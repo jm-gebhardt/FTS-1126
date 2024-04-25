@@ -127,7 +127,14 @@ public class AgvStateConsumer : IConsumer<MqttState>
             // overwrite AgvCorrelationId in a 2. step, as we are mapping from two sources to one destination, which isn't supported by AutoMapper
             _mapper.Map(agvCorrelationId, agvError);
             return agvError;
-        }).ToList());
+        }).ToList(), new AgvPosition(
+            context.Message.AgvPosition!.PositionInitialized,
+            context.Message.AgvPosition.X,
+            context.Message.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
+            0f,
+            (float)Mathematics.ConvertToRadians(90.0f) - context.Message.AgvPosition.Theta, // Special treatment for Karis AGV. 90° in our System (AGV facing right) is 0° in our world
+            context.Message.AgvPosition.DeviationRange
+        ));
 
         await context.Publish(agvErrorStatusReceived, context.CancellationToken);
     }

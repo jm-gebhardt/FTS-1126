@@ -1,93 +1,36 @@
 ﻿using System.Net;
-using System.Text.Json;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using MassTransit;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 
-/// <summary>
-/// Handler for exceptions that can occur during execution of controllers
-/// </summary>
-public class ExceptionHandlerMiddleware : IMiddleware
+/// <inheritdoc/>
+/// <inheritdoc/>
+public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> logger) : BaseExceptionHandlerMiddleware(logger)
 {
-    private readonly ILogger _logger;
-
-    /// <inheritdoc cref="ExceptionHandlerMiddleware"/>
-    public ExceptionHandlerMiddleware(ILogger<ExceptionHandlerMiddleware> logger)
+    /// <inheritdoc/>
+    protected override HttpStatusCode Convert(Exception exception)
     {
-        _logger = logger;
-    }
-
-    /// <inheritdoc />
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
-    {
-        try
+        var statusCode = exception switch
         {
-            await next(context);
-        }
-        catch (Exception ex)
-        {
-            await HandleExceptionAsync(context, ex);
-        }
-    }
-
-    private Task HandleExceptionAsync(HttpContext context, Exception exception)
-    {
-        _logger.LogError(exception, "Exception occurred during request processing");
-        HttpStatusCode statusCode;
-
-        if (exception is RequestFaultException or RequestException && exception.InnerException != null)
-        {
-            exception = exception.InnerException;
-        }
-
-        var problem = new ProblemDetails
-        {
-            Detail = exception.Message,
-            Type = exception.GetType().ToString()
+            NotInCorrectStateException => HttpStatusCode.BadRequest,
+            ActionGroupStateInvalidException => HttpStatusCode.BadRequest,
+            InvalidNodeTypeException => HttpStatusCode.BadRequest,
+            InvalidAgvSettingsPropertyException => HttpStatusCode.BadRequest,
+            ActionGroupInvalidException => HttpStatusCode.BadRequest,
+            NodeNotFoundException => HttpStatusCode.BadRequest,
+            BadRequestException => HttpStatusCode.BadRequest,
+            BatchQueryException => HttpStatusCode.BadRequest,
+            NodeNotAvailableException => HttpStatusCode.Conflict,
+            NoNodesAvailableException => HttpStatusCode.Conflict,
+            ResetAgvErrorFailedException => HttpStatusCode.InternalServerError,
+            NotFoundException => HttpStatusCode.NotFound,
+            _ => HttpStatusCode.InternalServerError
         };
 
-        switch (exception)
-        {
-            case NotInCorrectStateException:
-            case ActionGroupStateInvalidException:
-            case InvalidNodeTypeException:
-            case InvalidAgvSettingsPropertyException:
-            case ActionGroupInvalidException:
-            case NodeNotFoundException:
-            case BadRequestException:
-                statusCode = HttpStatusCode.BadRequest;
-                break;
-
-            case BatchQueryException:
-                statusCode = HttpStatusCode.BadRequest;
-                break;
-
-            case NodeNotAvailableException:
-            case NoNodesAvailableException:
-                statusCode = HttpStatusCode.Conflict;
-                break;
-
-            case ResetAgvErrorFailedException:
-                statusCode = HttpStatusCode.InternalServerError;
-                break;
-
-            case NotFoundException:
-                statusCode = HttpStatusCode.NotFound;
-                break;
-
-            default:
-                statusCode = HttpStatusCode.InternalServerError;
-                break;
-        }
-
-        string result = JsonSerializer.Serialize(problem);
-        context.Response.StatusCode = (int) statusCode;
-        context.Response.ContentType = "application/json";
-        return context.Response.WriteAsync(result);
+        return statusCode;
     }
 }

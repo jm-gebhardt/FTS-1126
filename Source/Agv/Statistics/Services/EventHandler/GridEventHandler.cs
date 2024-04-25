@@ -67,7 +67,7 @@ public class GridEventHandler :
 
                 if (map == null)
                 {
-                    _db.Maps.Add(new Domain.Models.Map(agvMap.CorrelationId, grid.GridId, xiMin, yiMin, xiMax, yiMax));
+                    _db.Maps.Add(new Domain.Models.Map(agvMap.CorrelationId, grid.GridId, xiMin, yiMin, xiMax, yiMax, agvMap.Nodes.Select(n => n.Z).First()));
                     continue;
                 }
                 map.UpdateExtent(xiMin, yiMin, xiMax, yiMax);

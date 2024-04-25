@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.Statistics.Domain.Models;
 /// <summary>
 /// Represents a map
 /// </summary>
-public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax)
+public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax, float z)
 {
     /// <summary>
     /// The id of the map.
@@ -38,6 +38,12 @@ public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax
     public int XMax { get; private set; } = xMax;
 
     /// <summary>
+    /// The Z position of the map [m].
+    /// </summary>
+    [UsedImplicitly]
+    public float Z { get; init; }  = z;
+
+    /// <summary>
     /// The Grid object.
     /// </summary>
     public Grid? Grid { get; init; }
@@ -68,11 +74,12 @@ public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax
     /// </summary>
     /// <param name="xIndex">Position x index.</param>
     /// <param name="yIndex">Position y index.</param>
+    /// <param name="z">The z position</param>
     /// <returns>boolean</returns>
-    public bool IsPositionWithinMap(int xIndex, int yIndex)
+    public bool IsPositionWithinMap(int xIndex, int yIndex, float z)
     {
         bool isWithin = XMin <= xIndex && xIndex <= XMax &&
-                        YMin <= yIndex && yIndex <= YMax;
+                        YMin <= yIndex && yIndex <= YMax && Math.Abs(Z -z) <= Constants.Grid.ZIdentityPrecision; 
         return isWithin;
     }
 }

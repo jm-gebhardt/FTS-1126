@@ -54,8 +54,9 @@ public class AgvErrorRepositoryTest
         await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync([agvError], agvCorrelationId);  
         agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agvCorrelationId, errorLevel: ErrorLevel.Warning);
 
-        bool changed = await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync([agvError], agvCorrelationId);
+        (bool changed, List<AgvError> newErrors) = await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync([agvError], agvCorrelationId);
         changed.ShouldBeTrue();
+        newErrors.Single().ShouldBe(agvError);
     }
 
     [TestMethod]

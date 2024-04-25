@@ -200,7 +200,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
     {
-        (var correlationId, List<AgvError> errors) = context.Message;
+        (var correlationId, List<AgvError> errors, _) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         bool hadError = agv.HasError;
         bool agvHasError = errors.HasAnyError();

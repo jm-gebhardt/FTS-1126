@@ -73,6 +73,7 @@ public static class HostBuilderExtension
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();
             services.AddTransient<IMapRepository, EfMapRepository>();
             services.AddTransient<IGridRepository, EfGridRepository>();
+            services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
             services.AddTransient<IGridAgvPositionRepository, EfGridAgvPositionRepository>();
             services.AddTransient<IMapAgvPositionsRepository, EfMapAgvPositionsRepository>();
             

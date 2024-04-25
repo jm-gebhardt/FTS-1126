@@ -8,4 +8,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="Errors">The errors of the agv.</param>
-public record UpdateErrorStatus(Guid CorrelationId, List<AgvError> Errors) : CorrelatedBy<Guid>;
+/// <param name="Position">The position of the agv when the error status was received.</param>
+public record UpdateErrorStatus(Guid CorrelationId, List<AgvError> Errors, AgvPosition Position) : CorrelatedBy<Guid>;

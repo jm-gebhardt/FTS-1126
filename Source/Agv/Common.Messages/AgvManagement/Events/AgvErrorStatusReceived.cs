@@ -8,15 +8,12 @@ namespace Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 /// </summary>
 public record AgvErrorStatusReceived : CorrelatedBy<Guid>
 {
-    /// <summary>
-    /// Initializes a new instance of <see cref="AgvErrorStatusReceived"/>
-    /// </summary>
-    /// <param name="correlationId">The Agv CorrelationId</param>
-    /// <param name="errors"></param>
-    public AgvErrorStatusReceived(Guid correlationId, List<AgvError>? errors)
+    /// <inheritdoc cref="AgvErrorStatusReceived"/>
+    public AgvErrorStatusReceived(Guid correlationId, List<AgvError>? errors, AgvPosition agvPosition)
     {
         CorrelationId = correlationId;
         Errors = errors;
+        AgvPosition = agvPosition;
     }
 
     /// <inheritdoc />
@@ -26,4 +23,9 @@ public record AgvErrorStatusReceived : CorrelatedBy<Guid>
     /// List of errors, Agv had encountered
     /// </summary>
     public List<AgvError>? Errors { get; set; }
+
+    /// <summary>
+    /// Current AGV position
+    /// </summary>
+    public AgvPosition AgvPosition { get; }
 }

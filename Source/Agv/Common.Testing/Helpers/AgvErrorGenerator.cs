@@ -8,7 +8,9 @@ namespace Gebhardt.Acc.Common.Testing.Helpers;
 /// </summary>
 public static class AgvErrorGenerator
 {
-    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General, ErrorFlag errorFlag = ErrorFlag.Agv)
+    private static readonly AgvPosition _defaultAgvPosition = new(true, 1, 1, 1, 0);
+
+    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General, AgvPosition? position = null, ErrorFlag errorFlag = ErrorFlag.Agv)
     {
         var errors = new List<AgvError>();
         for (int i = 0; i < errorItems; i++)
@@ -27,7 +29,7 @@ public static class AgvErrorGenerator
             ));
         }
 
-        return new AgvErrorStatusReceived(agvCorrelationId, errors);
+        return new AgvErrorStatusReceived(agvCorrelationId, errors, position?? _defaultAgvPosition);
     }
 
     public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General, ErrorFlag errorFlag = ErrorFlag.Agv)

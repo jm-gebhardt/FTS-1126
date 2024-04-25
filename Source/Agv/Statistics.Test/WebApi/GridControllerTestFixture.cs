@@ -15,6 +15,7 @@ namespace Gebhardt.Acc.Statistics.Test.WebApi;
 public class GridControllerTestFixture : MockRequestClientControllerTestFixture<GridController>
 {
     private Mock<IRequestClient<AddGrid>> _addGridClient = null!;
+
     private GotPositionFrequencies _gotPositionFrequencies = null!;
     private GotGrids _gotGrids = null!;
 
@@ -23,6 +24,7 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
     protected override void SetupController()
     {
         AddRequestClient<GetPositionFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
+        AddRequestClient<GetErrorFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
         AddRequestClient<GetGrids, GotGrids>(() => _gotGrids);
         _addGridClient = AddRequestClient<AddGrid, Success>(new Success());
     }
@@ -39,9 +41,9 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
         return this;
     }
 
-    public GridControllerTestFixture WithPositionFrequency(PositionFrequency positionFrequency)
+    public GridControllerTestFixture WithCountHeatmap(CountHeatmap countHeatmap)
     {
-        _gotPositionFrequencies = new GotPositionFrequencies(positionFrequency);
+        _gotPositionFrequencies = new GotPositionFrequencies(countHeatmap);
         return this;
     }
 

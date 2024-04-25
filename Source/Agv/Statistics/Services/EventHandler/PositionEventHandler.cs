@@ -40,25 +40,23 @@ public class PositionEventHandler : IConsumer<AgvPositionReceived>
 
         if (!await _agvPositionFilter.ShouldActAsync(context.Message))
         {
-            _logger.LogDebug("{AgvSerialNumber}: Skip AgvPosition", context.Message.SerialNumber);
             return;
         }
-        _logger.LogDebug("{AgvSerialNumber}: Use AgvPosition", context.Message.SerialNumber);
 
         ICollection<Grid> grids = await _db.Grids.GetAll();
         foreach (var grid in grids)
         {
             (int xPos, int yPos) = grid.GetXyIndex(position.X, position.Y);
-            var gridPosition = new GridAgvPosition(grid.GridId, agv, position.X, position.Y, xPos, yPos, context.Message.MessageCreatedDate, null);
+            var gridPosition = new GridAgvPosition(grid.GridId, agv, position.X, position.Y, position.Z, xPos, yPos, context.Message.MessageCreatedDate, null);
             _db.GridAgvPositions.Add(gridPosition);
 
             ICollection<Map> maps = await _db.Maps.GetMapsForGridAsync(grid.GridId);
 
             foreach (var map in maps)
             {
-                if (!map.IsPositionWithinMap(xPos, yPos))
+                if (!map.IsPositionWithinMap(xPos, yPos, position.Z))
                 {
-                    _logger.LogDebug("{AgvSerialNumber}: Skip MapAgvPosition, because it's not inside", context.Message.SerialNumber);
+                    _logger.LogDebug("{AgvSerialNumber}: Skip MapAgvPosition, because it's not inside {XPos}/{YPos} ({XMin}/{YMin})", context.Message.SerialNumber, xPos, yPos, map.XMin, map.YMin);
                     continue;
                 }
 

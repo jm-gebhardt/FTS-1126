@@ -27,4 +27,9 @@ public interface IStatisticsDb : IUnitOfWork
     /// The <see cref="Models.MapAgvPositions"/> repository.
     /// </summary>
     IMapAgvPositionsRepository MapAgvPositions { get; }
+
+    /// <summary>
+    /// The <see cref="AgvError"/> repository.
+    /// </summary>
+    IAgvErrorRepository GridAgvErrors { get; }
 }

@@ -15,7 +15,7 @@ public class PositionEventHandlerTest
     public async Task ConsumeAgvPositionReceived_SingleGrid_SinglePositionAdded()
     {
         var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2) };
-        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95)};
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95, 1)};
         MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
             .ShouldActReturns(true)
             .WithGrids(grids)
@@ -45,7 +45,7 @@ public class PositionEventHandlerTest
     public async Task ConsumeAgvPositionReceived_MultipleGrids_MultipleGridPositionsAdded()
     {
         var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2), new("a grid", 10, 10, 0, 0, 1, 1) };
-        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95)};
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95, 1)};
         MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
             .ShouldActReturns(true)
             .WithGrids(grids)
@@ -61,7 +61,7 @@ public class PositionEventHandlerTest
     public async Task ConsumeAgvPositionReceived_SingleGrid_WhenWithinMapXYIndex_AgvMapPositionAdded()
     {
         var grids = new List<Grid> { new("a grid", 1, 1, 0, 1, 0, 1) };
-        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 15,25,48,70)};
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 15,25,48,70, 1)};
         MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
             .ShouldActReturns(true)
             .WithGrids(grids)
@@ -78,7 +78,7 @@ public class PositionEventHandlerTest
     public async Task ConsumeAgvPositionReceived_SingleGrid_WhenNotWithinMapXYIndex_AgvMapPositionAdded()
     {
         var grids = new List<Grid> { new("a grid", 1, 1, 0, 1, 0, 1) };
-        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95)};
+        var maps = new List<Map> { new(Guid.NewGuid(),  Guid.NewGuid(), 65,27,70,95, 1)};
         MockDbConsumerTestFixture<PositionEventHandler> fixture = new PositionEventHandlerTestFixture()
             .ShouldActReturns(true)
             .WithGrids(grids)

@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.Statistics.WebApi.Controllers;
+using Gebhardt.Acc.Statistics.WebApi.Middleware;
 using Gebhardt.Acc.Statistics.WebApi.Swagger;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +31,7 @@ public static class WebHostBuilderExtension
         webHostBuilder.ConfigureServices(services =>
         {
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
             services.AddControllers()
                 .AddApplicationPart(executingAssembly)
@@ -84,6 +86,7 @@ public static class WebHostBuilderExtension
         app.UseDefaultFiles(); // Serve Default.htm/html, Index.htm/html by default, without having to explicitly qualify the URL.
         app.UseStaticFiles(); // Allow html, images, etc. in wwwroot directory to be served. (use UseWebRoot to change folder)
         app.UseRouting();
+        app.UseMiddleware<ExceptionHandlerMiddleware>();
         app.UseCors();
         app.UseWebSockets();
         app.UseAuthentication(); // verify user

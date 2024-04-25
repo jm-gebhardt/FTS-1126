@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Exceptions;
 

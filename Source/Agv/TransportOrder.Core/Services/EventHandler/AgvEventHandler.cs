@@ -212,7 +212,7 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvErrorStatusReceived> context)
     {
         List<AgvError> agvErrors = context.Message.Errors ?? new List<AgvError>();
-        await context.Publish(new UpdateErrorStatus(context.Message.CorrelationId, agvErrors));
+        await context.Publish(new UpdateErrorStatus(context.Message.CorrelationId, agvErrors, context.Message.AgvPosition));
     }
 
     /// <summary>

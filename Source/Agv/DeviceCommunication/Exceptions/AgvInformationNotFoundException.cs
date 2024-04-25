@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Services;
 using JetBrains.Annotations;
 

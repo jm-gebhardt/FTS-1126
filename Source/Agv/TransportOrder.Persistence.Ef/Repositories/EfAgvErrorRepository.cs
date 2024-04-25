@@ -17,7 +17,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId)
+    public async Task<(bool changed, List<AgvError> newErrors)> AddOrUpdateAgvErrorStatusAsync(List<AgvError>? errors, Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<AgvError> previousErrors = await context.Set<AgvError>()
@@ -27,13 +27,15 @@ public class EfAgvErrorRepository : IAgvErrorRepository
         List<AgvError> resolvedErrors = previousErrors.Where(p => errors == null || !errors.Any(p.IsSameError)).ToList();
         ResolveErrors(resolvedErrors);
 
+        List<AgvError> newErrors = new();
+
         if (errors?.Any() ?? false)
         {
-            List<AgvError> newErrors = errors.Where(e => !previousErrors.Any(e.IsSameError)).ToList();
+            newErrors = errors.Where(e => !previousErrors.Any(e.IsSameError)).ToList();
             await context.AddRangeAsync(newErrors);
         }
         bool changed = await context.SaveChangesAsync() != 0;
-        return changed;
+        return (changed, newErrors);
     }
 
     private static void ResolveErrors(IList<AgvError> resolvedErrors)

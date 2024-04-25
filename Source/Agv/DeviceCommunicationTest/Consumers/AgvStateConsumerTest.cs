@@ -149,7 +149,14 @@ public class AgvStateConsumerTest
 
         await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) // Initially, AGV002 has _chargingState = false
         {
-            Errors = expectedErrors
+            Errors = expectedErrors,
+            AgvPosition = new MqttAgvPosition()
+            {
+                PositionInitialized = true,
+                Theta = 0,
+                X = 12,
+                Y = 12
+            }
         }, null);
 
         await fixture.ShouldHavePublishedAsync<MqttState>();
@@ -186,7 +193,16 @@ public class AgvStateConsumerTest
             new() { LoadId = cargoId + "2", LoadPosition = "positionC2", LoadType = "Box", LoadDimensions = new MqttLoadDimensions { Height = dimensionHeight, Width = 0.8f, Length = 0.9f }, BoundingBoxReference = null }
         };
 
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId) { Loads = loadList }, null);
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId) {
+             Loads = loadList,
+               AgvPosition = new MqttAgvPosition()
+            {
+                PositionInitialized = true,
+                Theta = 0,
+                X = 12,
+                Y = 12
+            }
+            }, null);
         await fixture.ShouldHavePublishedAsync<MqttState>();
         
         var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();

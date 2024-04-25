@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Statistics.Domain.Models;
 
@@ -43,6 +44,11 @@ public class GridAgvPosition
     public float Y { get; init; }
 
     /// <summary>
+    /// The Z position [m].
+    /// </summary>
+    public float Z { get; init; }
+
+    /// <summary>
     /// The agv serial number.
     /// </summary>
     public string SerialNumber
@@ -63,23 +69,50 @@ public class GridAgvPosition
     [UsedImplicitly]
     public ICollection<MapAgvPositions>? MapAgvPositions { get; init; }
 
+    /// <summary>
+    /// The list of AgvError object.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<AgvError>? AgvErrors { get; set; }
+
     /// <inheritdoc cref="GridAgvPosition"/>>
-    public GridAgvPosition(Guid gridId, string serialNumber, float x, float y, int xIndex, int yIndex, DateTime time, Grid? grid)
+    public GridAgvPosition(Guid gridId, string serialNumber, float x, float y, float z, int xIndex, int yIndex, DateTime time, Grid? grid)
     {
         PositionId = Guid.NewGuid();
         GridId = gridId;
         SerialNumber = serialNumber;
         X = x;
         Y = y;
+        Z = z;
         XIndex = xIndex;
         YIndex = yIndex;
         Timestamp = time;
         Grid = grid;
         MapAgvPositions = new List<MapAgvPositions>();
+        AgvErrors = new List<AgvError>();
     }
 
+    /// <inheritdoc cref="GridAgvPosition"/>>
+    public GridAgvPosition(Guid positionId, Guid gridId, string serialNumber, float x, float y, float z, int xIndex, int yIndex, DateTime timeStamp, Grid? grid, List<MapAgvPositions> mapAgvPositions, List<AgvError> agvErrors )
+    {
+        PositionId = positionId;
+        GridId = gridId;
+        SerialNumber = serialNumber;
+        X = x;
+        Y = y;
+        Z = z;
+        XIndex = xIndex;
+        YIndex = yIndex;
+        Timestamp = timeStamp;
+        Grid = grid;
+        MapAgvPositions = mapAgvPositions;
+        AgvErrors = agvErrors;
+    }
+
+    /// <inheritdoc cref="GridAgvPosition"/>>
+    [JsonConstructor]
     [UsedImplicitly]
-    private GridAgvPosition()
+    public GridAgvPosition()
     {
         PositionId = Guid.NewGuid();
         SerialNumber = string.Empty;

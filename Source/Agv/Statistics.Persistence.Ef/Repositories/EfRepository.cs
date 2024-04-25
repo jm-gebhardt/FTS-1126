@@ -11,7 +11,10 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     where T : class
     where TContext : DbContext
 {
-    private readonly TContext _context;
+    /// <summary>
+    /// The db context.
+    /// </summary>
+    protected readonly TContext Context;
 
     /// <summary>
     /// Gets the underlying db set.
@@ -23,8 +26,8 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     /// </summary>
     protected EfRepository(TContext context)
     {
-        _context = context;
-        DbSet = _context.Set<T>();
+        Context = context;
+        DbSet = Context.Set<T>();
     }
 
     /// <inheritdoc />
@@ -36,7 +39,7 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     /// <inheritdoc />
     public async Task<T> GetByIdAsync(Guid id)
     {
-        var entityType = _context.Model.FindEntityType(typeof(T));
+        var entityType = Context.Model.FindEntityType(typeof(T));
         string? keyName = entityType?.FindPrimaryKey()?.Properties.Select(x => x.Name).Single();
 
         var parameter = Expression.Parameter(typeof(T), "e");
@@ -54,19 +57,19 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     /// <inheritdoc />
     public void Remove(T aggregate)
     {
-        _context.Remove(aggregate);
+        Context.Remove(aggregate);
     }
 
     /// <inheritdoc />
     public void Add(T aggregate)
     {
-        _context.Add(aggregate);
+        Context.Add(aggregate);
     }
 
     /// <inheritdoc />
     public void AddRange(IEnumerable<T> aggregates)
     {
-        _context.AddRange(aggregates);
+        Context.AddRange(aggregates);
     }
 
     /// <inheritdoc />
@@ -78,6 +81,6 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     /// <inheritdoc />
     public async Task SaveAsync()
     {
-        await _context.SaveChangesAsync();
+        await Context.SaveChangesAsync();
     }
 }

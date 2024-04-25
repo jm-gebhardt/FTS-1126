@@ -102,7 +102,8 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [AgvErrorGenerator.GenerateAgvError(errorLevel: ErrorLevel.Fatal)]));
+        var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Fatal);
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors!, errorStatus.AgvPosition));
         fixture.AgvDb.Verify(r =>
             r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Once());
     }
@@ -113,7 +114,8 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [AgvErrorGenerator.GenerateAgvError(errorLevel: ErrorLevel.Warning)]));
+        var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Warning);
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors!, errorStatus.AgvPosition));
         fixture.AgvDb.Verify(r =>
             r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Never());
     }
@@ -124,7 +126,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(hasError: true);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, []));
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [], new AgvPosition(true, 1,1,1, 0)));
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 
@@ -134,7 +136,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateBusyAgv(hasError: true);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, []));
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [], new AgvPosition(true, 1, 1, 1, 0)));
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 

@@ -2,8 +2,8 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.Statistics.Domain</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj"/>
+    <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <ProjectReference Include="..\Common\Common.csproj"/>
+        <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 </Project>

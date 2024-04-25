@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
