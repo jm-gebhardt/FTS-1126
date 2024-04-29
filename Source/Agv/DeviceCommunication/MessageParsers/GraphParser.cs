@@ -113,8 +113,8 @@ public class GraphParser
         var (fromNode, toNode) = GetFromToNodes(mqttEdge);
         string fromNodeId = swap ? toNode.Id : fromNode.Id;
         string toNodeId = swap ? fromNode.Id : toNode.Id;
-        var id = GraphHelper.ToGuid(fromNodeId, metric, toNodeId);
-        var edge = GetGraphEdgeForCurveType(mqttEdge, (float)length, swap, fromNodeId, toNodeId, id);
+       
+        var edge = GetGraphEdgeForCurveType(mqttEdge, metric, (float)length, swap, fromNodeId, toNodeId);
         bool added = _edges.Add(edge);
         if (added && _considerVelocity)
         {
@@ -126,7 +126,7 @@ public class GraphParser
         return added;
     }
 
-    private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float length, bool swap, string fromNodeId, string toNodeId, Guid id)
+    private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeId, string toNodeId)
     {
         ICollection<MqttControlPoint>? controlPoints = swap ? mqttEdge.ControlPoints?.Reverse().ToList() : mqttEdge.ControlPoints;
         bool parsed = Enum.TryParse<EdgeType>(mqttEdge.EdgeType, true, out var edgeType);
@@ -134,12 +134,14 @@ public class GraphParser
         {
             edgeType = EdgeType.Direct;
         }
+        var id = GraphHelper.ToGuid(edgeType, fromNodeId, metric, toNodeId);
         switch (edgeType)
         {
             case EdgeType.Direct:
                 return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id);
 
             case EdgeType.Bezier1:
+
                 if (controlPoints?.Count != 1)
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier1)} curve");

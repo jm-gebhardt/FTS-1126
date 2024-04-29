@@ -198,7 +198,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
             CreateDirect(Way0016, DPaint, nodes),
             CreateDirect(DPaint, Way0016, nodes),
             CreateDirect(Way0123, Pdqa, nodes),
-            GraphEdge.CreateDirect(Pdqa, Way0123, 4.841580390930176f, GraphHelper.ToGuid(Pdqa, 30f, Way0123))
+            GraphEdge.CreateDirect(Pdqa, Way0123, 4.841580390930176f, GraphHelper.ToGuid(EdgeType.Direct,Pdqa, 30f, Way0123))
         };
         return new AgvGraph(correlationId, nodes, edges);
     }
@@ -209,14 +209,14 @@ public class FixedGraphGenerator : GraphGeneratorBase
         var sourceNode = nodes.Single(n => n.Id == fromNodeId);
         var targetNode = nodes.Single(n => n.Id == toNodeId);
         float length = (float)Mathematics.EuclideanDistance(sourceNode, targetNode);
-        return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
+        return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier1"/>
     private static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)
     {
         float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x, (float)y) });
-        return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
+        return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(EdgeType.Bezier1,fromNodeId, length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreatePolypath"/>
@@ -228,14 +228,14 @@ public class FixedGraphGenerator : GraphGeneratorBase
         points.AddRange(pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)));
         points.Add(targetNode);
         double length = new Polypath(points).GetLength();
-        return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints, GraphHelper.ToGuid(fromNodeId, (float)length, toNodeId));
+        return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float)length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
     private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
     {
         float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x1, (float)y1), new((float)x2, (float)y2) });
-        return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(fromNodeId, length, toNodeId));
+        return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(EdgeType.Bezier2, fromNodeId, length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreateSlanted"/>
@@ -244,7 +244,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
         var sourceNode = nodes.Single(n => n.Id == fromNodeId);
         var targetNode = nodes.Single(n => n.Id == toNodeId);
         double length = new Slanted(sourceNode.AsVector3(), targetNode.AsVector3(), exitAngle, exitDistance).GetLength();
-        return GraphEdge.CreateSlanted(fromNodeId, toNodeId,(float) length, exitAngle, exitDistance, GraphHelper.ToGuid(fromNodeId, (float)length, toNodeId));
+        return GraphEdge.CreateSlanted(fromNodeId, toNodeId,(float) length, exitAngle, exitDistance, GraphHelper.ToGuid(EdgeType.Slanted, fromNodeId, (float)length, toNodeId));
     }
 
     /// <inheritdoc />

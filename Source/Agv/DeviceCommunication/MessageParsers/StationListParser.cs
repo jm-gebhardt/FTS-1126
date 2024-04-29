@@ -128,8 +128,8 @@ public class StationListParser
                         float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
                         string graphNodeId = graphNode.Id;
                         string nodeNearbyId = nodeNearby.Id;
-                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(graphNodeId, metric, nodeNearbyId)));
-                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(nodeNearbyId, metric, graphNodeId)));
+                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId)));
+                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId)));
                     }
                     allAdded &= added;
                 }

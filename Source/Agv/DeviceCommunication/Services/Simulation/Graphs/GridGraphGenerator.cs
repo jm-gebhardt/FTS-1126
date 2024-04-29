@@ -275,10 +275,10 @@ public class GridGraphGenerator : GraphGeneratorBase
     {
         string fromNodeId = fromNode.Id;
         string toNodeId = toNode.Id;
-        _edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, EdgeMetric, GraphHelper.ToGuid(fromNodeId, EdgeMetric, toNodeId)));
+        _edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, EdgeMetric, toNodeId)));
         if (bidirectional)
         {
-            _edges.Add(GraphEdge.CreateDirect(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(toNodeId, EdgeMetric, fromNodeId)));
+            _edges.Add(GraphEdge.CreateDirect(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, toNodeId, EdgeMetric, fromNodeId)));
         }
     }
 

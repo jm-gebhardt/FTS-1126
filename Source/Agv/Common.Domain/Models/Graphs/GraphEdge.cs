@@ -74,7 +74,7 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <returns></returns>
     public override string ToString()
     {
-        return $"{FromNodeId} -- {Length} --> {ToNodeId}";
+        return $"{Variant} -- {FromNodeId} -- {Length} --> {ToNodeId}";
     }
 
     /// <summary>
