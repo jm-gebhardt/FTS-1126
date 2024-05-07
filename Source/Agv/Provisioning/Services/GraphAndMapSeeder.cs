@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
-using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Maps;
+using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.Provisioning.Configuration;
 using Gebhardt.Acc.Provisioning.Models;
 using JetBrains.Annotations;

@@ -1,0 +1,116 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "agvData",
+    "description": "The basic AGV data from the agv.",
+    "subtopic": "/agvData",
+    "type": "object",
+    "properties": {
+        "serialNumber": {
+            "description": "Serial number of the agv.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
+        "requestId": {
+            "type": "string",
+            "description": "The unique ID replied from the request."
+        },
+        "model": {
+            "type": "string",
+            "description": "The model name of the agv.",
+            "examples": [
+                "KARIS",
+                "GridSkitter"
+            ]
+        },
+        "type": {
+            "type": "string",
+            "description": "The type of the agv.",
+            "examples": [
+                "Bauform1",
+                "BF1"
+            ]
+        },
+        "ipV4Address": {
+            "type": "string",
+            "description": "The IP Address of the agv.",
+            "examples": [
+                "10.0.0.23",
+                "192.168.178.123"
+            ]
+        },
+        "softwareVersion": {
+            "type": "string",
+            "description": "The software version for the agv."
+        },
+        "length": {
+            "type": "number",
+            "description": "The length of the agv in [m]."
+        },
+        "width": {
+            "type": "number",
+            "description": "The width of the agv in [m]."
+        },
+        "payload": {
+            "type": "integer",
+            "description": "The max. payload of the agv in [kg]."
+        },
+        "batteryCapacity": {
+            "type": "number",
+            "description": "The capacity of the agvs battery in [Ah]."
+        },
+        "maxVelocityStraight": {
+            "type": "number",
+            "description": "The maximum velocity of the agv in straight direction [m/s]."
+        },
+        "maxVelocityTurn": {
+            "type": "number",
+            "description": "The maximum velocity of the agv in while turning [m/s]."
+        },
+        "maxVelocityTurnOnSpot": {
+            "type": "number",
+            "description": "The maximum velocity of the agv while turning on spot [rad/s]."
+        },
+        "turnOnSpotThreshold": {
+            "type": "number",
+            "description": "Threshold angle by which the agv will stop and turn on spot [rad]."
+        },
+        "acceleration": {
+            "type": "number",
+            "description": "The maximum velocity of the agv while turning on spot [m/s^2]."
+        },
+        "sensors": {
+            "type": "array",
+            "description": "The list of sensors in the agv.",
+            "items": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "sensorIdentifier": {
+                            "type": "string",
+                            "description": "The identifier of the sensor."
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "required": [
+        "serialNumber",
+        "requestId",
+        "model",
+        "type",
+        "ipV4Address",
+        "length",
+        "width",
+        "payload",
+        "batteryCapacity",
+        "maxVelocityStraight",
+        "maxVelocityTurn",
+        "maxVelocityTurnOnSpot",
+        "turnOnSpotThreshold",
+        "acceleration"
+    ]
+}

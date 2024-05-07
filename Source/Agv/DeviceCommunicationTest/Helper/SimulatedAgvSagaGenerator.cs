@@ -4,8 +4,8 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Services.Simulation;
-using Gebhardt.Acc.DeviceCommunication.States;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;
 

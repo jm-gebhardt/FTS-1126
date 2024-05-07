@@ -26,6 +26,8 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Testing\Common.Testing.csproj"/>
-        <ProjectReference Include="..\DeviceCommunication\DeviceCommunication.csproj"/>
+        <ProjectReference Include="..\DeviceCommunication.KarisAgv\DeviceCommunication.KarisAgv.csproj" />
+        <ProjectReference Include="..\DeviceCommunication.Common\DeviceCommunication.Common.csproj"/>
+        <ProjectReference Include="..\DeviceCommunication.SimAgv\DeviceCommunication.SimAgv.csproj" />
     </ItemGroup>
 </Project>

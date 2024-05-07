@@ -1,8 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Exceptions;
-using Gebhardt.Acc.DeviceCommunication.MessageParsers;
-using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

@@ -1,6 +1,6 @@
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.CmdOptions;
-using Gebhardt.Acc.DeviceCommunication.Services.Simulation;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,9 +14,9 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 [TestClass]
 public class SimulatedAgvProviderTest
 {
-    private static SimulateOptions GetSimulatedOptions(int numberOfAgvs = 1)
+    private static Options GetSimulatedOptions(int numberOfAgvs = 1)
     {
-        return new SimulateOptions()
+        return new Options()
         {
             Agvs = numberOfAgvs,
             Sources = new[] { "S1" },

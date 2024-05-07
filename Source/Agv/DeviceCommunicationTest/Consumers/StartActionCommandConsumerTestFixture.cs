@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 

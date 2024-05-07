@@ -4,7 +4,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;
 

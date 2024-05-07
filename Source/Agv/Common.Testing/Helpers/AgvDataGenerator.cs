@@ -17,7 +17,7 @@ public static class AgvDataGenerator
         AgvData.Sensor[]? sensors = null)
     {
         return new AgvData(correlationId ?? Guid.NewGuid(),
-            "Karis",
+            "KARIS",
             "BF1",
             ipV4Address,
             "v0",

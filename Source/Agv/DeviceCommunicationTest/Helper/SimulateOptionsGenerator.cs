@@ -1,17 +1,17 @@
-﻿using Gebhardt.Acc.DeviceCommunication.CmdOptions;
+﻿using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;
 
 public static class SimulateOptionsGenerator
 {
-    public static SimulateOptions GenerateSimulateOptions(string source, string destination, int numberOfSimulatedAgvs = 1, int nodeTravelTime = 5000)
+    public static Options GenerateSimulateOptions(string source, string destination, int numberOfSimulatedAgvs = 1, int nodeTravelTime = 5000)
     {
         return GenerateSimulateOptions(new[] { source }, new[] { destination }, numberOfSimulatedAgvs, nodeTravelTime);
     }
 
-    private static SimulateOptions GenerateSimulateOptions(string[] sources, string[] destinations, int numberOfSimulatedAgvs = 1, int nodeTravelTime = 5000)
+    private static Options GenerateSimulateOptions(string[] sources, string[] destinations, int numberOfSimulatedAgvs = 1, int nodeTravelTime = 5000)
     {
-        return new SimulateOptions
+        return new Options
         {
             Agvs = numberOfSimulatedAgvs,
             Sources = sources,

@@ -6,7 +6,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WCSCommunication", "WCSComm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{295FB233-7BEC-4FC6-97BF-B8ECCBCAFD9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication", "DeviceCommunication\DeviceCommunication.csproj", "{886BCCFA-0CF3-4965-AF68-888263472568}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication.KarisAgv", "DeviceCommunication.KarisAgv\DeviceCommunication.KarisAgv.csproj", "{886BCCFA-0CF3-4965-AF68-888263472568}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransportOrder.Core", "TransportOrder.Core\TransportOrder.Core.csproj", "{46E31FAD-3FA1-483A-B963-ECD6D6776B02}"
 EndProject
@@ -52,11 +52,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Statistics.Test", "Statisti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Provisioning", "Provisioning\Provisioning.csproj", "{01F05DC0-BD4A-4028-86EE-DD228509369E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication.WebApi", "DeviceCommunication.WebApi\DeviceCommunication.WebApi.csproj", "{62CA650B-3B1B-477F-A6E6-55424CBD0057}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication.SimAgv", "DeviceCommunication.SimAgv\DeviceCommunication.SimAgv.csproj", "{62CA650B-3B1B-477F-A6E6-55424CBD0057}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.Persistence.Ef", "Common.Persistence.Ef\Common.Persistence.Ef.csproj", "{0CC482A5-A0FE-4F77-99FA-87BF54E60862}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication.Messages", "DeviceCommunication.Messages\DeviceCommunication.Messages.csproj", "{82554C26-9533-488A-9DC7-FE858F20CAE4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCommunication.Common", "DeviceCommunication.Common\DeviceCommunication.Common.csproj", "{82554C26-9533-488A-9DC7-FE858F20CAE4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{896EEA92-CFB5-4A39-812A-E47E038AFF65}"
 EndProject

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using MassTransit;
 using MassTransit.Serialization;
 using MassTransit.Testing;

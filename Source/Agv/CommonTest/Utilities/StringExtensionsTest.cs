@@ -45,8 +45,8 @@ public class StringExtensionsTest
     [DataRow("KARIS-Flow-1", "b8fbd408-83b9-3c87-8c91-9bc8c870f325")]
     [DataRow("Omnipallet-1", "83446ca0-130f-ed81-521a-69b3e55242ac")]
     [DataRow("Omnipallet-2", "be5fa3ef-cbf8-f815-758e-bfc0c888cd48")]
-    [DataRow("karis0", "aefddf7d-21a2-6490-80f2-67160e516662")]
-    [DataRow("karis1", "3abdc4f4-c38b-0545-ef8f-6d35da8d5ac2")]
+    [DataRow("KARIS0", "cab6cd15-4401-6408-c73b-d7417ccea083")]
+    [DataRow("KARIS1", "8e2dec4a-6809-8516-c231-890953e42249")]
     public void ToGuid_ShouldWorkFor(string inputString, string expectedGuid)
     {
         var guid = inputString.ToGuid();

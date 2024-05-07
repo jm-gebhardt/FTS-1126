@@ -1,12 +1,12 @@
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.DeviceCommunication.Services;
-using Gebhardt.Acc.DeviceCommunication.Services.Graphs;
+using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunicationTest.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
-public class AgvGraphConsumerTestFixture : MqttConsumerTestFixture<AgvGraphConsumer>
+public class AgvGraphConsumerTestFixture : MqttConsumerTestFixture<MqttGraphConsumer>
 {
     private IAgvRepository AgvRepository { get; } = new AgvRepositoryTestFixture().AgvRepository;
 

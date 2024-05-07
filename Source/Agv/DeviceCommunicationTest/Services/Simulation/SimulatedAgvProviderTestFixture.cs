@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.DeviceCommunication.Services.Simulation;
+﻿using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;

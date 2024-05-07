@@ -1,10 +1,11 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services;
 
-public class ActionEventConsumerMqttFixture : MqttConsumerTestFixture<ActionEventConsumer>
+public class ActionEventConsumerMqttFixture : MqttConsumerTestFixture<ActionAbortedConsumer>
 {
     private readonly AgvRepositoryTestFixture _agvRepositoryTestFixture = new();
 

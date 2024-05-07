@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.DeviceCommunication.Services.Graphs;
+using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Graphs;

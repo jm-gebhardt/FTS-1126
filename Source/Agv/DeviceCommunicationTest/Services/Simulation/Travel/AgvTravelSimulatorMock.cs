@@ -1,4 +1,4 @@
-using Gebhardt.Acc.DeviceCommunication.Services.Simulation.Travel;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;

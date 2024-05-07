@@ -27,7 +27,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
-        <ProjectReference Include="..\DeviceCommunication\DeviceCommunication.csproj" />
         <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
         <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
         <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj" />

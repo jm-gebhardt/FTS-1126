@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.DeviceCommunication.Common</AssemblyName>
+        <OutputType>Library</OutputType>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="MassTransit" Version="8.2.1" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.1" />
+        <PackageReference Include="SkiaSharp" Version="2.88.8" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Common\Common.csproj" />
+    </ItemGroup>
+</Project>

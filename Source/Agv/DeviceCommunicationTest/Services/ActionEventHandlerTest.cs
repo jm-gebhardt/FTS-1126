@@ -2,9 +2,9 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Messages.Enums;
-using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
-using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -19,7 +19,7 @@ public class ActionEventHandlerTest
     {
         var agvInformation = AgvInformationGenerator.GetAgvInformation();
         var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
-        MqttConsumerTestFixture<ActionEventConsumer> fixture = new ActionEventConsumerMqttFixture()
+        MqttConsumerTestFixture<ActionAbortedConsumer> fixture = new ActionEventConsumerMqttFixture()
             .WithAgvInformation(agvInformation);
 
         var actionCorrelationId = Guid.NewGuid();
@@ -43,7 +43,7 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionAborted_EmptyAgvId_DoesNotPublishMqttOrder()
     {
-        MqttConsumerTestFixture<ActionEventConsumer> fixture = new ActionEventConsumerMqttFixture();
+        MqttConsumerTestFixture<ActionAbortedConsumer> fixture = new ActionEventConsumerMqttFixture();
 
         var actionCorrelationId = Guid.NewGuid();
         const string orderId = "1234";

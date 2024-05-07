@@ -1,4 +1,4 @@
-using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services;
 

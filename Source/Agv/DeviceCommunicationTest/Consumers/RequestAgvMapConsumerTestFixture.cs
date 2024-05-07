@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 

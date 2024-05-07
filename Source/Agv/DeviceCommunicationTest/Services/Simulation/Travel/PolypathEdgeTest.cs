@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Polypath = Gebhardt.Acc.DeviceCommunication.Services.Simulation.Travel.PolypathEdge;
+using Polypath = Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel.PolypathEdge;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
 

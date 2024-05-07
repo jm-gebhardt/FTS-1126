@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
+﻿using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;

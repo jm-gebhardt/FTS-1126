@@ -3,10 +3,10 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Messages.Events;
-using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
-using Gebhardt.Acc.DeviceCommunication.Services;
-using Gebhardt.Acc.DeviceCommunication.States;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Events;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.States;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 

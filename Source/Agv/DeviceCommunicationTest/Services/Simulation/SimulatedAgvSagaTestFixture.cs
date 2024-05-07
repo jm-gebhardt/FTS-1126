@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Testing.Time;
-using Gebhardt.Acc.DeviceCommunication.States;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;

@@ -22,6 +22,11 @@ public class EnvFile
     /// </summary>
     public const string DefaultPassword = "agvs!Ar3Aw3som3";
 
+    /// <summary>
+    /// Default docker compose profiles
+    /// </summary>
+    private const string DefaultComposeProfiles = "karisagv,wcs";
+
     private readonly string _composeDirectoryPath;
     private string EnvTemplateFile => $"{_composeDirectoryPath}/.env.template";
     private Dictionary<string, string> _dict = new();
@@ -65,6 +70,7 @@ public class EnvFile
             {
                 "USER" => DefaultUser,
                 "PASSWORD" => DefaultPassword,
+                "PROFILES" => DefaultComposeProfiles,
                 _ => _dict[key]
             };
         }

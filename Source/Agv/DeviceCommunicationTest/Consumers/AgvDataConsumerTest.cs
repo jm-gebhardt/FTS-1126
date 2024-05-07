@@ -2,8 +2,8 @@
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Messages.MqttMessages;
-using Gebhardt.Acc.DeviceCommunication.Services;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -47,7 +47,7 @@ public class AgvDataConsumerTest
             new() { SensorIdentifier = "Back02" },
             new() { SensorIdentifier = "Front02" }
         };
-        var message = new MqttAgvData(AgvSerialNumber, "Karis", "BF1", "127.0.0.1", "v3.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
+        var message = new MqttAgvData(AgvSerialNumber, "KARIS", "BF1", "127.0.0.1", "v3.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
         await fixture.ShouldHavePublishedAsync<MqttAgvData>();
 
@@ -59,7 +59,7 @@ public class AgvDataConsumerTest
         publishedData.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
         publishedData.SerialNumber.ShouldBe(AgvSerialNumber);
         publishedData.Data.Sensors.Length.ShouldBe(4);
-        publishedData.Data.Model.ShouldBe("Karis");
+        publishedData.Data.Model.ShouldBe("KARIS");
         publishedData.Data.Type.ShouldNotBeNull();
         publishedData.Data.MaxVelocityTurnOnSpot.ShouldBe(2.5);
         publishedData.Data.MaxVelocityStraight.ShouldBe(1.8);
