@@ -4,8 +4,12 @@ pool:
 variables:
 - name: 'SourceDirectory'
   value: 'Source/Agv'
+- name: 'IntegrationTestSourceDirectory'
+  value: 'Source/Agv.IntegrationTest'  
 - name: 'Build.Target'
   value: 'CompileAgv.sln'
+- name: 'Build.Target.IntegrationTest'
+  value: 'IntegrationTest.sln'  
 
 schedules:
   - cron: "0 4 * * *"
@@ -32,7 +36,7 @@ steps:
       checkLatest: true
   - task: NuGetAuthenticate@1
   - task: NuGetCommand@2
-    displayName: 'Restoring based on NuGet.config'
+    displayName: 'Restoring Source/Agv based on NuGet.config'
     inputs:
       command: 'restore'
       restoreSolution: '$(SourceDirectory)/$(Build.Target)'
@@ -55,4 +59,29 @@ steps:
           exit 1;
         fi
       workingDirectory: 'Source/Agv'
+  - task: NuGetCommand@2
+    displayName: 'Restoring Source/Agv.IntegrationTest based on NuGet.config'
+    inputs:
+      command: 'restore'
+      restoreSolution: '$(IntegrationTestSourceDirectory)/$(Build.Target.IntegrationTest)'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(IntegrationTestSourceDirectory)/NuGet.Config'
+  - task: Bash@3
+    displayName: 'Check for vulnerabilities in dependencies of integration test'
+    inputs:
+      targetType: 'inline'
+      script: |
+        set -ex
+        OUTPUT=$(dotnet list package --vulnerable --include-transitive)
+        echo "${OUTPUT}"
+        VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z\.]+` has the following vulnerable packages/{ print $2}'))
+        for i in "${VULNERABLE_PROJECTS[@]}"
+        do
+            echo "##vso[task.logissue type=error]${i} has vulnerable dependencies" >&2
+        done
+        if [ -n "${VULNERABLE_PROJECTS}" ]; then
+          exit 1;
+        fi
+      workingDirectory: 'Source/Agv.IntegrationTest'
+
       
