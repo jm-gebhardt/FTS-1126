@@ -40,7 +40,7 @@ public class EfNodeRepository : INodeRepository
 
         if (!nodeIds.Any())
         {
-            throw new MapNotFoundException(nameof(mapCorrelationId), mapCorrelationId);
+            throw new MapNotFoundException(mapCorrelationId);
         }
 
         List<NodeLock> nodeStates = await context.Set<NodeLock>()

@@ -158,7 +158,7 @@ public class EfMapRepositoryTest
 
         fixture.Add(map);
 
-        List<GraphNode> stationGraphNodes = (await fixture.Repository.GetStationsForMapAsync(map.CorrelationId)).ToList();
+        List<GraphNode> stationGraphNodes = (await fixture.Repository.GetStationNodesForMapAsync(map.CorrelationId)).ToList();
         stationGraphNodes.Count.ShouldBe(0);
     }
 }

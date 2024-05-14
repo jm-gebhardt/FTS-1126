@@ -7,6 +7,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
@@ -112,7 +113,7 @@ public class EfMapRepository : IMapRepository
             .FirstOrDefaultAsync(q => q.CorrelationId == correlationId);
         if (map == null)
         {
-            throw new MapNotFoundException();
+            throw new MapNotFoundException(correlationId);
         }
         return map;
     }
@@ -163,21 +164,22 @@ public class EfMapRepository : IMapRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<GraphNode>> GetStationsForMapAsync(Guid mapCorrelationId)
+    public async Task<IEnumerable<GraphNode>> GetStationNodesForMapAsync(Guid mapCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var map = await context.Set<Map>()
-                .Include(m => m.Nodes)
-                .AsNoTracking()
-                .SingleOrDefaultAsync(m => m.CorrelationId == mapCorrelationId);
+        List<EfNode> stationNodes = await context.Set<EfNode>()
+            .Where(NodeFilters.IsStation)
+            .Where(n => n.Maps.Any(m => m.CorrelationId == mapCorrelationId))
+            .AsNoTracking()
+            .ToListAsync();
 
-        if (map == null)
+        if (!stationNodes.Any() && !Exists(mapCorrelationId))
         {
-            throw new MapNotFoundException();
+            throw new MapNotFoundException(mapCorrelationId);
         }
 
-        var stations = _mapper.Map<List<GraphNode>>(map.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint));
+        var stations = _mapper.Map<List<GraphNode>>(stationNodes);
 
         return stations;
     }

@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
@@ -13,7 +14,7 @@ public class StationProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereStationIsMappedToStationDto()
     {
-        var station = new Station("testNodeId", 3.0, 2.0);
+        var station = new Station("testNodeId", 3.0, 2.0, AgvGraph.NodeType.Park);
         var mapper = MappingHelper.GetMapper(new StationProfile());
 
         var stationDto = mapper.Map<StationDto>(station);
@@ -22,7 +23,8 @@ public class StationProfileTest
         stationDto.ShouldSatisfyAllConditions(
             x => x.NodeId.ShouldBe(station.Id),
             x => x.Length.ShouldBe(station.Length),
-            x => x.Width.ShouldBe(station.Width));
+            x => x.Width.ShouldBe(station.Width),
+            x => x.StationType.ShouldBe(station.StationType));
     }
 
     [TestMethod]

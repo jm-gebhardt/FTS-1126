@@ -15,6 +15,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using MassTransit;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
@@ -267,6 +268,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetMap>();
 
         configurator.AddConsumer<GetStationsRequestHandler>();
+        configurator.AddRequestClient<GetMapStations>();
         configurator.AddRequestClient<GetStations>();
+        configurator.AddRequestClient<GetStation>();
     }
 }

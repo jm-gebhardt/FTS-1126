@@ -25,19 +25,31 @@ public static class NodeExtensions
     public static Vector2 AsVector2(this GraphNode node) => new(node.X, node.Y);
 
     /// <summary>
-    /// True if the given node is a station.
+    /// True if node type is Charge, Drop, Pick, PickDrop or Park.
     /// </summary>
-    public static bool IsStation(this GraphNode node) => new[]
+    /// <param name="nodeType">The node type to evaluate.</param>
+    /// <returns>True if node type represents a station.</returns>
+    private static bool IsStation(this AgvGraph.NodeType nodeType) => new[]
     {
         AgvGraph.NodeType.Charge, AgvGraph.NodeType.Drop, AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park
-    }.Contains(node.Type);
+    }.Contains(nodeType);
+
+    /// <summary>
+    /// True if node type is Charge, Drop, Pick, PickDrop or Park.
+    /// </summary>
+    /// <param name="node">The node with the node type to evaluate.</param>
+    /// <returns>True if node type represents a station.</returns>
+    public static bool IsStation(this GraphNode node)
+    {
+        return node.Type.IsStation();
+    }
 
     /// <summary>
     /// True if the given node is a pick station.
     /// </summary>
     public static bool IsPickStation(this GraphNode node) => new[]
     {
-         AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop
+        AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop
     }.Contains(node.Type);
 
     /// <summary>
@@ -47,12 +59,12 @@ public static class NodeExtensions
     {
         AgvGraph.NodeType.Drop, AgvGraph.NodeType.PickDrop
     }.Contains(node.Type);
-    
+
     /// <summary>
     /// True if a nodes needs to be reserved.
     /// </summary>
     /// <param name="node">The node.</param>
-    public static bool NeedsReservation (this GraphNode node) =>  new []{ AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}.Contains(node.Type);
+    public static bool NeedsReservation(this GraphNode node) => new[] {AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}.Contains(node.Type);
 
     /// <summary>
     /// True if a nodes is a charge node.

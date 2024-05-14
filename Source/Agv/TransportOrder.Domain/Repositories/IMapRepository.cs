@@ -50,9 +50,9 @@ public interface IMapRepository
     Task AssignAgvGraphToMapsAsync(Guid agvId);
 
     /// <summary>
-    /// Get all stations for the map.
+    /// Get all station graph nodes for the map.
     /// </summary>
     /// <param name="mapCorrelationId">The Guid of the map.</param>
     /// <returns></returns>
-    Task<IEnumerable<GraphNode>> GetStationsForMapAsync(Guid mapCorrelationId);
+    Task<IEnumerable<GraphNode>> GetStationNodesForMapAsync(Guid mapCorrelationId);
 }

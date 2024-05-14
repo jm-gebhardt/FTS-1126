@@ -9,7 +9,7 @@ using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
-/// Defines a handler for the GetMapList request
+/// Defines a handler for map related requests.
 /// </summary>
 [UsedImplicitly]
 public class GetMapRequestHandler :

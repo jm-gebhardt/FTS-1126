@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
@@ -7,20 +8,8 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 /// </summary>
 public class MapNotFoundException : NotFoundException
 {
-    /// <summary>
     /// <inheritdoc cref="MapNotFoundException"/>
-    /// </summary>
-    public MapNotFoundException() : base("Map")
-    {
-    }
-
-    /// <summary>
-    /// <inheritdoc cref="MapNotFoundException"/>
-    /// </summary>
-    /// <param name="paramIdentifierName">Name of map identifier</param>
-    /// <param name="paramIdentifierValue">Value of map identifier</param>
-    public MapNotFoundException(string paramIdentifierName, object paramIdentifierValue)
-        : base("Map", paramIdentifierName, paramIdentifierValue)
+    public MapNotFoundException(Guid correlationId) : base(nameof(Map), nameof(Map.CorrelationId), correlationId)
     {
     }
 }

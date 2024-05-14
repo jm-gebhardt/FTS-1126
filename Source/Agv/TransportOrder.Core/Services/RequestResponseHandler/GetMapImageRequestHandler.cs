@@ -36,7 +36,7 @@ public class GetMapImageRequestHandler : IConsumer<GetMapImage>
         byte[]? image = _mapRepository.GetMapImage(request.CorrelationId);
         if (image == null || image.Length == 0)
         {
-            throw new MapNotFoundException(nameof(request.CorrelationId), request.CorrelationId);
+            throw new MapNotFoundException(request.CorrelationId);
         }
 
         await context.RespondAsync(new GotMapImage(image));

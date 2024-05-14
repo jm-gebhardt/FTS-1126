@@ -7,4 +7,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 /// </summary>
 /// <param name="CorrelationId">The map correlation id.</param>
 [UsedImplicitly]
-public record GetStations(Guid CorrelationId);
+public record GetMapStations(Guid CorrelationId);

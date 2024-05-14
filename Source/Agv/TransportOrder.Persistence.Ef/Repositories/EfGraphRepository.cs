@@ -99,10 +99,10 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<GraphNode>> GetNodesByIdsAsync( ICollection<string> nodeIds)
+    public async Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<string> nodeIds)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-         List<EfNode> nodes = await context.Set<EfAgvGraph>()
+        List<EfNode> nodes = await context.Set<EfAgvGraph>()
             .Include(g => g.Nodes)
             .SelectMany(g => g.Nodes)
             .Where(n => nodeIds.Contains(n.Id))
@@ -158,7 +158,7 @@ public class EfGraphRepository : IGraphRepository
 
         if (map == null)
         {
-            throw new MapNotFoundException();
+            throw new MapNotFoundException(mapCorrelationId);
         }
 
         var graph = new Graph
@@ -197,7 +197,7 @@ public class EfGraphRepository : IGraphRepository
 
             if (existingGraph == null)
             {
-                context.Add((object)efGraph);
+                context.Add((object) efGraph);
             }
             else
             {

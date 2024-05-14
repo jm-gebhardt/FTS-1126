@@ -16,7 +16,7 @@ public class NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> : Med
     
     public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithEmptyRepository()
     {
-        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => throw new MapNotFoundException(nameof(correlationId), correlationId));
+        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => throw new MapNotFoundException(correlationId));
         return this;
     }
 
