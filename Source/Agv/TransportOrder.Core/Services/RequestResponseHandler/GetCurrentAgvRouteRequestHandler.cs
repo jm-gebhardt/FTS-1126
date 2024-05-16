@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+﻿using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using JetBrains.Annotations;
@@ -13,24 +14,32 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 public class GetCurrentAgvRouteRequestHandler : IConsumer<GetCurrentAgvRoute>, IConsumer<GetCurrentAgvRoutes>
 {
     private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
+    private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
-    public GetCurrentAgvRouteRequestHandler(IAgvRouteRetrievalService agvRouteRetrievalService)
+    public GetCurrentAgvRouteRequestHandler(IAgvRouteRetrievalService agvRouteRetrievalService, IAgvDb agvDb)
     {
         _agvRouteRetrievalService = agvRouteRetrievalService;
+        _agvDb = agvDb;
     }
 
     /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
     public async Task Consume(ConsumeContext<GetCurrentAgvRoute> context)
     {
-        var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.CorrelationId);
+        var correlationId = context.Message.CorrelationId;
+        await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(correlationId);
+
+        var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationId);
         await context.RespondAsync(new GotCurrentAgvRoute(agvRoute));
     }
 
     /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
     public async Task Consume(ConsumeContext<GetCurrentAgvRoutes> context)
     {
-        IReadOnlyDictionary<Guid, CurrentAgvRouteReadModel?> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.CorrelationIds);
+        ICollection<Guid> correlationIds = context.Message.CorrelationIds;
+        await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(correlationIds);
+
+        ICollection<CurrentAgvRouteReadModel> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationIds);
         await context.RespondAsync(new GotCurrentAgvRoutes(agvRoute));
     }
 }

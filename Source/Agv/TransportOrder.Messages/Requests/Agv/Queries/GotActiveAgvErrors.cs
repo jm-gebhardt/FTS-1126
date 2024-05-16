@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 public record GotActiveAgvErrors(List<AgvError> AgvErrors);
 
 /// <summary>
-/// Represents a
+/// Represents an agv error
 /// </summary>
 public record AgvError
 {

@@ -65,11 +65,17 @@ public class GetAgvErrorsRequestHandler :
         (ICollection<Guid> selectedAgvs, var fromDate, var toDate) = context.Message;
         await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(selectedAgvs);
         IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate);
-        Dictionary<Guid, List<AgvError>> errorsByAgv = agvErrorHistory
+        List<AgvErrors> agvErrors = agvErrorHistory
             .GroupBy(e => e.AgvCorrelationId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.ErrorReceived).ToList());
-        var errors = _mapper.Map<Dictionary<Guid, List<Messages.Requests.Agv.Queries.AgvError>>>(errorsByAgv);
-        await context.RespondAsync(new GotErrorHistoryForAgvs(errors));
+            .Select(g => new AgvErrors(
+                g.Key, 
+                _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
+                    g.OrderByDescending(e => e.ErrorReceived).ToList())
+                )
+            )
+            .ToList();
+
+        await context.RespondAsync(new GotErrorHistoryForAgvs(agvErrors));
     }
 
     /// <summary>
@@ -81,10 +87,17 @@ public class GetAgvErrorsRequestHandler :
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
         await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(selectedAgvs);
 
-        IList<AgvError> fetchedErrors = await _agvDb.Errors.GetActiveErrorsAsync(selectedAgvs.ToList());
-        Dictionary<Guid, List<AgvError>> errorsByAgv = fetchedErrors.GroupBy(e => e.AgvCorrelationId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.ErrorReceived).ToList());
-        var errors = _mapper.Map<Dictionary<Guid, List<Messages.Requests.Agv.Queries.AgvError>>>(errorsByAgv);
+        IList<AgvError> fetchedErrors = await _agvDb.Errors.GetActiveErrorsAsync([.. selectedAgvs]);
+        List<AgvErrors> errors = fetchedErrors
+            .GroupBy(e => e.AgvCorrelationId)
+            .Select(g => new AgvErrors(
+                g.Key, 
+                _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
+                    g.OrderByDescending(e => e.ErrorReceived).ToList())
+                )
+            )
+            .ToList();
+
         await context.RespondAsync(new GotActiveErrorsForAgvs(errors));
     }
 }

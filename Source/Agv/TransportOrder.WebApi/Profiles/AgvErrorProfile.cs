@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -20,5 +21,7 @@ public class AgvErrorProfile : WebApiProfile
             .ForMember(c => c.CorrelationId, c => c.Ignore());
         CreateMap<Guid, AgvErrorStatusDto>(MemberList.None)
             .ForMember(c => c.CorrelationId, c => c.MapFrom(s => s));
+        CreateMap<AgvErrors, AgvErrorsDto>()
+            .ForMember(c => c.AgvErrors, c => c.MapFrom(s => s.AgvErrorList));
     }
 }

@@ -32,18 +32,15 @@ public class GetCurrentAgvRouteRequestHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes());
         Guid[] agvCorrelationIds = { agvCorrelationId };
-        var agvRoutesByAgv = new Dictionary<Guid, CurrentAgvRouteReadModel?>
-        {
-            { agvCorrelationId, agvRoute }
-        };
+        
         GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler>()
-            .WithAgvRoutes(agvCorrelationIds, agvRoutesByAgv)
+            .WithAgvRoutes(agvCorrelationIds, [agvRoute])
             .Build();
 
         Response<GotCurrentAgvRoutes> response = await fixture.GetResponseAsync<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(agvCorrelationIds));
 
-        response.Message.AgvRoutesByCorrelationId.Count.ShouldBe(agvCorrelationIds.Length);
-        response.Message.AgvRoutesByCorrelationId.First().Value.ShouldBe(agvRoute);
-        response.Message.AgvRoutesByCorrelationId.First().Key.ShouldBe(agvCorrelationId);
+        response.Message.AgvRoutes.Count.ShouldBe(agvCorrelationIds.Length);
+        response.Message.AgvRoutes.First().RemainingRoute.ShouldBe(agvRoute.RemainingRoute);
+        response.Message.AgvRoutes.First().CorrelationId.ShouldBe(agvCorrelationId);
     }
 }

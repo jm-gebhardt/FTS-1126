@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using JetBrains.Annotations;
 
@@ -21,5 +22,6 @@ public class CargoProfile : WebApiProfile
             );
 
         CreateMap<AgvHasCargo, AgvHasCargoDto>();
+        CreateMap<AgvCargos, CargosDto>();
     }
 }

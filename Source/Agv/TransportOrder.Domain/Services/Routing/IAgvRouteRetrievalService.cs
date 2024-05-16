@@ -22,5 +22,5 @@ public interface IAgvRouteRetrievalService
     /// </summary>
     /// <param name="agvCorrelationIds"></param>
     /// <returns></returns>
-    Task<IReadOnlyDictionary<Guid, CurrentAgvRouteReadModel?>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds);
+    Task<ICollection<CurrentAgvRouteReadModel>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds);
 }

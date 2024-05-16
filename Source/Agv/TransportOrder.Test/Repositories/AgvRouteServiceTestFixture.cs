@@ -45,10 +45,6 @@ public class AgvRouteServiceTestFixture : TransportOrderDbFixture
                     {
                         result[id] = matchingAgv.AgvStatus?.LastNodeId;
                     }
-                    else
-                    {
-                        result[id] = null;
-                    }
                 }
                 return result;
             });

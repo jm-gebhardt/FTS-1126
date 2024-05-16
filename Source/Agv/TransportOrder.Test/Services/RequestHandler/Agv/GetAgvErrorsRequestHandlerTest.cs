@@ -115,10 +115,10 @@ public class GetAgvErrorsRequestHandlerTest
 
         Response<GotActiveErrorsForAgvs> response = await fixture.GetResponseAsync<GotActiveErrorsForAgvs>(new GetActiveErrorsForAgvs(new List<Guid> { agv.CorrelationId }));
 
-        Dictionary<Guid, List<AgvError>> actualErrorsForAgvs = response.Message.ErrorsByAgv;
+        List<AgvErrors> actualErrorsForAgvs = response.Message.AgvsErrors;
 
         actualErrorsForAgvs.Count.ShouldBe(agvs.Count);
-        List<AgvError> actualErrorsForAgv = actualErrorsForAgvs[agv.CorrelationId];
+        List<AgvError> actualErrorsForAgv = actualErrorsForAgvs.FindAll(e => e.CorrelationId == agv.CorrelationId).Select(e => e.AgvErrorList).First().ToList();
         actualErrorsForAgv.Count.ShouldBe(errors.Count);
         actualErrorsForAgv.Single().CorrelationId.ShouldBe(agvError.CorrelationId);
         actualErrorsForAgv.Single().ErrorType.ShouldBe(agvError.ErrorType);
@@ -150,10 +150,10 @@ public class GetAgvErrorsRequestHandlerTest
 
         Response<GotErrorHistoryForAgvs> response = await fixture.GetResponseAsync<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(new List<Guid> { agv.CorrelationId }, DateTime.Today.AddDays(-1), DateTime.UtcNow));
 
-        Dictionary<Guid, List<AgvError>> actualErrorsForAgvs = response.Message.ErrorsByAgv;
+        List<AgvErrors> actualErrorsForAgvs = response.Message.AgvsErrors;
 
         actualErrorsForAgvs.Count.ShouldBe(agvs.Count);
-        List<AgvError> actualErrorsForAgv = actualErrorsForAgvs[agv.CorrelationId];
+        List<AgvError> actualErrorsForAgv = actualErrorsForAgvs.FindAll(e => e.CorrelationId == agv.CorrelationId).Select(e => e.AgvErrorList).First().ToList();
         actualErrorsForAgv.Count.ShouldBe(errors.Count);
         actualErrorsForAgv.Single().CorrelationId.ShouldBe(agvError.CorrelationId);
         actualErrorsForAgv.Single().ErrorType.ShouldBe(agvError.ErrorType);

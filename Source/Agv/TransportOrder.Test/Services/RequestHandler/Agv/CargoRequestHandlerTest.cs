@@ -73,11 +73,12 @@ public class CargoRequestHandlerTest
             .Build();
 
         Response<GotCargosOfAgvs> response = await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> { agvCorrelationId1, agvCorrelationId2, agvCorrelationId3 }));
+        List<AgvCargos> agvsCargoList = response.Message.AgvCargosList.ToList();
 
-        response.Message.CargosByAgvCorrelationId.Count.ShouldBe(expectedCargosByAgvCorrelationId.Count);
-        foreach (KeyValuePair<Guid, ICollection<Cargo>> kv in response.Message.CargosByAgvCorrelationId)
+        agvsCargoList.Count.ShouldBe(expectedCargosByAgvCorrelationId.Count);
+        foreach (var cargo in agvsCargoList)
         {
-            VerifyCargos(kv.Value, expectedCargosByAgvCorrelationId[kv.Key]);
+            VerifyCargos(cargo.Cargos.ToList(), expectedCargosByAgvCorrelationId[cargo.CorrelationId]);
         }
     }
 

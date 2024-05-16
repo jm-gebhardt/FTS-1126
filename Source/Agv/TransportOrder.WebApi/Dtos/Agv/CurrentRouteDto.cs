@@ -8,14 +8,21 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 /// </summary>
 public record CurrentRouteDto : DatedMessage
 {
+    /// <summary>
+    /// The correlation id of the agv.
+    /// </summary>
+    [UsedImplicitly]
+    public Guid CorrelationId { get; init; }
+
     /// <summary>The remaining route in the form of nodes and edges.</summary>
     /// <example>N002-001,N003-001,N003-002,N004-002,D2</example>
     /// <example>D2</example>
     public string[] RemainingRoute { get; init; }
 
     /// <inheritdoc cref="CurrentRouteDto"/>>
-    public CurrentRouteDto(string[] remainingRoute)
+    public CurrentRouteDto(Guid correlationId, string[] remainingRoute)
     {
+        CorrelationId = correlationId;
         RemainingRoute = remainingRoute;
     }
 

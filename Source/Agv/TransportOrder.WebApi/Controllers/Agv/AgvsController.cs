@@ -94,6 +94,10 @@ public class AgvsController : Controller
     [Route("/agvs")]
     public async Task<ActionResult<IEnumerable<AgvDto>>> GetSelectedAgvs([FromQuery] ICollection<Guid> correlationIds)
     {
+        if (correlationIds.Count == 0)
+        {
+            return Ok(new List<AgvDto>());
+        }
         Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(correlationIds));
         var agvs = _mapper.Map<List<AgvDto>>(response.Message.Agvs);
         return Ok(agvs);
@@ -124,6 +128,10 @@ public class AgvsController : Controller
     [Route("/agvs/graph")]
     public async Task<ActionResult<IEnumerable<GraphDto>>> GetAgvGraphs([FromQuery] ICollection<Guid> correlationIds)
     {
+        if (correlationIds.Count == 0)
+        {
+            return Ok(new List<GraphDto>());
+        }
         Response<GotAgvGraphs> response = await _getAgvGraphsClient.GetResponse<GotAgvGraphs>(new GetAgvGraphs(correlationIds));
         var graphs = _mapper.Map<List<GraphDto>>(response.Message.Graphs);
         return Ok(graphs);
@@ -154,38 +162,50 @@ public class AgvsController : Controller
     [Route("/agvs/battery")]
     public async Task<ActionResult<IEnumerable<AgvBatteryStatusDto>>> GetAgvsBattery([FromQuery] ICollection<Guid> correlationIds)
     {
+        if (correlationIds.Count == 0)
+        {
+            return Ok(new List<AgvBatteryStatusDto>());
+        }
         Response<GotAgvsBattery> response = await _getAgvsBatteryClient.GetResponse<GotAgvsBattery>(new GetAgvsBattery(correlationIds));
         var agvBattery = _mapper.Map<List<AgvBatteryStatusDto>>(response.Message.AgvBatteryStatus);
         return Ok(agvBattery);
     }
 
     /// <summary>
-    /// Get list of selected agvs' current routes.
+    /// Get list of selected agvs` current routes.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <returns></returns>
     [HttpPost]
     [Route("/agvs/currentRoute")]
-    public async Task<ActionResult<Dictionary<Guid, CurrentRouteDto?>>> GetAgvRoute([FromQuery] ICollection<Guid> correlationIds)
+    public async Task<ActionResult<IEnumerable<CurrentRouteDto>>> GetAgvRoute([FromQuery] ICollection<Guid> correlationIds)
     {
+        if (correlationIds.Count == 0)
+        {
+            return Ok(new List<CurrentRouteDto>());
+        }
         Response<GotCurrentAgvRoutes> response = await _getCurrentAgvRoutesClient.GetResponse<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(correlationIds));
-        var dto = _mapper.Map<Dictionary<Guid, CurrentRouteDto>>(response.Message.AgvRoutesByCorrelationId);
-        return Ok(dto);
+        var dto = _mapper.Map<List<CurrentRouteDto>>(response.Message.AgvRoutes);
+        List<CurrentRouteDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new CurrentRouteDto(c, [])).ToList();
+        result.AddRange(dto ?? []);
+        return Ok(result);
     }
 
     /// <summary>
-    /// Get mapping of selected agvs' active error lists.
+    /// Get mapping of selected agvs` active error lists.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <response code="200">Ok</response>
     /// <response code="400">One or more of given correlation ids is unknown.</response>
     [HttpPost]
     [Route("/agvs/errors")]
-    public async Task<ActionResult<Dictionary<Guid, IEnumerable<AgvErrorDto>>>> GetErrorsForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds)
+    public async Task<ActionResult<IEnumerable<AgvErrorsDto>>> GetErrorsForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds)
     {
         Response<GotActiveErrorsForAgvs> response = await _getActiveErrorsClient.GetResponse<GotActiveErrorsForAgvs>(new GetActiveErrorsForAgvs(correlationIds));
-        var dto = _mapper.Map<Dictionary<Guid, IEnumerable<AgvErrorDto>>>(response.Message.ErrorsByAgv);
-        return Ok(dto);
+        var dto = _mapper.Map<List<AgvErrorsDto>>(response.Message.AgvsErrors);
+        List<AgvErrorsDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new AgvErrorsDto(c, [])).ToList();
+        result.AddRange(dto);
+        return Ok(result);
     }
 
     /// <summary>
@@ -198,11 +218,13 @@ public class AgvsController : Controller
     /// <response code="400">One or more of given correlation ids is unknown.</response>
     [HttpPost]
     [Route("/agvs/errorHistory")]
-    public async Task<ActionResult<Dictionary<Guid, IEnumerable<AgvErrorDto>>>> GetErrorHistoryForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds, DateTime? dateFrom, DateTime? dateTo)
+    public async Task<ActionResult<IEnumerable<AgvErrorsDto>>> GetErrorHistoryForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds, DateTime? dateFrom, DateTime? dateTo)
     {
         Response<GotErrorHistoryForAgvs> response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
-        var dto = _mapper.Map<Dictionary<Guid, IEnumerable<AgvErrorDto>>>(response.Message.ErrorsByAgv);
-        return Ok(dto);
+        var dto = _mapper.Map<List<AgvErrorsDto>>(response.Message.AgvsErrors);
+        List<AgvErrorsDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new AgvErrorsDto(c, [])).ToList();
+        result.AddRange(dto);
+        return Ok(result);
     }
 
     /// <summary>
@@ -213,10 +235,10 @@ public class AgvsController : Controller
     /// <returns></returns>
     [HttpPost]
     [Route("/agvs/cargos")]
-    public async Task<ActionResult<IReadOnlyDictionary<Guid, ICollection<CargoDto>>>> GetCargosOfAgvs([FromQuery] ICollection<Guid> correlationIds)
+    public async Task<ActionResult<IEnumerable<CargosDto>>> GetCargosOfAgvs([FromQuery] ICollection<Guid> correlationIds)
     {
         Response<GotCargosOfAgvs> response = await _getCargosOfAgvsClient.GetResponse<GotCargosOfAgvs>(new GetCargosOfAgvs(correlationIds));
-        var dto = _mapper.Map<IReadOnlyDictionary<Guid, ICollection<CargoDto>>>(response.Message.CargosByAgvCorrelationId);
+        var dto = _mapper.Map<IEnumerable<CargosDto>>(response.Message.AgvCargosList);
         return Ok(dto);
     }
 

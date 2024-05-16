@@ -72,7 +72,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, CurrentAgvRouteReadModel?>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds)
+    public async Task<ICollection<CurrentAgvRouteReadModel>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds)
     {
         await using var context = await CreateDbContextAsync();
         IQueryable<ActionGroup> queryable = context.Set<ActionGroup>()
@@ -95,14 +95,14 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
         Dictionary<Guid, ActionGroup?> actionGroupById = actionGroupTask.Result;
         IReadOnlyDictionary<Guid, string?> lastNodeIdById = lastNodeIdTask.Result;
 
-        var agvRoutesById = new Dictionary<Guid, CurrentAgvRouteReadModel?>();
+        var agvRoutesById = new Dictionary<Guid, CurrentAgvRouteReadModel>();
 
         foreach (KeyValuePair<Guid, string?> lastNodeIdByAgv in lastNodeIdById)
         {
             var agvCorrelationId = lastNodeIdByAgv.Key;
             if (!actionGroupById.TryGetValue(agvCorrelationId, out var actionGroup))
             {
-                agvRoutesById[agvCorrelationId] = null;
+                agvRoutesById[agvCorrelationId] = new CurrentAgvRouteReadModel(agvCorrelationId, []);
                 continue;
             }
 
@@ -112,7 +112,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
 
             if (currentAction == null)
             {
-                agvRoutesById[agvCorrelationId] = null;
+                agvRoutesById[agvCorrelationId] = new CurrentAgvRouteReadModel(agvCorrelationId, []);
                 continue;
             }
 
@@ -126,6 +126,6 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             agvRoutesById[agvCorrelationId] = agvRoute;
         }
 
-        return agvRoutesById;
+        return agvRoutesById.Select(kv => kv.Value).ToList();
     }
 }
