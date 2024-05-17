@@ -2,7 +2,7 @@ using JetBrains.Annotations;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi.SchemaFilter;
+namespace Gebhardt.Acc.Common.WebApi;
 
 /// <summary>
 /// Swagger Schema filter to mark all model properties as required unless they are nullable

@@ -18,7 +18,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
-using Gebhardt.Acc.TransportOrder.WebApi.SchemaFilter;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
