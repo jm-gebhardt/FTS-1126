@@ -123,7 +123,7 @@ public class MoveAgvRequestHandler(
             orderId,
             actions,
             assignedAgv: agvCorrelationId,
-            isManual: actions.All(a => a.ActionType != ActionType.Charge),
+            isManual: true,
             creator: creator
         );
         IRequestClient<QueueActionGroup>? requestClient = context.CreateRequestClient<QueueActionGroup>(bus);
