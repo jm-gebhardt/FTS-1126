@@ -27,7 +27,7 @@ public class SmartLinkService : ISmartLinkService
     {
         var request = new RestRequest(new Uri(_moduleConfigProvider.ModuleConfig.SmartLinkUrl))
         {
-            Timeout = _moduleConfigProvider.ModuleConfig.RequestTimeout
+            Timeout = TimeSpan.FromSeconds(_moduleConfigProvider.ModuleConfig.RequestTimeout)
         };
         var response = await _restClient.GetAsync<SmartLinkData>(request);
 
