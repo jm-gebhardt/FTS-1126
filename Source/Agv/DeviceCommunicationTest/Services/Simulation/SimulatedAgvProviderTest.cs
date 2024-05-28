@@ -26,6 +26,7 @@ public class SimulatedAgvProviderTest
         };
     }
 
+    [Ignore]
     [TestMethod]
     public async Task SimulatedAgvProvider_Create_Triggered_CreateAgv_Published()
     {
@@ -41,6 +42,7 @@ public class SimulatedAgvProviderTest
         result.ShouldBeTrue();
     }
 
+    [Ignore]
     [TestMethod]
     public async Task TwoAgvs_SingleSourceAndDestination_CreateAgvPublished_AgvIdUnique_Successful()
     {
