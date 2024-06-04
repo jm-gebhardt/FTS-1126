@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Statistics.Domain.Models;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;

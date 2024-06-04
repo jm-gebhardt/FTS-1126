@@ -2,7 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
+namespace Gebhardt.Acc.Common.Persistence.Ef;
 
 /// <summary>
 /// Provides an abstract base class for all repository implementations.
