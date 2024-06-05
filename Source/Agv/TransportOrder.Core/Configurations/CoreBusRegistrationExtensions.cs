@@ -129,6 +129,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<StartActionOfActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CompleteActionOfActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CreateParkingActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<SetTargetForAction, ActionCommandHandler>(c);
         });
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
     }

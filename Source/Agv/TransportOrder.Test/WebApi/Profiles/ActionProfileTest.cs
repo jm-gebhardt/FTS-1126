@@ -27,6 +27,17 @@ public class ActionProfileTest
     }
 
     [TestMethod]
+    public void Map_IncompleteActionGroupToActionGroupDto_MapsActionsInOrderBySequence()
+    {
+        var mapper = MappingHelper.GetMapper(new AgvGraphProfile(), new AgvProfile(), new TransportOrder.WebApi.Profiles.ActionProfile(), new AgvErrorProfile(), new ActionProfile());
+
+        List<AgvAction> actions = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget().Actions.OrderByDescending(x => x.Sequence).ToList();
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
+        var actionGroupDto = mapper.Map<ActionGroupDto>(mapper.Map<ActionGroup>(actionGroup).ConvertFromActionGroupWithFakeNodeType());
+        actionGroupDto.Actions.Select(a => a.Sequence).ShouldBeInOrder(SortDirection.Ascending);
+    }
+
+    [TestMethod]
     public void Map_ActionToActionDto_MapsAllPropertiesCorrectly()
     {
         var mapper = MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.ActionProfile());

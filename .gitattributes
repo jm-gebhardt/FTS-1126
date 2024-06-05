@@ -1,5 +1,6 @@
 # Set default behavior to automatically normalize line endings
 * text eol=crlf encoding=UTF-8
+dotnet-tools.json -text
 
 # Files declared as binary at the end
 # Remaining untouched

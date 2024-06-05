@@ -63,6 +63,12 @@ public class ActionGroup
     public bool IsChargingOrder => Actions.Any(a => a.ActionType == ActionType.Charge);
 
     /// <summary>
+    /// True if any of the actions is incomplete, i.e. its target is undefined.
+    /// </summary>
+
+    public bool IsIncomplete => Actions.Any(a => a.IsIncomplete);
+    
+    /// <summary>
     /// List of actions (ordered by sequence).
     /// </summary>
     public IReadOnlyList<AgvAction> Actions
@@ -279,6 +285,22 @@ public class ActionGroup
         UpdateActionState(actionId, ActionState.Started);
     }
 
+    /// <summary>
+    /// Set a target for an action.
+    /// </summary>
+    /// <param name="actionId">The correlation id of the action.</param>
+    /// <param name="targetNode">The target node.</param>
+    /// <exception cref="ActionNotFoundException">Thrown if no action with was found using the action id</exception>
+    /// <exception cref="SetActionTargetFailedException">Thrown if the action already had a target</exception>
+    public void SetTargetForAction(Guid actionId, string targetNode)
+    {
+        if (Actions.All(a => a.CorrelationId != actionId))
+        {
+            throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionId);
+        }
+        Actions.Single(a => a.CorrelationId == actionId).SetTarget(targetNode);
+    }
+
     private void UpdateActionState(Guid actionId, ActionState state)
     {
         Actions.Single(a => a.CorrelationId == actionId).UpdateActionState(state);
@@ -337,7 +359,11 @@ public class ActionGroup
     /// <returns>Node ids if the targets.</returns>
     public string[] GetTargets()
     {
-        return !Actions.Any() ? [] : Actions.Select(a => a.TargetNodeId).ToArray();
+        return !Actions.Any() ? [] : Actions
+            .Where((action, index) => !action.IsIncomplete &&
+                                    (index == 0 || (!Actions[index - 1].IsIncomplete && action.Sequence == Actions[index - 1].Sequence + 1)))
+            .Select(action => action.TargetNodeId)
+            .ToArray();
     }
 
     /// <summary>

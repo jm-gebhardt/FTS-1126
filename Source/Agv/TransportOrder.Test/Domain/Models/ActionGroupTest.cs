@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Test.Extensions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -211,5 +212,63 @@ public class ActionGroupTests
         actionGroup.StartedDate.ShouldNotBeNull();
         actionGroup.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
         actionGroup.Actions.First().Nodes.ShouldBe(nodes);
+    }
+
+    [TestMethod]
+    public void GetTargets_PickDropActionGroup_TargetNodeIdsOfPickAndDropAction()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).TargetNodeId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).TargetNodeId];
+
+        actionGroup.GetTargets().ShouldBe(expectedTargets);
+    }
+
+    [TestMethod]
+    public void GetTargets_IncompletePickDropActionGroupWithoutDropTarget_TargetNodeIdsOfPickAndMoveAction()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
+        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).TargetNodeId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).TargetNodeId];
+
+        actionGroup.GetTargets().ShouldBe(expectedTargets);
+    }
+
+    [TestMethod]
+    public void GetTargets_IncompletePickDropActionGroupWithoutPickTarget_TargetNodeIdOfMoveAction()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
+        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).TargetNodeId];
+
+        actionGroup.GetTargets().ShouldBe(expectedTargets);
+    }
+
+    [TestMethod]
+    public void SetTargetForAction_ValidData_TargetOfIncompleteActionSet()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
+        var action = actionGroup.Actions.First(a => a.IsIncomplete);
+        const string target = "target";
+        
+        actionGroup.SetTargetForAction(action.CorrelationId, target);
+        
+        actionGroup.IsIncomplete.ShouldBeFalse();
+        action.TargetNodeId.ShouldBe(target);
+        action.IsIncomplete.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void SetTargetForAction_UnknownAction_ThrowsActionNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        Should.Throw<ActionNotFoundException>(() => actionGroup.SetTargetForAction("unknown".ToGuid(), "target"));
+    }
+
+    [TestMethod]
+    public void SetTargetForAction_ActionNotIncomplete_ThrowsSetActionTargetFailedException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var action = actionGroup.Actions.First(a => !a.IsIncomplete);
+       
+        Should.Throw<SetActionTargetFailedException>(() => actionGroup.SetTargetForAction(action.CorrelationId, "target"));
     }
 }

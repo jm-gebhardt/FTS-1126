@@ -42,4 +42,5 @@ public static class LogCodes
     public const int OrderInvalid = 106;
     public const int OrderAborted = 107;
     public const int OrderCanceled = 108;
+    public const int OrderIncomplete = 109;
 }

@@ -125,6 +125,131 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
+    public static ActionGroup GenerateIncompletePickDropActionGroupWithoutPickTarget(
+        ActionState pickActionState = ActionState.Created,
+        ActionState dropActionState = ActionState.Created,
+        ActionState moveActionState = ActionState.Created,
+        string? moveDestination = null,
+        string? destination = null,
+        Guid? assignedAgv = null,
+        DateTime createdDate = default,
+        DateTime? completedDate = null,
+        DateTime? startedDate = null,
+        TimeSpan? duration = null,
+        bool hasPriority = false
+    )
+    {
+        const string orderId = "orderId";
+        var groupId = Guid.NewGuid();
+
+        var pickActionGuid = Guid.NewGuid();
+        var dropActionGuid = Guid.NewGuid();
+        var moveActionGuid = Guid.NewGuid();
+
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId)
+        {
+            Sequence = 0
+        };
+        moveAction.UpdateActionState(moveActionState);
+
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, string.Empty, groupId)
+        {
+            Sequence = 1
+        };
+        pickAction.UpdateActionState(pickActionState);
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
+        {
+            Sequence = 2
+        };
+        dropAction.UpdateActionState(dropActionState);
+
+        var actions = new List<AgvAction> { moveAction, pickAction, dropAction };
+
+        var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
+        {
+            AssignedAgv = assignedAgv,
+            EstimatedDuration = duration,
+            HasPriority = hasPriority
+        };
+        actionGroup.UpdateActionGroupState();
+        if (createdDate != default)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CreatedDate))!.SetValue(actionGroup, createdDate);
+        }
+        if (startedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.StartedDate))!.SetValue(actionGroup, startedDate);
+        }
+        if (completedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
+        }
+        return actionGroup;
+    }
+
+    public static ActionGroup GenerateIncompletePickDropActionGroupWithoutDropTarget(
+        ActionState pickActionState = ActionState.Created,
+        ActionState dropActionState = ActionState.Created,
+        ActionState moveActionState = ActionState.Created,
+        string? moveDestination = null,
+        string? source = null,
+        Guid? assignedAgv = null,
+        DateTime createdDate = default,
+        DateTime? completedDate = null,
+        DateTime? startedDate = null,
+        TimeSpan? duration = null,
+        bool hasPriority = false
+    )
+    {
+        const string orderId = "orderId";
+        var groupId = Guid.NewGuid();
+
+        var pickActionGuid = Guid.NewGuid();
+        var dropActionGuid = Guid.NewGuid();
+        var moveActionGuid = Guid.NewGuid();
+
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId)
+        {
+            Sequence = 0
+        };
+        pickAction.UpdateActionState(pickActionState);
+
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId)
+        {
+            Sequence = 1
+        };
+        moveAction.UpdateActionState(moveActionState);
+
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, string.Empty, groupId)
+        {
+            Sequence = 2
+        };
+        dropAction.UpdateActionState(dropActionState);
+
+        var actions = new List<AgvAction> { pickAction, moveAction, dropAction };
+
+        var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
+        {
+            AssignedAgv = assignedAgv,
+            EstimatedDuration = duration,
+            HasPriority = hasPriority
+        };
+        actionGroup.UpdateActionGroupState();
+        if (createdDate != default)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CreatedDate))!.SetValue(actionGroup, createdDate);
+        }
+        if (startedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.StartedDate))!.SetValue(actionGroup, startedDate);
+        }
+        if (completedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
+        }
+        return actionGroup;
+    }
+
     public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null, TimeSpan? duration = null)
     {
         const string orderId = "move";

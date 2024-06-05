@@ -25,7 +25,8 @@ public class ActionEventHandler :
     IConsumer<ActionAbortionCompleted>,
     IConsumer<ActionCanceled>,
     IConsumer<ActionDurationEstimated>,
-    IConsumer<AutomaticActionWithdrawn>
+    IConsumer<AutomaticActionWithdrawn>,
+    IConsumer<TargetForActionSet>
 {
     private readonly ILogger<ActionEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -149,5 +150,18 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
         await context.Publish(new FreeNode(context.Message.TargetNodeId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TargetForActionSet"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TargetForActionSet> context)
+    {
+        (var action, Guid? assignedAgv) = context.Message;
+
+        if (assignedAgv != null)
+        {
+            await context.Publish(new SelectNodesForAction(action, assignedAgv.Value));
+        }
     }
 }

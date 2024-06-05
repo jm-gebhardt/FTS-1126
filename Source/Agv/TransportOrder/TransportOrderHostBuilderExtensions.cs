@@ -9,6 +9,7 @@ using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
+using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -37,7 +38,7 @@ namespace Gebhardt.Acc.TransportOrder;
 public static class TransportOrderHostBuilderExtensions
 {
     /// <summary>
-    /// Configured the HostBuilder to used the TransportOrderCore <paramref name="hostBuilder" />
+    /// Configures the HostBuilder used by the TransportOrderCore <paramref name="hostBuilder" />
     /// </summary>
     /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
     /// <param name="productionOptions"><see cref="ProductionOptions"/></param>
@@ -147,5 +148,6 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<IConcurrentDictionaryProvider<string, (double value, DateTime lastUpdated)>, DeviationCacheProvider>();
         services.AddTransient<IActionGroupDurationEstimationService, ActionGroupDurationEstimationService>();
         services.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
+        services.AddTransient<ActionCommandHelper>();
     }
 }

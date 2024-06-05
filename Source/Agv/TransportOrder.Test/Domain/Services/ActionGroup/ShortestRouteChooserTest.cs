@@ -144,4 +144,21 @@ public class ShortestRouteChooserTest
         chosenActionGroup.ShouldNotBeNull();
         chosenActionGroup.Actions.First().ShouldBe(actionGroup.Actions.First());
     }
+
+    [TestMethod]
+    public async Task GetActionGroupAsync_FirstActionOfActionGroupIsIncomplete_ReturnNull()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            source: string.Empty,
+            destination: AgvGraphGenerator.DestinationClose.Id
+        );
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+
+        var fixture = new ChooseAgvActionGroupServiceFixture()
+            .AddNotStartedActionGroup(actionGroup)
+            .WithAgvHasRouteToDestination(agv, actionGroup, 1f);
+
+        var chosenActionGroup = await fixture.ShortestRouteChooser.GetNotStartedActionGroupAsync(agv, null);
+        chosenActionGroup.ShouldBeNull();
+    }
 }

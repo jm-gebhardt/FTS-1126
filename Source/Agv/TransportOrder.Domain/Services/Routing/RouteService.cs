@@ -101,7 +101,7 @@ public class RouteService : IRouteService
         AgvAction? firstAction = null;
         double? firstActionCost = null;
 
-        foreach (var action in actionGroup.Actions)
+        foreach (var action in actionGroup.Actions.Where(a => !a.IsIncomplete))
         {
             double? costs = await GetCostsAsync(agv, action.TargetNodeId, agvData, cancellationToken);
             if (costs == null)

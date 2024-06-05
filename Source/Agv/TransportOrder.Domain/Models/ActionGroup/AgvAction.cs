@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -34,7 +35,7 @@ public class AgvAction : IParentedBy<Guid>
     /// <summary>
     /// Target node id of the action
     /// </summary>
-    public string TargetNodeId { get; init; }
+    public string TargetNodeId { get; private set; }
 
     /// <summary>
     /// The nodes of the trip
@@ -65,6 +66,11 @@ public class AgvAction : IParentedBy<Guid>
     /// Action is the first action of a group.
     /// </summary>
     public bool IsFirstAction => Sequence == 0;
+
+    /// <summary>
+    /// True if the action is complete, i.e. its target is not defined.
+    /// </summary>
+    public bool IsIncomplete => TargetNodeId == string.Empty;
 
     /// <summary>
     /// Constructor
@@ -107,6 +113,20 @@ public class AgvAction : IParentedBy<Guid>
         State = state;
 
         SetDates();
+    }
+
+    /// <summary>
+    /// Sets a target for the action.
+    /// </summary>
+    /// <param name="targetNodeId">The target node id.</param>
+    /// <exception cref="SetActionTargetFailedException">Thrown, if a target was already set previously.</exception>
+    public void SetTarget(string targetNodeId)
+    {
+        if (TargetNodeId != string.Empty)
+        {
+            throw new SetActionTargetFailedException(targetNodeId);
+        }
+        TargetNodeId = targetNodeId;
     }
 
     private void SetDates()

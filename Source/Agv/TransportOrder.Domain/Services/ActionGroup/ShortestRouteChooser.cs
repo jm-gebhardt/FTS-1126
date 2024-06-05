@@ -85,7 +85,7 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         {
             double? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, agvData, cancellationToken);
 
-            if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) > minCosts)
+            if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) > minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {
                 continue;
             }

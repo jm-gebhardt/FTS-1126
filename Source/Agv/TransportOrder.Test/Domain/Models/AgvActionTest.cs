@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -77,4 +78,24 @@ public class AgvActionTest
         actionToUpdateState.State.ShouldBe(state);
         actionToUpdateState.CompletedDate.ShouldBe(previousCompletedDate);
     }
-}
+
+    [TestMethod]
+    public void SetTarget_ValidData_TargetSet()
+    {
+        var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), string.Empty);
+        const string target = "target";
+
+        action.SetTarget(target);
+
+        action.TargetNodeId.ShouldBe(target);
+        action.IsIncomplete.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void SetTarget_ActionIsNotIncomplete_ThrowsSetActionTargetFailedException()
+    {
+        var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), "target");
+
+        Should.Throw<SetActionTargetFailedException>(() => action.SetTarget("new target"));
+    }
+} 

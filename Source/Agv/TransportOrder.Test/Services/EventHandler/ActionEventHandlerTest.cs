@@ -39,7 +39,7 @@ public class ActionEventHandlerTest
             .AddActionGroup(actionGroup);
         var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionGroupCreatedForAgv);
-        
+
         await fixture.ShouldHaveConsumedAsync<ActionGroupCreatedForAgv>();
         await fixture.ShouldHavePublishedAsync<SelectNodesForAction>();
         await fixture.ShouldNotHavePublishedAsync<AbortChargeAction>();
@@ -59,12 +59,12 @@ public class ActionEventHandlerTest
             .AddActionGroup(actionGroup)
             .AddAgvs(agv)
             .WithCurrentAgvAction(chargeAction)
-            .WithAgvSettings(new AgvSettingsReadModel (minChargeUp : threshold));
+            .WithAgvSettings(new AgvSettingsReadModel(minChargeUp: threshold));
         var actionGroupCreatedForAgv = new ActionGroupCreatedForAgv(mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionGroupCreatedForAgv);
 
         await fixture.ShouldHaveConsumedAsync<ActionGroupCreatedForAgv>();
-        
+
         if (expectedToAbortChargeAction)
         {
             await fixture.ShouldHavePublishedAsync<AbortChargeAction>();
@@ -85,7 +85,7 @@ public class ActionEventHandlerTest
             .AddActionGroup(actionGroup);
         var actionCompletedEvent = new ActionCompleted(actionGroup.Actions.First().CorrelationId);
         await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
-        
+
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldHavePublishedAsync<CompleteActionOfActionGroup>();
     }
@@ -96,7 +96,7 @@ public class ActionEventHandlerTest
         var fixture = new ActionEventHandlerTestFixture();
         var startingActionForAgvFailed = new StartingActionForAgvFailed(Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(startingActionForAgvFailed);
-        
+
         await fixture.ShouldHaveConsumedAsync<StartingActionForAgvFailed>();
         (await fixture.TestHarness.Published.Any<HandleAgvActionStartFailure>(f =>
             f.Context.Message == new HandleAgvActionStartFailure(startingActionForAgvFailed.CorrelationId))).ShouldBeTrue();
@@ -121,7 +121,7 @@ public class ActionEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var nodesSelectedForAction = new NodesSelectedForAction(actionGroup.Actions.First(), Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(nodesSelectedForAction);
-        
+
         await fixture.ShouldHaveConsumedAsync<NodesSelectedForAction>();
         await fixture.ShouldHavePublishedAsync<EstimateActionGroupDuration>();
     }
@@ -187,5 +187,29 @@ public class ActionEventHandlerTest
         await fixture.TestHarness.Bus.Publish(new AutomaticActionWithdrawn("Charge-0"));
         await fixture.ShouldHaveConsumedAsync<AutomaticActionWithdrawn>();
         await fixture.ShouldHavePublishedAsync<FreeNode>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TargetForActionSet_AssignedAgv_PublishesSelectNodesForAction()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        var action = Common.Testing.Helpers.AgvActionGenerator.GenerateMoveAction();
+
+        await fixture.TestHarness.Bus.Publish(new TargetForActionSet(action, Guid.NewGuid()));
+
+        await fixture.ShouldHaveConsumedAsync<TargetForActionSet>();
+        await fixture.ShouldHavePublishedAsync<SelectNodesForAction>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TargetForActionSet_NoAssignedAgv_SelectNodesForActionNotPublished()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        var action = Common.Testing.Helpers.AgvActionGenerator.GenerateMoveAction();
+
+        await fixture.TestHarness.Bus.Publish(new TargetForActionSet(action, null));
+
+        await fixture.ShouldHaveConsumedAsync<TargetForActionSet>();
+        await fixture.ShouldNotHavePublishedAsync<SelectNodesForAction>();
     }
 }

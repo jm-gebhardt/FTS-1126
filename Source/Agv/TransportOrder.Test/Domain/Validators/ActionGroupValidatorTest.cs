@@ -31,6 +31,42 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
+    public async Task ValidateAsync_WhenAllConditionsAreMetForIncompleteActionGroupWithoutDropTarget_Passes()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
+
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [TestMethod]
+    public async Task ValidateAsync_WhenAllConditionsAreMetForIncompleteActionGroupWithoutPickTarget_Passes()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
+
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [TestMethod]
     [DataRow(null)]
     [DataRow("")]
     public async Task ValidateAsync_WhenOrderIdIsNullOrEmpty_Fails(string orderId)

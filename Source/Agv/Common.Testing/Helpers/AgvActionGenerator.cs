@@ -147,6 +147,87 @@ public static class AgvActionGenerator
     }
 
     [UsedImplicitly]
+    public static ActionGroup GenerateIncompleteActionGroupWithoutPickTarget(ActionGroupState actionGroupState = ActionGroupState.Created,
+        ActionState actionState = ActionState.Created,
+        string? moveDestination = null,
+        string? destination = null,
+        Guid? assignedAgv = null)
+    {
+        const string orderId = "orderId-pick-drop";
+        var groupId = Guid.NewGuid();
+
+        var pickActionGuid = Guid.NewGuid();
+        var dropActionGuid = Guid.NewGuid();
+        var moveActionGuid = Guid.NewGuid();
+
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId)
+        {
+            Sequence = 0,
+            State = actionState
+        };
+
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick,string.Empty, groupId)
+        {
+            Sequence = 1,
+            State = actionState
+        };
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
+        {
+            Sequence = 2,
+            State = actionState
+        };
+
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction, pickAction, dropAction }, ActionGroupCreator.Wms)
+        {
+            State = actionGroupState,
+            AssignedAgv = assignedAgv
+        };
+
+        return actionGroup;
+    }
+
+    [UsedImplicitly]
+    public static ActionGroup GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState actionGroupState = ActionGroupState.Created,
+        ActionState actionState = ActionState.Created,
+        string? source = null,
+        string? moveDestination = null,
+        Guid? assignedAgv = null)
+    {
+        const string orderId = "orderId-pick-drop";
+        var groupId = Guid.NewGuid();
+
+        var pickActionGuid = Guid.NewGuid();
+        var dropActionGuid = Guid.NewGuid();
+        var moveActionGuid = Guid.NewGuid();
+
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId)
+        {
+            Sequence = 0,
+            State = actionState
+        };
+
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId)
+        {
+            Sequence = 1,
+            State = actionState
+        };
+
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, string.Empty, groupId)
+        {
+            Sequence = 2,
+            State = actionState
+        };
+
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { pickAction, moveAction, dropAction }, ActionGroupCreator.Wms)
+        {
+            State = actionGroupState,
+            AssignedAgv = assignedAgv
+        };
+
+        return actionGroup;
+    }
+
+    [UsedImplicitly]
     public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false)
     {
         const string orderId = "orderId-move";
