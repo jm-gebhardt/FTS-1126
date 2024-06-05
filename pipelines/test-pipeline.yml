@@ -13,6 +13,9 @@ variables:
   value: 'Release'
 - name: NugetVersion
   value: 6.0
+- name:  System.Debug
+  value: false
+
 
 stages:
   ################################################
@@ -134,8 +137,8 @@ stages:
   ################################################
 - stage: IntegrationTest
   dependsOn: Build
-  # condition: and( succeeded(), in(variables['Build.Reason'], 'PullRequest', 'Manual') )
-  condition: false
+  condition: and( succeeded(), in(variables['Build.Reason'], 'PullRequest', 'Manual') )
+  #condition: false
   jobs:
     - job: VersionCheck
       pool:
@@ -147,11 +150,13 @@ stages:
         - task: TriggerBuild@4
           displayName: 'Run IntegrationTest Pipeline'
           inputs:
+            useSameBranch: false
+            branchToUse: master
+            queueBuildForUserThatTriggeredBuild: false
             buildDefinition: AgvDevComb-IntegrationTest
             waitForQueuedBuildsToFinish: true
             waitForQueuedBuildsToFinishRefreshTime: 10
-            buildParameters: >
-              accGitHash: $(accGitHash)
+            buildParameters: "accGitHash: $(accGitHash)"
             authenticationMethod: 'Personal Access Token'
             password: '$(token)'
   
