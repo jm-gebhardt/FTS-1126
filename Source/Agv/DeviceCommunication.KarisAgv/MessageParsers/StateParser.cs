@@ -205,16 +205,7 @@ public class StateParser(ILogger logger, IMapper mapper)
             return;
         }
 
-        var fieldViolationWarning = new AgvError(CorrelationId,
-            "Field violation",
-            "Safety state warning: field violation",
-            "FVE-4242",
-            ErrorLevel.Warning,
-            "Field violation",
-            ErrorCategory.General,
-            null,
-            state.Timestamp.DateTime, 
-            ErrorFlag.Agv);
+        var fieldViolationWarning = new FieldViolation(CorrelationId, state.Timestamp.DateTime);
 
         if (AgvErrors == null)
         {

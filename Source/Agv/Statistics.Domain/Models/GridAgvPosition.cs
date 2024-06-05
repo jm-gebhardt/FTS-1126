@@ -75,6 +75,12 @@ public class GridAgvPosition
     [UsedImplicitly]
     public ICollection<AgvError>? AgvErrors { get; set; }
 
+    /// <summary>
+    /// The list of AgvFieldViolation object.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<AgvFieldViolation>? AgvFieldViolations { get; set; }
+
     /// <inheritdoc cref="GridAgvPosition"/>>
     public GridAgvPosition(Guid gridId, string serialNumber, float x, float y, float z, int xIndex, int yIndex, DateTime time, Grid? grid)
     {
@@ -90,10 +96,11 @@ public class GridAgvPosition
         Grid = grid;
         MapAgvPositions = new List<MapAgvPositions>();
         AgvErrors = new List<AgvError>();
+        AgvFieldViolations = new List<AgvFieldViolation>();
     }
 
     /// <inheritdoc cref="GridAgvPosition"/>>
-    public GridAgvPosition(Guid positionId, Guid gridId, string serialNumber, float x, float y, float z, int xIndex, int yIndex, DateTime timeStamp, Grid? grid, List<MapAgvPositions> mapAgvPositions, List<AgvError> agvErrors )
+    public GridAgvPosition(Guid positionId, Guid gridId, string serialNumber, float x, float y, float z, int xIndex, int yIndex, DateTime timeStamp, Grid? grid, List<MapAgvPositions> mapAgvPositions, List<AgvError> agvErrors, List<AgvFieldViolation> agvFieldViolations)
     {
         PositionId = positionId;
         GridId = gridId;
@@ -107,6 +114,7 @@ public class GridAgvPosition
         Grid = grid;
         MapAgvPositions = mapAgvPositions;
         AgvErrors = agvErrors;
+        AgvFieldViolations = agvFieldViolations;
     }
 
     /// <inheritdoc cref="GridAgvPosition"/>>

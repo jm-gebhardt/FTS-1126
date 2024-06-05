@@ -31,6 +31,7 @@ public class StatisticsDbContext : DbContext
         modelBuilder.ApplyConfiguration(new MapEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvGridPositionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvErrorEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvFieldViolationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new GridEntityConfiguration());
         modelBuilder.ApplyConfiguration(new MapAgvPositionsEntityConfiguration());
     }

@@ -20,10 +20,19 @@ public class ErrorEventHandler(IStatisticsDb db): IConsumer<AgvErrorReceived>
     {
         (var error, var position, string serialNumber) = context.Message;
         ICollection<Grid> grids = await db.Grids.GetAll();
+       
+        // Collect grid positions first to avoid duplication of
+        // error counts on retry (if a position was not saved yet)
+        ICollection<GridAgvPosition> gridPositions = [];
         foreach (var grid in grids)
         {
             (int xPos, int yPos) = grid.GetXyIndex(position.X, position.Y);
             var gridPosition = await db.GridAgvPositions.GetPositionAsync(grid.GridId, xPos, yPos, position.Z, serialNumber);
+            gridPositions.Add(gridPosition);
+        }
+
+        foreach (var gridPosition in gridPositions)
+        {
             await context.Publish(new AddError(error, gridPosition.PositionId));
         }
     }

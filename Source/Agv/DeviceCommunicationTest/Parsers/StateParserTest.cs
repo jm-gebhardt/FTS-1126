@@ -50,6 +50,7 @@ public class StateParserTest
         stateParser.CorrelationId.ShouldBe(mqttState.SerialNumber.ToGuid());
         stateParser.AgvErrors.ShouldBeNull();
         stateParser.Cargos.ShouldBeEmpty();
+        stateParser.AgvStatus.Disturbed.ShouldBeFalse();
         ValidatePosition(mqttState, stateParser.AgvPosition);
         ValidDataAgvStatus(mqttState, stateParser.AgvStatus);
     }
@@ -90,6 +91,7 @@ public class StateParserTest
 
         stateParser.Parse(mqttState);
 
+        stateParser.AgvStatus.Disturbed.ShouldBeFalse();
         stateParser.AgvErrors.ShouldNotBeNull();
         stateParser.AgvErrors.Single().AgvCorrelationId.ShouldBe(mqttState.SerialNumber.ToGuid());
         stateParser.AgvErrors.Single().ErrorLevel.ShouldBe(ErrorLevel.Fatal);
@@ -105,6 +107,7 @@ public class StateParserTest
 
         stateParser.Parse(mqttState);
 
+        stateParser.AgvStatus.Disturbed.ShouldBeFalse();
         stateParser.Cargos.ShouldNotBeEmpty();
         stateParser.Cargos.Single().LoadId.ShouldBe(mqttLoad.LoadId);
     }
@@ -120,7 +123,8 @@ public class StateParserTest
         
         stateParser.AgvErrors.ShouldNotBeNull();
         stateParser.AgvErrors.Count.ShouldBe(2);
-        var fieldViolationWarning = stateParser.AgvErrors.Single(e => e.ErrorDescription!.Contains("field violation", StringComparison.CurrentCultureIgnoreCase));
+        stateParser.AgvStatus.Disturbed.ShouldBeTrue();
+        var fieldViolationWarning = stateParser.AgvErrors.Single(e => e is FieldViolation);
         fieldViolationWarning.ErrorLevel.ShouldBe(ErrorLevel.Warning);
     }
 
@@ -134,7 +138,8 @@ public class StateParserTest
 
         stateParser.AgvErrors.ShouldNotBeNull();
         stateParser.AgvErrors.Count.ShouldBe(1);
-        var fieldViolationWarning = stateParser.AgvErrors.Single(e => e.ErrorDescription!.Contains("field violation", StringComparison.CurrentCultureIgnoreCase));
+        stateParser.AgvStatus.Disturbed.ShouldBeTrue();
+        var fieldViolationWarning = stateParser.AgvErrors.Single(e => e is FieldViolation);
         fieldViolationWarning.ErrorLevel.ShouldBe(ErrorLevel.Warning);
     }
 
@@ -148,7 +153,8 @@ public class StateParserTest
 
         stateParser.AgvErrors.ShouldNotBeNull();
         stateParser.AgvErrors.Count.ShouldBe(1);
-        var fieldViolationWarning = stateParser.AgvErrors.Single(e => e.ErrorDescription!.Contains("field violation", StringComparison.CurrentCultureIgnoreCase));
+        stateParser.AgvStatus.Disturbed.ShouldBeTrue();
+        var fieldViolationWarning = stateParser.AgvErrors.Single(e => e is FieldViolation);
         fieldViolationWarning.ErrorLevel.ShouldBe(ErrorLevel.Warning);
     }
 
@@ -162,7 +168,8 @@ public class StateParserTest
         stateParser.Parse(mqttState);
 
         stateParser.AgvErrors.ShouldNotBeNull();
+        stateParser.AgvStatus.Disturbed.ShouldBeTrue();
         stateParser.AgvErrors.Count.ShouldBe(1);
-        stateParser.AgvErrors.SingleOrDefault(e => e.ErrorDescription!.Contains("field violation", StringComparison.CurrentCultureIgnoreCase)).ShouldBeNull();
+        stateParser.AgvErrors.SingleOrDefault(e => e is FieldViolation).ShouldBeNull();
     }
 }

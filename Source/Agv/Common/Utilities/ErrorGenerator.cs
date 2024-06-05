@@ -52,17 +52,9 @@ public static class ErrorGenerator
                 DateTime.UtcNow,
                 ErrorFlag.Agv
             ),
-            3 => new AgvError(
+            3 => new FieldViolation(
                 correlationId,
-                "Field violation",
-                "Safety state warning: field violation",
-                "FVE-4242",
-                ErrorLevel.Warning,
-                "Field violation",
-                ErrorCategory.General,
-                null,
-                DateTime.UtcNow,
-                ErrorFlag.Agv
+                DateTime.UtcNow
             ),
             _ => new AgvError(
                 correlationId,

@@ -32,4 +32,9 @@ public interface IStatisticsDb : IUnitOfWork
     /// The <see cref="AgvError"/> repository.
     /// </summary>
     IAgvErrorRepository GridAgvErrors { get; }
+
+    /// <summary>
+    /// The <see cref="AgvFieldViolation"/> repository.
+    /// </summary>
+    IAgvFieldViolationRepository GridAgvFieldViolations { get; }
 }

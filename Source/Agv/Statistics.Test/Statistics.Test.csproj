@@ -5,11 +5,11 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="13.0.1"/>
-        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0"/>
-        <PackageReference Include="MassTransit" Version="8.2.2"/>
-        <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.2.2"/>
-        <PackageReference Include="MassTransit.Prometheus" Version="8.1.3"/>
+        <PackageReference Include="AutoMapper" Version="13.0.1" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="MassTransit" Version="8.2.2" />
+        <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.2.2" />
+        <PackageReference Include="MassTransit.Prometheus" Version="8.1.3" />
         <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.5" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
@@ -30,5 +30,8 @@
         <ProjectReference Include="..\Statistics.Persistence.Ef\Statistics.Persistence.Ef.csproj" />
         <ProjectReference Include="..\Statistics.WebApi\Statistics.WebApi.csproj" />
         <ProjectReference Include="..\Statistics\Statistics.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Services\RequestHandler\" />
     </ItemGroup>
 </Project>

@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Statistics.Domain.Exceptions;
 using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
@@ -37,12 +39,28 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
     public MockDbConsumerTestFixture<TConsumer> WithGrids(List<Grid> grids)
     {
         StatisticsDbMock.Setup(x => x.Grids.GetAll()).ReturnsAsync(grids);
+        StatisticsDbMock.Setup(x => x.Grids.ThrowIfNotExistAsync(It.IsAny<Guid>()))
+            .Callback((Guid gridId) =>
+            {
+                if (grids.All(a => a.GridId != gridId))
+                {
+                    throw new GridNotFoundException(gridId);
+                }
+            });
+            
         return this;
     }
     
     public MockDbConsumerTestFixture<TConsumer> WithMaps(List<Map> maps)
     {
         StatisticsDbMock.Setup(x => x.Maps.GetMapsForGridAsync(It.IsAny<Guid>())).ReturnsAsync(maps);
+        StatisticsDbMock.Setup(x => x.Maps.ThrowIfNotExistAsync(It.IsAny<Guid>())).Callback((Guid c) =>
+        {
+            if (maps.All(m => m.MapId != c))
+            {
+                throw new MapNotFoundException(c);
+            }
+        });
         return this;
     }
 
@@ -64,6 +82,17 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
                 p.YIndex == y &&
                 Math.Abs(p.Z - z) <= float.Epsilon &&
                 p.SerialNumber == agv));
+        return this;
+    }
+
+    public MockDbConsumerTestFixture<TConsumer> WithFieldViolationOccurence(CountHeatmap heatmap)
+    {
+        StatisticsDbMock.Setup(x => x.GridAgvFieldViolations.GetFieldViolationOccurence(
+            It.IsAny<Guid>(),
+            It.IsAny<Guid>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<string[]>())).ReturnsAsync(heatmap);
         return this;
     }
 }

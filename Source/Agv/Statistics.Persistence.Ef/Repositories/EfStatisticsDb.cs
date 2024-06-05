@@ -14,6 +14,7 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
     private readonly bool _efAgvGridPositionRepositoryRegistered;
     private readonly bool _efMapAgvPositionRepositoryRegistered;
     private readonly bool _efAgvGridErrorRepositoryRegistered;
+    private readonly bool _efAgvGridFieldViolationRepositoryRegistered;
 
     /// <inheritdoc />
     public async Task<int> SaveAsync(CancellationToken cancellationToken = default)
@@ -44,6 +45,11 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
             await GridAgvErrors.SaveAsync();
         }
 
+        if (!_efAgvGridFieldViolationRepositoryRegistered)
+        {
+            await GridAgvFieldViolations.SaveAsync();
+        }
+
         return await DbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -62,6 +68,9 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
     /// <inheritdoc />
     public IAgvErrorRepository GridAgvErrors { get; }
 
+    /// <inheritdoc />
+    public IAgvFieldViolationRepository GridAgvFieldViolations { get; }
+
     /// <inheritdoc cref="EfStatisticsDb" />
     public EfStatisticsDb(IServiceProvider provider,
         StatisticsDbContext context,
@@ -69,7 +78,8 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
         IGridRepository gridRepository, 
         IGridAgvPositionRepository gridAgvPositionRepository,
         IMapAgvPositionsRepository mapAgvPositionsRepository,
-        IAgvErrorRepository gridAgvErrorRepository
+        IAgvErrorRepository gridAgvErrorRepository,
+        IAgvFieldViolationRepository gridAgvFieldViolationRepository
         )
     {
         _efGridRepositoryRegistered = provider.GetService(typeof(EfGridRepository)) != null;
@@ -77,12 +87,14 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
         _efAgvGridPositionRepositoryRegistered = provider.GetService(typeof(EfGridAgvPositionRepository)) != null;
         _efMapAgvPositionRepositoryRegistered = provider.GetService(typeof(EfMapAgvPositionsRepository)) != null;
         _efAgvGridErrorRepositoryRegistered = provider.GetService(typeof(EfAgvErrorRepository)) != null;
+        _efAgvGridFieldViolationRepositoryRegistered = provider.GetService(typeof(EfAgvFieldViolationRepository)) != null;
         DbContext = context;
         Maps = mapRepository;
         Grids = gridRepository;
         GridAgvPositions = gridAgvPositionRepository;
         MapAgvPositions = mapAgvPositionsRepository;
         GridAgvErrors = gridAgvErrorRepository;
+        GridAgvFieldViolations = gridAgvFieldViolationRepository;
     }
 
     /// <inheritdoc cref="IAsyncDisposable" />

@@ -48,6 +48,48 @@ public class EfGridPositionRepositoryTest
     }
 
     [TestMethod]
+    public async Task DeleteAgvPositionOlderThan_PositionReferencedByFieldViolation_NotDeleted()
+    {
+        await using var fixture = new StatisticsDbTestFixture();
+        fixture.MapAgvPositions.Add(_mapPosition!);
+        fixture.GridAgvPositions.Add(_position!);
+        fixture.Grids.Add(_grid!);
+        fixture.Maps.Add(_map!);
+        var violation = new AgvFieldViolation(_position!.PositionId, DateTime.UtcNow);
+        fixture.GridAgvFieldViolations.Add(violation);
+        await fixture.SaveAsync();
+
+        await fixture.GridAgvPositions.DeleteAgvPositionsOlderThan(DateTime.UtcNow);
+
+        (await fixture.GridAgvPositions.GetByIdAsync(_position.PositionId)).ShouldBe(_position);
+    }
+
+    [TestMethod]
+    public async Task DeleteAgvPositionOlderThan_PositionReferencedByFieldViolationAndError_NotDeleted()
+    {
+        await using var fixture = new StatisticsDbTestFixture();
+        fixture.MapAgvPositions.Add(_mapPosition!);
+        fixture.GridAgvPositions.Add(_position!);
+        fixture.Grids.Add(_grid!);
+        fixture.Maps.Add(_map!);
+        var violation = new AgvFieldViolation(_position!.PositionId, DateTime.UtcNow);
+        fixture.GridAgvFieldViolations.Add(violation);
+        var agvError = AgvErrorGenerator.GenerateAgvError();
+        var error = new AgvError(_position!.PositionId,
+            agvError.ErrorReceived,
+            agvError.ErrorLevel,
+            agvError.ErrorCode ?? "",
+            agvError.ErrorType,
+            agvError.ErrorCategory);
+        fixture.GridAgvErrors.Add(error);
+        await fixture.SaveAsync();
+
+        await fixture.GridAgvPositions.DeleteAgvPositionsOlderThan(DateTime.UtcNow);
+
+        (await fixture.GridAgvPositions.GetByIdAsync(_position.PositionId)).ShouldBe(_position);
+    }
+
+    [TestMethod]
     public async Task DeleteAgvPositionOlderThan_NotReferencedPosition_Deleted()
     {
         await using var fixture = new StatisticsDbTestFixture();

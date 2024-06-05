@@ -23,5 +23,6 @@ public static class MediatorRegistrationExtension
         cfg.AddRequestClient<GetGrids>();
         cfg.AddRequestClient<GetPositionFrequencies>();
         cfg.AddRequestClient<GetErrorFrequencies>();
+        cfg.AddRequestClient<GetFieldViolationFrequencies>();
     }
 }

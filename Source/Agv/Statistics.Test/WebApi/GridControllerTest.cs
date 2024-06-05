@@ -52,4 +52,24 @@ public class GridControllerTest
         positionFrequencyDto.GridId.ShouldBe(gridId);
         positionFrequencyDto.MapId.ShouldBe(mapId);
     }
+
+    [TestMethod]
+    public async Task GetFieldViolationFrequency_ValidData_ReturnsPositionFrequencyDtos()
+    {
+        var gridId = Guid.NewGuid();
+        var mapId = Guid.NewGuid();
+        DateTime? fromDate = DateTime.UtcNow;
+        DateTime? toDate = DateTime.UtcNow;
+
+        var fieldViolationFrequency = new CountHeatmap(gridId, mapId, new List<ICollection<float>>());
+
+        var fixture = new GridControllerTestFixture()
+            .WithCountHeatmap(fieldViolationFrequency)
+            .Build();
+
+        var positionFrequencyDto = await fixture.GetControllerResultValueAsync(c => c.GetFieldViolationFrequency(gridId, mapId, fromDate, toDate, []));
+
+        positionFrequencyDto.GridId.ShouldBe(gridId);
+        positionFrequencyDto.MapId.ShouldBe(mapId);
+    }
 }

@@ -16,6 +16,7 @@ public static class MockDbExtension
     public static void SetupVerifiableMethods(this Mock<IStatisticsDb> dbMock)
     {
         dbMock.Setup(x => x.Grids.Add(It.IsAny<Grid>())).Verifiable();
+        dbMock.Setup(x => x.GridAgvFieldViolations.Add(It.IsAny<AgvFieldViolation>())).Verifiable();
         dbMock.Setup(x => x.GridAgvErrors.Add(It.IsAny<AgvError>())).Verifiable();
         dbMock.Setup(x => x.Maps.Add(It.IsAny<Map>())).Verifiable();
         dbMock.Setup(x => x.GridAgvPositions.Add(It.IsAny<GridAgvPosition>())).Verifiable();
@@ -40,6 +41,16 @@ public static class MockDbExtension
     public static void VerifyErrorAdded(this Mock<IStatisticsDb> dbMock)
     {
         dbMock.Verify(x => x.GridAgvErrors.Add(It.IsAny<AgvError>()), Times.AtLeastOnce);
+        dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Verify a field violation was added.
+    /// </summary>
+    /// <param name="dbMock">The db mock.</param>
+    public static void VerifyFieldViolationAdded(this Mock<IStatisticsDb> dbMock)
+    {
+        dbMock.Verify(x => x.GridAgvFieldViolations.Add(It.IsAny<AgvFieldViolation>()), Times.AtLeastOnce);
         dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 

@@ -57,7 +57,12 @@ public class EfGridAgvPositionRepository(StatisticsDbContext context) : EfReposi
             .Select(e => e.PositionId)
             .ToListAsync();
 
-        positionsToDelete = positionsToDelete.Except(positionsWithErrors).ToList();
+        List<Guid> positionsWithFieldViolations = await Context.Set<AgvFieldViolation>()
+            .Where(e => delete.Contains(e.PositionId))
+            .Select(e => e.PositionId)
+            .ToListAsync();
+
+        positionsToDelete = positionsToDelete.Except(positionsWithErrors).Except(positionsWithFieldViolations).ToList();
         IQueryable<GridAgvPosition> entitiesToDelete = DbSet.Where(p => positionsToDelete.Contains(p.PositionId));
         Context.RemoveRange(entitiesToDelete);
         await Context.SaveChangesAsync();

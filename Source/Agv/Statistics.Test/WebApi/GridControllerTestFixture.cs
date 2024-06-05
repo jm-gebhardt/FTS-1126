@@ -25,6 +25,7 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
     {
         AddRequestClient<GetPositionFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
         AddRequestClient<GetErrorFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
+        AddRequestClient<GetFieldViolationFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
         AddRequestClient<GetGrids, GotGrids>(() => _gotGrids);
         _addGridClient = AddRequestClient<AddGrid, Success>(new Success());
     }

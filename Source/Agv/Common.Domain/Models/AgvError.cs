@@ -105,6 +105,22 @@ public record AgvError : CorrelatedBy<Guid>
     {
         return ErrorType == error2.ErrorType && ErrorLevel == error2.ErrorLevel && ErrorCategory == error2.ErrorCategory && error2.ErrorFlag == ErrorFlag;
     }
+
+    /// <summary>
+    /// True if the error is a field violation.
+    /// </summary>
+    /// <returns></returns>
+    public bool IsFieldViolation()
+    {
+        var fieldViolation = new FieldViolation(CorrelationId, ErrorReceived);
+        return ErrorType == fieldViolation.ErrorType 
+               && ErrorLevel == fieldViolation.ErrorLevel 
+               && ErrorCategory == fieldViolation.ErrorCategory 
+               && fieldViolation.ErrorFlag == ErrorFlag 
+               && fieldViolation.ErrorCode == ErrorCode 
+               && fieldViolation.ErrorDescription == ErrorDescription 
+               && fieldViolation.ErrorTitle == ErrorTitle;
+    }
 }
 
 /// <summary>

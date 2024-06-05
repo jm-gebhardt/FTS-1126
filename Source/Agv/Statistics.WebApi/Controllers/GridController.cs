@@ -18,6 +18,7 @@ public class GridController : Controller
 {
     private readonly IRequestClient<GetPositionFrequencies> _getPositionFrequencyClient;
     private readonly IRequestClient<GetErrorFrequencies> _getErrorFrequencyClient;
+    private readonly IRequestClient<GetFieldViolationFrequencies> _getFieldViolationFrequencyClient;
     private readonly IRequestClient<GetGrids> _getGridsClient;
     private readonly IRequestClient<AddGrid> _addGridClient;
     private readonly IMapper _mapper;
@@ -28,13 +29,15 @@ public class GridController : Controller
         IRequestClient<GetGrids> getGridsRequestClient,
         IRequestClient<GetPositionFrequencies> positionFrequencyClient,
         IRequestClient<GetErrorFrequencies> getErrorFrequencyClient,
-        IRequestClient<AddGrid> addGridRequestClient)
+        IRequestClient<AddGrid> addGridRequestClient,
+        IRequestClient<GetFieldViolationFrequencies> getFieldViolationFrequencyClient)
     {
         _mapper = mapper;
         _getGridsClient = getGridsRequestClient;
         _getPositionFrequencyClient = positionFrequencyClient;
         _getErrorFrequencyClient = getErrorFrequencyClient;
         _addGridClient = addGridRequestClient;
+        _getFieldViolationFrequencyClient = getFieldViolationFrequencyClient;
     }
 
     /// <summary>
@@ -130,6 +133,30 @@ public class GridController : Controller
                 agvSerialNumbers ?? [],
                 ErrorLevel.Warning,
                 errorCode));
+        var positionFrequency = _mapper.Map<FrequencyDto>(response.Message.PositionFrequency);
+        return Ok(positionFrequency);
+    }
+
+    /// <summary>
+    /// Get the safety field violation frequencies heatmap for the given grid.
+    /// </summary>
+    /// <param name="gridId">The CorrelationId of the Grid.</param>
+    /// <param name="mapId">The CorrelationId of the Map.</param>
+    /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
+    /// <param name="toDate">The UTC to Date, only items with a less CreatedDate will be considered.</param>
+    /// <param name="agvSerialNumbers">Serial numbers of agvs (optional) for which the errors occured.</param>
+    /// <response code="200">Ok</response>
+    /// <returns>Object containing mapId,gridId, and frequencies [[x-index, y-index, count], ...]</returns>
+    [HttpGet]
+    [Route("/grid/{gridId:guid}/safetyFieldViolationFrequency")]
+    public async Task<ActionResult<FrequencyDto>> GetFieldViolationFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers)
+    {
+        Response<GotPositionFrequencies> response = await _getFieldViolationFrequencyClient.GetResponse<GotPositionFrequencies>(
+            new GetFieldViolationFrequencies(gridId,
+                mapId,
+                fromDate,
+                toDate,
+                agvSerialNumbers ?? []));
         var positionFrequency = _mapper.Map<FrequencyDto>(response.Message.PositionFrequency);
         return Ok(positionFrequency);
     }

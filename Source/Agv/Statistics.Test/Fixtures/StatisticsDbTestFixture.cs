@@ -27,6 +27,8 @@ public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>,  
 
     public IAgvErrorRepository GridAgvErrors { get; }
 
+    public IAgvFieldViolationRepository GridAgvFieldViolations { get; }
+
     /// <inheritdoc cref="StatisticsDbTestFixture"/>
     public StatisticsDbTestFixture()
     {
@@ -36,5 +38,6 @@ public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>,  
         GridAgvPositions = new EfGridAgvPositionRepository(_context);
         MapAgvPositions = new EfMapAgvPositionsRepository(_context);
         GridAgvErrors = new EfAgvErrorRepository(_context);
+        GridAgvFieldViolations = new EfAgvFieldViolationRepository(_context);
     }
 }

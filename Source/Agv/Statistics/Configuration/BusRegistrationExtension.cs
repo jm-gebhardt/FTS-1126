@@ -32,7 +32,7 @@ public static class BusRegistrationExtension
             c.Message<AgvErrorReceived>(o => o.UseMessageRetry(r =>
             {
                 // Corresponding GridAgvPositions may not have been saved yet (e.g. due to filtering). Retry in that case. 
-                r.Interval(3, TimeSpan.FromSeconds(15));
+                r.Interval(6, TimeSpan.FromSeconds(15));
                 r.Handle<GridAgvPositionNotFoundException>();
             })));
         cfg.AddConsumer<ErrorCommandHandler>();
