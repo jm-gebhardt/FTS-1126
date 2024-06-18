@@ -37,7 +37,12 @@ public class MoveAgvRequestHandler(
     {
         (var agvCorrelationId, string targetNodeId, var creator) = context.Message;
 
-        await agvDb.Agvs.ThrowIfAgvNotExistsAsync(agvCorrelationId);
+        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        if (!agv.CanStartManualOperationalAction)
+        {
+            throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
+        }
 
         var targetNode = await agvDb.Graphs.GetNodeAsync(targetNodeId);
 
@@ -67,7 +72,12 @@ public class MoveAgvRequestHandler(
     {
         (var agvCorrelationId, string chargerId) = context.Message;
 
-        await agvDb.Agvs.ThrowIfAgvNotExistsAsync(agvCorrelationId);
+        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        if (!agv.CanStartManualOperationalAction)
+        {
+            throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
+        }
 
         var node = await agvDb.Graphs.GetNodeAsync(chargerId);
 

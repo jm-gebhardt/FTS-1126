@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Utilities;
@@ -20,16 +21,30 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 public class AgvEventHandlerTest
 {
     [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvIsLocked_PublishesTryStartManualAction()
+    public async Task Consume_AgvNeedsCharging_AgvIsInUserMode_PublishesTryStartManualAction()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        agv.Lock();
+        agv.SetUserMode();
         fixture.AddAgv(agv);
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
 
         await fixture.PublishMessageAsync(agvNeedsCharging);
         
+        await fixture.ShouldHavePublishedAsync<TryStartManualAction>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvNeedsCharging_AgvIsInMaintenanceMode_PublishesTryStartManualAction()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        agv.SetMaintenanceMode(null);
+        fixture.AddAgv(agv);
+        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
+
+        await fixture.PublishMessageAsync(agvNeedsCharging);
+
         await fixture.ShouldHavePublishedAsync<TryStartManualAction>();
     }
 
@@ -50,11 +65,42 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvBecameIdle_AgvIsLocked_PublishesTryStartManualAction()
+    public async Task Consume_AgvNeedsCharging_AgvIsLocked_NothingPublished()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.Lock();
+        fixture.AddAgv(agv);
+        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
+
+        await fixture.PublishMessageAsync(agvNeedsCharging);
+
+        await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryStartManualAction>();
+        await fixture.ShouldNotHavePublishedAsync<StartChargingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvBecameIdle_AgvIsInMaintenanceMode_PublishesTryStartManualAction()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        agv.Lock();
+        agv.SetMaintenanceMode(null);
+        fixture.AddAgv(agv);
+        var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
+
+        await fixture.PublishMessageAsync(agvBecameIdle);
+
+        await fixture.ShouldHavePublishedAsync<TryStartManualAction>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvBecameIdle_AgvIsInUserMode_PublishesTryStartManualAction()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        agv.SetUserMode();
         fixture.AddAgv(agv);
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
 
@@ -68,6 +114,22 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        fixture.AddAgv(agv);
+        fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
+        fixture.AddChargeAction(existsPriorToTest: false);
+        var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
+
+        await fixture.PublishMessageAsync(agvBecameIdle);
+
+        await fixture.ShouldHavePublishedAsync<TryStartNextActionInActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvBecameIdle_LockedAgvCarryingLoad_PublishesTryStartNextActionInActionGroup()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        agv.Lock();
         fixture.AddAgv(agv);
         fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
         fixture.AddChargeAction(existsPriorToTest: false);
@@ -265,5 +327,125 @@ public class AgvEventHandlerTest
         var fixture = new AgvEventHandlerTestFixture();
         await fixture.PublishMessageAsync(new ChargingNodeSelectedForAgv(Guid.NewGuid(), "a charging node"));
         await fixture.ShouldHavePublishedAsync<StartChargingActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_NormalModeNoPausedActionGroup_NothingPublished()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldNotHavePublishedAsync<PauseActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_UserModeStartedActionGroup_PublishesPauseActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetUserMode();
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions: [], ActionGroupState.Started);
+        actionGroup.Assign(agv);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([actionGroup]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldHavePublishedAsync<PauseActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_UserModeNoStartedActionGroup_NothingPublished()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetUserMode();
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldNotHavePublishedAsync<PauseActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_MaintenanceModeStartedActionGroup_PublishesPauseActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetMaintenanceMode("reason");
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions: [], ActionGroupState.Started);
+        actionGroup.Assign(agv);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([actionGroup]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldHavePublishedAsync<PauseActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_MaintenanceModeNoAssignedActionGroup_NothingPublished()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetMaintenanceMode("reason");
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldNotHavePublishedAsync<ResetActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_MaintenanceModeAssignedCreatedNonManualActionGroup_PublishesResetActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetMaintenanceMode("reason");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:agv.CorrelationId);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([actionGroup]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldHavePublishedAsync<ResetActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_MaintenanceModeAssignedCreatedManualActionGroup_CancelManualActions_PublishesCancelActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetMaintenanceMode("reason");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        actionGroup.IsManual = true;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([actionGroup]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode, true));
+        await fixture.ShouldNotHavePublishedAsync<ResetActionGroup>();
+        await fixture.ShouldHavePublishedAsync<CancelActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_MaintenanceModeAssignedCreatedManualActionGroup_NoCancelManualActions_PublishesCancelActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetMaintenanceMode("reason");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        actionGroup.IsManual = true;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([actionGroup]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldNotHavePublishedAsync<CancelActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_LockedNoStartedActionGroup_NothingPublished()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.Lock("reason");
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([]);
+
+        await fixture.PublishMessageAsync(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldNotHavePublishedAsync<PauseActionGroup>();
     }
 }

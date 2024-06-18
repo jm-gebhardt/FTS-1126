@@ -58,9 +58,19 @@ public class AgvAction : IParentedBy<Guid>
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
+    /// Date the action has been paused at (UTC)
+    /// </summary>
+    public DateTime? PausedDate { get; set; }
+
+    /// <summary>
+    /// Duration that the action has been paused for.
+    /// </summary>
+    public TimeSpan PausedDuration { get; set; } = TimeSpan.Zero;
+
+    /// <summary>
     /// The duration of the action.
     /// </summary>
-    public TimeSpan? Duration => CompletedDate - StartedDate;
+    public TimeSpan? Duration => CompletedDate - StartedDate - PausedDuration;
 
     /// <summary>
     /// Action is the first action of a group.
@@ -110,6 +120,12 @@ public class AgvAction : IParentedBy<Guid>
             return;
         }
 
+        if (State == ActionState.Paused && PausedDate != null)
+        {
+            PausedDuration += (TimeSpan)(DateTime.UtcNow - PausedDate);
+            PausedDate = null;
+        }
+
         State = state;
 
         SetDates();
@@ -148,6 +164,10 @@ public class AgvAction : IParentedBy<Guid>
             case ActionState.Canceled:
             case ActionState.Invalid:
                 CompletedDate = now;
+                break;
+
+            case ActionState.Paused:
+                PausedDate = now;
                 break;
         }
     }

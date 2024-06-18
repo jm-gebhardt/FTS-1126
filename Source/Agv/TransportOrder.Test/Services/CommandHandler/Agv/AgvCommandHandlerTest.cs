@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -336,7 +337,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId));
+        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId, "reason"));
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<AgvLockedChanged>();
         var agvLockedChanged = fixture.TestHarness.Published.Select<AgvLockedChanged>().Single().Context.Message;
@@ -349,7 +350,7 @@ public class AgvCommandHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithoutAgv();
-        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId));
+        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId, "reason"));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
 
@@ -434,6 +435,20 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
         
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareAgvForStartingAction_AgvIsLocked_AgvPreparedForStartingActionNotPublished()
+    {
+        var fixture = new AgvCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: NodeGenerator.GenerateParkingNode().Id);
+        agv.Lock();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<AgvPreparedForStartingAction>();
     }
 
     [TestMethod]
@@ -660,5 +675,34 @@ public class AgvCommandHandlerTest
         
         await fixture.ShouldHaveConsumedAsync<UpdateAgvSettingsGroupReference>();
         agv.AgvSettingsGroup.ShouldNotBe(previousGroupId);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetUserMode_ValidData_PublishesAgvModeChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+        var command = new SetUserMode(agv.CorrelationId, "user");
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<SetUserMode>();
+        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
+        agv.Mode.Type.ShouldBe(ModeType.UserMode);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetNormalMode_ValidData_PublishesAgvModeChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+        var command = new SetNormalMode(agv.CorrelationId, "user");
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
+        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
     }
 }

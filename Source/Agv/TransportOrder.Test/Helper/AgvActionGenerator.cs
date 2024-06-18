@@ -313,6 +313,10 @@ public static class AgvActionGenerator
             case ActionGroupState.Aborted:
                 actionGroup.AbortAction(actionId, Enumerable.Empty<Reason>());
                 break;
+
+            case ActionGroupState.Paused:
+                actionGroup.State = ActionGroupState.Paused;
+                break;
         }
         return actionGroup;
     }

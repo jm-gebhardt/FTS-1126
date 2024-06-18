@@ -1,0 +1,93 @@
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
+using MassTransit;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+
+namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+
+/// <summary>
+/// Provides handlers for setting agv modes.
+/// </summary>
+[UsedImplicitly]
+public class AgvModeRequestHandler:
+    IConsumer<SetMaintenanceMode>,
+    IConsumer<SetNormalMode>,
+    IConsumer<SetUserMode>
+{
+    private readonly IBus _bus;
+    private readonly IAgvDb _agvDb;
+    private readonly IActionGroupRepository _actionGroupRepository;
+    private readonly ILogger<AgvModeRequestHandler> _logger;
+
+    /// <inheritdoc cref="AgvModeRequestHandler"/>
+    public AgvModeRequestHandler(ILogger<AgvModeRequestHandler> logger, IBus bus, IAgvDb agvDb, IActionGroupRepository actionGroupRepository)
+    {
+        _logger = logger;
+        _bus = bus;
+        _agvDb = agvDb;
+        _actionGroupRepository = actionGroupRepository;
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SetMaintenanceMode"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
+    {
+        (var agvCorrelationId, string? setter, string? reason, bool cancelManualActions) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        await _bus.Publish(new SetMaintenanceMode(agv.CorrelationId, setter, reason, cancelManualActions), context.CancellationToken);
+
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SetNormalMode"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SetNormalMode> context)
+    {
+        (var agvCorrelationId, string? setter) = context.Message;
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        if (agv.IsLocked)
+        {
+            _logger.LogDebug("Triggering unlock of agv {AgvCorrelationId}", agvCorrelationId );
+            await _bus.Publish(new UnlockAgv(agv.CorrelationId));
+            await context.RespondAsync(new Success());
+            return;
+        }
+
+        IReadOnlyList<ActionGroup> pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems:100);
+        if (pausedActionGroups.Count == 0)
+        {
+            _logger.LogDebug("Triggering set normal mode for agv {AgvCorrelationId}", agvCorrelationId );
+            await _bus.Publish(new SetNormalMode(agv.CorrelationId, setter));
+            await context.RespondAsync(new Success());
+            return;
+        }
+
+        foreach (var actionGroup in pausedActionGroups)
+        {
+            _logger.LogDebug("Triggering resuming of action group {ActionGroupCorrelationId} for agv {AgvCorrelationId}", actionGroup.CorrelationId, agvCorrelationId );
+            await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, setter));
+            await context.RespondAsync(new Success());
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SetUserMode"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SetUserMode> context)
+    {
+        (var agvCorrelationId, string? setter) = context.Message;
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        await _bus.Publish(new SetUserMode(agv.CorrelationId, setter));
+        await context.RespondAsync(new Success());
+    }
+}

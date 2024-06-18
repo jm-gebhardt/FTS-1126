@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Map;
 /// </summary>
 /// <typeparam name="TRequestClient"></typeparam>
 /// <typeparam name="TConsumer"></typeparam>
-public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
+public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer, MockConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {

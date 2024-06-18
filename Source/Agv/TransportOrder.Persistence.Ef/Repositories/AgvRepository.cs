@@ -131,6 +131,7 @@ public class AgvRepository : IAgvRepository
         List<Agv> agvs = await Agvs.Where(Agv.IsReadyStatic)
             .Where(a => a.GraphExists &&
                         !a.IsLocked &&
+                        a.Mode.Type == ModeType.Normal &&
                         a.CurrentAgvState == AgvState.Idle &&
                         !a.AgvStatus!.Busy).ToListAsync();
 
@@ -147,7 +148,7 @@ public class AgvRepository : IAgvRepository
         List<Agv> agvs = await agvContext.Where(agv => agv.GraphExists &&
                                                                          actionGroups.Any(g => g.AssignedAgv == agv.CorrelationId && g.State == ActionGroupState.Started &&
                                                                                                g.Actions.Any(a => a.ActionType == ActionType.Charge && a.State == ActionState.Started)) &&
-                                                                         agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging).ToListAsync();
+                                                                         agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging && !agv.IsLocked).ToListAsync();
         return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].MinChargeUp).ToList();
     }
 
@@ -157,6 +158,7 @@ public class AgvRepository : IAgvRepository
         return await Agvs.Where(Agv.IsReadyStatic)
             .Where(a => a.GraphExists &&
                         !a.IsLocked &&
+                        a.Mode.Type == ModeType.Normal &&
                         a.CurrentAgvState == AgvState.Idle &&
                         !a.AgvStatus!.Busy &&
                         a.AgvStatus!.BatteryCharge >= minBatteryLevel

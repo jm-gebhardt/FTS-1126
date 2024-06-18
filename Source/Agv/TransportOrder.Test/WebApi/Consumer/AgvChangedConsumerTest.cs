@@ -83,4 +83,17 @@ public class AgvChangedConsumerTest
         fixture.PublisherMock.Verify(h => h.SendAgvHasCargoChangedAsync(agvCorrelationId, hasCargo),
             Times.Once);
     }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChanged_ValidData_SentAgvModeChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+      
+        await fixture.TestHarness.Bus.Publish(new AgvModeChanged(agv.CorrelationId, agv.Mode));
+
+        (await fixture.ConsumerHarness.Consumed.Any<AgvModeChanged>()).ShouldBeTrue();
+        fixture.PublisherMock.Verify(h => h.SendAgvModeChangedAsync(agv.CorrelationId, agv.Mode),
+            Times.Once);
+    }
 }

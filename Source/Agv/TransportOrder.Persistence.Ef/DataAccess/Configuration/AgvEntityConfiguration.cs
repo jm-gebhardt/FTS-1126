@@ -13,8 +13,12 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
     {
         builder.HasKey(g => g.CorrelationId);
 
-        builder.ConfigureAllProperties(p => p.CanWrite && p.PropertyType != typeof(AgvStatus));
-
+        builder.ConfigureAllProperties(p => p.CanWrite && p.PropertyType != typeof(AgvStatus)   && p.PropertyType != typeof(AgvMode));
+        builder.OwnsOne(e => e.Mode, o =>
+        {
+            o.WithOwner().HasForeignKey(e => e.AgvCorrelationId);
+        });
+        builder.Navigation(e => e.Mode).AutoInclude();
         builder.OwnsOne(e => e.AgvStatus, o =>
         {
             o.ToTable(nameof(AgvStatus));

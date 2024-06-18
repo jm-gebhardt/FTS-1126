@@ -4,7 +4,7 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 
 /// <summary>
 /// Represents the event triggered, when an action group
-/// was aborted via the transport order WebApi.
+/// was aborted via the transport order WebApi or during a pause request.
 /// </summary>
 public record ActionAborted : CorrelatedBy<Guid>
 {

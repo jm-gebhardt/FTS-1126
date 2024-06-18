@@ -11,7 +11,7 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
 
-public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
+public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer, TConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {

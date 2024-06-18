@@ -102,8 +102,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
         ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
         _agvPositionRepository = GetAgvPositionRepository().Object;
-
         ActionGroupRepository = new Mock<IActionGroupRepository>();
+        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<bool?>())).ReturnsAsync([]);
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?)null));
         ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(_chargeAction);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
@@ -223,8 +223,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<SendAgvToCharger> sendAgvToChargerClient = GetRequestClient<SendAgvToCharger>();
         IRequestClient<UpdateAgvSettings> updateAgvSettingsClient = GetRequestClient<UpdateAgvSettings>();
         IRequestClient<ResetAgvSettingToDefault> resetAgvSettingsClient = GetRequestClient<ResetAgvSettingToDefault>();
+        IRequestClient<SetUserMode> setUserModeClient = GetRequestClient<SetUserMode>();
+        IRequestClient<SetMaintenanceMode> setMaintenanceModeClient = GetRequestClient<SetMaintenanceMode>();
+        IRequestClient<SetNormalMode> setNormalModeClient = GetRequestClient<SetNormalMode>();
 
-        var controller = new AgvController(Mapper,
+    var controller = new AgvController(Mapper,
             getAgvRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
@@ -248,7 +251,10 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvSettingsRequestClient,
             sendAgvToChargerClient,
             updateAgvSettingsClient,
-            resetAgvSettingsClient
+            resetAgvSettingsClient,
+            setUserModeClient, 
+            setMaintenanceModeClient, 
+            setNormalModeClient
         )
         {
             ControllerContext = new ControllerContext(

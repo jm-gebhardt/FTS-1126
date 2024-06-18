@@ -63,6 +63,11 @@ public record Agv : IAgv
     /// <summary>The last node for the agv.</summary>
     public GraphNode? LastNode { get; init; }
 
+    /// <summary>
+    /// The agv mode.
+    /// </summary>
+    public AgvMode AgvMode { get; init; } = null!;
+
     /// <param name="correlationId">CorrelationId</param>
     /// <param name="serialNumber">The serial number of the agv.</param>
     /// <param name="name">The name of the agv.</param>
@@ -79,6 +84,7 @@ public record Agv : IAgv
     /// <param name="agvError">List of Agv errors</param>
     /// <param name="lastNodeId">Last node id for agv.</param>
     /// <param name="lastNode">Last node for agv.</param>
+    /// <param name="mode">The agv mode.</param>
     [PublicAPI]
     public Agv(
         Guid correlationId,
@@ -96,7 +102,8 @@ public record Agv : IAgv
         ActionGroupReadModel? currentActionGroup,
         List<AgvError> agvError,
         string? lastNodeId,
-        GraphNode? lastNode
+        GraphNode? lastNode,
+        AgvMode mode
     )
     {
         CorrelationId = correlationId;
@@ -115,6 +122,7 @@ public record Agv : IAgv
         Errors = agvError;
         LastNodeId = lastNodeId;
         LastNode = lastNode;
+        AgvMode = mode;
     }
 
     /// <summary>

@@ -25,6 +25,13 @@ public interface IAgvClient
     Task AgvStateChanged(AgvStateDto agvState);
 
     /// <summary>
+    /// Agv mode changed.
+    /// </summary>
+    /// <param name="agvMode">The agv mode.</param>
+    [SignalRMethod("AgvStateChanged")]
+    Task AgvModeChanged(AgvModeDto agvMode);
+
+    /// <summary>
     /// Agv position changed.
     /// </summary>
     /// <param name="positionStatus">The agv position status.</param>

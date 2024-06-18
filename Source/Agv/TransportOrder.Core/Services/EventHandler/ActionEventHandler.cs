@@ -26,7 +26,8 @@ public class ActionEventHandler :
     IConsumer<ActionCanceled>,
     IConsumer<ActionDurationEstimated>,
     IConsumer<AutomaticActionWithdrawn>,
-    IConsumer<TargetForActionSet>
+    IConsumer<TargetForActionSet>,
+    IConsumer<ActionGroupResumed>
 {
     private readonly ILogger<ActionEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -163,5 +164,13 @@ public class ActionEventHandler :
         {
             await context.Publish(new SelectNodesForAction(action, assignedAgv.Value));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionGroupResumed"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionGroupResumed> context)
+    {
+        await context.Publish(new SetNormalMode(context.Message.AgvCorrelationId, context.Message.Setter));
     }
 }

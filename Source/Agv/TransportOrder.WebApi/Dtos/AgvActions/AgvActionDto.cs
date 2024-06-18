@@ -66,6 +66,16 @@ public record AgvActionDto
     public DateTime? CompletedDate { get; init; }
 
     /// <summary>
+    /// Date the action has been paused (UTC)
+    /// </summary>
+    public DateTime? PausedDate { get; init; }
+
+    /// <summary>
+    /// Duration that the action was paused for
+    /// </summary>
+    public TimeSpan PausedDuration { get; init; }
+
+    /// <summary>
     /// AgvAction model
     /// <param name="correlationId">Correlation ID</param>
     /// <param name="parentId">Action group ID</param>
@@ -77,6 +87,7 @@ public record AgvActionDto
     /// <param name="createdDate">Date the action was created (UTC)</param>
     /// <param name="startedDate">Date the action was started (UTC)</param>
     /// <param name="completedDate">Date the action was completed (UTC)</param>
+    /// <param name="pausedDate"> Date the action was paused (UTC)</param>
     /// </summary>
     public AgvActionDto
     (
@@ -89,7 +100,8 @@ public record AgvActionDto
         string[] nodes,
         DateTime createdDate,
         DateTime? startedDate,
-        DateTime? completedDate
+        DateTime? completedDate,
+        DateTime? pausedDate
     )
     {
         CorrelationId = correlationId;
@@ -102,6 +114,7 @@ public record AgvActionDto
         CreatedDate = createdDate;
         StartedDate = startedDate;
         CompletedDate = completedDate;
+        PausedDate = pausedDate;
     }
 
     /// <summary>

@@ -44,6 +44,19 @@ public class MoveAgvRequestHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_MoveAgv_AgvIsLocked_ThrowsActionNotAllowedInModeException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.Lock();
+        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<MoveAgv>(
+            new MoveAgv(agv.CorrelationId, "known target", ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [TestMethod]
     public async Task Consume_MoveAgv_ValidData_Responds_AgvMoveSuccessful()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -127,6 +140,19 @@ public class MoveAgvRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
             new ChargeAgv(agv.CorrelationId, "unknown charger")));
+    }
+
+    [TestMethod]
+    public async Task Consume_ChargeAgv_AgvIsLocked_ThrowsActionNotAllowedInModeException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.Lock();
+        MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
+            new ChargeAgv(agv.CorrelationId, "known charger")));
     }
 
     [TestMethod]

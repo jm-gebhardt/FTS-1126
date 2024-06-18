@@ -49,6 +49,23 @@ public class RouteRequestHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_SendAgvToCharger_AgvIsLocked_DoesNotPublishNodeStateChange()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.Lock();
+        var chargingNode = NodeGenerator.GenerateChargingNode();
+        var fixture = new SendAgvToChargerRequestHandlerTestFixture()
+            .WithAgv(agv)
+            .WithCurrentAction(null)
+            .ReserveChargerReturns(chargingNode)
+            .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
+
+        await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId));
+        await fixture.ShouldHaveConsumedAsync<SendAgvToCharger>();
+        await fixture.ShouldNotHaveConsumedAsync<NodeStateChanged>();
+    }
+
+    [TestMethod]
     public async Task Consume_SendAgvToCharger_AgvWithAction_PublishesStartChargingActionGroup()
     {
         var agv = AgvGenerator.GenerateIdleAgv();

@@ -275,6 +275,22 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetActionGroupsAsync_ProvideAgvAndState_ReturnActionGroup()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var actionGroupInCreatedState = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId);
+        var actionGroupInPausedState = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, pickActionState: ActionState.Paused);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups(new List<ActionGroup> { actionGroupInCreatedState, actionGroupInPausedState })
+            .BuildAsync();
+
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems:2);
+
+        actionGroupsResult.Single().ShouldBeEquivalentTo(actionGroupInPausedState);
+    }
+
+    [TestMethod]
     public async Task GetActionGroupsAsync_SortByStartedDateDescending_ReturnsSortedActionGroups()
     {
         var earlierStartedGroup = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: DateTime.UtcNow.AddDays(-1));
@@ -451,7 +467,7 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetSubsequentActionAsync_NoCompletedAction_DoesNotReturnSubsequentAction()
+    public async Task GetSubsequentActionAsync_NoCompletedAction_ReturnsFirstAction()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -463,7 +479,8 @@ public class ActionGroupRepositoryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        await Should.ThrowAsync<ActionNotFoundException>(fixture.ActionGroupRepository.GetSubsequentActionAsync(agv.CorrelationId));
+        var subsequentActionInRepository = await fixture.ActionGroupRepository.GetSubsequentActionAsync(agv.CorrelationId);
+        VerifyAgvAction(subsequentActionInRepository, actionGroup.Actions.First());
     }
 
     [TestMethod]
@@ -819,5 +836,72 @@ public class ActionGroupRepositoryTest
         Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source", targetNodeId: "target");
         durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
         durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
+    }
+
+    [TestMethod]
+    public async Task GetNextManualActionGroupForAgvAsync_NoAllowedActionTypesOneManualActionGroup_ReturnsManualActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:Guid.NewGuid());
+        actionGroup.IsManual = true;
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(actionGroup.AssignedAgv!.Value)).ShouldBeEquivalentTo(actionGroup);
+    }
+
+    [TestMethod]
+    public async Task GetNextManualActionGroupForAgvAsync_MultipleManualActionGroups_ReturnsFirstCreatedManualActionGroup()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var firstCreatedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, createdDate: DateTime.UtcNow);
+        firstCreatedActionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, createdDate: firstCreatedActionGroup.CreatedDate.AddSeconds(10));
+        actionGroup.IsManual = true;
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([actionGroup, firstCreatedActionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(agvCorrelationId)).ShouldBeEquivalentTo(firstCreatedActionGroup);
+    }
+
+    [TestMethod]
+    public async Task GetNextManualActionGroupForAgvAsync_NoManualActionGroups_ReturnsNull()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(actionGroup.AssignedAgv!.Value)).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetNextManualActionGroupForAgvAsync_NoManualActionGroupsForAgv_ReturnsNull()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        actionGroup.IsManual = true;
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(Guid.NewGuid())).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetNextManualActionGroupForAgvAsync_NoManualActionGroupsWithAllowedActionTypes_ReturnsNull()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        actionGroup.IsManual = true;
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(actionGroup.AssignedAgv!.Value, [ActionType.Charge, ActionType.Move])).ShouldBeNull();
     }
 }

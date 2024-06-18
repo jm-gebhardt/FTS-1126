@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -44,6 +45,11 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         var agvCorrelationId = context.Message.CorrelationId;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        if (!agv.CanStartManualOperationalAction)
+        {
+            throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
+        }
 
         var currentAction = await _actionGroupDb.GetCurrentAgvActionAsync(agv.CorrelationId);
 

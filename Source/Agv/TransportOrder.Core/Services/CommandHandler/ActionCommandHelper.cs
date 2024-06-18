@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
@@ -51,11 +52,11 @@ public class ActionCommandHelper
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="assignedAgv">The assigned agv.</param>
+    /// <param name="ignoreLocked">Ignore of the assigned agv is locked.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns></returns>
-    public async Task<bool> SelectNodesForAgvAction(AgvAction action, Domain.Models.Agv.Agv assignedAgv, CancellationToken cancellationToken)
+    public async Task<bool> SelectNodesForAgvAction(AgvAction action, Domain.Models.Agv.Agv assignedAgv, bool ignoreLocked, CancellationToken cancellationToken)
     {
-        if (!assignedAgv.TryTransitionToBusy(ignoreLocked: true))
+        if (!assignedAgv.TryTransitionToBusy(ignoreLocked: ignoreLocked))
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy.", assignedAgv.CorrelationId);
             return false;
@@ -162,6 +163,36 @@ public class ActionCommandHelper
     /// <returns></returns>
     public async Task<bool> CheckAgvActionCanBeStarted(IPublishEndpoint context, AgvAction action, Domain.Models.Agv.Agv assignedAgv, Domain.Models.ActionGroup.ActionGroup actionGroup)
     {
+        if (actionGroup.State == ActionGroupState.Paused)
+        {
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action group is paused.", action.CorrelationId, actionGroup.CorrelationId);
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
+            return false;
+        }
+
+        if (assignedAgv.IsLocked)
+        {
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start any actions in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
+            return false;
+        }
+
+        if (actionGroup is { IsMovingCargo: true, IsManual: true } && !assignedAgv.CanStartManualPickDropAction)
+        {
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start pick/drop actions in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
+            return false;
+        }
+
+        if (!actionGroup.IsManual && !assignedAgv.CanStartAutomaticAction)
+        {
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start automatic action in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
+            return false;
+        }
+        
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
         if (!isNextActionInGroup)
         {

@@ -48,6 +48,9 @@ public class AgvCommandHandler :
     IConsumer<GoOffline>,
     IConsumer<UpdateAgvData>,
     IConsumer<LockAgv>,
+    IConsumer<SetUserMode>,
+    IConsumer<SetNormalMode>,
+    IConsumer<SetMaintenanceMode>,
     IConsumer<UnlockAgv>,
     IConsumer<AcceptAgvCommand>,
     IConsumer<SetAgvForceIdle>,
@@ -433,6 +436,65 @@ public class AgvCommandHandler :
     }
 
     /// <summary>
+    /// Handles the <see cref="UpdateAgvSettingsGroupReference"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UpdateAgvSettingsGroupReference> context)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
+        agv.AgvSettingsGroup = settingsGroup.Id;
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SetUserMode"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SetUserMode> context)
+    {
+        (var agvCorrelationId, string? setter) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        agv.SetUserMode(setter);
+
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
+        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "Agv mode changed", $"AGV { agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
+        await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SetNormalMode"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SetNormalMode> context)
+    {
+        (var agvCorrelationId, string? setter) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        agv.SetNormalMode(setter);
+
+         await _agvDb.Agvs.UpdateAgvAsync(agv);
+        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "Agv mode changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
+
+        await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
+        await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SetMaintenanceMode"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
+    {
+        (var agvCorrelationId, string? setter, string? reason, bool cancelManualActions) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        agv.SetMaintenanceMode(reason, setter);
+
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
+
+        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "Agv mode changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
+        await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode, cancelManualActions));
+    }
+
+    /// <summary>
     /// Handles the <see cref="LockAgv"/> command.
     /// </summary>
     public async Task Consume(ConsumeContext<LockAgv> context)
@@ -444,15 +506,15 @@ public class AgvCommandHandler :
             await context.RespondAsync(new AgvNotFoundResult(agvCorrelationId));
             return;
         }
-        agv.Lock();
+        agv.Lock(context.Message.Reason);
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(LockAgv), agv.CorrelationId);
         }
-
         _logger.LogAgvInformation(LogCodes.AgvLocked, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked");
         await context.Publish(new AgvLockedChanged(agv.CorrelationId, true));
         await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
+        await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
     }
 
     /// <summary>
@@ -480,6 +542,7 @@ public class AgvCommandHandler :
         await context.Publish(new AgvBecameIdle(agv.CorrelationId), context.CancellationToken);
         await context.Publish(new AgvLockedChanged(agv.CorrelationId, false));
         await context.RespondAsync(new UnlockAgvResult(agv.CorrelationId));
+        await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
     }
 
     /// <summary>
@@ -564,7 +627,7 @@ public class AgvCommandHandler :
     {
         var (action, agvCorrelationId) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        bool isAvailable = agv.TryTransitionToBusy(true);
+        bool isAvailable = agv.TryTransitionToBusy(false);
 
         if (!isAvailable)
         {
@@ -613,17 +676,6 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         await ResetOfflineWatchDog(context, agv, agvSettings);
-        await _agvDb.Agvs.UpdateAgvAsync(agv);
-    }
-
-    /// <summary>
-    /// Handles the <see cref="UpdateAgvSettingsGroupReference"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<UpdateAgvSettingsGroupReference> context)
-    {
-        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
-        var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
-        agv.AgvSettingsGroup = settingsGroup.Id;
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 

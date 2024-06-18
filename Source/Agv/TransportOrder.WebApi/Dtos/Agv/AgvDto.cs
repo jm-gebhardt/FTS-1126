@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using JetBrains.Annotations;
@@ -60,6 +61,11 @@ public record AgvDto : DatedMessage
     /// <summary>The last node id for the agv.</summary>
     public GraphNodeDto? LastNode { get; init; }
 
+    /// <summary>
+    /// The mode of the agv.
+    /// </summary>
+    public AgvMode AgvMode { get; init; }
+
     /// <param name="correlationId">CorrelationId.</param>
     /// <param name="serialNumber">AGV Serial Number.</param>
     /// <param name="name">The name of the agv.</param>
@@ -75,6 +81,7 @@ public record AgvDto : DatedMessage
     /// <param name="currentActionGroup">The recent action group of the agv.</param>
     /// <param name="agvErrorDto">List of agv errors.</param>
     /// <param name="lastNode">Last node.</param>
+    /// <param name="mode">The agv mode.</param>
     [PublicAPI]
     public AgvDto(Guid correlationId,
         string serialNumber,
@@ -90,7 +97,8 @@ public record AgvDto : DatedMessage
         bool isCharging,
         ActionGroupDto? currentActionGroup,
         List<AgvErrorDto> agvErrorDto,
-        GraphNodeDto? lastNode)
+        GraphNodeDto? lastNode,
+        AgvMode mode)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -107,6 +115,7 @@ public record AgvDto : DatedMessage
         CurrentActionGroup = currentActionGroup;
         Errors = agvErrorDto;
         LastNode = lastNode;
+        AgvMode = mode;
     }
 
     /// <summary>
@@ -116,5 +125,6 @@ public record AgvDto : DatedMessage
     {
         SerialNumber = null!;
         Name = null!;
+        AgvMode = null!;
     }
 }

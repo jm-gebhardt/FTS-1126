@@ -46,6 +46,13 @@ public interface IActionGroupRepository
     Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState actionGroupState, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null);
 
     /// <summary>
+    /// Get the next manual action group for an agv.
+    /// </summary>
+    /// <param name="assignedAgv">The assigned agv.</param>
+    /// <param name="allowedActionTypes">Optional list of action types to be contained in the group.</param>
+    Task<ActionGroup?> GetNextManualActionGroupForAgvAsync(Guid assignedAgv, List<ActionType>? allowedActionTypes=null);
+
+    /// <summary>
     /// Get the durations of actions in action groups that are in given actionGroupState and
     /// go from a source node to a target node. Both source and target are optional.
     /// </summary>
@@ -178,6 +185,12 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id.</param>
     Task<bool> AgvHasPendingActions(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Checks if the agv has any assigned action groups that have priority.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id.</param>
+    Task<bool> AgvHasPriorityActionGroups(Guid agvCorrelationId);
 
     /// <summary>
     /// Gets the agv assigned to the group of the given action.

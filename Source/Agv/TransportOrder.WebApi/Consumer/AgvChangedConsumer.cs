@@ -19,7 +19,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvDiscovered>,
     IConsumer<AgvBecameIdle>,
     IConsumer<CargoChanged>,
-    IConsumer<HasCargoChanged>
+    IConsumer<HasCargoChanged>,
+    IConsumer<AgvModeChanged>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -121,5 +122,13 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     public async Task Consume(ConsumeContext<HasCargoChanged> context)
     {
         await _agvPublisher.SendAgvHasCargoChangedAsync(context.Message.AgvCorrelationId, context.Message.HasCargo);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvModeChanged"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvModeChanged> context)
+    {
+        await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, context.Message.Mode);
     }
 }

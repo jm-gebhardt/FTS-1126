@@ -6,30 +6,30 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
 public static class AgvGenerator
 {
-    public static Agv GenerateReadyAgv(int index = 0, bool isLocked = false, int batteryCharge = 100)
+    public static Agv GenerateReadyAgv(int index = 0,  int batteryCharge = 100)
     {
-        var agv = GenerateAgv(AgvState.Idle, index, "A", isLocked: isLocked, batteryCharge: batteryCharge);
+        var agv = GenerateAgv(AgvState.Idle, index, "A", batteryCharge: batteryCharge);
         return agv;
     }
 
-    public static Agv GenerateBusyAgv(int index = 0, bool isLocked = false, int batteryCharge = 100, bool hasError = false)
+    public static Agv GenerateBusyAgv(int index = 0,int batteryCharge = 100, bool hasError = false)
     {
-        var agv = GenerateAgv(AgvState.Busy, index, "A", isLocked: isLocked, batteryCharge: batteryCharge, hasError: hasError);
+        var agv = GenerateAgv(AgvState.Busy, index, "A", batteryCharge: batteryCharge, hasError: hasError);
         return agv;
     }
 
-    public static Agv GenerateIdleAgv(int index = 0, string? lastNodeId = "node", bool isLocked = false, int batteryCharge = 100, bool hasError = false)
+    public static Agv GenerateIdleAgv(int index = 0, string? lastNodeId = "node", int batteryCharge = 100, bool hasError = false)
     {
-        var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge, hasError: hasError);
+        var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, batteryCharge: batteryCharge, hasError: hasError);
         return agv;
     }
 
-    public static IEnumerable<Agv> GenerateIdleAgvs(int count, string? lastNodeId = null, bool isLocked = false, int batteryCharge = 100, bool hasError = false)
+    public static IEnumerable<Agv> GenerateIdleAgvs(int count, string? lastNodeId = null, int batteryCharge = 100, bool hasError = false)
     {
         int index = 0;
         for (int i = 0; i < count; i++)
         {
-            yield return GenerateAgv(AgvState.Idle, ++index, lastNodeId, isLocked: isLocked, batteryCharge: batteryCharge, hasError: hasError);
+            yield return GenerateAgv(AgvState.Idle, ++index, lastNodeId, batteryCharge: batteryCharge, hasError: hasError);
         }
     }
 
@@ -40,9 +40,9 @@ public static class AgvGenerator
     }
 
     [UsedImplicitly]
-    public static Agv GenerateChargingAgv(int index = 0, string? lastNodeId = "C-1", bool isLocked = false, int batteryCharge = 100)
+    public static Agv GenerateChargingAgv(int index = 0, string? lastNodeId = "C-1", int batteryCharge = 100)
     {
-        return GenerateAgv(AgvState.Busy, index, lastNodeId, charging: true, isLocked: isLocked, batteryCharge: batteryCharge, orderId: string.Empty);
+        return GenerateAgv(AgvState.Busy, index, lastNodeId, charging: true, batteryCharge: batteryCharge, orderId: string.Empty);
     }
 
     [UsedImplicitly]
@@ -63,7 +63,6 @@ public static class AgvGenerator
         string? lastNodeId,
         AgvStatus? agvStatus = null,
         bool charging = false,
-        bool isLocked = false,
         int batteryCharge = 100,
         string orderId = "orderId",
         bool hasError = false
@@ -72,7 +71,7 @@ public static class AgvGenerator
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
         agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId);
-        var agv = new Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus, isLocked)
+        var agv = new Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus)
         {
             HasError = hasError
         };

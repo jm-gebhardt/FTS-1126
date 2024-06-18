@@ -7,7 +7,7 @@ using Shouldly;
 
 namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
-public abstract class ControllerTestFixture<TRequest, TRequestHandler, TController> : MediatorTestFixture<TRequest, TRequestHandler>
+public abstract class ControllerTestFixture<TRequest, TRequestHandler, TController> : MediatorTestFixture<TRequest, TRequestHandler, MockConsumer>
     where TRequest : class
     where TRequestHandler : class, IConsumer
     where TController : Controller
@@ -26,7 +26,7 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
         return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>)GetRequestClient() : null!;
     }
 
-    public override MediatorTestFixture<TRequest, TRequestHandler> Build()
+    public override MediatorTestFixture<TRequest, TRequestHandler, MockConsumer> Build()
     {
         base.Build();
 

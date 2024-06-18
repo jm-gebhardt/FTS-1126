@@ -55,6 +55,9 @@ public class AgvController : Controller
     private readonly IRequestClient<UpdateAgvSettings> _updateAgvSettingsClient;
     private readonly IRequestClient<SendAgvToCharger> _sendAgvToChargerClient;
     private readonly IRequestClient<ResetAgvSettingToDefault> _resetSettingToDefaultClient;
+    private readonly IRequestClient<SetUserMode> _setUserModeClient;
+    private readonly IRequestClient<SetMaintenanceMode> _setMaintenanceModeClient;
+    private readonly IRequestClient<SetNormalMode> _setNormalModeClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -85,7 +88,10 @@ public class AgvController : Controller
         IRequestClient<GetAgvSettings> getAgvSettingsClient,
         IRequestClient<SendAgvToCharger> sendAgvToChargerClient,
         IRequestClient<UpdateAgvSettings> updateAgvSettingsClient,
-        IRequestClient<ResetAgvSettingToDefault> resetSettingToDefaultClient
+        IRequestClient<ResetAgvSettingToDefault> resetSettingToDefaultClient,
+        IRequestClient<SetUserMode> setUserModeClient,
+        IRequestClient<SetMaintenanceMode> setMaintenanceModeClient,
+        IRequestClient<SetNormalMode> setNormalModeClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -113,6 +119,9 @@ public class AgvController : Controller
         _sendAgvToChargerClient = sendAgvToChargerClient;
         _updateAgvSettingsClient = updateAgvSettingsClient;
         _resetSettingToDefaultClient = resetSettingToDefaultClient;
+        _setUserModeClient = setUserModeClient;
+        _setMaintenanceModeClient = setMaintenanceModeClient;
+        _setNormalModeClient = setNormalModeClient;
     }
 
     /// <summary>
@@ -380,13 +389,52 @@ public class AgvController : Controller
     /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/lock")]
-    public async Task<ActionResult> LockAgv(Guid correlationId)
+    public async Task<ActionResult> LockAgv(Guid correlationId, [FromQuery] string reason)
     {
-        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId));
+        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId, reason));
         if (response.Message is AgvNotFoundResult)
         {
             return NotFound();
         }
+        return Ok();
+    }
+
+    /// <summary>
+    /// Set agv to user mode.
+    /// </summary>
+    /// <response code="200">Ok: Agv was successfully set to user mode.</response>
+    /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/userMode")]
+    public async Task<ActionResult> SetUserMode(Guid correlationId)
+    {
+        await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, null));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Set agv to maintenance mode.
+    /// </summary>
+    /// <response code="200">Ok: Agv was successfully set to maintenance mode.</response>
+    /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/maintenanceMode")]
+    public async Task<ActionResult> SetMaintenanceMode(Guid correlationId, [FromQuery] string reason, [FromQuery] bool cancelManualActions)
+    {
+        await _setMaintenanceModeClient.GetResponse<Success>(new SetMaintenanceMode(correlationId, null, reason, cancelManualActions));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Set agv to normal mode.
+    /// </summary>
+    /// <response code="200">Ok: Agv was successfully set to normal mode.</response>
+    /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/normalMode")]
+    public async Task<ActionResult> SetNormalMode(Guid correlationId)
+    {
+        await _setNormalModeClient.GetResponse<Success>(new SetNormalMode(correlationId, null));
         return Ok();
     }
 
@@ -420,7 +468,7 @@ public class AgvController : Controller
     /// Move agv manually to a specific node. 
     /// </summary>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
-    /// <response code="400">Target node does not exist or is reserved or occupied.</response>
+    /// <response code="400">Target node does not exist or is reserved or occupied or agv is locked.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <response code="409">Destination node needs reservation, but is currently not available.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
@@ -439,7 +487,7 @@ public class AgvController : Controller
     /// <param name="correlationId">The correlation ID of the AGV.</param>
     /// <param name="chargerId">The identifier of the charger.</param>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed.</response>
-    /// <response code="400">ChargerId does not correspond to a charger or does not exist at all.</response>
+    /// <response code="400">ChargerId does not correspond to a charger or does not exist at all or agv is locked.</response>
     /// <response code="404">AGV with given correlationId not found.</response>
     /// <response code="409">Charger is currently not available.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>

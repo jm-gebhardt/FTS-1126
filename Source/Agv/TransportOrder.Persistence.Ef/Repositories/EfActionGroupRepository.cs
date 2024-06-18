@@ -37,9 +37,26 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState actionGroupState, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 0, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState actionGroupState, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
     {
         return await GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
+    }
+
+    /// <inheritdoc />
+    public async Task<ActionGroup?> GetNextManualActionGroupForAgvAsync(Guid assignedAgv, List<ActionType>? allowedActionTypes = null)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .Where(a => a.AssignedAgv == assignedAgv && a.IsManual)
+            .AsNoTracking();
+
+        if (allowedActionTypes != null)
+        {
+            actionGroups = actionGroups.Where(ag => ag.Actions.Any(a => allowedActionTypes.Contains(a.ActionType)));
+        }
+        
+        actionGroups = actionGroups.OrderByProperty(SortBy.CreatedDate.ToString(), isDescending: false).ThenByDescending(g => g.HasPriority);
+        return actionGroups.FirstOrDefault();
     }
 
     /// <inheritdoc />
@@ -366,12 +383,12 @@ public class EfActionGroupRepository : IActionGroupRepository
         var startedGroup = await queryable
             .Where(actionGroup => actionGroup.AssignedAgv == agvCorrelationId &&
                                   actionGroup.State == ActionGroupState.Started &&
-                                  actionGroup.Actions.Any(a => a.State == ActionState.Completed))
+                                  actionGroup.Actions.Any(a => a.State != ActionState.Completed))
             .OrderBy(a => a.StartedDate)
             .AsNoTracking()
             .FirstOrDefaultAsync();
 
-        var subsequentAction = startedGroup?.Actions.Where(action => action.State == ActionState.Created).MinBy(a => a.Sequence);
+        var subsequentAction = startedGroup?.Actions.Where(action => action.State != ActionState.Completed).MinBy(a => a.Sequence);
 
         if (subsequentAction == null)
         {
@@ -392,6 +409,17 @@ public class EfActionGroupRepository : IActionGroupRepository
             (a.State == ActionGroupState.Created || (a.State == ActionGroupState.Started && a.Actions.Any(aa => aa.State == ActionState.Created)) ||
              (a.AssignedAgv == null && a.State == ActionGroupState.Created))
         );
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> AgvHasPriorityActionGroups(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+
+        return await actionGroups.AnyAsync(a =>
+            a.AssignedAgv == agvCorrelationId && a.State == ActionGroupState.Created && a.HasPriority);
     }
 
     /// <inheritdoc />

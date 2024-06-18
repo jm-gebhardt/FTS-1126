@@ -31,6 +31,7 @@ public static class LogCodes
     public const int AgvIdle = 311;
     public const int AgvSettingUpdated = 312;
     public const int AgvSettingsReset = 313;
+    public const int AgvModeChanged = 314;
 
     // Order
     public const int OrderCreated = 100;
@@ -43,4 +44,6 @@ public static class LogCodes
     public const int OrderAborted = 107;
     public const int OrderCanceled = 108;
     public const int OrderIncomplete = 109;
+    public const int OrderPaused = 110;
+    public const int OrderResumed = 111;
 }

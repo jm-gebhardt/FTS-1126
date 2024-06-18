@@ -57,6 +57,16 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
+    /// Date the action has been paused (UTC)
+    /// </summary>
+    public DateTime? PausedDate { get; set; }
+
+    /// <summary>
+    /// Time that the action was paused for
+    /// </summary>
+    public TimeSpan PausedDuration { get; set; }
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>

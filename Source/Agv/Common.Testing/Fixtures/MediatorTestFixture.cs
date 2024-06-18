@@ -13,10 +13,12 @@ namespace Gebhardt.Acc.Common.Testing.Fixtures;
 /// </summary>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TConsumer"></typeparam>
+/// <typeparam name="TBusConsumer"></typeparam>
 [PublicAPI]
-public class MediatorTestFixture<TRequest, TConsumer> : MassTransitConsumerTestFixture<TConsumer>
+public class MediatorTestFixture<TRequest, TConsumer, TBusConsumer> : MassTransitConsumerTestFixture<TBusConsumer>
     where TRequest : class
     where TConsumer : class, IConsumer
+    where TBusConsumer : class, IConsumer
 {
     private readonly List<Action<IMediatorRegistrationConfigurator>> _configureMediatorAction = new();
 
@@ -35,7 +37,7 @@ public class MediatorTestFixture<TRequest, TConsumer> : MassTransitConsumerTestF
     /// <summary>
     /// Builds the service provider based on the service collection, in order to be able to register services lazy
     /// </summary>
-    public new virtual MediatorTestFixture<TRequest, TConsumer> Build()
+    public new virtual MediatorTestFixture<TRequest, TConsumer, TBusConsumer> Build()
     {
         AddServices(s =>
         {
@@ -59,7 +61,7 @@ public class MediatorTestFixture<TRequest, TConsumer> : MassTransitConsumerTestF
         return this;
     }
 
-    protected new async Task<MediatorTestFixture<TRequest, TConsumer>> BuildAsync()
+    protected new async Task<MediatorTestFixture<TRequest, TConsumer, TBusConsumer>> BuildAsync()
     {
         await base.BuildAsync();
         return this;
@@ -73,7 +75,7 @@ public class MediatorTestFixture<TRequest, TConsumer> : MassTransitConsumerTestF
         cfg.AddRequestClient<TRequest2>();
     }
 
-    public virtual MediatorTestFixture<TRequest, TConsumer> ConfigureAdditionalRequestClient<TRequestHandler2, TRequest2>()
+    public virtual MediatorTestFixture<TRequest, TConsumer, TBusConsumer> ConfigureAdditionalRequestClient<TRequestHandler2, TRequest2>()
         where TRequest2 : class
         where TRequestHandler2 : class, IConsumer
     {

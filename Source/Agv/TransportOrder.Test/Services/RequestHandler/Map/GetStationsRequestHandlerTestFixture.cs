@@ -16,7 +16,7 @@ using GraphNode = Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Map;
 
-public class GetStationsRequestHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
+public class GetStationsRequestHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer, MockConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {

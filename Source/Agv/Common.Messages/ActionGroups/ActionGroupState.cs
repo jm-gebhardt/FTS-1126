@@ -38,5 +38,10 @@ public enum ActionGroupState
     /// <summary>
     /// Action group has been aborted.
     /// </summary>
-    Aborted
+    Aborted,
+
+    /// <summary>
+    /// Action group has been paused.
+    /// </summary>
+    Paused
 }

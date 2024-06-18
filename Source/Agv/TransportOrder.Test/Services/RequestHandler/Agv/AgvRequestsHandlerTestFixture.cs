@@ -1,6 +1,7 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Configurations;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -14,17 +15,19 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
 
-public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer>
+public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : MediatorTestFixture<TRequestClient, TConsumer, MockConsumer>
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
     private readonly Mock<IAgvDb> _agvDb = new();
 
-    private readonly Mock<IActionGroupRetrievalService> _actionGroupRepository = new();
+    private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
     public AgvSettingsReadModel AgvSettings => EfAgvSettingsProvider.DefaultSettings;
 
@@ -36,11 +39,13 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         AddServices(s =>
         {
             s.AddTransient(_ => _agvDb.Object);
+            s.AddTransient(_ => _actionGroupRetrievalService.Object);
             s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             if (bus != null)
             {
-                s.AddTransient(_ => bus);
+                var descriptor = new ServiceDescriptor(typeof(IBus), _ => bus, ServiceLifetime.Singleton);
+                s.Replace(descriptor);
             }
             s.AddFakeSettings(() => AgvSettings);
         });
@@ -89,13 +94,13 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs, TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
         _agvDb.AddAgvs(agvs);
-        _actionGroupRepository.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
+        _actionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>()))
             .ReturnsAsync(agvs.ToDictionary(a => a.CorrelationId, _ => actionGroup.ConvertFromActionGroupWithFakeNodeType()));
-        _actionGroupRepository.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()));
-        _actionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()));
-       _actionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
+        _actionGroupRetrievalService.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()));
+        _actionGroupRetrievalService.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()));
+        _actionGroupRetrievalService.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
-        _actionGroupRepository.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()))
+        _actionGroupRetrievalService.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         IEnumerable<AgvData> specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(correlationId: a.CorrelationId));
 
@@ -111,9 +116,15 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup? actionGroup = null)
     {
-        _actionGroupRepository.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
+        List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups = [];
+        if (actionGroup != null)
+        {
+            actionGroups = [actionGroup];
+        }
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<bool?>())).ReturnsAsync(actionGroups);
+        _actionGroupRetrievalService.Setup(r => r.GetActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
-        return WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv }, actionGroup);
+        return WithAgvs([agv], actionGroup);
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithActiveAgvErrors(Guid agvCorrelationId, List<AgvError> agvErrors)

@@ -69,7 +69,23 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         _metricCollectorServiceMock.Verify(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>()), callTimes);
     }
 
-    protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null)
+    public void VerifyGetNextManualActionGroupForAgvAsyncInput(Guid agvCorrelationId, List<ActionType>? allowedActionTypes = null)
+    {
+        if (allowedActionTypes == null)
+        {
+            ActionGroupRepository.Verify(x => x.GetNextManualActionGroupForAgvAsync(
+                    It.Is<Guid>(g => g == agvCorrelationId),
+                    It.Is<List<ActionType>?>(a => a == null)),
+                Times.Once);
+            return;
+        }
+        ActionGroupRepository.Verify(x => x.GetNextManualActionGroupForAgvAsync(
+                It.Is<Guid>(g => g == agvCorrelationId),
+                It.Is<List<ActionType>>(a => a.SequenceEqual(allowedActionTypes))),
+            Times.Once);
+    }
+
+   protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null)
     {
         _agvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(SettingsReadModel);
 
@@ -112,7 +128,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         ActionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
         ActionGroupRepository.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
         ActionGroupRepository.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-
+        ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync(actionGroup);
         return this;
     }
 

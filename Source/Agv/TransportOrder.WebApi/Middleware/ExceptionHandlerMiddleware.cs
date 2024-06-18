@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 
 /// <inheritdoc/>
-/// <inheritdoc/>
 public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> logger) : BaseExceptionHandlerMiddleware(logger)
 {
     /// <inheritdoc/>
@@ -18,6 +17,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
         {
             NotInCorrectStateException => HttpStatusCode.BadRequest,
             ActionGroupStateInvalidException => HttpStatusCode.BadRequest,
+            ActionNotAllowedInModeException => HttpStatusCode.BadRequest,
             InvalidNodeTypeException => HttpStatusCode.BadRequest,
             InvalidAgvSettingsPropertyException => HttpStatusCode.BadRequest,
             ActionGroupInvalidException => HttpStatusCode.BadRequest,

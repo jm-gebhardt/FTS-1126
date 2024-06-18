@@ -36,6 +36,12 @@ public class Agv : IAgv
     public AgvStatus? AgvStatus { get; set; }
 
     /// <summary>
+    /// The mode of the agv.
+    /// </summary>
+
+    public AgvMode Mode { get; init; }
+
+    /// <summary>
     /// The current state of the agv.
     /// </summary>
     public AgvState CurrentAgvState
@@ -53,6 +59,26 @@ public class Agv : IAgv
             }
         }
     }
+
+    /// <summary>
+    /// The agv can start an automatic action.
+    /// </summary>
+    public bool CanStartAutomaticAction => Mode.Type == ModeType.Normal;
+
+    /// <summary>
+    /// The agv can start a manual pick/drop action.
+    /// </summary>
+    public bool CanStartManualPickDropAction => new List<ModeType>{ModeType.Maintenance, ModeType.Normal}.Contains(Mode.Type);
+
+    /// <summary>
+    /// The agv can start a manual operational action (Park, Charge, Move).
+    /// </summary>
+    public bool CanStartManualOperationalAction => new List<ModeType> { ModeType.Maintenance, ModeType.Normal, ModeType.UserMode }.Contains(Mode.Type);
+
+    /// <summary>
+    /// The agv should start manual action next.
+    /// </summary>
+    public bool ShouldStartManualAction => new List<ModeType> { ModeType.Maintenance, ModeType.UserMode }.Contains(Mode.Type);
 
     /// <summary>
     /// Gets the previous state of the agv.
@@ -82,7 +108,7 @@ public class Agv : IAgv
     /// </summary>
     public bool IsLocked
     {
-        get => _isLocked;
+        get => Mode.Type == ModeType.Locked;
         private set
         {
             bool hasChanged = value != _isLocked;
@@ -90,7 +116,7 @@ public class Agv : IAgv
             if (hasChanged)
             {
                 TimeOfLockStateChanged = DateTime.UtcNow;
-                _isLocked = value;
+                _isLocked =  Mode.Type == ModeType.Locked;
             }
         }
     }
@@ -184,6 +210,7 @@ public class Agv : IAgv
         IsLocked = isLocked;
         NeedsMaintenance = false;
         CurrentAgvState = AgvState.Initial;
+        Mode = new AgvMode(ModeType.Normal, CorrelationId);
     }
 
     /// <summary>
@@ -197,6 +224,7 @@ public class Agv : IAgv
         SerialNumber = serialNumber;
         Name = agvName ?? serialNumber;
         CurrentAgvState = AgvState.Initial;
+        Mode = new AgvMode(ModeType.Normal, CorrelationId);
     }
 
     /// <summary>
@@ -207,6 +235,7 @@ public class Agv : IAgv
         SerialNumber = null!;
         Name = null!;
         CurrentAgvState = AgvState.Initial;
+        Mode = new AgvMode(ModeType.Normal, CorrelationId);
     }
 
     /// <summary>
@@ -368,19 +397,47 @@ public class Agv : IAgv
     /// <summary>
     /// Lock the agv.
     /// </summary>
-    public void Lock()
+    public void Lock(string? reason=null, string? setter = null)
     {
+        Mode.Switch(ModeType.Locked, reason, setter) ;
         IsLocked = true;
     }
 
     /// <summary>
     /// Set IsLocked to false and sets agv to idle state.
     /// </summary>
-    /// <returns>True if the state has changed</returns>
-    public void Unlock()
+    public void Unlock(string? setter = null)
     {
         SetIdle();
+        Mode.Switch(ModeType.Normal, modeModeSetter: setter);
         IsLocked = false;
+    }
+
+    /// <summary>
+    /// Set the agv into user mode.
+    /// </summary>
+    public void SetUserMode(string? setter = null)
+    {
+        Mode.Switch(ModeType.UserMode, modeModeSetter: setter);
+        SetIdle();
+    }
+
+    /// <summary>
+    /// Set the agv into normal mode.
+    /// </summary>
+    public void SetNormalMode(string? setter = null)
+    {
+        Mode.Switch(ModeType.Normal, modeModeSetter: setter);
+        SetIdle();
+    }
+
+    /// <summary>
+    /// Set the agv into maintenance mode.
+    /// </summary>
+    public void SetMaintenanceMode(string? reason, string? setter = null)
+    {
+        Mode.Switch(ModeType.Maintenance, reason: reason, modeModeSetter: setter);
+        SetIdle();
     }
 
     /// <summary>

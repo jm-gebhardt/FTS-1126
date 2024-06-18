@@ -42,5 +42,10 @@ public enum ActionState
     /// <summary>
     /// Action aborted.
     /// </summary>
-    Aborted
+    Aborted,
+
+    /// <summary>
+    /// Action is Paused
+    /// </summary>
+    Paused
 }

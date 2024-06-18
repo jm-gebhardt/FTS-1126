@@ -3,7 +3,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.System;
 
-public class SystemRequestHandlerTestFixture<TRequestClient> : MediatorTestFixture<TRequestClient, SystemRequestHandler>
+public class SystemRequestHandlerTestFixture<TRequestClient> : MediatorTestFixture<TRequestClient, SystemRequestHandler, MockConsumer>
     where TRequestClient : class
 {
     public SystemRequestHandlerTestFixture<TRequestClient> WithCurrentTime(DateTime currentTime)

@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -45,7 +46,7 @@ public class AgvControllerTest
 
         var agvDto = await fixture.GetControllerResultAsync(c => c.GetAgv(correlationId));
 
-        var expectedAgvDto = new AgvDto(correlationId, agvSerialNumber, agvSerialNumber, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f});
+        var expectedAgvDto = new AgvDto(correlationId, agvSerialNumber, agvSerialNumber, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f}, new AgvMode(ModeType.Normal, correlationId));
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
         agvDto.SerialNumber.ShouldBe(expectedAgvDto.SerialNumber);
@@ -317,7 +318,7 @@ public class AgvControllerTest
         var controller = fixture.Controller;
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
-        var result = await controller.LockAgv(correlationId) as OkResult;
+        var result = await controller.LockAgv(correlationId, "reason") as OkResult;
         result.ShouldNotBeNull();
 
         var harness = fixture.MediatorTestHarness;
@@ -471,5 +472,44 @@ public class AgvControllerTest
         var actionResult = await fixture.Controller.ResetAgvSettingToDefault(fixture.AgvSerialNumbers[2].ToGuid(), "BatterLevelCritical");
         var result = actionResult as OkObjectResult;
         result.ShouldBeAssignableTo<OkResult>();
+    }
+
+    [TestMethod]
+    public async Task SetUserMode_ValidData_Ok()
+    {
+        AgvControllerTestFixture<SetUserMode, AgvModeRequestHandler> fixture = new AgvControllerTestFixture<SetUserMode, AgvModeRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        var actionResult = await fixture.Controller.SetUserMode(fixture.AgvSerialNumbers[2].ToGuid());
+        var result = actionResult as OkObjectResult;
+        result.ShouldBeAssignableTo<OkResult>();
+        (await fixture.TestHarness.Published.Any<SetUserMode>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task SetNormalMode_ValidData_Ok()
+    {
+        AgvControllerTestFixture<SetNormalMode, AgvModeRequestHandler> fixture = new AgvControllerTestFixture<SetNormalMode, AgvModeRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        var actionResult = await fixture.Controller.SetNormalMode(fixture.AgvSerialNumbers[2].ToGuid());
+        var result = actionResult as OkObjectResult;
+        result.ShouldBeAssignableTo<OkResult>();
+        (await fixture.TestHarness.Published.Any<SetNormalMode>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task SetMaintenanceMode_ValidData_Ok()
+    {
+        AgvControllerTestFixture<SetMaintenanceMode, AgvModeRequestHandler> fixture = new AgvControllerTestFixture<SetMaintenanceMode, AgvModeRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        var actionResult = await fixture.Controller.SetMaintenanceMode(fixture.AgvSerialNumbers[2].ToGuid(), "reason", false);
+        var result = actionResult as OkObjectResult;
+        result.ShouldBeAssignableTo<OkResult>();
+        (await fixture.TestHarness.Published.Any<SetMaintenanceMode>()).ShouldBeTrue();
     }
 }

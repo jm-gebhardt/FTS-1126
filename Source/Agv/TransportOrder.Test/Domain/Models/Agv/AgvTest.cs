@@ -107,7 +107,7 @@ public class AgvTest
     [TestMethod]
     public void IsAvailable_IsReadyIdleAndUnlocked_IsAvailable()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(isLocked: false, lastNodeId: "node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "node");
         agv.IsAvailable(ignoreLocked: false).ShouldBeTrue();
     }
 
@@ -116,7 +116,8 @@ public class AgvTest
     [TestMethod]
     public void IsAvailable_IsReadyIdleAndLocked_IsAvailableIfLockedIsIgnored(bool ignoreLocked, bool expectedIsAvailable)
     {
-        var agv = AgvGenerator.GenerateIdleAgv(isLocked: true, lastNodeId: "node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "node");
+        agv.Lock();
         agv.IsAvailable(ignoreLocked: ignoreLocked).ShouldBe(expectedIsAvailable);
     }
 
@@ -159,5 +160,31 @@ public class AgvTest
 
         agv.ShouldRequestGraph().ShouldBeTrue();
         agv.AgvGraphRequestedLastTime.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public void Lock_ReasonAndSetterGiven_IsLockedModeIsLocked()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        const string setter = "a name";
+        const string reason = "a reason";
+        agv.Lock(reason, setter);
+
+        agv.IsLocked.ShouldBeTrue();
+        agv.Mode.Type.ShouldBe(ModeType.Locked);
+        agv.Mode.Setter.ShouldBe(setter);
+        agv.Mode.Reason.ShouldBe(reason);
+    }
+
+    [TestMethod]
+    public void Lock_ReasonAndSetterNotGiven_IsLockedModeIsLocked()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        agv.Lock();
+
+        agv.IsLocked.ShouldBeTrue();
+        agv.Mode.Type.ShouldBe(ModeType.Locked);
+        agv.Mode.Setter.ShouldBeNull();
+        agv.Mode.Reason.ShouldBeNull();
     }
 }

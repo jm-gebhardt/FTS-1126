@@ -13,7 +13,7 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
 
-public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<ResetAgvErrors, ResetAgvErrorsRequestHandler>
+public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<ResetAgvErrors, ResetAgvErrorsRequestHandler, MockConsumer>
 {
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IMessageAwaiter<AgvErrorChanged>> _agvErrorChangedAwaiter = new();

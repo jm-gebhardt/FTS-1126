@@ -42,6 +42,7 @@ public class ExceptionHandlerMiddlewareTest
         yield return [() => new AgvGraphsNotDefinedException(new List<Guid>()), HttpStatusCode.BadRequest];
         yield return [() => new AgvsDataBatchQueryException(new List<Guid>()), HttpStatusCode.BadRequest];
         yield return [() => new AgvsNotFoundException(new List<Guid>()), HttpStatusCode.BadRequest];
+        yield return [() => new ActionNotAllowedInModeException(default, default!), HttpStatusCode.BadRequest];
 
         // Conflict
         yield return [() => new ChargeStationNotAvailableException(null!), HttpStatusCode.Conflict];

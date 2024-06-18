@@ -71,7 +71,11 @@ public class CreateActionGroupRequestHandler :
         // validate agv existence 
         if (agvCorrelationId != null)
         {
-            await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(agvCorrelationId.Value);
+            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
+            if (!agv.CanStartManualPickDropAction)
+            {
+                throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
+            }
         }
 
         // validate source and target node

@@ -24,7 +24,7 @@ public enum ActionType
     Move,
 
     /// <summary>
-    /// Drive to the ToStation, which is a charger and start charging
+    /// Charge at ToStation
     /// </summary>
     Charge
 }

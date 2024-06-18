@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.ActionGroup;
 /// <summary>
 /// Provides a test fixture for <see cref="ActionGroupStatisticsRequestHandler"/> .
 /// </summary>
-public class ActionGroupStatisticsRequestHandlerTestFixture : MediatorTestFixture<GetActionGroupStatistics, ActionGroupStatisticsRequestHandler>
+public class ActionGroupStatisticsRequestHandlerTestFixture : MediatorTestFixture<GetActionGroupStatistics, ActionGroupStatisticsRequestHandler, MockConsumer>
 {
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 

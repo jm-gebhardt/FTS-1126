@@ -5,18 +5,18 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.ActionGroup;
 
-public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<CreatePickDropActionGroup, CreateActionGroupRequestHandler>
+public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<CreatePickDropActionGroup, CreateActionGroupRequestHandler, MockConsumer>
 {
     private readonly Mock<IActionGroupRetrievalService> _retrievalService = new();
     public readonly Mock<IActionGroupRepository> ActionGroupRepository = new();
@@ -25,16 +25,9 @@ public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<Cr
 
     protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile()];
 
-    public CreateActionGroupRequestHandlerTestFixture WithAgvExists(bool agvExists)
+    public CreateActionGroupRequestHandlerTestFixture WithAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        _agvDb.Setup(x => x.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>())).Callback((Guid c) =>
-        {
-            if (agvExists)
-            {
-                return;
-            }
-            throw new AgvNotFoundException(c);
-        });
+        _agvDb.AddAgvs(agvs);
         return this;
     }
 

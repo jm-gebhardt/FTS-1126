@@ -41,7 +41,7 @@ public class ActionGroup
     /// The date the action has been completed (UTC).
     /// </summary>
     public DateTime? CompletedDate { get; set; }
-
+    
     /// <summary>
     /// The state of the ActionGroup.
     /// </summary>
@@ -53,9 +53,14 @@ public class ActionGroup
     public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
 
     /// <summary>
+    /// The first action that is not started
+    /// </summary>
+    public AgvAction? FirstNotCompletedAction => Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Created);
+
+    /// <summary>
     /// True, if the action group is moving cargo.
     /// </summary>
-    public bool IsMovingCargo => Actions.Any(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop);
+    public bool IsMovingCargo => Actions.Any(a => a.ActionType is ActionType.Pick or ActionType.Drop);
 
     /// <summary>
     /// True, if the action group is a charging order.
@@ -95,7 +100,7 @@ public class ActionGroup
     /// <summary>
     /// If true, then this ActionGroup has priority over others (starts immediately).
     /// </summary>
-    public bool HasPriority { get; init; }
+    public bool HasPriority { get; set; }
 
     /// <summary>
     /// Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
@@ -161,6 +166,7 @@ public class ActionGroup
             _ when Actions.Any(a => a.State == ActionState.Canceled) => ActionGroupState.Canceled,
             _ when Actions.Any(a => a.State == ActionState.Aborted) => ActionGroupState.Aborted,
             _ when Actions.Any(a => a.State == ActionState.Invalid) => ActionGroupState.Invalid,
+            _ when Actions.Any(a => a.State == ActionState.Paused) => ActionGroupState.Paused,
             _ => ActionGroupState.Started
         };
 
@@ -218,7 +224,41 @@ public class ActionGroup
     /// <param name="actionId">The id of the action.</param>
     public void CompleteAction(Guid actionId)
     {
+        if (State == ActionGroupState.Paused && Actions[-1].CorrelationId != actionId)
+        {
+            var actionToPause = Actions[Actions.ToList().FindIndex(a => a.CorrelationId == actionId) + 1];
+            UpdateActionState(actionToPause.CorrelationId, ActionState.Paused);
+        }
+
         UpdateActionState(actionId, ActionState.Completed);
+    }
+
+    /// <summary>
+    /// Pauses the currently started action of the action group.
+    /// Alternatively pauses the first action that is in created if none is started.
+    /// </summary>
+    public void PauseActionGroup()
+    {
+        var action = FirstNotCompletedAction;
+        if (action == null)
+        {
+            return;
+        }
+        UpdateActionState(action.CorrelationId, ActionState.Paused);
+    }
+
+    /// <summary>
+    /// Resumes the paused action of this action group.
+    /// </summary>
+    public void ResumeActionGroup()
+    {
+        var action = Actions.FirstOrDefault(a => a.State == ActionState.Paused);
+        if (action == null)
+        {
+            return;
+        }
+        UpdateActionState(action.CorrelationId, ActionState.Created);
+        HasPriority = true;
     }
 
     /// <summary>
@@ -262,10 +302,9 @@ public class ActionGroup
     /// <summary>
     /// Reset the state of the action to <see cref="ActionState.Created"/>.
     /// </summary>
-    /// <param name="actionId">The action id.</param>
-    private void ResetAction(Guid actionId)
+    /// <param name="action">The action.</param>
+    private void ResetAction(AgvAction action)
     {
-        var action = Actions.Single(a => a.CorrelationId == actionId);
         action.StartedDate = null;
         action.CompletedDate = null;
         action.Nodes = Array.Empty<string>();
@@ -332,7 +371,7 @@ public class ActionGroup
     {
         foreach (var agvAction in Actions)
         {
-            ResetAction(agvAction.CorrelationId);
+            ResetAction(agvAction);
         }
         AssignedAgv = null;
         StartedDate = null;

@@ -65,6 +65,9 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<GoOffline, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvData, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<AcceptAgvCommand, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<SetMaintenanceMode, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<SetUserMode, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<SetNormalMode, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<LockAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UnlockAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvForceIdle, AgvCommandHandler>(c);
@@ -130,6 +133,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<CompleteActionOfActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CreateParkingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<SetTargetForAction, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<ResumeActionGroup, ActionCommandHandler>(c);
         });
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
     }
@@ -198,6 +202,11 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddConsumer<RequestAgvGraphCommandHandler>();
         configurator.AddRequestClient<RequestAgvGraph>();
+
+        configurator.AddConsumer<AgvModeRequestHandler>();
+        configurator.AddRequestClient<SetMaintenanceMode>();
+        configurator.AddRequestClient<SetUserMode>();
+        configurator.AddRequestClient<SetNormalMode>();
     }
 
     private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)

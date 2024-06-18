@@ -98,7 +98,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     a.Nodes,
                     a.CreatedDate,
                     a.StartedDate,
-                    a.CompletedDate)
+                    a.CompletedDate, 
+                    a.PausedDate,
+                    a.PausedDuration)
             ).Distinct().ToList(),
             g.IsManual,
             g.HasPriority,
@@ -163,7 +165,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         {
             agvActionReadModels1 = actionGroup.Actions.Join(graphNodes, a => a.TargetNodeId, n => n.Id, (a, n) =>
                     new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State, a.ActionType,
-                        a.TargetNodeId, n.Type, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate))
+                        a.TargetNodeId, n.Type, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration))
                 .Distinct().ToList();
 
             if (!unknownTargetNodeIds.Any())
@@ -176,7 +178,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         {
             agvActionReadModels2 = actionGroup.Actions.Join(unknownTargetNodeIds, a => a.TargetNodeId, u => u, (a, _) =>
                 new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State, a.ActionType,
-                    a.TargetNodeId, AgvGraph.NodeType.WayPoint, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate)).Distinct().ToList();
+                    a.TargetNodeId, AgvGraph.NodeType.WayPoint, a.Nodes, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration)).Distinct().ToList();
             if (!graphNodes.Any())
             {
                 return agvActionReadModels2.ToList();

@@ -1,17 +1,20 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
@@ -33,7 +36,8 @@ public class AgvEventHandler :
     IConsumer<AgvPreparedForStartingAction>,
     IConsumer<AgvLoadStatusReceived>,
     IConsumer<ParkingNodeSelectedForAgv>,
-    IConsumer<ChargingNodeSelectedForAgv>
+    IConsumer<ChargingNodeSelectedForAgv>,
+    IConsumer<AgvModeChanged>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -65,7 +69,7 @@ public class AgvEventHandler :
         if (!agv.IsAvailable(ignoreLocked: true))
         {
             // AGV is still busy
-            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available (charging ignored)", agvCorrelationId);
+            _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not available ", agvCorrelationId);
             return;
         }
         _logger.LogDebug("Try assigning charging action for agv with CorrelationId: {AgvCorrelationId} because it is ready (and needs charging)", agvCorrelationId);
@@ -74,15 +78,21 @@ public class AgvEventHandler :
             bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
             var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
 
-            if (agv.IsLocked)
+            if (agv.ShouldStartManualAction)
             {
-                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is locked. Try start manual action", agvCorrelationId);
+                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is in mode {Mode}. Try start manual action", agvCorrelationId, agv.Mode.Type.ToString());
                 await context.Publish(new TryStartManualAction(agv.CorrelationId));
                 return;
             }
             if (hasUnfinishedDropAction)
             {
                 _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has unfinished drop action", agvCorrelationId);
+                return;
+            }
+
+            if (!agv.CanStartAutomaticAction)
+            {
+                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is in mode {Mode} and can not start any automatic actions", agvCorrelationId, agv.Mode.Type.ToString());
                 return;
             }
 
@@ -113,17 +123,23 @@ public class AgvEventHandler :
 
         await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            if (agv.IsLocked)
-            {
-                await context.Publish(new TryStartManualAction(agv.CorrelationId));
-                return;
-            }
-
             bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
             if (hasUnfinishedActionGroup)
             {
                 _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}", agv.CorrelationId);
                 await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
+                return;
+            }
+
+            if (agv.ShouldStartManualAction)
+            {
+                await context.Publish(new TryStartManualAction(agv.CorrelationId));
+                return;
+            }
+
+            if (!agv.CanStartAutomaticAction)
+            {
+                _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is in mode {Mode} and can not start any automatic actions", agvCorrelationId, agv.Mode.Type.ToString());
                 return;
             }
 
@@ -270,5 +286,38 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<ChargingNodeSelectedForAgv> context)
     {
         await context.Publish(new StartChargingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.ChargeStationId, context.Message.Initiator));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvModeChanged"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvModeChanged> context)
+    {
+        (var agvCorrelationId, var agvMode, bool cancelManualActions) = context.Message;
+
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(states:[ActionGroupState.Created, ActionGroupState.Started], assignedAgvCorrelationId: agvCorrelationId);
+        foreach (var actionGroup in actionGroups)
+        {
+            if (agvMode.Type == ModeType.Maintenance && actionGroup.State == ActionGroupState.Created)
+            {
+                if (!actionGroup.IsManual)
+                {
+                    _logger.LogDebug("Resetting action group {CorrelationId}", actionGroup.CorrelationId);
+                    await context.Publish(new ResetActionGroup(actionGroup.CorrelationId));
+                }
+
+                if (actionGroup.IsManual && cancelManualActions)
+                {
+                    _logger.LogDebug("Cancelling action group {CorrelationId}", actionGroup.CorrelationId);
+                    await context.Publish(new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi));
+                }
+            }
+
+            if (agvMode.Type is ModeType.Maintenance or ModeType.UserMode)
+            {
+                _logger.LogDebug("Pausing action group {CorrelationId}", actionGroup.CorrelationId);
+                await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));
+            }
+        }
     }
 }

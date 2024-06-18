@@ -79,6 +79,28 @@ public class AgvEfRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetReadyAgvsAsync_InUserMode_DoesNotReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv();
+        readyAgv.SetUserMode();
+        await fixture.Add(readyAgv);
+
+        (await fixture.Repository.GetReadyAgvsAsync()).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsAsync_InMaintenanceMode_DoesNotReturnAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var readyAgv = AgvGenerator.GenerateReadyAgv();
+        readyAgv.SetMaintenanceMode("reason");
+        await fixture.Add(readyAgv);
+
+        (await fixture.Repository.GetReadyAgvsAsync()).ShouldBeEmpty();
+    }
+
+    [TestMethod]
     public async Task GetReadyAgvsAsync_IsLocked_DoesNotReturnAgv()
     {
         var fixture = new EfAgvRepositoryTestFixture();
@@ -242,5 +264,39 @@ public class AgvEfRepositoryTest
         await fixture.Add(agv);
         ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.Single().CorrelationId.ShouldBe(agv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsWithAtLeastLowBatteryLevel_InUserMode_NoAgvReturned()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        agv.SetUserMode();
+        await fixture.Add(agv);
+        ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        agvs.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetReadyAgvsWithAtLeastLowBatteryLevel_InMaintenanceMode_NoAgvReturned()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        agv.SetMaintenanceMode("reason");
+        await fixture.Add(agv);
+        ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        agvs.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetChargingAgvsWithMinBatteryLevelAsync_AgvIsLocked_DoesNotReturnLockedAgv()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var lockedAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp);
+        lockedAgv.Lock();
+        await fixture.Add(lockedAgv);
+
+        ICollection<Agv> agvs = await fixture.Repository.GetChargingAgvsWithMinBatteryLevelAsync();
+        agvs.ShouldBeEmpty();
     }
 }

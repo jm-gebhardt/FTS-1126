@@ -10,7 +10,7 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.ActionGroup;
 
-public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixture<TRequestClient, RouteRequestHandler>
+public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixture<TRequestClient, RouteRequestHandler, MockConsumer>
     where TRequestClient : class
 {
     private readonly Mock<IRouteService> _routeServiceMock = new();

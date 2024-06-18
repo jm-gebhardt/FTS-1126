@@ -13,11 +13,18 @@ public record LockAgv : CorrelatedBy<Guid>
     public Guid CorrelationId { get; }
 
     /// <summary>
+    /// The lock reason.
+    /// </summary>
+    public string Reason {get; }
+
+    /// <summary>
     /// <inheritdoc cref="LockAgv"/>
     /// </summary>
-    /// <param name="correlationId"></param>
-    public LockAgv(Guid correlationId)
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="reason">The lock reason.</param>
+    public LockAgv(Guid correlationId, string reason)
     {
         CorrelationId = correlationId;
+        Reason = reason;
     }
 }

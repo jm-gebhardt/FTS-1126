@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using Microsoft.AspNetCore.SignalR;
+using AgvPositionStatus = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvPositionStatus;
+using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 
@@ -39,6 +41,13 @@ public class AgvPublisher : IAgvPublisher
     {
         var agvStateDto = _mapper.Map<AgvStateDto>(agv);
         return _hubContext.Clients.All.AgvStateChanged(agvStateDto);
+    }
+
+    /// <inheritdoc/>
+    public Task SendAgvModeChangedAsync(Guid agvCorrelationId, AgvMode mode)
+    {
+        var agvModeDto = new AgvModeDto(agvCorrelationId, mode);
+        return _hubContext.Clients.All.AgvModeChanged(agvModeDto);
     }
 
     /// <inheritdoc />

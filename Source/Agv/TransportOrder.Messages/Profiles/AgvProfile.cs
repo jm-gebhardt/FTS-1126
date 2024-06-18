@@ -32,6 +32,7 @@ public class AgvProfile : Profile
             .ForMember(d => d.CorrelationId, opt => opt.Ignore());
 
         CreateMap<Domain.Models.Agv.Agv, MessageContent.Agv>(MemberList.None)
+            .ForMember(a => a.AgvMode, opt => opt.MapFrom(src => src.Mode))
             .IncludeMembers(s => s.AgvStatus)
             .ForMember(nameof(MessageContent.Agv.CurrentState), opt => opt.MapFrom(src => src.CurrentAgvState));
 

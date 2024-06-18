@@ -89,4 +89,20 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         _actionGroupRepository.Setup(r => r.HasUnfinishedDropActionsAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
         _actionGroupRepository.Setup(r => r.HasUnfinishedActionGroupAsync(It.Is<Guid>(c => c == correlationId))).ReturnsAsync(true);
     }
+
+    public AgvEventHandlerTestFixture WithActionGroups(List<ActionGroup> actionGroups)
+    {
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), 0, It.IsAny<Guid>(), It.IsAny<bool?>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(
+            It.IsAny<IList<ActionGroupState>?>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<int>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<bool?>(),
+            It.IsAny<SortBy>(),
+            It.IsAny<bool>()
+        )).ReturnsAsync(actionGroups);
+        return this;
+    }
 }

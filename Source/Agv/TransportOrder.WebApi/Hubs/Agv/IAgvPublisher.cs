@@ -1,7 +1,9 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using AgvPositionStatus = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvPositionStatus;
+using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 
@@ -14,6 +16,11 @@ public interface IAgvPublisher
     /// Publishes the status of an agv to all clients.
     /// </summary>
     Task SendAgvStateChangedAsync(Messages.MessageContent.Agv agv);
+
+    /// <summary>
+    /// Publishes the mode of an agv to all clients.
+    /// </summary>
+    Task SendAgvModeChangedAsync(Guid agvCorrelationId, AgvMode mode);
 
     /// <summary>
     /// Publishes that an agv has been discovered to all clients.
