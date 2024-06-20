@@ -3,6 +3,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
@@ -60,6 +61,7 @@ public class MapController : Controller
     /// <param name="correlationId">The map correlation id.</param>
     /// <response code="200">Ok</response>
     /// <response code="404">Map with given correlationId not found.</response>
+    [Authorize]
     [HttpGet]
     [Route("/map/{correlationId:guid}")]
     public async Task<ActionResult<MapDto>> GetMap(Guid correlationId)
@@ -75,6 +77,7 @@ public class MapController : Controller
     /// <param name="correlationId">The map correlation id.</param>
     /// <response code="200">Ok</response>
     /// <response code="404">Map with given correlationId not found.</response>
+    [Authorize]
     [HttpGet]
     [Route("/map/{correlationId:guid}/graph")]
     public async Task<ActionResult<GraphDto>> GetMapGraph(Guid correlationId)
@@ -90,6 +93,7 @@ public class MapController : Controller
     /// <param name="correlationId">The map correlation id.</param>
     /// <response code="200">Ok</response>
     /// <response code="404">Map with given correlationId not found.</response>
+    [Authorize]
     [HttpGet]
     [Route("/map/{correlationId:guid}/nodeStates")]
     public async Task<ActionResult<ICollection<NodeStateDto>>> GetNodeStatesForMap(Guid correlationId)
@@ -104,6 +108,7 @@ public class MapController : Controller
     /// </summary>
     /// <param name="correlationId">The correlation id of the map.</param>
     /// <returns></returns>
+    [Authorize]
     [HttpGet]
     [Route("/map/{correlationId:guid}/stations")]
     public async Task<ActionResult<ICollection<StationDto>>> GetStationsForMap(Guid correlationId)

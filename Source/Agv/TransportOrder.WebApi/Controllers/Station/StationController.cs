@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Station;
@@ -10,6 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Station;
 /// Single station requests.
 /// </summary>
 [ApiController]
+[Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class StationController : Controller
 {

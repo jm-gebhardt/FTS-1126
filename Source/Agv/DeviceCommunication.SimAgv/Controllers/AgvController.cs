@@ -2,6 +2,7 @@
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Commands;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Dtos;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Controllers;
@@ -9,6 +10,8 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Controllers;
 /// <summary>
 /// Contains agv related endpoints.
 /// </summary>
+[ApiController]
+[Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 [Route("agv/{correlationId:guid}")]
 public class AgvController : Controller

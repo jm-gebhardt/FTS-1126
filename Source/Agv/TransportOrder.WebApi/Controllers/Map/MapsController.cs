@@ -1,6 +1,7 @@
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
@@ -9,6 +10,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
 /// Batch map requests.
 /// </summary>
 [ApiController]
+[Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class MapsController : Controller
 {

@@ -6,6 +6,7 @@ using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Messages.Requests;
 using Gebhardt.Acc.Statistics.WebApi.Dtos;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.Acc.Statistics.WebApi.Controllers;
@@ -13,6 +14,8 @@ namespace Gebhardt.Acc.Statistics.WebApi.Controllers;
 /// <summary>
 /// Single action group requests.
 /// </summary>
+[ApiController]
+[Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class GridController : Controller
 {

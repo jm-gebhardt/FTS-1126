@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
@@ -11,6 +12,8 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 /// <summary>
 /// Action groups batch requests.
 /// </summary>
+[ApiController]
+[Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class ActionGroupsController : Controller
 {

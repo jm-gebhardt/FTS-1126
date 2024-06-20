@@ -5,7 +5,11 @@ using System.Xml.XPath;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Controllers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv;
@@ -24,13 +28,31 @@ public static class WebHostBuilderExtension
     {
         var executingAssembly = Assembly.GetExecutingAssembly();
 
-        webHostBuilder.ConfigureServices(services =>
+        webHostBuilder.ConfigureServices((context, services) =>
         {
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddMvc();
             services.AddControllers()
                 .AddApplicationPart(executingAssembly)
                 .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+
+            var config = context.Configuration.GetSection("KEYCLOAK");
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
+                {
+                    o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
+                    o.RequireHttpsMetadata = false;
+                    o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
+                    o.TokenValidationParameters.ValidateIssuer = false;
+                    o.TokenValidationParameters.ValidateAudience = false;
+                    o.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                    o.TokenValidationParameters.SignatureValidator =
+                        delegate (string token, TokenValidationParameters _)
+                        {
+                            var jwt = new JsonWebToken(token);
+                            return jwt;
+                        };
+                });
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc(new RestApiGroup());
@@ -39,7 +61,27 @@ public static class WebHostBuilderExtension
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                 options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
                 options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
-
+                var securityScheme = new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter a valid token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = JwtBearerDefaults.AuthenticationScheme
+                };
+                options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
+                        },
+                        new string[] {}
+                    }
+                });
+                options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
                 IncludeXmlComments(options);
             });
         });

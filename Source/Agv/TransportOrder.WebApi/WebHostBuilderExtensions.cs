@@ -22,8 +22,13 @@ using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Swashbuckle.AspNetCore.Filters;
 using AgvPositionSignificanceChecker = Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi;
@@ -33,15 +38,17 @@ namespace Gebhardt.Acc.TransportOrder.WebApi;
 /// </summary>
 public static class WebHostBuilderExtensions
 {
+    private const string AccessToken = "access_token";
+   
     /// <summary>
-    /// Configured the WebHostBuilder to used the TransportOrderWebApi <paramref name="webHostBuilder" />
+    /// Configured the WebHostBuilder to use the TransportOrderWebApi <paramref name="webHostBuilder" />
     /// </summary>
     /// <param name="webHostBuilder"></param>
     public static IWebHostBuilder AddTransportOrderWebApi(this IWebHostBuilder webHostBuilder)
     {
         var executingAssembly = Assembly.GetExecutingAssembly();
 
-        webHostBuilder.ConfigureServices(services =>
+        webHostBuilder.ConfigureServices((context, services) =>
         {
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -65,22 +72,93 @@ public static class WebHostBuilderExtensions
                 .AddApplicationPart(executingAssembly)
                 .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
+            var config = context.Configuration.GetSection("KEYCLOAK");
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
+            {
+                o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
+                o.RequireHttpsMetadata = false;
+                o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
+                o.TokenValidationParameters.ValidateIssuer = false;
+                o.TokenValidationParameters.ValidateAudience = false;
+                o.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                o.TokenValidationParameters.SignatureValidator =
+                    delegate(string token, TokenValidationParameters _)
+                    {
+                        var jwt = new JsonWebToken(token);
+                        return jwt;
+                    };
+                o.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = ctx =>
+                    {
+                        var accessToken = ctx.Request.Query[AccessToken];
+
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (ctx.HttpContext.WebSockets.IsWebSocketRequest || ctx.Request.Headers["Accept"] == "text/event-stream"))
+                        {
+                            ctx.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
             services.ConfigureEventLogSettings(executingAssembly);
 
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc(new RestApiGroup());
                 options.SwaggerDoc(new HubApiGroup());
-                options.AddSignalRSwaggerGen(opt => { opt.ScanAssemblies(executingAssembly); });
+                options.AddSignalRSwaggerGen(opt =>
+                {
+                    opt.ScanAssemblies(executingAssembly);
+                    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
+                            },
+                            new string[] { }
+                        }
+                    });
+                    opt.AddOperationFilter(new SecurityRequirementsOperationFilter(true, JwtBearerDefaults.AuthenticationScheme));
+                });
                 options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
                 options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                 options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
                 options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
-
+                var securityScheme = new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter a valid token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT", 
+                    Scheme = JwtBearerDefaults.AuthenticationScheme
+                };
+                options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
+                        },
+                        new string[] {}
+                    }
+                });
+                options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
                 IncludeXmlComments(options);
             });
-            services.AddSignalR()
+            IdentityModelEventSource.ShowPII = true;
+
+            services.AddSignalR(options =>
+                {
+                    options.EnableDetailedErrors = true;
+                })
                 .AddJsonProtocol(options =>
                 {
                     options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;

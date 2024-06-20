@@ -1,10 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 
 /// <summary>
 /// Hub for Agv related Dtos
 /// </summary>
+[Authorize]
 public class AgvHub : BaseHub<IAgvClient>
 {
     /// <summary>

@@ -1,10 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
 /// <summary>
 /// Hub for ActionGroup related Dtos
 /// </summary>
+[Authorize]
 public class ActionGroupHub : BaseHub<IActionGroupClient>
 {
     /// <summary>

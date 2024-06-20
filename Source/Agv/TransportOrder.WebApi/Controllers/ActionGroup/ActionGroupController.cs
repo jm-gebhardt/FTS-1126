@@ -7,6 +7,7 @@ using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ActionGroupCreated = Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup.ActionGroupCreated;
 
@@ -15,6 +16,8 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 /// <summary>
 /// Single action group requests.
 /// </summary>
+[ApiController]
+[Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class ActionGroupController : Controller
 {

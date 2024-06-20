@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
@@ -16,6 +17,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
 /// Agv batch requests.
 /// </summary>
 [ApiController]
+[Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class AgvsController : Controller
 {

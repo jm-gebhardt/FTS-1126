@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using JetBrains.Annotations;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -84,6 +85,7 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id.</param>
     /// <returns>The most recent ActionGroup of the agv. It may already be completed.</returns>
+    [PublicAPI]
     Task<ActionGroup?> GetCurrentAssignedActionGroupAsync(Guid agvCorrelationId);
 
     /// <summary>
@@ -119,6 +121,7 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="correlationId">The action correlation id.</param>
     /// <returns>Returns AgvAction identified by key or null when not found.</returns>
+    [PublicAPI]
     Task<AgvAction?> GetActionByIdAsync(Guid correlationId);
 
     /// <summary>
@@ -169,6 +172,7 @@ public interface IActionGroupRepository
     /// <summary>
     /// Get list of ActionGroup with invalid actions.
     /// </summary>
+    [PublicAPI]
     Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync();
 
     /// <summary>
