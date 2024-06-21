@@ -61,6 +61,7 @@ public static class HostBuilderExtension
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
             services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
             services.AddSingleton<IHostCommunicator, TelegramHostCommunicator>();
+            services.TryAddKaeserGraphConfiguration();
         });
         return hostBuilder;
     }

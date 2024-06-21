@@ -1,0 +1,16 @@
+﻿using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
+using Gebhardt.Acc.PrismatCommunicationTest.Helper;
+
+namespace Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
+
+public class HostOrderRepositoryTestFixture: PrismatDbTestFixture
+{
+    public readonly IHostOrderRepository Repository;
+
+    public HostOrderRepositoryTestFixture()
+    {
+        var context = ContextFactory.CreateDbContext();
+        Repository = new EfHostOrderRepository(context, OrderGenerator.KaeserConfiguration);
+    }
+}

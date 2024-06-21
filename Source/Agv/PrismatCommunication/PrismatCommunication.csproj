@@ -13,6 +13,7 @@
         <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
         <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.2" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
+        <PackageReference Include="YamlDotNet" Version="15.1.6"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.6">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -33,9 +34,17 @@
         <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
     <ItemGroup>
+        <None Update="Configuration\graph-configuration.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>Gebhardt.Acc.$(MSBuildProjectName)Test</_Parameter1>
         </AssemblyAttribute>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Messages\Events\" />
     </ItemGroup>
     <Target Name="DisableWarnings" BeforeTargets="CoreCompile">
         <ItemGroup>

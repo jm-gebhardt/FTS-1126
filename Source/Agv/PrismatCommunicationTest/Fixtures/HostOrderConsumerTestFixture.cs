@@ -2,6 +2,7 @@
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
+using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -19,6 +20,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         base.AddServices(collection);
         collection.AddTransient(_ => HostOrderRepositoryMock.Object);
         collection.AddTransient(_ => _hostCommunicatorMock.Object);
+        collection.AddTransient(_ => OrderGenerator.KaeserConfiguration);
         return this;
     }
 
@@ -39,6 +41,30 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder!);
         HostOrderRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<HostOrder>())).Verifiable();
+        return this;
+    }
+
+    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsDecisionPoint(bool hasHostOrders)
+    {
+        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsDecisionPoint()).ReturnsAsync(hasHostOrders);
+        return this;
+    }
+
+    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsLoadTriggerPoint(bool hasHostOrders)
+    {
+        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsLoadTriggerPoint()).ReturnsAsync(hasHostOrders);
+        return this;
+    }
+
+    public HostOrderConsumerTestFixture<TConsumer> WithNextIncompleteOrderWithUnknownDropTarget(HostOrder? hostOrder)
+    {
+        HostOrderRepositoryMock.Setup(x => x.GetNextIncompleteOrderWithUnknownDropTarget()).ReturnsAsync(hostOrder);
+        return this;
+    }
+
+    public HostOrderConsumerTestFixture<TConsumer> WithNextIncompleteOrderWithUnknownPickTarget(HostOrder? hostOrder)
+    {
+        HostOrderRepositoryMock.Setup(x => x.GetNextIncompleteOrderWithUnknownPickTarget()).ReturnsAsync(hostOrder);
         return this;
     }
 

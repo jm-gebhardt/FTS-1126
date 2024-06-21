@@ -13,4 +13,25 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// </summary>
     /// <param name="hostOrder">The host order.</param>
     Task UpdateAsync(HostOrder hostOrder);
+
+    /// <summary>
+    ///Check if there are host orders that are heading towards the decision point to get a drop target assigned.
+    /// </summary>
+    Task<bool> HasDropOrdersHeadingTowardsDecisionPoint();
+
+    /// <summary>
+    ///Check if there drop host orders that are heading towards the load trigger point.
+    /// </summary>
+    /// <returns></returns>
+    Task<bool> HasDropOrdersHeadingTowardsLoadTriggerPoint();
+
+    /// <summary>
+    /// Get the next order with unknown pick target.
+    /// </summary>
+    Task<HostOrder?> GetNextIncompleteOrderWithUnknownPickTarget();
+
+    /// <summary>
+    /// Get the next order with unknown drop target.
+    /// </summary>
+    Task<HostOrder?> GetNextIncompleteOrderWithUnknownDropTarget();
 }

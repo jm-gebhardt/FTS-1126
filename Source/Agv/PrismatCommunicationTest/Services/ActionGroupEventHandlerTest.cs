@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
@@ -18,7 +20,7 @@ public class ActionGroupEventHandlerTest
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
-        var hostOrder = new HostOrder(actionGroup.CorrelationId, "OrderId", "hu");
+        var hostOrder = new HostOrder(actionGroup.CorrelationId, "OrderId", "hu", DateTime.UtcNow);
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
@@ -43,5 +45,47 @@ public class ActionGroupEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
         await fixture.ShouldNotHavePublishedAsync<FinishHostOrder>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupStarted_ValidData_HandleHostOrderStart()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+
+        var actionGroupStarted = new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness.Bus.Publish(actionGroupStarted);
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupStarted>();
+        (await fixture.TestHarness.Published.Any<HandleHostOrderStart>(f =>
+            f.Context.Message == new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroupStarted.MessageCreatedDate))).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task SetTargetForAction_ValidData_PublishesPassDecisionPoint()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+
+        var setTargetForAction = new SetTargetForAction(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "a target node");
+
+        var passDecisionPoint = await fixture.PublishAndGetFirstMessageAsync<SetTargetForAction, PassDecisionPoint>(setTargetForAction);
+
+        passDecisionPoint.AssignedAgv.ShouldBe(setTargetForAction.AssignedAgv);
+        passDecisionPoint.TargetNodeId.ShouldBe(setTargetForAction.TargetNodeId);
+        passDecisionPoint.CorrelationId.ShouldBe(setTargetForAction.ActionGroupId);
+    }
+
+    [TestMethod]
+    public async Task AgvPassedLoadTriggerPoint_ValidData_PublishesPassLoadTriggerPoint()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+
+        var agvPassedLoadTriggerPoint = new AgvPassedLoadTriggerPoint(Guid.NewGuid(), Guid.NewGuid());
+
+        var passLoadTriggerPoint = await fixture.PublishAndGetFirstMessageAsync<AgvPassedLoadTriggerPoint, PassLoadTriggerPoint>(agvPassedLoadTriggerPoint);
+
+        passLoadTriggerPoint.CorrelationId.ShouldBe(agvPassedLoadTriggerPoint.ActionGroupCorrelationId.GetValueOrDefault());
+        passLoadTriggerPoint.AgvCorrelationId.ShouldBe(agvPassedLoadTriggerPoint.CorrelationId);
     }
 }
