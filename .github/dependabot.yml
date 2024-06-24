@@ -13,10 +13,10 @@ updates:
     groups:
       masstransit:
           patterns:
-            - "Masstransit*" 
+            - "Masstransit*"
       efcore:
           patterns:
-            - "Microsoft.EntityFrameworkCore*"         
+            - "Microsoft.EntityFrameworkCore*"
   - package-ecosystem: nuget
     directory: /Source/Agv.IntegrationTest
     open-pull-requests-limit: 20
