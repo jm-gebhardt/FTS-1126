@@ -9,7 +9,7 @@ updates:
        - "d57dc9ca-b7fe-401f-b7f7-c2ec2fcb5b3d" # is@odw42.onmicrosoft.com
        - "a1963800-1848-4394-a6ed-7d0f733b4359" # arne@odw42.onmicrosoft.com
        - "42f4ca0f-010d-6b7d-9420-a358bd5d6ed2" # s.schrader@gebhardt-group.com
-       - "c01aac72-8af7-4b1d-8393-c787d77add86" # j.schmidt@ibs-dev.de
+       - "affc89bd-574b-6f17-a7c0-7cce0e4800b7" # t.guy@gebhardtusa.com
     groups:
       masstransit:
           patterns:
@@ -26,4 +26,4 @@ updates:
        - "d57dc9ca-b7fe-401f-b7f7-c2ec2fcb5b3d" # is@odw42.onmicrosoft.com
        - "a1963800-1848-4394-a6ed-7d0f733b4359" # arne@odw42.onmicrosoft.com
        - "42f4ca0f-010d-6b7d-9420-a358bd5d6ed2" # s.schrader@gebhardt-group.com
-    
+       - "affc89bd-574b-6f17-a7c0-7cce0e4800b7" # t.guy@gebhardtusa.com
