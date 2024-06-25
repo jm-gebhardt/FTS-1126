@@ -12,7 +12,6 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 /// <summary>
 /// Action groups batch requests.
 /// </summary>
-[ApiController]
 [Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class ActionGroupsController : Controller
