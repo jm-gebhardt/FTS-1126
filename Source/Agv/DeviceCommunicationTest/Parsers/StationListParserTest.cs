@@ -53,8 +53,8 @@ public class StationListParserTest
     {
         var nodes = new MqttNode[]
         {
-            new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f }
         };
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
@@ -72,12 +72,12 @@ public class StationListParserTest
     {
         var nodes = new MqttNode[]
         {
-            new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f }
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
         };
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
@@ -95,12 +95,12 @@ public class StationListParserTest
     {
         var nodes = new MqttNode[]
         {
-            new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f }
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
         };
         var stations = new Station[]
         {
@@ -129,12 +129,12 @@ public class StationListParserTest
 
         var nodes = new MqttNode[]
         {
-            new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f }
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
         };
         var stations = new Station[]
         {
@@ -158,12 +158,12 @@ public class StationListParserTest
     {
         var nodes = new MqttNode[]
         {
-            new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f }
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
         };
         var stations = new Station[]
         {
@@ -203,12 +203,12 @@ public class StationListParserTest
 
         var nodes = new MqttNode[]
         {
-            new() { NodeId = 1, X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = 2, X = 9f, Y = 9f, Z = 0f }
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f }
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = 1, StartId = 1, EndId = 2, Bidirectional = true, MaxVelocity = 1 }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
         };
         var stations = new Station[]
         {

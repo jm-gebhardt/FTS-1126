@@ -172,8 +172,8 @@ public class GraphParser
 
     private (GraphNode fromNode, GraphNode toNode) GetFromToNodes(MqttEdge mqttEdge)
     {
-        string fromNodeId = mqttEdge.StartId.ToString();
-        string toNodeId = mqttEdge.EndId.ToString();
+        string fromNodeId = mqttEdge.StartId;
+        string toNodeId = mqttEdge.EndId;
         var fromNode = _nodes.Single(n => n.Id == fromNodeId);
         var toNode = _nodes.Single(n => n.Id == toNodeId);
         return (fromNode, toNode);
@@ -225,7 +225,7 @@ public class GraphParser
 
         foreach (var node in _graph.Nodes!)
         {
-            allAdded &= _nodes.Add(new GraphNode(node.NodeId.ToString())
+            allAdded &= _nodes.Add(new GraphNode(node.NodeId)
             {
                 Type = AgvGraph.NodeType.WayPoint,
                 X = node.X,

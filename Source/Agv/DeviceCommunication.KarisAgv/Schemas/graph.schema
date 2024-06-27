@@ -41,7 +41,7 @@
           "description": "The Node representation.",
           "properties": {
             "nodeId": {
-              "type": "integer",
+              "type": "string",
               "description": "The unique ID of the node."
             },
             "x": {
@@ -98,15 +98,15 @@
           "description": "The Edge representation.",
             "properties": {
                 "edgeId": {
-                    "type": "integer",
+                    "type": "string",
                     "description": "The unique ID of the edge."
                 },
                 "startId": {
-                    "type": "integer",
+                    "type": "string",
                     "description": "The ID of the node where the edge starts."
                 },
                 "endId": {
-                    "type": "integer",
+                    "type": "string",
                     "description": "The ID of the node where the edge ends."
                 },
                 "bidirectional": {
@@ -118,7 +118,7 @@
                     ]
                 },
                 "maxVelocity": {
-                    "type": "integer",
+                    "type": "float",
                     "description": "The maximum allowed velocity on that edge [m/s]."
                 },
                 "edgeType": {

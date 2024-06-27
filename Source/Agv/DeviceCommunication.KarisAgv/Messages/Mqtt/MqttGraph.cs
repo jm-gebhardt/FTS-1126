@@ -79,7 +79,7 @@ public record MqttNode
     /// <summary>
     /// The unique ID of the node
     /// </summary>
-    public int NodeId { get; set; }
+    public string NodeId { get; set; } = string.Empty;
 
     /// <summary>
     /// The x coordinate of the node
@@ -107,17 +107,17 @@ public record MqttEdge
     /// <summary>
     /// The unique ID of the edge
     /// </summary>
-    public int EdgeId { get; set; }
+    public string EdgeId { get; set; } = string.Empty;
 
     /// <summary>
     /// The ID of the node where the edge starts
     /// </summary>
-    public int StartId { get; set; }
+    public string StartId { get; set; } = string.Empty;
 
     /// <summary>
     /// The ID of the node where the edge ends
     /// </summary>
-    public int EndId { get; set; }
+    public string EndId { get; set; } = string.Empty;
 
     /// <summary>
     /// true/false. The edge can be traveled in both directions. If false, only from start to end

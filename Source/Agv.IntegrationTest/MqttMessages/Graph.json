@@ -5,61 +5,61 @@
     "relatedMapId": "H05",
     "nodes": [
         {
-            "nodeId": 11,
+            "nodeId": "11",
             "x": 10.0,
             "y": 10.0,
             "z": 0.0
         },
         {
-            "nodeId": 21,
+            "nodeId": "21",
             "x": 20.0,
             "y": 10.0,
             "z": 0.0
         },
         {
-            "nodeId": 41,
+            "nodeId": "41",
             "x": 40.0,
             "y": 10.0,
             "z": 0.0
         },
         {
-            "nodeId": 12,
+            "nodeId": "12",
             "x": 10.0,
             "y": 20.0,
             "z": 0.0
         },
         {
-            "nodeId": 22,
+            "nodeId": "22",
             "x": 20.0,
             "y": 20.0,
             "z": 0.0
         },
         {
-            "nodeId": 42,
+            "nodeId": "42",
             "x": 40.0,
             "y": 20.0,
             "z": 0.0
         },
         {
-            "nodeId": 13,
+            "nodeId": "13",
             "x": 10.0,
             "y": 30.0,
             "z": 0.0
         },
         {
-            "nodeId": 23,
+            "nodeId": "23",
             "x": 20.0,
             "y": 30.0,
             "z": 0.0
         },
         {
-            "nodeId": 33,
+            "nodeId": "33",
             "x": 30.0,
             "y": 30.0,
             "z": 0.0
         },
         {
-            "nodeId": 43,
+            "nodeId": "43",
             "x": 40.0,
             "y": 30.0,
             "z": 0.0
@@ -67,9 +67,9 @@
     ],
     "edges": [
         {
-            "edgeId": 1121,
-            "startId": 11,
-            "endId": 21,
+            "edgeId": "1121",
+            "startId": "11",
+            "endId": "21",
             "bidirectional": true,
             "maxVelocity": 1,
             "edgeType": "DIRECT",
@@ -77,9 +77,9 @@
             "attributes": []
         },
         {
-            "edgeId": 2122,
-            "startId": 21,
-            "endId": 22,
+            "edgeId": "2122",
+            "startId": "21",
+            "endId": "22",
             "bidirectional": true,
             "maxVelocity": 1,
             "edgeType": "DIRECT",
@@ -87,9 +87,9 @@
             "attributes": []
         },
         {
-            "edgeId": 2212,
-            "startId": 22,
-            "endId": 12,
+            "edgeId": "2212",
+            "startId": "22",
+            "endId": "12",
             "bidirectional": false,
             "maxVelocity": 2,
             "edgeType": "DIRECT",
@@ -97,9 +97,9 @@
             "attributes": []
         },
         {
-            "edgeId": 1213,
-            "startId": 12,
-            "endId": 13,
+            "edgeId": "1213",
+            "startId": "12",
+            "endId": "13",
             "bidirectional": false,
             "maxVelocity": 2,
             "edgeType": "DIRECT",
@@ -107,9 +107,9 @@
             "attributes": []
         },
         {
-            "edgeId": 2223,
-            "startId": 22,
-            "endId": 23,
+            "edgeId": "2223",
+            "startId": "22",
+            "endId": "23",
             "bidirectional": true,
             "maxVelocity": 2,
             "edgeType": "DIRECT",
@@ -117,18 +117,18 @@
             "attributes": []
         },
         {
-            "edgeId": 1323,
-            "startId": 13,
-            "endId": 23,
+            "edgeId": "1323",
+            "startId": "13",
+            "endId": "23",
             "bidirectional": false,
             "maxVelocity": 2,
             "edgeType": "DIRECT",
             "attributes": []
         },
         {
-            "edgeId": 2333,
-            "startId": 23,
-            "endId": 33,
+            "edgeId": "2333",
+            "startId": "23",
+            "endId": "33",
             "bidirectional": true,
             "maxVelocity": 1,
             "edgeType": "DIRECT",
@@ -136,18 +136,18 @@
             "attributes": []
         },
         {
-            "edgeId": 3343,
-            "startId": 33,
-            "endId": 43,
+            "edgeId": "3343",
+            "startId": "33",
+            "endId": "43",
             "bidirectional": true,
             "maxVelocity": 1,
             "controlPoints": [],
             "attributes": []
         },
         {
-            "edgeId": 4243,
-            "startId": 42,
-            "endId": 43,
+            "edgeId": "4243",
+            "startId": "42",
+            "endId": "43",
             "bidirectional": true,
             "maxVelocity": 1,
             "edgeType": "DIRECT",
@@ -155,9 +155,9 @@
             "attributes": []
         },
         {
-            "edgeId": 4142,
-            "startId": 41,
-            "endId": 42,
+            "edgeId": "4142",
+            "startId": "41",
+            "endId": "42",
             "bidirectional": true,
             "maxVelocity": 1,
             "edgeType": "DIRECT",
