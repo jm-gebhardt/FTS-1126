@@ -129,7 +129,7 @@ public static class WebHostBuilderExtensions
                 options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                 options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
-                options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
+                options.CustomSchemaIds(Swagger.CustomSchemaSelector.RemoveDtoSuffix);
                 var securityScheme = new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
