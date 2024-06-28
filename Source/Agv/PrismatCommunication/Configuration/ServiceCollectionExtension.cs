@@ -22,10 +22,16 @@ public static class ServiceCollectionExtension
     /// Adds a <see cref="KaeserGraphConfiguration" /> as singleton to the service collection provided.
     /// </summary>
     /// <param name="serviceCollection">The service collection.</param>
+    /// <param name="isSimulationMode">Whether this function is called from the simulation mode.</param>
     /// <returns></returns>
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public static IServiceCollection TryAddKaeserGraphConfiguration(this IServiceCollection serviceCollection)
+    public static IServiceCollection TryAddKaeserGraphConfiguration(this IServiceCollection serviceCollection, bool isSimulationMode)
     {
+        if (isSimulationMode)
+        {
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPointName, "WP-021");
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.LoadTriggerPointName, "WP-018");
+        }
         serviceCollection.TryAddSingleton(_config.Value);
         return serviceCollection;
     }

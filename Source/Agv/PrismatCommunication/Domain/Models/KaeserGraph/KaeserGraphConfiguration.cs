@@ -12,7 +12,7 @@ public class KaeserGraphConfiguration
     /// <summary>
     /// Prismat targets where nodes are known.
     /// </summary>
-    public string[] PrismatKnownTargets { get; } = ["1020", "1040", "2130", "2110", "2230", "2210", "2330", "2310", "2430", "2410"];
+    public string[] PrismatKnownTargets { get; } = ["1020", "1050", "2130", "2110", "2230", "2210", "2330", "2310", "2430", "2410"];
 
     /// <summary>
     /// Prismat targets for which the pick node is unknown;
@@ -51,8 +51,10 @@ public class KaeserGraphConfiguration
     public KaeserGraphConfiguration(IConcurrentDictionaryProvider<string, string> triggerPointMapping)
     {
         TriggerPointMapping = triggerPointMapping;
+
         TriggerPointMapping.Add(LoadTriggerPointName, "");
         TriggerPointMapping.Add(DecisionPointName, "");
+
         StationMapping = new Dictionary<string, string>()
         {
             { "1020", "3" },

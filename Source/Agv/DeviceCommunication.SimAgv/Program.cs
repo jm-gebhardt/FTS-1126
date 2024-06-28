@@ -32,7 +32,7 @@ try
     parser.ParseArguments<Options>(args)
         .WithParsed(simulationOptions =>
         {
-            if (!simulationOptions.GridGraph && !simulationOptions.FixedGraph)
+            if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false })
             {
                 throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph})");
             }
@@ -51,6 +51,11 @@ try
                     else if (simulationOptions.GridGraph)
                     {
                         services.AddTransient<IGraphGenerator, GridGraphGenerator>();
+                        services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
+                    }
+                    else if (simulationOptions.KaeserGraph)
+                    {
+                        services.AddTransient<IGraphGenerator, KaeserGraphGenerator>();
                         services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
                     }
                     services.AddHostedService<SimulatedAgvProvider>();

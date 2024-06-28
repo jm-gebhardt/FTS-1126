@@ -12,6 +12,7 @@ public sealed class Options
 {
     private const string GridGraphSet = "GridGraph";
     private const string FixedGraphSet = "FixedGraph";
+    private const string KaeserGraphSet = "KaeserGraph";
 
     /// <summary>
     /// Number of AGVs
@@ -85,6 +86,13 @@ public sealed class Options
     [UsedImplicitly]
     [Option('g', "gridgraph", HelpText = "Use the grid graph generator", SetName = GridGraphSet, Default = false)]
     public bool GridGraph { get; init; }
+
+    /// <summary>
+    /// Flag to use the grid graph generator in simulation mode
+    /// </summary>
+    [UsedImplicitly]
+    [Option('k', "kaesergraph", HelpText = "Use the kaeser graph generator", SetName = KaeserGraphSet, Default = false)]
+    public bool KaeserGraph { get; init; }
 
     /// <summary>
     /// List of simulation sources

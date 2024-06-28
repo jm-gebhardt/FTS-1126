@@ -26,7 +26,6 @@
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Properties\" />
-      <Folder Include="Services\" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="Resources\BackgroundImages\Charge Park_1.16_-11_-21.png">
