@@ -17,6 +17,9 @@ updates:
       efcore:
           patterns:
             - "Microsoft.EntityFrameworkCore*"
+      fluentvalidation:
+          patterns:
+            - "FluentValidation*"
   - package-ecosystem: nuget
     directory: /Source/Agv.IntegrationTest
     open-pull-requests-limit: 20
