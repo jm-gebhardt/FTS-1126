@@ -13,7 +13,7 @@ updates:
     groups:
       masstransit:
           patterns:
-            - "Masstransit*"
+            - "MassTransit*"
       efcore:
           patterns:
             - "Microsoft.EntityFrameworkCore*"

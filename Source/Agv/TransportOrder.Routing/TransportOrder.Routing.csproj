@@ -2,15 +2,15 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.TransportOrder.Routing</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj"/>
+    <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="MassTransit.Prometheus" Version="8.1.3"/>
-        <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.2.2"/>
-        <PackageReference Include="MassTransit" Version="8.2.2"/>
-        <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.2" />
+        <PackageReference Include="MassTransit.Prometheus" Version="8.1.3" />
+        <PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.2.3" />
+        <PackageReference Include="MassTransit" Version="8.2.3" />
+        <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.3" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Common\Common.csproj"/>
+        <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 </Project>
