@@ -283,7 +283,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
         c.Saga.ActionStartDate = DateTime.UtcNow;
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes, c.Saga.ActionStartDate!.Value, 0);
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes, c.Message.Action.Edges, c.Saga.ActionStartDate!.Value, 0);
     }
 
     private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler()

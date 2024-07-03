@@ -1165,7 +1165,7 @@ public class ActionCommandHandlerTest
     public async Task Consume_PauseActionGroup_StartedActionGroup_PausesActionGroup()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
@@ -1180,7 +1180,7 @@ public class ActionCommandHandlerTest
     public async Task Consume_PauseActionGroup_ActionGroupWithCompletedAction_PausesActionGroup()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
         actionGroup.CompleteAction(actionGroup.Actions[0].CorrelationId);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)

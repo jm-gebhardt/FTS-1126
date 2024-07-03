@@ -10,6 +10,11 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 public record GraphEdgeDto
 {
     /// <summary>
+    /// The correlation id of the edge.
+    /// </summary>
+    public Guid CorrelationId { get; init; } = Guid.Empty;
+   
+    /// <summary>
     /// Id of the node where the edge starts.
     /// </summary>
     public string FromNodeId { get; init; } = null!;

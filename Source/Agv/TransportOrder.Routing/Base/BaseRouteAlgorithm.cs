@@ -76,7 +76,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 
         if (source == destination) // Already at destination -> 0 cost
         {
-            return new Route(0f, new[] {source});
+            return new Route(0f, new[] {source}, Array.Empty<Guid>());
         }
 
         return CalculateRouteInternal(source, destination);
@@ -108,7 +108,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
             return null;
         }
 
-        var totalRoute = new Route(0, Array.Empty<string>());
+        var totalRoute = new Route(0, Array.Empty<string>(), Array.Empty<Guid>());
 
         for (int i = 0; i < waypoints.Length - 1; i++)
         {

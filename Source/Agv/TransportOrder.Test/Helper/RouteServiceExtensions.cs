@@ -9,9 +9,10 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
 public static class RouteServiceExtensions
 {
-    public static void WithRoute(this Mock<IRouteService> routeServiceMock, double costs, string[] nodes)
+    public static void WithRoute(this Mock<IRouteService> routeServiceMock, double costs, string[] nodes, Guid[]? edges = null)
     {
-        routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(costs, nodes));
+        Guid[] routeEdges = edges ?? [];
+        routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(costs, nodes, routeEdges));
     }
 
     public static void WithRouteCostsFirstAction(this Mock<IRouteService> routeServiceMock, TransportOrder.Domain.Models.Agv.Agv agv, ActionGroup actionGroup, float? routeCosts = null)

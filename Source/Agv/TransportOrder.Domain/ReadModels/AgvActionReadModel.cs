@@ -15,6 +15,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="TargetNodeId">The target node id of the action.</param>
 /// <param name="TargetNodeType">The type of the target node.</param>
 /// <param name="Nodes">The nodes of the trip.</param>
+/// <param name="Edges">The edges of the trip.</param>
 /// <param name="CreatedDate">The creation date.</param>
 /// <param name="StartedDate">The start date.</param>
 /// <param name="CompletedDate">The completion date.</param>
@@ -29,6 +30,7 @@ public record AgvActionReadModel(
     string TargetNodeId,
     AgvGraph.NodeType TargetNodeType,
     string[] Nodes,
+    Guid[] Edges,
     DateTime CreatedDate,
     DateTime? StartedDate,
     [PublicAPI]DateTime? CompletedDate,

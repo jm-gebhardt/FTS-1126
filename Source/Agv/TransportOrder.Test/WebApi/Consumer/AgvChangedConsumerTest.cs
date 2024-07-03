@@ -67,7 +67,7 @@ public class AgvChangedConsumerTest
 
         await fixture.TestHarness.Bus.Publish(new AgvBecameIdle(agvCorrelationId));
         (await fixture.ConsumerHarness.Consumed.Any<AgvBecameIdle>()).ShouldBeTrue();
-        fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>())),
+        fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<string>(), Array.Empty<Guid>())),
             Times.Once);
     }
 

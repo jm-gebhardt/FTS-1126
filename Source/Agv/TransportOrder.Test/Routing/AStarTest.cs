@@ -3,6 +3,7 @@ using System.Numerics;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Implementations;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
@@ -32,18 +33,18 @@ public class AStarTest
     public AStarTest()
     {
         _graph = new AgvGraph(Guid.Empty,
-            new []
+            new[]
             {
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 5f, nodeId:"1"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 1f, 5f, nodeId:"2"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, nodeId:"3"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 3f, 3f, nodeId:"4"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 3f, 6f, nodeId:"5"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 3f, nodeId:"6"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 6f, 0f, nodeId:"7"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 7f, 1f, nodeId:"8"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 8f, nodeId:"9"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 8f, 5f, nodeId:"10")
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 5f, nodeId: "1"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 1f, 5f, nodeId: "2"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, nodeId: "3"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 3f, 3f, nodeId: "4"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 3f, 6f, nodeId: "5"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 3f, nodeId: "6"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 6f, 0f, nodeId: "7"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 7f, 1f, nodeId: "8"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 8f, nodeId: "9"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 8f, 5f, nodeId: "10")
             },
             new[]
             {
@@ -104,7 +105,7 @@ public class AStarTest
             {
                 if (c == ' ')
                 {
-                    var next = NodeGenerator.GenerateNode(AgvGraph.NodeType.WayPoint, x, y, nodeId:$"{x:D2}/{y:D2}");
+                    var next = NodeGenerator.GenerateNode(AgvGraph.NodeType.WayPoint, x, y, nodeId: $"{x:D2}/{y:D2}");
                     nodes.Add(next);
                     var prev = nodes.SingleOrDefault(n => n.Id == $"{x - 1:D2}/{y:D2}");
                     if (prev != null)
@@ -126,15 +127,15 @@ public class AStarTest
         _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray());
 
         _wikiExample = new AgvGraph(Guid.Empty,
-            new []
+            new[]
             {
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 0f, nodeId:"Nairobi"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 42f, 80f, nodeId:"Tokyo"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 104f, 100f, nodeId:"Marseille"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 96f, 60f, nodeId:"Berlin"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 104f, -10f, nodeId:"Denver"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 150f, 20f, nodeId:"Helsinki"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 200f, 92f, nodeId:"Rio")
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 0f, nodeId: "Nairobi"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 42f, 80f, nodeId: "Tokyo"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 104f, 100f, nodeId: "Marseille"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 96f, 60f, nodeId: "Berlin"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 104f, -10f, nodeId: "Denver"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 150f, 20f, nodeId: "Helsinki"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 200f, 92f, nodeId: "Rio")
             },
             new[]
             {
@@ -162,10 +163,10 @@ public class AStarTest
     {
         var routes = new List<Route?>
         {
-            new(9f, Array.Empty<string>()),
-            new(1f, Array.Empty<string>()),
+            new(9f, Array.Empty<string>(), Array.Empty<Guid>()),
+            new(1f, Array.Empty<string>(), Array.Empty<Guid>()),
             null,
-            new(5f, Array.Empty<string>())
+            new(5f, Array.Empty<string>(), Array.Empty<Guid>())
         };
 
         List<Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
@@ -315,8 +316,8 @@ public class AStarTest
         var graph = new AgvGraph(Guid.Empty,
             new[]
             {
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 5f, nodeId:"1"),
-                NodeGenerator.GenerateNode(AgvGraph.NodeType.Drop, 1f, 5f, nodeId:"2")
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 5f, nodeId: "1"),
+                NodeGenerator.GenerateNode(AgvGraph.NodeType.Drop, 1f, 5f, nodeId: "2")
             },
             new[]
             {
@@ -408,11 +409,11 @@ public class AStarTest
             Guid.NewGuid(),
             new List<GraphNode>
             {
-                NodeGenerator.GenerateNode(x:0, y:0, nodeId:"01"),
-                NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Bez"),
-                NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Dir"),
-                NodeGenerator.GenerateNode(x:1, y:2, nodeId:"03"),
-                NodeGenerator.GenerateNode(x:2, y:2, nodeId:"04")
+                NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "01"),
+                NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Bez"),
+                NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Dir"),
+                NodeGenerator.GenerateNode(x: 1, y: 2, nodeId: "03"),
+                NodeGenerator.GenerateNode(x: 2, y: 2, nodeId: "04")
             },
             new List<GraphEdge>
             {
@@ -454,10 +455,10 @@ public class AStarTest
             Guid.NewGuid(),
             new List<GraphNode>
             {
-                NodeGenerator.GenerateNode(x:0, y:0, nodeId:"01"),
-                NodeGenerator.GenerateNode(x:1, y:1, nodeId:"Bez"),
-                NodeGenerator.GenerateNode(x:0.9f, y:2, nodeId:"Dir"),
-                NodeGenerator.GenerateNode(x:1, y:2, nodeId:"03")
+                NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "01"),
+                NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "Bez"),
+                NodeGenerator.GenerateNode(x: 0.9f, y: 2, nodeId: "Dir"),
+                NodeGenerator.GenerateNode(x: 1, y: 2, nodeId: "03")
             },
             new List<GraphEdge>
             {
@@ -506,11 +507,11 @@ public class AStarTest
 
         var nodes = new List<GraphNode>
         {
-            NodeGenerator.GenerateNode(x:0, y:0, nodeId:"01"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Poly"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Dir"),
-            NodeGenerator.GenerateNode(x:1, y:2, nodeId:"03"),
-            NodeGenerator.GenerateNode(x:2, y:2, nodeId:"04")
+            NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "01"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Poly"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Dir"),
+            NodeGenerator.GenerateNode(x: 1, y: 2, nodeId: "03"),
+            NodeGenerator.GenerateNode(x: 2, y: 2, nodeId: "04")
         };
         var graph = new AgvGraph(
             Guid.NewGuid(),
@@ -582,12 +583,12 @@ public class AStarTest
 
         var nodes = new List<GraphNode>
         {
-            NodeGenerator.GenerateNode(x:0, y:0, nodeId:"01"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Poly"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Dir"),
-            NodeGenerator.GenerateNode(x:1, y:2, nodeId:"03"),
-            NodeGenerator.GenerateNode(x:2, y:2, nodeId:"04"),
-            NodeGenerator.GenerateNode(x:1, y:0, nodeId:"05")
+            NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "01"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Poly"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Dir"),
+            NodeGenerator.GenerateNode(x: 1, y: 2, nodeId: "03"),
+            NodeGenerator.GenerateNode(x: 2, y: 2, nodeId: "04"),
+            NodeGenerator.GenerateNode(x: 1, y: 0, nodeId: "05")
         };
         var graph = new AgvGraph(
             Guid.NewGuid(),
@@ -657,21 +658,21 @@ public class AStarTest
         const float west = 3f * (float)Math.PI / 2f;
         var nodes = new List<GraphNode>
         {
-            NodeGenerator.GenerateNode(x:0, y:0, nodeId:"01"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Slant"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Dir"),
-            NodeGenerator.GenerateNode(x:1, y:2, nodeId:"03"),
-            NodeGenerator.GenerateNode(x:2, y:2, nodeId:"04")
+            NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "01"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Slant"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Dir"),
+            NodeGenerator.GenerateNode(x: 1, y: 2, nodeId: "03"),
+            NodeGenerator.GenerateNode(x: 2, y: 2, nodeId: "04")
         };
         var graph = new AgvGraph(
             Guid.NewGuid(),
             nodes,
             [
-                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
-                GraphEdge.CreateDirect("02Dir", "03"),
-                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
+                GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2), "01-02Dir".ToGuid()),
+                GraphEdge.CreateDirect("02Dir", "03", id: "02Dir-03".ToGuid()),
+                GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2), id: "02Dir-04".ToGuid()),
                 AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.9, [.. nodes]),
-                GraphEdge.CreateDirect("02Slant", "03"),
+                GraphEdge.CreateDirect("02Slant", "03", id: "02Slant-03".ToGuid()),
                 AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.9, [.. nodes])
             ]
         );
@@ -683,12 +684,14 @@ public class AStarTest
         route.ShouldNotBeNull();
         route.Nodes.Length.ShouldBe(3);
         route.Nodes.ShouldContain("02Dir");
+        route.Edges.ShouldBe(["01-02Dir".ToGuid(), "02Dir-03".ToGuid()]);
 
         var route2 = aStar.CalculateRoute("01", "04");
 
         route2.ShouldNotBeNull();
         route2.Nodes.Length.ShouldBe(3);
         route2.Nodes.ShouldContain("02Dir");
+        route2.Edges.ShouldBe(["01-02Dir".ToGuid(), "02Dir-04".ToGuid()]);
     }
 
     [TestMethod]
@@ -720,24 +723,109 @@ public class AStarTest
         const float west = 3f * (float)Math.PI / 2f;
         var nodes = new List<GraphNode>
         {
-            NodeGenerator.GenerateNode(x:0, y:0, nodeId:"01"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Slant"),
-            NodeGenerator.GenerateNode(x:1, y:1, nodeId:"02Dir"),
-            NodeGenerator.GenerateNode(x:1, y:2, nodeId:"03"),
-            NodeGenerator.GenerateNode(x:2, y:2, nodeId:"04"),
-            NodeGenerator.GenerateNode(x:1, y:0, nodeId:"05")
+            NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "01"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Slant"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02Dir"),
+            NodeGenerator.GenerateNode(x: 1, y: 2, nodeId: "03"),
+            NodeGenerator.GenerateNode(x: 2, y: 2, nodeId: "04"),
+            NodeGenerator.GenerateNode(x: 1, y: 0, nodeId: "05")
         };
         var graph = new AgvGraph(
             Guid.NewGuid(),
             nodes,
             [
-                GraphEdge.CreateDirect("01", "05"),
-                GraphEdge.CreateDirect("02Dir", "03"),
-                GraphEdge.CreateDirect("02Slant", "03"),
-                GraphEdge.CreateDirect("03", "04"),
-                GraphEdge.CreateDirect("05", "02Dir"),
+                GraphEdge.CreateDirect("01", "05", id: "01-05".ToGuid()),
+                GraphEdge.CreateDirect("02Dir", "03", id: "02Dir-03".ToGuid()),
+                GraphEdge.CreateDirect("02Slant", "03", id: "02Slant-03".ToGuid()),
+                GraphEdge.CreateDirect("03", "04", id: "03-04".ToGuid()),
+                GraphEdge.CreateDirect("05", "02Dir", id: "05-02Dir".ToGuid()),
                 AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.0, [.. nodes]),
                 AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.0, [.. nodes])
+            ]
+        );
+
+        var id0102Slant = graph.Edges.Single(e => e is { Variant: EdgeType.Slanted, ToNodeId: "02Slant" }).Id;
+        var id02Slant04 = graph.Edges.Single(e => e is { Variant: EdgeType.Slanted, ToNodeId: "04" }).Id;
+
+        var aStar = new AStar(graph, _slowTurnAgvData);
+
+        var route = aStar.CalculateRoute("01", "03");
+
+        route.ShouldNotBeNull();
+        route.Nodes.Length.ShouldBe(3);
+        route.Nodes.ShouldContain("02Slant");
+        route.Edges.ShouldBe([id0102Slant, "02Slant-03".ToGuid()]);
+
+        var route2 = aStar.CalculateRoute("01", "04");
+
+        route2.ShouldNotBeNull();
+        route2.Nodes.Length.ShouldBe(3);
+        route2.Nodes.ShouldContain("02Slant");
+        route2.Edges.ShouldBe([id0102Slant, id02Slant04]);
+    }
+
+    [TestMethod]
+    public void CalculateRoute_TwoEdgesWithSameSourceTarget_UsesDirectEdges()
+    {
+        /*
+                Sketched graph:
+
+                       0      1      2      3
+
+                0      1--*
+                        \ |
+                          *--*
+                           \ |
+                1            2--*---3
+                               \ |
+                                 |
+                                 | \
+                2                *---4
+
+
+                3
+
+                Key:
+                - "1", "P", "D", "3", "4" are nodes (representing "01", "02", "03", "04" respectively).
+                - "-", "\" and "|" represent edge connections.
+                - "*" represents a control point in a polypath edge.
+       */
+
+        var nodes = new List<GraphNode>
+        {
+            NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "01"),
+            NodeGenerator.GenerateNode(x: 1, y: 1, nodeId: "02"),
+            NodeGenerator.GenerateNode(x: 1, y: 2, nodeId: "03"),
+            NodeGenerator.GenerateNode(x: 2, y: 2, nodeId: "04")
+        };
+
+        var directEdge0102 = GraphEdge.CreateDirect("01", "02", (float)Math.Sqrt(2));
+        var directEdge0204 = GraphEdge.CreateDirect("02", "04", (float)Math.Sqrt(2));
+        var polyPathEdge0102 = AgvGraphGenerator.CreatePolypathEdge("01",
+            "02",
+            [
+                new EdgeCoefficient(0.5, 0),
+                new EdgeCoefficient(0.5, 0.5),
+                new EdgeCoefficient(1, 0.5)
+            ],
+            [.. nodes]);
+        var polyPathEdge0204 = AgvGraphGenerator.CreatePolypathEdge("02",
+            "04",
+            [
+                new EdgeCoefficient(1.5, 1),
+                new EdgeCoefficient(1.5, 2)
+            ],
+            [.. nodes]);
+        
+        var graph = new AgvGraph(
+            Guid.NewGuid(),
+            nodes,
+            [
+                directEdge0102,
+                GraphEdge.CreateDirect("02", "03"),
+                directEdge0204,
+                polyPathEdge0102,
+                polyPathEdge0204
             ]
         );
 
@@ -747,12 +835,14 @@ public class AStarTest
 
         route.ShouldNotBeNull();
         route.Nodes.Length.ShouldBe(3);
-        route.Nodes.ShouldContain("02Slant");
+        route.Nodes.ShouldContain("02");
+        route.Edges.ShouldContain(directEdge0102.Id);
 
         var route2 = aStar.CalculateRoute("01", "04");
 
         route2.ShouldNotBeNull();
         route2.Nodes.Length.ShouldBe(3);
-        route2.Nodes.ShouldContain("02Slant");
+        route2.Nodes.ShouldContain("02");
+        route2.Edges.ShouldContain(directEdge0204.Id);
     }
 }

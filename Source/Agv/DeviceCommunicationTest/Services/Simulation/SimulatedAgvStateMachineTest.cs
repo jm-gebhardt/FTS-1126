@@ -121,9 +121,10 @@ public class SimulatedAgvStateMachineTest
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         ICollection<GraphNode> nodes = graph.Nodes;
-
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First();
-        action.Nodes = GetArbitraryRoute(action.TargetNodeId, graph);
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(action.TargetNodeId);
+        action.Nodes = route.nodes;
+        action.Edges = route.edges;
         var startNode = nodes.First(n => n.Id == action.Nodes.First());
         string destination = action.Nodes.Last();
         var agvSaga = SimulatedAgvSagaGenerator.Generate(simulationSpeed: 2, agvGraph: graph, currentNode: startNode);
@@ -324,22 +325,5 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new ResetAgvErrors(correlationId, []));
 
         agvTravelSimulatorMock.Mock.Verify(m => m.Resume(), Times.Once);
-    }
-
-    private string[] GetArbitraryRoute(string targetNode, AgvGraph graph)
-    {
-        var nodes = new List<string> {targetNode};
-        foreach (int unused in Enumerable.Range(0, 3))
-        {
-            var edge = graph.Edges.FirstOrDefault(e => e.ToNodeId == targetNode && !nodes.Contains(e.FromNodeId));
-            if (edge == null)
-            {
-                break;
-            }
-            nodes.Add(edge.FromNodeId);
-            targetNode = edge.FromNodeId;
-        }
-        nodes.Reverse();
-        return nodes.ToArray();
     }
 }

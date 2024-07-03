@@ -38,8 +38,9 @@ public class RouteRequestHandler : IConsumer<GetRoute>
         Route? route;
         try
         {
-            string[] nodes = (await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId, agvData)).Nodes;
-            route = new Route(agv.CorrelationId, nodes);
+            var modelRoute = await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId, agvData);
+            
+            route = new Route(agv.CorrelationId, modelRoute.Nodes, modelRoute.Edges);
         }
         catch (RouteNotFoundException)
         {

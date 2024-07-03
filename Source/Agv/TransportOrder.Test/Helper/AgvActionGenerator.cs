@@ -57,7 +57,7 @@ public static class AgvActionGenerator
         var actionGroup = GeneratePickDropActionGroup(source: source, destination: destination);
         foreach (var action in actionGroup.Actions)
         {
-            actionGroup.StartAction(action.CorrelationId, []);
+            actionGroup.StartAction(action.CorrelationId, [], []);
             action.CompletedDate = action.StartedDate!.Value.AddSeconds(actionDuration);
             action.State = ActionState.Completed;
         }
@@ -288,7 +288,7 @@ public static class AgvActionGenerator
         switch (state)
         {
             case ActionGroupState.Started:
-                actionGroup.StartAction(actionId, []);
+                actionGroup.StartAction(actionId, [], []);
                 break;
 
             case ActionGroupState.Completed:

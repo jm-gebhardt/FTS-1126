@@ -24,6 +24,7 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
             {
                 graphEdges.Add(new GraphEdgeDto
                 {
+                    CorrelationId = edge.CorrelationId,
                     FromNodeId = fromNode.Id, ToNodeId = toNode.Id,
                     Variant = edge.Variant, VariantParameters = edge.VariantParameters, Length = edge.Length
                 });

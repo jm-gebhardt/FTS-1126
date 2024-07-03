@@ -32,9 +32,9 @@ public class AgvGraphProfileTest
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>
             {
-                new(nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), EdgeType.Direct,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), EdgeType.Direct,
                     new List<EdgeCoefficient>(), 8.9443),
-                new(nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), EdgeType.Direct,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), EdgeType.Direct,
                     new List<EdgeCoefficient>(), 8.9443)
             }, Guid.NewGuid());
 
@@ -81,9 +81,9 @@ public class AgvGraphProfileTest
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>
             {
-                new(nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), edge1.Variant,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), edge1.Variant,
                     edge1.VariantParameters, 8.9443),
-                new(nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), edge2.Variant,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), edge2.Variant,
                     edge2.VariantParameters, 8.9443)
             }, Guid.NewGuid());
 
@@ -132,9 +132,9 @@ public class AgvGraphProfileTest
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>
             {
-                new(nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), edge1.Variant,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), edge1.Variant,
                     edge1.VariantParameters, 8.9443),
-                new(nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), edge2.Variant,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), edge2.Variant,
                     edge2.VariantParameters, 8.9443)
             }, Guid.NewGuid());
 
@@ -183,9 +183,9 @@ public class AgvGraphProfileTest
         var agvGraph = new Graph(nodes,
             new List<GraphEdge>
             {
-                new(nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), edge1.Variant,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S1"), nodes.Single(e => e.Id == "D1"), edge1.Variant,
                     edge1.VariantParameters, 8.9443),
-                new(nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), edge2.Variant,
+                new(Guid.NewGuid(), nodes.Single(e => e.Id == "S2"), nodes.Single(e => e.Id == "D2"), edge2.Variant,
                     edge2.VariantParameters, 8.9443)
             }, Guid.NewGuid());
 

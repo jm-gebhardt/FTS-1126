@@ -34,6 +34,7 @@ public class ActionGroupsControllerTest
                         "target",
                         AgvGraph.NodeType.PickDrop,
                         [],
+                        [],
                         DateTime.UtcNow,
                         null,
                         null,

@@ -15,12 +15,13 @@ public class AgvRouteRetrievalServiceTest
     [TestMethod]
     public async Task GetAgvRouteAsync_WhenLastNodeIdIsNull_ReturnsAgvRouteBasedOnAgvsLastNodeId()
     {
-        string[] nodes = NodeGenerator.GenerateRouteNodes();
-        string node = nodes[1];
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        string node = route.nodes[1];
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionState.Started, assignedAgv: agv.CorrelationId);
         var action = actionGroup.Actions.First();
-        action.Nodes = nodes;
+        action.Nodes = route.nodes;
+        action.Edges = route.edges;
         var fixture = await new AgvRouteServiceTestFixture()
             .WithAgv(agv)
             .WithActionGroup(actionGroup)
@@ -29,18 +30,20 @@ public class AgvRouteRetrievalServiceTest
         var actualRoute = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(agv.CorrelationId);
 
         actualRoute.ShouldNotBeNull();
-        actualRoute.RemainingRoute.ShouldBe(nodes.Skip(1).ToArray());
+        actualRoute.RemainingNodes.ShouldBe(route.nodes.Skip(1).ToArray());
+        actualRoute.RemainingEdges.ShouldBe(route.edges.Skip(1).ToArray());
     }
 
     [TestMethod]
-    public async Task GetAgvRouteAsync_WhenLastNodeIdIsGiven_ReturnsRemainingRoute()
+    public async Task GetAgvRouteAsync_WhenLastNodeIdIsGiven_ReturnsRemainingNodes()
     {
-        string[] nodes = NodeGenerator.GenerateRouteNodes();
-        string node = nodes[2];
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: nodes[0]);
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        string node = route.nodes[1];
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: route.nodes[0]);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
         var action = actionGroup.Actions.First();
-        action.Nodes = nodes;
+        action.Nodes = route.nodes;
+        action.Edges = route.edges;
         var fixture = await new AgvRouteServiceTestFixture()
             .WithAgv(agv)
             .WithActionGroup(actionGroup)
@@ -49,7 +52,8 @@ public class AgvRouteRetrievalServiceTest
         var actualRoute = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(agv.CorrelationId, node);
 
         actualRoute.ShouldNotBeNull();
-        actualRoute.RemainingRoute.ShouldBe(nodes.Skip(2).ToArray());
+        actualRoute.RemainingNodes.ShouldBe(route.nodes.Skip(1).ToArray());
+        actualRoute.RemainingEdges.ShouldBe(route.edges.Skip(1).ToArray());
     }
 
     [TestMethod]
@@ -66,18 +70,20 @@ public class AgvRouteRetrievalServiceTest
     [TestMethod]
     public async Task GetAgvRouteAsync_MultipleAgvs_ReturnsDictionaryWithAgvRoutes()
     {
-        string[] nodes1 = NodeGenerator.GenerateRouteNodes();
-        string[] nodes2 = NodeGenerator.GenerateRouteNodes("D1");
-        var agv1 = AgvGenerator.GenerateIdleAgv(lastNodeId: nodes1[1], index: 1);
-        var agv2 = AgvGenerator.GenerateIdleAgv(lastNodeId: nodes2[2], index: 2);
+        (string[] nodes, Guid[] edges) route1 = AgvGraphGenerator.CreateRoute();
+        (string[] nodes, Guid[] edges) route2 = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.Dst1);
+        var agv1 = AgvGenerator.GenerateIdleAgv(lastNodeId: route1.nodes[1], index: 1);
+        var agv2 = AgvGenerator.GenerateIdleAgv(lastNodeId: route2.nodes[1], index: 2);
 
         var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv1.CorrelationId, pickActionState: ActionState.Started);
         var action1 = actionGroup1.Actions.First();
-        action1.Nodes = nodes1;
+        action1.Nodes = route1.nodes;
+        action1.Edges = route1.edges;
 
         var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv2.CorrelationId, pickActionState: ActionState.Started);
         var action2 = actionGroup2.Actions.First();
-        action2.Nodes = nodes2;
+        action2.Nodes = route2.nodes;
+        action2.Edges = route2.edges;
         var fixture = await new AgvRouteServiceTestFixture()
             .WithAgv(agv1)
             .WithAgv(agv2)
@@ -90,9 +96,11 @@ public class AgvRouteRetrievalServiceTest
         actualRoutes.ShouldNotBeNull();
         actualRoutes.Count.ShouldBe(2);
         actualRoutes.Find(r => r.CorrelationId == agv1.CorrelationId).ShouldNotBeNull();
-        actualRoutes.Find(r => r.CorrelationId == agv1.CorrelationId)!.RemainingRoute.ShouldBe(nodes1.Skip(1).ToArray());
+        actualRoutes.Find(r => r.CorrelationId == agv1.CorrelationId)!.RemainingNodes.ShouldBe(route1.nodes.Skip(1).ToArray());
+        actualRoutes.Find(r => r.CorrelationId == agv1.CorrelationId)!.RemainingEdges.ShouldBe(route1.edges.Skip(1).ToArray());
         actualRoutes.Find(r => r.CorrelationId == agv2.CorrelationId).ShouldNotBeNull();
-        actualRoutes.Find(r => r.CorrelationId == agv2.CorrelationId)!.RemainingRoute.ShouldBe(nodes2.Skip(2).ToArray());
+        actualRoutes.Find(r => r.CorrelationId == agv2.CorrelationId)!.RemainingNodes.ShouldBe(route2.nodes.Skip(1).ToArray());
+        actualRoutes.Find(r => r.CorrelationId == agv2.CorrelationId)!.RemainingEdges.ShouldBe(route2.edges.Skip(1).ToArray());
     }
 
     [TestMethod]
@@ -112,11 +120,12 @@ public class AgvRouteRetrievalServiceTest
     [TestMethod]
     public async Task GetAgvRouteAsync_NonExistingAgvCorrelationId_ReturnsNullForThatId()
     {
-        string[] nodes = NodeGenerator.GenerateRouteNodes();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: nodes[1]);
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: route.nodes[1]);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
         var action = actionGroup.Actions.First();
-        action.Nodes = nodes;
+        action.Nodes = route.nodes;
+        action.Edges = route.edges;
         var fixture = await new AgvRouteServiceTestFixture()
             .WithAgv(agv)
             .WithActionGroup(actionGroup)
@@ -129,7 +138,8 @@ public class AgvRouteRetrievalServiceTest
         actualRoutes.ShouldNotBeNull();
         actualRoutes.Count.ShouldBe(1);
         actualRoutes.Find(r => r.CorrelationId == agv.CorrelationId).ShouldNotBeNull();
-        actualRoutes.Find(r => r.CorrelationId == agv.CorrelationId)!.RemainingRoute.ShouldBe(nodes.Skip(1).ToArray());
+        actualRoutes.Find(r => r.CorrelationId == agv.CorrelationId)!.RemainingNodes.ShouldBe(route.nodes.Skip(1).ToArray());
+        actualRoutes.Find(r => r.CorrelationId == agv.CorrelationId)!.RemainingEdges.ShouldBe(route.edges.Skip(1).ToArray());
         actualRoutes.Find(r => r.CorrelationId == nonExistingAgvCorrelationId).ShouldBeNull();
     }
 }

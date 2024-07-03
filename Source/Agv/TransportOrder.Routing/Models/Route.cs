@@ -7,15 +7,12 @@ namespace Gebhardt.Acc.TransportOrder.Routing.Models;
 /// </summary>
 public class Route : IComparable<Route>
 {
-    /// <summary>
-    /// Route Constructor
-    /// </summary>
-    /// <param name="costs"></param>
-    /// <param name="nodes"></param>
-    public Route(double costs, string[] nodes)
+    /// <inheritdoc cref="Route"/>>
+    public Route(double costs, string[] nodes, Guid[] edges)
     {
         Costs = costs;
         Nodes = nodes;
+        Edges = edges;
     }
 
     /// <summary>
@@ -29,6 +26,12 @@ public class Route : IComparable<Route>
     /// </summary>
     [PublicAPI]
     public string[] Nodes { get; set; }
+
+    /// <summary>
+    /// List of edge ids that define the route
+    /// </summary>
+    [PublicAPI]
+    public Guid[] Edges { get; set; }
 
     /// <summary>
     /// Used for sorting, nulls last.
@@ -65,6 +68,11 @@ public class Route : IComparable<Route>
             :
             a.Nodes.Concat(b.Nodes).ToArray();
 
-        return new Route(a.Costs + b.Costs, nodes);
+        Guid[] edges = a.Edges.LastOrDefault() == b.Edges.FirstOrDefault() ?
+            a.Edges.Concat(b.Edges.Skip(1)).ToArray() // Skip first item of b if first and last are equal
+            :
+            a.Edges.Concat(b.Edges).ToArray();
+
+        return new Route(a.Costs + b.Costs, nodes, edges);
     }
 }

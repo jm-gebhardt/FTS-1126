@@ -61,7 +61,7 @@ public class AgvPublisherTest
     public async Task SendAgvRouteAsync_SendsAgvRouteDto_To_AgvRouteChanged()
     {
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
-        var data = new CurrentAgvRouteReadModel(Guid.NewGuid(), Array.Empty<string>());
+        var data = new CurrentAgvRouteReadModel(Guid.NewGuid(), Array.Empty<string>(), Array.Empty<Guid>());
         var expectedDto = Mock.Of<CurrentAgvRouteDto>();
 
         fixture.MapperMock.Setup(m => m.Map<CurrentAgvRouteDto>(It.IsAny<CurrentAgvRouteReadModel>())).Returns(expectedDto);

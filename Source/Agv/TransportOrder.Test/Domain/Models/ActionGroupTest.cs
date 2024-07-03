@@ -46,13 +46,15 @@ public class ActionGroupTests
 
         actionGroup.StartedDate.ShouldBeNull();
         string[] nodes = ["source", "target"];
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, nodes);
+        Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
+
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges);
         actionGroup.UpdateActionGroupState();
 
         actionGroup.State.ShouldBe(ActionGroupState.Started);
         actionGroup.StartedDate.ShouldNotBeNull();
         actionGroup.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
-        actionGroup.Actions.First().Nodes.ShouldBe(nodes);
+        actionGroup.Actions[0].Nodes.ShouldBe(nodes);
     }
 
     [TestMethod]
@@ -61,7 +63,7 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var previousDate = DateTime.Today.AddDays(-10);
 
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
         actionGroup.StartedDate = previousDate;
 
         actionGroup.UpdateActionGroupState();
@@ -206,12 +208,13 @@ public class ActionGroupTests
 
         actionGroup.StartedDate.ShouldBeNull();
         string[] nodes = ["source", "target"];
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, nodes);
+        Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges);
 
         actionGroup.State.ShouldBe(ActionGroupState.Started);
         actionGroup.StartedDate.ShouldNotBeNull();
         actionGroup.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
-        actionGroup.Actions.First().Nodes.ShouldBe(nodes);
+        actionGroup.Actions[0].Nodes.ShouldBe(nodes);
     }
 
     [TestMethod]

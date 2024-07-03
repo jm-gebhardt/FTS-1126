@@ -188,7 +188,7 @@ public class AgvsController : Controller
         }
         Response<GotCurrentAgvRoutes> response = await _getCurrentAgvRoutesClient.GetResponse<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(correlationIds));
         var dto = _mapper.Map<List<CurrentRouteDto>>(response.Message.AgvRoutes);
-        List<CurrentRouteDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new CurrentRouteDto(c, [])).ToList();
+        List<CurrentRouteDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new CurrentRouteDto(c, [], [])).ToList();
         result.AddRange(dto ?? []);
         return Ok(result);
     }

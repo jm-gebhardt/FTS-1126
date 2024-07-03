@@ -6,5 +6,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// The current route of the Agv. It is null when the Agv has completed the last action.
 /// </summary>
 /// <param name="CorrelationId">The CorrelationId of the Agv.</param>
-/// <param name="RemainingRoute">The remaining route in the form of nodes and edges.</param>
-public record CurrentAgvRouteReadModel([UsedImplicitly] Guid CorrelationId, string[] RemainingRoute);
+/// <param name="RemainingNodes">The remaining nodes.</param>
+/// <param name="RemainingEdges">The remaining edges.</param>
+public record CurrentAgvRouteReadModel([UsedImplicitly] Guid CorrelationId, string[] RemainingNodes, Guid[] RemainingEdges);

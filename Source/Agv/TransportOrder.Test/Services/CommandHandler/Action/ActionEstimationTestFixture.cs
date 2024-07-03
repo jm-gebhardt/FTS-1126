@@ -36,7 +36,7 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
     {
         string[] targetNodes = ActionGroup.Actions.Select(a => a.TargetNodeId).ToArray();
         RouteService.Setup(r => r.GetRouteAsync(Agv, targetNodes.ToArray(), null, It.IsAny<AgvData>()))
-            .ReturnsAsync(new Route(onCosts, null!));
+            .ReturnsAsync(new Route(onCosts, null!, null!));
 
         return this;
     }

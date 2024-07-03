@@ -68,6 +68,7 @@ public class ActionCommandHelper
         var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
         var route = await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, null, agvData, cancellationToken);
         action.Nodes = action.ActionType == ActionType.Charge ? [action.TargetNodeId] : route.Nodes;
+        action.Edges = route.Edges;
 
         _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, action.ParentId, assignedAgv.CorrelationId);
         try

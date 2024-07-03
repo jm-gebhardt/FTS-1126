@@ -89,7 +89,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     }
 
     /// <inheritdoc />
-    public void EstimateTravelTimes(IReadOnlyList<string> nodes, DateTime entryTime, double initialVelocity)
+    public void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTime entryTime, double initialVelocity)
     {
         Reset();
         if (nodes.Count < 1)
@@ -98,7 +98,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         }
 
         double entryAngle = 0;
-        BaseEdge? edge;
+        BaseEdge? followingEdge;
 
         // e.g. charge action
         if (nodes.Count == 1)
@@ -112,32 +112,28 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             return;
         }
 
-        foreach (var node in nodes.Select((id, index) => new { id, index }))
+        foreach (var edge in edges.Select((id, index) => new { id, index }))
         {
-            if (node.index >= nodes.Count - 2)
+            if (edge.index >= edges.Count - 1)
             {
                 break;
             }
-            if (node.id == nodes[node.index + 1]) // node duplication
-            {
-                continue;
-            }
 
-            edge = Edges.Single(e => e.FromNodeId == node.id && e.ToNodeId == nodes[node.index + 1]);
-            var nextEdge = Edges.First(e => e.FromNodeId == nodes[node.index + 1] && e.ToNodeId == nodes[node.index + 2]);
-            bool turnAgvAtExit = FollowingEdges.Count == 0 && edge.SourceNode.IsStation();
-            edge.SetAngles(entryAngle, nextEdge.SourceNode, nextEdge.ReferenceTarget, turnAgvAtExit);
-            edge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
-            FollowingEdges.Add(edge);
+            followingEdge = Edges.Single(e => e.Id == edge.id);
+            var nextEdge = Edges.First(e => e.Id == edges[edge.index + 1]);
+            bool turnAgvAtExit = FollowingEdges.Count == 0 && followingEdge.SourceNode.IsStation();
+            followingEdge.SetAngles(entryAngle, nextEdge.SourceNode, nextEdge.ReferenceTarget, turnAgvAtExit);
+            followingEdge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
+            FollowingEdges.Add(followingEdge);
 
-            entryTime = edge.EstimatedExitTime;
-            initialVelocity = turnAgvAtExit ? 0 : edge.ExitVelocity;
-            entryAngle = edge.ExitAngle;
+            entryTime = followingEdge.EstimatedExitTime;
+            initialVelocity = turnAgvAtExit ? 0 : followingEdge.ExitVelocity;
+            entryAngle = followingEdge.ExitAngle;
         }
-        edge = Edges.Single(e => e.FromNodeId == nodes[^2] && e.ToNodeId == nodes[^1]);
-        edge.SetAngles(entryAngle, null, null);
-        edge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
-        FollowingEdges.Add(edge);
+        followingEdge = Edges.Single(e => e.Id == edges.Last());
+        followingEdge.SetAngles(entryAngle, null, null);
+        followingEdge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
+        FollowingEdges.Add(followingEdge);
 
         CurrentEdge = FollowingEdges.FirstOrDefault();
         CurrentNode = CurrentEdge?.SourceNode;

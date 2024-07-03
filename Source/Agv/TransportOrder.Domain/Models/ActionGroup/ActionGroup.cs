@@ -307,7 +307,8 @@ public class ActionGroup
     {
         action.StartedDate = null;
         action.CompletedDate = null;
-        action.Nodes = Array.Empty<string>();
+        action.Nodes = [];
+        action.Edges = [];
         EstimatedDuration = TimeSpan.Zero;
         action.UpdateActionState(ActionState.Created);
         UpdateActionGroupState();
@@ -318,9 +319,11 @@ public class ActionGroup
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
     /// <param name="nodes">The nodes of the action.</param>
-    public void StartAction(Guid actionId, string[] nodes)
+    /// <param name="edges">The edges of the action.</param>
+    public void StartAction(Guid actionId, string[] nodes, Guid[] edges)
     {
         Actions.Single(a => a.CorrelationId == actionId).Nodes = nodes;
+        Actions.Single(a => a.CorrelationId == actionId).Edges = edges;
         UpdateActionState(actionId, ActionState.Started);
     }
 

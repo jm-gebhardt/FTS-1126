@@ -197,7 +197,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenStateOfActionGroupIsNotCreated_Fails()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, ["source", "way", "target"]); // manually setting to not Created state
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, ["source", "way", "target"], []); // manually setting to not Created state
         var agv = AgvGenerator.GenerateIdleAgv();
 
         var fixture = new ActionGroupValidatorTestFixture()

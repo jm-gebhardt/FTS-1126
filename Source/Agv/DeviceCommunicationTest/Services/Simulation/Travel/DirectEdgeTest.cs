@@ -267,12 +267,13 @@ public class DirectEdgeTest
         var agvData = new KarisType1(correlationId, "ip address");
         SetupWoodShop();
         string[] nodes = { "D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA" };
+        Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), WoodShop.Edges.ToList());
         var startNode = WoodShop.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
         SetupWoodShopSimulator(agvData, position);
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
-        WoodShopSimulator.EstimateTravelTimes(nodes, entryTime, initialVelocity);
+        WoodShopSimulator.EstimateTravelTimes(nodes, edges, entryTime, initialVelocity);
 
         var directEdge = (DirectEdge)WoodShopSimulator.FollowingEdges.Single(e => e.SourceNode.Id == "WP-0017");
         double distanceAcc = directEdge.GetEdgeTravelDistance(agvData, directEdge.AccelerationFinishTime);

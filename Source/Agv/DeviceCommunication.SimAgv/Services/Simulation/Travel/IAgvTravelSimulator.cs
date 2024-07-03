@@ -36,7 +36,7 @@ public interface IAgvTravelSimulator
     /// <summary>
     /// Estimates travel times on the current edges.
     /// </summary>
-    void EstimateTravelTimes(IReadOnlyList<string> nodes, DateTime entryTime, double initialVelocity);
+    void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTime entryTime, double initialVelocity);
 
     /// <summary>
     /// Updates the current position.

@@ -179,6 +179,35 @@ public static class AgvGraphGenerator
         double length = new Polypath(points).GetLength();
         return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints);
     }
+
+    public static Guid[] SelectRouteEdges(List<string> nodes, IReadOnlyCollection<GraphEdge> edges)
+    {
+        return nodes.Take(nodes.Count - 1).Select((id, index) => new { id, index })
+            .Select(node => edges.FirstOrDefault(e => e.FromNodeId == node.id && e.ToNodeId == nodes[node.index + 1]))
+            .OfType<GraphEdge>().Select(edge => edge.Id).ToArray();
+    }
+
+    public static (string[] nodes, Guid[] edges) CreateRoute(string targetNode = Prk2)
+    {
+        var graph = CreateDefaultGraph();
+        var edges = new List<Guid>();
+        var nodes = new List<string> { targetNode };
+        foreach (int unused in Enumerable.Range(0, 3))
+        {
+            var edge = graph.Edges.FirstOrDefault(e => e.ToNodeId == targetNode && !nodes.Contains(e.FromNodeId));
+            if (edge == null)
+            {
+                break;
+            }
+            nodes.Add(edge.FromNodeId);
+            edges.Add(edge.Id);
+            targetNode = edge.FromNodeId;
+        }
+        nodes.Reverse();
+        edges.Reverse();
+
+        return (nodes.ToArray(), edges.ToArray());
+    }
 }
 
 // ReSharper disable UnusedMember.Global

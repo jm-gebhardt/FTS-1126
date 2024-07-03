@@ -9,6 +9,11 @@ namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 [UsedImplicitly]
 public record GraphEdge
 {
+    /// <summary>
+    /// The correlation id of the edge.
+    /// </summary>
+    public Guid CorrelationId { get; init; }
+    
     /// <summary>The from node.</summary>
     public GraphNode From { get; init; }
 
@@ -32,16 +37,19 @@ public record GraphEdge
         From = null!;
         To = null!;
         VariantParameters = null!;
+        CorrelationId = Guid.Empty;
     }
 
     /// <inheritdoc cref="GraphEdge"/>
+    /// <param name="correlationId">The correlation id.</param>
     /// <param name="from">The from node.</param>
     /// <param name="to">The to node.</param>
     /// <param name="variant">The variant of this edge.</param>
     /// <param name="variantParameters">Parameters for the variant type of this edge.</param>
     /// <param name="length">The length of the edge.</param>
-    public GraphEdge(GraphNode from, GraphNode to, EdgeType variant, ICollection<EdgeCoefficient> variantParameters, double length = 1.0)
+    public GraphEdge(Guid correlationId, GraphNode from, GraphNode to, EdgeType variant, ICollection<EdgeCoefficient> variantParameters, double length = 1.0)
     {
+        CorrelationId = correlationId;
         From = from;
         To = to;
         Variant = variant;

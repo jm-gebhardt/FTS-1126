@@ -104,7 +104,7 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     public async Task Consume(ConsumeContext<AgvBecameIdle> context)
     {
         await _agvPublisher.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(context.Message.CorrelationId,
-            Array.Empty<string>()));
+            Array.Empty<string>(), Array.Empty<Guid>()));
     }
 
     /// <summary>

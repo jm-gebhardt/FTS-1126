@@ -64,9 +64,10 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
         }
 
         string[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
+        Guid[] remainingNodes = currentAction.Edges.Skip(currentAction.Nodes.Length - remainingRoute.Length).ToArray();
 
-        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute);
-        _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingRoute));
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute, remainingNodes);
+        _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes));
 
         return agvRoute;
     }
@@ -102,7 +103,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             var agvCorrelationId = lastNodeIdByAgv.Key;
             if (!actionGroupById.TryGetValue(agvCorrelationId, out var actionGroup))
             {
-                agvRoutesById[agvCorrelationId] = new CurrentAgvRouteReadModel(agvCorrelationId, []);
+                agvRoutesById[agvCorrelationId] = new CurrentAgvRouteReadModel(agvCorrelationId, [], []);
                 continue;
             }
 
@@ -112,16 +113,16 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
 
             if (currentAction == null)
             {
-                agvRoutesById[agvCorrelationId] = new CurrentAgvRouteReadModel(agvCorrelationId, []);
+                agvRoutesById[agvCorrelationId] = new CurrentAgvRouteReadModel(agvCorrelationId, [], []);
                 continue;
             }
 
             string? lastNodeId = lastNodeIdByAgv.Value;
 
             string[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
-
-            var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute);
-            _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingRoute));
+            Guid[] remainingNodes = currentAction.Edges.Skip(currentAction.Nodes.Length - remainingRoute.Length).ToArray();
+            var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute, remainingNodes);
+            _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes));
 
             agvRoutesById[agvCorrelationId] = agvRoute;
         }

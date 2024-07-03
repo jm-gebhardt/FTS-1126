@@ -6,6 +6,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 /// <summary>
 /// The current route of the Agv. It is null when the Agv has completed the last action.
 /// </summary>
+[PublicAPI]
 public record CurrentRouteDto : DatedMessage
 {
     /// <summary>
@@ -14,16 +15,20 @@ public record CurrentRouteDto : DatedMessage
     [UsedImplicitly]
     public Guid CorrelationId { get; init; }
 
-    /// <summary>The remaining route in the form of nodes and edges.</summary>
-    /// <example>N002-001,N003-001,N003-002,N004-002,D2</example>
-    /// <example>D2</example>
-    public string[] RemainingRoute { get; init; }
+    /// <summary>The remaining nodes.</summary>
+    public string[] RemainingNodes { get; init; }
+    
+    /// <summary>
+    /// The remaining edges.
+    /// </summary>
+    public Guid[] RemainingEdges { get; init; }
 
     /// <inheritdoc cref="CurrentRouteDto"/>>
-    public CurrentRouteDto(Guid correlationId, string[] remainingRoute)
+    public CurrentRouteDto(Guid correlationId, string[] remainingNodes, Guid[] remainingEdges)
     {
         CorrelationId = correlationId;
-        RemainingRoute = remainingRoute;
+        RemainingNodes = remainingNodes;
+        RemainingEdges= remainingEdges;
     }
 
     /// <summary>
@@ -32,6 +37,7 @@ public record CurrentRouteDto : DatedMessage
     [PublicAPI]
     private CurrentRouteDto()
     {
-        RemainingRoute = null!;
+        RemainingNodes = null!;
+        RemainingEdges = null!;
     }
 }

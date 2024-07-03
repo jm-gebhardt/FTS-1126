@@ -15,8 +15,8 @@ public class GetCurrentAgvRouteRequestHandlerTest
     public async Task Consume_GetAgvRouteRequest_ReturnsAgvRoute()
     {
         var agvCorrelationId = Guid.NewGuid();
-        string[] agvRouteNodes = NodeGenerator.GenerateRouteNodes();
-        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, agvRouteNodes);
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, route.nodes, route.edges);
         GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler>()
             .WithAgvRoute(agvCorrelationId, agvRoute)
             .Build();
@@ -30,7 +30,8 @@ public class GetCurrentAgvRouteRequestHandlerTest
     public async Task Consume_GetAgvRoutesRequest_ReturnsAgvRoutes()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes());
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, route.nodes, route.edges);
         Guid[] agvCorrelationIds = { agvCorrelationId };
         
         GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler>()
@@ -40,7 +41,8 @@ public class GetCurrentAgvRouteRequestHandlerTest
         Response<GotCurrentAgvRoutes> response = await fixture.GetResponseAsync<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(agvCorrelationIds));
 
         response.Message.AgvRoutes.Count.ShouldBe(agvCorrelationIds.Length);
-        response.Message.AgvRoutes.First().RemainingRoute.ShouldBe(agvRoute.RemainingRoute);
+        response.Message.AgvRoutes.First().RemainingNodes.ShouldBe(agvRoute.RemainingNodes);
+        response.Message.AgvRoutes.First().RemainingEdges.ShouldBe(agvRoute.RemainingEdges);
         response.Message.AgvRoutes.First().CorrelationId.ShouldBe(agvCorrelationId);
     }
 }

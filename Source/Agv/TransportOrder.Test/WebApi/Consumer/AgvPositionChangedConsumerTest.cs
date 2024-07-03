@@ -159,7 +159,7 @@ public class AgvPositionChangedConsumerTest
     public async Task Receiving_AgvLastNodeIdChanged_AgvRouteIsNotNull_SendAgvRouteAsyncCalled(string oldLastNodeId, string newLastNodeId)
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes());
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes(), []);
         var fixture = new AgvPositionChangedConsumerTestFixture()
             .WithNodeReserved(newLastNodeId, false)
             .WithAgvRoute(agvCorrelationId, newLastNodeId, agvRoute);

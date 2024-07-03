@@ -83,6 +83,11 @@ public class AStar : BaseRouteAlgorithm
         public double F => G + H;
 
         /// <summary>
+        /// The edge the node is on.
+        /// </summary>
+        public Guid Edge { get; set; }
+
+        /// <summary>
         /// Clone <see cref="Node"/>.
         /// </summary>
         /// <param name="node"></param>
@@ -201,7 +206,7 @@ public class AStar : BaseRouteAlgorithm
                 CalculateCostsForSimpleEdge(current, destination, edge);
                 continue;
             }
-            CalculateCostsForCompositeEdge(current, destination, sections, virtualNodes);
+            CalculateCostsForCompositeEdge(edge.Id, current, destination, sections, virtualNodes);
         }
     }
 
@@ -210,17 +215,16 @@ public class AStar : BaseRouteAlgorithm
         double time = CalculateCosts(current, edge, out double finalVelocity, out double decelerationCost);
         double g = current.G + time;
         var successor = _nodes[edge.ToNodeId];
-
-        if (_openList.ContainsKey(successor.Node.Id) && g >= successor.G)
+       
+       if (_openList.ContainsKey(successor.Node.Id) &&_openList[successor.Node.Id].G <= g && g >= successor.G)
         {
             return;
         }
-
         successor.Predecessor = current.Node.Id;
         successor.EntryVector = CalculateExitVector(edge);
         successor.DecelerationCost = decelerationCost;
         successor.EntryVelocity = finalVelocity;
-        successor.G = g;
+        successor.Edge = edge.Id;
 
         if (successor.H == 0f && successor != destination)
         {
@@ -228,10 +232,16 @@ public class AStar : BaseRouteAlgorithm
             successor.H = successor.DistanceTo(destination) / MaxVelocityStraight;
         }
 
+        successor.G = g;
+        if (_openList.ContainsKey(successor.Node.Id))
+        {
+            _openList[successor.Node.Id] = successor;
+            return;
+        }
         _openList.TryAdd(successor.Node.Id, successor);
     }
 
-    private void CalculateCostsForCompositeEdge(ANode current, ANode destination, List<GraphEdge> sections, List<GraphNode> virtualNodes)
+    private void CalculateCostsForCompositeEdge(Guid edgeId, ANode current, ANode destination, List<GraphEdge> sections, List<GraphNode> virtualNodes)
     {
         _virtualNodes = virtualNodes.ToDictionary(n => n.Id, n => new ANode(n));
         var currentNode = current;
@@ -257,11 +267,18 @@ public class AStar : BaseRouteAlgorithm
         currentNode.G = current.G;
         currentNode.Predecessor = current.Node.Id;
         double g = currentNode.G + time;
-        if (_openList.ContainsKey(currentNode.Node.Id) && g >= currentNode.G)
+        if (_openList.ContainsKey(currentNode.Node.Id) &&_openList[currentNode.Node.Id].G <= g && g >= currentNode.G)
         {
             return;
         }
+        currentNode.Edge = edgeId;
+
         currentNode.G = g;
+        if (_openList.ContainsKey(currentNode.Node.Id))
+        {
+            _openList[currentNode.Node.Id] = currentNode;
+            return;
+        }
         _openList.TryAdd(currentNode.Node.Id, currentNode);
     }
 
@@ -436,18 +453,21 @@ public class AStar : BaseRouteAlgorithm
             // No path found.
             return null;
         }
+
         var route = new List<string> { end.Node.Id };
+        var routeEdges = new List<Guid>();
         current = end;
 
         // Write path found.
         while (current.Node.Id != source)
         {
+            routeEdges.Add(current.Edge);
             current = _nodes[current.Predecessor];
             route.Add(current.Node.Id);
         }
-
+        routeEdges.Reverse();
         route.Reverse();
 
-        return new Route(end.F, route.ToArray());
+        return new Route(end.F, route.ToArray(), routeEdges.ToArray());
     }
 }

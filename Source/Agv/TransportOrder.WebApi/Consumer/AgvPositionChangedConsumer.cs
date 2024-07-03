@@ -86,7 +86,7 @@ public class AgvPositionChangedConsumer :
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);
         if (agvRoute != null)
         {
-            _logger.LogTrace("Publishing AgvRoute {AgvRoute}", string.Join(",", agvRoute.RemainingRoute));
+            _logger.LogTrace("Publishing AgvRoute {AgvRoute}", string.Join(",", agvRoute.RemainingNodes));
 
             await _agvPublisher.SendAgvRouteChangedAsync(agvRoute);
         }
