@@ -3,11 +3,12 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Messages.Filters;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
+using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
-using Gebhardt.Acc.PrismatCommunication.PrismatApi.TelegramApi;
+using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.SimulationMode;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,7 @@ public static class HostBuilderExtension
         {
             try
             {
+                services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
                 services.ConfigureServicesMassTransit(context.Configuration, x =>
                 {
                     x.AddBusConsumers();
@@ -72,6 +74,7 @@ public static class HostBuilderExtension
             services.AddConfigurationTypeManager();
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
+            services.TryAddPrismatApi(context.Configuration);
             services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
             services.AddSingleton<IHostCommunicator, TelegramHostCommunicator>();
             services.TryAddKaeserGraphConfiguration(simulateOptions != null);

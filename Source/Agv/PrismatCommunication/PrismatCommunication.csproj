@@ -32,7 +32,10 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Persistence.Ef\Common.Persistence.Ef.csproj" />
+        <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\PrismatCommunication.Messages\PrismatCommunication.Messages.csproj" />
+        <ProjectReference Include="..\PrismatCommunication.TelegramApi\PrismatCommunication.TelegramApi.csproj" />
     </ItemGroup>
     <ItemGroup>
         <None Update="Configuration\graph-configuration.yml">
@@ -43,9 +46,6 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>Gebhardt.Acc.$(MSBuildProjectName)Test</_Parameter1>
         </AssemblyAttribute>
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Messages\Events\" />
     </ItemGroup>
     <Target Name="DisableWarnings" BeforeTargets="CoreCompile">
         <ItemGroup>

@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.PrismatCommunication.TelegramApiClient</AssemblyName>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+      <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
+      <ProjectReference Include="..\PrismatCommunication.Messages\PrismatCommunication.Messages.csproj" />
+      <ProjectReference Include="..\PrismatCommunication.TelegramApi\PrismatCommunication.TelegramApi.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -78,9 +78,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.WebApi", "Common.Web
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PrismatCommunication", "PrismatCommunication", "{7A1D4655-2027-455F-80F0-86FFA7D70BDD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrismatCommunication", "PrismatCommunication\PrismatCommunication.csproj", "{2B14F5F7-0838-4810-9742-E260241EEF17}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrismatCommunication", "PrismatCommunication\PrismatCommunication.csproj", "{2B14F5F7-0838-4810-9742-E260241EEF17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrismatCommunicationTest", "PrismatCommunicationTest\PrismatCommunicationTest.csproj", "{877E7CAC-2ED8-46EC-AF03-7823A2BC4FA3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrismatCommunicationTest", "PrismatCommunicationTest\PrismatCommunicationTest.csproj", "{877E7CAC-2ED8-46EC-AF03-7823A2BC4FA3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common.TelegramCommunication", "Common.TelegramCommunication\Common.TelegramCommunication.csproj", "{64590726-A6E8-430E-8CD1-B24849B293D6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrismatCommunication.TelegramApi", "PrismatCommunication.TelegramApi\PrismatCommunication.TelegramApi.csproj", "{1FD1C747-53BA-4317-83FA-C920EE54A767}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrismatCommunication.Messages", "PrismatCommunication.Messages\PrismatCommunication.Messages.csproj", "{03070558-22C1-404B-A8BD-4DBE318B1DC7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrismatCommunication.TelegramApiClient", "PrismatCommunication.TelegramApiTestClient\PrismatCommunication.TelegramApiClient.csproj", "{2B3D4849-9DB6-4CE2-9BEF-8DF42BAE9680}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -216,6 +224,22 @@ Global
 		{877E7CAC-2ED8-46EC-AF03-7823A2BC4FA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{877E7CAC-2ED8-46EC-AF03-7823A2BC4FA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{877E7CAC-2ED8-46EC-AF03-7823A2BC4FA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64590726-A6E8-430E-8CD1-B24849B293D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64590726-A6E8-430E-8CD1-B24849B293D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64590726-A6E8-430E-8CD1-B24849B293D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64590726-A6E8-430E-8CD1-B24849B293D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FD1C747-53BA-4317-83FA-C920EE54A767}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FD1C747-53BA-4317-83FA-C920EE54A767}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FD1C747-53BA-4317-83FA-C920EE54A767}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FD1C747-53BA-4317-83FA-C920EE54A767}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03070558-22C1-404B-A8BD-4DBE318B1DC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03070558-22C1-404B-A8BD-4DBE318B1DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03070558-22C1-404B-A8BD-4DBE318B1DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03070558-22C1-404B-A8BD-4DBE318B1DC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B3D4849-9DB6-4CE2-9BEF-8DF42BAE9680}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B3D4849-9DB6-4CE2-9BEF-8DF42BAE9680}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B3D4849-9DB6-4CE2-9BEF-8DF42BAE9680}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B3D4849-9DB6-4CE2-9BEF-8DF42BAE9680}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -253,6 +277,10 @@ Global
 		{CF02C5E7-B9A0-4AB3-91E1-98465FBFE797} = {896EEA92-CFB5-4A39-812A-E47E038AFF65}
 		{2B14F5F7-0838-4810-9742-E260241EEF17} = {7A1D4655-2027-455F-80F0-86FFA7D70BDD}
 		{877E7CAC-2ED8-46EC-AF03-7823A2BC4FA3} = {7A1D4655-2027-455F-80F0-86FFA7D70BDD}
+		{64590726-A6E8-430E-8CD1-B24849B293D6} = {896EEA92-CFB5-4A39-812A-E47E038AFF65}
+		{1FD1C747-53BA-4317-83FA-C920EE54A767} = {7A1D4655-2027-455F-80F0-86FFA7D70BDD}
+		{03070558-22C1-404B-A8BD-4DBE318B1DC7} = {7A1D4655-2027-455F-80F0-86FFA7D70BDD}
+		{2B3D4849-9DB6-4CE2-9BEF-8DF42BAE9680} = {7A1D4655-2027-455F-80F0-86FFA7D70BDD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8AF26A4-DDC8-432C-9E5A-C27502C1D249}

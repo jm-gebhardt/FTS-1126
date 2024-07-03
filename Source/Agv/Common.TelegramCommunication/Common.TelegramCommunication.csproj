@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.Common.TelegramCommunication</AssemblyName>
+        <OutputType>Library</OutputType>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Configuration\" />
+    </ItemGroup>
+</Project>

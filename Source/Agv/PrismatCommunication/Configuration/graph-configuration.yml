@@ -2,7 +2,7 @@ DecisionPointName: "DP1"
 LoadTriggerPointName: "DP2"
 StationMapping:
   "1020": "3"
-  "1050": "3"
+  "1040": "3"
   "9060": "4"
   "9070": "4"
   "2130": "5"
