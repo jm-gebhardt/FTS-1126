@@ -1,9 +1,9 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;

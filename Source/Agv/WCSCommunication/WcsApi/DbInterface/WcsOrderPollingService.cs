@@ -1,7 +1,7 @@
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using JetBrains.Annotations;

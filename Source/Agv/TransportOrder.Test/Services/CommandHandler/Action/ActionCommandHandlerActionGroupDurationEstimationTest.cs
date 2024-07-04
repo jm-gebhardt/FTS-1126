@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;

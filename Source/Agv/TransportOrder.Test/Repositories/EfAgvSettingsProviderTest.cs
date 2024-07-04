@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;

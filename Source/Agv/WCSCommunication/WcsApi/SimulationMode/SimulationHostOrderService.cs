@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.WCSCommunication.CmdOptions;
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using MassTransit;

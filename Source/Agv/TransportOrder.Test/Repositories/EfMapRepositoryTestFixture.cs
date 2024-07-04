@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;

@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;

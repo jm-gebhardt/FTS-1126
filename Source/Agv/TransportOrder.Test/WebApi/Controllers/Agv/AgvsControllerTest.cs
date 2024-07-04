@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;

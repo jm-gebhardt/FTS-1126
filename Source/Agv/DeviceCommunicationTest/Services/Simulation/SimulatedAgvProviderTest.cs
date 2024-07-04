@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Microsoft.Extensions.DependencyInjection;

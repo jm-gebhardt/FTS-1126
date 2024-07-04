@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

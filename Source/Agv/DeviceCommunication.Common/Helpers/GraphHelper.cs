@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.DeviceCommunication.Common.Helpers;
 

@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;

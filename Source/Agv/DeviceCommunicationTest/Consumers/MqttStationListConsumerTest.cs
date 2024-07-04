@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Events;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;

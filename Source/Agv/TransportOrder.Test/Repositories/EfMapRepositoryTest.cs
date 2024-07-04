@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;

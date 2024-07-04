@@ -1,8 +1,8 @@
-﻿using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using Gebhardt.Acc.WCSCommunication.Services.CommandHandler;

@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Contracts;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using JetBrains.Annotations;
 

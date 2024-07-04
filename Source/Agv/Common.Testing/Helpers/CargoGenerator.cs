@@ -1,5 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.Common.Testing.Helpers;
 

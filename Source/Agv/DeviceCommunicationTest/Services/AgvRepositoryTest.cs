@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

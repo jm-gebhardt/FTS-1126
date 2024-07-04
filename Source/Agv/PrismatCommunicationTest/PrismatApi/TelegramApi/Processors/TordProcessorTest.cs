@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;

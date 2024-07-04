@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Common.Helpers;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 

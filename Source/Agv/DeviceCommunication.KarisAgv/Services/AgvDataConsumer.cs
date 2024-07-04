@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.Common.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using JetBrains.Annotations;

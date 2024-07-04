@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using MassTransit;
 using Microsoft.Extensions.Logging;

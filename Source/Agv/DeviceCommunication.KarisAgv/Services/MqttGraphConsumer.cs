@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Events;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;

@@ -2,8 +2,8 @@
 using System.Numerics;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Implementations;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
