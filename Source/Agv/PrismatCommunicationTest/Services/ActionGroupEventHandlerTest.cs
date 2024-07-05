@@ -88,4 +88,17 @@ public class ActionGroupEventHandlerTest
         passLoadTriggerPoint.CorrelationId.ShouldBe(agvPassedLoadTriggerPoint.ActionGroupCorrelationId.GetValueOrDefault());
         passLoadTriggerPoint.AgvCorrelationId.ShouldBe(agvPassedLoadTriggerPoint.CorrelationId);
     }
+
+    [TestMethod]
+    public async Task PickActionCompleted_ValidData_PublishesFinishPick()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var pickActionCompleted = new PickActionCompleted(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow);
+
+        var finishPick = await fixture.PublishAndGetFirstMessageAsync<PickActionCompleted, FinishPick>(pickActionCompleted);
+
+        finishPick.ActionCorrelationId.ShouldBe(pickActionCompleted.ActionCorrelationId);
+        finishPick.CorrelationId.ShouldBe(pickActionCompleted.CorrelationId);
+        finishPick.Timestamp.ShouldBe(pickActionCompleted.Timestamp);
+    }
 }

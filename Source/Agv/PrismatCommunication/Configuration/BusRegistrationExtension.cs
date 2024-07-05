@@ -26,6 +26,7 @@ public static class BusRegistrationExtension
             partitioner.PartitionMessageById<PassDecisionPoint, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<QueuePickDropActionGroupForAgv, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<QueueActionGroupWithUnknownDropTargetForAgv, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
         });
         cfg.AddConsumer<ActionGroupEventHandler>();
         cfg.AddConsumer<HostOrderEventHandler>();

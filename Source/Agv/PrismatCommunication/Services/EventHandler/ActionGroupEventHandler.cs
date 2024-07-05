@@ -16,7 +16,8 @@ public class ActionGroupEventHandler:
     IConsumer<ActionGroupCompleted>,
     IConsumer<ActionGroupStarted>,
     IConsumer<SetTargetForAction>,
-    IConsumer<AgvPassedLoadTriggerPoint>
+    IConsumer<AgvPassedLoadTriggerPoint>,
+    IConsumer<PickActionCompleted>
 {
     /// <summary>
     /// Handles the <see cref="ActionGroupCompleted"/> event.
@@ -58,5 +59,14 @@ public class ActionGroupEventHandler:
     {
         (var agv, Guid? actionGroupId) = context.Message;
         await context.Publish(new PassLoadTriggerPoint(agv, actionGroupId.GetValueOrDefault()));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="PickActionCompleted"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<PickActionCompleted> context)
+    {
+        var (correlationId, actionCorrelationId, timestamp) = context.Message;
+        await context.Publish(new FinishPick(correlationId, actionCorrelationId, timestamp));
     }
 }

@@ -353,6 +353,36 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_PublishesPickActionCompleted()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a=> a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_NotPickAction_DoesNotPublishPickActionCompleted()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<PickActionCompleted>();
+    }
+
+    [TestMethod]
     public async Task Consume_CompleteActionOfActionGroup_ActionGroupNotCompleteChargingAction_PublishesActionGroupChangedSetIdleNotCalled()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");

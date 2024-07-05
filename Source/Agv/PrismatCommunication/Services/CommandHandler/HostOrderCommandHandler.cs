@@ -23,7 +23,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     IConsumer<PassDecisionPoint>,
     IConsumer<QueuePickDropActionGroupForAgv>,
     IConsumer<PassLoadTriggerPoint>,
-    IConsumer<QueueActionGroupWithUnknownDropTargetForAgv>
+    IConsumer<QueueActionGroupWithUnknownDropTargetForAgv>,
+    IConsumer<FinishPick>
 
 {
     /// <summary>
@@ -150,5 +151,21 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         var actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration, assignedAgv);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await context.Publish(new QueueActionGroup(actionGroup, false));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="FinishPick"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<FinishPick> context)
+    {
+        var (correlationId, actionCorrelationId, timestamp) = context.Message;
+        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+        var pickAction = hostOrder.Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick && a.CorrelationId == actionCorrelationId);
+        if (pickAction == null)
+        {
+            logger.LogError("Could not report completion off pick action {ActionCorrelationId} of group {CorrelationId}, action not found ", actionCorrelationId, correlationId);
+            return;
+        }
+        hostCommunicator.ReportPickCompletion(hostOrder.Hu, pickAction.Node, timestamp);
     }
 }

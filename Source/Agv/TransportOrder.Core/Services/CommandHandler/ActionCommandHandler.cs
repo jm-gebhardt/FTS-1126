@@ -510,6 +510,7 @@ public class ActionCommandHandler :
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(correlationId);
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var action = actionGroup.Actions.Single(a => a.CorrelationId == correlationId);
 
         actionGroup.CompleteAction(correlationId);
         await _actionService.TryUpdateActionGroup(actionGroup);
@@ -518,16 +519,22 @@ public class ActionCommandHandler :
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
         await context.Publish(new NonChargingActionCompleted(agvCorrelationId), cancellationToken);
 
+        if (!agv.CanStartAutomaticAction && !actionGroup.IsManual && actionGroup.State != ActionGroupState.Paused)
+        {
+            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId), cancellationToken);
+        }
+
+        if (action.ActionType == ActionType.Pick)
+        {
+            await context.Publish(new PickActionCompleted(actionGroup.CorrelationId, action.CorrelationId, action.CompletedDate.GetValueOrDefault()), cancellationToken);
+        }
+
         if (actionGroup.State != ActionGroupState.Completed)
         {
             _logger.LogOrderInformation(LogCodes.OrderActionCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{actionGroup.Actions.First(a => a.CorrelationId == correlationId).ActionType} of order {actionGroup.OrderId} has been completed");
             return;
         }
 
-        if (!agv.CanStartAutomaticAction && !actionGroup.IsManual && actionGroup.State != ActionGroupState.Paused)
-        {
-            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId), cancellationToken);
-        }
         await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
         _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully");
         await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);

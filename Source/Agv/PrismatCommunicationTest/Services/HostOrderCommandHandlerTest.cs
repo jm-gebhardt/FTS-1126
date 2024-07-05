@@ -256,4 +256,54 @@ public class HostOrderCommandHandlerTest
         queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).TargetNodeId.ShouldBeEmpty();
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.Agv);
     }
+
+    [TestMethod]
+    public async Task Consume_FinishPick_ValidData_PickCompletionReported()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var pickAction = order.Actions.Single(a => a.ActionType == ActionType.Pick);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var command = new FinishPick(order.CorrelationId, pickAction.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<FinishPick>();
+        fixture.VerifyPickCompletion(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_FinishPick_UnknownOrder_PickCompletionNotReported()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var pickAction = order.Actions.Single(a => a.ActionType == ActionType.Pick);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostCommunicator();
+
+        var command = new FinishPick("Unknown".ToGuid(), pickAction.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<FinishPick>();
+        fixture.VerifyPickCompletion(Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_FinishPick_NotPickAction_PickCompletionNotReported()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var dropAction = order.Actions.Single(a => a.ActionType == ActionType.Drop);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var command = new FinishPick(order.CorrelationId, dropAction.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<FinishPick>();
+        fixture.VerifyPickCompletion(Times.Never());
+    }
 }

@@ -17,4 +17,11 @@ public class TelegramHostCommunicator(ILogger<TelegramHostCommunicator> logger, 
         telegramProcessor.EnqueueTelegram(new Arrival(DateTime.UtcNow, destination, hu));
         await Task.CompletedTask;
     }
+
+    /// <inheritdoc cref="IHostCommunicator"/>>
+    public void ReportPickCompletion(string hu, string position, DateTime time)
+    {
+        logger.LogInformation("Reporting pick completion to prismat");
+        telegramProcessor.EnqueueTelegram(new Pick(hu, position, time));
+    }
 }
