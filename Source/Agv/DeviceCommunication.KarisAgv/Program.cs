@@ -8,6 +8,7 @@ using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.States;
 using MassTransit;
@@ -79,6 +80,7 @@ try
         hostBuilder.ConfigureServices((_, services) =>
         {
             services.AddSingleton<IAgvRepository, AgvRepository>();
+            services.AddSingleton<IGraphRepository, GraphRepository>();
             services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

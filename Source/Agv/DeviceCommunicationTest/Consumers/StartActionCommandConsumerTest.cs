@@ -222,4 +222,74 @@ public class StartActionCommandConsumerTest
             mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
         }
     }
+
+    /// <summary>
+    /// Test consuming a StartActionCommand message (the pick action) and
+    /// publish an MqttOrder Mqtt message with correct nodes and edges.
+    /// </summary>
+    /// <returns></returns>
+    [TestMethod]
+    public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT_CorrectNodesAndEdges()
+    {
+        var fixture = new StartActionCommandConsumerTestFixture();
+
+        // Create a publish observer
+        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        {
+            var actionCorrelationId = Guid.NewGuid();
+            const string agvSerialNumber = "agv0";
+            const string orderId = "1234";
+            var orderCorrelationId = orderId.ToGuid();
+            const string toStationId = "Drop5";
+
+            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
+            {
+                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
+                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()]
+            };
+            var correlationId = Guid.NewGuid();
+            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
+
+            // Publish ExecuteTransportOrder
+            await fixture.TestHarness.Bus.Publish(message);
+
+            // Get Consumer Harness
+            IConsumerTestHarness<StartActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<StartActionCommandConsumer>();
+
+            // Check if consumed
+            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
+            // Get consumed message
+            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
+            action = consumedMessage.Context.Message.Action;
+
+            // Get published MqttOrder Mqtt message
+            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
+
+            // Check content
+            var mqttMessage = publishedMessage.Context.Message;
+
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+            // For pick action Karis expects destination as source ...
+            mqttMessage.Stations?.FromStationIdentifier.ShouldBe(toStationId);
+            // ... and empty destination.
+            mqttMessage.Stations?.ToStationIdentifier.ShouldBe(string.Empty);
+            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
+            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
+
+            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
+            // Check nodes and edges, should not contain pick station and edge to pick station
+            mqttMessage.Route?.Edges.Count.ShouldBe(2);
+            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
+            List<object>? routeNodes = mqttMessage.Route?.Nodes;
+            if (routeNodes != null)
+            {
+                for (int i = 0; i < routeNodes.Count; i++)
+                {
+                    var routeNode = (MqttNode)routeNodes[i];
+                    routeNode.NodeId.ShouldBe(action.Nodes[i]);
+                }
+            }
+        }
+    }
 }

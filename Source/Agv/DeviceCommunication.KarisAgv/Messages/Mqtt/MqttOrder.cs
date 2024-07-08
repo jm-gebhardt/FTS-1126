@@ -89,14 +89,14 @@ public record Coordinates
 public record Route
 {
     /// <summary>
-    /// The list of edges to use/travel over for the order
-    /// </summary>
-    public List<object>? Edges { get; set; }
-
-    /// <summary>
     /// The list of nodes to use/travel over for the order
     /// </summary>
-    public List<object>? Nodes { get; set; }
+    public List<object> Nodes { get; set; } = [];
+
+    /// <summary>
+    /// The list of edges to use/travel over for the order
+    /// </summary>
+    public List<object> Edges { get; set; } = [];
 }
 
 /// <summary>

@@ -5,7 +5,7 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 namespace Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 
 /// <summary>
-/// This record contain all important states of the  the agv, such as status, agv action and agv graph 
+/// This record contain all important states of the agv, such as status, agv action and agv graph 
 /// </summary>
 /// <value></value>
 public record AgvInformation

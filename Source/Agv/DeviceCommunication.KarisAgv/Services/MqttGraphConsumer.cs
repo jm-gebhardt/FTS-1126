@@ -4,6 +4,7 @@ using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Events;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -18,16 +19,19 @@ public class MqttGraphConsumer : IConsumer<MqttGraph>
 {
     private readonly ILogger<MqttGraphConsumer> _logger;
     private readonly IAgvRepository _agvRepository;
+    private readonly IGraphRepository _graphRepository;
 
     /// <summary>
     /// Create consumer with message handler delegate.
     /// </summary>
     /// <param name="logger">Mandatory logger facility.</param>
-    /// <param name="agvRepository"></param>
-    public MqttGraphConsumer(ILogger<MqttGraphConsumer> logger, IAgvRepository agvRepository)
+    /// <param name="agvRepository">The agv repository with AgvInformation.</param>
+    /// <param name="graphRepository">The graph repository of GraphNodes/Edges with matching MqttNodes/Edges.</param>
+    public MqttGraphConsumer(ILogger<MqttGraphConsumer> logger, IAgvRepository agvRepository, IGraphRepository graphRepository)
     {
         _logger = logger;
         _agvRepository = agvRepository;
+        _graphRepository = graphRepository;
     }
 
     /// <summary>
@@ -49,7 +53,7 @@ public class MqttGraphConsumer : IConsumer<MqttGraph>
             }
         }
 
-        var graphParser = new GraphParser(reversedYGraph);
+        var graphParser = new GraphParser(reversedYGraph, _graphRepository);
         var agvGraph = graphParser.Graph;
         FeedAgvRepository(correlationId, agvGraph);
 

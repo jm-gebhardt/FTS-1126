@@ -4,6 +4,7 @@ using Gebhardt.Acc.DeviceCommunication.Common.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
@@ -17,6 +18,7 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 public class GraphParser
 {
     private readonly MqttGraph _graph;
+    private readonly IGraphRepository? _graphRepository;
 
     private string? _serialNumber;
     private readonly HashSet<GraphNode> _nodes;
@@ -43,6 +45,19 @@ public class GraphParser
     /// The Id of the related map.
     /// </summary>
     public Guid RelatedMapId { get; private set; }
+
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="graph"><see cref="MqttGraph"/> message.</param>
+    /// <param name="graphRepository">The graphNode/Edge - MqttNode/Edge mapping.</param>
+    public GraphParser(MqttGraph graph, IGraphRepository graphRepository)
+    {
+        _graph = graph;
+        _graphRepository = graphRepository;
+        _nodes = new HashSet<GraphNode>(new GraphNodeComparer());
+        _edges = new HashSet<GraphEdge>(new GraphEdgeComparer());
+    }
 
     /// <summary>
     /// Constructor.
@@ -121,6 +136,8 @@ public class GraphParser
             // No division by zero due to _considerVelocity.
             _overallDuration += (float)length / mqttEdge.MaxVelocity;
         }
+        
+        _graphRepository?.Add(edge.Id, mqttEdge);
 
         return added;
     }
@@ -222,15 +239,17 @@ public class GraphParser
     {
         bool allAdded = true;
 
-        foreach (var node in _graph.Nodes!)
+        foreach (var mqttNode in _graph.Nodes!)
         {
-            allAdded &= _nodes.Add(new GraphNode(node.NodeId)
+            var newNode = new GraphNode(mqttNode.NodeId)
             {
                 Type = AgvGraph.NodeType.WayPoint,
-                X = node.X,
-                Y = node.Y,
-                Z = node.Z ?? 0f
-            });
+                X = mqttNode.X,
+                Y = mqttNode.Y,
+                Z = mqttNode.Z ?? 0f
+            };
+            allAdded &= _nodes.Add(newNode);
+            _graphRepository?.Add(newNode.Id, mqttNode);
         }
 
         return allAdded;

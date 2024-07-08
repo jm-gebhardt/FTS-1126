@@ -73,7 +73,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// <summary>
     /// Merge graph and station list into an <see cref="Acc.Common.Domain.Models.Graphs.AgvGraph"/>.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Station list/graph missing or validation issue..</exception>
+    /// <exception cref="InvalidOperationException">Station list/graph missing or validation issue.</exception>
     public void MergeGraph()
     {
         if (MqttStationList == null)

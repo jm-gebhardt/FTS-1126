@@ -15,7 +15,7 @@ public class StationListParser
 {
     private readonly MqttStationList _stationList;
     private readonly MqttGraph _graph;
-
+ 
     private string? _serialNumber;
 
     /// <summary>Indicator for graph usability (valid or not).</summary>
@@ -42,7 +42,7 @@ public class StationListParser
     {
         _stationList = stationList;
         _graph = graph;
-    }
+   }
 
     /// <summary>
     /// Calculate distance between <paramref name="station"/> and <paramref name="node"/>.

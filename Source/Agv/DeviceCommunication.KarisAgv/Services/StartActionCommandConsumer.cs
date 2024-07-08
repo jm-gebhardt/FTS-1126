@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -19,14 +20,16 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
 {
     private readonly ILogger<StartActionCommandConsumer> _logger;
     private readonly IAgvRepository _agvRepository;
+    private readonly IGraphRepository _graphRepository;
 
     /// <summary>
     /// Create dummy consumer with message handler delegate
     /// </summary>
-    public StartActionCommandConsumer(ILogger<StartActionCommandConsumer> logger, IAgvRepository agvRepository)
+    public StartActionCommandConsumer(ILogger<StartActionCommandConsumer> logger, IAgvRepository agvRepository, IGraphRepository graphRepository)
     {
         _logger = logger;
         _agvRepository = agvRepository;
+        _graphRepository = graphRepository;
     }
 
     /// <summary>
@@ -39,6 +42,11 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
         var action = context.Message.Action;
         var actionType = action.ActionType;
         string targetNodeId = action.TargetNodeId;
+        List<object> routeNodes = [];
+        routeNodes.AddRange(action.Nodes.Select(graphNodeId => _graphRepository.GetMqttNode(graphNodeId)).OfType<MqttNode>());
+        List<object> routeEdges = [];
+        routeEdges.AddRange(action.Edges.Select(graphEdgeGuid => _graphRepository.GetMqttEdge(graphEdgeGuid)).OfType<MqttEdge>());
+
         OrderType orderType;
         string sourceToSend = string.Empty;
         string destinationToSend = string.Empty;
@@ -88,6 +96,11 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
             {
                 FromStationIdentifier = sourceToSend,
                 ToStationIdentifier = destinationToSend
+            },
+            Route = new Route()
+            {
+                Edges = routeEdges,
+                Nodes = routeNodes
             }
         }, context.CancellationToken);
 
