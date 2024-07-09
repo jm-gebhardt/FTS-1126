@@ -74,16 +74,17 @@ public static class HostBuilderExtension
             services.AddConfigurationTypeManager();
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
-            services.TryAddPrismatApi(context.Configuration);
             services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
-            services.AddSingleton<IHostCommunicator, TelegramHostCommunicator>();
             services.TryAddKaeserGraphConfiguration(simulateOptions != null);
 
             if (simulateOptions == null)
             {
+                services.TryAddPrismatApi(context.Configuration);
+                services.AddSingleton<IHostCommunicator, TelegramHostCommunicator>();
                 return;
             }
 
+            services.AddSingleton<IHostCommunicator, SimulationHostCommunicator>();
             services.AddSingleton(_ => simulateOptions);
             services.AddHostedService<PollingBackgroundService<LongLoopSimulator>>();
             services.AddHostedService<PollingBackgroundService<ShortLoopSimulator>>();
