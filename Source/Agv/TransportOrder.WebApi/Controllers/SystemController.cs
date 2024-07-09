@@ -2,6 +2,7 @@
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers;
 
@@ -30,6 +31,7 @@ public class SystemController : Controller
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/system/time")]
+    [Produces(MediaTypeNames.Application.Json)]
     public async Task<ActionResult<DateTime>> GetSystemTime()
     {
         Response<GotSystemTime> response = await _getSystemTimeClient.GetResponse<GotSystemTime>(new GetSystemTime(Guid.NewGuid()));
