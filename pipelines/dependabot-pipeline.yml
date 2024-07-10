@@ -16,3 +16,4 @@ steps:
 - task: dependabot@1
   inputs:
     dockerImageTag: 'latest'
+    failOnException: false
