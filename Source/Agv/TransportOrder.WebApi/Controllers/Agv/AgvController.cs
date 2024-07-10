@@ -14,6 +14,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Routing;
+using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -262,7 +263,7 @@ public class AgvController : Controller
     /// <returns></returns>
     /// <response code="200">Route</response>
     /// <response code="204">No Route found.</response>
-    /// <response code="400">Start/Destination node node found.</response>
+    /// <response code="400">Start/Destination node not found.</response>
     /// <response code="404">Agv with given correlation id not found.</response>
     /// <returns>The calculated route for the given parameters.</returns>
     [HttpGet]
@@ -393,7 +394,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/lock")]
     public async Task<ActionResult> LockAgv(Guid correlationId, [FromQuery] string reason)
     {
-        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId, reason));
+        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId, reason, User.GetEmail()));
         if (response.Message is AgvNotFoundResult)
         {
             return NotFound();
@@ -410,7 +411,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/userMode")]
     public async Task<ActionResult> SetUserMode(Guid correlationId)
     {
-        await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, null));
+        await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, User.GetEmail()));
         return Ok();
     }
 
@@ -423,7 +424,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/maintenanceMode")]
     public async Task<ActionResult> SetMaintenanceMode(Guid correlationId, [FromQuery] string reason, [FromQuery] bool cancelManualActions)
     {
-        await _setMaintenanceModeClient.GetResponse<Success>(new SetMaintenanceMode(correlationId, null, reason, cancelManualActions));
+        await _setMaintenanceModeClient.GetResponse<Success>(new SetMaintenanceMode(correlationId, User.GetEmail(), reason, cancelManualActions));
         return Ok();
     }
 

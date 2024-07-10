@@ -19,19 +19,19 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Swashbuckle.AspNetCore.Filters;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using AgvPositionSignificanceChecker = Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi;
+namespace Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 
 /// <summary>
 /// IWebHostBuilder extensions

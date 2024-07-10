@@ -337,7 +337,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId, "reason"));
+        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId, "reason", "agv"));
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<AgvLockedChanged>();
         var agvLockedChanged = fixture.TestHarness.Published.Select<AgvLockedChanged>().Single().Context.Message;
@@ -350,7 +350,7 @@ public class AgvCommandHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithoutAgv();
-        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId, "reason"));
+        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId, "reason", "agv"));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
 
@@ -680,15 +680,55 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_SetUserMode_ValidData_PublishesAgvModeChanged()
     {
+        const string setter = "user";
+
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        var command = new SetUserMode(agv.CorrelationId, "user");
+        var command = new SetUserMode(agv.CorrelationId, setter);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<SetUserMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         agv.Mode.Type.ShouldBe(ModeType.UserMode);
+        agv.Mode.Setter.ShouldBe(setter);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetMaintenanceMode_ValidData_PublishesAgvModeChanged()
+    {
+        const string setter = "user";
+        const string reason = "That is the reason";
+
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+        var command = new SetMaintenanceMode(agv.CorrelationId, setter, reason, false);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<SetMaintenanceMode>();
+        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
+        agv.Mode.Type.ShouldBe(ModeType.Maintenance);
+        agv.Mode.Setter.ShouldBe(setter);
+        agv.Mode.Reason.ShouldBe(reason);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetNormalModeWithSetter_ValidData_PublishesAgvModeChanged()
+    {
+        const string setter = "user";
+
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+        var command = new SetNormalMode(agv.CorrelationId, setter);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
+        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.Setter.ShouldBe(setter);
     }
 
     [TestMethod]
@@ -697,12 +737,13 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        var command = new SetNormalMode(agv.CorrelationId, "user");
+        var command = new SetNormalMode(agv.CorrelationId, null);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.Setter.ShouldBeNull();
     }
 }

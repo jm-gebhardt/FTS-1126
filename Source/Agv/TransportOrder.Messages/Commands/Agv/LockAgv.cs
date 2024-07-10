@@ -18,13 +18,20 @@ public record LockAgv : CorrelatedBy<Guid>
     public string Reason {get; }
 
     /// <summary>
+    /// The email of the user who requested lock.
+    /// </summary>
+    public string? Setter { get; }
+
+    /// <summary>
     /// <inheritdoc cref="LockAgv"/>
     /// </summary>
     /// <param name="correlationId">The agv correlation id.</param>
     /// <param name="reason">The lock reason.</param>
-    public LockAgv(Guid correlationId, string reason)
+    /// <param name="setter">The email of the user who requested lock.</param>
+    public LockAgv(Guid correlationId, string reason, string? setter)
     {
         CorrelationId = correlationId;
         Reason = reason;
+        Setter = setter;
     }
 }

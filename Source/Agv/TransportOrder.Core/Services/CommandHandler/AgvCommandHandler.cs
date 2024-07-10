@@ -506,7 +506,7 @@ public class AgvCommandHandler :
             await context.RespondAsync(new AgvNotFoundResult(agvCorrelationId));
             return;
         }
-        agv.Lock(context.Message.Reason);
+        agv.Lock(context.Message.Reason, context.Message.Setter);
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(LockAgv), agv.CorrelationId);

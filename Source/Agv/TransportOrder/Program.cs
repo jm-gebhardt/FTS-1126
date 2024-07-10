@@ -6,7 +6,7 @@ using Gebhardt.Acc.TransportOrder;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.Acc.TransportOrder.WebApi;
+using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
