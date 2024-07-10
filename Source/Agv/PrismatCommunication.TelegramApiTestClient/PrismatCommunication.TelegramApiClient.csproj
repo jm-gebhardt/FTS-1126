@@ -5,6 +5,9 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
+      <PackageReference Include="System.Text.Json" Version="8.0.4" />
+     </ItemGroup>
+    <ItemGroup>
       <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
       <ProjectReference Include="..\PrismatCommunication.Messages\PrismatCommunication.Messages.csproj" />
       <ProjectReference Include="..\PrismatCommunication.TelegramApi\PrismatCommunication.TelegramApi.csproj" />
