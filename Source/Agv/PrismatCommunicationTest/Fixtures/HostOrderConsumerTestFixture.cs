@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
@@ -14,13 +15,14 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
 {
     private readonly Mock<IHostCommunicator> _hostCommunicatorMock = new();
     public readonly Mock<IHostOrderRepository> HostOrderRepositoryMock = new();
-   
+    public readonly KaeserGraphConfiguration Configuration = OrderGenerator.KaeserConfiguration;
+
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
         collection.AddTransient(_ => HostOrderRepositoryMock.Object);
         collection.AddTransient(_ => _hostCommunicatorMock.Object);
-        collection.AddTransient(_ => OrderGenerator.KaeserConfiguration);
+        collection.AddSingleton(_ => Configuration);
         return this;
     }
 

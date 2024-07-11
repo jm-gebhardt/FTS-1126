@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
@@ -17,6 +18,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using MassTransit;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -47,6 +49,8 @@ public static class CoreBusRegistrationExtensions
         RegisterCoreGraphHandlers(busRegistrationConfigurator);
 
         RegisterCoreAgvHandlers(busRegistrationConfigurator);
+
+        RegisterTriggerHandlers(busRegistrationConfigurator);
 
         return busRegistrationConfigurator;
     }
@@ -95,6 +99,19 @@ public static class CoreBusRegistrationExtensions
 
         busRegistrationConfigurator.AddConsumer<AgvErrorCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<UpdateErrorStatus>();
+    }
+
+    private static void RegisterTriggerHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
+    {
+        busRegistrationConfigurator.AddConsumer<TriggerEventHandler>();
+        busRegistrationConfigurator.AddConsumer<TriggerCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<CreateTrigger, TriggerCommandHandler>(c);
+            partitioner.PartitionMessageById<AddTriggerLocation, TriggerCommandHandler>(c);
+            partitioner.PartitionMessageById<RemoveTriggerLocation, TriggerCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateConfigurationParameter, TriggerCommandHandler>(c);
+        });
     }
 
     private static void RegisterCoreGraphHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
@@ -158,6 +175,8 @@ public static class CoreBusRegistrationExtensions
         RegisterMediatorErrorHandlers(configurator);
 
         RegisterMediatorSystemHandlers(configurator);
+
+        RegisterMediatorTriggerHandlers(configurator);
     }
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)
@@ -176,6 +195,16 @@ public static class CoreBusRegistrationExtensions
     {
         configurator.AddConsumer<SystemRequestHandler>();
         configurator.AddRequestClient<GetSystemTime>();
+    }
+
+    private static void RegisterMediatorTriggerHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<TriggerRequestHandler>();
+        configurator.AddRequestClient<GetTriggers>();
+        configurator.AddRequestClient<AssignTriggerToLocation>();
+        configurator.AddRequestClient<TryRemoveTriggerLocation>();
+        configurator.AddRequestClient<GetTrigger>();
+        configurator.AddRequestClient<TryUpdateConfigurationParameter>();
     }
 
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)

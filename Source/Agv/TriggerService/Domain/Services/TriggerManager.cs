@@ -53,6 +53,7 @@ public class TriggerManager(ReflectionService reflectionService, ILogger<Trigger
         var trigger = await triggerRepository.GetById(triggerId);
         foreach (var parameter in updatedParameters)
         {
+            logger.LogInformation("Updating trigger configuration parameter {Name}: {Value}", parameter.Name, parameter.Value);
             trigger.UpdateConfigurationParameter(parameter.Name, parameter.Value);
         }
 

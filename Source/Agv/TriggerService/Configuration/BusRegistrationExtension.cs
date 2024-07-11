@@ -1,3 +1,6 @@
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.TriggerService.Services;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -14,6 +17,11 @@ public static class BusRegistrationExtension
     [PublicAPI]
     public static IBusRegistrationConfigurator AddBusConsumers(this IBusRegistrationConfigurator cfg)
     {
+        cfg.AddConsumer<TriggerEventHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(16);
+            partitioner.PartitionMessageById<TriggerConfigurationUpdated, TriggerEventHandler>(c);
+        });
         return cfg;
     }
 }

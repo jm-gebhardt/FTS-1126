@@ -96,6 +96,13 @@ public interface IGraphRepository
     Task<bool> NodeExistsAsync(string nodeId);
 
     /// <summary>
+    /// Check if an edge exists in the repository.
+    /// </summary>
+    /// <param name="edgeId">The id of the edge</param>
+    /// <returns></returns>
+    Task<bool> EdgeExistsAsync(Guid edgeId);
+
+    /// <summary>
     /// Gets the (global) Graph. If there is none it will create an empty one.
     /// </summary>
     Task<Graph> GetGraphAsync();

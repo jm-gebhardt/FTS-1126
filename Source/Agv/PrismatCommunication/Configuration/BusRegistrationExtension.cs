@@ -30,6 +30,7 @@ public static class BusRegistrationExtension
         });
         cfg.AddConsumer<ActionGroupEventHandler>();
         cfg.AddConsumer<HostOrderEventHandler>();
+        cfg.AddConsumer<TriggerEventHandler>();
         return cfg;
     }
 }

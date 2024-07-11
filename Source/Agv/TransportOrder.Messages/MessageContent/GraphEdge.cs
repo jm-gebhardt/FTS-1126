@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 /// <summary>
 /// Message content for a graph edge.
 /// </summary>
-[UsedImplicitly]
+[PublicAPI]
 public record GraphEdge
 {
     /// <summary>

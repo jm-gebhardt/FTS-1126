@@ -264,6 +264,16 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
+    public async Task<bool> EdgeExistsAsync(Guid edgeId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        return await context.Set<EfEdge>()
+            .AsNoTracking()
+            .AnyAsync(e => e.Id == edgeId);
+    }
+
+    /// <inheritdoc />
     public async Task<Graph> GetGraphAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
