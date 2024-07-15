@@ -14,7 +14,6 @@ namespace Gebhardt.Acc.Statistics.WebApi.Controllers;
 /// <summary>
 /// Single action group requests.
 /// </summary>
-[ApiController]
 [Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class GridController : Controller
