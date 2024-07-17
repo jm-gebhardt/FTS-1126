@@ -183,7 +183,7 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     /// </summary>
     public void TrySendLifeTelegram()
     {
-        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromMinutes(1) && !ShouldReceiveTelegram())
+        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
         {
             SendQueue.Enqueue(new Life(DateTime.UtcNow));
         }

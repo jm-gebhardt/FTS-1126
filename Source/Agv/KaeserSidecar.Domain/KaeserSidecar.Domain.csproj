@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.KaeserSidecar.Domain</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+      <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
+      <ProjectReference Include="..\PrismatCommunication\PrismatCommunication.csproj" />
+      <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Models\" />
+      <Folder Include="Services\" />
+    </ItemGroup>
+
+</Project>

@@ -43,6 +43,11 @@ public class KaeserGraphConfiguration
     public string LoadTriggerPointName { get; private set; } = "DP1";
 
     /// <summary>
+    /// Provides a mapping from station ids to naming in the conveyor management.
+    /// </summary>
+    public Dictionary<string, string> ConveyorStationMapping { get; private set; }
+
+    /// <summary>
     /// Provides a mapping of trigger points to nodes.
     /// </summary>
     public IConcurrentDictionaryProvider<string, string> TriggerPointMapping { get; }
@@ -70,6 +75,13 @@ public class KaeserGraphConfiguration
             { "2430", "8" },
             { "2410", "8" }
         };
+
+        ConveyorStationMapping = new Dictionary<string, string>()
+        {
+            { "1", "WE01" },
+            { "2", "WE02" },
+            { "3", "WE03" }
+        };
     }
 
     /// <summary>
@@ -78,6 +90,7 @@ public class KaeserGraphConfiguration
     public KaeserGraphConfiguration()
     {
         StationMapping = new Dictionary<string, string>();
+        ConveyorStationMapping = new Dictionary<string, string>();
         TriggerPointMapping = new InMemoryTriggerPointMapping();
     }
 
@@ -107,5 +120,6 @@ public class KaeserGraphConfiguration
         DecisionPointName = yamlData.DecisionPointName;
         LoadTriggerPointName = yamlData.LoadTriggerPointName;
         StationMapping = yamlData.StationMapping;
+        ConveyorStationMapping = yamlData.ConveyorStationMapping;
     }
 }

@@ -110,7 +110,10 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
         hostOrder.PassTriggerPoint();
         await hostOrderRepository.UpdateAsync(hostOrder);
-        await context.Publish(new DecisionPointPassed(assignedAgv!.Value, targetNodeId));
+        if (hostOrder.HasUnknownDropTarget(configuration))
+        {   // only trigger Doppelspiel, if it is a drop order
+            await context.Publish(new DecisionPointPassed(assignedAgv!.Value, targetNodeId));
+        }
     }
 
     /// <summary>

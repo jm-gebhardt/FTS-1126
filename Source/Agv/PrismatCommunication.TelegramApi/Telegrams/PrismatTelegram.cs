@@ -65,15 +65,6 @@ public class PrismatTelegram : TelegramBase
         return time;
     }
 
-    /// <summary>
-    /// Convert the Time property to string.
-    /// </summary>
-    /// <returns></returns>
-    protected string ConvertTime()
-    {
-        return Time.ToString("yyyy:MM:dd:HH:mm:ss:fff");
-    }
-
     /// <inheritdoc cref="TelegramBase"/>>
     public override string CreateAcknowledgement()
     {

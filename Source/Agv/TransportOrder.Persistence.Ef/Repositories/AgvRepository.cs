@@ -25,6 +25,15 @@ public class AgvRepository : IAgvRepository
         _agvSettingsProvider = agvSettingsProvider;
     }
 
+    /// <summary>
+    /// Initializes a new <see cref="AgvRepository"/> instance for db only access.
+    /// </summary>
+    public AgvRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    {
+        _dbContextFactory = dbContextFactory;
+        _agvSettingsProvider = null!;
+    }
+
     private IQueryable<Agv> Agvs =>
         _dbContextFactory.CreateDbContext()
             .Set<Agv>()

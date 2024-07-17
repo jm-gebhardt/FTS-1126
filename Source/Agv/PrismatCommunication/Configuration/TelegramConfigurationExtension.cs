@@ -21,5 +21,6 @@ public static class TelegramConfigurationExtension
         config.UseTcpKeepAlive = true;
         config.TcpKeepAliveRetries =int.Parse(configSection.GetValue("TCP_KEEP_ALIVE_RETRIES", "5")!);
         config.TelegramWaitingTime =int.Parse(configSection.GetValue("TELEGRAM_WAITING_TIME", "180000")!);
+        config.LifeTelegramInterval =int.Parse(configSection.GetValue("LIFE_TELEGRAM_INTERVAL", "60")!);
     }
 }

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.KaeserSidecar</AssemblyName>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Common\Common.csproj" />
+      <ProjectReference Include="..\KaeserConveyorTelegramApi\KaeserConveyorTelegramApi.csproj" />
+      <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
+      <ProjectReference Include="..\KaeserSidecar.Messages\KaeserSidecar.Messages.csproj" />
+      <ProjectReference Include="..\KaeserSidecar.Persistence.Ef\KaeserSidecar.Persistence.Ef.csproj" />
+      <ProjectReference Include="..\PrismatCommunication\PrismatCommunication.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Services\TelegramApi\" />
+      <Folder Include="SimulationMode\" />
+      <Folder Include="Services\EventHandler\" />
+    </ItemGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+
+</Project>

@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.KaeserConveyorTelegramApi</AssemblyName>
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
+    </ItemGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+</Project>

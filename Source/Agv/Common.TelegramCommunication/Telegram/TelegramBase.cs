@@ -52,12 +52,21 @@ public abstract class TelegramBase
     public abstract bool Load(string telegram);
 
     /// <summary>
+    /// Convert the Time property to string.
+    /// </summary>
+    /// <returns></returns>
+    protected string ConvertTime()
+    {
+        return Time.ToString("yyyy:MM:dd:HH:mm:ss:fff");
+    }
+
+    /// <summary>
     /// Creates an acknowledgement to the message
     /// </summary>
     /// <returns></returns>
     [PublicAPI]
     public virtual string CreateAcknowledgement()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Rec.PadRight(4, '0')}/{nameof(Rec)}:{Send.PadRight(4, '0')}/{nameof(Time)}:{Time}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Rec.PadRight(8, '.')}/{nameof(Rec)}:{Send.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{EndSymbol}";
     }
 }

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.KaeserSidecar.Persistence.Ef</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+      <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
+      <ProjectReference Include="..\PrismatCommunication\PrismatCommunication.csproj" />
+      <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
+      <ProjectReference Include="..\TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj" />
+    </ItemGroup>
+
+</Project>

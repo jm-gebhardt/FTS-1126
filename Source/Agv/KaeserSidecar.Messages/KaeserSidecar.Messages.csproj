@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.KaeserSidecar.Messages</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+
+</Project>
