@@ -16,13 +16,13 @@ namespace Gebhardt.Acc.TriggerService.Domain.Services;
 public class TriggerManager(ReflectionService reflectionService, ILogger<TriggerManager> logger, TriggerServiceConfiguration configuration, ITriggerRepository triggerRepository): ITriggerManager
 {
     /// <inheritdoc cref="ITriggerManager"/>>
-    public async Task<IReadOnlyCollection<ITrigger>> LoadTriggers()
+    public async Task<IReadOnlyCollection<IFfcTrigger>> LoadTriggers()
     {
-        var triggers = new List<ITrigger>();
+        var triggers = new List<IFfcTrigger>();
 
         foreach (var trigger in reflectionService.GetITriggerImplementations(configuration.TriggerFolder))
         {
-            var triggerInstance = reflectionService.GetInstance<ITrigger>(trigger, []);
+            var triggerInstance = reflectionService.GetInstance<IFfcTrigger>(trigger, []);
             if (triggerInstance == null)
             {
                 logger.LogError("Could not create instance of trigger {Trigger}", trigger.FullName);

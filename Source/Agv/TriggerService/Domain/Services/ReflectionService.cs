@@ -13,7 +13,7 @@ namespace Gebhardt.Acc.TriggerService.Domain.Services;
 public class ReflectionService(IServiceProvider serviceProvider, ILogger<ReflectionService> logger)
 {
     /// <summary>
-    /// Get all non-abstract implementations of <see cref="ITrigger"/> in given folder.
+    /// Get all non-abstract implementations of <see cref="IFfcTrigger"/> in given folder.
     /// </summary>
     /// <param name="folder">The folder to look for implementations.</param>
     /// <returns>Collection of types implementing the interface</returns>
@@ -21,9 +21,9 @@ public class ReflectionService(IServiceProvider serviceProvider, ILogger<Reflect
     {
         return GetTriggerAssemblies(logger, folder)
             .SelectMany(s => s.GetTypes())
-            .Where(t => t.GetInterface(nameof(ITrigger)) != null
+            .Where(t => t.GetInterface(nameof(IFfcTrigger)) != null
                         && t.IsClass
-                        && typeof(ITrigger).IsAssignableFrom(t)
+                        && typeof(IFfcTrigger).IsAssignableFrom(t)
                         && !t.IsAbstract);
     }
 
@@ -42,16 +42,19 @@ public class ReflectionService(IServiceProvider serviceProvider, ILogger<Reflect
             logger.LogWarning("No triggers available");
             return [];
         }
-        foreach (string dll in Directory.GetFiles(current, "*.dll"))
+        foreach (string subDirectory in Directory.GetDirectories(current))
         {
-            try
+            foreach (string dll in Directory.GetFiles(subDirectory, "*.dll"))
             {
-                var assembly = Assembly.LoadFrom(dll);
-                assemblies.Add(assembly);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Could not load trigger dll {Message}", ex.Message);
+                try
+                {
+                    var assembly = Assembly.LoadFrom(dll);
+                    assemblies.Add(assembly);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("Could not load trigger dll {Message}", ex.Message);
+                }
             }
         }
         return assemblies;

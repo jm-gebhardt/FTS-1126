@@ -17,7 +17,7 @@ public class TriggerConfigurator(ITriggerManager triggerManager, IBus bus, Trigg
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            IReadOnlyCollection<ITrigger> triggers = await triggerManager.LoadTriggers();
+            IReadOnlyCollection<IFfcTrigger> triggers = await triggerManager.LoadTriggers();
             foreach (var trigger in triggers)
             {
                 await bus.Publish(new TriggerConfigured(trigger.GetProperties(), trigger.GetConfigurationParameters().Values), stoppingToken);

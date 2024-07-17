@@ -13,7 +13,7 @@ public interface ITriggerManager
     /// <summary>
     /// Load the triggers
     /// </summary>
-    Task<IReadOnlyCollection<ITrigger>> LoadTriggers();
+    Task<IReadOnlyCollection<IFfcTrigger>> LoadTriggers();
 
     /// <summary>
     /// Invoke the trigger

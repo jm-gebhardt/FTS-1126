@@ -8,24 +8,24 @@ namespace Gebhardt.Acc.TriggerService.Domain.Repositories;
 public interface ITriggerRepository
 {
     /// <summary>
-    /// Try to add a trigger to the repository.
+    /// Try to add a ffcTrigger to the repository.
     /// </summary>
-    /// <param name="id">The id of the trigger.</param>
-    /// <param name="trigger">The trigger.</param>
+    /// <param name="id">The id of the ffcTrigger.</param>
+    /// <param name="ffcTrigger">The ffcTrigger.</param>
     /// <returns></returns>
-    public Task<bool> TryAdd(Guid id, ITrigger trigger);
+    public Task<bool> TryAdd(Guid id, IFfcTrigger ffcTrigger);
 
     /// <summary>
     /// Get a trigger by its id.
     /// </summary>
     /// <param name="id">The trigger id.</param>
     /// <returns>The trigger</returns>
-    public Task<ITrigger> GetById(Guid id);
+    public Task<IFfcTrigger> GetById(Guid id);
 
     /// <summary>
-    /// Update a trigger.
+    /// Update a ffcTrigger.
     /// </summary>
-    /// <param name="id">The trigger id</param>
-    /// <param name="trigger">The trigger</param>
-    public Task UpdateTrigger(Guid id, ITrigger trigger);
+    /// <param name="id">The ffcTrigger id</param>
+    /// <param name="ffcTrigger">The ffcTrigger</param>
+    public Task UpdateTrigger(Guid id, IFfcTrigger ffcTrigger);
 }

@@ -13,12 +13,12 @@ namespace Gebhardt.Acc.TriggerExample;
 /// Represents a trigger example
 /// </summary>
 [UsedImplicitly]
-public class TestTrigger(IBus bus) : ITrigger
+public class TestTrigger(IBus bus) : IFfcTrigger
 {
     private const string PropertyName = "Number";
     private int _propertyValue;
 
-    /// <inheritdoc cref="ITrigger"/>>
+    /// <inheritdoc cref="IFfcTrigger"/>>
     public ConcurrentDictionary<string, ConfigurationParameter> GetConfigurationParameters()
     {
         var config = new ConcurrentDictionary<string, ConfigurationParameter>();
@@ -26,20 +26,20 @@ public class TestTrigger(IBus bus) : ITrigger
         return config;
     }
 
-    /// <inheritdoc cref="ITrigger"/>>
+    /// <inheritdoc cref="IFfcTrigger"/>>
     public void UpdateConfigurationParameter(string name, string value)
     {
         _propertyValue = int.Parse(value);
     }
 
-    /// <inheritdoc cref="ITrigger"/>>
+    /// <inheritdoc cref="IFfcTrigger"/>>
     public TriggerProperties GetProperties()
     {
         const string name = "test trigger";
         return new TriggerProperties("www.wobe-systems.com:", name, "");
     }
 
-    /// <inheritdoc cref="ITrigger"/>>
+    /// <inheritdoc cref="IFfcTrigger"/>>
     public async Task Invoke(AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
         Console.WriteLine($"{PropertyName}: {_propertyValue}");

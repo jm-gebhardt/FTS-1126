@@ -9,10 +9,10 @@ namespace Gebhardt.Acc.Common.TriggerDefinition;
 using ConfigurationParameters = ConcurrentDictionary<string, ConfigurationParameter>;
 
 /// <summary>
-/// Provides an interface for trigger implementations
+/// Provides an interface for fusion flow control trigger implementations
 /// </summary>
 [PublicAPI]
-public interface ITrigger
+public interface IFfcTrigger
 {
     /// <summary>
     /// Gets the configuration parameters of the trigger.

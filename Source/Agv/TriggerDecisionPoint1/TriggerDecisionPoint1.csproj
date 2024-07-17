@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.TriggerDecisionPoint1</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+      <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
+      <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
+      <ProjectReference Include="..\TriggerDefinition\Common.TriggerDefinition.csproj" />
+    </ItemGroup>
+</Project>

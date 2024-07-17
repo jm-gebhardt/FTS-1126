@@ -30,13 +30,13 @@ public class TriggerManagerTestFixture: FixtureBase
             s.AddSingleton<ITriggerManager, TriggerManager>();
         });
         _triggerRepository.Setup(x => x.GetById(It.IsAny<Guid>())).ReturnsAsync(TestTrigger);
-        _triggerRepository.Setup(x => x.UpdateTrigger(It.IsAny<Guid>(), It.IsAny<ITrigger>())).Verifiable();
+        _triggerRepository.Setup(x => x.UpdateTrigger(It.IsAny<Guid>(), It.IsAny<IFfcTrigger>())).Verifiable();
         Build();
         TriggerManager = Provider.GetRequiredService<ITriggerManager>();
     }
 
     public void VerifyTriggerUpdated()
     {
-        _triggerRepository.Verify(x => x.UpdateTrigger(It.IsAny<Guid>(), It.IsAny<ITrigger>()), Times.Once);
+        _triggerRepository.Verify(x => x.UpdateTrigger(It.IsAny<Guid>(), It.IsAny<IFfcTrigger>()), Times.Once);
     }
 }

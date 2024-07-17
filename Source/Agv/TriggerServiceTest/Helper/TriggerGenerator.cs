@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TriggerService.Test.Helper;
 
 public static class TriggerGenerator
 {
-    public class Trigger : ITrigger
+    public class Trigger : IFfcTrigger
     {
         public Trigger()
         {

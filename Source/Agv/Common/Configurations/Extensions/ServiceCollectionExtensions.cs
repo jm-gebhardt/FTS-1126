@@ -45,7 +45,7 @@ public static class ServiceCollectionExtensions
                 rabbitMqConfiguration?.Invoke(context, cfg);
                 cfg.UseConsumeFilter<AgvTracingConsumeFilters>(context);
                 cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(context);
-                cfg.ConfigureEndpoints(context);
+                cfg.ConfigureEndpoints(context, new DefaultEndpointNameFormatter(includeNamespace: true));
                 cfg.Host(massTransitConfig.Url);
                 cfg.UsePrometheusMetrics();
             });

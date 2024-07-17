@@ -11,21 +11,21 @@ namespace Gebhardt.Acc.TriggerService.Persistence.Ef.Repositories;
 /// <inheritdoc cref="ITriggerRepository"/>>
 public class EfTriggerRepository(IDbContextFactory<TriggerServiceDbContext> dbContextFactory) : ITriggerRepository
 {
-    private readonly ConcurrentDictionary<Guid, ITrigger> _triggers = new();
+    private readonly ConcurrentDictionary<Guid, IFfcTrigger> _triggers = new();
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task<bool> TryAdd(Guid id, ITrigger trigger)
+    public async Task<bool> TryAdd(Guid id, IFfcTrigger ffcTrigger)
     {
-        if (!await LoadTriggerFromDb(id, trigger))
+        if (!await LoadTriggerFromDb(id, ffcTrigger))
         {
-            await AddOrUpdateInDb(id, trigger);
+            await AddOrUpdateInDb(id, ffcTrigger);
         }
 
-        return _triggers.TryAdd(id, trigger);
+        return _triggers.TryAdd(id, ffcTrigger);
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task<ITrigger> GetById(Guid id)
+    public async Task<IFfcTrigger> GetById(Guid id)
     {
         if (!_triggers.TryGetValue(id, out var trigger))
         {
@@ -37,18 +37,18 @@ public class EfTriggerRepository(IDbContextFactory<TriggerServiceDbContext> dbCo
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task UpdateTrigger(Guid id, ITrigger trigger)
+    public async Task UpdateTrigger(Guid id, IFfcTrigger ffcTrigger)
     {
-        await AddOrUpdateInDb(id, trigger);
+        await AddOrUpdateInDb(id, ffcTrigger);
 
         if (!_triggers.TryGetValue(id, out var oldTrigger))
         {
-            _triggers.TryAdd(id, trigger);
+            _triggers.TryAdd(id, ffcTrigger);
         }
-        _triggers.TryUpdate(id, trigger, oldTrigger?? trigger);
+        _triggers.TryUpdate(id, ffcTrigger, oldTrigger?? ffcTrigger);
     }
 
-    private async Task<bool> LoadTriggerFromDb(Guid id, ITrigger trigger)
+    private async Task<bool> LoadTriggerFromDb(Guid id, IFfcTrigger ffcTrigger)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         var storedTrigger = await context.Set<Trigger>().SingleOrDefaultAsync(t => t.Id == id);
@@ -56,25 +56,25 @@ public class EfTriggerRepository(IDbContextFactory<TriggerServiceDbContext> dbCo
         {
             foreach (var parameter in storedTrigger.ConfigurationParameters)
             {
-                trigger.UpdateConfigurationParameter(parameter.Name, parameter.Value);
+                ffcTrigger.UpdateConfigurationParameter(parameter.Name, parameter.Value);
             }
             return true;
         }
         return false;
     }
 
-    private async Task AddOrUpdateInDb(Guid id, ITrigger trigger)
+    private async Task AddOrUpdateInDb(Guid id, IFfcTrigger ffcTrigger)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         var storedTrigger = await context.Set<Trigger>().SingleOrDefaultAsync(t => t.Id == id);
         if (storedTrigger != null)
         {
-            storedTrigger.UpdateParameters(trigger.GetConfigurationParameters().Values);
+            storedTrigger.UpdateParameters(ffcTrigger.GetConfigurationParameters().Values);
             context.Set<Trigger>().Update(storedTrigger);
         }
         else
         {
-            storedTrigger = new Trigger(id, trigger.GetConfigurationParameters().Values);
+            storedTrigger = new Trigger(id, ffcTrigger.GetConfigurationParameters().Values);
             context.Set<Trigger>().Add(storedTrigger);
         }
         await context.SaveChangesAsync();
