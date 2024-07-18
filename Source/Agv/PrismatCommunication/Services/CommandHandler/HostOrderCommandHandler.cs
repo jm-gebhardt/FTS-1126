@@ -22,7 +22,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     IConsumer<FinishHostOrder>,
     IConsumer<PassDecisionPoint>,
     IConsumer<QueuePickDropActionGroupForAgv>,
-    IConsumer<PassLoadTriggerPoint>,
+    IConsumer<PassCargoTriggerPoint>,
     IConsumer<QueueActionGroupWithUnknownDropTargetForAgv>,
     IConsumer<FinishPick>
 
@@ -68,7 +68,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         if (hostOrder.HasUnknownDropTarget(configuration))
         {
             // Check if there are agvs that are to be selected to handle this order directly after dropping
-            if (await hostOrderRepository.HasDropOrdersHeadingTowardsLoadTriggerPoint())
+            if (await hostOrderRepository.HasDropOrdersHeadingTowardsCargoTriggerPoint())
             {
                 return;
             }
@@ -129,9 +129,9 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     }
 
     /// <summary>
-    /// Handles the <see cref="PassLoadTriggerPoint"/> command.
+    /// Handles the <see cref="PassCargoTriggerPoint"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<PassLoadTriggerPoint> context)
+    public async Task Consume(ConsumeContext<PassCargoTriggerPoint> context)
     {
         var (assignedAgv, correlationId) = context.Message;
         if (correlationId != default)
@@ -141,7 +141,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             await hostOrderRepository.UpdateAsync(hostOrder);
         }
    
-        await context.Publish(new LoadTriggerPointPassed(assignedAgv));
+        await context.Publish(new CargoTriggerPointPassed(assignedAgv));
     }
 
     /// <summary>

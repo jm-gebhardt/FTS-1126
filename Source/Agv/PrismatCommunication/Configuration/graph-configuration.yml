@@ -1,5 +1,5 @@
-DecisionPointName: "DP1"
-LoadTriggerPointName: "DP2"
+DecisionPoint1TriggerName: "DP1"
+CheckCargoTriggerName: "DP2"
 StationMapping:
   "1020": "3"
   "1050": "3"

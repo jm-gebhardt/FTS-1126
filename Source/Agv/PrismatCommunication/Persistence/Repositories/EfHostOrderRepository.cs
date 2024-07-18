@@ -30,7 +30,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>>
-    public async Task<bool> HasDropOrdersHeadingTowardsLoadTriggerPoint()
+    public async Task<bool> HasDropOrdersHeadingTowardsCargoTriggerPoint()
     {
         return await _context.Set<HostOrder>().Where(
             h => !h.PassedTriggerPoint

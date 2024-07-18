@@ -38,27 +38,27 @@ public class HostOrderEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_LoadTriggerPointPassed_ValidData_PublishesQueueActionGroupWithUnknownDropTargetForAgv()
+    public async Task Consume_CargoTriggerPointPassed_ValidData_PublishesQueueActionGroupWithUnknownDropTargetForAgv()
     {
         var orderDetails = OrderGenerator.GenerateUnknownDropTargetOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         using HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
             .WithNextIncompleteOrderWithUnknownDropTarget(order);
 
-        await fixture.TestHarness.Bus.Publish(new LoadTriggerPointPassed(Guid.NewGuid()));
-        (await fixture.ConsumerHarness.Consumed.Any<LoadTriggerPointPassed>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new CargoTriggerPointPassed(Guid.NewGuid()));
+        (await fixture.ConsumerHarness.Consumed.Any<CargoTriggerPointPassed>()).ShouldBeTrue();
 
         await fixture.ShouldHavePublishedAsync<QueueActionGroupWithUnknownDropTargetForAgv>();
     }
 
     [TestMethod]
-    public async Task Consume_LoadTriggerPointPassed_NoPendingPick_DoesNotPublishQueueActionGroupWithUnknownDropTargetForAgv()
+    public async Task Consume_CargoTriggerPointPassed_NoPendingPick_DoesNotPublishQueueActionGroupWithUnknownDropTargetForAgv()
     {
         using HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
             .WithNextIncompleteOrderWithUnknownDropTarget(null);
 
-        await fixture.TestHarness.Bus.Publish(new LoadTriggerPointPassed(Guid.NewGuid()));
-        (await fixture.ConsumerHarness.Consumed.Any<LoadTriggerPointPassed>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new CargoTriggerPointPassed(Guid.NewGuid()));
+        (await fixture.ConsumerHarness.Consumed.Any<CargoTriggerPointPassed>()).ShouldBeTrue();
 
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroupWithUnknownDropTargetForAgv>();
     }

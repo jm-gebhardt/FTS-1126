@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using JetBrains.Annotations;
 using MassTransit;
@@ -16,7 +16,7 @@ public class ActionGroupEventHandler:
     IConsumer<ActionGroupCompleted>,
     IConsumer<ActionGroupStarted>,
     IConsumer<SetTargetForAction>,
-    IConsumer<AgvPassedLoadTriggerPoint>,
+    IConsumer<AgvPassedCargoTriggerPoint>,
     IConsumer<PickActionCompleted>
 {
     /// <summary>
@@ -53,12 +53,12 @@ public class ActionGroupEventHandler:
     }
 
     /// <summary>
-    /// Handles the <see cref="AgvPassedLoadTriggerPoint"/> message.
+    /// Handles the <see cref="AgvPassedCargoTriggerPoint"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<AgvPassedLoadTriggerPoint> context)
+    public async Task Consume(ConsumeContext<AgvPassedCargoTriggerPoint> context)
     {
-        (var agv, Guid? actionGroupId) = context.Message;
-        await context.Publish(new PassLoadTriggerPoint(agv, actionGroupId.GetValueOrDefault()));
+        (var agv, Guid? actionGroupId, bool _) = context.Message;
+        await context.Publish(new PassCargoTriggerPoint(agv, actionGroupId.GetValueOrDefault()));
     }
 
     /// <summary>

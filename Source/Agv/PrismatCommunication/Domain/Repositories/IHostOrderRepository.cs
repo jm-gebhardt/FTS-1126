@@ -20,10 +20,10 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     Task<bool> HasDropOrdersHeadingTowardsDecisionPoint();
 
     /// <summary>
-    ///Check if there drop host orders that are heading towards the load trigger point.
+    ///Check if there drop host orders that are heading towards the check cargo trigger point.
     /// </summary>
     /// <returns></returns>
-    Task<bool> HasDropOrdersHeadingTowardsLoadTriggerPoint();
+    Task<bool> HasDropOrdersHeadingTowardsCargoTriggerPoint();
 
     /// <summary>
     /// Get the next order with unknown pick target.

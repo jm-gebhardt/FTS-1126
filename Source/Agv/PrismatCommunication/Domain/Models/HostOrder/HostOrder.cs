@@ -194,7 +194,7 @@ public class HostOrder
                 CorrelationId, 
                 OrderId,
                 [
-                    new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPointName], CorrelationId),
+                    new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPoint1TriggerName], CorrelationId),
                     Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId){Sequence = 1} ).First(),
                     Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId){Sequence = 2} ).First()
                 ], 
@@ -218,7 +218,7 @@ public class HostOrder
                 OrderId,
                 [
                     Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId){Sequence = 0} ).First(),
-                    new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPointName], CorrelationId){Sequence = 1},
+                    new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPoint1TriggerName], CorrelationId){Sequence = 1},
                     Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId){Sequence = 2} ).First()
                 ],
                 ActionGroupCreator.Wms,
@@ -229,7 +229,7 @@ public class HostOrder
             OrderId,
             [
                 Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId){Sequence = 0} ).First(),
-                new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPointName], CorrelationId){Sequence = 1},
+                new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPoint1TriggerName], CorrelationId){Sequence = 1},
                 Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId){Sequence = 2} ).First()
             ],
             ActionGroupCreator.Wms,

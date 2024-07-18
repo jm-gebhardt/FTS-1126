@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
@@ -77,13 +77,13 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
-    public async Task AgvPassedLoadTriggerPoint_ValidData_PublishesPassLoadTriggerPoint()
+    public async Task AgvPassedCargoTriggerPoint_ValidData_PublishesPassCargoTriggerPoint()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
 
-        var agvPassedLoadTriggerPoint = new AgvPassedLoadTriggerPoint(Guid.NewGuid(), Guid.NewGuid());
+        var agvPassedLoadTriggerPoint = new AgvPassedCargoTriggerPoint(Guid.NewGuid(), Guid.NewGuid(), true);
 
-        var passLoadTriggerPoint = await fixture.PublishAndGetFirstMessageAsync<AgvPassedLoadTriggerPoint, PassLoadTriggerPoint>(agvPassedLoadTriggerPoint);
+        var passLoadTriggerPoint = await fixture.PublishAndGetFirstMessageAsync<AgvPassedCargoTriggerPoint, PassCargoTriggerPoint>(agvPassedLoadTriggerPoint);
 
         passLoadTriggerPoint.CorrelationId.ShouldBe(agvPassedLoadTriggerPoint.ActionGroupCorrelationId.GetValueOrDefault());
         passLoadTriggerPoint.AgvCorrelationId.ShouldBe(agvPassedLoadTriggerPoint.CorrelationId);

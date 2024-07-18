@@ -116,8 +116,8 @@ public static class ServiceCollectionExtension
     {
         if (isSimulationMode)
         {
-            _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPointName, "WP-021");
-            _config.Value.UpdateTriggerPointNodeId(_config.Value.LoadTriggerPointName, "WP-018");
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPoint1TriggerName, "WP-021");
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.CheckCargoTriggerName, "WP-018");
         }
         serviceCollection.TryAddSingleton(_config.Value);
         return serviceCollection;

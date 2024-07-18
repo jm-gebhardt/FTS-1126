@@ -34,13 +34,13 @@ public class KaeserGraphConfiguration
     /// <summary>
     /// The name of the trigger at decision point in the Kaeser project.
     /// </summary>
-    public string DecisionPointName { get; private set; } = "DP2";
+    public string DecisionPoint1TriggerName { get; private set; } = "DP1";
 
     /// <summary>
     /// The name of the trigger where agvs announce their cargo state
     /// to conveyor management.
     /// </summary>
-    public string LoadTriggerPointName { get; private set; } = "DP1";
+    public string CheckCargoTriggerName { get; private set; } = "DP2";
 
     /// <summary>
     /// Provides a mapping from station ids to naming in the conveyor management.
@@ -57,8 +57,8 @@ public class KaeserGraphConfiguration
     {
         TriggerPointMapping = triggerPointMapping;
 
-        TriggerPointMapping.Add(LoadTriggerPointName, "");
-        TriggerPointMapping.Add(DecisionPointName, "");
+        TriggerPointMapping.Add(CheckCargoTriggerName, "");
+        TriggerPointMapping.Add(DecisionPoint1TriggerName, "");
 
         StationMapping = new Dictionary<string, string>()
         {
@@ -117,8 +117,8 @@ public class KaeserGraphConfiguration
             .Build();
         var yamlData = deserializer.Deserialize<KaeserGraphConfiguration>(reader);
 
-        DecisionPointName = yamlData.DecisionPointName;
-        LoadTriggerPointName = yamlData.LoadTriggerPointName;
+        DecisionPoint1TriggerName = yamlData.DecisionPoint1TriggerName;
+        CheckCargoTriggerName = yamlData.CheckCargoTriggerName;
         StationMapping = yamlData.StationMapping;
         ConveyorStationMapping = yamlData.ConveyorStationMapping;
     }

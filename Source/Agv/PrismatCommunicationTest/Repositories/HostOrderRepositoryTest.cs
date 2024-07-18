@@ -35,7 +35,7 @@ public class HostOrderRepositoryTest
         fixture.Repository.Add(dropHostOrder);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.HasDropOrdersHeadingTowardsLoadTriggerPoint()).ShouldBeTrue();
+        (await fixture.Repository.HasDropOrdersHeadingTowardsCargoTriggerPoint()).ShouldBeTrue();
     }
 
     [TestMethod]

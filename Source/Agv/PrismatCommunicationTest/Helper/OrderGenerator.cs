@@ -22,8 +22,8 @@ public static class OrderGenerator
     {
         get
         {
-            Configuration.UpdateTriggerPointNodeId(Configuration.DecisionPointName, DecisionNode);
-            Configuration.UpdateTriggerPointNodeId(Configuration.LoadTriggerPointName, LoadTriggerNode);
+            Configuration.UpdateTriggerPointNodeId(Configuration.DecisionPoint1TriggerName, DecisionNode);
+            Configuration.UpdateTriggerPointNodeId(Configuration.CheckCargoTriggerName, LoadTriggerNode);
             return Configuration;
         }
     }

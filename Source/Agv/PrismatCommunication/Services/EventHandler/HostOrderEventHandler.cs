@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 [UsedImplicitly]
 public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository) : 
     IConsumer<DecisionPointPassed>,
-    IConsumer<LoadTriggerPointPassed>
+    IConsumer<CargoTriggerPointPassed>
 {
     /// <summary>
     /// Handles the <see cref="DecisionPointPassed"/> event.
@@ -27,9 +27,9 @@ public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository) :
     }
 
     /// <summary>
-    /// Handles the <see cref="LoadTriggerPointPassed"/> event.
+    /// Handles the <see cref="CargoTriggerPointPassed"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<LoadTriggerPointPassed> context)
+    public async Task Consume(ConsumeContext<CargoTriggerPointPassed> context)
     {
         var order = await hostOrderRepository.GetNextIncompleteOrderWithUnknownDropTarget();
         if (order != null)

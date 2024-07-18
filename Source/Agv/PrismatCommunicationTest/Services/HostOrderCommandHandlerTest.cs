@@ -101,10 +101,10 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_NoDropOrdersHeadingTowardsLoadTriggerPoint_QueueActionGroup()
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_NoDropOrdersHeadingTowardsCargoTriggerPoint_QueueActionGroup()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithDropOrdersHeadingTowardsLoadTriggerPoint(false)
+            .WithDropOrdersHeadingTowardsCargoTriggerPoint(false)
             .WithHostOrderRepository(null)
             .WithHostCommunicator();
 
@@ -128,10 +128,10 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsLoadTriggerPoint_HostOrderOnlySaved()
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsCargoTriggerPoint_HostOrderOnlySaved()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithDropOrdersHeadingTowardsLoadTriggerPoint(true)
+            .WithDropOrdersHeadingTowardsCargoTriggerPoint(true)
             .WithHostOrderRepository(null)
             .WithHostCommunicator();
 
@@ -208,7 +208,7 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_PassLoadTriggerPoint_OrderIdProvided_UpdatesOrderAndPublishesLoadTriggerPointPassed()
+    public async Task Consume_PassCargoTriggerPoint_OrderIdProvided_UpdatesOrderAndPublishesPassCargoTriggerPointPassed()
     {
         var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -217,22 +217,22 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
-        var command = new PassLoadTriggerPoint(Guid.NewGuid(), order.CorrelationId);
+        var command = new PassCargoTriggerPoint(Guid.NewGuid(), order.CorrelationId);
 
-        var loadTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassLoadTriggerPoint, LoadTriggerPointPassed>(command);
+        var loadTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassCargoTriggerPoint, CargoTriggerPointPassed>(command);
         loadTriggerPointPassed.Agv.ShouldBe(command.AgvCorrelationId);
         order.PassedTriggerPoint.ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_PassLoadTriggerPoint_NoOrderIdProvided_LoadTriggerPointPassed()
+    public async Task Consume_PassCargoTriggerPoint_NoOrderIdProvided_CargoTriggerPointPassed()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostCommunicator();
 
-        var command = new PassLoadTriggerPoint(Guid.NewGuid(), default(Guid));
+        var command = new PassCargoTriggerPoint(Guid.NewGuid(), default(Guid));
 
-        var loadTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassLoadTriggerPoint, LoadTriggerPointPassed>(command);
+        var loadTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassCargoTriggerPoint, CargoTriggerPointPassed>(command);
         loadTriggerPointPassed.Agv.ShouldBe(command.AgvCorrelationId);
     }
 

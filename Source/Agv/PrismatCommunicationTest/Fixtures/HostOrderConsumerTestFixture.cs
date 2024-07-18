@@ -53,9 +53,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsLoadTriggerPoint(bool hasHostOrders)
+    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsCargoTriggerPoint(bool hasHostOrders)
     {
-        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsLoadTriggerPoint()).ReturnsAsync(hasHostOrders);
+        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsCargoTriggerPoint()).ReturnsAsync(hasHostOrders);
         return this;
     }
 
