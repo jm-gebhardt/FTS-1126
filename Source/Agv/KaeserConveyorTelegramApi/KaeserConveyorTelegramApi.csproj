@@ -3,6 +3,9 @@
         <AssemblyName>Gebhardt.Acc.KaeserConveyorTelegramApi</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
+    </ItemGroup>
+    <ItemGroup>
       <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
     </ItemGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
