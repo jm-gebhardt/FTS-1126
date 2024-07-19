@@ -181,8 +181,8 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     /// <inheritdoc />
     public void EstimateTravelTimes(AgvPosition targetPosition, DateTime entryTime, double initialVelocity)
     {
-        var virtualSource = new GraphNode(Guid.NewGuid().ToString()) { X = Position.X, Y = Position.Y };
-        var virtualTarget = new GraphNode(Guid.NewGuid().ToString()) { X = targetPosition.X, Y = targetPosition.Y };
+        var virtualSource = new GraphNode(Guid.NewGuid().ToString()) { X = Position.X, Y = Position.Y, Theta = Position.Theta};
+        var virtualTarget = new GraphNode(Guid.NewGuid().ToString()) { X = targetPosition.X, Y = targetPosition.Y, Theta = targetPosition.Theta};
         _nodes.Add(virtualSource);
         AddedVirtualNodes.Add(virtualSource.Id);
         _nodes.Add(virtualTarget);
@@ -232,8 +232,21 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         if (Math.Abs(progress!.Value - 1d) < double.Epsilon)
         {
             CurrentNode = CurrentEdge.TargetNode;
-            Position = new AgvPosition(true, CurrentNode.X, CurrentNode.Y, CurrentNode.Z, Position.Theta);
+            Position = new AgvPosition(true, CurrentNode.X, CurrentNode.Y, CurrentNode.Z, GetOrientation(Position));
         }
+    }
+
+    private float GetOrientation(AgvPosition position)
+    {
+        bool isMoveToCoordinate = AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Id);
+        bool isMoveBackToGraph = !AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Id) && AddedVirtualNodes.Contains(CurrentEdge.SourceNode.Id);
+
+        if (isMoveToCoordinate || isMoveBackToGraph)
+        {
+            return CurrentEdge.TargetNode.Theta;
+        }
+
+        return position.Theta;
     }
 
     /// <inheritdoc />

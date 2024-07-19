@@ -405,7 +405,7 @@ public class AgvTravelSimulatorTest
     }
 
     [TestMethod]
-    public void UpdatePosition_TargetStationReached_AgvDoesStaysAtOrientationOfEdge()
+    public void UpdatePosition_TargetStationReached_AgvStaysAtOrientationOfEdge()
     {
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
@@ -433,6 +433,62 @@ public class AgvTravelSimulatorTest
         simulator.Position.Theta.ShouldBe(lastOrientationOnEdge);
         simulator.CurrentEdge.ShouldBe(simulator.FollowingEdges.Last());
         simulator.CurrentNode.ShouldBe(targetNode);
+    }
+
+    [TestMethod]
+    public void UpdatePosition_MoveToCoordinate_TargetReached_OrientationOfTarget()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvData = new KarisType1(correlationId, "ip address");
+        var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
+        var graph = generator.Generate(agvData.CorrelationId);
+        string[] nodes = { "D-Paint", "WP-0016" };
+        var startNode = graph.Nodes.First(n => n.Id == nodes.First());
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var entryTime = DateTime.UtcNow;
+        var fakeTimeProvider = new FakeTimeProvider(entryTime);
+        var simulator = new AgvTravelSimulator(graph, agvData, position, fakeTimeProvider);
+
+        const double initialVelocity = 0;
+        var targetCoordinate = graph.Nodes.Single(n => n.Id == nodes.Last());
+        simulator.EstimateTravelTimes(new AgvPosition(true, targetCoordinate.X, targetCoordinate.Y, targetCoordinate.Z, targetCoordinate.Theta), entryTime, initialVelocity);
+
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
+        simulator.Position.Theta.ShouldBe(targetCoordinate.Theta);
+        simulator.CurrentEdge.ShouldBe(simulator.FollowingEdges.Last());
+        simulator.CurrentNode!.X.ShouldBe(targetCoordinate.X);
+        simulator.CurrentNode!.Y.ShouldBe(targetCoordinate.Y);
+    }
+
+    [TestMethod]
+    public void UpdatePosition_MoveFromCoordinateBackToGraph_TargetReached_OrientationOfStation()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvData = new KarisType1(correlationId, "ip address");
+        var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
+        var graph = generator.Generate(agvData.CorrelationId);
+        string[] nodes = { "D-Paint", "WP-0016" };
+        var startNode = graph.Nodes.First(n => n.Id == nodes.First());
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var fakeTimeProvider = new FakeTimeProvider();
+        var simulator = new AgvTravelSimulator(graph, agvData, position, fakeTimeProvider);
+
+        // Move to coordinate
+        var entryTime = DateTime.UtcNow;
+        const double initialVelocity = 0;
+        var coordinates = graph.Nodes.Single(n => n.Id == nodes.Last());
+        simulator.EstimateTravelTimes(new AgvPosition(true, coordinates.X, coordinates.Y, coordinates.Z, coordinates.Theta), entryTime, initialVelocity);
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
+        simulator.FinishTravel();
+
+        // Move to node on graph
+        var target = startNode;
+        simulator.EstimateTravelTimes([target.Id], [], entryTime, initialVelocity);
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
+        simulator.Position.Theta.ShouldBe(target.Theta);
     }
 
     [TestMethod]
