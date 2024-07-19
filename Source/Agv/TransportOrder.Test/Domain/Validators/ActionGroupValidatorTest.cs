@@ -31,6 +31,24 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
+    public async Task ValidateAsync_WhenActionGroupIsMoveToCoordinateAndAllConditionsAreMet_Passes()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup();
+
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [TestMethod]
     public async Task ValidateAsync_WhenAllConditionsAreMetForIncompleteActionGroupWithoutDropTarget_Passes()
     {
         var agv = AgvGenerator.GenerateIdleAgv();

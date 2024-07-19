@@ -46,7 +46,7 @@ public class ActionGroupValidatorTestFixture : FixtureBase
     {
         foreach (var action in actionGroup.Actions)
         {
-            _agvGraphRepository.Setup(x => x.NodeExistsAsync(action.TargetNodeId)).ReturnsAsync(doesNodeExist);
+            _agvGraphRepository.Setup(x => x.NodeExistsAsync(action.Target.NodeId!)).ReturnsAsync(doesNodeExist);
         }
 
         return this;

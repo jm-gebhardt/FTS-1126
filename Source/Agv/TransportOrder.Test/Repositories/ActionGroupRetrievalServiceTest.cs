@@ -80,6 +80,31 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
+    public async Task GetActionGroupsWithNodesAsync_ActionGroupWithMoveToCoordinate_GetsActionGroupReadModelEnrichedWithNodeTypes()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        await fixture.AddAsync(actionGroup);
+        var moveToCoordinateActionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup();
+        await fixture.AddAsync(moveToCoordinateActionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 2);
+
+        ICollection<AgvActionReadModel> actionsWithTargetNodes = actionGroups.Single( a=>a.CorrelationId == actionGroup.CorrelationId).Actions;
+        actionsWithTargetNodes.Count.ShouldBe(actionGroup.Actions.Count);
+        actionsWithTargetNodes.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.Pick);
+        actionsWithTargetNodes.Last().TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
+
+        ICollection<AgvActionReadModel> movesToCoordinates = actionGroups.Single(a => a.CorrelationId == moveToCoordinateActionGroup.CorrelationId).Actions;
+        movesToCoordinates.Count.ShouldBe(moveToCoordinateActionGroup.Actions.Count);
+        movesToCoordinates.First().TargetNodeId.ShouldBeEmpty();
+        movesToCoordinates.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
+    }
+
+    [TestMethod]
     public async Task GetActionGroupsWithNodesAsync_UnknownTargetNodeId_GetsActionGroupReadModelEnrichedWithWayPointType()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
@@ -373,6 +398,26 @@ public class ActionGroupRetrievalServiceTest
         actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.Pick);
         actualActionGroup.Actions.Last().TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentActionGroupsWithNodesAsync_ActionGroupWithMoveToCoordinate_ReturnsActionGroupsByAgvCorrelationId()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+        var agvCorrelationId = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup(assignedAgv: agvCorrelationId);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
+        await fixture.AddAsync(actionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetCurrentActionGroupsWithNodesAsync(new List<Guid> { agvCorrelationId });
+
+        var actualActionGroup = actionGroupsByAgvCorrelationId[agvCorrelationId]!;
+        actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+
+        actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
+        actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
+        actualActionGroup.Actions.Last().TargetNodeId.ShouldBeEmpty();
     }
 
     [TestMethod]

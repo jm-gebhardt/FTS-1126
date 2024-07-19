@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 
 /// <summary>
 /// A point defining the polygon.
@@ -33,6 +33,15 @@ public class PolygonPoint
     {
         Id = Guid.NewGuid();
         LocationId = locationId;
+        X = x;
+        Y = y;
+    }
+
+    /// <inheritdoc cref="PolygonPoint"/>>
+    public PolygonPoint(double x, double y)
+    {
+        Id = Guid.NewGuid();
+        LocationId = Guid.Empty;
         X = x;
         Y = y;
     }

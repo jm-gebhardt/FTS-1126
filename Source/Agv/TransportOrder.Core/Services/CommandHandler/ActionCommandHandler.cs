@@ -185,10 +185,24 @@ public class ActionCommandHandler :
             _logger.LogDebug("Action group {ActionGroupCorrelationId} is already assigned to another agv {AgvCorrelationId}/{OtherAgv}", actionGroup.CorrelationId, actionGroup.AssignedAgv, agvId);
             return;
         }
+        double duration = 0;
+        bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
+        if (!lastActionWasMoveToCoordinate && !action.IsMoveToCoordinate)
+        {
+            var route = await _routeService.GetRouteAsync(assignedAgv, actionGroup.GetTargets(), null, agvData);
+            duration = route.Costs;
 
-        var route = await _routeService.GetRouteAsync(assignedAgv, actionGroup.GetTargets(), null, agvData);
+            // average of unaccounted for costs (e.g. cargo loading and unloading) for pick/drop actions
+            if (actionGroup.IsMovingCargo)
+            {
+                duration += await _durationEstimationService.GetAverageDurationEstimateDeviationAsync(actionGroup.AssignedAgv!.Value, actionGroup.GetTargets());
+            }
+        }
 
-        double duration = route.Costs;
+        if (lastActionWasMoveToCoordinate || action.IsMoveToCoordinate)
+        {
+            duration += await _durationEstimationService.GetDurationEstimate(agvData!.MaxVelocityStraight, actionGroup.Actions.First(), assignedAgv.CorrelationId);
+        }
         // costs for charging itself, just assume 1% / s, we don't have the charging rate here
         double chargeCostsPerCharge = 100 - assignedAgv.AgvStatus!.BatteryCharge;
 
@@ -196,12 +210,6 @@ public class ActionCommandHandler :
 
         // costs for action switching / state transitions of the Agv from one action to the next action
         duration += actionGroup.Actions.Count * ActionCosts.SwitchingActions;
-
-        // average of unaccounted for costs (e.g. cargo loading and unloading) for pick/drop actions
-        if (actionGroup.IsMovingCargo)
-        {
-            duration += await _durationEstimationService.GetAverageDurationEstimateDeviationAsync(actionGroup.AssignedAgv!.Value, actionGroup.GetTargets());
-        }
 
         actionGroup.EstimatedDuration = TimeSpan.FromSeconds(duration);
 

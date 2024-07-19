@@ -271,7 +271,11 @@ public class AgvCommandHandler :
         _logger.LogDebug("Updating AgvStatus for agv {AgvCorrelationId}, {OldStatus} -> {NewStatus}", correlationId, agv.AgvStatus?.ToString(), agvStatus.ToString());
         var oldStatus = agv.AgvStatus;
         bool wasOnline = agv.IsOnline;
-
+       
+        if (oldStatus != null && agv.GraphExists)
+        {
+            await ResetLastNodeId(oldStatus, agvStatus);
+        }
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         await ResetOfflineWatchDog(context, agv, agvSettings);
         bool wasReady = agv.IsReady;
@@ -833,5 +837,19 @@ public class AgvCommandHandler :
             return;
         }
         await context.Publish(new NodeStateChanged(nodeState));
+    }
+
+    private async Task ResetLastNodeId(AgvStatus oldStatus, AgvStatus newStatus)
+    {
+        if (newStatus.LastNodeId == null || newStatus.LastNodeId == oldStatus.LastNodeId)
+        {
+            return;
+        }
+
+        // if the new last node id is not on a graph, do not update it
+        if (await _agvDb.Graphs.TryGetNodeAsync(newStatus.LastNodeId) == null)
+        {
+            newStatus.UpdateLastNodeId(oldStatus.LastNodeId!);
+        }
     }
 }

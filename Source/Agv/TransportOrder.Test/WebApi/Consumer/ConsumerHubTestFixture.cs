@@ -28,11 +28,11 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         new MapProfile(),
         new AgvErrorProfile(),
         new TransportOrder.WebApi.Profiles.ActionProfile(),
-        new Messages.Profiles.AgvProfile(),
-        new Messages.Profiles.AgvGraphProfile(),
-        new Messages.Profiles.AgvErrorProfile(),
-        new Messages.Profiles.MapProfile(),
-        new Messages.Profiles.AgvPositionProfile(),
+        new TransportOrder.Messages.Profiles.AgvProfile(),
+        new TransportOrder.Messages.Profiles.AgvGraphProfile(),
+        new TransportOrder.Messages.Profiles.AgvErrorProfile(),
+        new TransportOrder.Messages.Profiles.MapProfile(),
+        new TransportOrder.Messages.Profiles.AgvPositionProfile(),
         new ActionProfile()
     ];
 

@@ -2,6 +2,7 @@
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using JetBrains.Annotations;
 using System.Text.RegularExpressions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 

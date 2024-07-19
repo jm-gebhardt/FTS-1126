@@ -26,6 +26,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             BatchQueryException => HttpStatusCode.BadRequest,
             TriggerInstanceCountException => HttpStatusCode.BadRequest,
             TriggerAssignmentFailedException => HttpStatusCode.BadRequest,
+            PositionIsInRestrictedAreaException => HttpStatusCode.BadRequest,
             TriggerConfigurationUpdateFailedException => HttpStatusCode.BadRequest,
             NodeNotAvailableException => HttpStatusCode.Conflict,
             NoNodesAvailableException => HttpStatusCode.Conflict,

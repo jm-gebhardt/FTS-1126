@@ -263,6 +263,7 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddConsumer<MoveAgvRequestHandler>();
         configurator.AddRequestClient<MoveAgv>();
+        configurator.AddRequestClient<MoveAgvToCoordinate>();
         configurator.AddRequestClient<ChargeAgv>();
 
         configurator.AddConsumer<GetAgvsRequestHandler>();

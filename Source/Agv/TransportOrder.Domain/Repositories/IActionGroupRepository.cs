@@ -223,4 +223,10 @@ public interface IActionGroupRepository
     /// <param name="targetNodes">The target nodes.</param>
     /// <returns>The deviation in seconds.</returns>
     Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, string[] targetNodes );
+
+    /// <summary>
+    /// True, if the last completed action of this agv was a move to a coordinate.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    Task<bool> IsLastCompletedActionMoveToCoordinate(Guid agvCorrelationId);
 }

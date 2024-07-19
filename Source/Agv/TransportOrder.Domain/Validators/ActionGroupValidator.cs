@@ -63,14 +63,15 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                     //only check if nodes exist in case that there is no route, otherwise it's confirmed to be existing already
                     RuleForEach(p => p.Actions).ChildRules(action =>
                     {
-                        action.RuleFor(a => a.TargetNodeId)
-                            .MustAsync(async (nodeId, _) => await TargetNodeExists(nodeId))
+                        action.RuleFor(a => a.Target.NodeId)
+                            .MustAsync(async (nodeId, _) => await TargetNodeExists(nodeId!))
+                            .When(a => !a.IsMoveToCoordinate)
                             .WithReason(a => a.ActionType switch
                             {
                                 ActionType.Pick => Reasons.PickStationNodeDoesNotExist,
                                 ActionType.Drop => Reasons.DropStationNodeDoesNotExist,
                                 _ => Reasons.TargetNodeDoesNotExist
-                            }, a => a.TargetNodeId);
+                            }, a => a.Target.NodeId);
                     });
                 });
             });
@@ -155,6 +156,13 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     /// <returns></returns>
     private async Task<bool> CanHandleRouteAsync(ActionGroup actionGroup, CancellationToken cancellationToken)
     {
+        if (actionGroup.Actions.Any(a => a.IsMoveToCoordinate) && actionGroup.AssignedAgv != null)
+        {
+            _agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
+            _hasRoute = true;
+            return _hasRoute;
+        }
+
         if (actionGroup.AssignedAgv != null)
         {
             _agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);

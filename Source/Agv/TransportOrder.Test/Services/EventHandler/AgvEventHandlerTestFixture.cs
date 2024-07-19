@@ -35,7 +35,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     protected override IEnumerable<Profile> GetProfiles() => [new AgvStatusProfile()];
 
-    public static readonly Messages.MessageContent.AgvSettings AgvSettingsMessage = new()
+    public static readonly TransportOrder.Messages.MessageContent.AgvSettings AgvSettingsMessage = new()
     {
         BatteryLevelCritical = _agvSettingsReadModel.BatteryLevelCritical,
         MaxChargeUp = _agvSettingsReadModel.MaxChargeUp,

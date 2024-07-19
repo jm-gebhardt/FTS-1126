@@ -40,10 +40,10 @@ public class AgvActionCommandHandler(ILogger<AgvActionCommandHandler> logger, IT
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
-        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.TargetNodeId));
+        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Target.NodeId!));
         if (action != null)
         {
-            string station = action.TargetNodeId;
+            string station = action.Target.NodeId!;
             logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
             stationRepository.OccupyStation(station, agvCorrelationId);
         }

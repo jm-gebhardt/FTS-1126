@@ -133,6 +133,86 @@ public class AgvTravelSimulatorTest
     }
 
     [TestMethod]
+    public void EstimateTravelTimes_MoveToCoordinate_PropertiesSet()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvData = new KarisType1(correlationId, "ip address");
+        var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
+        var graph = generator.Generate(agvData.CorrelationId);
+        string[] nodes = { "D-Paint", "WP-0016"};
+        var startNode = graph.Nodes.First(n => n.Id == nodes.First());
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var simulator = new AgvTravelSimulator(graph, agvData, position, new FakeTimeProvider());
+
+        var entryTime = DateTime.UtcNow;
+        const double initialVelocity = 0;
+        var coordinates = graph.Nodes.Single(n => n.Id == nodes.Last());
+        simulator.EstimateTravelTimes(new AgvPosition(true, coordinates.X, coordinates.Y, coordinates.Z, coordinates.Theta), entryTime, initialVelocity);
+        simulator.TravelDuration!.Value.ShouldBeGreaterThan(TimeSpan.Zero);
+        simulator.FollowingEdges.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public void EstimateTravelTimes_MoveFromCoordinateBackToGraph_PropertiesSet()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvData = new KarisType1(correlationId, "ip address");
+        var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
+        var graph = generator.Generate(agvData.CorrelationId);
+        string[] nodes = { "D-Paint", "WP-0016" };
+        var startNode = graph.Nodes.First(n => n.Id == nodes.First());
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var fakeTimeProvider = new FakeTimeProvider();
+        var simulator = new AgvTravelSimulator(graph, agvData, position, fakeTimeProvider);
+
+        // Move to coordinate
+        var entryTime = DateTime.UtcNow;
+        const double initialVelocity = 0;
+        var coordinates = graph.Nodes.Single(n => n.Id == nodes.Last());
+        simulator.EstimateTravelTimes(new AgvPosition(true, coordinates.X, coordinates.Y, coordinates.Z, coordinates.Theta), entryTime, initialVelocity);
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
+        simulator.FinishTravel();
+
+        // Move to node on graph
+        string target = startNode.Id;
+        simulator.EstimateTravelTimes([target], [], entryTime, initialVelocity);
+        simulator.FollowingEdges.Single().TargetNode.Id.ShouldBe(target);
+        simulator.TravelDuration!.Value.ShouldBeGreaterThan(TimeSpan.Zero);
+    }
+
+    [TestMethod]
+    public void EstimateTravelTimes_MoveFromCoordinateToCoordinate_PropertiesSet()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvData = new KarisType1(correlationId, "ip address");
+        var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
+        var graph = generator.Generate(agvData.CorrelationId);
+        string[] nodes = { "D-Paint", "WP-0016" };
+        var startNode = graph.Nodes.First(n => n.Id == nodes.First());
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var fakeTimeProvider = new FakeTimeProvider();
+        var simulator = new AgvTravelSimulator(graph, agvData, position, fakeTimeProvider);
+
+        // Move to coordinate
+        var entryTime = DateTime.UtcNow;
+        const double initialVelocity = 0;
+        var coordinates = graph.Nodes.Single(n => n.Id == nodes.Last());
+        simulator.EstimateTravelTimes(new AgvPosition(true, coordinates.X, coordinates.Y, coordinates.Z, coordinates.Theta), entryTime, initialVelocity);
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
+        simulator.FinishTravel();
+
+        // Move to next coordinate
+        var nextCoordinates = graph.Nodes.Single(n => n.Id == nodes.First());
+        simulator.EstimateTravelTimes(new AgvPosition(true, nextCoordinates.X, nextCoordinates.Y, nextCoordinates.Z, nextCoordinates.Theta), entryTime, initialVelocity);
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition();
+        simulator.TravelDuration!.Value.ShouldBeGreaterThan(TimeSpan.Zero);
+        simulator.FollowingEdges.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
     public void EstimateTravelTimes_WikipediaExample() // For comparison with identical test of a*
     {
         string[] nodes  = { "Nairobi", "Tokyo", "Marseille", "Rio" };
@@ -213,6 +293,9 @@ public class AgvTravelSimulatorTest
         var fakeTimeProvider = new FakeTimeProvider(DateTime.UtcNow);
         var simulator = new AgvTravelSimulator(agvGraph, agvData, position, fakeTimeProvider);
 
+        //Mock previous move action to charger:
+        simulator.GetType().GetProperty(nameof(AgvTravelSimulator.CurrentNode))!.SetValue(simulator, node);
+        
         simulator.EstimateTravelTimes(new List<string> { node.Id }, [], fakeTimeProvider.Now(), 0);
 
         simulator.CurrentEdge.ShouldBeNull();
@@ -359,7 +442,7 @@ public class AgvTravelSimulatorTest
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var agvData = new KarisType1(correlationId, "ip address");
         var action = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: correlationId).Actions.First();
-        (string[] nodes, Guid[] edges) route = GetArbitraryRoute(action.TargetNodeId, agvGraph);
+        (string[] nodes, Guid[] edges) route = GetArbitraryRoute(action.Target.NodeId!, agvGraph);
         action.Nodes = route.nodes;
         action.Edges = route.edges;
         var startNode = agvGraph.Nodes.First(n => n.Id == action.Nodes.First());
@@ -389,7 +472,7 @@ public class AgvTravelSimulatorTest
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var agvData = new KarisType1(correlationId, "ip address");
         var action = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: correlationId).Actions.First();
-        (string[] nodes, Guid[] edges) route = GetArbitraryRoute(action.TargetNodeId, agvGraph);
+        (string[] nodes, Guid[] edges) route = GetArbitraryRoute(action.Target.NodeId!, agvGraph);
         action.Nodes = route.nodes;
         action.Edges = route.edges;
         var startNode = agvGraph.Nodes.First(n => n.Id == action.Nodes.First());

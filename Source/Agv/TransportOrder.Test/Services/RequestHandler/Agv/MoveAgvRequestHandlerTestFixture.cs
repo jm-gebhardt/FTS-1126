@@ -17,6 +17,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 {
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
 
     public Mock<IParkPointService> ParkPointService { get; } = new();
 
@@ -30,6 +31,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
             s.AddTransient(_ => _nodeStateRepository.Object);
             s.AddTransient(_ => ParkPointService.Object);
             s.AddTransient(_ => ChargingPointManager.Object);
+            s.AddTransient(_ => _restrictedAreaRepository.Object);
         });
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
@@ -47,6 +49,12 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
     public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> WithNode(GraphNode? node)
     {
         _agvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>())).ReturnsAsync((string id) => node ?? throw new NodeNotFoundException(id));
+        return this;
+    }
+
+    public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> WithInsideRestrictedArea(bool isInside)
+    {
+        _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>())).ReturnsAsync(isInside);
         return this;
     }
 

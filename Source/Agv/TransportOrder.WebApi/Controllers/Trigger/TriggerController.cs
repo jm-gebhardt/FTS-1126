@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using MassTransit;

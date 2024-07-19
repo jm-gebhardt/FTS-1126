@@ -122,6 +122,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
         services.AddTransient<ITriggerRepository, EfTriggerRepository>();
+        services.AddTransient<IRestrictedAreaRepository, EfRestrictedAreaRepository>();
         services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
         services.AddTransient<ICargoRepository, CargoRepository>();
         services.AddTransient<IAgvDb, AgvDb>();

@@ -69,19 +69,19 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         if (sourceNodeId != null && targetNodeId == null)
         {
-            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.TargetNodeId == sourceNodeId));
+            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.Target.NodeId == sourceNodeId));
         }
 
         if (sourceNodeId == null && targetNodeId != null)
         {
-            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.TargetNodeId == targetNodeId));
+            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.Target.NodeId == targetNodeId));
         }
 
         if (sourceNodeId != null && targetNodeId != null)
         {
             actionGroups = actionGroups.Where(a =>
-                a.Actions.Any(action => action.TargetNodeId == sourceNodeId) &&
-                a.Actions.Any(action => action.TargetNodeId == targetNodeId));
+                a.Actions.Any(action => action.Target.NodeId == sourceNodeId) &&
+                a.Actions.Any(action => action.Target.NodeId == targetNodeId));
         }
 
         List<AgvAction> actions = await actionGroups
@@ -462,7 +462,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             return actionGroups.Where(ag =>
                     ag.StartedDate.HasValue && ag.CompletedDate.HasValue && ag.EstimatedDuration.HasValue &&
                     ag.AssignedAgv == agvCorrelationId &&
-                    ag.Actions.All(a => targetNodes.Contains(a.TargetNodeId)))
+                    ag.Actions.All(a => targetNodes.Contains(a.Target.NodeId)))
                 .Average(ag => (ag.CompletedDate!.Value - ag.StartedDate!.Value - ag.EstimatedDuration!.Value).TotalSeconds);
         }
         catch (InvalidOperationException)
@@ -470,5 +470,20 @@ public class EfActionGroupRepository : IActionGroupRepository
             // no action groups found that match the query
             return 0;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsLastCompletedActionMoveToCoordinate(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        var action = await context.Set<ActionGroup>()
+            .AsNoTracking()
+            .Where(ag => ag.AssignedAgv == agvCorrelationId && ag.Actions.Any(a => a.CompletedDate != null))
+            .SelectMany(a => a.Actions)
+            .Where(a => a.CompletedDate != null)
+            .OrderByDescending(a => a.CompletedDate)
+            .FirstOrDefaultAsync();
+        return action is { IsMoveToCoordinate: true };
     }
 }

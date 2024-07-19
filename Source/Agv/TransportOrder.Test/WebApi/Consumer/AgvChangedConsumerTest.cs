@@ -36,7 +36,7 @@ public class AgvChangedConsumerTest
         }
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Agv>(agv);
 
         var mockGetAgvsClient = new Mock<IRequestClient<GetAgvs>>();
         var responseMock = new Mock<Response<GotAgvs>>();

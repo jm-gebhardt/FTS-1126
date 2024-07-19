@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;

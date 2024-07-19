@@ -62,6 +62,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IParkPointService> _parkPointService = new();
 
+    private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
+
     public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -112,10 +114,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         ChargingPointManager = new Mock<IChargingPointManager>();
         ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId:"Charger-1"));
         ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId:"Charger-1"));
+        _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>())).ReturnsAsync(false);
     }
 
     [UsedImplicitly]
-    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWithDefaultData()
+    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWithDefaultData(bool setUserMode=false)
     {
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv>();
         var data = new Dictionary<Guid, AgvData>();
@@ -131,7 +134,10 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var agvData = AgvDataGenerator.GenerateAgvData(correlationId: correlationId, ipV4Address: ip);
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);
-
+            if (setUserMode)
+            {
+                agv.SetUserMode();
+            }
             agvs.Add(agv);
             data[correlationId] = agvData;
         }
@@ -214,6 +220,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetActiveAgvErrors> getAgvErrorsRequestClient = GetRequestClient<GetActiveAgvErrors>();
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrors>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
+        IRequestClient<MoveAgvToCoordinate> moveAgvToCoordinateRequestClient = GetRequestClient<MoveAgvToCoordinate>();
         IRequestClient<ChargeAgv> chargeAgvRequestClient = GetRequestClient<ChargeAgv>();
         IRequestClient<SetAgvForceIdle> setAgvForceIdleClient = GetRequestClient<SetAgvForceIdle>();
         IRequestClient<GetAgvHasCargo> getAgvHasCargoClient = GetRequestClient<GetAgvHasCargo>();
@@ -243,6 +250,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getAgvErrorsRequestClient,
             getAgvErrorHistoryRequestClient,
             moveAgvRequestClient,
+            moveAgvToCoordinateRequestClient,
             chargeAgvRequestClient,
             setAgvForceIdleClient,
             getAgvHasCargoClient,
@@ -312,6 +320,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
+            sc.AddTransient(_ => _restrictedAreaRepository.Object);
         });
         base.Build();
 

@@ -31,10 +31,16 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
         return this;
     }
 
+    public new ActionGroupEstimationTestFixture WithLastActionIsMoveToCoordinate(bool isMoveToCoordinate)
+    {
+        ActionGroupRepository.Setup(x => x.IsLastCompletedActionMoveToCoordinate(It.IsAny<Guid>())).ReturnsAsync(isMoveToCoordinate);
+        return this;
+    }
+
     // ReSharper disable once UnusedMethodReturnValue.Global
     public ActionGroupEstimationTestFixture AddRouteOnCosts(double onCosts)
     {
-        string[] targetNodes = ActionGroup.Actions.Select(a => a.TargetNodeId).ToArray();
+        string[] targetNodes = ActionGroup.Actions.Select(a => a.Target.NodeId!).ToArray();
         RouteService.Setup(r => r.GetRouteAsync(Agv, targetNodes.ToArray(), null, It.IsAny<AgvData>()))
             .ReturnsAsync(new Route(onCosts, null!, null!));
 
@@ -45,6 +51,12 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
     public ActionGroupEstimationTestFixture AddDurationEstimateDeviation(double deviation = 0)
     {
         ActionGroupDurationEstimationService.Setup(x => x.GetAverageDurationEstimateDeviationAsync(It.IsAny<Guid>(), It.IsAny<string[]>())).ReturnsAsync(deviation);
+        return this;
+    }
+
+    public ActionGroupEstimationTestFixture AddDuration(double deviation = 0)
+    {
+        ActionGroupDurationEstimationService.Setup(x => x.GetDurationEstimate(It.IsAny<double>(), It.IsAny<AgvAction>(), It.IsAny<Guid>())).ReturnsAsync(deviation);
         return this;
     }
 

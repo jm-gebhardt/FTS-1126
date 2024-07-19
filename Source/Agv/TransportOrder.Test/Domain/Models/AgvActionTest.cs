@@ -87,7 +87,7 @@ public class AgvActionTest
 
         action.SetTarget(target);
 
-        action.TargetNodeId.ShouldBe(target);
+        action.Target.NodeId.ShouldBe(target);
         action.IsIncomplete.ShouldBeFalse();
     }
 

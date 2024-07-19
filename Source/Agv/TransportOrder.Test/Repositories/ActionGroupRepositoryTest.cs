@@ -42,7 +42,7 @@ public class ActionGroupRepositoryTest
             o => o.CompletedDate.ShouldBe(expectedAction.CompletedDate),
             o => o.Sequence.ShouldBe(expectedAction.Sequence),
             o => o.State.ShouldBe(expectedAction.State),
-            o => o.TargetNodeId.ShouldBe(expectedAction.TargetNodeId),
+            o => o.Target.NodeId.ShouldBe(expectedAction.Target.NodeId),
             o => o.ParentId.ShouldBe(expectedAction.ParentId),
             o => o.StartedDate.ShouldBe(expectedAction.StartedDate)
         );
@@ -903,5 +903,35 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(actionGroup.AssignedAgv!.Value, [ActionType.Charge, ActionType.Move])).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task IsLastCompletedActionMoveToCoordinate_LastActionIsMoveToCoordinate_ReturnsTrue()
+    {
+        var now = DateTime.UtcNow;
+        var agvCorrelationId = Guid.NewGuid();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, pickActionState:ActionState.Completed, dropActionState: ActionState.Completed, completedDate:now.AddMinutes(-3));
+        var moveToCoordinateActionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup(assignedAgv: agvCorrelationId, moveActionState:ActionState.Completed, completedDate:now.AddMinutes(5));
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pickDropActionGroup, moveToCoordinateActionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.IsLastCompletedActionMoveToCoordinate(agvCorrelationId)).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task IsLastCompletedActionMoveToCoordinate_LastActionIsDropAtStation_ReturnsFalse()
+    {
+        var now = DateTime.UtcNow;
+        var agvCorrelationId = Guid.NewGuid();
+        var moveToCoordinateActionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup(assignedAgv: agvCorrelationId, moveActionState: ActionState.Completed, completedDate: now.AddMinutes(-5));
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, completedDate: now.AddMinutes(5));
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pickDropActionGroup, moveToCoordinateActionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.IsLastCompletedActionMoveToCoordinate(agvCorrelationId)).ShouldBeFalse();
     }
 }

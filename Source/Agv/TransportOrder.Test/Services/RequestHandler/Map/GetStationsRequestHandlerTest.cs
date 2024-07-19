@@ -50,7 +50,7 @@ public class GetStationsRequestHandlerTest
 
         Response<GotMapStations> response = await fixture.GetResponseAsync<GotMapStations>(new GetMapStations(mapCorrelationId));
 
-        List<Messages.MessageContent.Station> gotStations = response.Message.Stations;
+        List<TransportOrder.Messages.MessageContent.Station> gotStations = response.Message.Stations;
         gotStations.ShouldNotBeNull();
         gotStations.Count.ShouldBe(5);
         gotStations.Count(s => s.Id == stationPickName).ShouldBe(1);
@@ -85,7 +85,7 @@ public class GetStationsRequestHandlerTest
 
         Response<GotMapStations> response = await fixture.GetResponseAsync<GotMapStations>(new GetMapStations(mapCorrelationId));
 
-        List<Messages.MessageContent.Station> gotStations = response.Message.Stations;
+        List<TransportOrder.Messages.MessageContent.Station> gotStations = response.Message.Stations;
         gotStations.ShouldNotBeNull();
         gotStations.Count.ShouldBe(5);
         gotStations.Count(s => s.Id == stationPickName).ShouldBe(1);
@@ -113,7 +113,7 @@ public class GetStationsRequestHandlerTest
 
         Response<GotMapStations> response = await fixture.GetResponseAsync<GotMapStations>(new GetMapStations(mapCorrelationId));
 
-        List<Messages.MessageContent.Station> gotStations = response.Message.Stations;
+        List<TransportOrder.Messages.MessageContent.Station> gotStations = response.Message.Stations;
         gotStations.ShouldNotBeNull();
         gotStations.Count.ShouldBe(0);
     }
@@ -146,6 +146,6 @@ public class GetStationsRequestHandlerTest
         var gotStation = response.Message.Station;
         gotStation.ShouldNotBeNull();
         gotStation.Id.ShouldBe(mapCorrelationId.ToString());
-        gotStation.ShouldBeOfType<Messages.MessageContent.Station>();
+        gotStation.ShouldBeOfType<TransportOrder.Messages.MessageContent.Station>();
     }
 }

@@ -68,6 +68,11 @@ public static class MockAgvDbExtensions
         repoMock.Setup(x => x.Graphs.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
         repoMock.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(graphExists);
     }
+
+    public static void AddNode(this Mock<IAgvDb> repoMock, GraphNode? node)
+    {
+        repoMock.Setup(x => x.Graphs.TryGetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
+    }
     
     public static void AddAgvData(this Mock<IAgvDb> repoMock, AgvData? agvData)
     {

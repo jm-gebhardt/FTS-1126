@@ -64,16 +64,31 @@ public class ActionCommandHelper
 
         // here the state has changed in all cases
         await PublishStateChange(assignedAgv);
+        bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
+        if ( !lastActionWasMoveToCoordinate && !action.IsMoveToCoordinate)
+        {
+            var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
+            var route = await _routeService.GetRouteAsync(assignedAgv, action.Target.NodeId!, null, agvData, cancellationToken);
+            action.Nodes = action.ActionType == ActionType.Charge ? [action.Target.NodeId!] : route.Nodes;
+            action.Edges = route.Edges;
+        }
 
-        var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
-        var route = await _routeService.GetRouteAsync(assignedAgv, action.TargetNodeId, null, agvData, cancellationToken);
-        action.Nodes = action.ActionType == ActionType.Charge ? [action.TargetNodeId] : route.Nodes;
-        action.Edges = route.Edges;
+        if (lastActionWasMoveToCoordinate)
+        {
+            action.Nodes = [action.Target.NodeId!];
+            action.Edges = [];
+        }
+
+        if (action.IsMoveToCoordinate)
+        {
+            action.Edges = [];
+            action.Nodes = [];
+        }
 
         _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, action.ParentId, assignedAgv.CorrelationId);
         try
         {
-            if ((action.Nodes == null || !action.Nodes.Any()) && assignedAgv.AgvStatus!.LastNodeId != action.TargetNodeId)
+            if ((action.Nodes == null || !action.Nodes.Any()) && assignedAgv.AgvStatus!.LastNodeId != action.Target.NodeId! && !action.IsMoveToCoordinate)
             {
                 throw new ArgumentNullException(nameof(action.Nodes));
             }

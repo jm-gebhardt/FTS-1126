@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Messages.Contracts;
 using JetBrains.Annotations;
 using MassTransit;
@@ -32,9 +33,15 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public ActionType ActionType { get; init; }
 
     /// <summary>
-    /// Target node id of the action
+    /// The target of the action.
     /// </summary>
-    public string TargetNodeId { get; init; }
+    public ActionTarget Target { get; init; }
+
+    /// <summary>
+    /// True, if the action is heading towards a position given
+    /// by coordinates instead of node id.
+    /// </summary>
+    public bool IsMoveToCoordinate => Target.NodeId == null && Target.Position != null;
 
     /// <summary>
     /// The nodes of the trip
@@ -82,7 +89,16 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     {
         CorrelationId = correlationId;
         ActionType = actionType;
-        TargetNodeId = targetNodeId;
+        Target = new ActionTarget(targetNodeId);
+        ParentId = parentId;
+    }
+
+    /// <inheritdoc cref="AgvAction"/>>
+    public AgvAction(Guid correlationId, ActionType actionType, ActionTarget target, Guid parentId)
+    {
+        CorrelationId = correlationId;
+        ActionType = actionType;
+        Target = target;
         ParentId = parentId;
     }
 
@@ -90,11 +106,12 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     /// Just to satisfy Entity Framework
     /// </summary>
     [UsedImplicitly]
-    private AgvAction()
+    [JsonConstructor]
+    public AgvAction()
     {
         CorrelationId = Guid.Empty;
         ActionType = ActionType.Pick;
-        TargetNodeId = string.Empty;
+        Target = new ActionTarget(string.Empty);
         ParentId = Guid.Empty;
     }
 }

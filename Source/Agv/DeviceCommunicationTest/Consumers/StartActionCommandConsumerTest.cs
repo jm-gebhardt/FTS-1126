@@ -60,7 +60,7 @@ public class StartActionCommandConsumerTest
             // Check consumed message
             action.CorrelationId.ShouldBe(actionCorrelationId);
             action.ParentId.ShouldBe(orderCorrelationId);
-            action.TargetNodeId.ShouldBe(toStationId);
+            action.Target.NodeId.ShouldBe(toStationId);
 
             // Get published MqttOrder Mqtt message
             IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
@@ -137,7 +137,7 @@ public class StartActionCommandConsumerTest
             // Check consumed message
             action.CorrelationId.ShouldBe(actionCorrelationId);
             action.ParentId.ShouldBe(orderCorrelationId);
-            action.TargetNodeId.ShouldBe(toStationId);
+            action.Target.NodeId.ShouldBe(toStationId);
 
             // Get published MqttOrder Mqtt message
             IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
@@ -200,7 +200,7 @@ public class StartActionCommandConsumerTest
             // Check consumed message
             action.CorrelationId.ShouldBe(actionCorrelationId);
             action.ParentId.ShouldBe(orderCorrelationId);
-            action.TargetNodeId.ShouldBe(toStationId);
+            action.Target.NodeId.ShouldBe(toStationId);
 
             // Get published MqttOrder Mqtt message
             IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
@@ -291,5 +291,86 @@ public class StartActionCommandConsumerTest
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Test consuming a StartActionCommand message (the move action to a coordinate)
+    /// and publish an MqttOrder Mqtt message with proper bus configuration.
+    /// </summary>
+    /// <returns></returns>
+    [TestMethod]
+    public async Task StartActionCommand_MoveToCoordinateAction_To_AGV_Via_MQTT()
+    {
+        var fixture = new StartActionCommandConsumerTestFixture();
+
+        // Create a publish observer
+        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        {
+            var actionCorrelationId = Guid.NewGuid();
+            const string agvSerialNumber = "agv0";
+            const string orderId = "1234";
+            var orderCorrelationId = orderId.ToGuid();
+            var target = new ActionTarget(12, 12, 0);
+
+            var action = new AgvAction(actionCorrelationId, ActionType.Move, target, orderCorrelationId);
+            var correlationId = Guid.NewGuid();
+            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
+
+            // Publish StartActionCommand
+            await fixture.TestHarness.Bus.Publish(message);
+
+            // Get Consumer Harness
+            IConsumerTestHarness<StartActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<StartActionCommandConsumer>();
+
+            // Check if consumed
+            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
+            // Get consumed message
+            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
+            action = consumedMessage.Context.Message.Action;
+
+            // Check consumed message
+            action.CorrelationId.ShouldBe(actionCorrelationId);
+            action.ParentId.ShouldBe(orderCorrelationId);
+            action.Target.ShouldBe(target);
+
+            // Get published MqttOrder Mqtt message
+            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
+
+            // Check routing key and content type
+            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
+            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
+            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
+
+            // Check content
+            var mqttMessage = publishedMessage.Context.Message;
+
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+
+            mqttMessage.Coordinates.ShouldBe(new Coordinates()
+            {
+                ToX = target.Position!.X,
+                ToY = target.Position.Y,
+                ToTheta = target.Position.Theta
+            });
+            mqttMessage.Stations.ShouldBeNull();
+            mqttMessage.OrderType.ShouldBe(OrderType.Move);
+            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
+
+            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
+        }
+    }
+
+    [TestMethod]
+    public async Task Test_StartAction_MoveToCoordinate_ActionTypeNotMove_ThrowsException()
+    {
+        var fixture = new StartActionCommandConsumerTestFixture();
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, new ActionTarget(12, 12, 0), Guid.NewGuid());
+        await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.NewGuid(), "agv-0", action));
+        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.ShouldHavePublishedAsync<StartActionCommand>();
+
+        IPublishedMessage<Fault<StartActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<StartActionCommand>>().First();
+        fault.Context.Message.Exceptions.ShouldContain(e => e.ExceptionType == typeof(InvalidOperationException).FullName);
     }
 }

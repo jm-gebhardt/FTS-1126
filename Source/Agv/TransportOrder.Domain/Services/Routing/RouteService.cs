@@ -101,9 +101,14 @@ public class RouteService : IRouteService
         AgvAction? firstAction = null;
         double? firstActionCost = null;
 
-        foreach (var action in actionGroup.Actions.Where(a => !a.IsIncomplete))
+        if (actionGroup.Actions.All(a => a.IsMoveToCoordinate))
         {
-            double? costs = await GetCostsAsync(agv, action.TargetNodeId, agvData, cancellationToken);
+            return 0;
+        }
+
+        foreach (var action in actionGroup.Actions.Where(a => a is { IsIncomplete: false, IsMoveToCoordinate: false }))
+        {
+            double? costs = await GetCostsAsync(agv, action.Target.NodeId!, agvData, cancellationToken);
             if (costs == null)
             {
                 return null; // Break if a target node is not reachable

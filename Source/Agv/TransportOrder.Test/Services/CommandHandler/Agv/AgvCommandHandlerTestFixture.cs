@@ -132,6 +132,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
+    public AgvCommandHandlerTestFixture WithNode(GraphNode? node)
+    {
+        AgvDb.AddNode(node);
+        return this;
+    }
+
     public AgvCommandHandlerTestFixture WithoutAgv()
     {
         AgvDb.AddAgvs();

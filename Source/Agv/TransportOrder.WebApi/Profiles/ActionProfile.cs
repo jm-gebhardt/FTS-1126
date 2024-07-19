@@ -24,7 +24,8 @@ public class ActionProfile : WebApiProfile
         CreateMap<ActionGroup, ActionGroupDto>()
             .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration));
         CreateMap<AgvAction, AgvActionDto>()
-            .ForMember(m => m.TargetNodeType, opt => opt.Ignore());
+            .ForMember(m => m.TargetNodeType, opt => opt.Ignore())
+            .ForMember(m => m.TargetNodeId, opt => opt.MapFrom(s => s.Target.NodeId!));
         CreateMap<DateTime, DateTime>().ConvertUsing(new CustomDateTimeConverter());
         CreateMap<DateTime?, DateTime?>().ConvertUsing(new CustomDateTimeConverter());
         CreateMap<DurationStatistics, ActionDurationStatisticsDto>();

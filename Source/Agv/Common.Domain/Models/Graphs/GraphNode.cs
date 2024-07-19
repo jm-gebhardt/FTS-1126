@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
@@ -19,7 +20,7 @@ public class GraphNode : IEquatable<GraphNode>
         get;
         [UsedImplicitly]
         init;
-    }
+    } = null!;
 
     /// <summary>
     /// The type of the node
@@ -62,6 +63,22 @@ public class GraphNode : IEquatable<GraphNode>
     public GraphNode(string id)
     {
         Id = id;
+    }
+
+    /// <inheritdoc cref="GraphNode"/>>
+    [JsonConstructor]
+    public GraphNode()
+    {
+    }
+
+    /// <inheritdoc cref="GraphNode"/>>
+    public GraphNode(string id, float x, float y, float z, AgvGraph.NodeType nodeType)
+    {
+        Id = id;
+        Y = y;
+        X = x;
+        Z = z;
+        Type = nodeType;
     }
 
     /// <inheritdoc />

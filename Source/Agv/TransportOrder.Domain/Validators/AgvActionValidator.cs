@@ -17,5 +17,11 @@ public class AgvActionValidator : AbstractValidator<AgvAction>
         RuleFor(p => p.State)
             .Equal(ActionState.Created)
             .WithReason(Reasons.ActionStateMustBeCreated, p => p.State);
+        RuleFor(a => a.Target.NodeId)
+            .NotNull()
+            .When(a => !a.IsMoveToCoordinate);
+        RuleFor(a => a.Target.Position)
+            .NotNull()
+            .When(a => a.IsMoveToCoordinate);
     }
 }

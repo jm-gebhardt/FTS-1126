@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,6 +12,6 @@ public class PolygonEntityConfiguration : IEntityTypeConfiguration<PolygonPoint>
     {
         builder.HasKey(e => e.Id);
         builder.Property(e => e.LocationId);
-        builder.ToTable("TriggerLocationPolygonPoints");
+        builder.ToTable("PolygonPoints");
     }
 }

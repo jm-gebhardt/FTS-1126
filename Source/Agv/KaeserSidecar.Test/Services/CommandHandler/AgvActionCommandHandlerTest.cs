@@ -74,7 +74,7 @@ public class AgvActionCommandHandlerTest
             .WithActionGroup(actionGroup);
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
 
-        var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.TargetNodeId == station).CorrelationId);
+        var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
@@ -90,7 +90,7 @@ public class AgvActionCommandHandlerTest
             .WithActionGroup(actionGroup);
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
 
-        var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.TargetNodeId == station).CorrelationId);
+        var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();

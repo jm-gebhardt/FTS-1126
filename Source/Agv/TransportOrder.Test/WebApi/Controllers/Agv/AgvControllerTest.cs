@@ -399,6 +399,18 @@ public class AgvControllerTest
     }
 
     [TestMethod]
+    public async Task MoveAgvToCoordinate_Ok()
+    {
+        AgvControllerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+            .SetupAgvDbWithDefaultData(setUserMode:true)
+            .Build();
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
+
+        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgvToCoordinate(correlationId, 1,1,0));
+        result.Value.ShouldBeOfType<Guid>();
+    }
+
+    [TestMethod]
     public async Task ChargeAgvAtCharger_Ok()
     {
         var targetNode =  NodeGenerator.GenerateNode(nodeId:"target", nodeType:AgvGraph.NodeType.Charge);

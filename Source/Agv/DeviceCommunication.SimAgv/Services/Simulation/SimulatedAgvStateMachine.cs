@@ -253,10 +253,18 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Then(c =>
             {
                 SetCurrentAction(c);
-
-                _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} to {TargetNodeId} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
-                    c.Saga.SerialNumber, c.Saga.CorrelationId,
-                    c.Message.Action.ActionType, c.Message.Action.TargetNodeId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                if (c.Message.Action.IsMoveToCoordinate)
+                {
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} to ({Position}) for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                        c.Saga.SerialNumber, c.Saga.CorrelationId,
+                        c.Message.Action.ActionType, c.Message.Action.Target.Position, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                }
+                else
+                {
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} started action {ActionType} to {TargetNodeId} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                        c.Saga.SerialNumber, c.Saga.CorrelationId,
+                        c.Message.Action.ActionType, c.Message.Action.Target.NodeId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                }
             })
             .TransitionTo(BusyMoving)
             .Publish(c => new ActionStarted(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
@@ -283,6 +291,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
         c.Saga.ActionStartDate = DateTime.UtcNow;
+        if (c.Message.Action.IsMoveToCoordinate)
+        {
+            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, 0);
+            return;
+        }
         c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes, c.Message.Action.Edges, c.Saga.ActionStartDate!.Value, 0);
     }
 
@@ -503,7 +516,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             throw new ArgumentException("Action data missing.");
         }
-        if (!context.Message.Action.Nodes.Any())
+        if (!context.Message.Action.Nodes.Any() && !context.Message.Action.IsMoveToCoordinate)
         {
             throw new ArgumentException("Nodes missing.");
         }

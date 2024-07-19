@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -186,17 +187,35 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateAgvStatus_LastNodeIdChanged_PublishesAgvLastNodeIdChanged()
+    public async Task Consume_UpdateAgvStatus_LastNodeIdChanged_NewLastNodeIdIsOnGraph_PublishesAgvLastNodeIdChanged()
     {
-        var fixture = new AgvCommandHandlerTestFixture()
-            .WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, "newLastNodeId");
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true)
+            .WithNode(new GraphNode(newAgvStatus.LastNodeId!));
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, "newLastNodeId");
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvLastNodeIdChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_LastNodeIdChanged_NewLastNodeIdIsNotOnGraph_DoesNotPublishAgvLastNodeIdChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, "newLastNodeId");
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true)
+            .WithNode(null);
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+        await fixture.ShouldNotHavePublishedAsync<AgvLastNodeIdChanged>();
     }
 
     [TestMethod]

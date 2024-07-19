@@ -51,6 +51,7 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TriggerEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TriggerLocationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new PolygonEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RestrictedAreaEntityConfiguration());
         // Adds Quartz.NET SqlServer schema to EntityFrameworkCore
         modelBuilder.AddQuartz(builder => builder.UseSqlServer(schema: "dbo"));
     }

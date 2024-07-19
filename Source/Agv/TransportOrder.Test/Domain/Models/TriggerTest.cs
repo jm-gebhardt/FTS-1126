@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;

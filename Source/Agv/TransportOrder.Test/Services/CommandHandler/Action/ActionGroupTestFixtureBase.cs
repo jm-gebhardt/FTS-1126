@@ -132,6 +132,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public ActionGroupTestFixtureBase<T> WithLastActionIsMoveToCoordinate(bool isMoveToCoordinate)
+    {
+        ActionGroupRepository.Setup(x => x.IsLastCompletedActionMoveToCoordinate(It.IsAny<Guid>())).ReturnsAsync(isMoveToCoordinate);
+        return this;
+    }
+
     public ActionGroupTestFixtureBase<T> AddActionGroupRetrieval(bool headingTo)
     {
         _actionGroupRetrievalService.Setup(x => x.IsAgvHeadingToNodeOfType(It.IsAny<Guid>(), It.IsAny<AgvGraph.NodeType>())).ReturnsAsync(headingTo);
@@ -144,10 +150,10 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
-    public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes)
+    public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes, Guid[] edges)
     {
         _agvDb.AddAgvData((AgvData?)null);
-        RouteService.WithRoute(0f, nodes);
+        RouteService.WithRoute(0f, nodes, edges);
         return this;
     }
 

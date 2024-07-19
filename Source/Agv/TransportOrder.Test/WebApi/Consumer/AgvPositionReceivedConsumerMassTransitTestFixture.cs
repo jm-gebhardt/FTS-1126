@@ -32,10 +32,10 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
         new MapProfile(),
         new AgvErrorProfile(),
         new ActionProfile(),
-        new Messages.Profiles.AgvProfile(),
-        new Messages.Profiles.AgvGraphProfile(),
-        new Messages.Profiles.AgvErrorProfile(),
-        new Messages.Profiles.MapProfile(),
+        new TransportOrder.Messages.Profiles.AgvProfile(),
+        new TransportOrder.Messages.Profiles.AgvGraphProfile(),
+        new TransportOrder.Messages.Profiles.AgvErrorProfile(),
+        new TransportOrder.Messages.Profiles.MapProfile(),
         new TransportOrder.Domain.Profiles.AgvPositionProfile()
     ];
 

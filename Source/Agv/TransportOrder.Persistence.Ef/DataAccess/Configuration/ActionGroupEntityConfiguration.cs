@@ -30,11 +30,15 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             a.HasKey(o => o.CorrelationId);
             a.Ignore(o => o.Duration);
             a.Ignore(o => o.IsIncomplete);
+            a.Ignore(o => o.IsMoveToCoordinate);
             a.Property(e => e.Sequence);
             a.Property(e => e.Nodes).HasJsonConversion();
             a.Property(e => e.State).HasMaxLength(MaxStateLength);
             a.Property(e => e.ActionType).HasMaxLength(MaxActionTypeLength);
-            a.HasIndex(e => e.TargetNodeId);
+            a.OwnsOne(e => e.Target, c =>
+            {
+                c.OwnsOne(t => t.Position);
+            });
         });
 
         builder.Navigation(g => g.Actions).AutoInclude();

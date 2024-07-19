@@ -101,7 +101,7 @@ public record AgvStatus
     /// <remarks>
     /// VDA5050.state.schema.lastNodeId
     /// </remarks>
-    public string? LastNodeId { get; }
+    public string? LastNodeId { get; private set; }
 
     /// <summary>
     /// Constructor of AgvStatus
@@ -168,5 +168,14 @@ public record AgvStatus
         Disturbed = false;
         LastNodeId = null;
         LastBatteryReplacement = DateTime.UtcNow.AddDays(-2);
+    }
+
+    /// <summary>
+    /// Update the last node id.
+    /// </summary>
+    /// <param name="nodeId">The new node id.</param>
+    public void UpdateLastNodeId(string nodeId)
+    {
+        LastNodeId = nodeId;
     }
 }

@@ -23,8 +23,8 @@ public class HostOrderTest
         pickAction.Sequence.ShouldBe(0);
         dropAction.Sequence.ShouldBe(1);
 
-        pickAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[shortCircuitOrder.Source]);
-        dropAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[shortCircuitOrder.Destination]); 
+        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[shortCircuitOrder.Source]);
+        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[shortCircuitOrder.Destination]); 
     }
 
     [TestMethod]
@@ -53,9 +53,9 @@ public class HostOrderTest
         pickAction.Sequence.ShouldBe(1);
         dropAction.Sequence.ShouldBe(2);
 
-        moveAction.TargetNodeId.ShouldBe(OrderGenerator.DecisionNode);
-        pickAction.TargetNodeId.ShouldBeEmpty();
-        dropAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[longCircuitOrder.Destination]);
+        moveAction.Target.NodeId.ShouldBe(OrderGenerator.DecisionNode);
+        pickAction.Target.NodeId.ShouldBeEmpty();
+        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[longCircuitOrder.Destination]);
     }
 
     [TestMethod]
@@ -74,8 +74,8 @@ public class HostOrderTest
         moveAction.Sequence.ShouldBe(1);
         dropAction.Sequence.ShouldBe(2);
 
-        pickAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[longCircuitOrder.Source]);
-        moveAction.TargetNodeId.ShouldBe(OrderGenerator.DecisionNode);
-        dropAction.TargetNodeId.ShouldBeEmpty();
+        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[longCircuitOrder.Source]);
+        moveAction.Target.NodeId.ShouldBe(OrderGenerator.DecisionNode);
+        dropAction.Target.NodeId.ShouldBeEmpty();
     }
 }

@@ -41,7 +41,14 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
     {
         var action = context.Message.Action;
         var actionType = action.ActionType;
-        string targetNodeId = action.TargetNodeId;
+        if (action.IsMoveToCoordinate)
+        {
+            await MoveToCoordinate(context);
+            return;
+        }
+
+        string targetNodeId = action.Target.NodeId!;
+
         List<object> routeNodes = [];
         routeNodes.AddRange(action.Nodes.Select(graphNodeId => _graphRepository.GetMqttNode(graphNodeId)).OfType<MqttNode>());
         List<object> routeEdges = [];
@@ -62,22 +69,22 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
         {
             case ActionType.Pick:
                 orderType = OrderType.Pick;
-                sourceToSend = action.TargetNodeId;
+                sourceToSend = targetNodeId;
                 break;
 
             case ActionType.Drop:
                 orderType = OrderType.Drop;
-                destinationToSend = action.TargetNodeId;
+                destinationToSend = targetNodeId;
                 break;
 
             case ActionType.Move:
                 orderType = OrderType.Move;
-                destinationToSend = action.TargetNodeId;
+                destinationToSend = targetNodeId;
                 break;
 
             case ActionType.Charge:
                 orderType = OrderType.Charge;
-                destinationToSend = action.TargetNodeId;
+                destinationToSend = targetNodeId;
                 break;
 
             default:
@@ -107,6 +114,36 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
         FeedAgvRepository(assignedAgv, action);
         _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, assignedAgv, agvSerialNumber, targetNodeId);
+    }
+
+    private async Task MoveToCoordinate(ConsumeContext<StartActionCommand> context)
+    {
+        var action = context.Message.Action;
+        var actionType = action.ActionType;
+        if (actionType != ActionType.Move)
+        {
+            throw new InvalidOperationException($"Can't handle {actionType} for move to coordinate");
+        }
+        string agvSerialNumber = context.Message.SerialNumber;
+        var assignedAgv = context.Message.CorrelationId;
+      
+        await context.PublishMqtt(new MqttOrder(action.CorrelationId.ToString())
+        {
+            SerialNumber = agvSerialNumber,
+            OrderType = OrderType.Move,
+            OrderId = action.CorrelationId.ToString(),
+            RecordType = OrderRecordType.Order,
+            Coordinates = new Coordinates
+            {
+                ToTheta = action.Target.Position!.Theta,
+                ToX = action.Target.Position!.X,
+                ToY = action.Target.Position!.Y
+            }
+        }, context.CancellationToken);
+
+        FeedAgvRepository(assignedAgv, action);
+        _logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} to coordinates: {Coordinates}",
+            action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.Position!);
     }
 
     private void FeedAgvRepository(Guid correlationId, AgvAction agvAction)

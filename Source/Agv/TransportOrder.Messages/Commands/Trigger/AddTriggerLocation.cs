@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using MassTransit;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;

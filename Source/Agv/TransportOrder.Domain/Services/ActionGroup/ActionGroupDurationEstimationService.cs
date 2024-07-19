@@ -1,4 +1,7 @@
-﻿using Gebhardt.Acc.Common.Dictionaries;
+﻿using System.Numerics;
+using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -9,12 +12,16 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
     private readonly IConcurrentDictionaryProvider<string, (double value, DateTime lastUpdated)> _deviationCache;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly TimeSpan _updateSpan = TimeSpan.FromHours(1);
+    private readonly IAgvPositionRepository _agvPositionRepository;
+    private readonly IGraphRepository _graphRepository;
 
     /// <inheritdoc cref="ActionGroupDurationEstimationService"/>
-    public ActionGroupDurationEstimationService(IConcurrentDictionaryProvider<string, (double, DateTime)> deviationCache, IActionGroupRepository actionGroupRepository)
+    public ActionGroupDurationEstimationService(IConcurrentDictionaryProvider<string, (double, DateTime)> deviationCache, IActionGroupRepository actionGroupRepository, IAgvPositionRepository agvPositionRepository, IGraphRepository graphRepository)
     {
         _deviationCache = deviationCache;
         _actionGroupRepository = actionGroupRepository;
+        _agvPositionRepository = agvPositionRepository;
+        _graphRepository = graphRepository;
     }
 
     /// <inheritdoc/>
@@ -31,6 +38,28 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
         }
 
         return deviation.value;
+    }
+
+    /// <inheritdoc/>
+    public async Task<double> GetDurationEstimate(double agvVelocity, AgvAction action, Guid agvCorrelationId)
+    {
+        var agvPosition = _agvPositionRepository.GetPosition(agvCorrelationId)!.AgvPosition;
+        if (action.IsMoveToCoordinate)
+        {
+            return EstimateDurationFromDistance((action.Target.Position!.X, action.Target.Position!.Y), (agvPosition.X, agvPosition.Y), agvVelocity);
+        }
+        var node = await _graphRepository.GetNodeAsync(action.Target.NodeId!);
+        return EstimateDurationFromDistance((agvPosition.X, agvPosition.Y), (node.X, node.Y), agvVelocity);
+    }
+
+    private static double EstimateDurationFromDistance((float, float) source, (float, float) target, double velocity)
+    {
+        if (velocity == 0)
+        {
+            return 0;
+        }
+        double distance = Mathematics.EuclideanDistance(new Vector3(source.Item1, source.Item2, 0), new Vector3(target.Item1, target.Item2, 0));
+        return distance / velocity;
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -33,9 +34,15 @@ public class AgvAction : IParentedBy<Guid>
     public ActionType ActionType { get; init; }
 
     /// <summary>
-    /// Target node id of the action
+    /// The target of the action.
     /// </summary>
-    public string TargetNodeId { get; private set; }
+    public ActionTarget Target { get; set; } = null!;
+
+    /// <summary>
+    /// True, if the action is heading towards a position given
+    /// by coordinates instead of node id.
+    /// </summary>
+    public bool IsMoveToCoordinate => Target.NodeId == null && Target.Position != null;
 
     /// <summary>
     /// The nodes of the trip.
@@ -85,7 +92,7 @@ public class AgvAction : IParentedBy<Guid>
     /// <summary>
     /// True if the action is complete, i.e. its target is not defined.
     /// </summary>
-    public bool IsIncomplete => TargetNodeId == string.Empty;
+    public bool IsIncomplete => Target.NodeId == string.Empty;
 
     /// <summary>
     /// Constructor
@@ -98,7 +105,22 @@ public class AgvAction : IParentedBy<Guid>
     {
         CorrelationId = correlationId;
         ActionType = actionType;
-        TargetNodeId = targetNodeId;
+        Target = new ActionTarget(targetNodeId);
+        ParentId = parentId;
+    }
+
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
+    /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
+    /// <param name="target">Target of the action</param>
+    /// <param name="parentId">The CorrelationId of the ActionGroup where this action belongs to</param>
+    public AgvAction(Guid correlationId, ActionType actionType, ActionTarget target, Guid parentId)
+    {
+        CorrelationId = correlationId;
+        ActionType = actionType;
+        Target = target;
         ParentId = parentId;
     }
 
@@ -106,11 +128,11 @@ public class AgvAction : IParentedBy<Guid>
     /// Just to satisfy Entity Framework
     /// </summary>
     [UsedImplicitly]
-    private AgvAction()
+    [JsonConstructor]
+    public AgvAction()
     {
         CorrelationId = Guid.Empty;
         ActionType = ActionType.Pick;
-        TargetNodeId = string.Empty;
         ParentId = Guid.Empty;
     }
 
@@ -143,11 +165,11 @@ public class AgvAction : IParentedBy<Guid>
     /// <exception cref="SetActionTargetFailedException">Thrown, if a target was already set previously.</exception>
     public void SetTarget(string targetNodeId)
     {
-        if (TargetNodeId != string.Empty)
+        if (Target.NodeId != string.Empty)
         {
             throw new SetActionTargetFailedException(targetNodeId);
         }
-        TargetNodeId = targetNodeId;
+        Target.NodeId = targetNodeId;
     }
 
     private void SetDates()
@@ -182,6 +204,6 @@ public class AgvAction : IParentedBy<Guid>
     /// </summary>
     public override string ToString()
     {
-        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {TargetNodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
+        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {Target.NodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
     }
 }

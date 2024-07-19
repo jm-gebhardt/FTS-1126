@@ -25,10 +25,12 @@ public class MoveAgvRequestHandler(
     IBus bus,
     INodeStateRepository nodeStateRepository,
     IParkPointService parkPointService,
-    IChargingPointManager chargingPointManager
+    IChargingPointManager chargingPointManager,
+    IRestrictedAreaRepository restrictedAreaRepository
 ) :
     IConsumer<MoveAgv>,
-    IConsumer<ChargeAgv>
+    IConsumer<ChargeAgv>,
+    IConsumer<MoveAgvToCoordinate>
 {
     /// <summary>
     /// Handles the <see cref="MoveAgv"/> request.
@@ -103,6 +105,40 @@ public class MoveAgvRequestHandler(
             ], $"Manual {nameof(ActionType.Charge)}",
             agvCorrelationId,
             ActionGroupCreator.TransportOrderWebApi,
+            actionGroupId);
+        await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="MoveAgvToCoordinate"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<MoveAgvToCoordinate> context)
+    {
+        (var agvCorrelationId, float x, float y, float theta, var creator) = context.Message;
+
+        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        if (!agv.ShouldStartManualAction)
+        {
+            throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
+        }
+
+        if (await restrictedAreaRepository.IsPointInRestrictedArea(x, y))
+        {
+            throw new PositionIsInRestrictedAreaException(x, y);
+        }
+
+        var actionGroupId = Guid.NewGuid();
+        await QueueNewActionGroup(context,
+            [
+                new AgvAction(Guid.NewGuid(),
+                    ActionType.Move,
+                    new ActionTarget(x,y, theta),
+                    actionGroupId)
+            ],
+            $"Manual {ActionType.Move} to ({x}, {y}) with orientation {theta}",
+            agvCorrelationId,
+            creator,
             actionGroupId);
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }

@@ -27,7 +27,7 @@ public class GetMapRequestHandlerTest
         var fixture = new MapRequestTestFixture<GetMapList, GetMapRequestHandler>();
 
         Response<GotMapList> response = await fixture.GetResponseAsync<GotMapList>(new GetMapList());
-        List<Messages.Requests.Map.Map> maps = response.Message.Maps;
+        List<TransportOrder.Messages.Requests.Map.Map> maps = response.Message.Maps;
 
         maps.ShouldNotBeEmpty();
 

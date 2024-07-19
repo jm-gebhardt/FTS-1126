@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Commands;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -122,7 +123,7 @@ public class SimulatedAgvStateMachineTest
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         ICollection<GraphNode> nodes = graph.Nodes;
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First();
-        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(action.TargetNodeId);
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(action.Target.NodeId!);
         action.Nodes = route.nodes;
         action.Edges = route.edges;
         var startNode = nodes.First(n => n.Id == action.Nodes.First());
@@ -185,8 +186,9 @@ public class SimulatedAgvStateMachineTest
         var fixture = new SimulatedAgvStateMachineTestFixture()
             .WithAgv(agvSaga)
             .Build();
+        agvSaga.TravelSimulator.GetType().GetProperty(nameof(AgvTravelSimulator.CurrentNode))!.SetValue(agvSaga.TravelSimulator, node);
         var action = AgvActionGenerator.GenerateAction(startNodeId: node.Id, targetNodeId: node.Id, actionType: ActionType.Pick);
-
+        action.Nodes = [node.Id];
         var agvLoadStatusReceived = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, AgvLoadStatusReceived>(
             new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
 
@@ -203,15 +205,16 @@ public class SimulatedAgvStateMachineTest
             currentNode: node,
             agvGraph: graph
         );
+        agvSaga.TravelSimulator.GetType().GetProperty(nameof(AgvTravelSimulator.CurrentNode))!.SetValue(agvSaga.TravelSimulator, node);
         var fixture = new SimulatedAgvStateMachineTestFixture()
             .WithAgv(agvSaga)
             .Build();
         var action = AgvActionGenerator.GenerateAction(startNodeId: node.Id, targetNodeId: node.Id, actionType: ActionType.Drop);
+        action.Nodes = [node.Id];
 
-        var agvLoadStatusReceived = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, AgvLoadStatusReceived>(
-            new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
-
+        await fixture.PublishMessageAsync(new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
         await fixture.WaitUntilAgvIdle(agvSaga);
+        var agvLoadStatusReceived = await fixture.GetFirstPublishedMessageAsync<AgvLoadStatusReceived>();
         agvLoadStatusReceived.Cargos.Count.ShouldBe(0);
     }
 

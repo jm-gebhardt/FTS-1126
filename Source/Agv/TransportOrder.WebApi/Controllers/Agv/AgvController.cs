@@ -50,6 +50,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvErrors> _getAgvErrorHistoryRequestClient;
     private readonly IRequestClient<ChargeAgv> _chargeAgvClient;
     private readonly IRequestClient<MoveAgv> _moveAgvClient;
+    private readonly IRequestClient<MoveAgvToCoordinate> _moveAgvToCoordinateClient;
     private readonly IRequestClient<SetAgvForceIdle> _setForceIdleClient;
     private readonly IRequestClient<GetAgvHasCargo> _getAgvHasCargoClient;
     private readonly IRequestClient<GetCargosOfAgv> _getCargosOfAgvClient;
@@ -83,6 +84,7 @@ public class AgvController : Controller
         IRequestClient<GetActiveAgvErrors> getAgvErrorsRequestClient,
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient,
         IRequestClient<MoveAgv> moveAgvClient,
+        IRequestClient<MoveAgvToCoordinate> moveAgvToCoordinateClient,
         IRequestClient<ChargeAgv> chargeAgvClient,
         IRequestClient<SetAgvForceIdle> setForceIdleClient,
         IRequestClient<GetAgvHasCargo> getAgvHasCargoClient,
@@ -112,6 +114,7 @@ public class AgvController : Controller
         _getAgvErrorsRequestClient = getAgvErrorsRequestClient;
         _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         _moveAgvClient = moveAgvClient;
+        _moveAgvToCoordinateClient = moveAgvToCoordinateClient;
         _chargeAgvClient = chargeAgvClient;
         _setForceIdleClient = setForceIdleClient;
         _getAgvHasCargoClient = getAgvHasCargoClient;
@@ -480,6 +483,22 @@ public class AgvController : Controller
     public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId)
     {
         Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
+
+        return Ok(response.Message.ActionGroupCorrelationId);
+    }
+
+    /// <summary>
+    /// Move agv manually to a coordinate with orientation. 
+    /// </summary>
+    /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
+    /// <response code="400">The position is inside a restricted area.</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    /// <returns>The CorrelationId of the created ActionGroup</returns>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/moveToCoordinate")]
+    public async Task<ActionResult<Guid>> MoveAgvToCoordinate(Guid correlationId, [FromQuery] [Required] float x, [FromQuery][Required] float y, [FromQuery][Required] float theta )
+    {
+        Response<AgvMoveSuccessful> response = await _moveAgvToCoordinateClient.GetResponse<AgvMoveSuccessful>(new MoveAgvToCoordinate(correlationId, x, y, theta, ActionGroupCreator.TransportOrderWebApi));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }

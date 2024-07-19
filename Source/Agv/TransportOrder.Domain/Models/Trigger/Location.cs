@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 
@@ -74,5 +76,15 @@ public class Location
         Polygon = polygon.Select(p => new PolygonPoint(p.X, p.Y, Id)).ToList();
         MapId = mapId;
         TriggerId = triggerId;
+    }
+
+    /// <summary>
+    /// True, if a position is inside a polygon location.
+    /// </summary>
+    /// <param name="position">The agv position.</param>
+    /// <returns>True, if a position is inside a polygon location.</returns>
+    public bool IsPositionAtLocation(AgvPosition position)
+    {
+        return Polygon.PointIsInPolygon(position.X, position.Y);
     }
 }

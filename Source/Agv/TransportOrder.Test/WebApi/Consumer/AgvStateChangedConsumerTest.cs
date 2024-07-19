@@ -30,7 +30,7 @@ public class AgvStateChangedConsumerTest
         agv = AgvGenerator.SetAgvState(currentState, agv, false);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Agv>(agv);
 
         var responseMock = new Mock<Response<GotAgvs>>();
         responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));
@@ -41,7 +41,7 @@ public class AgvStateChangedConsumerTest
         await fixture.ShouldHavePublishedAsync<AgvStateChanged>();
         await fixture.ShouldHaveConsumedAsync<AgvStateChanged>();
 
-        fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(It.Is<Messages.MessageContent.Agv>(x => x.CurrentState == currentState)), Times.Once);
+        fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(It.Is<TransportOrder.Messages.MessageContent.Agv>(x => x.CurrentState == currentState)), Times.Once);
     }
 
     [TestMethod]
@@ -52,7 +52,7 @@ public class AgvStateChangedConsumerTest
         agv = AgvGenerator.SetAgvState(currentState, agv, false);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Agv>(agv);
 
         var responseMock = new Mock<Response<GotAgvs>>();
         responseMock.SetupGet(m => m.Message).Returns(new GotAgvs(new[] { agvMessageContent }));
@@ -64,6 +64,6 @@ public class AgvStateChangedConsumerTest
         await fixture.ShouldHaveConsumedAsync<AgvStateChanged>();
 
         fixture.PublisherMock.Verify(h => h.SendAgvStateChangedAsync(
-            It.Is<Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId)), Times.Once);
+            It.Is<TransportOrder.Messages.MessageContent.Agv>(o => o.CorrelationId == agv.CorrelationId)), Times.Once);
     }
 }

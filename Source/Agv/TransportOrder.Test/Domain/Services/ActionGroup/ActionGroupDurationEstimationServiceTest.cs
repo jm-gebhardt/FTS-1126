@@ -1,5 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
@@ -54,5 +59,35 @@ public class ActionGroupDurationEstimationServiceTest
         fixture.ValueExistsInMemory(agvId, targets, out inMemoryDeviation).ShouldBe(true);
         inMemoryDeviation.value.ShouldBe(deviation.value);
         inMemoryDeviation.lastUpdated.ShouldBeGreaterThan(deviation.lastUpdated);
+    }
+
+    [DataRow(0, 0)]
+    [DataRow(1, 1)]
+    [DataTestMethod]
+    public async Task GetDurationEstimate_MoveToCoordinate_ReturnsDuration(double velocity, double expectedDuration)
+    {
+        var agvPositionStatus = new AgvPositionStatus(Guid.NewGuid(), "agv", new AgvPosition(true, 0, 1, 0, 0));
+        var fixture = new ActionGroupDurationEstimationServiceTestFixture()
+            .WithPositionStatus(agvPositionStatus);
+
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, new ActionTarget(1, 1, 0), Guid.NewGuid());
+
+       (await fixture.Service.GetDurationEstimate(velocity, action, agvPositionStatus.CorrelationId)).ShouldBe(expectedDuration);
+    }
+
+    [DataRow(0, 0)]
+    [DataRow(1, 1)]
+    [DataTestMethod]
+    public async Task GetDurationEstimate_MoveFromCoordinateToGraph_ReturnsDuration(double velocity, double expectedDuration)
+    {
+        var node = new GraphNode("a node", 1, 1, 0, AgvGraph.NodeType.WayPoint);
+        var agvPositionStatus = new AgvPositionStatus(Guid.NewGuid(), "agv", new AgvPosition(true, 0, 1, 0, 0));
+        var fixture = new ActionGroupDurationEstimationServiceTestFixture()
+            .WithPositionStatus(agvPositionStatus)
+            .WithNode(node);
+
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, node.Id, Guid.NewGuid());
+
+        (await fixture.Service.GetDurationEstimate(velocity, action, agvPositionStatus.CorrelationId)).ShouldBe(expectedDuration);
     }
 }

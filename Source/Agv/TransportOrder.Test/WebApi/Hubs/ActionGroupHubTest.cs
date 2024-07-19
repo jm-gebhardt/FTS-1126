@@ -18,7 +18,7 @@ public class ActionGroupHubTest
         var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, false, new List<Reason>());
         var expectedDto = Mock.Of<ActionGroupDto>();
 
-        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
+        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<TransportOrder.Messages.MessageContent.Agv>())).Returns(expectedDto);
 
         await fixture.Publisher.SendActionGroupCreatedAsync(data);
 
@@ -32,7 +32,7 @@ public class ActionGroupHubTest
         var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, false, new List<Reason>());
         var expectedDto = Mock.Of<ActionGroupDto>();
 
-        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Messages.MessageContent.Agv>())).Returns(expectedDto);
+        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<TransportOrder.Messages.MessageContent.Agv>())).Returns(expectedDto);
 
         await fixture.Publisher.SendActionGroupChangedAsync(data);
 

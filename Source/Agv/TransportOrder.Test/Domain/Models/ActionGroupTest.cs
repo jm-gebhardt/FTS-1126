@@ -221,7 +221,7 @@ public class ActionGroupTests
     public void GetTargets_PickDropActionGroup_TargetNodeIdsOfPickAndDropAction()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).TargetNodeId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).TargetNodeId];
+        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId!, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.NodeId!];
 
         actionGroup.GetTargets().ShouldBe(expectedTargets);
     }
@@ -230,7 +230,7 @@ public class ActionGroupTests
     public void GetTargets_IncompletePickDropActionGroupWithoutDropTarget_TargetNodeIdsOfPickAndMoveAction()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
-        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).TargetNodeId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).TargetNodeId];
+        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId!, actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId!];
 
         actionGroup.GetTargets().ShouldBe(expectedTargets);
     }
@@ -239,7 +239,7 @@ public class ActionGroupTests
     public void GetTargets_IncompletePickDropActionGroupWithoutPickTarget_TargetNodeIdOfMoveAction()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
-        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).TargetNodeId];
+        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId!];
 
         actionGroup.GetTargets().ShouldBe(expectedTargets);
     }
@@ -254,7 +254,7 @@ public class ActionGroupTests
         actionGroup.SetTargetForAction(action.CorrelationId, target);
         
         actionGroup.IsIncomplete.ShouldBeFalse();
-        action.TargetNodeId.ShouldBe(target);
+        action.Target.NodeId.ShouldBe(target);
         action.IsIncomplete.ShouldBeFalse();
     }
 

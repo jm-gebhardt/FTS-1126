@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.Triggers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Trigger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

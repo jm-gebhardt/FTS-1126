@@ -20,7 +20,7 @@ public static class AgvActionReadModelExtension
         }
 
         return new AgvActionReadModel(action.CorrelationId, action.ParentId, action.Sequence, action.State,
-            action.ActionType, action.TargetNodeId, AgvGraph.NodeType.Charge, action.Nodes, action.Edges,
+            action.ActionType, action.Target.NodeId!, AgvGraph.NodeType.Charge, action.Nodes, action.Edges,
             action.CreatedDate, action.StartedDate, action.CompletedDate, action.PausedDate, action.PausedDuration);
     }
 }

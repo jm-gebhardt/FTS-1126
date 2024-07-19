@@ -205,4 +205,82 @@ public class MoveAgvRequestHandlerTest
         fixture.VerifyNodeWasReserved(charger, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
+
+    [TestMethod]
+    public async Task Consume_MoveAgvToCoordinate_AgvDoesNotExist_ThrowsAgvNotFoundException()
+    {
+        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+            .AddAgvs([])
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
+            new MoveAgvToCoordinate("unknown agv".ToGuid(), 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [TestMethod]
+    public async Task Consume_MoveAgvToCoordinate_AgvIsLocked_ThrowsActionNotAllowedInModeException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.Lock();
+        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
+            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [TestMethod]
+    public async Task Consume_MoveAgvToCoordinate_AgvIsInAutomaticMode_ThrowsActionNotAllowedInModeException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
+            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [TestMethod]
+    public async Task Consume_MoveAgvToCoordinate_TargetPositionIsInRestrictedArea_ThrowsPositionIsInRestrictedAreaException()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetMaintenanceMode("maintenance");
+        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .WithInsideRestrictedArea(true)
+            .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<PositionIsInRestrictedAreaException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
+            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [TestMethod]
+    public async Task Consume_MoveAgvToCoordinate_ValidData_MaintenanceMode_RespondsAgvMoveSuccessfulPublishesQueueActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetMaintenanceMode("maintenance");
+        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .WithInsideRestrictedArea(false)
+            .BuildAsync();
+
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_MoveAgvToCoordinate_ValidData_UserMode_RespondsAgvMoveSuccessfulPublishesQueueActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetUserMode();
+        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .WithInsideRestrictedArea(false)
+            .BuildAsync();
+
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+    }
 }

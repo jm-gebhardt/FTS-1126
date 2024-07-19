@@ -404,7 +404,7 @@ public class ActionGroup
         return !Actions.Any() ? [] : Actions
             .Where((action, index) => !action.IsIncomplete &&
                                     (index == 0 || (!Actions[index - 1].IsIncomplete && action.Sequence == Actions[index - 1].Sequence + 1)))
-            .Select(action => action.TargetNodeId)
+            .Select(action => action.Target.NodeId!)
             .ToArray();
     }
 

@@ -53,8 +53,8 @@ public class HostOrderCommandHandlerTest
         pickAction.Sequence.ShouldBe(0);
         dropAction.Sequence.ShouldBe(1);
 
-        pickAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
-        dropAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
+        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
+        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
     }
 
     [TestMethod]
@@ -79,9 +79,9 @@ public class HostOrderCommandHandlerTest
         pickAction.Sequence.ShouldBe(1);
         dropAction.Sequence.ShouldBe(2);
 
-        moveAction.TargetNodeId.ShouldBe(OrderGenerator.DecisionNode);
-        pickAction.TargetNodeId.ShouldBeEmpty();
-        dropAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
+        moveAction.Target.NodeId.ShouldBe(OrderGenerator.DecisionNode);
+        pickAction.Target.NodeId.ShouldBeEmpty();
+        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
     }
 
     [TestMethod]
@@ -122,9 +122,9 @@ public class HostOrderCommandHandlerTest
         moveAction.Sequence.ShouldBe(1);
         dropAction.Sequence.ShouldBe(2);
 
-        pickAction.TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
-        moveAction.TargetNodeId.ShouldBe(OrderGenerator.DecisionNode);
-        dropAction.TargetNodeId.ShouldBeEmpty();
+        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
+        moveAction.Target.NodeId.ShouldBe(OrderGenerator.DecisionNode);
+        dropAction.Target.NodeId.ShouldBeEmpty();
     }
 
     [TestMethod]
@@ -203,8 +203,8 @@ public class HostOrderCommandHandlerTest
 
         queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AssignedAgv);
-        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).TargetNodeId.ShouldBe(command.PickNode);
-        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Actions.Single(a => a.ActionType == ActionType.Drop).Node]);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId.ShouldBe(command.PickNode);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Actions.Single(a => a.ActionType == ActionType.Drop).Node]);
     }
 
     [TestMethod]
@@ -251,9 +251,9 @@ public class HostOrderCommandHandlerTest
 
         order.AssignedAgv.ShouldBe(command.Agv);
         queueActionGroup.ActionGroup.Actions.Count.ShouldBe(3);
-        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).TargetNodeId.ShouldBe(OrderGenerator.DecisionNode);
-        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).TargetNodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Actions.Single(a => a.ActionType == ActionType.Pick).Node]);
-        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).TargetNodeId.ShouldBeEmpty();
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(OrderGenerator.DecisionNode);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Actions.Single(a => a.ActionType == ActionType.Pick).Node]);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.NodeId.ShouldBeEmpty();
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.Agv);
     }
 

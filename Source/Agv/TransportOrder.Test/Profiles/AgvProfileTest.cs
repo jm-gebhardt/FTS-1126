@@ -16,7 +16,7 @@ public class AgvProfileTest
     {
         var agvData = AgvDataGenerator.GenerateAgvData();
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvDataMessageContent = mapper.Map<Messages.Requests.Agv.Queries.AgvData>(agvData);
+        var agvDataMessageContent = mapper.Map<TransportOrder.Messages.Requests.Agv.Queries.AgvData>(agvData);
 
         agvDataMessageContent.ShouldNotBeNull();
         agvDataMessageContent.Acceleration.ShouldBe(agvData.Acceleration);
@@ -41,7 +41,7 @@ public class AgvProfileTest
         var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
         var agv = AgvGenerator.GenerateIdleAgv(agvStatus);
 
-        var agvMessageContent = mapper.Map<Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Agv>(agv);
         agvMessageContent.ShouldSatisfyAllConditions(
             o => o.SerialNumber.ShouldBe(agv.SerialNumber),
             o => o.CorrelationId.ShouldBe(agv.CorrelationId),
@@ -64,7 +64,7 @@ public class AgvProfileTest
     {
         var mapper = MappingHelper.GetMapper(new AgvProfile(), new AgvErrorProfile());
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvMessageContent = mapper.Map<TransportOrder.Domain.Models.Agv.Agv, Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<TransportOrder.Domain.Models.Agv.Agv, TransportOrder.Messages.MessageContent.Agv>(agv);
         var expectedAgvErrors = new List<AgvError>
         {
             AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)

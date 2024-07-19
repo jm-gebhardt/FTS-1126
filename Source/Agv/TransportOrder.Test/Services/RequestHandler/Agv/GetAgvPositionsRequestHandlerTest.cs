@@ -25,7 +25,7 @@ public class GetAgvPositionsRequestHandlerTest
 
         Response<GotAgvPositions> response = await fixture.GetResponseAsync<GotAgvPositions>(new GetAgvPositions(positions.Select(p => p.CorrelationId).ToList()));
 
-        List<Messages.MessageContent.AgvPositionStatus>? actualPositions = response.Message.AgvPositions;
+        List<TransportOrder.Messages.MessageContent.AgvPositionStatus>? actualPositions = response.Message.AgvPositions;
         actualPositions.ShouldNotBeNull();
         List<AgvPositionStatus> positionsOrdered = positions.OrderBy(p => p.CorrelationId).ToList();
         actualPositions.Select(p =>
@@ -46,7 +46,7 @@ public class GetAgvPositionsRequestHandlerTest
 
         Response<GotAgvPositions> response = await fixture.GetResponseAsync<GotAgvPositions>(new GetAgvPositions(new List<Guid>()));
 
-        List<Messages.MessageContent.AgvPositionStatus>? actualPositions = response.Message.AgvPositions;
+        List<TransportOrder.Messages.MessageContent.AgvPositionStatus>? actualPositions = response.Message.AgvPositions;
         actualPositions.ShouldNotBeNull();
         actualPositions.ShouldBeEmpty();
     }

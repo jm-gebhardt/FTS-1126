@@ -265,6 +265,39 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
+    public static ActionGroup GenerateMoveToCoordinateActionGroup(AgvPosition? targetPosition = null, 
+        bool isManual = false, 
+        Guid? assignedAgv = null, 
+        TimeSpan? duration = null,
+        ActionState moveActionState = ActionState.Created,
+        DateTime? completedDate = null)
+    {
+        const string orderId = "move";
+        var groupId = Guid.NewGuid();
+        var target = new ActionTarget(12, 12, 0);
+        if (targetPosition != null)
+        {
+            target = new ActionTarget(targetPosition.X, targetPosition.Y, targetPosition.Theta);
+        }
+        var moveAction = new AgvAction(correlationId: Guid.NewGuid(), actionType: ActionType.Move, target:target , parentId: groupId)
+        {
+            Nodes = []
+        };
+        moveAction.UpdateActionState(moveActionState);
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, hasPriority: true, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration };
+        actionGroup.UpdateActionGroupState();
+
+        if (completedDate != null)
+        {
+            moveAction.GetType().GetProperty(nameof(AgvAction.CompletedDate))!.SetValue(moveAction, completedDate);
+        }
+        if (completedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
+        }
+        return actionGroup;
+    }
+
     [UsedImplicitly]
     public static ActionGroup GenerateActionGroup(IList<AgvAction> actions, ActionGroupState actionGroupState = ActionGroupState.Created, string orderId = "", Guid? correlationId = null)
     {
