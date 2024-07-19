@@ -17,7 +17,7 @@ public class ParameterYamlConverter : IYamlTypeConverter
     }
 
     /// <inheritdoc />
-    public object ReadYaml(IParser parser, Type type)
+    public object ReadYaml(IParser parser, Type type, ObjectDeserializer rootDeserializer)
     {
         var typesToTry = new List<Type> { typeof(ActionDefinition) }; // Add other types as needed
 
@@ -46,11 +46,11 @@ public class ParameterYamlConverter : IYamlTypeConverter
     }
 
     /// <inheritdoc />
-    public void WriteYaml(IEmitter emitter, object? value, Type type)
+    public void WriteYaml(IEmitter emitter, object? value, Type type, ObjectSerializer serializer)
     {
         // Implement custom writing logic here if needed, 
         // or let the default serializer handle it.
-        var serializer = new SerializerBuilder().Build();
-        serializer.Serialize(emitter, value);
+        var newSerializer = new SerializerBuilder().Build();
+        newSerializer.Serialize(emitter, value);
     }
 }
