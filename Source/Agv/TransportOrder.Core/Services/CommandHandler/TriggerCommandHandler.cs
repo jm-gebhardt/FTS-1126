@@ -40,7 +40,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository):
         Guid? edgeId = context.Message.EdgeId;
         string? nodeId = context.Message.NodeId;
         var triggerId = context.Message.TriggerId;
-        var mapId = context.Message.MapId;
+        Guid? mapId = context.Message.MapId;
         ICollection<PolygonPoint> polygon = context.Message.Polygon;
         
         Location? location = null;

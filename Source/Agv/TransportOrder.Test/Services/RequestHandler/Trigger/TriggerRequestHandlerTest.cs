@@ -142,7 +142,7 @@ public class TriggerRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AssignTriggerToLocation_MapUnknown_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
+    public async Task Consume_AssignTriggerToLocation_MapGivenButUnknown_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
@@ -168,6 +168,24 @@ public class TriggerRequestHandlerTest
             .Build();
 
         Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, location.NodeId!, [], location.MapId));
+        response.Message.Location.ShouldBeEquivalentTo(location);
+        await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AssignTriggerToLocation_MapNotGiven_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
+    {
+        const string node = "a node";
+        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var location = new Location(node, Guid.NewGuid(), trigger.Id);
+        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+            .WithTriggers([trigger])
+            .WithGraphElementExists(true)
+            .WithMapExists(false)
+            .WithLocationResponse(location)
+            .Build();
+
+        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, location.NodeId!, [], null));
         response.Message.Location.ShouldBeEquivalentTo(location);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }

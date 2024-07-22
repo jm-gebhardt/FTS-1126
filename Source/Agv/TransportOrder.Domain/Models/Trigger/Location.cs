@@ -38,7 +38,7 @@ public class Location
     /// <summary>
     /// The id of the map the location is on.
     /// </summary>
-    public Guid MapId { get; set; }
+    public Guid? MapId { get; set; } 
 
     /// <inheritdoc cref="Location"/>>
     public Location()
@@ -50,31 +50,31 @@ public class Location
     }
 
     /// <inheritdoc cref="Location"/>>
-    public Location(string nodeId, Guid mapId, Guid triggerId )
+    public Location(string nodeId, Guid? mapId, Guid triggerId )
     {
         Id = Guid.NewGuid();
         Polygon = [];
         NodeId = nodeId;
-        MapId =  mapId;
         TriggerId = triggerId;
+        MapId =  mapId ?? null;
     }
 
     /// <inheritdoc cref="Location"/>>
-    public Location(Guid edgeId, Guid mapId, Guid triggerId)
+    public Location(Guid edgeId, Guid? mapId, Guid triggerId)
     {
         Id = Guid.NewGuid();
         Polygon = [];
         EdgeId = edgeId;
-        MapId = mapId;
+        MapId =  mapId ?? null;
         TriggerId = triggerId;
     }
 
     /// <inheritdoc cref="Location"/>>
-    public Location(ICollection<PolygonPoint> polygon, Guid mapId, Guid triggerId)
+    public Location(ICollection<PolygonPoint> polygon, Guid? mapId, Guid triggerId)
     {
         Id = Guid.NewGuid();
         Polygon = polygon.Select(p => new PolygonPoint(p.X, p.Y, Id)).ToList();
-        MapId = mapId;
+        MapId =  mapId ?? null;
         TriggerId = triggerId;
     }
 

@@ -37,7 +37,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     /// </summary>
     public async Task Consume(ConsumeContext<AssignTriggerToLocation> context)
     {
-        (var triggerId, Guid? edgeId, string? nodeId, ICollection<PolygonPoint> polygon, var mapId) = context.Message;
+        (var triggerId, Guid? edgeId, string? nodeId, ICollection<PolygonPoint> polygon, Guid? mapId) = context.Message;
 
         await ValidateMessageContent(triggerId, edgeId, nodeId, polygon, mapId);
 
@@ -54,7 +54,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new TriggerLocationAssigned(response.Message.Location!));
     }
 
-    private async Task ValidateMessageContent(Guid triggerId, Guid? edgeId, string? nodeId, ICollection<PolygonPoint> polygon, Guid mapId)
+    private async Task ValidateMessageContent(Guid triggerId, Guid? edgeId, string? nodeId, ICollection<PolygonPoint> polygon, Guid? mapId)
     {
         await triggerRepository.GetById(triggerId);
 
@@ -73,7 +73,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             throw new TriggerAssignmentFailedException($"Edge {edgeId} does not exist");
         }
 
-        if (!mapRepository.Exists(mapId))
+        if (mapId != null && !mapRepository.Exists(mapId.Value))
         {
             throw new TriggerAssignmentFailedException($"Map {mapId} does not exist");
         }

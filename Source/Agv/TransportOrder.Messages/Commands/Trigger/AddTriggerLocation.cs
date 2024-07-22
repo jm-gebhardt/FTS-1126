@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 /// <param name="NodeId">The node id, if set.</param>
 /// <param name="Polygon">The polygon, if set.</param>
 /// <param name="MapId">The map the location is on.</param>
-public record AddTriggerLocation(Guid TriggerId, Guid? EdgeId, string? NodeId, ICollection<PolygonPoint> Polygon, Guid MapId) : CorrelatedBy<Guid>
+public record AddTriggerLocation(Guid TriggerId, Guid? EdgeId, string? NodeId, ICollection<PolygonPoint> Polygon, Guid? MapId) : CorrelatedBy<Guid>
 {
     /// <inheritdoc cref="CorrelatedBy{TKey}"/>>
     public Guid CorrelationId => TriggerId;

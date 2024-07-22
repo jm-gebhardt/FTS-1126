@@ -65,7 +65,7 @@ public class TriggerController: Controller
     /// <response code="400">More than one location set.</response>
     [HttpPatch]
     [Route("/trigger/{id:guid}/location")]
-    public async Task<ActionResult<TriggerLocationDto>> AssignTriggerToLocation([FromRoute] Guid id, [FromQuery] Guid mapId, [FromQuery] string? nodeId, [FromQuery] Guid? edgeId, [FromBody] ICollection<PolygonPointDto>? polygon)
+    public async Task<ActionResult<TriggerLocationDto>> AssignTriggerToLocation([FromRoute] Guid id, [FromQuery] Guid? mapId, [FromQuery] string? nodeId, [FromQuery] Guid? edgeId, [FromBody] ICollection<PolygonPointDto>? polygon)
     {
         ICollection<PolygonPoint> polygonPoints = polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(polygon) : [];
         Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, edgeId, nodeId,  polygonPoints, mapId));

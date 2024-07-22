@@ -10,4 +10,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 /// <param name="NodeId">The node id, if set.</param>
 /// <param name="Polygon">The polygon, if set.</param>
 /// <param name="MapId">The map the location is on.</param>
-public record AssignTriggerToLocation(Guid TriggerId, Guid? EdgeId, string? NodeId, ICollection<PolygonPoint> Polygon, Guid MapId);
+public record AssignTriggerToLocation(Guid TriggerId, Guid? EdgeId, string? NodeId, ICollection<PolygonPoint> Polygon, Guid? MapId);

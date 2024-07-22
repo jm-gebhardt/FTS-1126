@@ -85,7 +85,7 @@ public class Trigger
     /// <param name="mapId">Id of the map the edge is on.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(Guid edgeId, Guid mapId)
+    public Location AddLocation(Guid edgeId, Guid? mapId)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {
@@ -103,7 +103,7 @@ public class Trigger
     /// <param name="mapId">Id of the map the node is on.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(string nodeId, Guid mapId)
+    public Location AddLocation(string nodeId, Guid? mapId)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {
@@ -121,7 +121,7 @@ public class Trigger
     /// <param name="mapId">Id of the map the polygon is on.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(ICollection<PolygonPoint> polygon, Guid mapId)
+    public Location AddLocation(ICollection<PolygonPoint> polygon, Guid? mapId)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {

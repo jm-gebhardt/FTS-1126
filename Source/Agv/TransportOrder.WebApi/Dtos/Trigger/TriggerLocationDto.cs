@@ -31,7 +31,7 @@ public record TriggerLocationDto
     /// <summary>
     /// The id of the map the location is on.
     /// </summary>
-    public Guid MapId { get; set; }
+    public Guid? MapId { get; set; }
 
     /// <inheritdoc cref="TriggerLocationDto"/>>
     public TriggerLocationDto()
