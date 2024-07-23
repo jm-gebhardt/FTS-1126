@@ -21,8 +21,14 @@ public static class BusRegistrationExtension
     [PublicAPI]
     public static IBusRegistrationConfigurator AddBusConsumers(this IBusRegistrationConfigurator cfg)
     {
-        cfg.AddConsumer<GridEventHandler>().Endpoint(c => c.InstanceId = nameof(GridEventHandler));
-        cfg.AddConsumer<HousekeepingCommandHandler>().Endpoint(c => c.InstanceId = nameof(HousekeepingCommandHandler));
+        cfg.AddConsumer<GridEventHandler>(c =>
+        {
+            c.UseConcurrentMessageLimit(1);
+        });
+        cfg.AddConsumer<HousekeepingCommandHandler>(c =>
+        {
+            c.UseConcurrentMessageLimit(1);
+        });
         cfg.AddConsumer<PositionEventHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
