@@ -121,6 +121,7 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
         context.Set<AgvSettingsGroup>().Update(group);
         context.Set<Setting>().Remove(originalSetting);
         await context.SaveChangesAsync();
+        // ReSharper disable once DisposeOnUsingVariable
         await context.DisposeAsync();
         await ReloadInMemorySettings();
     }

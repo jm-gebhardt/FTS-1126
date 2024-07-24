@@ -7,6 +7,8 @@ trigger:
 variables:
 - name: 'SourceDirectory'
   value: 'Source/Agv'
+- name: 'ResharperDirectory'
+  value: 'Source/Resharper'  
 - name: 'Build.Target'
   value: 'CompileAgv.sln'
 - name: 'Build.Configuration'
@@ -54,12 +56,25 @@ stages:
           command: build
           projects: '$(SourceDirectory)/$(Build.Target)'
           arguments: '--configuration $(Build.Configuration)'
-      - task: ResharperCli@2
-        inputs:
-          solutionOrProjectPath: '$(SourceDirectory)/$(Build.Target)'
-          additionalArguments: '--no-build'
-          failBuildLevelSelector: Suggestion
-          resharperNuGetVersion: '2023.3.3'
+      - powershell: |
+          echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
+          dotnet tool install --global JetBrains.ReSharper.GlobalTools --version 2024.1.4
+          dotnet tool restore
+          dotnet tool install --global dotnet-script
+          dotnet tool restore
+          dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
+          dotnet script  $(ResharperDirectory)/check-suggestions.csx
+          # Check logs.txt
+          $logContent = Get-Content ./resharper-logs.txt
+          if ($logContent -ne $null -and $logContent.Length -gt 0) {
+              Get-Content ./resharper-logs.txt
+              exit 1
+          }
+          else {
+              Write-Host "No suggestions found by ReSharper."
+          }
+        displayName: 'Run ReSharper Command Line Tools and Fail if ReSharper found suggestions'
+
   ################################################
   # Run Unit Tests
   ################################################  

@@ -17,9 +17,9 @@ public static class TelegramParser
     public static Dictionary<string, string> Parse(string telegram)
     {
         Dictionary<string, string> content = telegram
-            .Split(new string[] { EndSymbol }, StringSplitOptions.None)[0]
-            .Split(new string[] { FieldSeparator }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(field => field.Split(new string[] { KeyValueSeparator }, StringSplitOptions.None))
+            .Split([EndSymbol], StringSplitOptions.None)[0]
+            .Split([FieldSeparator], StringSplitOptions.RemoveEmptyEntries)
+            .Select(field => field.Split([KeyValueSeparator], StringSplitOptions.None))
             .Where(parts => parts.Length == 2)
             .ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim());
         return content;
