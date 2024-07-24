@@ -491,7 +491,8 @@ public class AgvController : Controller
     /// Move agv manually to a coordinate with orientation. 
     /// </summary>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
-    /// <response code="400">The position is inside a restricted area.</response>
+    /// <response code="400">The position is inside a restricted area.
+    /// Or the agv is not in user or maintenance mode.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]

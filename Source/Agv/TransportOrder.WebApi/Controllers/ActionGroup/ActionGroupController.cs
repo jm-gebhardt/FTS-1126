@@ -114,9 +114,10 @@ public class ActionGroupController : Controller
     /// <param name="agvCorrelationId">The assigned agv (optional).</param>
     /// <returns>The created action group.</returns>
     /// <response code="200">Ok</response>
-    /// <response code="400">The given pick or drop station node is not of type pick, drop, or pickdrop, respectively.
+    /// <response code="400">The given pick or drop station node is not of type pick, drop, or pick drop, respectively.
     /// Or the action group is invalid (e.g. there is no agv that can reach both the pick and drop station.).
-    /// Or the given pick or drop station not found</response>
+    /// Or the given pick or drop station is not found. 
+    /// Or the agv is not in maintenance or normal mode.</response>
     /// <response code="404">AGV with given correlationId not found .</response>
     [HttpPost]
     [Route("/actionGroup")]
