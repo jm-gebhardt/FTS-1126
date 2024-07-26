@@ -28,12 +28,21 @@ public static class OrderGenerator
         }
     }
 
-    public static OrderDetails GenerateShortCircuitOrder()
+    public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020=true)
     {
+        if (pickAt1020)
+        {
+            return new OrderDetails(Guid.NewGuid(),
+                "OrderId",
+                "1020",
+                KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith("2")),
+                "leNo",
+                HostOrderCreator.Wms);
+        }
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith("1")),
             KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith("2")),
+            "1050",
             "leNo",
             HostOrderCreator.Wms);
     }

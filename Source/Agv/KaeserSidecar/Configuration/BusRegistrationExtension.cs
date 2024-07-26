@@ -21,6 +21,8 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<AgvActionCommandHandler>();
         cfg.AddConsumer<DecisionPointEventHandler>();
         cfg.AddConsumer<CargoTriggerPointEventHandler>(c => c.ConcurrentMessageLimit = 1);
+        cfg.AddConsumer<DecisionPointEventHandler>(c => c.ConcurrentMessageLimit=1);
+        cfg.AddConsumer<ShortCircleTriggerPointEventHandler>(c => c.ConcurrentMessageLimit=1);
         return cfg;
     }
 }

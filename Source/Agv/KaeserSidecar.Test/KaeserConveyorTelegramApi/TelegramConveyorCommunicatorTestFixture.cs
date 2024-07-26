@@ -9,7 +9,7 @@ using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi;
 
-public class TelegramConveyorCommunicatorTestFixture : FixtureBase
+public class TelegramConveyorCommunicatorTestFixture: FixtureBase
 {
     public ToConveyorTelegramProcessor Processor { get; private set; } = null!;
 

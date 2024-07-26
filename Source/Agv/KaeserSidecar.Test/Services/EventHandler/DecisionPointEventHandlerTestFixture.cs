@@ -1,8 +1,11 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,7 +19,9 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixture<DecisionPointEventHandler>
 {
     private readonly IStationRepository _repository;
-
+    private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
+    private readonly Mock<IConveyorCommunicator> _communicator = new();
+    
     /// <inheritdoc cref="MassTransitConsumerTestFixture{DecisionPointEventHandler}"/>>
     protected override MassTransitConsumerTestFixture<DecisionPointEventHandler> AddServices(IServiceCollection collection)
     {
@@ -25,12 +30,17 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         collection.AddTransient(_ => new Mock<ILogger<DecisionPointEventHandler>>().Object);
         collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
         collection.AddSingleton<IStationRepository, StationRepository>();
+        collection.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
+        collection.AddSingleton(_ => _communicator.Object);
+        collection.AddSingleton(_ => _hostOrderRepository.Object);
         return this;
     }
 
     /// <inheritdoc cref="DecisionPointEventHandlerTestFixture"/>>
     public DecisionPointEventHandlerTestFixture()
     {
+        _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string?>())).Verifiable();
+
         Build();
         _repository = Provider.GetRequiredService<IStationRepository>();
     }
@@ -48,5 +58,26 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
             }
         }
         return this;
+    }
+
+    public DecisionPointEventHandlerTestFixture WithHostOrder(HostOrder? order)
+    {
+        if (order != null)
+        {
+            _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
+        }
+       
+        _hostOrderRepository.Setup(x => x.GetNextIncompleteOrderWithUnknownPickTarget()).ReturnsAsync(order);
+        return this;
+    }
+
+    public void VerifyReportingToConveyors(string station="none", bool hasCargo=false, string? pickStation=null, Times? times=null)
+    {
+        times ??= Times.Once();
+        if (times == Times.Never())
+        {
+            _communicator.Verify(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string?>()), (Times)times);
+        }
+        _communicator.Verify(x => x.ReportPalletPickDropStation(station, hasCargo, pickStation), (Times)times);
     }
 }

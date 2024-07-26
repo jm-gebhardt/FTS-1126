@@ -16,7 +16,6 @@ public class HostOrderRepositoryTest
         var order = OrderGenerator.GenerateUnknownDropTargetOrder();
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(order);
         dropHostOrder.Start(DateTime.UtcNow, Guid.NewGuid());
-        
         fixture.Repository.Add(dropHostOrder);
         await fixture.Repository.SaveAsync();
 

@@ -10,4 +10,9 @@ public interface IConveyorCommunicator
     /// </summary>
     /// <param name="cargo"></param>
     void ReportAplCargoState(bool cargo);
+    
+    /// <summary>
+    /// Report the station for pick or drop to the conveyor.
+    /// </summary>
+    void ReportPalletPickDropStation(string targetStation, bool hasCargo, string? pickStation);
 }

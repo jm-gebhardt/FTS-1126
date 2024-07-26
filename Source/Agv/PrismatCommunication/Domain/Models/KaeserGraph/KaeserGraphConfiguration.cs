@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
+using JetBrains.Annotations;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -7,6 +8,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 /// <summary>
 /// Provides the configuration of the Kaeser graph
 /// </summary>
+[PublicAPI]
 public class KaeserGraphConfiguration
 {
     /// <summary>
@@ -15,14 +17,19 @@ public class KaeserGraphConfiguration
     public string[] PrismatKnownTargets { get; } = ["1020", "1050", "2130", "2110", "2230", "2210", "2330", "2310", "2430", "2410"];
 
     /// <summary>
-    /// Prismat targets for which the pick node is unknown;
+    /// Prismat targets (pick and drop) of orders for which the pick node is unknown.
     /// </summary>
     public string[] PrismatIncompletePickTargets { get; } = ["1040", "9070"];
 
     /// <summary>
-    /// Prismat targets for which the drop node is unknown;
+    /// Prismat targets (pick and drop) of orders for which the drop node is unknown.
     /// </summary>
     public string[] PrismatIncompleteDropTargets { get; } = ["9060", "1060"];
+
+    /// <summary>
+    /// The AKL pick target sent by prismat that is to be handled with an immediate pick after dropping.
+    /// </summary>
+    public string PrismatAklPickTarget { get; private set; } = "1020";
 
     /// <summary>
     /// Provides a mapping between source and target definitions and
@@ -121,5 +128,9 @@ public class KaeserGraphConfiguration
         CheckCargoTriggerName = yamlData.CheckCargoTriggerName;
         StationMapping = yamlData.StationMapping;
         ConveyorStationMapping = yamlData.ConveyorStationMapping;
+        if (!string.IsNullOrEmpty(yamlData.PrismatAklPickTarget))
+        {
+            PrismatAklPickTarget = yamlData.PrismatAklPickTarget;
+        }
     }
 }
