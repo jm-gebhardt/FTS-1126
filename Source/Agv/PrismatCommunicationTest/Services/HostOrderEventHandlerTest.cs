@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
@@ -61,5 +62,38 @@ public class HostOrderEventHandlerTest
         (await fixture.ConsumerHarness.Consumed.Any<CargoTriggerPointPassed>()).ShouldBeTrue();
 
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroupWithUnknownDropTargetForAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_DropActionPassedShortCircleTriggerPoint_NextPickOrderForShortCircleExists_PublishesQueuePickDropActionGroupForAgv()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
+            .WithNextPickOrderForShortCircleDualOperation(hostOrder);
+
+        var shortCircleTriggerPointPassed = new ShortCircleTriggerPointPassed(Guid.NewGuid());
+        await fixture.TestHarness.Bus.Publish(shortCircleTriggerPointPassed);
+
+        await fixture.ShouldHaveConsumedAsync<ShortCircleTriggerPointPassed>();
+        await fixture.ShouldHavePublishedAsync<QueuePickDropActionGroupForAgv>();
+
+        var message = fixture.TestHarness.Published.Select<QueuePickDropActionGroupForAgv>().First().Context.Message;
+        message.CorrelationId.ShouldBe(hostOrder.CorrelationId);
+        OrderGenerator.KaeserConfiguration.StationMapping.TryGetValue(hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node, out string? expectedPickNode);
+        expectedPickNode.ShouldNotBeNull();
+        message.PickNode.ShouldBe(expectedPickNode);
+    }
+
+    [TestMethod]
+    public async Task Consume_DropActionPassedShortCircleTriggerPoint_NoNextPickOrderForShortCircleExists_DoesNotPublishQueuePickDropActionGroupForAgv()
+    {
+        HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
+            .WithNextPickOrderForShortCircleDualOperation(null);
+        var shortCircleTriggerPointPassed = new ShortCircleTriggerPointPassed(Guid.NewGuid());
+        await fixture.TestHarness.Bus.Publish(shortCircleTriggerPointPassed);
+
+        await fixture.ShouldHaveConsumedAsync<ShortCircleTriggerPointPassed>();
+        await fixture.ShouldNotHavePublishedAsync<QueuePickDropActionGroupForAgv>();
     }
 }

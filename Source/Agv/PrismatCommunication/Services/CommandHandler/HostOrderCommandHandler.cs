@@ -23,6 +23,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     IConsumer<PassDecisionPoint>,
     IConsumer<QueuePickDropActionGroupForAgv>,
     IConsumer<PassCargoTriggerPoint>,
+    IConsumer<PassShortCircleTriggerPoint>,
     IConsumer<QueueActionGroupWithUnknownDropTargetForAgv>,
     IConsumer<FinishPick>
 
@@ -47,6 +48,12 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, orderDetails);
         if (actionGroup != null)
         {
+            bool picksAt1020 = hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node == configuration.PrismatAklPickTarget;
+            // Check if there are agvs that are to be selected to handle this order directly after dropping
+            if (await hostOrderRepository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint() && picksAt1020)
+            {
+                return;
+            }
             await context.Publish(new QueueActionGroup(actionGroup, false));
             return;
         }
@@ -108,10 +115,11 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     {
         (var correlationId, Guid? assignedAgv, string targetNodeId) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        hostOrder.PassTriggerPoint();
-        await hostOrderRepository.UpdateAsync(hostOrder);
+       
         if (hostOrder.HasUnknownDropTarget(configuration))
-        {   // only trigger Doppelspiel, if it is a drop order
+        {   // only trigger dual operation, if it is a drop order
+            hostOrder.PassTriggerPoint();
+            await hostOrderRepository.UpdateAsync(hostOrder);
             await context.Publish(new DecisionPointPassed(assignedAgv!.Value, targetNodeId));
         }
     }
@@ -134,14 +142,18 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     public async Task Consume(ConsumeContext<PassCargoTriggerPoint> context)
     {
         var (assignedAgv, correlationId) = context.Message;
-        if (correlationId != default)
+        if (correlationId == default)
         {
-            var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+            return;
+        }
+
+        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+        if (hostOrder.HasUnknownPickTarget(configuration))
+        {
             hostOrder.PassTriggerPoint();
             await hostOrderRepository.UpdateAsync(hostOrder);
+            await context.Publish(new CargoTriggerPointPassed(assignedAgv));
         }
-   
-        await context.Publish(new CargoTriggerPointPassed(assignedAgv));
     }
 
     /// <summary>
@@ -170,5 +182,21 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             return;
         }
         hostCommunicator.ReportPickCompletion(hostOrder.Hu, pickAction.Node, timestamp);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="PassShortCircleTriggerPoint"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<PassShortCircleTriggerPoint> context)
+    {
+        var (assignedAgv, correlationId) = context.Message;
+        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+        bool dropsAt1050 = hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node != configuration.PrismatAklPickTarget;
+        if (dropsAt1050)
+        {
+            hostOrder.PassTriggerPoint();
+            await hostOrderRepository.UpdateAsync(hostOrder);
+            await context.Publish(new ShortCircleTriggerPointPassed(assignedAgv));
+        }
     }
 }

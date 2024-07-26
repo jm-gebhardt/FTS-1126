@@ -1,7 +1,9 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using JetBrains.Annotations;
 using MassTransit;
@@ -12,11 +14,12 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 /// Provides handlers for action group related events.
 /// </summary>
 [UsedImplicitly]
-public class ActionGroupEventHandler:
+public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     IConsumer<ActionGroupCompleted>,
     IConsumer<ActionGroupStarted>,
     IConsumer<SetTargetForAction>,
     IConsumer<AgvPassedCargoTriggerPoint>,
+    IConsumer<AgvPassedShortCircleTriggerPoint>,
     IConsumer<PickActionCompleted>
 {
     /// <summary>
@@ -68,5 +71,23 @@ public class ActionGroupEventHandler:
     {
         var (correlationId, actionCorrelationId, timestamp) = context.Message;
         await context.Publish(new FinishPick(correlationId, actionCorrelationId, timestamp));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvPassedShortCircleTriggerPoint"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvPassedShortCircleTriggerPoint> context)
+    {
+        (var agvData, _, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
+        if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick))
+        {
+            return;
+        }
+        var action = actionGroup.Actions.First(a => a.State == ActionState.Started);
+        if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+        {
+            return;
+        }
+        await context.Publish(new PassShortCircleTriggerPoint(agvData.CorrelationId, actionGroup.CorrelationId));
     }
 }

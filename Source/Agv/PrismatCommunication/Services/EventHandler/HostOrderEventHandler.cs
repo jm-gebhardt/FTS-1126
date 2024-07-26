@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using JetBrains.Annotations;
@@ -10,9 +12,10 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 /// Provides handlers for host order related events.
 /// </summary>
 [UsedImplicitly]
-public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository) : 
+public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository, KaeserGraphConfiguration configuration) : 
     IConsumer<DecisionPointPassed>,
-    IConsumer<CargoTriggerPointPassed>
+    IConsumer<CargoTriggerPointPassed>,
+    IConsumer<ShortCircleTriggerPointPassed>
 {
     /// <summary>
     /// Handles the <see cref="DecisionPointPassed"/> event.
@@ -35,6 +38,18 @@ public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository) :
         if (order != null)
         {
             await context.Publish(new QueueActionGroupWithUnknownDropTargetForAgv(order.CorrelationId, context.Message.Agv));
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ShortCircleTriggerPointPassed"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ShortCircleTriggerPointPassed> context)
+    {
+        var order = await hostOrderRepository.GetNextPickOrderForShortCircleDualOperation();
+        if (order != null && configuration.StationMapping.TryGetValue(order.Actions.First(a => a.ActionType == ActionType.Pick).Node, out string? pickNode))
+        {
+            await context.Publish(new QueuePickDropActionGroupForAgv(order.CorrelationId, context.Message.Agv, pickNode));
         }
     }
 }

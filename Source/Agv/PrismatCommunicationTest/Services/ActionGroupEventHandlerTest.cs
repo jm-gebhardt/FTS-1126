@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -6,6 +8,7 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
+using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
@@ -100,5 +103,53 @@ public class ActionGroupEventHandlerTest
         finishPick.ActionCorrelationId.ShouldBe(pickActionCompleted.ActionCorrelationId);
         finishPick.CorrelationId.ShouldBe(pickActionCompleted.CorrelationId);
         finishPick.Timestamp.ShouldBe(pickActionCompleted.Timestamp);
+    }
+
+    [TestMethod]
+    public async Task AgvPassedShortCircleTriggerPoint_ValidData_PublishesPassShortCircleTriggerPoint()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails);
+        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+       
+        var agvPassedShortCircleTriggerPoint = new AgvPassedShortCircleTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
+            new AgvStatus(), actionGroup, [], []);
+
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+
+        await fixture.TestHarness.Bus.Publish(agvPassedShortCircleTriggerPoint);
+
+        await fixture.ShouldHaveConsumedAsync<AgvPassedShortCircleTriggerPoint>();
+        await fixture.ShouldHavePublishedAsync<PassShortCircleTriggerPoint>();
+    }
+
+    [TestMethod]
+    public async Task AgvPassedShortCircleTriggerPoint_NotActionGroup_DoesNotPublishPassShortCircleTriggerPoint()
+    {
+        var agvPassedShortCircleTriggerPoint = new AgvPassedShortCircleTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
+            new AgvStatus(), null, [], []);
+
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        
+        await fixture.TestHarness.Bus.Publish(agvPassedShortCircleTriggerPoint);
+
+        await fixture.ShouldHaveConsumedAsync<AgvPassedShortCircleTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<PassShortCircleTriggerPoint>();
+    }
+
+    [TestMethod]
+    public async Task AgvPassedShortCircleTriggerPoint_NotPickDropActionGroup_DoesNotPublishPassShortCircleTriggerPoint()
+    {
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var agvPassedShortCircleTriggerPoint = new AgvPassedShortCircleTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
+            new AgvStatus(), actionGroup, [], []);
+
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+
+        await fixture.TestHarness.Bus.Publish(agvPassedShortCircleTriggerPoint);
+
+        await fixture.ShouldHaveConsumedAsync<AgvPassedShortCircleTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<PassShortCircleTriggerPoint>();
     }
 }

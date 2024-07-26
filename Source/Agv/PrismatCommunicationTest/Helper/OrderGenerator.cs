@@ -28,7 +28,7 @@ public static class OrderGenerator
         }
     }
 
-    public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020=true)
+    public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020 = true)
     {
         if (pickAt1020)
         {

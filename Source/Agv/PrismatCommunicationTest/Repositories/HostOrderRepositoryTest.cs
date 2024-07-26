@@ -82,4 +82,80 @@ public class HostOrderRepositoryTest
 
         (await fixture.Repository.GetNextIncompleteOrderWithUnknownDropTarget()).ShouldBeEquivalentTo(nextOrder);
     }
+
+    [TestMethod]
+    public async Task GetNextPickOrderForShortCircleDualOperation_ValidData_ReturnsOrder()
+    {
+        var earlierOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        var laterOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        var dropAt1050 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange([earlierOrder, laterOrder, dropAt1050, longCircleOrder]);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetNextPickOrderForShortCircleDualOperation()).ShouldBe(earlierOrder);
+    }
+
+    [TestMethod]
+    public async Task GetNextPickOrderForShortCircleDualOperation_NoUnstartedPick_ReturnsNull()
+    {
+        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var startedPickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        startedPickAt1020.Start(DateTime.UtcNow, Guid.NewGuid());
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange([longCircleOrder, startedPickAt1020]);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetNextPickOrderForShortCircleDualOperation()).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task HasDropOrdersHeadingTowardsShortCircleTriggerPoint_ValidData_ReturnsTrue()
+    {
+        var earlierOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        earlierOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        var pickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        pickAt1020.Start(DateTime.UtcNow, Guid.NewGuid());
+        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        longCircleOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange([earlierOrder, pickAt1020, longCircleOrder]);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasDropOrdersHeadingTowardsShortCircleTriggerPoint_NoOrderDroppingAt1050_ReturnsFalse()
+    {
+        var pickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        pickAt1020.Start(DateTime.UtcNow, Guid.NewGuid());
+        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        longCircleOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange([pickAt1020, longCircleOrder]);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task HasDropOrdersHeadingTowardsShortCircleTriggerPoint_NoStartedOrderThatDidNotPassShortCircleTriggerPoint_ReturnsFalse()
+    {
+        var passedTriggerPoint = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        passedTriggerPoint.Start(DateTime.UtcNow, Guid.NewGuid());
+        passedTriggerPoint.PassTriggerPoint();
+
+        var notStarted = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange([passedTriggerPoint, notStarted]);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint()).ShouldBeFalse();
+    }
 }

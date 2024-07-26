@@ -26,6 +26,12 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     Task<bool> HasDropOrdersHeadingTowardsCargoTriggerPoint();
 
     /// <summary>
+    ///Check if there drop host orders that are heading towards the short circle trigger point.
+    /// </summary>
+    /// <returns></returns>
+    Task<bool> HasDropOrdersHeadingTowardsShortCircleTriggerPoint();
+
+    /// <summary>
     /// Get the next order with unknown pick target.
     /// </summary>
     Task<HostOrder?> GetNextIncompleteOrderWithUnknownPickTarget();
@@ -34,4 +40,9 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// Get the next order with unknown drop target.
     /// </summary>
     Task<HostOrder?> GetNextIncompleteOrderWithUnknownDropTarget();
+
+    /// <summary>
+    /// Gets the next order picking at 1020 for dual operation.
+    /// </summary>
+    Task<HostOrder?> GetNextPickOrderForShortCircleDualOperation();
 }

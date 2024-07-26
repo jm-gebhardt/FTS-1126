@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
@@ -40,6 +41,17 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>>
+    public async Task<bool> HasDropOrdersHeadingTowardsShortCircleTriggerPoint()
+    {
+        return await _context.Set<HostOrder>().Where(
+                h => !h.PassedTriggerPoint
+                     && h.StartedDate != null
+                     && h.Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node))
+                     && h.Actions.All(a => a.Node != configuration.PrismatAklPickTarget))
+            .AnyAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>>
     public async  Task<HostOrder?> GetNextIncompleteOrderWithUnknownPickTarget()
     {
         return await _context.Set<HostOrder>().Where(
@@ -58,6 +70,16 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
                      && h.AssignedAgv == null
                      && h.StartedDate == null
                      && h.Actions.All(a => configuration.PrismatIncompleteDropTargets.Contains(a.Node)))
+            .OrderBy(h => h.CreatedDate).FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>>
+    public async Task<HostOrder?> GetNextPickOrderForShortCircleDualOperation()
+    {
+        return await _context.Set<HostOrder>().Where(
+                h =>  h.AssignedAgv == null
+                     && h.StartedDate == null
+                     && h.Actions.Any(a => a.Node == configuration.PrismatAklPickTarget && a.ActionType == ActionType.Pick))
             .OrderBy(h => h.CreatedDate).FirstOrDefaultAsync();
     }
 }

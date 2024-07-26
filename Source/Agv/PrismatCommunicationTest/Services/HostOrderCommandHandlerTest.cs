@@ -35,13 +35,13 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithKnownPickAndDropTarget_QueueActionGroup()
+    public async Task Consume_CreateHostOrder_DropOrderFor1050_QueueActionGroup()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostCommunicator();
 
-        var order = OrderGenerator.GenerateShortCircuitOrder();
+        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false);
    
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
@@ -55,6 +55,46 @@ public class HostOrderCommandHandlerTest
 
         pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
         dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_QueueActionGroup()
+    {
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(null)
+            .WithDropOrdersHeadingTowardsShortCircleTriggerPoint(false)
+            .WithHostCommunicator();
+
+        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+
+        var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
+        fixture.VerifyHostOrderAdded();
+
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
+        var pickAction = queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
+        var dropAction = queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
+
+        pickAction.Sequence.ShouldBe(0);
+        dropAction.Sequence.ShouldBe(1);
+
+        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
+        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateHostOrder_PickOrderFor1020PendingDropAt1050_DoesNotPublishQueueActionGroup()
+    {
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(null)
+            .WithDropOrdersHeadingTowardsShortCircleTriggerPoint(true)
+            .WithHostCommunicator();
+
+        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+
+        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
+
+        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
     [TestMethod]
@@ -189,6 +229,24 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task PassDecisionPoint_DoesNotDropAt1060_DoesNotPublishDecisionPointPassed()
+    {
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var command = new PassDecisionPoint(order.CorrelationId, Guid.NewGuid(), "a target node");
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<PassDecisionPoint>();
+        await fixture.ShouldNotHavePublishedAsync<DecisionPointPassed>();
+
+        order.PassedTriggerPoint.ShouldBeFalse();
+    }
+
+    [TestMethod]
     public async Task Consume_QueuePickDropActionGroupForAgv_ValidData_PublishesQueueActionGroup()
     {
         var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
@@ -219,21 +277,42 @@ public class HostOrderCommandHandlerTest
 
         var command = new PassCargoTriggerPoint(Guid.NewGuid(), order.CorrelationId);
 
-        var loadTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassCargoTriggerPoint, CargoTriggerPointPassed>(command);
-        loadTriggerPointPassed.Agv.ShouldBe(command.AgvCorrelationId);
+        var cargoTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassCargoTriggerPoint, CargoTriggerPointPassed>(command);
+        cargoTriggerPointPassed.Agv.ShouldBe(command.AgvCorrelationId);
         order.PassedTriggerPoint.ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_PassCargoTriggerPoint_NoOrderIdProvided_CargoTriggerPointPassed()
+    public async Task Consume_PassCargoTriggerPoint_NoOrderIdProvided_DoesNotPublishCargoTriggerPointPassed()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostCommunicator();
 
         var command = new PassCargoTriggerPoint(Guid.NewGuid(), default(Guid));
+       
+        await fixture.TestHarness.Bus.Publish(command);
+        
+        await fixture.ShouldHaveConsumedAsync<PassCargoTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<CargoTriggerPointPassed>();
+    }
 
-        var loadTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassCargoTriggerPoint, CargoTriggerPointPassed>(command);
-        loadTriggerPointPassed.Agv.ShouldBe(command.AgvCorrelationId);
+    [TestMethod]
+    public async Task Consume_PassCargoTriggerPoint_NotDroppingAt970_DoesNotPublishCargoTriggerPointPassed()
+    {
+        var orderDetails = OrderGenerator.GenerateUnknownDropTargetOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var command = new PassCargoTriggerPoint(Guid.NewGuid(), default(Guid));
+
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<PassCargoTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<CargoTriggerPointPassed>();
+
+        order.PassedTriggerPoint.ShouldBeFalse();
     }
 
     [TestMethod]
@@ -305,5 +384,40 @@ public class HostOrderCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<FinishPick>();
         fixture.VerifyPickCompletion(Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_PassShortCircleTriggerPoint_ValidData_PublishesShortCircleTriggerPointPassed()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order);
+
+        var command = new PassShortCircleTriggerPoint(Guid.NewGuid(), order.CorrelationId);
+
+        var shortCircleTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassShortCircleTriggerPoint, ShortCircleTriggerPointPassed>(command);
+
+        shortCircleTriggerPointPassed.Agv.ShouldBe(command.Agv);
+        order.PassedTriggerPoint.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_PassShortCircleTriggerPoint_NotDropAt1050_DoesNotPublishShortCircleTriggerPointPassed()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order);
+
+        var command = new PassShortCircleTriggerPoint(Guid.NewGuid(), order.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        
+        await fixture.ShouldHaveConsumedAsync<PassShortCircleTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<ShortCircleTriggerPointPassed>();
+        order.PassedTriggerPoint.ShouldBeFalse();
     }
 }
