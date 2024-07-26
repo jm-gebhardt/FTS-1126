@@ -82,10 +82,6 @@ public class PrometheusMetricCollectionServiceTest
         priorActionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         startedDate = priorActionGroup.CompletedDate!.Value.AddSeconds(idleTime);
 
-        var fixture = new PrometheusMetricCollectionServiceTestFixture()
-            .AddGraph(graph)
-            .AddActionGroups([priorActionGroup]);
-
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
             pickActionState: ActionState.Completed,
             dropActionState: ActionState.Completed,
@@ -96,6 +92,10 @@ public class PrometheusMetricCollectionServiceTest
         actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Src1, AgvGraphGenerator.Way1, AgvGraphGenerator.Way3, AgvGraphGenerator.Dst1];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
+
+        var fixture = new PrometheusMetricCollectionServiceTestFixture()
+            .AddGraph(graph)
+            .AddActionGroups([priorActionGroup, actionGroup]);
 
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
@@ -126,10 +126,6 @@ public class PrometheusMetricCollectionServiceTest
         priorActionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         startedDate = priorActionGroup.CompletedDate!.Value.AddSeconds(idleTime);
 
-        var fixture = new PrometheusMetricCollectionServiceTestFixture()
-            .AddGraph(graph)
-            .AddActionGroups([priorActionGroup]);
-
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(
             actionStateCharge: chargeActionState,
             actionStateMove: ActionState.Completed,
@@ -138,6 +134,10 @@ public class PrometheusMetricCollectionServiceTest
         actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Crg1];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
+
+        var fixture = new PrometheusMetricCollectionServiceTestFixture()
+            .AddGraph(graph)
+            .AddActionGroups([priorActionGroup, actionGroup]);
 
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
@@ -166,21 +166,21 @@ public class PrometheusMetricCollectionServiceTest
         priorActionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         startedDate = priorActionGroup.CompletedDate!.Value.AddSeconds(idleTime);
 
-        var fixture = new PrometheusMetricCollectionServiceTestFixture()
-            .AddGraph(graph)
-            .AddActionGroups([priorActionGroup]);
-
         var actionGroupCorrelationId = Guid.NewGuid();
         var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(
             actionGroupCorrelationId,
             string.Empty,
-            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move,  AgvGraphGenerator.Prk1, actionGroupCorrelationId) },
+            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1, actionGroupCorrelationId) },
             assignedAgv: agvId,
             creator: ActionGroupCreator.TransportOrder
         );
         actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1, AgvGraphGenerator.Way1, AgvGraphGenerator.Prk1];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
+
+        var fixture = new PrometheusMetricCollectionServiceTestFixture()
+            .AddGraph(graph)
+            .AddActionGroups([priorActionGroup, actionGroup]);
 
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
@@ -209,10 +209,6 @@ public class PrometheusMetricCollectionServiceTest
         priorActionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         startedDate = priorActionGroup.CompletedDate!.Value.AddSeconds(idleTime);
 
-        var fixture = new PrometheusMetricCollectionServiceTestFixture()
-            .AddGraph(graph)
-            .AddActionGroups([priorActionGroup]);
-
         var actionGroupCorrelationId = Guid.NewGuid();
         var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(
             actionGroupCorrelationId,
@@ -225,6 +221,10 @@ public class PrometheusMetricCollectionServiceTest
         actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1, AgvGraphGenerator.Way1, AgvGraphGenerator.Src1];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
+
+        var fixture = new PrometheusMetricCollectionServiceTestFixture()
+            .AddGraph(graph)
+            .AddActionGroups([priorActionGroup, actionGroup]);
 
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
