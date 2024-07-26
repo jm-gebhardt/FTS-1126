@@ -32,8 +32,4 @@
       <ProjectReference Include="..\TransportOrder.Test\TransportOrder.Test.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="KaeserConveyorTelegramApi\" />
-    </ItemGroup>
-
 </Project>

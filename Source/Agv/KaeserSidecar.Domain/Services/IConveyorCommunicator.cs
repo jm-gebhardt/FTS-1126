@@ -3,4 +3,11 @@
 /// <summary>
 /// Provides a service for communicating with the conveyors
 /// </summary>
-public interface IConveyorCommunicator;
+public interface IConveyorCommunicator
+{
+    /// <summary>
+    /// Report the cargo state to the APL conveyors.
+    /// </summary>
+    /// <param name="cargo"></param>
+    void ReportAplCargoState(bool cargo);
+}
