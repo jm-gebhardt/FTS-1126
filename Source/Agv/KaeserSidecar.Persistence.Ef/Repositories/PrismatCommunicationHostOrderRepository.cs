@@ -22,7 +22,7 @@ public class PrismatCommunicationHostOrderRepository: EfHostOrderRepository, IPr
     }
 
     /// <inheritdoc cref="IPrismatCommunicationHostOrderRepository"/>>
-    public async Task<HostOrder?> GetNextPickOnShortCircle()
+    public async Task<HostOrder?> GetNextPickOnShortLoop()
     {
         return await _context.Set<HostOrder>().Where(
                 h => !h.PassedTriggerPoint

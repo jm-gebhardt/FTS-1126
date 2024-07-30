@@ -41,7 +41,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>>
-    public async Task<bool> HasDropOrdersHeadingTowardsShortCircleTriggerPoint()
+    public async Task<bool> HasDropOrdersHeadingTowardsShortLoopTriggerPoint()
     {
         return await _context.Set<HostOrder>().Where(
                 h => !h.PassedTriggerPoint
@@ -74,7 +74,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>>
-    public async Task<HostOrder?> GetNextPickOrderForShortCircleDualOperation()
+    public async Task<HostOrder?> GetNextPickOrderForShortLoopDualOperation()
     {
         return await _context.Set<HostOrder>().Where(
                 h =>  h.AssignedAgv == null

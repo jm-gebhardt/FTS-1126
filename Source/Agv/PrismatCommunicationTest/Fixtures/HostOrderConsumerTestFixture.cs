@@ -59,9 +59,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsShortCircleTriggerPoint(bool hasHostOrders)
+    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsShortLoopTriggerPoint(bool hasHostOrders)
     {
-        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsShortCircleTriggerPoint()).ReturnsAsync(hasHostOrders);
+        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ReturnsAsync(hasHostOrders);
         return this;
     }
 
@@ -77,9 +77,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithNextPickOrderForShortCircleDualOperation(HostOrder? hostOrder)
+    public HostOrderConsumerTestFixture<TConsumer> WithNextPickOrderForShortLoopDualOperation(HostOrder? hostOrder)
     {
-        HostOrderRepositoryMock.Setup(x => x.GetNextPickOrderForShortCircleDualOperation()).ReturnsAsync(hostOrder);
+        HostOrderRepositoryMock.Setup(x => x.GetNextPickOrderForShortLoopDualOperation()).ReturnsAsync(hostOrder);
         return this;
     }
 

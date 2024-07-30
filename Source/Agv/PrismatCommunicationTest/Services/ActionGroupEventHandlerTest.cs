@@ -106,50 +106,50 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
-    public async Task AgvPassedShortCircleTriggerPoint_ValidData_PublishesPassShortCircleTriggerPoint()
+    public async Task AgvPassedShortLoopTriggerPoint_ValidData_PublishesPassShortLoopTriggerPoint()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails);
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
        
-        var agvPassedShortCircleTriggerPoint = new AgvPassedShortCircleTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
+        var agvPassedShortLoopTriggerPoint = new AgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
             new AgvStatus(), actionGroup, [], []);
 
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
 
-        await fixture.TestHarness.Bus.Publish(agvPassedShortCircleTriggerPoint);
+        await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
 
-        await fixture.ShouldHaveConsumedAsync<AgvPassedShortCircleTriggerPoint>();
-        await fixture.ShouldHavePublishedAsync<PassShortCircleTriggerPoint>();
+        await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+        await fixture.ShouldHavePublishedAsync<PassShortLoopTriggerPoint>();
     }
 
     [TestMethod]
-    public async Task AgvPassedShortCircleTriggerPoint_NotActionGroup_DoesNotPublishPassShortCircleTriggerPoint()
+    public async Task AgvPassedShortLoopTriggerPoint_NotActionGroup_DoesNotPublishPassShortLoopTriggerPoint()
     {
-        var agvPassedShortCircleTriggerPoint = new AgvPassedShortCircleTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
+        var agvPassedShortLoopTriggerPoint = new AgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
             new AgvStatus(), null, [], []);
 
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
         
-        await fixture.TestHarness.Bus.Publish(agvPassedShortCircleTriggerPoint);
+        await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
 
-        await fixture.ShouldHaveConsumedAsync<AgvPassedShortCircleTriggerPoint>();
-        await fixture.ShouldNotHavePublishedAsync<PassShortCircleTriggerPoint>();
+        await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<PassShortLoopTriggerPoint>();
     }
 
     [TestMethod]
-    public async Task AgvPassedShortCircleTriggerPoint_NotPickDropActionGroup_DoesNotPublishPassShortCircleTriggerPoint()
+    public async Task AgvPassedShortLoopTriggerPoint_NotPickDropActionGroup_DoesNotPublishPassShortLoopTriggerPoint()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        var agvPassedShortCircleTriggerPoint = new AgvPassedShortCircleTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
+        var agvPassedShortLoopTriggerPoint = new AgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
             new AgvStatus(), actionGroup, [], []);
 
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
 
-        await fixture.TestHarness.Bus.Publish(agvPassedShortCircleTriggerPoint);
+        await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
 
-        await fixture.ShouldHaveConsumedAsync<AgvPassedShortCircleTriggerPoint>();
-        await fixture.ShouldNotHavePublishedAsync<PassShortCircleTriggerPoint>();
+        await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<PassShortLoopTriggerPoint>();
     }
 }

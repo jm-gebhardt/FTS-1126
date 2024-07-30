@@ -84,67 +84,67 @@ public class HostOrderRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetNextPickOrderForShortCircleDualOperation_ValidData_ReturnsOrder()
+    public async Task GetNextPickOrderForShortLoopDualOperation_ValidData_ReturnsOrder()
     {
         var earlierOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var laterOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var dropAt1050 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
-        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([earlierOrder, laterOrder, dropAt1050, longCircleOrder]);
+        fixture.Repository.AddRange([earlierOrder, laterOrder, dropAt1050, longLoopOrder]);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.GetNextPickOrderForShortCircleDualOperation()).ShouldBe(earlierOrder);
+        (await fixture.Repository.GetNextPickOrderForShortLoopDualOperation()).ShouldBe(earlierOrder);
     }
 
     [TestMethod]
-    public async Task GetNextPickOrderForShortCircleDualOperation_NoUnstartedPick_ReturnsNull()
+    public async Task GetNextPickOrderForShortLoopDualOperation_NoUnstartedPick_ReturnsNull()
     {
-        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
         var startedPickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         startedPickAt1020.Start(DateTime.UtcNow, Guid.NewGuid());
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([longCircleOrder, startedPickAt1020]);
+        fixture.Repository.AddRange([longLoopOrder, startedPickAt1020]);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.GetNextPickOrderForShortCircleDualOperation()).ShouldBeNull();
+        (await fixture.Repository.GetNextPickOrderForShortLoopDualOperation()).ShouldBeNull();
     }
 
     [TestMethod]
-    public async Task HasDropOrdersHeadingTowardsShortCircleTriggerPoint_ValidData_ReturnsTrue()
+    public async Task HasDropOrdersHeadingTowardsShortLoopTriggerPoint_ValidData_ReturnsTrue()
     {
         var earlierOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         earlierOrder.Start(DateTime.UtcNow, Guid.NewGuid());
         var pickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         pickAt1020.Start(DateTime.UtcNow, Guid.NewGuid());
-        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
-        longCircleOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        longLoopOrder.Start(DateTime.UtcNow, Guid.NewGuid());
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([earlierOrder, pickAt1020, longCircleOrder]);
+        fixture.Repository.AddRange([earlierOrder, pickAt1020, longLoopOrder]);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint()).ShouldBeTrue();
+        (await fixture.Repository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task HasDropOrdersHeadingTowardsShortCircleTriggerPoint_NoOrderDroppingAt1050_ReturnsFalse()
+    public async Task HasDropOrdersHeadingTowardsShortLoopTriggerPoint_NoOrderDroppingAt1050_ReturnsFalse()
     {
         var pickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         pickAt1020.Start(DateTime.UtcNow, Guid.NewGuid());
-        var longCircleOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
-        longCircleOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        longLoopOrder.Start(DateTime.UtcNow, Guid.NewGuid());
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([pickAt1020, longCircleOrder]);
+        fixture.Repository.AddRange([pickAt1020, longLoopOrder]);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint()).ShouldBeFalse();
+        (await fixture.Repository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ShouldBeFalse();
     }
 
     [TestMethod]
-    public async Task HasDropOrdersHeadingTowardsShortCircleTriggerPoint_NoStartedOrderThatDidNotPassShortCircleTriggerPoint_ReturnsFalse()
+    public async Task HasDropOrdersHeadingTowardsShortLoopTriggerPoint_NoStartedOrderThatDidNotPassShortLoopTriggerPoint_ReturnsFalse()
     {
         var passedTriggerPoint = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         passedTriggerPoint.Start(DateTime.UtcNow, Guid.NewGuid());
@@ -156,6 +156,6 @@ public class HostOrderRepositoryTest
         fixture.Repository.AddRange([passedTriggerPoint, notStarted]);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint()).ShouldBeFalse();
+        (await fixture.Repository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ShouldBeFalse();
     }
 }

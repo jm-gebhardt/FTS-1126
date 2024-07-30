@@ -11,16 +11,16 @@ using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 
-public class ShortCircleTriggerPointEventHandlerTestFixture : MassTransitConsumerTestFixture<ShortCircleTriggerPointEventHandler>
+public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerTestFixture<ShortLoopTriggerPointEventHandler>
 {
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
 
-    /// <inheritdoc cref="MassTransitConsumerTestFixture{ShortCircleTriggerPointEventHandler}"/>>
-    protected override MassTransitConsumerTestFixture<ShortCircleTriggerPointEventHandler> AddServices(IServiceCollection collection)
+    /// <inheritdoc cref="MassTransitConsumerTestFixture{ShortLoopTriggerPointEventHandler}"/>>
+    protected override MassTransitConsumerTestFixture<ShortLoopTriggerPointEventHandler> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
-        collection.AddTransient(_ => new Mock<ILogger<ShortCircleTriggerPointEventHandler>>().Object);
+        collection.AddTransient(_ => new Mock<ILogger<ShortLoopTriggerPointEventHandler>>().Object);
         collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
         collection.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
         collection.AddSingleton(_ => _communicator.Object);
@@ -28,21 +28,21 @@ public class ShortCircleTriggerPointEventHandlerTestFixture : MassTransitConsume
         return this;
     }
 
-    /// <inheritdoc cref="ShortCircleTriggerPointEventHandlerTestFixture"/>>
-    public ShortCircleTriggerPointEventHandlerTestFixture()
+    /// <inheritdoc cref="ShortLoopTriggerPointEventHandlerTestFixture"/>>
+    public ShortLoopTriggerPointEventHandlerTestFixture()
     {
         _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string?>())).Verifiable();
 
         Build();
     }
 
-    public ShortCircleTriggerPointEventHandlerTestFixture WithHostOrder(HostOrder? order)
+    public ShortLoopTriggerPointEventHandlerTestFixture WithHostOrder(HostOrder? order)
     {
         if (order != null)
         {
             _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
         }
-        _hostOrderRepository.Setup(x => x.GetNextPickOnShortCircle()).ReturnsAsync(order);
+        _hostOrderRepository.Setup(x => x.GetNextPickOnShortLoop()).ReturnsAsync(order);
         return this;
     }
 

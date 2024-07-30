@@ -23,7 +23,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     IConsumer<PassDecisionPoint>,
     IConsumer<QueuePickDropActionGroupForAgv>,
     IConsumer<PassCargoTriggerPoint>,
-    IConsumer<PassShortCircleTriggerPoint>,
+    IConsumer<PassShortLoopTriggerPoint>,
     IConsumer<QueueActionGroupWithUnknownDropTargetForAgv>,
     IConsumer<FinishPick>
 
@@ -50,7 +50,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         {
             bool picksAt1020 = hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node == configuration.PrismatAklPickTarget;
             // Check if there are agvs that are to be selected to handle this order directly after dropping
-            if (await hostOrderRepository.HasDropOrdersHeadingTowardsShortCircleTriggerPoint() && picksAt1020)
+            if (await hostOrderRepository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint() && picksAt1020)
             {
                 return;
             }
@@ -185,9 +185,9 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     }
 
     /// <summary>
-    /// Handles the <see cref="PassShortCircleTriggerPoint"/> command.
+    /// Handles the <see cref="PassShortLoopTriggerPoint"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<PassShortCircleTriggerPoint> context)
+    public async Task Consume(ConsumeContext<PassShortLoopTriggerPoint> context)
     {
         var (assignedAgv, correlationId) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
@@ -196,7 +196,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         {
             hostOrder.PassTriggerPoint();
             await hostOrderRepository.UpdateAsync(hostOrder);
-            await context.Publish(new ShortCircleTriggerPointPassed(assignedAgv));
+            await context.Publish(new ShortLoopTriggerPointPassed(assignedAgv));
         }
     }
 }

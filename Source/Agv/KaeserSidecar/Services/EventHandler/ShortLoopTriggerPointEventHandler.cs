@@ -12,20 +12,20 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 
 /// <summary>
-/// Handles the short circle trigger point.
+/// Handles the short loop trigger point.
 /// </summary>
 [UsedImplicitly]
-public class ShortCircleTriggerPointEventHandler(ILogger<ShortCircleTriggerPointEventHandler> logger, IPrismatCommunicationHostOrderRepository hostOrderRepository, IConveyorCommunicator conveyorCommunicator, KaeserGraphConfiguration configuration) : IConsumer<AgvPassedShortCircleTriggerPoint>
+public class ShortLoopTriggerPointEventHandler(ILogger<ShortLoopTriggerPointEventHandler> logger, IPrismatCommunicationHostOrderRepository hostOrderRepository, IConveyorCommunicator conveyorCommunicator, KaeserGraphConfiguration configuration) : IConsumer<AgvPassedShortLoopTriggerPoint>
 {
     /// <summary>
-    /// Handles the <see cref="AgvPassedShortCircleTriggerPoint"/> message.
+    /// Handles the <see cref="AgvPassedShortLoopTriggerPoint"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<AgvPassedShortCircleTriggerPoint> context)
+    public async Task Consume(ConsumeContext<AgvPassedShortLoopTriggerPoint> context)
     {
         (_, _, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) )
         {
-            logger.LogWarning("Skip reporting target station to conveyor: Agv without pick drop action group passed short circle trigger point ({ActionGroup})", actionGroup?.CorrelationId);
+            logger.LogWarning("Skip reporting target station to conveyor: Agv without pick drop action group passed short loop trigger point ({ActionGroup})", actionGroup?.CorrelationId);
             return;
         }
         var action = actionGroup.Actions.First(a => a.State == ActionState.Started);
@@ -46,7 +46,7 @@ public class ShortCircleTriggerPointEventHandler(ILogger<ShortCircleTriggerPoint
         HostOrder? pendingPickOrder;
         if (isDropping)
         {
-            pendingPickOrder = await hostOrderRepository.GetNextPickOnShortCircle();
+            pendingPickOrder = await hostOrderRepository.GetNextPickOnShortLoop();
             if (pendingPickOrder != null)
             {
                 pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;

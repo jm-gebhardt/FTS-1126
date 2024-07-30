@@ -62,7 +62,7 @@ public class HostOrderCommandHandlerTest
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
-            .WithDropOrdersHeadingTowardsShortCircleTriggerPoint(false)
+            .WithDropOrdersHeadingTowardsShortLoopTriggerPoint(false)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
@@ -86,7 +86,7 @@ public class HostOrderCommandHandlerTest
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
-            .WithDropOrdersHeadingTowardsShortCircleTriggerPoint(true)
+            .WithDropOrdersHeadingTowardsShortLoopTriggerPoint(true)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
@@ -387,7 +387,7 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_PassShortCircleTriggerPoint_ValidData_PublishesShortCircleTriggerPointPassed()
+    public async Task Consume_PassShortLoopTriggerPoint_ValidData_PublishesShortLoopTriggerPointPassed()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -395,16 +395,16 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order);
 
-        var command = new PassShortCircleTriggerPoint(Guid.NewGuid(), order.CorrelationId);
+        var command = new PassShortLoopTriggerPoint(Guid.NewGuid(), order.CorrelationId);
 
-        var shortCircleTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassShortCircleTriggerPoint, ShortCircleTriggerPointPassed>(command);
+        var shortLoopTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassShortLoopTriggerPoint, ShortLoopTriggerPointPassed>(command);
 
-        shortCircleTriggerPointPassed.Agv.ShouldBe(command.Agv);
+        shortLoopTriggerPointPassed.Agv.ShouldBe(command.Agv);
         order.PassedTriggerPoint.ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_PassShortCircleTriggerPoint_NotDropAt1050_DoesNotPublishShortCircleTriggerPointPassed()
+    public async Task Consume_PassShortLoopTriggerPoint_NotDropAt1050_DoesNotPublishShortLoopTriggerPointPassed()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -412,12 +412,12 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order);
 
-        var command = new PassShortCircleTriggerPoint(Guid.NewGuid(), order.CorrelationId);
+        var command = new PassShortLoopTriggerPoint(Guid.NewGuid(), order.CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(command);
         
-        await fixture.ShouldHaveConsumedAsync<PassShortCircleTriggerPoint>();
-        await fixture.ShouldNotHavePublishedAsync<ShortCircleTriggerPointPassed>();
+        await fixture.ShouldHaveConsumedAsync<PassShortLoopTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<ShortLoopTriggerPointPassed>();
         order.PassedTriggerPoint.ShouldBeFalse();
     }
 }

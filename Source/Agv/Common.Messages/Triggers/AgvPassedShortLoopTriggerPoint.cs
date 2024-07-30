@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Gebhardt.Acc.Common.Messages.Triggers;
 
 /// <summary>
-/// Represents the event raised when an agv passed the trigger point on the short circle.
+/// Represents the event raised when an agv passed the trigger point on the short loop.
 /// </summary>
 /// <param name="AgvData">The agv data.</param>
 /// <param name="AgvStatus">The agv status.</param>
@@ -13,4 +13,4 @@ namespace Gebhardt.Acc.Common.Messages.Triggers;
 /// <param name="Cargo">The current cargo.</param>
 /// <param name="Errors">The errors of the agv.</param>
 [PublicAPI]
-public record AgvPassedShortCircleTriggerPoint(AgvData AgvData, AgvStatus AgvStatus, ActionGroup? ActionGroup, ICollection<Cargo> Cargo, ICollection<AgvError> Errors);
+public record AgvPassedShortLoopTriggerPoint(AgvData AgvData, AgvStatus AgvStatus, ActionGroup? ActionGroup, ICollection<Cargo> Cargo, ICollection<AgvError> Errors);

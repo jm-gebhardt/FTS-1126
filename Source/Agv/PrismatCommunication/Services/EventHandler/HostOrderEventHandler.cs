@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository, KaeserGraphConfiguration configuration) : 
     IConsumer<DecisionPointPassed>,
     IConsumer<CargoTriggerPointPassed>,
-    IConsumer<ShortCircleTriggerPointPassed>
+    IConsumer<ShortLoopTriggerPointPassed>
 {
     /// <summary>
     /// Handles the <see cref="DecisionPointPassed"/> event.
@@ -42,11 +42,11 @@ public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository, Kae
     }
 
     /// <summary>
-    /// Handles the <see cref="ShortCircleTriggerPointPassed"/> event.
+    /// Handles the <see cref="ShortLoopTriggerPointPassed"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<ShortCircleTriggerPointPassed> context)
+    public async Task Consume(ConsumeContext<ShortLoopTriggerPointPassed> context)
     {
-        var order = await hostOrderRepository.GetNextPickOrderForShortCircleDualOperation();
+        var order = await hostOrderRepository.GetNextPickOrderForShortLoopDualOperation();
         if (order != null && configuration.StationMapping.TryGetValue(order.Actions.First(a => a.ActionType == ActionType.Pick).Node, out string? pickNode))
         {
             await context.Publish(new QueuePickDropActionGroupForAgv(order.CorrelationId, context.Message.Agv, pickNode));

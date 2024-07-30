@@ -65,17 +65,17 @@ public class HostOrderEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_DropActionPassedShortCircleTriggerPoint_NextPickOrderForShortCircleExists_PublishesQueuePickDropActionGroupForAgv()
+    public async Task Consume_DropActionPassedShortLoopTriggerPoint_NextPickOrderForShortLoopExists_PublishesQueuePickDropActionGroupForAgv()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
-            .WithNextPickOrderForShortCircleDualOperation(hostOrder);
+            .WithNextPickOrderForShortLoopDualOperation(hostOrder);
 
-        var shortCircleTriggerPointPassed = new ShortCircleTriggerPointPassed(Guid.NewGuid());
-        await fixture.TestHarness.Bus.Publish(shortCircleTriggerPointPassed);
+        var shortLoopTriggerPointPassed = new ShortLoopTriggerPointPassed(Guid.NewGuid());
+        await fixture.TestHarness.Bus.Publish(shortLoopTriggerPointPassed);
 
-        await fixture.ShouldHaveConsumedAsync<ShortCircleTriggerPointPassed>();
+        await fixture.ShouldHaveConsumedAsync<ShortLoopTriggerPointPassed>();
         await fixture.ShouldHavePublishedAsync<QueuePickDropActionGroupForAgv>();
 
         var message = fixture.TestHarness.Published.Select<QueuePickDropActionGroupForAgv>().First().Context.Message;
@@ -86,14 +86,14 @@ public class HostOrderEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_DropActionPassedShortCircleTriggerPoint_NoNextPickOrderForShortCircleExists_DoesNotPublishQueuePickDropActionGroupForAgv()
+    public async Task Consume_DropActionPassedShortLoopTriggerPoint_NoNextPickOrderForShortLoopExists_DoesNotPublishQueuePickDropActionGroupForAgv()
     {
         HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
-            .WithNextPickOrderForShortCircleDualOperation(null);
-        var shortCircleTriggerPointPassed = new ShortCircleTriggerPointPassed(Guid.NewGuid());
-        await fixture.TestHarness.Bus.Publish(shortCircleTriggerPointPassed);
+            .WithNextPickOrderForShortLoopDualOperation(null);
+        var shortLoopTriggerPointPassed = new ShortLoopTriggerPointPassed(Guid.NewGuid());
+        await fixture.TestHarness.Bus.Publish(shortLoopTriggerPointPassed);
 
-        await fixture.ShouldHaveConsumedAsync<ShortCircleTriggerPointPassed>();
+        await fixture.ShouldHaveConsumedAsync<ShortLoopTriggerPointPassed>();
         await fixture.ShouldNotHavePublishedAsync<QueuePickDropActionGroupForAgv>();
     }
 }

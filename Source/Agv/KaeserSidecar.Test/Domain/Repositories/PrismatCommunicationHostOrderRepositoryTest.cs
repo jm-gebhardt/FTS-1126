@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Repositories;
 public class PrismatCommunicationHostOrderRepositoryTest
 {
     [TestMethod]
-    public async Task GetNextPickOnShortCircle_ValidData_ReturnsHostOrder()
+    public async Task GetNextPickOnShortLoop_ValidData_ReturnsHostOrder()
     {
         var fixture = new PrismatCommunicationHostOrderRepositoryTestFixture();
 
@@ -18,11 +18,11 @@ public class PrismatCommunicationHostOrderRepositoryTest
         fixture.Repository.AddRange([earlierOrder, laterOrder, dropOrder]);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.GetNextPickOnShortCircle()).ShouldBe(earlierOrder);
+        (await fixture.Repository.GetNextPickOnShortLoop()).ShouldBe(earlierOrder);
     }
 
     [TestMethod]
-    public async Task GetNextPickOnShortCircle_NoOrderPickingAt1020_ReturnsNull()
+    public async Task GetNextPickOnShortLoop_NoOrderPickingAt1020_ReturnsNull()
     {
         var fixture = new PrismatCommunicationHostOrderRepositoryTestFixture();
 
@@ -30,6 +30,6 @@ public class PrismatCommunicationHostOrderRepositoryTest
         fixture.Repository.Add(dropOrder);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.GetNextPickOnShortCircle()).ShouldBeNull();
+        (await fixture.Repository.GetNextPickOnShortLoop()).ShouldBeNull();
     }
 }

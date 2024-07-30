@@ -9,8 +9,8 @@ namespace Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 public interface IPrismatCommunicationHostOrderRepository : IHostOrderRepository
 {
     /// <summary>
-    /// Gets the next AKL pick on the short circle (at 1020).
+    /// Gets the next AKL pick on the short loop (at 1020).
     /// </summary>
     /// <returns></returns>
-    public Task<HostOrder?> GetNextPickOnShortCircle();
+    public Task<HostOrder?> GetNextPickOnShortLoop();
 }

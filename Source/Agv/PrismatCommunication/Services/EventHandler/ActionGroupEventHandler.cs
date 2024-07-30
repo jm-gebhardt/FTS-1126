@@ -19,7 +19,7 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     IConsumer<ActionGroupStarted>,
     IConsumer<SetTargetForAction>,
     IConsumer<AgvPassedCargoTriggerPoint>,
-    IConsumer<AgvPassedShortCircleTriggerPoint>,
+    IConsumer<AgvPassedShortLoopTriggerPoint>,
     IConsumer<PickActionCompleted>
 {
     /// <summary>
@@ -74,9 +74,9 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     }
 
     /// <summary>
-    /// Handles the <see cref="AgvPassedShortCircleTriggerPoint"/> message.
+    /// Handles the <see cref="AgvPassedShortLoopTriggerPoint"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<AgvPassedShortCircleTriggerPoint> context)
+    public async Task Consume(ConsumeContext<AgvPassedShortLoopTriggerPoint> context)
     {
         (var agvData, _, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick))
@@ -88,6 +88,6 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
         {
             return;
         }
-        await context.Publish(new PassShortCircleTriggerPoint(agvData.CorrelationId, actionGroup.CorrelationId));
+        await context.Publish(new PassShortLoopTriggerPoint(agvData.CorrelationId, actionGroup.CorrelationId));
     }
 }
