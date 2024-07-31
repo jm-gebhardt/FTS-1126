@@ -76,6 +76,11 @@ public record AgvActionDto
     public TimeSpan PausedDuration { get; init; }
 
     /// <summary>
+    /// Information that will be passed to the agv.
+    /// </summary>
+    public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; init; }
+
+    /// <summary>
     /// AgvAction model
     /// <param name="correlationId">Correlation ID</param>
     /// <param name="parentId">Action group ID</param>
@@ -88,6 +93,7 @@ public record AgvActionDto
     /// <param name="startedDate">Date the action was started (UTC)</param>
     /// <param name="completedDate">Date the action was completed (UTC)</param>
     /// <param name="pausedDate"> Date the action was paused (UTC)</param>
+    /// <param name="infoToAgv">The information that will be passed to the agv.</param>
     /// </summary>
     public AgvActionDto
     (
@@ -101,7 +107,8 @@ public record AgvActionDto
         DateTime createdDate,
         DateTime? startedDate,
         DateTime? completedDate,
-        DateTime? pausedDate
+        DateTime? pausedDate,
+        Dictionary<InfoToAgvKey, string> infoToAgv
     )
     {
         CorrelationId = correlationId;
@@ -115,6 +122,7 @@ public record AgvActionDto
         StartedDate = startedDate;
         CompletedDate = completedDate;
         PausedDate = pausedDate;
+        InfoToAgv = infoToAgv;
     }
 
     /// <summary>

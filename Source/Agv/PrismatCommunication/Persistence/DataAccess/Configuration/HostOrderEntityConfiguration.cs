@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,6 +21,7 @@ public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>
             o.HasKey(e => e.CorrelationId);
             o.Property(e => e.ActionGroupId);
             o.ToTable(HostOrderActionsTable);
+            o.Property(p => p.InfoToAgv).HasJsonConversion();
         });
         builder.Navigation(e => e.Actions).AutoInclude();
     }

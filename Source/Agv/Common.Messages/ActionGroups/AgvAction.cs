@@ -79,27 +79,35 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public TimeSpan PausedDuration { get; set; }
 
     /// <summary>
+    /// Information that will be sent to the agv.
+    /// </summary>
+    public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; set; }
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
     /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
     /// <param name="targetNodeId">Target node id of the action</param>
     /// <param name="parentId">The CorrelationId of the ActionGroup where this action belongs to</param>
-    public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId, Guid parentId)
+    /// <param name="infoToAgv">Information that will be sent to the agv.</param>
+    public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
         CorrelationId = correlationId;
         ActionType = actionType;
         Target = new ActionTarget(targetNodeId);
         ParentId = parentId;
+        InfoToAgv = infoToAgv;
     }
 
     /// <inheritdoc cref="AgvAction"/>>
-    public AgvAction(Guid correlationId, ActionType actionType, ActionTarget target, Guid parentId)
+    public AgvAction(Guid correlationId, ActionType actionType, ActionTarget target, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
         CorrelationId = correlationId;
         ActionType = actionType;
         Target = target;
         ParentId = parentId;
+        InfoToAgv = infoToAgv;
     }
 
     /// <summary>
@@ -114,4 +122,15 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
         Target = new ActionTarget(string.Empty);
         ParentId = Guid.Empty;
     }
+}
+
+/// <summary>
+/// Keys for extra information that will be sent to the agv.
+/// </summary>
+public enum InfoToAgvKey
+{
+    /// <summary>
+    /// Information about cargo rotation in degrees.
+    /// </summary>
+    CargoRotation
 }

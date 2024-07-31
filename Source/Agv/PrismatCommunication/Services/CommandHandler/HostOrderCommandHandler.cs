@@ -37,8 +37,11 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         string hu = context.Message.Hu;
        
         var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, hu, orderDetails.CreationDate);
+
+        Dictionary<InfoToAgvKey, string> infoToAgv = GenerateRotationInformation(context.Message);
+
         hostOrder.AddAction(orderDetails.Source, ActionType.Pick);
-        hostOrder.AddAction(orderDetails.Destination, ActionType.Drop);
+        hostOrder.AddAction(orderDetails.Destination, ActionType.Drop, infoToAgv);
 
         hostOrderRepository.Add(hostOrder);
         await hostOrderRepository.SaveAsync();
@@ -83,6 +86,16 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
             await context.Publish(new QueueActionGroup(actionGroup, false));
         }
+    }
+
+    /// <summary>
+    /// Generates rotation information for a host order.
+    /// </summary>
+    /// <param name="_">The message to generate cargo rotation information from.</param>
+    /// <returns></returns>
+    private static Dictionary<InfoToAgvKey, string> GenerateRotationInformation(CreateHostOrder _)
+    {
+        return new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, "0" } };
     }
 
     /// <summary>

@@ -94,9 +94,10 @@ public class HostOrder
     /// </summary>
     /// <param name="node">The node of the action.</param>
     /// <param name="actionType">The action type.</param>
-    public void AddAction(string node, ActionType actionType)
+    /// <param name="infoToAgv">Information that will be sent to the agv.</param>
+    public void AddAction(string node, ActionType actionType, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
-        var action = new Action(Guid.NewGuid(), CorrelationId, node, actionType, _actions.Count);
+        var action = new Action(Guid.NewGuid(), CorrelationId, node, actionType, _actions.Count, infoToAgv);
         _actions.Add(action);
     }
 
@@ -174,7 +175,7 @@ public class HostOrder
         {
             return new ActionGroup(CorrelationId,
                 OrderId,
-                Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId)
+                Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv)
                     { Sequence = a.SequenceNumber }).ToList(),
                 orderDetails.Creator.ConvertToActionGroupCreator(),
                 orderDetails.CreationDate);
@@ -195,8 +196,8 @@ public class HostOrder
                 OrderId,
                 [
                     new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPoint1TriggerName], CorrelationId),
-                    Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId){Sequence = 1} ).First(),
-                    Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId){Sequence = 2} ).First()
+                    Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 1} ).First(),
+                    Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 2} ).First()
                 ], 
                 orderDetails.Creator.ConvertToActionGroupCreator(), 
                 orderDetails.CreationDate);
@@ -217,9 +218,9 @@ public class HostOrder
                 CorrelationId,
                 OrderId,
                 [
-                    Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId){Sequence = 0} ).First(),
+                    Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                     new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPoint1TriggerName], CorrelationId){Sequence = 1},
-                    Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId){Sequence = 2} ).First()
+                    Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 2} ).First()
                 ],
                 ActionGroupCreator.Wms,
                 CreatedDate){AssignedAgv = assignedAgv};
@@ -228,9 +229,9 @@ public class HostOrder
             CorrelationId,
             OrderId,
             [
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId){Sequence = 0} ).First(),
+                Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                 new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.TriggerPointMapping.ConcurrentDict[configuration.DecisionPoint1TriggerName], CorrelationId){Sequence = 1},
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId){Sequence = 2} ).First()
+                Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 2} ).First()
             ],
             ActionGroupCreator.Wms,
             CreatedDate);
@@ -250,8 +251,8 @@ public class HostOrder
         return new ActionGroup(CorrelationId,
             OrderId,
             [
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType,  pickNode, CorrelationId){Sequence = 0} ).First(),
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId){Sequence = 1} ).First()
+                Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType,  pickNode, CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
+                Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv){Sequence = 1} ).First()
             ],
             ActionGroupCreator.Wms,
             DateTime.UtcNow){AssignedAgv = agv};

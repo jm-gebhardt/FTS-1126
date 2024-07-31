@@ -75,6 +75,11 @@ public class AgvAction : IParentedBy<Guid>
     public DateTime? PausedDate { get; set; }
 
     /// <summary>
+    /// Information that will be passed to the agv.
+    /// </summary>
+    public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; set; }
+
+    /// <summary>
     /// Duration that the action has been paused for.
     /// </summary>
     public TimeSpan PausedDuration { get; set; } = TimeSpan.Zero;
@@ -101,12 +106,14 @@ public class AgvAction : IParentedBy<Guid>
     /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
     /// <param name="targetNodeId">Target node id of the action</param>
     /// <param name="parentId">The CorrelationId of the ActionGroup where this action belongs to</param>
-    public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId, Guid parentId)
+    /// <param name="infoToAgv">Information that will be passed to the agv.</param>
+    public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
         CorrelationId = correlationId;
         ActionType = actionType;
         Target = new ActionTarget(targetNodeId);
         ParentId = parentId;
+        InfoToAgv = infoToAgv;
     }
 
     /// <summary>
@@ -116,12 +123,14 @@ public class AgvAction : IParentedBy<Guid>
     /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
     /// <param name="target">Target of the action</param>
     /// <param name="parentId">The CorrelationId of the ActionGroup where this action belongs to</param>
-    public AgvAction(Guid correlationId, ActionType actionType, ActionTarget target, Guid parentId)
+    /// <param name="infoToAgv">Information that will be passed to the agv.</param>
+    public AgvAction(Guid correlationId, ActionType actionType, ActionTarget target, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
         CorrelationId = correlationId;
         ActionType = actionType;
         Target = target;
         ParentId = parentId;
+        InfoToAgv = infoToAgv;
     }
 
     /// <summary>

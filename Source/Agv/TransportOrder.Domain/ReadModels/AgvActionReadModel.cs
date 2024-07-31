@@ -21,6 +21,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="CompletedDate">The completion date.</param>
 /// <param name="PausedDate">The paused date.</param>
 /// <param name="PausedDuration">The duration that the action was paused.</param>
+/// <param name="InfoToAgv">Information that will be sent to the agv.</param>
 public record AgvActionReadModel(
     Guid CorrelationId,
     Guid ParentId,
@@ -35,5 +36,5 @@ public record AgvActionReadModel(
     DateTime? StartedDate,
     [PublicAPI]DateTime? CompletedDate,
     [PublicAPI]DateTime? PausedDate,
-    TimeSpan PausedDuration
-);
+    TimeSpan PausedDuration,
+    Dictionary<InfoToAgvKey, string>? InfoToAgv = null);

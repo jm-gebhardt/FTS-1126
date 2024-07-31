@@ -39,6 +39,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             {
                 c.OwnsOne(t => t.Position);
             });
+            a.Property(o => o.InfoToAgv).HasJsonConversion();
         });
 
         builder.Navigation(g => g.Actions).AutoInclude();
