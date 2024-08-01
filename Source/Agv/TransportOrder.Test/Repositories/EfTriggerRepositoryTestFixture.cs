@@ -1,4 +1,7 @@
-﻿using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -8,6 +11,8 @@ public class EfTriggerRepositoryTestFixture : TransportOrderDbFixture
 
     public EfTriggerRepositoryTestFixture()
     {
-        Repository = new EfTriggerRepository(ContextFactory);
+        var mockLogger = new Mock<ILogger<EfTriggerRepository>>();
+        var nodeTriggersDictionaryProvider = new NodeTriggersDictionaryProvider();
+        Repository = new EfTriggerRepository(ContextFactory, nodeTriggersDictionaryProvider, mockLogger.Object);
     }
 }

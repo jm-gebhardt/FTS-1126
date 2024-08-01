@@ -244,11 +244,11 @@ public class GridGraphGenerator : GraphGeneratorBase
     {
         if (_serviceNodeTypes.Length == 0)
         {
-            throw new IndexOutOfRangeException("Number of service nodes need to be greater than 0.");
+            throw new IndexOutOfRangeException("Number of service nodes must be greater than 0.");
         }
         if (_serviceNodeTypes.Length > 2 * _gridRows)
         {
-            throw new IndexOutOfRangeException("Grid is to small to add service nodes.");
+            throw new IndexOutOfRangeException("Grid is too small to add service nodes.");
         }
 
         float step = 2.0f * _gridRows / _serviceNodeTypes.Length;

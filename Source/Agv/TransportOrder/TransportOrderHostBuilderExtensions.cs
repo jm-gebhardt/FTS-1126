@@ -74,6 +74,7 @@ public static class TransportOrderHostBuilderExtensions
        
         services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
         services.AddHostedService<AgvSettingsInitializer>();
+        services.AddHostedService<TriggerLocationsInitializer>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
         services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
         // -  database
@@ -120,6 +121,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<INodeStateRepository, EfNodeStateRepository>();
 
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
+        services.AddSingleton<IConcurrentDictionaryProvider<string, List<Guid>>, NodeTriggersDictionaryProvider>();
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
         services.AddTransient<ITriggerRepository, EfTriggerRepository>();
         services.AddTransient<IRestrictedAreaRepository, EfRestrictedAreaRepository>();

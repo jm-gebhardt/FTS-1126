@@ -59,6 +59,7 @@ public static class CoreBusRegistrationExtensions
     {
         busRegistrationConfigurator.AddConsumer<AgvDataEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvPositionReceivedEventHandler>();
+        busRegistrationConfigurator.AddConsumer<AgvLastNodeIdChangedEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);

@@ -43,4 +43,18 @@ public class EfTriggerRepositoryTest
 
         (await fixture.Repository.GetById(trigger.Properties.Id)).ShouldBeEquivalentTo(trigger);
     }
+
+    [TestMethod]
+    public async Task UpdateTrigger_UnknownTriggerId_ThrowsTriggerNotFoundException()
+    {
+        var fixture = new EfTriggerRepositoryTestFixture();
+
+        var trigger = TriggerGenerator.GenerateTrigger();
+
+        await fixture.Repository.TryAdd(trigger.Properties.Id, trigger);
+
+        trigger.UpdateConfigurationParameter("name", "newValue");
+
+        await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.UpdateTrigger(Guid.NewGuid(), trigger));
+    }
 }

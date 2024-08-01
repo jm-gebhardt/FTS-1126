@@ -1,27 +1,55 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="ITriggerRepository"/>>
-public class EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory) : ITriggerRepository
+public class EfTriggerRepository : ITriggerRepository
 {
+    private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
+    private readonly IConcurrentDictionaryProvider<string, List<Guid>> _nodeTriggersDictionaryProvider;
+    private readonly ILogger<EfTriggerRepository> _logger;
+
+    /// <summary>
+    /// Initializes a new <see cref="EfTriggerRepository"/> instance.
+    /// </summary>
+    /// <param name="dbContextFactory">Database context factory.</param>
+    /// <param name="concurrentDictionaryProvider">The provider of the node to trigger in memory dictionary.</param>
+    /// <param name="logger">The logger.</param>
+    public EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IConcurrentDictionaryProvider<string, List<Guid>> concurrentDictionaryProvider,
+        ILogger<EfTriggerRepository> logger
+    )
+    {
+        _dbContextFactory = dbContextFactory;
+        _nodeTriggersDictionaryProvider = concurrentDictionaryProvider;
+        _logger = logger;
+    }
+
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task Add(Trigger trigger)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         await context.AddAsync(trigger);
         await context.SaveChangesAsync();
+        if (trigger.Locations.Count > 0)
+        {
+            foreach (var location in trigger.Locations)
+            {
+                AddTriggerToLocationDictionary(trigger, location);
+            }
+        }
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task<ICollection<Trigger>> GetTriggers()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         return await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
@@ -35,7 +63,7 @@ public class EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task<Trigger> GetById(Guid triggerId)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var trigger = await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
@@ -52,7 +80,7 @@ public class EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task Update(Trigger trigger)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var triggerToUpdate = await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
@@ -76,6 +104,7 @@ public class EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbCo
                     {
                         context.Set<PolygonPoint>().RemoveRange(location.Polygon);
                     }
+                    RemoveTriggerFromLocationRepository(trigger, location);
                 }
                 context.Set<Location>().RemoveRange(locationToRemove);
             }
@@ -89,6 +118,7 @@ public class EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbCo
                     {
                         await context.Set<PolygonPoint>().AddRangeAsync(location.Polygon);
                     }
+                    AddTriggerToLocationDictionary(trigger, location);
                     await context.Set<Location>().AddAsync(location);
                 }
             }
@@ -104,5 +134,65 @@ public class EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbCo
         }
 
         await context.SaveChangesAsync();
+    }
+
+    private void RemoveTriggerFromLocationRepository(Trigger trigger, Location location)
+    {
+        if (location.NodeId != null)
+        {
+            if (_nodeTriggersDictionaryProvider.ConcurrentDict.TryGetValue(location.NodeId, out List<Guid>? triggerIds))
+            {
+                triggerIds.Remove(location.TriggerId);
+                _logger.LogDebug("{Method}: Removed trigger {TriggerId} from node {NodeId}", nameof(RemoveTriggerFromLocationRepository), trigger.Id, location.NodeId);
+            }
+        }
+    }
+
+    private void AddTriggerToLocationDictionary(Trigger trigger, Location location)
+    {
+        if (location.NodeId != null)
+        {
+            _nodeTriggersDictionaryProvider.ConcurrentDict.AddOrUpdate(location.NodeId,
+                addValueFactory: (_) => [location.TriggerId],
+                updateValueFactory: (_, oldValue) =>
+                {
+                    oldValue.Add(location.TriggerId);
+                    return oldValue;
+                });
+            _logger.LogDebug("{Method}: Added trigger {TriggerId} to node {NodeId}", nameof(AddTriggerToLocationDictionary), trigger.Id, location.NodeId);
+        }
+    }
+
+    /// <inheritdoc cref="ITriggerRepository"/>>
+    public ICollection<Guid> GetTriggersAssignedToNode(string nodeId)
+    {
+        return _nodeTriggersDictionaryProvider.ConcurrentDict.GetValueOrDefault(nodeId, []);
+    }
+
+    /// <inheritdoc cref="ITriggerRepository"/>>
+    public async Task LoadTriggerToLocationDictionary()
+    {
+        _nodeTriggersDictionaryProvider.ConcurrentDict.Clear();
+        ICollection<Trigger> triggers = await GetTriggers();
+        foreach (var trigger in triggers)
+        {
+            if (trigger.Locations.Count <= 0)
+            {
+                continue;
+            }
+            foreach (var location in trigger.Locations)
+            {
+                if (location.NodeId != "")
+                {
+                    _nodeTriggersDictionaryProvider.ConcurrentDict.AddOrUpdate(location.NodeId!,
+                        addValueFactory: (_) => [location.TriggerId],
+                        updateValueFactory: (_, oldValue) =>
+                        {
+                            oldValue.Add(location.TriggerId);
+                            return oldValue;
+                        });
+                }
+            }
+        }
     }
 }

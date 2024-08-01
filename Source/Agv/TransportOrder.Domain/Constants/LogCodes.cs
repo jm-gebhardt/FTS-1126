@@ -32,6 +32,7 @@ public static class LogCodes
     public const int AgvSettingUpdated = 312;
     public const int AgvSettingsReset = 313;
     public const int AgvModeChanged = 314;
+    public const int AgvReachedTrigger = 315;
 
     // Order
     public const int OrderCreated = 100;

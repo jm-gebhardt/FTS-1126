@@ -39,6 +39,11 @@ public class EfTriggerRepository(IDbContextFactory<TriggerServiceDbContext> dbCo
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task UpdateTrigger(Guid id, IFfcTrigger ffcTrigger)
     {
+        if (id != ffcTrigger.GetProperties().Id)
+        {
+            throw new TriggerNotFoundException(id.ToString());
+        }
+
         await AddOrUpdateInDb(id, ffcTrigger);
 
         if (!_triggers.TryGetValue(id, out var oldTrigger))
