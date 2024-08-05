@@ -23,10 +23,12 @@ public static class BusRegistrationExtension
             var partitioner = c.CreatePartitioner(16);
             partitioner.PartitionMessageById<CreateHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<FinishHostOrder, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<PassCargoTriggerPoint, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<PassDecisionPoint, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<PassShortLoopTriggerPoint, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<QueuePickDropActionGroupForAgv, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<QueueActionGroupWithUnknownDropTargetForAgv, HostOrderCommandHandler>(c);
-            partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
         });
         cfg.AddConsumer<ActionGroupEventHandler>();
         cfg.AddConsumer<HostOrderEventHandler>();

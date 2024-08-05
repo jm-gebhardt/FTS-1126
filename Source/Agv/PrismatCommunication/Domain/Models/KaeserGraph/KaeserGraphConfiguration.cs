@@ -50,6 +50,12 @@ public class KaeserGraphConfiguration
     public string CheckCargoTriggerName { get; private set; } = "DP2";
 
     /// <summary>
+    /// The name of the trigger where agvs on short loop announce their cargo state
+    /// to conveyor management.
+    /// </summary>
+    public string ShortLoopTriggerName { get; private set; } = "DP3";
+
+    /// <summary>
     /// Provides a mapping from station ids to naming in the conveyor management.
     /// </summary>
     public Dictionary<string, string> ConveyorStationMapping { get; private set; }
@@ -66,6 +72,7 @@ public class KaeserGraphConfiguration
 
         TriggerPointMapping.Add(CheckCargoTriggerName, "");
         TriggerPointMapping.Add(DecisionPoint1TriggerName, "");
+        TriggerPointMapping.Add(ShortLoopTriggerName, "");
 
         StationMapping = new Dictionary<string, string>()
         {
@@ -126,6 +133,7 @@ public class KaeserGraphConfiguration
 
         DecisionPoint1TriggerName = yamlData.DecisionPoint1TriggerName;
         CheckCargoTriggerName = yamlData.CheckCargoTriggerName;
+        ShortLoopTriggerName = yamlData.ShortLoopTriggerName;
         StationMapping = yamlData.StationMapping;
         ConveyorStationMapping = yamlData.ConveyorStationMapping;
         if (!string.IsNullOrEmpty(yamlData.PrismatAklPickTarget))

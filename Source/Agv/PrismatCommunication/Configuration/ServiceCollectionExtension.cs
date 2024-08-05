@@ -118,6 +118,7 @@ public static class ServiceCollectionExtension
         {
             _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPoint1TriggerName, "WP-021");
             _config.Value.UpdateTriggerPointNodeId(_config.Value.CheckCargoTriggerName, "WP-018");
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.ShortLoopTriggerName, "WP-023");
         }
         serviceCollection.TryAddSingleton(_config.Value);
         return serviceCollection;
@@ -127,7 +128,7 @@ public static class ServiceCollectionExtension
     {
         const string configFile = "graph-configuration.yml";
         const string configDirectory = "Configuration";
-        string[] files = Array.Empty<string>();
+        string[] files = [];
         string? current = Path.Join(Directory.GetCurrentDirectory(), configDirectory);
 
         // Traverse the directory tree upwards to find a config file.

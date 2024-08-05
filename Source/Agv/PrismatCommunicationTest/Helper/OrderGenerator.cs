@@ -14,7 +14,10 @@ public static class OrderGenerator
     public const string DecisionNode = "Waypoint1";
 
     [PublicAPI]
-    public const string LoadTriggerNode = "Waypoint2";
+    public const string CheckCargoTriggerNode = "Waypoint2";
+
+    [PublicAPI]
+    public const string ShortLoopTriggerNode = "Waypoint3";
 
     private static KaeserGraphConfiguration Configuration { get; } = new(new InMemoryTriggerPointMapping());
 
@@ -23,7 +26,8 @@ public static class OrderGenerator
         get
         {
             Configuration.UpdateTriggerPointNodeId(Configuration.DecisionPoint1TriggerName, DecisionNode);
-            Configuration.UpdateTriggerPointNodeId(Configuration.CheckCargoTriggerName, LoadTriggerNode);
+            Configuration.UpdateTriggerPointNodeId(Configuration.CheckCargoTriggerName, CheckCargoTriggerNode);
+            Configuration.UpdateTriggerPointNodeId(Configuration.ShortLoopTriggerName, ShortLoopTriggerNode);
             return Configuration;
         }
     }
@@ -35,13 +39,13 @@ public static class OrderGenerator
             return new OrderDetails(Guid.NewGuid(),
                 "OrderId",
                 "1020",
-                KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith("2")),
+                KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
                 "leNo",
                 HostOrderCreator.Wms);
         }
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith("2")),
+            KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
             "1050",
             "leNo",
             HostOrderCreator.Wms);

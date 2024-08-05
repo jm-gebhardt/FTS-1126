@@ -40,7 +40,7 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     public async Task Consume(ConsumeContext<ActionGroupStarted> context)
     {
         var (actionGroup, _, timestamp) = context.Message;
-        if (actionGroup.Creator is ActionGroupCreator.Wms)
+        if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
         {
             await context.Publish(new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, timestamp));
         }

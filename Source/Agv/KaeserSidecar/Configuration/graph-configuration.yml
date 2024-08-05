@@ -1,5 +1,6 @@
 DecisionPoint1TriggerName: "DP1"
 CheckCargoTriggerName: "DP2"
+ShortLoopTriggerName: "DP3"
 StationMapping:
   "1020": "3"
   "1050": "3"

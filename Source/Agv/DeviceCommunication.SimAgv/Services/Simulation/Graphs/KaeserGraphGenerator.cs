@@ -50,6 +50,7 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
     private const string Wp20 = "WP-020";
     private const string Wp21 = "WP-021";
     private const string Wp22 = "WP-022";
+    private const string Wp23 = "WP-023";
 
     private const string Park0 = "Queue-0";
     private const string Park1 = "Queue-1";
@@ -91,6 +92,7 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
     private const float EmptyRow = Row3 + RowSpacing;
     private const float Row4 = EmptyRow + RowSpacing;
     private const float Row5 = Row4 + RowSpacing;
+    private const float Row6 = Row5 + RowSpacing;
 
     private const float Col0 = X8;
     private const float Col1 = X2;
@@ -117,19 +119,19 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
             new (Pd2) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X2, Y = Row1 },
             new (Pd3) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X3, Y = Row1 },
             new (Pd4) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col5, Y = Y4},
-            new (Pd5) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X5, Y = Row5 },
-            new (Pd6) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X6, Y = Row5 },
-            new (Pd7) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X7, Y = Row5 },
-            new (Pd8) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col0, Y = Row5 },
+            new (Pd5) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X5, Y = Row6 },
+            new (Pd6) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X6, Y = Row6 },
+            new (Pd7) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X7, Y = Row6 },
+            new (Pd8) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col0, Y = Row6 },
 
             new (Park2) { Type = AgvGraph.NodeType.Park, Theta = North, X = Col5, Y = Ywp17 },
             new (Park1) { Type = AgvGraph.NodeType.Park, Theta = North, X = Col5, Y = Row4 },
             new (Park0) { Type = AgvGraph.NodeType.Park, Theta = North, X = Col5, Y = Row5 },
 
-            new(Wp00) { Type = AgvGraph.NodeType.WayPoint, X = X5, Y = Row4 },
-            new(Wp01) { Type = AgvGraph.NodeType.WayPoint, X = X6, Y = Row4 },
-            new(Wp02) { Type = AgvGraph.NodeType.WayPoint, X = X7, Y = Row4 },
-            new(Wp03) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row4 },
+            new(Wp00) { Type = AgvGraph.NodeType.WayPoint, X = X5, Y = Row5 },
+            new(Wp01) { Type = AgvGraph.NodeType.WayPoint, X = X6, Y = Row5 },
+            new(Wp02) { Type = AgvGraph.NodeType.WayPoint, X = X7, Y = Row5 },
+            new(Wp03) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row5 },
             new(Wp04) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row3 },
             new(Wp05) { Type = AgvGraph.NodeType.WayPoint, X = Col1, Y = Row3 },
             new(Wp06) { Type = AgvGraph.NodeType.WayPoint, X = Col1, Y = Row2 },
@@ -148,7 +150,8 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
             new(Wp19) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 2f * (Col2 - X1) / 5f, Y = Row2 },
             new(Wp20) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 3f * (Col2 - X1) / 5f,  Y = Row2 },
             new(Wp21) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 4f * (Col2 - X1) / 5f,  Y = Row2 },
-            new(Wp22) { Type = AgvGraph.NodeType.WayPoint, X = Col0,  Y = Row2 }
+            new(Wp22) { Type = AgvGraph.NodeType.WayPoint, X = Col0,  Y = Row2 },
+            new(Wp23) { Type = AgvGraph.NodeType.WayPoint, X = Col0,  Y = Row4 }
         };
         GraphEdge[] edges =
         {
@@ -158,8 +161,10 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
             CreateDirect(Wp02, Wp01, nodes),
             CreateDirect(Wp02, Wp03, nodes),
             CreateDirect(Wp03, Wp02, nodes),
-            CreateDirect(Wp03, Wp04, nodes),
-            CreateDirect(Wp04, Wp03, nodes),
+            CreateDirect(Wp03, Wp23, nodes),
+            CreateDirect(Wp23, Wp03, nodes),
+            CreateDirect(Wp04, Wp23, nodes),
+            CreateDirect(Wp23, Wp04, nodes),
             CreateDirect(Wp04, Wp05, nodes),
             CreateDirect(Wp05, Wp04, nodes),
             CreateDirect(Wp05, Wp06, nodes),
