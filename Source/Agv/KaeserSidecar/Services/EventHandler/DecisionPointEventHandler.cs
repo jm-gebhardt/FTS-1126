@@ -20,7 +20,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 public class DecisionPointEventHandler (ILogger<DecisionPointEventHandler> logger, IStationRepository stationRepository, IPrismatCommunicationHostOrderRepository hostOrderRepository, IConveyorCommunicator conveyorCommunicator, KaeserGraphConfiguration configuration): 
     IConsumer<AgvPassedDecisionPoint1>
 {
-    private string _lastChosenStation = string.Empty;
+    private static string _lastChosenStation = string.Empty;
 
     /// <summary>
     /// Handles the <see cref="AgvPassedDecisionPoint1"/> message.
