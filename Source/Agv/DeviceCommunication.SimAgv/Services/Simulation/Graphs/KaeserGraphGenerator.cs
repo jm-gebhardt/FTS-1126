@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 
 /// <summary>
 /// </summary>
-public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBase(new[] { Pd1, Pd2, Pd3, Pd4, Pd5, Pd6, Pd7, Pd8 }, new[] { Pd1, Pd2, Pd3, Pd4, Pd5, Pd6, Pd7, Pd8 }, magGenerator)
+public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBase(new[] { Pd1, Pd2, Pd3, Pd4, Pd5, Pd6, Pd7, Pd8 }, new[] { Pd1, Pd2, Pd3, Pd4, Pd5, Pd6, Pd7, Pd8 }, mapGenerator)
 {
     // Node names
 
@@ -52,9 +52,9 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
     private const string Wp22 = "WP-022";
     private const string Wp23 = "WP-023";
 
-    private const string Park0 = "Queue-0";
-    private const string Park1 = "Queue-1";
-    private const string Park2 = "Queue-2";
+    private const string Park0 = "ParkQueue-0";
+    private const string Park1 = "ParkQueue-1";
+    private const string Park2 = "ParkQueue-2";
 
     private const string ManualCharge = "ManualCharge";
 
@@ -124,9 +124,9 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
             new (Pd7) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X7, Y = Row6 },
             new (Pd8) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col0, Y = Row6 },
 
-            new (Park2) { Type = AgvGraph.NodeType.Park, Theta = North, X = Col5, Y = Ywp17 },
-            new (Park1) { Type = AgvGraph.NodeType.Park, Theta = North, X = Col5, Y = Row4 },
-            new (Park0) { Type = AgvGraph.NodeType.Park, Theta = North, X = Col5, Y = Row5 },
+            new (Park2) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Ywp17 },
+            new (Park1) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Row4 },
+            new (Park0) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Row5 },
 
             new(Wp00) { Type = AgvGraph.NodeType.WayPoint, X = X5, Y = Row5 },
             new(Wp01) { Type = AgvGraph.NodeType.WayPoint, X = X6, Y = Row5 },
@@ -196,6 +196,7 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
             CreateDirect(Wp22, Wp04, nodes),
 
             CreateDirect(Park2, Park1, nodes),
+            CreateDirect(Park2, Wp17, nodes),
             CreateDirect(Park1, Park0, nodes),
             CreateDirect(Park0, Wp18, nodes),
 
@@ -229,7 +230,6 @@ public class KaeserGraphGenerator(IMapGenerator magGenerator) : GraphGeneratorBa
 
             CreatePolypath(Wp16, Park2, [new EdgeCoefficient(Col5, Row3)], nodes),
             CreatePolypath(Park1, Wp17, [new EdgeCoefficient(Xwp17, Row4)], nodes),
-            CreatePolypath(Park0, Wp17, [new EdgeCoefficient(Xwp17, Row5)], nodes),
             CreatePolypath(Wp17, Wp11, [new EdgeCoefficient(Xwp17, Row1)], nodes),
             CreatePolypath(Wp18, Wp15, [new EdgeCoefficient(Xwp17,  Ywp18), new EdgeCoefficient(Xwp17,  Row2)], nodes),
             CreatePolypath(ManualCharge, Wp22, [new EdgeCoefficient(X7, Row2)], nodes),
