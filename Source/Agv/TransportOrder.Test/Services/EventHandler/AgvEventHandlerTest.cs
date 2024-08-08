@@ -60,7 +60,7 @@ public class AgvEventHandlerTest
         
         await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartManualAction>();
-        await fixture.ShouldNotHavePublishedAsync<StartChargingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CreateChargingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
     }
 
@@ -77,7 +77,7 @@ public class AgvEventHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartManualAction>();
-        await fixture.ShouldNotHavePublishedAsync<StartChargingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CreateChargingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
     }
 
@@ -155,7 +155,7 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvBecameIdle_AgvIsNotCarryingNeedCharging_DoesNotPublishTryStartNewActionGroup()
+    public async Task Consume_AgvBecameIdle_AgvIsNotCarryingNeedCharging_DoesPublishTryStartNewActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId", batteryCharge: 10);
@@ -167,7 +167,7 @@ public class AgvEventHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartManualAction>();
-        await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryStartNewActionGroup>();
     }
 
     [TestMethod]
@@ -322,11 +322,11 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ChargingNodeSelectedForAgv_PublishesStartChargingActionGroup()
+    public async Task Consume_ChargingNodeSelectedForAgv_PublishesCreateChargingActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
         await fixture.PublishMessageAsync(new ChargingNodeSelectedForAgv(Guid.NewGuid(), "a charging node"));
-        await fixture.ShouldHavePublishedAsync<StartChargingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<CreateChargingActionGroup>();
     }
 
     [TestMethod]

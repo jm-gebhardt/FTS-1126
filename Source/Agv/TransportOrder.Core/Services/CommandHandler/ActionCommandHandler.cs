@@ -37,7 +37,7 @@ public class ActionCommandHandler :
     IConsumer<TryStartNextActionInActionGroup>,
     IConsumer<TryStartNewActionGroup>,
     IConsumer<CreateParkingActionGroup>,
-    IConsumer<StartChargingActionGroup>,
+    IConsumer<CreateChargingActionGroup>,
     IConsumer<CompleteActionOfActionGroup>,
     IConsumer<QueueActionGroup>,
     IConsumer<CancelActionGroup>,
@@ -101,23 +101,27 @@ public class ActionCommandHandler :
     {
         var (action, agvCorrelationId) = context.Message;
         var cancellationToken = context.CancellationToken;
-        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
-        bool agvActionCanBeStarted = await _actionService.CheckAgvActionCanBeStarted(context, action, assignedAgv, actionGroup);
-        if (agvActionCanBeStarted)
-        {
-            actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
-            await _actionService.TryUpdateActionGroup(actionGroup);
-            var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
-            await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
-            await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
-            if (action.IsFirstAction)
+
+        await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
+        { 
+            var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+            var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
+            bool agvActionCanBeStarted = await _actionService.CheckAgvActionCanBeStarted(context, action, assignedAgv, actionGroup);
+            if (agvActionCanBeStarted)
             {
-                _logger.LogOrderInformation(LogCodes.OrderStarted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Started", $"Order {actionGroup.OrderId} has been started");
-                await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
+                actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
+                await _actionService.TryUpdateActionGroup(actionGroup);
+                var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
+                await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
+                await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
+                if (action.IsFirstAction)
+                {
+                    _logger.LogOrderInformation(LogCodes.OrderStarted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Started", $"Order {actionGroup.OrderId} has been started");
+                    await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
+                }
+                _logger.LogOrderInformation(LogCodes.OrderActionStarted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{action.ActionType} of order {actionGroup.OrderId} has been started");
             }
-            _logger.LogOrderInformation(LogCodes.OrderActionStarted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{action.ActionType} of order {actionGroup.OrderId} has been started");
-        }
+        }, context.CancellationToken);
     }
 
     /// <summary>
@@ -318,7 +322,7 @@ public class ActionCommandHandler :
         bool needsCharging = agv.CheckMustCharge(agvSettings);
         bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
 
-        bool canStartNewAction = !needsCharging && !agv.NeedsMaintenance && !hasUnfinishedDropAction && !agv.IsLocked;
+        bool canStartNewAction = !agv.NeedsMaintenance && !hasUnfinishedDropAction && !agv.IsLocked;
 
         if (!canStartNewAction)
         {
@@ -385,9 +389,9 @@ public class ActionCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="StartChargingActionGroup"/> command.
+    /// Handles the <see cref="CreateChargingActionGroup"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<StartChargingActionGroup> context)
+    public async Task Consume(ConsumeContext<CreateChargingActionGroup> context)
     {
         (var groupCorrelationId, var agvCorrelationId, string chargeStationId, var initiator) = context.Message;
         bool triggeredByWebApi = initiator == ActionGroupCreator.TransportOrderWebApi;
@@ -397,9 +401,9 @@ public class ActionCommandHandler :
 
         bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
         IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
-        _logger.LogDebug("Evaluating {Name}, has unfinished action: {HasUnfinishedActionGroup} for agv {AgvCorrelationId}.", nameof(StartChargingActionGroup), hasUnfinishedActionGroup, agv.CorrelationId);
+        _logger.LogDebug("Evaluating {Name}, has unfinished action: {HasUnfinishedActionGroup} for agv {AgvCorrelationId}.", nameof(CreateChargingActionGroup), hasUnfinishedActionGroup, agv.CorrelationId);
 
-        if (agv.IsLocked || (hasUnfinishedActionGroup && !triggeredByWebApi) || (!agv.CanStartAutomaticAction && !triggeredByWebApi))
+        if (agv.IsLocked || (!agv.CanStartAutomaticAction && !triggeredByWebApi))
         {
             return;
         }

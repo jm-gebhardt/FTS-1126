@@ -20,7 +20,7 @@ public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<TryStartNextActionInActionGroup>>,
     IFilter<ConsumeContext<StartActionOfActionGroup>>,
     IFilter<ConsumeContext<CompleteActionOfActionGroup>>,
-    IFilter<ConsumeContext<StartChargingActionGroup>>,
+    IFilter<ConsumeContext<CreateChargingActionGroup>>,
     IFilter<ConsumeContext<QueueActionGroup>>,
     IFilter<ConsumeContext<NodesSelectedForAction>>,
     IFilter<ConsumeContext<ActionCompleted>>,
@@ -75,7 +75,7 @@ public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
     }
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
-    public async Task Send(ConsumeContext<StartChargingActionGroup> context, IPipe<ConsumeContext<StartChargingActionGroup>> next)
+    public async Task Send(ConsumeContext<CreateChargingActionGroup> context, IPipe<ConsumeContext<CreateChargingActionGroup>> next)
     {
         LogDebug(context);
         await next.Send(context);

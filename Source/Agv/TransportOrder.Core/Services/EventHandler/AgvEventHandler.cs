@@ -143,13 +143,8 @@ public class AgvEventHandler :
                 return;
             }
 
-            var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
-            bool needsCharging = agv.CheckMustCharge(agvSettings);
-            if (!needsCharging)
-            {
-                _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}", agv.CorrelationId);
-                await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
-            }
+            _logger.LogDebug("Starting new action for agv: {AgvCorrelationId}", agv.CorrelationId);
+            await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
         }, context.CancellationToken);
     }
 
@@ -285,7 +280,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ChargingNodeSelectedForAgv> context)
     {
-        await context.Publish(new StartChargingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.ChargeStationId, context.Message.Initiator));
+        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.ChargeStationId, context.Message.Initiator));
     }
 
     /// <summary>

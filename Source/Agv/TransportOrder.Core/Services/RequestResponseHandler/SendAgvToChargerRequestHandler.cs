@@ -56,7 +56,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         var charger = await _chargingPointManager.ReserveChargerAsync(agv, startNodeId: currentAction?.Target.NodeId);
         await PublishNodeStateChange(charger.Id);
 
-        await context.Publish(new StartChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi));
+        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi));
 
         await context.RespondAsync(new Success());
     }

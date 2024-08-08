@@ -10,4 +10,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 /// <param name="AgvCorrelationId">The correlationId of the agv.</param>
 /// <param name="ChargeStationId">Charger id.</param>
 /// <param name="Creator">The creator of the charge action group.</param>
-public record StartChargingActionGroup(Guid CorrelationId, Guid AgvCorrelationId, string ChargeStationId, ActionGroupCreator Creator = ActionGroupCreator.TransportOrder): CorrelatedBy<Guid>;
+public record CreateChargingActionGroup(Guid CorrelationId, Guid AgvCorrelationId, string ChargeStationId, ActionGroupCreator Creator = ActionGroupCreator.TransportOrder): CorrelatedBy<Guid>;

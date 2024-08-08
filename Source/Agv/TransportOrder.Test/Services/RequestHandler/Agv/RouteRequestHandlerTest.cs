@@ -66,7 +66,7 @@ public class RouteRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_SendAgvToCharger_AgvWithAction_PublishesStartChargingActionGroup()
+    public async Task Consume_SendAgvToCharger_AgvWithAction_PublishesCreateChargingActionGroup()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var chargingNode = NodeGenerator.GenerateChargingNode();
@@ -76,11 +76,11 @@ public class RouteRequestHandlerTest
             .ReserveChargerReturns(chargingNode)
             .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
 
-        var startChargingActionGroup = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, StartChargingActionGroup>(
+        var createChargingActionGroup = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, CreateChargingActionGroup>(
             new SendAgvToCharger(agv.CorrelationId));
-      
-        startChargingActionGroup.AgvCorrelationId.ShouldBe(agv.CorrelationId);
-        startChargingActionGroup.ChargeStationId.ShouldBe(chargingNode.Id);
-        startChargingActionGroup.Creator.ShouldBe(ActionGroupCreator.TransportOrderWebApi);
+
+        createChargingActionGroup.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        createChargingActionGroup.ChargeStationId.ShouldBe(chargingNode.Id);
+        createChargingActionGroup.Creator.ShouldBe(ActionGroupCreator.TransportOrderWebApi);
     }
 }

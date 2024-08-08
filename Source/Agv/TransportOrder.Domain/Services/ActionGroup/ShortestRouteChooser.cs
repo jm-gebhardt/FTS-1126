@@ -62,24 +62,33 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     }
 
     /// <summary>
-    /// Returns the first action of an ActionGroup that satisfies these conditions:
-    /// <para>- A Route for all actions exists</para>
-    /// <para>- The cost of the first action is the lowest</para>
+    /// Returns the first ActionGroup that satisfies these conditions:
+    /// <para>- Is a charging action group</para>
+    /// <para>- Is a manual action group</para>
+    /// <para>- Is an action group with an existing route for all actions and the cost of the first action is the lowest.</para>
     /// </summary>
     /// <param name="agv"></param>
     /// <param name="agvData"></param>
     /// <param name="cancellationToken"></param>
-    /// <returns>AgvAction</returns>
+    /// <returns>ActionGroup</returns>
     /// <exception cref="AgvLocationUnknownException"></exception>
     public async Task<Models.ActionGroup.ActionGroup?> GetNotStartedActionGroupAsync(Agv agv, AgvData? agvData, CancellationToken cancellationToken = default)
     {
+        var chargingActionGroup = await _actionGroupRepository.GetCreatedChargingActionGroupForAgvAsync(agv.CorrelationId);
+        if (chargingActionGroup != null)
+        {
+            _logger.LogDebug($@"ShortestRouteChooser.GetNotStartedActionGroupAsync: 
+                Found charging action group {chargingActionGroup.CorrelationId} for AGV: {agv.CorrelationId}");
+            return chargingActionGroup;
+        }
+
         IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
 
         var manualActionGroup = notStartedActionGroups.OrderByDescending(g => g.HasPriority).FirstOrDefault(g => g.IsManual);
 
         if (manualActionGroup != null)
         {
-            // if there is a manual action group, return the action. The list of actionGroups is already ordered by the CreationDate, so the first is fine 
+            // If there is a manual action group, return this action group. The list of actionGroups is already ordered by the CreationDate, so the first is fine 
             return manualActionGroup;
         }
 

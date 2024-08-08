@@ -229,4 +229,11 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     Task<bool> IsLastCompletedActionMoveToCoordinate(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Gets an action group responsible for charging an AGV that is assigned and in the created state.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>Assigned ActionGroup</returns>
+    Task<ActionGroup?> GetCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId);
 }

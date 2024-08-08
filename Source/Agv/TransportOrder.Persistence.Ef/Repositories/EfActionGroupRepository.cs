@@ -486,4 +486,24 @@ public class EfActionGroupRepository : IActionGroupRepository
             .FirstOrDefaultAsync();
         return action is { IsMoveToCoordinate: true };
     }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .Include(ag => ag.Actions)
+            .AsNoTracking();
+
+        // The SQL created is less than optimal. If this becomes problematic, 
+        // may want to create a stored procedure and call that instead.
+        return await actionGroups.Where(ag =>
+            ag.AssignedAgv == agvCorrelationId
+            && ag.State == ActionGroupState.Created
+            && ag.Actions.Any(a =>
+                a.ActionType == ActionType.Charge
+                && a.State == ActionState.Created))
+            .FirstOrDefaultAsync();
+    }
 }
