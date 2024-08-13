@@ -20,7 +20,7 @@ public class TriggerTest
         const string urn = "unique resource name";
         const string displayName = "name";
         const int instances = 2;
-        var configurationParameter = new ConfigurationParameter("name", "value", "validation regex");
+        var configurationParameter = new ConfigurationParameter("name", "description", "value", "validation regex");
 
         var trigger = new Trigger(id, urn, displayName, version, description, instances, [configurationParameter]);
 
@@ -37,7 +37,7 @@ public class TriggerTest
     {
         const string node = "a node id";
         var map = Guid.NewGuid();
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
        
         var location = trigger.AddLocation(node, map);
         
@@ -53,7 +53,7 @@ public class TriggerTest
     public void AddLocation_NodeId_InstanceMaximumExceeded_ThrowsTriggerInstanceCountException()
     {
         const int instances = 1;
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", instances, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", instances, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
         trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(instances);
 
@@ -65,7 +65,7 @@ public class TriggerTest
     {
         var edge = Guid.NewGuid();
         var map = Guid.NewGuid();
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
 
         var location = trigger.AddLocation(edge, map);
 
@@ -81,7 +81,7 @@ public class TriggerTest
     public void AddLocation_EdgeId_InstanceMaximumExceeded_ThrowsTriggerInstanceCountException()
     {
         const int instances = 1;
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", instances, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", instances, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
         trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(instances);
 
@@ -93,7 +93,7 @@ public class TriggerTest
     {
         List<PolygonPoint> polygon = [new PolygonPoint(42.0, 42.0, Guid.NewGuid())];
         var map = Guid.NewGuid();
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
 
         var location = trigger.AddLocation(polygon, map);
 
@@ -110,7 +110,7 @@ public class TriggerTest
     public void AddLocation_Polygon_InstanceMaximumExceeded_ThrowsTriggerInstanceCountException()
     {
         const int instances = 1;
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", instances, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", instances, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
         trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(instances);
 
@@ -120,7 +120,7 @@ public class TriggerTest
     [TestMethod]
     public void RemoveLocation_ValidData_LocationRemoved()
     {
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
         var location = trigger.AddLocation("a node", Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(1);
 
@@ -131,7 +131,7 @@ public class TriggerTest
     [TestMethod]
     public void RemoveLocation_LocationNotFound_ThrowsTriggerLocationNotFoundException()
     {
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
 
         Should.Throw<TriggerLocationNotFoundException>(() => trigger.RemoveLocation("unknown".ToGuid()));
     }
@@ -139,7 +139,7 @@ public class TriggerTest
     [TestMethod]
     public void ValidateConfigurationParameterValue_NoValidation_ReturnsTrue()
     {
-        var parameter = new ConfigurationParameter("parameter name", "value", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         trigger.ValidateConfigurationParameterValue(parameter.Name, "any new value").ShouldBeTrue();
     }
@@ -155,7 +155,7 @@ public class TriggerTest
     public void ValidateConfigurationParameterValue_DoesNotValidate_ReturnsFalse()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "0", isNumber);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", isNumber);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         trigger.ValidateConfigurationParameterValue(parameter.Name, "not a number").ShouldBeFalse();
     }
@@ -163,7 +163,7 @@ public class TriggerTest
     [TestMethod]
     public void ValidateConfigurationParameterValue_ValidationIsNotValidRegex_ReturnsTrue()
     {
-        var parameter = new ConfigurationParameter("parameter name", "0", "([");
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", "([");
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         trigger.ValidateConfigurationParameterValue(parameter.Name, "any new value").ShouldBeTrue();
     }
@@ -172,7 +172,7 @@ public class TriggerTest
     public void ValidateConfigurationParameterValue_Validates_ReturnsTrue()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "0", isNumber);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", isNumber);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         trigger.ValidateConfigurationParameterValue(parameter.Name, "12").ShouldBeTrue();
     }
@@ -181,7 +181,7 @@ public class TriggerTest
     public void ValidateConfigurationParameterValue_EscapedSpecialBackslash_ReturnsTrue()
     {
         const string isNumber = "^-?\\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "0", isNumber);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", isNumber);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         trigger.ValidateConfigurationParameterValue(parameter.Name, "12").ShouldBeTrue();
     }
@@ -189,7 +189,7 @@ public class TriggerTest
     [TestMethod]
     public void UpdateConfigurationParameter_ValidData_UpdatesParameterValue()
     {
-        var parameter = new ConfigurationParameter("parameter name", "value", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         const string newValue = "a new value";
 
@@ -204,7 +204,7 @@ public class TriggerTest
     [TestMethod]
     public void UpdateConfigurationParameter_UnknownParameter_ReturnsNull()
     {
-        var parameter = new ConfigurationParameter("parameter name", "value", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
         trigger.UpdateConfigurationParameter("unknown", "any new value").ShouldBeNull();

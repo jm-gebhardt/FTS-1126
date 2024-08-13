@@ -6,9 +6,10 @@
 public record ConfigurationParameter
 {
     /// <inheritdoc cref="ConfigurationParameter"/>>
-    public ConfigurationParameter(string name, string value, string validation)
+    public ConfigurationParameter(string name, string description, string value, string validation)
     {
         Name = name;
+        Description = description;
         Value = value;
         Validation = validation;
     }
@@ -17,6 +18,11 @@ public record ConfigurationParameter
     /// The parameter name.
     /// </summary>
     public string Name { get; init; }
+
+    /// <summary>
+    /// The parameter description. 
+    /// </summary>
+    public string Description { get; init; }
 
     /// <summary>
     /// The parameter value.

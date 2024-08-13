@@ -15,13 +15,14 @@ namespace Gebhardt.Acc.TriggerDecisionPoint1;
 public class DecisionPoint1Trigger(IBus bus) : IFfcTrigger
 {
     private const string PropertyName = "StationCount";
+    private const string PropertyDescription = "Anzahl der Stationen, die als Ziel für APL 1060 verwendet werden können.";
     private int _propertyValue = 3;
 
     /// <inheritdoc cref="IFfcTrigger"/>>
     public ConcurrentDictionary<string, ConfigurationParameter> GetConfigurationParameters()
     {
         var config = new ConcurrentDictionary<string, ConfigurationParameter>();
-        config.TryAdd(PropertyName, new ConfigurationParameter(PropertyName, _propertyValue.ToString(), @"^\d+$"));
+        config.TryAdd(PropertyName, new ConfigurationParameter(PropertyName, PropertyDescription, _propertyValue.ToString(), @"^\d+$"));
         return config;
     }
 

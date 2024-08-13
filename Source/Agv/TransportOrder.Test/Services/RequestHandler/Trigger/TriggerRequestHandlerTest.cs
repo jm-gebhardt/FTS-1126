@@ -55,7 +55,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_TryUpdateConfigurationParameter_ValidData_PublishesUpdateConfigurationParameterRespondsSuccess()
     {
-        var parameter = new ConfigurationParameter("parameter name", "value", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
         TriggerRequestHandlerTestFixture<TryUpdateConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateConfigurationParameter>()
             .WithTriggers([trigger])
@@ -68,7 +68,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_TryUpdateConfigurationParameter_UnknownTrigger_ThrowsTriggerNotFoundException_DoesNotPublishUpdateConfigurationParameter()
     {
-        var parameter = new ConfigurationParameter("parameter name", "value", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
         TriggerRequestHandlerTestFixture<TryUpdateConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateConfigurationParameter>()
             .WithTriggers([trigger])
@@ -82,7 +82,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryUpdateConfigurationParameter_ValidationFails_ThrowsTriggerConfigurationUpdateFailedException_DoesNotPublishUpdateConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "0", isNumber);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", isNumber);
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
         TriggerRequestHandlerTestFixture<TryUpdateConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateConfigurationParameter>()
             .WithTriggers([trigger])

@@ -30,7 +30,8 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveTriggerLocation_ValidData_TriggerLocationRemoved()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "value", "validation regex")]);
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
+        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
         var location = trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(1);
@@ -47,7 +48,7 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateConfigurationParameter_ValidData_PublishesTriggerConfigurationUpdated()
     {
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
@@ -62,7 +63,7 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateConfigurationParameter_UnknownParameter_DoesNotPublishTriggerOrUpdateConfiguration()
     {
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);

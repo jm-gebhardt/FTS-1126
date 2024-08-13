@@ -12,7 +12,7 @@ public static class TriggerGenerator
     {
         public Trigger()
         {
-            Parameters.TryAdd("name", new ConfigurationParameter("name", "value", "a validation regex"));
+            Parameters.TryAdd("name", new ConfigurationParameter("name", "description", "value", "a validation regex"));
         }
 
         public ConcurrentDictionary<string, ConfigurationParameter> Parameters { get; } = new();
@@ -27,7 +27,7 @@ public static class TriggerGenerator
         public void UpdateConfigurationParameter(string name, string value)
         {
             Parameters.TryGetValue(name, out var oldParameter);
-            Parameters.TryUpdate(name, new ConfigurationParameter(oldParameter!.Name, value, oldParameter.Validation), oldParameter);
+            Parameters.TryUpdate(name, new ConfigurationParameter(oldParameter!.Name, oldParameter.Description, value, oldParameter.Validation), oldParameter);
         }
 
         public TriggerProperties GetProperties()

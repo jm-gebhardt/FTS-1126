@@ -16,13 +16,14 @@ namespace Gebhardt.Acc.TriggerExample;
 public class TestTrigger(IBus bus) : IFfcTrigger
 {
     private const string PropertyName = "Number";
+    private const string PropertyDescription = "Test Trigger Description";
     private int _propertyValue;
 
     /// <inheritdoc cref="IFfcTrigger"/>>
     public ConcurrentDictionary<string, ConfigurationParameter> GetConfigurationParameters()
     {
         var config = new ConcurrentDictionary<string, ConfigurationParameter>();
-        config.TryAdd(PropertyName, new ConfigurationParameter(PropertyName, _propertyValue.ToString(), @"^-?\d+$"));
+        config.TryAdd(PropertyName, new ConfigurationParameter(PropertyName, PropertyDescription, _propertyValue.ToString(), @"^-?\d+$"));
         return config;
     }
 

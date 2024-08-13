@@ -13,11 +13,12 @@ public class TriggerManagerTest
     {
         var fixture = new TriggerManagerTestFixture();
 
-        var configuration = new ConfigurationParameter("test", "value", "");
+        var configuration = new ConfigurationParameter("test", "description", "value", "");
         fixture.TestTrigger.Parameters.TryAdd(configuration.Name, configuration);
 
         const string updatedValue = "new value";
-        await fixture.TriggerManager.UpdateConfigurationParameters(fixture.TestTrigger.Properties.Id, [new ConfigurationParameter(configuration.Name, updatedValue, configuration.Validation)]);
+        var parameter = new ConfigurationParameter(configuration.Name, configuration.Description, updatedValue, configuration.Validation);
+        await fixture.TriggerManager.UpdateConfigurationParameters(fixture.TestTrigger.Properties.Id, [parameter]);
 
         fixture.TestTrigger.Parameters[configuration.Name].Value.ShouldBe(updatedValue);
         fixture.VerifyTriggerUpdated();

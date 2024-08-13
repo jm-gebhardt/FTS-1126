@@ -14,7 +14,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         
         await fixture.Repository.Add(trigger);
@@ -34,7 +34,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
         //Add trigger with location
@@ -57,7 +57,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         await fixture.AddAsync(trigger);
 
@@ -78,7 +78,7 @@ public class EfTriggerRepositoryTest
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
             new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
@@ -108,7 +108,7 @@ public class EfTriggerRepositoryTest
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
             new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
@@ -136,7 +136,7 @@ public class EfTriggerRepositoryTest
         const string otherNodeId = "WP-0009";
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
             new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
@@ -166,7 +166,7 @@ public class EfTriggerRepositoryTest
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "0", string.Empty);
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
             new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),

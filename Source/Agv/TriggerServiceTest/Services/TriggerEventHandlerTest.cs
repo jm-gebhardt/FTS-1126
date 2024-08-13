@@ -28,7 +28,7 @@ public class TriggerEventHandlerTest
     {
         var fixture = new TriggerMessageConsumerTestFixture<TriggerEventHandler>();
 
-        var message = new TriggerConfigurationUpdated(Guid.NewGuid(), [new ConfigurationParameter("name", "value", "validation")]);
+        var message = new TriggerConfigurationUpdated(Guid.NewGuid(), [new ConfigurationParameter("name", "description", "value", "validation")]);
         await fixture.TestHarness.Bus.Publish(message);
         
         await fixture.ShouldHaveConsumedAsync<TriggerConfigurationUpdated>();

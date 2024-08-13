@@ -9,9 +9,10 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 public record ConfigurationParameterDto
 {
     /// <inheritdoc cref="ConfigurationParameterDto"/>>
-    public ConfigurationParameterDto(string name, string value, string validation)
+    public ConfigurationParameterDto(string name, string description, string value, string validation)
     {
         Name = name;
+        Description = description;
         Value = value;
         Validation = validation;
     }
@@ -20,6 +21,7 @@ public record ConfigurationParameterDto
     public ConfigurationParameterDto()
     {
         Name = string.Empty;
+        Description = string.Empty;
         Value = string.Empty;
         Validation = string.Empty;
     }
@@ -28,6 +30,11 @@ public record ConfigurationParameterDto
     /// The parameter name.
     /// </summary>
     public string Name { get; init; }
+
+    /// <summary>
+    /// The parameter description.
+    /// </summary>
+    public string Description { get; init; }
 
     /// <summary>
     /// The parameter value.
