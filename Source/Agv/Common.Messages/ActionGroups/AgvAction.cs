@@ -46,12 +46,12 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     /// <summary>
     /// The nodes of the trip
     /// </summary>
-    public string[] Nodes { get; set; } = [];
+    public ICollection<string> Nodes { get; set; } = [];
 
     /// <summary>
     /// The nodes of the trip
     /// </summary>
-    public Guid[] Edges { get; set; } = [];
+    public ICollection<Guid> Edges { get; set; } = [];
 
     /// <summary>
     /// Date the action was created (UTC)

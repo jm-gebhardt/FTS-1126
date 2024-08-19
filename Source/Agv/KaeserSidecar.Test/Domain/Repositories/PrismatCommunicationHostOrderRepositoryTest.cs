@@ -15,7 +15,7 @@ public class PrismatCommunicationHostOrderRepositoryTest
         var earlierOrder = OrderGenerator.GenerateHostOrderFromOrderDetails( OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var laterOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
-        fixture.Repository.AddRange([earlierOrder, laterOrder, dropOrder]);
+        fixture.Repository.AddRange(earlierOrder, laterOrder, dropOrder);
         await fixture.Repository.SaveAsync();
 
         (await fixture.Repository.GetNextPickOnShortLoop()).ShouldBe(earlierOrder);

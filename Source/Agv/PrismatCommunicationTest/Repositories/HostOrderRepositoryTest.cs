@@ -92,7 +92,7 @@ public class HostOrderRepositoryTest
         var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([earlierOrder, laterOrder, dropAt1050, longLoopOrder]);
+        fixture.Repository.AddRange(earlierOrder, laterOrder, dropAt1050, longLoopOrder);
         await fixture.Repository.SaveAsync();
 
         (await fixture.Repository.GetNextPickOrderForShortLoopDualOperation()).ShouldBe(earlierOrder);
@@ -105,7 +105,7 @@ public class HostOrderRepositoryTest
         var startedPickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         startedPickAt1020.Start(DateTime.UtcNow, Guid.NewGuid());
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([longLoopOrder, startedPickAt1020]);
+        fixture.Repository.AddRange(longLoopOrder, startedPickAt1020);
         await fixture.Repository.SaveAsync();
 
         (await fixture.Repository.GetNextPickOrderForShortLoopDualOperation()).ShouldBeNull();
@@ -122,7 +122,7 @@ public class HostOrderRepositoryTest
         longLoopOrder.Start(DateTime.UtcNow, Guid.NewGuid());
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([earlierOrder, pickAt1020, longLoopOrder]);
+        fixture.Repository.AddRange(earlierOrder, pickAt1020, longLoopOrder);
         await fixture.Repository.SaveAsync();
 
         (await fixture.Repository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ShouldBeTrue();
@@ -137,7 +137,7 @@ public class HostOrderRepositoryTest
         longLoopOrder.Start(DateTime.UtcNow, Guid.NewGuid());
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([pickAt1020, longLoopOrder]);
+        fixture.Repository.AddRange(pickAt1020, longLoopOrder);
         await fixture.Repository.SaveAsync();
 
         (await fixture.Repository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ShouldBeFalse();
@@ -153,7 +153,7 @@ public class HostOrderRepositoryTest
         var notStarted = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange([passedTriggerPoint, notStarted]);
+        fixture.Repository.AddRange(passedTriggerPoint, notStarted);
         await fixture.Repository.SaveAsync();
 
         (await fixture.Repository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ShouldBeFalse();

@@ -12,7 +12,7 @@ public record AgvErrorStatusDto : DatedMessage
     public Guid CorrelationId { get; init; }
 
     /// <summary>The list of errors. If there is no error it is empty or null.</summary>
-    public List<AgvErrorDto> Errors { get; init; }
+    public ICollection<AgvErrorDto> Errors { get; init; }
 
     /// <inheritdoc cref="AgvErrorStatusDto" />
     /// <param name="correlationId">The CorrelationId of the Agv</param>

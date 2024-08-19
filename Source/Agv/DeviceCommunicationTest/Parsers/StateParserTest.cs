@@ -17,7 +17,7 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Parsers;
 [TestClass]
 public class StateParserTest
 {
-    private readonly IMapper _mapper = MappingHelper.GetMapper([new CargoProfile(), new MqttErrorProfile()]);
+    private readonly IMapper _mapper = MappingHelper.GetMapper(new CargoProfile(), new MqttErrorProfile());
     private readonly Mock<ILogger> _logger = new();
 
     private void ValidatePosition(MqttState state, AgvPosition position)

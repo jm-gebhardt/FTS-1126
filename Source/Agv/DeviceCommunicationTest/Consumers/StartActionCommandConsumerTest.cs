@@ -284,11 +284,8 @@ public class StartActionCommandConsumerTest
             List<object>? routeNodes = mqttMessage.Route?.Nodes;
             if (routeNodes != null)
             {
-                for (int i = 0; i < routeNodes.Count; i++)
-                {
-                    var routeNode = (MqttNode)routeNodes[i];
-                    routeNode.NodeId.ShouldBe(action.Nodes[i]);
-                }
+                routeNodes.Select(node => ((MqttNode)node).NodeId)
+                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
             }
         }
     }

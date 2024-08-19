@@ -497,7 +497,7 @@ public class AgvCommandHandlerTest
         var domainCargos = _mapper.Map<IReadOnlyCollection<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
 
         var fixture = new AgvCommandHandlerTestFixture()
-            .WithHasCargoStates([true, false])
+            .WithHasCargoStates(true, false)
             .WithSetCargoReturnValue(agv.CorrelationId, domainCargos, true);
         fixture.AddAgvs([agv]);
 
@@ -516,7 +516,7 @@ public class AgvCommandHandlerTest
         var domainCargos = _mapper.Map<IReadOnlyCollection<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
 
         var fixture = new AgvCommandHandlerTestFixture()
-            .WithHasCargoStates([true, true])
+            .WithHasCargoStates(true, true)
             .WithSetCargoReturnValue(agv.CorrelationId, domainCargos, false);
         fixture.AddAgvs([agv]);
 

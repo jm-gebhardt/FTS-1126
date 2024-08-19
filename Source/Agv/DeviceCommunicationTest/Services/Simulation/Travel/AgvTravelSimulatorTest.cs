@@ -507,9 +507,9 @@ public class AgvTravelSimulatorTest
 
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
-        simulator.EstimateTravelTimes(action.Nodes, route.edges, entryTime, initialVelocity);
+        simulator.EstimateTravelTimes(action.Nodes.ToArray(), route.edges, entryTime, initialVelocity);
 
-        simulator.FollowingEdges.Count.ShouldBe(action.Nodes.Length - 1);
+        simulator.FollowingEdges.Count.ShouldBe(action.Nodes.Count - 1);
         simulator.TravelDuration!.Value.ShouldBeGreaterThan(TimeSpan.Zero);
         simulator.CurrentEdge!.SourceNode.ShouldBe(startNode);
 
