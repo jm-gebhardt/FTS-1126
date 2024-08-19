@@ -33,7 +33,7 @@ public class Location
     /// <summary>
     /// The polygon, if set.
     /// </summary>
-    public ICollection<PolygonPoint> Polygon { get; set; }
+    public ICollection<TriggerPolygonPoint> Polygon { get; set; }
 
     /// <summary>
     /// The id of the map the location is on.
@@ -73,7 +73,7 @@ public class Location
     public Location(ICollection<PolygonPoint> polygon, Guid? mapId, Guid triggerId)
     {
         Id = Guid.NewGuid();
-        Polygon = polygon.Select(p => new PolygonPoint(p.X, p.Y, Id)).ToList();
+        Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, Id)).ToList();
         MapId =  mapId ?? null;
         TriggerId = triggerId;
     }

@@ -1,8 +1,11 @@
-﻿namespace Gebhardt.Acc.Common.Messages.Triggers;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.Common.Messages.Triggers;
 
 /// <summary>
 /// A configuration parameter
 /// </summary>
+[PublicAPI]
 public record ConfigurationParameter
 {
     /// <inheritdoc cref="ConfigurationParameter"/>>

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
@@ -102,7 +101,7 @@ public class EfTriggerRepository : ITriggerRepository
                 {
                     if (location.Polygon.Count > 0)
                     {
-                        context.Set<PolygonPoint>().RemoveRange(location.Polygon);
+                        context.Set<TriggerPolygonPoint>().RemoveRange(location.Polygon);
                     }
                     RemoveTriggerFromLocationRepository(trigger, location);
                 }
@@ -116,7 +115,7 @@ public class EfTriggerRepository : ITriggerRepository
                 {
                     if (location.Polygon.Count > 0)
                     {
-                        await context.Set<PolygonPoint>().AddRangeAsync(location.Polygon);
+                        await context.Set<TriggerPolygonPoint>().AddRangeAsync(location.Polygon);
                     }
                     AddTriggerToLocationDictionary(trigger, location);
                     await context.Set<Location>().AddAsync(location);

@@ -12,12 +12,13 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
     {
         builder.HasKey(e => e.Id);
         builder.ToTable("TriggerLocations");
-        builder.HasMany(l => l.Polygon)
+        builder.HasMany(e => e.Polygon)
             .WithOne()
-            .HasForeignKey(p => p.LocationId);
+            .HasForeignKey(p => p.LocationId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(e => e.Polygon).AutoInclude();
         builder.Property(e => e.MapId);
         builder.Property(e => e.EdgeId);
         builder.Property(e => e.NodeId);
-        builder.Navigation(n => n.Polygon).AutoInclude();
     }
 }

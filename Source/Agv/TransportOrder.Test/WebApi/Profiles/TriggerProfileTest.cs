@@ -15,7 +15,7 @@ public class TriggerProfileTest
     [TestMethod]
     public void Map_NodeLocation_MapsToDtoProperties()
     {
-        var mapper = MappingHelper.GetMapper(new TriggerProfile());
+        var mapper = MappingHelper.GetMapper(new TriggerProfile(), new PolygonPointProfile());
 
         var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [parameter]);
@@ -42,7 +42,7 @@ public class TriggerProfileTest
     [TestMethod]
     public void Map_EdgeLocation_MapsToDtoProperties()
     {
-        var mapper = MappingHelper.GetMapper(new TriggerProfile());
+        var mapper = MappingHelper.GetMapper(new TriggerProfile(), new PolygonPointProfile());
 
         var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [parameter]);
@@ -69,7 +69,7 @@ public class TriggerProfileTest
     [TestMethod]
     public void Map_PolygonLocation_MapsToDtoProperties()
     {
-        var mapper = MappingHelper.GetMapper(new TriggerProfile());
+        var mapper = MappingHelper.GetMapper(new TriggerProfile(), new PolygonPointProfile());
 
         var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [parameter]);

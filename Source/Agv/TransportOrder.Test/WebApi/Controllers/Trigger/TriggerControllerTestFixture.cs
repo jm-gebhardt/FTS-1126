@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Trigger;
 
 public class TriggerControllerTestFixture: MockRequestClientControllerTestFixture<TriggerController>
 {
-    protected override IEnumerable<Profile> GetProfiles() => [new TriggerProfile()];
+    protected override IEnumerable<Profile> GetProfiles() => [new TriggerProfile(), new PolygonPointProfile()];
 
     private GotTrigger _gotTrigger = null!;
     private TriggerLocationAssigned _triggerLocationAssigned = null!;

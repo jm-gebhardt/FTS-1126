@@ -11,7 +11,7 @@ public class RestrictedArea
     public RestrictedArea(ICollection<PolygonPoint> area)
     {
         Id = Guid.NewGuid();
-        Area = area.Select(p => new PolygonPoint(p.X, p.Y, Id)).ToList();
+        Area = area.Select(p => new RestrictedAreaPolygonPoint(p.X, p.Y, Id)).ToList();
     }
 
     /// <inheritdoc cref="RestrictedArea"/>>
@@ -29,7 +29,30 @@ public class RestrictedArea
     /// <summary>
     /// The (restricted) area.
     /// </summary>
-    public ICollection<PolygonPoint> Area { get; init; }
+    public ICollection<RestrictedAreaPolygonPoint> Area { get; init; }
+
+    /// <summary>
+    /// Update the area.
+    /// </summary>
+    /// <param name="newArea">The area.</param>
+    public void UpdateArea(ICollection<PolygonPoint> newArea)
+    {
+        List<Guid> oldAreaPoints = Area.Select(a => a.Id).ToList();
+        List<Guid> newAreaPoints = newArea.Select(a => a.Id).ToList();
+
+        List<PolygonPoint> newPoints = newArea.Where(a => !oldAreaPoints.Contains(a.Id)).ToList();
+        foreach (var newPoint in newPoints)
+        {
+            var point = new RestrictedAreaPolygonPoint(newPoint.X, newPoint.Y, Id){Id = newPoint.Id};
+            Area.Add(point);
+        }
+
+        List<RestrictedAreaPolygonPoint> pointsToRemove= Area.Where(a => !newAreaPoints.Contains(a.Id)).ToList();
+        foreach (var point in pointsToRemove)
+        {
+            Area.Remove(point);
+        }
+    }
 
     /// <summary>
     /// True, if a point is inside a restricted area.

@@ -49,4 +49,28 @@ public class RestrictedAreaTest
 
         restrictedArea.IsPositionInside(x, y).ShouldBe(expectedValue);
     }
+
+    [TestMethod]
+    public void UpdateArea_AddPoints_AreaUpdated()
+    {
+        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var restrictedArea = new RestrictedArea(polygon);
+        List<PolygonPoint> updatedArea = polygon;
+        updatedArea.Add(new PolygonPoint(4, 1));
+        
+        restrictedArea.UpdateArea(updatedArea);
+
+        restrictedArea.Area.Count.ShouldBeEquivalentTo(updatedArea.Count);
+    }
+
+    [TestMethod]
+    public void UpdateArea_RemovePoints_AreaUpdated()
+    {
+        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var restrictedArea = new RestrictedArea(polygon);
+
+        restrictedArea.UpdateArea([]);
+
+        restrictedArea.Area.ShouldBeEmpty();
+    }
 }

@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -15,6 +16,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
@@ -126,6 +128,14 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<NodeCommandHandler>();
 
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
+
+        busRegistrationConfigurator.AddConsumer<RestrictedAreaCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<SaveRestrictedArea, RestrictedAreaCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateRestrictedArea, RestrictedAreaCommandHandler>(c);
+            partitioner.PartitionMessageById<DeleteRestrictedArea, RestrictedAreaCommandHandler>(c);
+        });
     }
 
     private static void RegisterCoreActionGroupHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
@@ -178,6 +188,8 @@ public static class CoreBusRegistrationExtensions
         RegisterMediatorSystemHandlers(configurator);
 
         RegisterMediatorTriggerHandlers(configurator);
+
+        RegisterMediatorRestrictedAreaHandlers(configurator);
     }
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)
@@ -312,5 +324,15 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetMapStations>();
         configurator.AddRequestClient<GetStations>();
         configurator.AddRequestClient<GetStation>();
+    }
+
+    private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<RestrictedAreaRequestHandler>();
+        configurator.AddRequestClient<AddRestrictedArea>();
+        configurator.AddRequestClient<TryDeleteRestrictedArea>();
+        configurator.AddRequestClient<TryUpdateRestrictedArea>();
+        configurator.AddRequestClient<GetRestrictedArea>();
+        configurator.AddRequestClient<GetRestrictedAreas>();
     }
 }

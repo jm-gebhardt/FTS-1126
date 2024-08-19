@@ -36,6 +36,8 @@
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Services\CommandHandler\Trigger\" />
+      <Folder Include="Services\RequestHandler\RestrictedArea\" />
+      <Folder Include="WebApi\Controllers\RestrictedArea\" />
       <Folder Include="WebApi\Controllers\Trigger\" />
     </ItemGroup>
 </Project>

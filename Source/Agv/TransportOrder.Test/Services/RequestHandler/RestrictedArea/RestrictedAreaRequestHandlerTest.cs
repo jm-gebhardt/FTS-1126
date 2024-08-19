@@ -1,0 +1,79 @@
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
+using MassTransit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
+
+namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.RestrictedArea;
+
+[TestClass]
+public class RestrictedAreaRequestHandlerTest
+{
+    [TestMethod]
+    public async Task Consume_AddRestrictedArea_ValidData_SaveRestrictedAreaPublished()
+    {
+        RestrictedAreaRequestHandlerTestFixture<AddRestrictedArea> fixture = new RestrictedAreaRequestHandlerTestFixture<AddRestrictedArea>().Build();
+
+        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+
+        Response<RestrictedAreaAdded> response = await fixture.GetResponseAsync<RestrictedAreaAdded>(new AddRestrictedArea(polygon));
+
+        response.Message.RestrictedArea.Area.Count.ShouldBe(polygon.Count);
+
+        (await fixture.GetFirstPublishedMessageAsync<SaveRestrictedArea>()).RestrictedArea.ShouldBeEquivalentTo(response.Message.RestrictedArea);
+    }
+
+    [TestMethod]
+    public async Task Consume_TryUpdateRestrictedArea_ValidData_UpdateRestrictedArea()
+    {
+        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) });
+        RestrictedAreaRequestHandlerTestFixture<TryUpdateRestrictedArea> fixture = new RestrictedAreaRequestHandlerTestFixture<TryUpdateRestrictedArea>()
+            .WithRestrictedArea(restrictedArea)
+            .Build();
+
+        Response<Success> response = await fixture.GetResponseAsync<Success>(new TryUpdateRestrictedArea(restrictedArea.Id, new List<PolygonPoint> { new(2, 1), new(1, 3), new(2, 2) }));
+
+        response.ShouldNotBeNull();
+        await fixture.ShouldHavePublishedAsync<UpdateRestrictedArea>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryDeleteRestrictedArea_ValidData_DeleteRestrictedArea()
+    {
+        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) });
+        RestrictedAreaRequestHandlerTestFixture<TryDeleteRestrictedArea> fixture = new RestrictedAreaRequestHandlerTestFixture<TryDeleteRestrictedArea>()
+            .WithRestrictedArea(restrictedArea)
+            .Build();
+
+        Response<Success> response = await fixture.GetResponseAsync<Success>(new TryDeleteRestrictedArea(restrictedArea.Id));
+        response.ShouldNotBeNull();
+
+        (await fixture.GetFirstPublishedMessageAsync<DeleteRestrictedArea>()).RestrictedAreaId.ShouldBe(restrictedArea.Id);
+    }
+
+    [TestMethod]
+    public async Task Consume_GetRestrictedArea_ValidData_GotRestrictedArea()
+    {
+        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) });
+        RestrictedAreaRequestHandlerTestFixture<GetRestrictedArea> fixture = new RestrictedAreaRequestHandlerTestFixture<GetRestrictedArea>()
+            .WithRestrictedArea(restrictedArea)
+            .Build();
+
+        (await fixture.GetResponseAsync<GotRestrictedArea>(new GetRestrictedArea(restrictedArea.Id)))
+            .Message.RestrictedArea.ShouldBeEquivalentTo(restrictedArea);
+    }
+
+    [TestMethod]
+    public async Task Consume_GetRestrictedAreas_ValidData_GotRestrictedAreas()
+    {
+        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) });
+        RestrictedAreaRequestHandlerTestFixture<GetRestrictedAreas> fixture = new RestrictedAreaRequestHandlerTestFixture<GetRestrictedAreas>()
+            .WithRestrictedArea(restrictedArea)
+            .Build();
+
+        (await fixture.GetResponseAsync<GotRestrictedAreas>(new GetRestrictedAreas([restrictedArea.Id])))
+            .Message.RestrictedAreas.ShouldBeEquivalentTo(new List<TransportOrder.Domain.Models.RestrictedArea.RestrictedArea> { restrictedArea });
+    }
+}
