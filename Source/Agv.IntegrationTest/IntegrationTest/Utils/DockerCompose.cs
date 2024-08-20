@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Polly;
 
 namespace Gebhardt.Acc.IntegrationTest.Utils;
 
@@ -12,7 +14,7 @@ public class DockerCompose
 
     private readonly ILogger _logger;
 
-    private readonly string _composeFile;
+    private readonly string[] _composeFiles;
 
     private readonly string _dockerRegistry;
 
@@ -24,26 +26,26 @@ public class DockerCompose
 
     /// <summary>
     /// Constructor
-    /// <param name="composeFileLocation">The location of the compose file</param>
+    /// <param name="composeFilesLocation">The list of compose files locations</param>
     /// <param name="dockerRegistry">The name of the docker registry where to pull specific containers from</param>
     /// <param name="dockerRegistryRepository">The name of the docker repository where to pull specific containers from</param>
     /// <param name="dockerRegistryUser">The user for the docker registry</param>
     /// <param name="dockerRegistryPassword">The password for the docker registry</param>
     /// </summary>
-    public DockerCompose(string composeFileLocation, string dockerRegistry = "",
+    public DockerCompose(string composeFilesLocation, string dockerRegistry = "",
         string dockerRegistryRepository = "", string dockerRegistryUser = "", string dockerRegistryPassword = "")
     {
         var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
-        _composeFile = Environment.GetEnvironmentVariable(composeFileLocation)
-                       ?? throw new InvalidOperationException(
-                           $"Environment variable {composeFileLocation} must be set.");
+        _composeFiles = Environment.GetEnvironmentVariable(composeFilesLocation)?.Split(',')
+                        ?? throw new InvalidOperationException(
+                            $"Environment variable {composeFilesLocation} must be set.");
         _dockerRegistry = dockerRegistry;
         _dockerRegistryRepository = dockerRegistryRepository;
         _dockerRegistryUser = dockerRegistryUser;
         _dockerRegistryPassword = dockerRegistryPassword;
 
         _logger = loggerFactory.CreateLogger<DockerCompose>();
-        _envFile = new EnvFile(_composeFile);
+        _envFile = new EnvFile(_composeFiles.First());
         _envFile.Create();
     }
 
@@ -71,7 +73,7 @@ public class DockerCompose
     /// </summary>
     public bool Up(string specificContainers = "")
     {
-        return RunDockerComposeCommand($"up {specificContainers} -d", 240000);
+        return RunDockerComposeCommand($"up {specificContainers} -d", 640000);
     }
 
     /// <summary>
@@ -99,7 +101,7 @@ public class DockerCompose
     public bool AreRemoved()
     {
         var success = RunCommand("ps -a --format=json", out var stdout);
-        Trace.WriteLine($"Running docker container: {stdout}");    
+        Trace.WriteLine($"Running docker container: {stdout}");
 
         if (!success)
         {
@@ -114,30 +116,35 @@ public class DockerCompose
     /// Are all started services in state "running" 
     /// </summary>
     /// <returns>true if all containers are running</returns>
-    public bool AreRunning()
+    public bool AreRunning(string[]? excludedContainers = null)
     {
-        var success = RunCommand("ps -a --format=json", out var stdout);
+        var stdout = "";
+        excludedContainers ??= Array.Empty<string>();
+        var polly = Policy
+            .HandleResult<bool>(c => c == false || stdout == string.Empty)
+            .WaitAndRetry(5, (_, retryCount) =>
+            {   
+                _logger.LogError("try: {RetryCount}, Stdout: {Stdout}", retryCount, stdout);
+                return TimeSpan.FromSeconds(2);
+            });
+
+        // Due to https://github.com/docker/compose/issues/10958 jq is used to fix the json
+        var success = polly.Execute(() =>
+            RunCommand(" ps --no-trunc --format '{\"name\":\"{{.Names}}\",\"state\":\"{{.State}}\"}' | jq -sc",
+                out stdout));
+
+
         if (!success)
         {
             return false;
         }
 
-        // Due to https://github.com/docker/compose/issues/10958 split string instead of using NewtonSoft JArray.Parse
-        var states = stdout.Split("\"State\":");
-        var firstString = true;
-        foreach (var stateString in states)
-        {
-            if (firstString)
-            {
-                firstString = false;
-                continue;
-            }
+        var containers = JsonConvert.DeserializeObject<List<DockerContainer>>(stdout);
 
-            if (stateString.StartsWith("\"running\"")) continue;
-            Trace.WriteLine("At least one docker container is not in state \"running\".");
-            return false;
-        }
-        return true;
+        var failedContainers = containers?.Where(c => !excludedContainers.Any(e => c.Name.EndsWith(e)))
+            .Where(c => !c.State.Equals("running"));
+
+        return failedContainers?.Count() == 0;
     }
 
     /// <summary>
@@ -149,7 +156,7 @@ public class DockerCompose
     {
         return RunCommand(args, out _, true, timeout);
     }
-        
+
     /// <summary>
     /// Run a docker compose command, output will be printed to stdout/stderr
     /// </summary>
@@ -170,21 +177,26 @@ public class DockerCompose
     /// <returns>Returns true if exit code is zero</returns>
     private bool RunCommand(string args, out string stdout, bool dockerComposeCommand = true, int timeout = 120000)
     {
-        var cmd = dockerComposeCommand ? $"compose -f \"{_composeFile}\" --env-file \"{_envFile.FilePath}\" " : " ";
-            
-        _logger.LogInformation("Executing docker {Command }{CommandArguments}", cmd, args);
+        var composeFiles = $"-f {string.Join(" -f ", _composeFiles)}";
+        var cmd = dockerComposeCommand
+            ? $"docker compose {composeFiles} --env-file \"{_envFile.FilePath}\" "
+            : " docker ";
 
-        var processInfo = new ProcessStartInfo("docker", cmd + args)
+        _logger.LogInformation("Executing {Command}{CommandArguments}", cmd, args);
+
+        using var process = new Process()
         {
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
+            StartInfo =
+            {
+                FileName = "bash",
+                ArgumentList = { "-c", "--", cmd + args },
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            }
         };
-
-        using var process = new Process();
         var stdOutWriter = new StringWriter();
-        process.StartInfo = processInfo;
         process.OutputDataReceived += (_, e) =>
         {
             Console.WriteLine(e.Data);

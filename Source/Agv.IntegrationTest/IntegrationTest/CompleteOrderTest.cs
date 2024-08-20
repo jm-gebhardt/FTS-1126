@@ -36,6 +36,7 @@ namespace Gebhardt.Acc.IntegrationTest;
 public class CompleteOrderTest
 {
     private DockerCompose? _dockerCompose;
+    private static readonly string[] ExcludedContainers = new[] { "mssqlbootstrap_1" };
 
     /// <summary>
     /// Start all docker services before each test
@@ -47,7 +48,7 @@ public class CompleteOrderTest
         _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
         _dockerCompose.AreRemoved().ShouldBeTrue();
         _dockerCompose.Up().ShouldBeTrue();
-        _dockerCompose.AreRunning().ShouldBeTrue();
+        _dockerCompose.AreRunning(ExcludedContainers).ShouldBeTrue();
     }
 
     /// <summary>

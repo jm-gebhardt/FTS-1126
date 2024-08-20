@@ -25,7 +25,7 @@ public class EnvFile
     /// <summary>
     /// Default docker compose profiles
     /// </summary>
-    private const string DefaultComposeProfiles = "karisagv,wcs";
+    private const string DefaultComposeProfiles = "karisagv,wcs,infrastructure";
 
     private readonly string _composeDirectoryPath;
     private string EnvTemplateFile => $"{_composeDirectoryPath}/.env.template";

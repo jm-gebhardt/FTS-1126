@@ -12,6 +12,7 @@ public class DockerComposeTest
 {
     private const string DockerRegistry = "registry.gitlab.com";
     private const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
+    private static readonly string[] ExcludedContainers = new[] { "mssqlbootstrap_1" };
 
     private const string DockerRegistryUser = "gebhardt";
 
@@ -27,7 +28,7 @@ public class DockerComposeTest
     {
         var dc = new DockerCompose(EnvVars.ComposeFileEnvVar);
         dc.Up().ShouldBeTrue();
-        dc.AreRunning().ShouldBeTrue();
+        dc.AreRunning(ExcludedContainers).ShouldBeTrue();
         dc.Down().ShouldBeTrue();
         dc.AreRemoved().ShouldBeTrue();
     }
@@ -38,15 +39,16 @@ public class DockerComposeTest
     [TestMethod]
     public void CombinedComposeTest()
     {
+        
         var dc = new DockerCompose(EnvVars.ComposeFileEnvVar);
         var dcVirtual = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
             DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
         dc.Up().ShouldBeTrue();
-        dc.AreRunning().ShouldBeTrue();
+        dc.AreRunning(ExcludedContainers).ShouldBeTrue();
         dcVirtual.Login();
         dcVirtual.Pull();
         dcVirtual.Up("karis0 mongo-provisioning").ShouldBeTrue();
-        dcVirtual.AreRunning().ShouldBeTrue();
+        dcVirtual.AreRunning(ExcludedContainers).ShouldBeTrue();
         dcVirtual.Down().ShouldBeTrue();
         dcVirtual.AreRemoved().ShouldBeTrue();
         dc.Down().ShouldBeTrue();

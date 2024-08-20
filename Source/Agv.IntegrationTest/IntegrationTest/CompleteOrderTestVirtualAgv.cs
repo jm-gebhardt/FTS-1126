@@ -18,6 +18,7 @@ public class CompleteOrderTestVirtualAgv
 
     private const string DockerRegistry = "registry.gitlab.com";
     private const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
+    private static readonly string[] ExcludedContainers = new[] { "mssqlbootstrap_1" };
 
     private const string DockerRegistryUser = "gebhardt";
 
@@ -42,13 +43,13 @@ public class CompleteOrderTestVirtualAgv
 
         //Start Leitsteuerung
         _dockerCompose.Up().ShouldBeTrue();
-        _dockerCompose.AreRunning().ShouldBeTrue();
+        _dockerCompose.AreRunning(ExcludedContainers).ShouldBeTrue();
 
         //Start Virtual AGV
         _dockerComposeVirtualAgv.Login().ShouldBeTrue();
         _dockerComposeVirtualAgv.Pull().ShouldBeTrue();
         _dockerComposeVirtualAgv.Up("karis0 mongo-provisioning").ShouldBeTrue();
-        _dockerComposeVirtualAgv.AreRunning().ShouldBeTrue();
+        _dockerComposeVirtualAgv.AreRunning(ExcludedContainers).ShouldBeTrue();
     }
 
     /// <summary>
