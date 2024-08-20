@@ -32,11 +32,16 @@ public static class HostBuilderExtension
         {
             try
             {
+                //Register singleton consumers
+                services.RegisterSingletonConsumers();
                 services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
+                //Configure masstransit
                 services.ConfigureServicesMassTransit(context.Configuration, x =>
                 {
                     x.AddBusConsumers();
                 });
+                //Override the masstransit consumer factory for singleton consumers
+                services.RegisterSingletonConsumerFactories();
             }
             catch (InvalidOperationException e)
             {

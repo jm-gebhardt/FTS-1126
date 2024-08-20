@@ -23,12 +23,17 @@ public class ShortLoopTriggerPointEventHandler(ILogger<ShortLoopTriggerPointEven
     public async Task Consume(ConsumeContext<AgvPassedShortLoopTriggerPoint> context)
     {
         (_, _, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
-        if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) )
+        if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick))
         {
             logger.LogWarning("Skip reporting target station to conveyor: Agv without pick drop action group passed short loop trigger point ({ActionGroup})", actionGroup?.CorrelationId);
             return;
         }
-        var action = actionGroup.Actions.First(a => a.State == ActionState.Started);
+        var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started);
+        if (action == null)
+        {
+            logger.LogWarning("Skip reporting target station to conveyor: Agv without started action passed trigger point. Current action group is: ({ActionGroup})", actionGroup.CorrelationId);
+            return;
+        }
         if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
         {
             logger.LogWarning("Skip reporting target station to conveyor: Target {Target} is not configured station for drop - right away pick sequence", action.Target.NodeId!);
