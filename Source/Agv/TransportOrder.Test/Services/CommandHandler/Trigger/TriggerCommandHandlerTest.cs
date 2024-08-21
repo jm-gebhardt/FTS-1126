@@ -102,7 +102,7 @@ public class TriggerCommandHandlerTest
         trigger.Locations.ShouldBeEmpty();
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        var command = new AddTriggerLocation(trigger.Id, null, null, [new PolygonPoint(12,12, Guid.NewGuid())], Guid.NewGuid());
+        var command = new AddTriggerLocation(trigger.Id, null, null, [new PolygonPoint(12,12, 0, Guid.NewGuid())], Guid.NewGuid());
 
         await fixture.TestHarness.Bus.Publish(command);
 

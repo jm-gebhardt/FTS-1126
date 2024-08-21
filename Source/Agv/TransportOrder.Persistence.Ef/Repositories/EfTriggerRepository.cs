@@ -53,7 +53,7 @@ public class EfTriggerRepository : ITriggerRepository
         return await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
-            .ThenInclude(t => t.Polygon)
+            .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
             .AsNoTracking()
             .AsSplitQuery()
             .ToListAsync();
@@ -66,7 +66,7 @@ public class EfTriggerRepository : ITriggerRepository
         var trigger = await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
-            .ThenInclude(t => t.Polygon)
+            .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
             .AsSplitQuery()
             .SingleOrDefaultAsync(t => t.Id == triggerId);
         if (trigger == null)
@@ -83,7 +83,7 @@ public class EfTriggerRepository : ITriggerRepository
         var triggerToUpdate = await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
-            .ThenInclude(t => t.Polygon)
+            .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
             .AsSplitQuery()
             .SingleOrDefaultAsync(t => t.Id == trigger.Id);
         if (triggerToUpdate == null)

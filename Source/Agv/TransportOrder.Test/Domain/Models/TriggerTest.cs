@@ -91,7 +91,7 @@ public class TriggerTest
     [TestMethod]
     public void AddLocation_Polygon_LocationAdded()
     {
-        List<PolygonPoint> polygon = [new PolygonPoint(42.0, 42.0, Guid.NewGuid())];
+        List<PolygonPoint> polygon = [new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())];
         var map = Guid.NewGuid();
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
 
@@ -114,7 +114,7 @@ public class TriggerTest
         trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(instances);
 
-        Should.Throw<TriggerInstanceCountException>(() => trigger.AddLocation([new PolygonPoint(42.0, 42.0, Guid.NewGuid())], Guid.NewGuid()));
+        Should.Throw<TriggerInstanceCountException>(() => trigger.AddLocation([new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())], Guid.NewGuid()));
     }
 
     [TestMethod]

@@ -36,7 +36,7 @@ public class EfRestrictedAreaRepositoryTest
         - "x" represents the location of the point
         */
 
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
         await fixture.AddAsync(restrictedArea);
@@ -47,7 +47,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task GetRestrictedArea_ValidData_GetsRestrictedArea()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
 
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
@@ -59,7 +59,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task GetRestrictedArea_UnknownArea_ThrowsRestrictedAreaNotFoundException()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
 
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
@@ -71,7 +71,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task AddRestrictedArea_ValidData_RestrictedAreaAdded()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
 
@@ -83,7 +83,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task GetRestrictedAreas_ValidData_GetsRestrictedAreas()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
 
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
@@ -95,7 +95,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task GetRestrictedAreas_NoIdsGiven_GetsAllRestrictedAreas()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
 
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
@@ -107,7 +107,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task GetRestrictedAreas_UnknownArea_ThrowsRestrictedAreaNotFoundException()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
 
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
@@ -119,13 +119,13 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task UpdateRestrictedArea_PointAdded_RestrictedAreaUpdated()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
         await fixture.AddAsync(restrictedArea);
 
         List<PolygonPoint> updatedArea = polygon;
-        updatedArea.Add(new PolygonPoint(4, 1));
+        updatedArea.Add(new PolygonPoint(4, 1, 4));
         restrictedArea.UpdateArea(updatedArea);
 
         await fixture.Repository.UpdateRestrictedArea(restrictedArea);
@@ -136,7 +136,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task UpdateRestrictedArea_PointsRemoved_RestrictedAreaUpdated()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
         await fixture.AddAsync(restrictedArea);
@@ -151,7 +151,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task UpdateRestrictedArea_UnknownArea_ThrowsRestrictedAreaNotFoundException()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
 
@@ -161,7 +161,7 @@ public class EfRestrictedAreaRepositoryTest
     [TestMethod]
     public async Task DeleteRestrictedArea_ValidData_RestrictedAreaRemoved()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
         await fixture.AddAsync(restrictedArea);

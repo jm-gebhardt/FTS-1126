@@ -11,7 +11,7 @@ public class RestrictedArea
     public RestrictedArea(ICollection<PolygonPoint> area)
     {
         Id = Guid.NewGuid();
-        Area = area.Select(p => new RestrictedAreaPolygonPoint(p.X, p.Y, Id)).ToList();
+        Area = area.Select(p => new RestrictedAreaPolygonPoint(p.X, p.Y, p.Index, Id)).ToList();
     }
 
     /// <inheritdoc cref="RestrictedArea"/>>
@@ -43,7 +43,7 @@ public class RestrictedArea
         List<PolygonPoint> newPoints = newArea.Where(a => !oldAreaPoints.Contains(a.Id)).ToList();
         foreach (var newPoint in newPoints)
         {
-            var point = new RestrictedAreaPolygonPoint(newPoint.X, newPoint.Y, Id){Id = newPoint.Id};
+            var point = new RestrictedAreaPolygonPoint(newPoint.X, newPoint.Y, newPoint.Index, Id){Id = newPoint.Id};
             Area.Add(point);
         }
 

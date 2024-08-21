@@ -11,7 +11,7 @@ public class RestrictedAreasControllerTest
     [TestMethod]
     public async Task GetRestrictedAras_ValidData_ReturnsRestrictedAreaDto()
     {
-        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) });
+        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(2, 2, 2) });
         var fixture = new RestrictedAreasControllerTestFixture()
             .WithRestrictedArea(restrictedArea)
             .Build();

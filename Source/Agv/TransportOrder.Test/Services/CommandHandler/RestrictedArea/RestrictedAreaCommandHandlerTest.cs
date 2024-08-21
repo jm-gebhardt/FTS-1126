@@ -12,7 +12,7 @@ public class RestrictedAreaCommandHandlerTest
     {
         var fixture = new RestrictedAreaCommandHandlerTestFixture();
 
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(polygon);
 
         await fixture.PublishMessageAsync(new SaveRestrictedArea(restrictedArea));
@@ -25,7 +25,7 @@ public class RestrictedAreaCommandHandlerTest
     {
         var fixture = new RestrictedAreaCommandHandlerTestFixture();
 
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(polygon);
 
         await fixture.PublishMessageAsync(new UpdateRestrictedArea(restrictedArea));
@@ -38,7 +38,7 @@ public class RestrictedAreaCommandHandlerTest
     {
         var fixture = new RestrictedAreaCommandHandlerTestFixture();
 
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(polygon);
 
         await fixture.PublishMessageAsync(new DeleteRestrictedArea(restrictedArea.Id));

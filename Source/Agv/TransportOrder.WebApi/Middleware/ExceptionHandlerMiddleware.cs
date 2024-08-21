@@ -27,6 +27,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             TriggerInstanceCountException => HttpStatusCode.BadRequest,
             TriggerAssignmentFailedException => HttpStatusCode.BadRequest,
             PositionIsInRestrictedAreaException => HttpStatusCode.BadRequest,
+            InvalidPolygonLengthException => HttpStatusCode.BadRequest,
             TriggerConfigurationUpdateFailedException => HttpStatusCode.BadRequest,
             NodeNotAvailableException => HttpStatusCode.Conflict,
             NoNodesAvailableException => HttpStatusCode.Conflict,

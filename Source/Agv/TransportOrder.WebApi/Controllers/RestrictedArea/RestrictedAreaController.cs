@@ -58,6 +58,7 @@ public class RestrictedAreaController : Controller
     /// </summary>
     /// <param name="area">The restricted area polygon.</param>
     /// <response code="200">Ok</response>
+    /// <response code="400">Invalid polygon with less than three points provided.</response>
     [HttpPost]
     [Route("/restrictedArea")]
     public async Task<ActionResult<RestrictedAreaDto>> AddRestrictedArea([FromBody] [Required] ICollection<PolygonPointDto> area)
@@ -88,6 +89,7 @@ public class RestrictedAreaController : Controller
     /// <param name="area">The updated restricted area polygon.</param>
     /// <response code="200">Ok</response>
     /// <response code="404">Restricted area with given id not found.</response>
+    /// <response code="400">Invalid polygon with less than three points provided.</response>
     [HttpPatch]
     [Route("/restrictedArea/{id:guid}")]
     public async Task<ActionResult> UpdateRestrictedArea([FromRoute] Guid id, [FromBody][Required] ICollection<PolygonPointDto> area)

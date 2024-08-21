@@ -25,7 +25,7 @@ public class PolygonExtensionTest
         - "x" represents the location of the point
         */
 
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
 
@@ -53,9 +53,9 @@ public class PolygonExtensionTest
 
         var polygon = new List<PolygonPoint>
         {
-            new(5, 1),
-            new(2, 2), new(2, 4), new(5, 4), new(7, 6),
-            new(7, 3)
+            new(5, 1, 0),
+            new(2, 2, 1), new(2, 4, 2), new(5, 4, 3), new(7, 6, 4),
+            new(7, 3, 5)
         };
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
@@ -86,9 +86,9 @@ public class PolygonExtensionTest
          */
         var polygon = new List<PolygonPoint>
         {
-            new(1, 4), new(1, 8), new(6, 9), new(12, 7),
-            new(12, 2), new(10, 6), new(10, 2), new(5, 2),
-            new(7, 5), new(8, 3), new(8, 6), new(4, 6)
+            new(1, 4, 0), new(1, 8, 1), new(6, 9, 2), new(12, 7, 3),
+            new(12, 2, 4), new(10, 6, 5), new(10, 2, 6), new(5, 2, 7),
+            new(7, 5, 8), new(8, 3, 9), new(8, 6, 10), new(4, 6, 11)
         };
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
@@ -118,8 +118,8 @@ public class PolygonExtensionTest
          */
         var polygon = new List<PolygonPoint>
         {
-            new(4, 1), new(2, 2), new(4, 4), new(2, 7),
-            new(4, 8), new(6, 7), new(4, 4), new(6, 2)
+            new(4, 1, 0), new(2, 2, 1), new(4, 4, 2), new(2, 7, 3),
+            new(4, 8, 4), new(6, 7, 5), new(4, 4, 6), new(6, 2, 7)
         };
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
@@ -150,9 +150,9 @@ public class PolygonExtensionTest
          */
         var polygon = new List<PolygonPoint>
         {
-            new(1, 1), new(4, 9), new(10, 9), new(10, 1), new(6, 1),
-            new(5, 2), new(7, 2), new(7, 5), new(9, 5), new(9, 6),
-            new(7, 6), new(7, 5), new(4, 5), new(5, 2)
+            new(1, 1, 0), new(4, 9, 1), new(10, 9, 2), new(10, 1, 3), new(6, 1, 4),
+            new(5, 2, 5), new(7, 2, 6), new(7, 5, 7), new(9, 5, 8), new(9, 6, 9),
+            new(7, 6, 10), new(7, 5, 11), new(4, 5, 12), new(5, 2, 13)
         };
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }

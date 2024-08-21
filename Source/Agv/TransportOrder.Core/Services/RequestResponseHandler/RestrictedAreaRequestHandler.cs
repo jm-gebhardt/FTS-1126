@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -26,6 +27,12 @@ public class RestrictedAreaRequestHandler(IBus bus, IRestrictedAreaRepository re
     public async Task Consume(ConsumeContext<AddRestrictedArea> context)
     {
         ICollection<PolygonPoint> polygon = context.Message.AreaPolygon;
+
+        if (polygon.Count < 3)
+        {
+            throw new InvalidPolygonLengthException();
+        }
+
         var restrictedArea = new RestrictedArea(polygon);
 
         await bus.Publish(new SaveRestrictedArea(restrictedArea));
@@ -39,6 +46,11 @@ public class RestrictedAreaRequestHandler(IBus bus, IRestrictedAreaRepository re
     public async Task Consume(ConsumeContext<TryUpdateRestrictedArea> context)
     {
         (var restrictedAreaId, ICollection<PolygonPoint> updatedPolygon) = context.Message;
+
+        if (updatedPolygon.Count < 3)
+        {
+            throw new InvalidPolygonLengthException();
+        }
 
         var restrictedArea = await restrictedAreaRepository.GetRestrictedArea(restrictedAreaId);
 

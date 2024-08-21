@@ -12,7 +12,7 @@ public class RestrictedAreaControllerTest
     [TestMethod]
     public async Task GetRestrictedAra_ValidData_ReturnsRestrictedAreaDto()
     {
-        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) });
+        var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(2, 2, 2) });
         var fixture = new RestrictedAreaControllerTestFixture()
             .WithRestrictedArea(restrictedArea)
             .Build();
@@ -26,7 +26,7 @@ public class RestrictedAreaControllerTest
     [TestMethod]
     public async Task AddRestrictedArea_ValidData_ReturnsRestrictedAreaDto()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(2, 2, 2) };
         var restrictedArea = new TransportOrder.Domain.Models.RestrictedArea.RestrictedArea(polygon);
 
         var fixture = new RestrictedAreaControllerTestFixture()
@@ -42,7 +42,7 @@ public class RestrictedAreaControllerTest
     [TestMethod]
     public async Task UpdateRestrictedArea_ValidData_Returns()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(2, 2) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(2, 2, 2) };
         var fixture = new RestrictedAreaControllerTestFixture()
             .Build();
 

@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 public class TriggerPolygonPoint : PolygonPoint
 {
     /// <inheritdoc cref="TriggerPolygonPoint"/>>
-    public TriggerPolygonPoint(double x, double y, Guid locationId) : base(x, y, locationId) { }
+    public TriggerPolygonPoint(double x, double y, int index, Guid locationId) : base(x, y, index, locationId) { }
 
     /// <inheritdoc cref="TriggerPolygonPoint"/>>
     public TriggerPolygonPoint()

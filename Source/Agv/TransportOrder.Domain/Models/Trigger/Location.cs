@@ -73,7 +73,7 @@ public class Location
     public Location(ICollection<PolygonPoint> polygon, Guid? mapId, Guid triggerId)
     {
         Id = Guid.NewGuid();
-        Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, Id)).ToList();
+        Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, p.Index, Id)).ToList();
         MapId =  mapId ?? null;
         TriggerId = triggerId;
     }

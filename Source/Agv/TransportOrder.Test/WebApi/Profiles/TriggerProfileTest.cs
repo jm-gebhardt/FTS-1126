@@ -73,7 +73,7 @@ public class TriggerProfileTest
 
         var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [parameter]);
-        var location = trigger.AddLocation([new PolygonPoint(42.0, 42.0, Guid.NewGuid())], Guid.NewGuid());
+        var location = trigger.AddLocation([new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())], Guid.NewGuid());
 
         var triggerDto = mapper.Map<TriggerDto>(trigger);
 

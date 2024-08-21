@@ -8,7 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
-/// <inheritdoc />
+/// <inheritdoc cref="IRestrictedAreaRepository" />
 public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory) : IRestrictedAreaRepository
 {
     /// <inheritdoc />
@@ -16,7 +16,7 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         List<RestrictedArea> restrictedAreas = await context.Set<RestrictedArea>()
-            .Include(a => a.Area)
+            .Include(a => a.Area.OrderBy(p => p.Index))
             .AsNoTracking()
             .ToListAsync();
         return restrictedAreas.Any(a => a.IsPositionInside(x, y));
@@ -35,7 +35,7 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         var restrictedAreaToUpdate = await context.Set<RestrictedArea>()
-            .Include(a => a.Area)
+            .Include(a => a.Area.OrderBy(p => p.Index))
             .SingleOrDefaultAsync(a => a.Id == restrictedArea.Id);
         if (restrictedAreaToUpdate == null)
         {
@@ -59,7 +59,7 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         var restrictedArea = await context.Set<RestrictedArea>()
-            .Include(a => a.Area)
+            .Include(a => a.Area.OrderBy(p => p.Index))
             .SingleOrDefaultAsync(a => a.Id == id);
 
         return restrictedArea ?? throw new RestrictedAreaNotFoundException(id);
@@ -69,8 +69,8 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
     public async Task<ICollection<RestrictedArea>> GetRestrictedAreas(Guid[] ids)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        IIncludableQueryable<RestrictedArea, ICollection<RestrictedAreaPolygonPoint>> restrictedAreas = context.Set<RestrictedArea>()
-            .Include(a => a.Area);
+        IIncludableQueryable<RestrictedArea, IOrderedEnumerable<RestrictedAreaPolygonPoint>> restrictedAreas = context.Set<RestrictedArea>()
+            .Include(a => a.Area.OrderBy(p => p.Index));
         if (ids.IsNullOrEmpty())
         {
             return await restrictedAreas.ToListAsync();

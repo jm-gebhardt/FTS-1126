@@ -11,7 +11,7 @@ public class RestrictedAreaTest
     [TestMethod]
     public void Construct_FromPolygon_PropertiesSet()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(2, 2) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(2, 2, 1) };
 
         var restrictedArea = new RestrictedArea(polygon);
 
@@ -44,7 +44,7 @@ public class RestrictedAreaTest
         - "x" represents the location of the point
         */
 
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
 
         restrictedArea.IsPositionInside(x, y).ShouldBe(expectedValue);
@@ -53,10 +53,10 @@ public class RestrictedAreaTest
     [TestMethod]
     public void UpdateArea_AddPoints_AreaUpdated()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
         List<PolygonPoint> updatedArea = polygon;
-        updatedArea.Add(new PolygonPoint(4, 1));
+        updatedArea.Add(new PolygonPoint(4, 1, 4));
         
         restrictedArea.UpdateArea(updatedArea);
 
@@ -66,7 +66,7 @@ public class RestrictedAreaTest
     [TestMethod]
     public void UpdateArea_RemovePoints_AreaUpdated()
     {
-        var polygon = new List<PolygonPoint> { new(1, 1), new(1, 3), new(3, 3), new(3, 1) };
+        var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
 
         restrictedArea.UpdateArea([]);

@@ -39,6 +39,7 @@ public class ExceptionHandlerMiddlewareTest
         yield return [() => new ActionGroupInvalidException(Array.Empty<string>()), HttpStatusCode.BadRequest];
         yield return [() => new NodeNotFoundException(default!), HttpStatusCode.BadRequest];
         yield return [() => new BadRequestException(default!), HttpStatusCode.BadRequest];
+        yield return [() => new InvalidPolygonLengthException(), HttpStatusCode.BadRequest];
         yield return [() => new AgvGraphsNotDefinedException(new List<Guid>()), HttpStatusCode.BadRequest];
         yield return [() => new AgvsDataBatchQueryException(new List<Guid>()), HttpStatusCode.BadRequest];
         yield return [() => new AgvsNotFoundException(new List<Guid>()), HttpStatusCode.BadRequest];
