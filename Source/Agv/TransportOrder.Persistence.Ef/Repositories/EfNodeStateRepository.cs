@@ -103,6 +103,7 @@ public class EfNodeStateRepository : INodeStateRepository
             _logger.LogDebug("Could not not occupy node {NodeId} because it is locked or already occupied", nodeId);
             return false;
         }
+        
         _logger.LogDebug("Occupy node {NodeId} with AGV {CorrelationId}", nodeId, agvCorrelationId);
         return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId);
     }

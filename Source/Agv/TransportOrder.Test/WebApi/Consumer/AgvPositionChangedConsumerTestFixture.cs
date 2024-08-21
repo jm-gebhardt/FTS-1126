@@ -10,20 +10,23 @@ public class AgvPositionChangedConsumerTestFixture : ConsumerHubTestFixture<AgvP
 {
     public AgvPositionChangedConsumerTestFixture WithNodeReserved(string nodeId, bool reserve = true)
     {
+        NodeStateRepositoryMock.Setup(x => x.OccupyNodeAsync(nodeId, It.IsAny<Guid>())).Verifiable();
         NodeStateRepositoryMock.Setup(x => x.IsNodeReservedAsync(nodeId)).ReturnsAsync(reserve);
-        NodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(nodeId)).ReturnsAsync(new NodeLock(nodeId, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
         return this;
     }
 
-    public AgvPositionChangedConsumerTestFixture WithNodeOccupied()
+    public AgvPositionChangedConsumerTestFixture WithNodeOccupied(Guid agvId)
     {
-        NodeStateRepositoryMock.Setup(x => x.UnOccupyNodeAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+        NodeStateRepositoryMock.Setup(x => x.UnOccupyNodeAsync(agvId)).ReturnsAsync(true);
         return this;
     }
 
-    public AgvPositionChangedConsumerTestFixture WithOutNodeState()
+    public AgvPositionChangedConsumerTestFixture WithNodeStates(NodeLock? oldNodeState, NodeLock? newNodeState)
     {
-        NodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync((NodeLock?)null);
+        NodeStateRepositoryMock.SetupSequence(x => x.GetNodeStateAsync(It.IsAny<string>()))
+            .ReturnsAsync(oldNodeState)
+            .ReturnsAsync(newNodeState)
+            .ReturnsAsync(oldNodeState);
         return this;
     }
 

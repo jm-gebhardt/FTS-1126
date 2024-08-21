@@ -1,3 +1,5 @@
+using JetBrains.Annotations;
+
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 /// <summary>
@@ -18,9 +20,61 @@ public enum NodeLockState
 /// <summary>
 /// Lock state of a node
 /// </summary>
-/// <param name="NodeId"></param>
-/// <param name="NodeState"></param>
-/// <param name="IsLocked"></param>
-/// <param name="AgvCorrelationId"></param>
-/// <param name="ModifiedDate"></param>
-public record NodeLock(string NodeId, NodeLockState NodeState, bool IsLocked, Guid? AgvCorrelationId, DateTime ModifiedDate);
+[PublicAPI]
+public record NodeLock
+{
+    /// <summary>
+    /// The id of the node.
+    /// </summary>
+    public string NodeId { get; set; }
+
+    /// <summary>
+    /// The state the node is in.
+    /// </summary>
+    public NodeLockState NodeState { get; set; }
+
+    /// <summary>
+    /// True, if the node is locked.
+    /// </summary>
+    public bool IsLocked { get; set; }
+
+    /// <summary>
+    /// The agv assigned to the node.
+    /// </summary>
+    public Guid? AgvCorrelationId { get; set; }
+
+    /// <summary>
+    /// The time the node lock was last modified.
+    /// </summary>
+    public DateTime ModifiedDate { get; set; }
+
+    /// <inheritdoc cref="NodeLock"/>>
+    public NodeLock(string nodeId, NodeLockState nodeState, bool isLocked, Guid? agvCorrelationId, DateTime modifiedDate)
+    {
+        NodeId = nodeId;
+        NodeState = nodeState;
+        IsLocked = isLocked;
+        AgvCorrelationId = agvCorrelationId;
+        ModifiedDate = modifiedDate;
+    }
+
+    /// <summary>
+    /// True, if the node is occupied by the given agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <returns></returns>
+    public bool IsOccupiedByAgv(Guid agvCorrelationId)
+    {
+        return AgvCorrelationId == agvCorrelationId && NodeState == NodeLockState.Occupied;
+    }
+
+    /// <summary>
+    /// True, if the node is reserved for the given agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <returns></returns>
+    public bool IsReservedForAgv(Guid agvCorrelationId)
+    {
+        return AgvCorrelationId == agvCorrelationId && NodeState == NodeLockState.Reserved;
+    }
+}

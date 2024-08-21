@@ -68,19 +68,18 @@ public class AgvPositionChangedConsumer :
         (var agvCorrelationId, string? oldLastNodeId, string? newLastNodeId) = context.Message;
         _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvLastNodeIdChanged), agvCorrelationId, agvCorrelationId);
 
-        if (oldLastNodeId != null)
+        var oldLastNode = await _nodeStateRepository.GetNodeStateAsync(oldLastNodeId!);
+        var newLastNode = await _nodeStateRepository.GetNodeStateAsync(newLastNodeId!);
+        if (oldLastNode != null && oldLastNode.IsOccupiedByAgv(agvCorrelationId))
         {
-            bool nodeWasOccupied = await _nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
-            if (nodeWasOccupied)
-            {
-                await PublishNodeStateChange(context, oldLastNodeId);
-            }
+            await _nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
+            await PublishNodeStateChange(context, oldLastNodeId!);
         }
 
-        if (newLastNodeId != null && await _nodeStateRepository.IsNodeReservedAsync(newLastNodeId))
+        if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
         {
-            await _nodeStateRepository.OccupyNodeAsync(newLastNodeId, agvCorrelationId);
-            await PublishNodeStateChange(context, newLastNodeId);
+            await _nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
+            await PublishNodeStateChange(context, newLastNodeId!);
         }
 
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);
