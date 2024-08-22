@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupRepository actionGroupRepository) : IMetricCollectionService
 {
     /// <inheritdoc cref="IMetricCollectionService"/>>
-    public async Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, string? lastNodeId=null)
+    public async Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, string? lastNodeId = null)
     {
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
         await CollectTravelDistance(actionGroup, agvCorrelationId, lastNodeId);
@@ -28,7 +28,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         {
             return;
         }
-        IEnumerable<AgvAction> actions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop);
+        IEnumerable<AgvAction> actions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Drop);
         double durationSeconds = actions
             .Where(action => action.Duration != null)
             .Sum(action => action.Duration!.Value.TotalSeconds);
@@ -36,17 +36,13 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
     }
 
     /// <summary>
-    /// Collect the duration when agv was busy moving w/o cargo.
+    /// Collect the duration when agv was busy moving.
     /// </summary>
     /// <param name="actionGroup">The completed action group.</param>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     private void CollectBusyDuration(Models.ActionGroup.ActionGroup actionGroup, Guid agvCorrelationId)
     {
-        if (actionGroup.IsMovingCargo)
-        {
-            return;
-        }
-        IEnumerable<AgvAction> moveActions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Move);
+        IEnumerable<AgvAction> moveActions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Move || a.ActionType == ActionType.Pick);
         double durationSeconds = moveActions
             .Where(moveAction => moveAction.Duration != null)
             .Sum(moveAction => moveAction.Duration!.Value.TotalSeconds);
@@ -63,18 +59,22 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         // Accept delay in idle duration collection.
         // Collection during completion ensures the agv accepted and actually
         // executed the action group and dates are written to the db.
-        IReadOnlyList<Models.ActionGroup.ActionGroup> latestActionGroups = await actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Aborted], toDate:currentActionGroup.CompletedDate!.Value.AddMilliseconds(-1), assignedAgvCorrelationId: agvCorrelationId, maxItems: 2, sortBy: SortBy.CompletedDate, sortDescending: true);
+        IReadOnlyList<Models.ActionGroup.ActionGroup> latestActionGroups = await actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Aborted], toDate: currentActionGroup.CompletedDate!.Value.AddMilliseconds(-1), assignedAgvCorrelationId: agvCorrelationId, maxItems: 2, sortBy: SortBy.CompletedDate, sortDescending: true);
         if (latestActionGroups.Count < 1)
         {
             return;
         }
-        var priorActionGroup = latestActionGroups.First( a => a.CorrelationId != currentActionGroup.CorrelationId);
+        var priorActionGroup = latestActionGroups.FirstOrDefault(a => a.CorrelationId != currentActionGroup.CorrelationId);
+        if (priorActionGroup == null)
+        {
+            return;
+        }
         TimeSpan? duration = currentActionGroup.StartedDate - priorActionGroup.CompletedDate;
         if (duration == null)
         {
             return;
         }
-        
+
         double durationSeconds = duration.Value.TotalSeconds + GetIdleDurationInBetweenActions(currentActionGroup);
         PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvCorrelationId.ToString()).Set(durationSeconds);
     }
@@ -103,7 +103,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
 
         return duration.TotalSeconds;
     }
-    
+
     /// <summary>
     /// Collect the duration of charging.
     /// </summary>
