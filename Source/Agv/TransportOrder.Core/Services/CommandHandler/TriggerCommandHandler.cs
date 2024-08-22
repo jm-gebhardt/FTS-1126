@@ -1,11 +1,13 @@
-﻿using Gebhardt.Acc.Common.Messages.Triggers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Trigger;
 using JetBrains.Annotations;
 using MassTransit;
+using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
@@ -13,7 +15,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// Provides handlers for trigger-related commands.
 /// </summary>
 [UsedImplicitly]
-public class TriggerCommandHandler(ITriggerRepository triggerRepository):
+public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper mapper) :
     IConsumer<CreateTrigger>,
     IConsumer<AddTriggerLocation>,
     IConsumer<RemoveTriggerLocation>,
@@ -41,8 +43,9 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository):
         string? nodeId = context.Message.NodeId;
         var triggerId = context.Message.TriggerId;
         Guid? mapId = context.Message.MapId;
-        ICollection<PolygonPoint> polygon = context.Message.Polygon;
-        
+      
+        ICollection<PolygonPoint> polygon =  mapper.Map<List<PolygonPoint>>(context.Message.Polygon);
+
         Location? location = null;
         Exception? exception = null;
         Trigger trigger = null!;
@@ -68,8 +71,8 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository):
         {
             exception = ex;
         }
-        await context.RespondAsync(new TriggerLocationAdded(location, exception?.Message ));
-        
+        await context.RespondAsync(new TriggerLocationAdded(location, exception?.Message));
+
         if (nodeId != null && exception == null)
         {
             await context.Publish(new TriggerAssignedToNode(triggerId, trigger.DisplayName, nodeId));

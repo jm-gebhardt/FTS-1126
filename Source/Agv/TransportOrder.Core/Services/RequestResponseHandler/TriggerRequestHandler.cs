@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
@@ -37,13 +38,13 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     /// </summary>
     public async Task Consume(ConsumeContext<AssignTriggerToLocation> context)
     {
-        (var triggerId, Guid? edgeId, string? nodeId, ICollection<PolygonPoint> polygon, Guid? mapId) = context.Message;
+        (var triggerId, string? nodeId, Guid? edgeId, ICollection <PolygonPoint> polygon, Guid? mapId) = context.Message;
 
-        await ValidateMessageContent(triggerId, edgeId, nodeId, polygon, mapId);
+        await ValidateMessageContent(triggerId, nodeId, edgeId,  polygon, mapId);
 
         IRequestClient<AddTriggerLocation>? requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
         
-        Response<TriggerLocationAdded> response =  await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, edgeId, nodeId, polygon, mapId));
+        Response<TriggerLocationAdded> response =  await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, nodeId, edgeId, polygon, mapId));
 
         if (response.Message.Exception != null)
         {
@@ -54,11 +55,11 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new TriggerLocationAssigned(response.Message.Location!));
     }
 
-    private async Task ValidateMessageContent(Guid triggerId, Guid? edgeId, string? nodeId, ICollection<PolygonPoint> polygon, Guid? mapId)
+    private async Task ValidateMessageContent(Guid triggerId, string? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId)
     {
         await triggerRepository.GetById(triggerId);
 
-        if (!OnlyOneLocationSet(edgeId, nodeId, polygon))
+        if (!OnlyOneLocationSet(nodeId, edgeId, polygon))
         {
             throw new TriggerAssignmentFailedException("More then one location set: only one of edge id, node id, or polygon must be provided");
         }
@@ -79,7 +80,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         }
     }
     
-    private static bool OnlyOneLocationSet(Guid? edgeId, string? nodeId, ICollection<PolygonPoint> polygon)
+    private static bool OnlyOneLocationSet(string? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon)
     {
         int count = 0;
 

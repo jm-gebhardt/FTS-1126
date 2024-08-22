@@ -234,7 +234,7 @@ The data is loaded from the data folder, but the path can be specified by IConfi
 You find an example structure in the Provisioning/examples/ folder.
 
 ### Agvs
-To provision an Agv, you must store the desired data under data\{AgvName}\:
+To provision an Agv, you must store the desired data under data\Agvs\{AgvName}\:
 - AgvStatusReceived.json
 - AgvGraphReceived.json
 - AgvData.json
@@ -257,3 +257,9 @@ he structure of the filename should follow this pattern:
 - Upscale factor: `1.2` (greater than the graph scale)
 - x-offset: `-10` (units in the graph coordinate system)
 - y-offset: `-22` (units in the graph coordinate system)
+
+### Trigger Locations
+To provision a trigger location, you must stored the desired data under data\TriggerLocations\{TriggerLocationName}\:
+- TriggerLocation.json
+  For each trigger location you have to create a separate folder with a TriggerLocation.json.
+  To use it with docker compose, copy the data directory to the AgvDevComb\Config\provisioning directory and provide profile "provisioning" to the COMPOSE_PROFILES environment variable in your .env file.

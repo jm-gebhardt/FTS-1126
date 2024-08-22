@@ -14,14 +14,14 @@ public record TriggerLocationDto
     public Guid Id { get; set; }
 
     /// <summary>
-    /// The edge id, if set.
-    /// </summary>
-    public Guid? EdgeId { get; set; }
-
-    /// <summary>
     /// The node id, if set.
     /// </summary>
     public string? NodeId { get; set; }
+
+    /// <summary>
+    /// The edge id, if set.
+    /// </summary>
+    public Guid? EdgeId { get; set; }
 
     /// <summary>
     /// The polygon, if set.

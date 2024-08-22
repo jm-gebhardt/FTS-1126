@@ -1,11 +1,11 @@
 ﻿using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Profiles;
 

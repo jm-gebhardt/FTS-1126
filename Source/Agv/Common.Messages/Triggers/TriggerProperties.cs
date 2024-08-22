@@ -17,7 +17,7 @@ public record TriggerProperties
         Version = version;
         Description = description;
         InstanceMaximum = instancesMax;
-        Id = $"{Urn}:{Version}".ToGuid();
+        Id = GetTriggerId(Urn, Version);
     }
 
     /// <inheritdoc cref="TriggerProperties"/>>
@@ -53,5 +53,13 @@ public record TriggerProperties
     /// <summary>
     /// If set, the maximum allowed trigger instances in the graph 
     /// </summary>
-    public int? InstanceMaximum { get; init; } 
+    public int? InstanceMaximum { get; init; }
+
+    /// <summary>
+    /// Create trigger id based on trigger urn and trigger version. 
+    /// </summary>
+    public static Guid GetTriggerId(string triggerUrn, string triggerVersion)
+    {
+        return $"{triggerUrn}:{triggerVersion}".ToGuid();
+    }
 }

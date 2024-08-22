@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
+using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using MassTransit;
@@ -68,7 +68,7 @@ public class TriggerController: Controller
     public async Task<ActionResult<TriggerLocationDto>> AssignTriggerToLocation([FromRoute] Guid id, [FromQuery] Guid? mapId, [FromQuery] string? nodeId, [FromQuery] Guid? edgeId, [FromBody] ICollection<PolygonPointDto>? polygon)
     {
         ICollection<PolygonPoint> polygonPoints = polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(polygon) : [];
-        Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, edgeId, nodeId,  polygonPoints, mapId));
+        Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, nodeId, edgeId, polygonPoints, mapId));
         var location = _mapper.Map<TriggerLocationDto>(response.Message.Location);
         return Ok(location);
     }

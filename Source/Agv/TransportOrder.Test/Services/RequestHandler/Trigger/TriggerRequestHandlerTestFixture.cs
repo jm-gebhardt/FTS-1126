@@ -1,9 +1,9 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
-using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Trigger;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;

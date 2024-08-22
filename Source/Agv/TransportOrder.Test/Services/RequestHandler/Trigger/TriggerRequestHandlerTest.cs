@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
@@ -99,7 +100,7 @@ public class TriggerRequestHandlerTest
         .WithTriggers([])
         .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<TriggerNotFoundException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation("unknown".ToGuid(), Guid.NewGuid(), null, [], Guid.NewGuid())));
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerNotFoundException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation("unknown".ToGuid(), null, Guid.NewGuid(), [], Guid.NewGuid())));
     }
 
     [TestMethod]
@@ -112,7 +113,7 @@ public class TriggerRequestHandlerTest
             .WithMapExists(true)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, Guid.NewGuid(), "a node", [], Guid.NewGuid())));
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, "a node", Guid.NewGuid(), [], Guid.NewGuid())));
     }
 
     [TestMethod]
@@ -125,7 +126,7 @@ public class TriggerRequestHandlerTest
             .WithMapExists(true)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, "unknown".ToGuid(), null, [], Guid.NewGuid())));
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, "unknown".ToGuid(), [], Guid.NewGuid())));
     }
 
     [TestMethod]
@@ -138,7 +139,7 @@ public class TriggerRequestHandlerTest
             .WithMapExists(true)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, "unknown node", [], Guid.NewGuid())));
+        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id,  "unknown node", null, [], Guid.NewGuid())));
     }
 
     [TestMethod]
@@ -151,7 +152,7 @@ public class TriggerRequestHandlerTest
             .WithMapExists(false)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, Guid.NewGuid(), null, [], "unknown".ToGuid())));
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, Guid.NewGuid(), [], "unknown".ToGuid())));
     }
 
     [TestMethod]
@@ -167,7 +168,7 @@ public class TriggerRequestHandlerTest
             .WithLocationResponse(location)
             .Build();
 
-        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, location.NodeId!, [], location.MapId));
+        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, location.NodeId!, null, [], location.MapId));
         response.Message.Location.ShouldBeEquivalentTo(location);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }
@@ -185,7 +186,7 @@ public class TriggerRequestHandlerTest
             .WithLocationResponse(location)
             .Build();
 
-        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, location.NodeId!, [], null));
+        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id,  location.NodeId!, null, [], null));
         response.Message.Location.ShouldBeEquivalentTo(location);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }
@@ -203,6 +204,6 @@ public class TriggerRequestHandlerTest
             .WithLocationResponse(null, "an exception")
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async() => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, location.NodeId!, [], location.MapId)));
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async() => await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, location.NodeId!, null, [], location.MapId)));
     }
 }

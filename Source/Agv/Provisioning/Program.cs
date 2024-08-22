@@ -18,6 +18,7 @@ try
             services.Configure<ConfigOptions>(context.Configuration.GetSection(ConfigOptions.SectionName));
 
             services.AddScoped<ISeeder, GraphAndMapSeeder>();
+            services.AddScoped<ISeeder, TriggerLocationsSeeder>();
             services.AddScoped<ISeeder, AgvsSeeder>();
             services.AddSingleton<AgvSeederFactory>();
         });

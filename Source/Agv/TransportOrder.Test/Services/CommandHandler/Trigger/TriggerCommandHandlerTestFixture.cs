@@ -1,5 +1,8 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -13,7 +16,11 @@ public class TriggerCommandHandlerTestFixture: MassTransitConsumerTestFixture<Tr
 
     public TriggerCommandHandlerTestFixture()
     {
-        AddServices(s => s.AddTransient(_ => _triggerRepository.Object));
+        AddServices(s =>
+        {
+            s.AddTransient(_ => _triggerRepository.Object);
+            s.AddTransient<IMapper>(_ => MappingHelper.GetMapper(new PolygonPointProfile()));
+        });
         _triggerRepository.Setup(x => x.Add(It.IsAny<TransportOrder.Domain.Models.Trigger.Trigger>()))
             .Callback((TransportOrder.Domain.Models.Trigger.Trigger t) => Trigger = t);
         _triggerRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Trigger.Trigger>()))

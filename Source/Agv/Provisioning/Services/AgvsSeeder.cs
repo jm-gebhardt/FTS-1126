@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.Provisioning.Services;
 internal class AgvsSeeder : ISeeder
 {
     private readonly AgvSeederFactory _agvSeederFactory;
-    private readonly string[] _folderPaths;
+    private readonly string[] _folderPaths = [];
 
     /// <inheritdoc />
     public string Name { get; }
@@ -22,15 +22,22 @@ internal class AgvsSeeder : ISeeder
         ILogger<AgvsSeeder> logger)
     {
         _agvSeederFactory = agvSeederFactory;
-        string basePath = configOptions.Value.BasePath;
+        string agvBasePath = Path.Join(configOptions.Value.BasePath, "Agvs");
 
-        string[] files = Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)
-            .Select(f => f.Replace(basePath, string.Empty)).ToArray();
+        if (Directory.Exists(agvBasePath))
+        {
+            string[] files = Directory.GetFiles(agvBasePath, "*", SearchOption.AllDirectories)
+                .Select(f => f.Replace(agvBasePath, string.Empty)).ToArray();
 
-        logger.LogInformation("All files:");
-        logger.LogInformation("{Files}", string.Join(Environment.NewLine, files));
+            logger.LogInformation("All agv files:");
+            logger.LogInformation("{Files}", string.Join(Environment.NewLine, files));
 
-        _folderPaths = Directory.GetDirectories(basePath);
+            _folderPaths = Directory.GetDirectories(agvBasePath);
+        }
+        else
+        {
+            logger.LogInformation("Directory {AgvBasePath} not found.", agvBasePath);
+        }
 
         Name = $"Agv seeder of {_folderPaths.Length} Agvs";
     }
