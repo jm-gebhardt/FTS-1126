@@ -657,7 +657,7 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AbortActionGroup_NoActionInStatusStarted_DoesNotPublishActionAborted()
+    public async Task Consume_AbortActionGroup_AllActionsCompleted_DoesNotPublishActionAborted()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.TryTransitionToBusy(true);
@@ -670,6 +670,30 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_AbortActionGroup_AllActionsCompletedOrCreated_PublishesActionAbortedAndActionGroupChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.TryTransitionToBusy(true);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Completed, dropActionState: ActionState.Created);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup)
+            .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
+        var expectedAbortedAction = actionGroup.Actions.First(a => a.State != ActionState.Completed);
+
+        var abortedMessage = await fixture.PublishAndGetFirstMessageAsync<AbortActionGroup, ActionAborted>(
+            new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
+        await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
+        abortedMessage.CorrelationId.ShouldBe(agv.CorrelationId);
+        abortedMessage.Action.ActionType.ShouldBe(expectedAbortedAction.ActionType);
+        abortedMessage.Action.CorrelationId.ShouldBe(expectedAbortedAction.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]

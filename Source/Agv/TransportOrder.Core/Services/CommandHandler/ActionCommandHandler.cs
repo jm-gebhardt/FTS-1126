@@ -567,11 +567,11 @@ public class ActionCommandHandler :
             await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, no assigned agv."));
             return;
         }
-        var action = actionGroup.Actions.FirstOrDefault(a => a.StartedDate != null && a.State != ActionState.Completed);
+        var action = actionGroup.Actions.FirstOrDefault(a => a.State != ActionState.Completed);
         if (action == null)
         {
-            _logger.LogError("Could not abort action group {ActionGroupCorrelationId}, no started actions.", actionGroup.CorrelationId);
-            await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, no started actions."));
+            _logger.LogError("Could not abort action group {ActionGroupCorrelationId}, no actions that are not completed", actionGroup.CorrelationId);
+            await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, all actions completed."));
             return;
         }
         var agv = await _agvDb.Agvs.GetAgvAsync((Guid)actionGroup.AssignedAgv!);
