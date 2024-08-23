@@ -37,6 +37,7 @@ public class CompleteOrderTest
 {
     private DockerCompose? _dockerCompose;
     private static readonly string[] ExcludedContainers = new[] { "mssqlbootstrap_1" };
+    private RestApi? _restApi;
 
     /// <summary>
     /// Start all docker services before each test
@@ -45,7 +46,14 @@ public class CompleteOrderTest
     public void StartServices()
     {
         _dockerCompose.ShouldBeNull();
+        _restApi.ShouldBeNull();
         _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
+        _restApi = new RestApi(
+            Environment.GetEnvironmentVariable(EnvVars.KeycloakClientId) ?? string.Empty,
+            Environment.GetEnvironmentVariable(EnvVars.KeycloakUsername)?? string.Empty,
+            Environment.GetEnvironmentVariable(EnvVars.KeycloakUserPassword)?? string.Empty
+        );
+        
         _dockerCompose.AreRemoved().ShouldBeTrue();
         _dockerCompose.Up().ShouldBeTrue();
         _dockerCompose.AreRunning(ExcludedContainers).ShouldBeTrue();
@@ -58,9 +66,11 @@ public class CompleteOrderTest
     public void StopServices()
     {
         _dockerCompose.ShouldNotBeNull();
+        _restApi.ShouldNotBeNull();
         _dockerCompose.Down().ShouldBeTrue();
         _dockerCompose.AreRemoved().ShouldBeTrue();
         _dockerCompose = null;
+        _restApi = null;
     }
 
     /// <summary>
@@ -100,24 +110,23 @@ public class CompleteOrderTest
 
     private async Task<TestAgv> AddAgv(string agvSerialNumber, CancellationToken token)
     {
-        var restApi = new RestApi();
 
         var agv = new TestAgv(agvSerialNumber);
         await agv.SubscribeDataTopics();
 
         _ = agv.StartSendingStatus(token);
 
-        var restAgv = await restApi.WaitForAgv(agv.SerialNumber);
+        var restAgv = await _restApi!.WaitForAgv(agv.SerialNumber);
         restAgv.ShouldNotBeNull();
 
-        (await restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-        (await restApi.WaitForAgvGraph(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-        var restMaps = await restApi.WaitForMaps();
+        (await _restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+        (await _restApi.WaitForAgvGraph(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
+        var restMaps = await _restApi.WaitForMaps();
         var restMap = restMaps!.FirstOrDefault();
         restMap.ShouldNotBeNull();
-        (await restApi.WaitForMap(restMap["correlationId"]?.ToString()!, restAgv["correlationId"]?.ToString()!)).ShouldNotBeNull();
+        (await _restApi.WaitForMap(restMap["correlationId"]?.ToString()!, restAgv["correlationId"]?.ToString()!)).ShouldNotBeNull();
 
-        (await restApi.SetAgvIdle(restAgv["correlationId"]?.ToString())).ShouldBeTrue();
+        (await _restApi.SetAgvIdle(restAgv["correlationId"]?.ToString())).ShouldBeTrue();
 
         return agv;
     }
@@ -133,9 +142,8 @@ public class CompleteOrderTest
 
         await context.AddNewOrder(orderId, leNo, source, destination);
         await context.SaveChangesAsync();
-
-        var restApi = new RestApi();
-        var actionGroup = await restApi.WaitForFinishedActionGroupForOrder(orderId);
+        
+        var actionGroup = await _restApi!.WaitForFinishedActionGroupForOrder(orderId);
         actionGroup.ShouldNotBeNull();
         
         context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();

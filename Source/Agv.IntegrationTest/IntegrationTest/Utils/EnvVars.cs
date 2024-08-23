@@ -24,4 +24,22 @@ public static class EnvVars
     /// TAR's Docker Registry Password
     /// </summary>
     public const string DockerRegistryPassword = "DockerRegistryPassword";
+
+    /// <summary>
+    /// Default keycloak client ID.
+    /// This client is required to retrieve valid JWT tokens
+    /// </summary>
+    public const string KeycloakClientId = "KEYCLOAK_DEFAULT_CLIENT_ID";
+    
+    /// <summary>
+    /// Default keycloak username.
+    /// This username is required to retrieve valid JWT tokens
+    /// </summary>
+    public const string KeycloakUsername = "KEYCLOAK_DEFAULT_USERNAME";
+    
+    /// <summary>
+    /// Default keycloak user password
+    /// This username and password are required to retrieve valid JWT tokens
+    /// </summary>
+    public const string KeycloakUserPassword = "KEYCLOAK_DEFAULT_USERPASSWORD";
 }

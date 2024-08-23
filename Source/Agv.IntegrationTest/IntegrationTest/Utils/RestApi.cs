@@ -1,6 +1,8 @@
 using System.Net;
 using Newtonsoft.Json.Linq;
 using JetBrains.Annotations;
+using IdentityModel.Client;
+using Newtonsoft.Json;
 
 namespace Gebhardt.Acc.IntegrationTest.Utils;
 
@@ -15,13 +17,29 @@ public class RestApi
     /// </summary>
     public const string DefaultApiUrl = "http://localhost/transportorder";
 
+    private readonly string _keycloakClientId = "";
+    private readonly string _userName = "";
+    private readonly string _userPassword = "";
+
     private readonly string _apiUrl;
+    private string _accessToken = string.Empty;
 
     /// <summary>
     /// Rest API constructor
     /// </summary>
     public RestApi(string url = DefaultApiUrl)
     {
+        _apiUrl = url;
+    }
+    
+    /// <summary>
+    /// Rest API constructor
+    /// </summary>
+    public RestApi(string keycloakClientId, string userName, string userPassword, string url = DefaultApiUrl)
+    {
+        _keycloakClientId = keycloakClientId;
+        _userName = userName;
+        _userPassword = userPassword;
         _apiUrl = url;
     }
 
@@ -32,6 +50,13 @@ public class RestApi
 
         try
         {
+            if (string.IsNullOrEmpty(_accessToken))
+            {
+                await GetAuthToken();    
+            }
+            
+            httpClient.SetBearerToken(_accessToken);
+            
             var response = await httpClient.GetAsync(url);
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -61,15 +86,21 @@ public class RestApi
         var httpClient = new HttpClient();
         var url = $"{_apiUrl}/{subPath}";
         Console.WriteLine($"Patch({url})");
+        
+        if (string.IsNullOrEmpty(_accessToken))
+        {
+            await GetAuthToken();    
+        }
+        
+        httpClient.SetBearerToken(_accessToken);
+        
         var response = await httpClient.PatchAsync(url, null);
 
-        if (response.StatusCode != HttpStatusCode.OK)
-        {
-            await WriteError($"Request '{url}' failed ({(int)response.StatusCode}): {response.ReasonPhrase}");
-            return false;
-        }
+        if (response.StatusCode == HttpStatusCode.OK) return true;
+        
+        await WriteError($"Request '{url}' failed ({(int)response.StatusCode}): {response.ReasonPhrase}");
+        return false;
 
-        return true;
     }
 
     /// <summary>
@@ -326,6 +357,38 @@ public class RestApi
     {
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
         Console.WriteLine($"{timestamp}: {message}");
+    }
+
+    private async Task GetAuthToken()
+    {
+        var httpClient = new HttpClient();
+        const string serverUrl = "http://localhost/security";
+        const string discoveryUrl = $"realms/agv/.well-known/openid-configuration";
+        
+        try
+        {
+            var discoveryDoc = await httpClient.GetDiscoveryDocumentAsync($"{serverUrl}/{discoveryUrl}");
+            if (discoveryDoc.IsError)
+                throw new ApplicationException(discoveryDoc.Error);
+            
+            var tokenEndpoint = discoveryDoc.TokenEndpoint;
+            var tokenStr = await httpClient.RequestPasswordTokenAsync(
+                new PasswordTokenRequest()
+                {
+                    Address = tokenEndpoint,
+                    ClientId = _keycloakClientId,
+                    UserName = _userName,
+                    Password = _userPassword,
+                    Scope = ""
+                });
+
+            _accessToken = tokenStr.AccessToken!;
+        }
+        catch (HttpRequestException e)
+        {
+            await WriteError($"Request '{serverUrl}/{discoveryUrl}' failed: {e}");
+            _accessToken = string.Empty;
+        }
     }
 
 }

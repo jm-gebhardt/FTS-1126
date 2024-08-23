@@ -16,6 +16,8 @@ public class CompleteOrderTestVirtualAgv
     private DockerCompose? _dockerCompose;
     private DockerCompose? _dockerComposeVirtualAgv;
 
+    private RestApi _restApi = null!; 
+    
     private const string DockerRegistry = "registry.gitlab.com";
     private const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
     private static readonly string[] ExcludedContainers = new[] { "mssqlbootstrap_1" };
@@ -33,8 +35,16 @@ public class CompleteOrderTestVirtualAgv
     public void StartServices()
     {
         _dockerCompose.ShouldBeNull();
+        _restApi.ShouldBeNull();
         _dockerComposeVirtualAgv.ShouldBeNull();
 
+        _restApi = new RestApi(
+            Environment.GetEnvironmentVariable(EnvVars.KeycloakClientId) ?? string.Empty,
+            Environment.GetEnvironmentVariable(EnvVars.KeycloakUsername)?? string.Empty,
+            Environment.GetEnvironmentVariable(EnvVars.KeycloakUserPassword)?? string.Empty
+        );
+        _restApi.ShouldNotBeNull();
+        
         _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
         _dockerComposeVirtualAgv = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
             DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
@@ -79,23 +89,22 @@ public class CompleteOrderTestVirtualAgv
         const string leNo = "123";
         const string source = "PVB02";
         const string destination = "PVB03";
-
-        var restApi = new RestApi();
-        var restAgv = await restApi.WaitForAgv(agvSerialNumber);
+        
+        var restAgv = await _restApi.WaitForAgv(agvSerialNumber);
         restAgv.ShouldNotBeNull();
 
         var agvCorrelationId = restAgv["correlationId"]?.ToString();
         agvCorrelationId.ShouldNotBeNullOrEmpty();
 
-        (await restApi.WaitForAgvData(agvCorrelationId)).ShouldNotBeNull();
-        (await restApi.WaitForAgvGraph(agvCorrelationId)).ShouldNotBeNull();
-        var restMaps = await restApi.WaitForMaps();
+        (await _restApi.WaitForAgvData(agvCorrelationId)).ShouldNotBeNull();
+        (await _restApi.WaitForAgvGraph(agvCorrelationId)).ShouldNotBeNull();
+        var restMaps = await _restApi.WaitForMaps();
         var restMap = restMaps!.FirstOrDefault();
         restMap.ShouldNotBeNull();
-        (await restApi.WaitForMap(restMap["correlationId"]?.ToString()!, restAgv["correlationId"]?.ToString()!)).ShouldNotBeNull();
+        (await _restApi.WaitForMap(restMap["correlationId"]?.ToString()!, restAgv["correlationId"]?.ToString()!)).ShouldNotBeNull();
 
 
-        (await restApi.SetAgvIdle(agvCorrelationId)).ShouldBeTrue();
+        (await _restApi.SetAgvIdle(agvCorrelationId)).ShouldBeTrue();
 
         var context = new WcsDbContext();
 
@@ -104,7 +113,7 @@ public class CompleteOrderTestVirtualAgv
         await context.AddNewOrder(orderId, leNo, source, destination);
         await context.SaveChangesAsync();
 
-        var actionGroup = await restApi.WaitForFinishedActionGroupForOrder(orderId);
+        var actionGroup = await _restApi.WaitForFinishedActionGroupForOrder(orderId);
         actionGroup.ShouldNotBeNull();
 
         context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();
