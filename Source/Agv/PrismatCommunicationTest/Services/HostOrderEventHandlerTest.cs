@@ -20,7 +20,7 @@ public class HostOrderEventHandlerTest
         using HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
             .WithNextIncompleteOrderWithUnknownPickTarget(order);
 
-        await fixture.TestHarness.Bus.Publish(new DecisionPointPassed(Guid.NewGuid(), "a target node"));
+        await fixture.TestHarness.Bus.Publish(new DecisionPointPassed(Guid.NewGuid(), "a target node", false));
         (await fixture.ConsumerHarness.Consumed.Any<DecisionPointPassed>()).ShouldBeTrue();
 
         await fixture.ShouldHavePublishedAsync<QueuePickDropActionGroupForAgv>();
@@ -32,7 +32,7 @@ public class HostOrderEventHandlerTest
         using HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
             .WithNextIncompleteOrderWithUnknownPickTarget(null);
 
-        await fixture.TestHarness.Bus.Publish(new DecisionPointPassed(Guid.NewGuid(), "a target node"));
+        await fixture.TestHarness.Bus.Publish(new DecisionPointPassed(Guid.NewGuid(), "a target node", false));
         (await fixture.ConsumerHarness.Consumed.Any<DecisionPointPassed>()).ShouldBeTrue();
 
         await fixture.ShouldNotHavePublishedAsync<QueuePickDropActionGroupForAgv>();
@@ -72,7 +72,7 @@ public class HostOrderEventHandlerTest
         HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
             .WithNextPickOrderForShortLoopDualOperation(hostOrder);
 
-        var shortLoopTriggerPointPassed = new ShortLoopTriggerPointPassed(Guid.NewGuid());
+        var shortLoopTriggerPointPassed = new ShortLoopTriggerPointPassed(Guid.NewGuid(), false);
         await fixture.TestHarness.Bus.Publish(shortLoopTriggerPointPassed);
 
         await fixture.ShouldHaveConsumedAsync<ShortLoopTriggerPointPassed>();
@@ -90,7 +90,7 @@ public class HostOrderEventHandlerTest
     {
         HostOrderConsumerTestFixture<HostOrderEventHandler> fixture = new HostOrderConsumerTestFixture<HostOrderEventHandler>()
             .WithNextPickOrderForShortLoopDualOperation(null);
-        var shortLoopTriggerPointPassed = new ShortLoopTriggerPointPassed(Guid.NewGuid());
+        var shortLoopTriggerPointPassed = new ShortLoopTriggerPointPassed(Guid.NewGuid(), false);
         await fixture.TestHarness.Bus.Publish(shortLoopTriggerPointPassed);
 
         await fixture.ShouldHaveConsumedAsync<ShortLoopTriggerPointPassed>();

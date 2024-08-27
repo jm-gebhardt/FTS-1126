@@ -1222,7 +1222,7 @@ public class ActionCommandHandlerTest
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target", false));
 
         await fixture.ShouldHavePublishedAsync<TargetForActionSet>();
 
@@ -1243,7 +1243,7 @@ public class ActionCommandHandlerTest
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target", false));
 
         await fixture.ShouldHavePublishedAsync<TargetForActionSet>();
 

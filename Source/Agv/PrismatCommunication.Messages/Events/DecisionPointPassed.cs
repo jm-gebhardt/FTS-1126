@@ -5,4 +5,5 @@
 /// </summary>
 /// <param name="AssignedAgv">The assigned agv.</param>
 /// <param name="TargetNodeId">The decided target node id.</param>
-public record DecisionPointPassed(Guid AssignedAgv, string TargetNodeId);
+/// <param name="ShouldNotPickNext">The agv should not pick in the next step.</param>
+public record DecisionPointPassed(Guid AssignedAgv, string TargetNodeId, bool ShouldNotPickNext);

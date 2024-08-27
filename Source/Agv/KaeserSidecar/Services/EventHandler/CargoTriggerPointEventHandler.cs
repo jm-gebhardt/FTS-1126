@@ -34,7 +34,7 @@ public class CargoTriggerPointEventHandler(ILogger<CargoTriggerPointEventHandler
         {
             hostOrder = await hostOrderRepository.GetByIdAsync(actionGroup.Value);
         }
-        catch (Exception)
+        catch (InvalidOperationException)
         {
             logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not handling pick-drop action group ", agv);
             return;

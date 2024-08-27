@@ -25,7 +25,7 @@ public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository, Kae
         var order = await hostOrderRepository.GetNextIncompleteOrderWithUnknownPickTarget();
         if (order != null)
         {
-            await context.Publish(new QueuePickDropActionGroupForAgv(order.CorrelationId, context.Message.AssignedAgv, context.Message.TargetNodeId));
+            await context.Publish(new QueuePickDropActionGroupForAgv(order.CorrelationId, context.Message.AssignedAgv, context.Message.TargetNodeId, context.Message.ShouldNotPickNext));
         }
     }
 
@@ -49,7 +49,7 @@ public class HostOrderEventHandler(IHostOrderRepository hostOrderRepository, Kae
         var order = await hostOrderRepository.GetNextPickOrderForShortLoopDualOperation();
         if (order != null && configuration.StationMapping.TryGetValue(order.Actions.First(a => a.ActionType == ActionType.Pick).Node, out string? pickNode))
         {
-            await context.Publish(new QueuePickDropActionGroupForAgv(order.CorrelationId, context.Message.Agv, pickNode));
+            await context.Publish(new QueuePickDropActionGroupForAgv(order.CorrelationId, context.Message.Agv, pickNode, context.Message.ShouldNotPickNext));
         }
     }
 }

@@ -15,14 +15,15 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 public class DecisionPointEventHandlerTest
 {
     [TestMethod]
-    public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupied_NextPickAvailable_SelectsStation1SendsTelegramWithPickStation()
+    public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupied_NextPickAvailable_AgvHasEnoughBattery_SelectsStation1SendsTelegramWithPickStation()
     {
         const string targetStation = "1";
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
         var hostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
             .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
-            .WithHostOrder(hostOrder);
+            .WithHostOrder(hostOrder)
+            .WithAgvHasLowBatteryLevel(false);
         var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()), 
             new AgvStatus(), actionGroup, [], [], 3);
 
@@ -36,16 +37,46 @@ public class DecisionPointEventHandlerTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.TargetNodeId.ShouldBe(targetStation);
+        setTargetForAction.ShouldNotPickNext.ShouldBeFalse();
     }
 
     [TestMethod]
-    public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupied_NoNextPickAvailable_SelectsStation1SendsTelegramWithoutPickStation()
+    public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupied_NextPickAvailable_AgvHasNotEnoughBattery_SelectsStation1SendsTelegramWithoutPickStation()
+    {
+        const string targetStation = "1";
+        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
+        var hostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
+        var fixture = new DecisionPointEventHandlerTestFixture()
+            .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
+            .WithHostOrder(hostOrder)
+            .WithAgvHasLowBatteryLevel(true);
+        var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
+            new AgvStatus(), actionGroup, [], [], 3);
+
+        await fixture.TestHarness.Bus.Publish(agvPassedDecisionPoint1);
+
+        await fixture.ShouldHaveConsumedAsync<AgvPassedDecisionPoint1>();
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
+
+        fixture.VerifyReportingToConveyors("WE01", true, null, Times.Once());
+
+        var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
+        setTargetForAction.ShouldNotBeNull();
+        setTargetForAction.TargetNodeId.ShouldBe(targetStation);
+        setTargetForAction.ShouldNotPickNext.ShouldBeTrue();
+    }
+
+    [DataTestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupied_NoNextPickAvailable_SelectsStation1SendsTelegramWithoutPickStation(bool hasLowBatteryLevel)
     {
         const string targetStation = "1";
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
         var fixture = new DecisionPointEventHandlerTestFixture()
             .WithOccupancies([new StationOccupancy(targetStation, 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
-            .WithHostOrder(null);
+            .WithHostOrder(null)
+            .WithAgvHasLowBatteryLevel(hasLowBatteryLevel);
         var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
             new AgvStatus(), actionGroup, [], [], 3);
 
@@ -60,6 +91,7 @@ public class DecisionPointEventHandlerTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.TargetNodeId.ShouldBe(targetStation);
+        setTargetForAction.ShouldNotPickNext.ShouldBeTrue();
     }
 
     [TestMethod]

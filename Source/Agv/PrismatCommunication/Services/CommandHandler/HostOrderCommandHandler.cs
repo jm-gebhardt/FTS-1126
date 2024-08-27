@@ -126,14 +126,14 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     /// </summary>
     public async Task Consume(ConsumeContext<PassDecisionPoint> context)
     {
-        (var correlationId, Guid? assignedAgv, string targetNodeId) = context.Message;
+        (var correlationId, Guid? assignedAgv, string targetNodeId, bool shouldNotPickNext) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
        
         if (hostOrder.HasUnknownDropTarget(configuration))
         {   // only trigger dual operation, if it is a drop order
             hostOrder.PassTriggerPoint();
             await hostOrderRepository.UpdateAsync(hostOrder);
-            await context.Publish(new DecisionPointPassed(assignedAgv!.Value, targetNodeId));
+            await context.Publish(new DecisionPointPassed(assignedAgv!.Value, targetNodeId, shouldNotPickNext));
         }
     }
 
@@ -142,9 +142,9 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     /// </summary>
     public async Task Consume(ConsumeContext<QueuePickDropActionGroupForAgv> context)
     {
-        (var correlationId, var assignedAgv, string pickNodeId) = context.Message;
+        (var correlationId, var assignedAgv, string pickNodeId, bool shouldNotPickNext) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        var actionGroup = hostOrder.CreatePickDropActionGroupForAgv(pickNodeId, assignedAgv, configuration);
+        var actionGroup = hostOrder.CreatePickDropActionGroupForAgv(pickNodeId, shouldNotPickNext? null: assignedAgv, configuration);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await context.Publish(new QueueActionGroup(actionGroup, false));
     }
@@ -202,14 +202,14 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     /// </summary>
     public async Task Consume(ConsumeContext<PassShortLoopTriggerPoint> context)
     {
-        var (assignedAgv, correlationId) = context.Message;
+        (var assignedAgv, var correlationId, bool shouldNotPickNext) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
         bool dropsAt1050 = hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node != configuration.PrismatAklPickTarget;
         if (dropsAt1050)
         {
             hostOrder.PassTriggerPoint();
             await hostOrderRepository.UpdateAsync(hostOrder);
-            await context.Publish(new ShortLoopTriggerPointPassed(assignedAgv));
+            await context.Publish(new ShortLoopTriggerPointPassed(assignedAgv, shouldNotPickNext));
         }
     }
 }

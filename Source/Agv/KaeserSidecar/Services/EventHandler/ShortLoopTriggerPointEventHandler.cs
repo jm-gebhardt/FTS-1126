@@ -15,14 +15,14 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 /// Handles the short loop trigger point.
 /// </summary>
 [UsedImplicitly]
-public class ShortLoopTriggerPointEventHandler(ILogger<ShortLoopTriggerPointEventHandler> logger, IPrismatCommunicationHostOrderRepository hostOrderRepository, IConveyorCommunicator conveyorCommunicator, KaeserGraphConfiguration configuration) : IConsumer<AgvPassedShortLoopTriggerPoint>
+public class ShortLoopTriggerPointEventHandler(ILogger<ShortLoopTriggerPointEventHandler> logger, IPrismatCommunicationHostOrderRepository hostOrderRepository, IConveyorCommunicator conveyorCommunicator, KaeserGraphConfiguration configuration, IAgvSettingsService agvSettingsService) : IConsumer<AgvPassedShortLoopTriggerPoint>
 {
     /// <summary>
     /// Handles the <see cref="AgvPassedShortLoopTriggerPoint"/> message.
     /// </summary>
     public async Task Consume(ConsumeContext<AgvPassedShortLoopTriggerPoint> context)
     {
-        (_, _, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
+        (var agvData, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick))
         {
             logger.LogWarning("Skip reporting target station to conveyor: Agv without pick drop action group passed short loop trigger point ({ActionGroup})", actionGroup?.CorrelationId);
@@ -41,14 +41,30 @@ public class ShortLoopTriggerPointEventHandler(ILogger<ShortLoopTriggerPointEven
         }
 
         bool isDropping = action is { ActionType: ActionType.Drop };
-        string? pickTarget = await GetPickStation(actionGroup, isDropping);
+        bool hasLowBatteryLevel = false;
+        if (isDropping)
+        {
+            hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(agvStatus.CorrelationId);
+        }
+        string? pickTarget = await GetPickStation(actionGroup, isDropping, hasLowBatteryLevel);
         conveyorCommunicator.ReportPalletPickDropStation(targetStation, isDropping, pickTarget);
+        if (isDropping)
+        {
+            bool shouldNotPickNext = hasLowBatteryLevel || pickTarget == null;
+            await context.Publish(new DroppingAgvPassedShortLoopTriggerPoint(agvData, actionGroup, shouldNotPickNext));
+        }
     }
-
-    private async Task<string?> GetPickStation(ActionGroup actionGroup, bool isDropping)
+    
+    private async Task<string?> GetPickStation(ActionGroup actionGroup, bool isDropping, bool hasLowBatteryLevel)
     {
         string? pickTarget = null;
         HostOrder? pendingPickOrder;
+        
+        if (isDropping && hasLowBatteryLevel)
+        {
+            return pickTarget;
+        }
+
         if (isDropping)
         {
             pendingPickOrder = await hostOrderRepository.GetNextPickOnShortLoop();

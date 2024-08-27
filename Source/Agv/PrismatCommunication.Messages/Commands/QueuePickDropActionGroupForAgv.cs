@@ -8,4 +8,5 @@ namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 /// <param name="CorrelationId">The host order correlation id.</param>
 /// <param name="AssignedAgv">The assigned agv.</param>
 /// <param name="PickNode">The pick node.</param>
-public record QueuePickDropActionGroupForAgv(Guid CorrelationId, Guid AssignedAgv, string PickNode) : CorrelatedBy<Guid>;
+/// <param name="HasLowBatteryLevel">The agv has a low battery level.</param>
+public record QueuePickDropActionGroupForAgv(Guid CorrelationId, Guid AssignedAgv, string PickNode, bool HasLowBatteryLevel) : CorrelatedBy<Guid>;

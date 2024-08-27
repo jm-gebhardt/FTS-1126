@@ -5,14 +5,17 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 
 [TestClass]
 public class ShortLoopTriggerPointEventHandlerTest
 {
-    [TestMethod]
-    public async Task Consume_AgvPassedShortLoopTriggerPoint_DropAt1050DroppingNextPickAvailable_ReportsToConveyor()
+    [DataTestMethod]
+    [DataRow(false, "1020")]
+    [DataRow(true, null)]
+    public async Task Consume_AgvPassedShortLoopTriggerPoint_DropAt1050DroppingNextPickAvailable_ReportsToConveyor(bool hasLowBatteryLevel, string? pickStation)
     {
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
@@ -21,15 +24,19 @@ public class ShortLoopTriggerPointEventHandlerTest
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
 
         var fixture = new ShortLoopTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(nextPickOrder);
+            .WithHostOrder(nextPickOrder)
+            .WithAgvHasLowBatteryLevel(hasLowBatteryLevel);
 
         var agvPassedShortLoopTriggerPoint = new AgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
             new AgvStatus(), actionGroup, [], []);
 
         await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+    
+        await fixture.ShouldHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
+        (await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedShortLoopTriggerPoint>()).ShouldNotPickNext.ShouldBe(hasLowBatteryLevel || pickStation == null);
 
-        fixture.VerifyReportingToConveyors("WE03", true, "1020", Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", true, pickStation, Times.Once());
     }
 
     [TestMethod]
@@ -41,14 +48,17 @@ public class ShortLoopTriggerPointEventHandlerTest
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
 
         var fixture = new ShortLoopTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(null);
+            .WithHostOrder(null)
+            .WithAgvHasLowBatteryLevel(false);
 
         var agvPassedShortLoopTriggerPoint = new AgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
             new AgvStatus(), actionGroup, [], []);
 
         await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
-
+        await fixture.ShouldHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
+        (await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedShortLoopTriggerPoint>()).ShouldNotPickNext.ShouldBeTrue();
+        
         fixture.VerifyReportingToConveyors("WE03", true, null, Times.Once());
     }
 
@@ -67,6 +77,7 @@ public class ShortLoopTriggerPointEventHandlerTest
 
         await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
         fixture.VerifyReportingToConveyors("WE03", true, null, Times.Never());
     }
@@ -87,6 +98,7 @@ public class ShortLoopTriggerPointEventHandlerTest
 
         await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
         fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Once());
     }
@@ -106,6 +118,7 @@ public class ShortLoopTriggerPointEventHandlerTest
 
         await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
         fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Never());
     }
@@ -121,6 +134,7 @@ public class ShortLoopTriggerPointEventHandlerTest
 
         await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
         fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Never());
     }

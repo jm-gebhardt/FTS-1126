@@ -21,7 +21,8 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
     private readonly IStationRepository _repository;
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
-    
+    private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
+
     /// <inheritdoc cref="MassTransitConsumerTestFixture{DecisionPointEventHandler}"/>>
     protected override MassTransitConsumerTestFixture<DecisionPointEventHandler> AddServices(IServiceCollection collection)
     {
@@ -33,6 +34,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         collection.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
         collection.AddSingleton(_ => _communicator.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
+        collection.AddTransient(_ => _agvSettingsService.Object);
         return this;
     }
 
@@ -68,6 +70,12 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         }
        
         _hostOrderRepository.Setup(x => x.GetNextIncompleteOrderWithUnknownPickTarget()).ReturnsAsync(order);
+        return this;
+    }
+
+    public DecisionPointEventHandlerTestFixture WithAgvHasLowBatteryLevel(bool hasLowBatteryLevel)
+    {
+        _agvSettingsService.Setup(x => x.CheckAgvHasLowBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);
         return this;
     }
 

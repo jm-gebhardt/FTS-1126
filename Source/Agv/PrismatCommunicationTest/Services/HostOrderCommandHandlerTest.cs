@@ -223,7 +223,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(dropOrder)
             .WithHostCommunicator();
 
-        var command = new PassDecisionPoint(dropOrder.CorrelationId, Guid.NewGuid(), "a target node");
+        var command = new PassDecisionPoint(dropOrder.CorrelationId, Guid.NewGuid(), "a target node", false);
         await fixture.PublishAndGetFirstMessageAsync<PassDecisionPoint, DecisionPointPassed>(command);
         dropOrder.PassedTriggerPoint.ShouldBeTrue();
     }
@@ -237,7 +237,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
-        var command = new PassDecisionPoint(order.CorrelationId, Guid.NewGuid(), "a target node");
+        var command = new PassDecisionPoint(order.CorrelationId, Guid.NewGuid(), "a target node", false);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<PassDecisionPoint>();
@@ -247,7 +247,7 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_QueuePickDropActionGroupForAgv_ValidData_PublishesQueueActionGroup()
+    public async Task Consume_QueuePickDropActionGroupForAgv_AgvShouldPickNext_PublishesQueueActionGroupWithAssignedAgv()
     {
         var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -256,11 +256,30 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
-        var command = new QueuePickDropActionGroupForAgv(order.CorrelationId, Guid.NewGuid(), "a target node");
+        var command = new QueuePickDropActionGroupForAgv(order.CorrelationId, Guid.NewGuid(), "a target node", false);
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<QueuePickDropActionGroupForAgv, QueueActionGroup>(command);
 
         queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AssignedAgv);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId.ShouldBe(command.PickNode);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Actions.Single(a => a.ActionType == ActionType.Drop).Node]);
+    }
+
+    [TestMethod]
+    public async Task Consume_QueuePickDropActionGroupForAgv_AgvShouldNotPickNext_PublishesQueueActionGroupWithoutAssignedAgv()
+    {
+        var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var command = new QueuePickDropActionGroupForAgv(order.CorrelationId, Guid.NewGuid(), "a target node", true);
+        var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<QueuePickDropActionGroupForAgv, QueueActionGroup>(command);
+
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
+        queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(null);
         queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId.ShouldBe(command.PickNode);
         queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Actions.Single(a => a.ActionType == ActionType.Drop).Node]);
     }
@@ -395,7 +414,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order);
 
-        var command = new PassShortLoopTriggerPoint(Guid.NewGuid(), order.CorrelationId);
+        var command = new PassShortLoopTriggerPoint(Guid.NewGuid(), order.CorrelationId, false);
 
         var shortLoopTriggerPointPassed = await fixture.PublishAndGetFirstMessageAsync<PassShortLoopTriggerPoint, ShortLoopTriggerPointPassed>(command);
 
@@ -412,7 +431,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order);
 
-        var command = new PassShortLoopTriggerPoint(Guid.NewGuid(), order.CorrelationId);
+        var command = new PassShortLoopTriggerPoint(Guid.NewGuid(), order.CorrelationId, false);
 
         await fixture.TestHarness.Bus.Publish(command);
         

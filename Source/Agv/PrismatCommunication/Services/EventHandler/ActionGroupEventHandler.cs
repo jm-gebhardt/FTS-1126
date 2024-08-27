@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
@@ -19,7 +18,7 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     IConsumer<ActionGroupStarted>,
     IConsumer<SetTargetForAction>,
     IConsumer<AgvPassedCargoTriggerPoint>,
-    IConsumer<AgvPassedShortLoopTriggerPoint>,
+    IConsumer<DroppingAgvPassedShortLoopTriggerPoint>,
     IConsumer<PickActionCompleted>
 {
     /// <summary>
@@ -51,8 +50,8 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     /// </summary>
     public async Task Consume(ConsumeContext<SetTargetForAction> context)
     {
-        (_, var actionGroupId, Guid? assignedAgv, string targetNodeId) = context.Message;
-        await context.Publish(new PassDecisionPoint(actionGroupId, assignedAgv, targetNodeId));
+        (_, var actionGroupId, Guid? assignedAgv, string targetNodeId, bool shouldNotPickNext) = context.Message;
+        await context.Publish(new PassDecisionPoint(actionGroupId, assignedAgv, targetNodeId, shouldNotPickNext));
     }
 
     /// <summary>
@@ -74,20 +73,20 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     }
 
     /// <summary>
-    /// Handles the <see cref="AgvPassedShortLoopTriggerPoint"/> message.
+    /// Handles the <see cref="DroppingAgvPassedShortLoopTriggerPoint"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<AgvPassedShortLoopTriggerPoint> context)
+    public async Task Consume(ConsumeContext<DroppingAgvPassedShortLoopTriggerPoint> context)
     {
-        (var agvData, _, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
+        (var agvData, var actionGroup, bool shouldNotPickNext) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick))
         {
             return;
         }
-        var action = actionGroup.Actions.First(a => a.State == ActionState.Started);
+        var action = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
         {
             return;
         }
-        await context.Publish(new PassShortLoopTriggerPoint(agvData.CorrelationId, actionGroup.CorrelationId));
+        await context.Publish(new PassShortLoopTriggerPoint(agvData.CorrelationId, actionGroup.CorrelationId, shouldNotPickNext));
     }
 }

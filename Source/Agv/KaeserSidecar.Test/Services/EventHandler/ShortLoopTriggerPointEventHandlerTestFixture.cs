@@ -15,6 +15,7 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
 {
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
+    private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
 
     /// <inheritdoc cref="MassTransitConsumerTestFixture{ShortLoopTriggerPointEventHandler}"/>>
     protected override MassTransitConsumerTestFixture<ShortLoopTriggerPointEventHandler> AddServices(IServiceCollection collection)
@@ -25,6 +26,7 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
         collection.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
         collection.AddSingleton(_ => _communicator.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
+        collection.AddTransient(_ => _agvSettingsService.Object);
         return this;
     }
 
@@ -43,6 +45,12 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
             _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
         }
         _hostOrderRepository.Setup(x => x.GetNextPickOnShortLoop()).ReturnsAsync(order);
+        return this;
+    }
+
+    public ShortLoopTriggerPointEventHandlerTestFixture WithAgvHasLowBatteryLevel(bool hasLowBatteryLevel)
+    {
+        _agvSettingsService.Setup(x => x.CheckAgvHasLowBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);
         return this;
     }
 

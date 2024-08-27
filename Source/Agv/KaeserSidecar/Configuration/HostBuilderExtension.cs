@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 using Gebhardt.Acc.KaeserSidecar.CmdOptions;
@@ -9,6 +10,8 @@ using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.SimulationMode;
 using Gebhardt.Acc.PrismatCommunication.Configuration;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
+using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -70,6 +73,8 @@ public static class HostBuilderExtension
             services.AddTransient<ITransportOrderDb, TransportOrderDb>();
             services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
             services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();
+            services.AddTransient<ITransportOrderAgvSettingsProvider, TransportOrderAgvSettingsProvider>();
+            services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
             // Add transport order db connection
             services.AddDbContextFactory<TransportOrderDbContext>(builder =>
             {
@@ -77,6 +82,7 @@ public static class HostBuilderExtension
 
                 builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); });
             });
+            services.AddTransient<IAgvSettingsService, AgvSettingsService>();
             services.AddSingleton<IStationRepository, StationRepository>();
             services.TryAddKaeserGraphConfiguration(simulateOptions != null);
             if (simulateOptions != null)
