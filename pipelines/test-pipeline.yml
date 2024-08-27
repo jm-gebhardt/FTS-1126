@@ -147,31 +147,3 @@ stages:
           coverageThreshold: 70
           coverageFailOption: fixed
   
-  ################################################
-  # Integration Test 
-  ################################################
-- stage: IntegrationTest
-  dependsOn: Build
-  #condition: and( succeeded(), in(variables['Build.Reason'], 'PullRequest', 'Manual') )
-  condition: false
-  jobs:
-    - job: VersionCheck
-      pool:
-        vmImage: 'ubuntu-latest'
-      displayName: Trigger integration test pipeline
-      continueOnError: false
-      steps:
-        - script: echo "##vso[task.setvariable variable=accGitHash;]$(git rev-parse HEAD)"
-        - task: TriggerBuild@4
-          displayName: 'Run IntegrationTest Pipeline'
-          inputs:
-            useSameBranch: false
-            branchToUse: master
-            queueBuildForUserThatTriggeredBuild: false
-            buildDefinition: AgvDevComb-IntegrationTest
-            waitForQueuedBuildsToFinish: true
-            waitForQueuedBuildsToFinishRefreshTime: 10
-            templateParameters: "accGitHash: $(accGitHash)"
-            authenticationMethod: 'Personal Access Token'
-            password: '$(token)'
-  
