@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
@@ -55,9 +56,13 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
         routeEdges.AddRange(action.Edges.Select(graphEdgeGuid => _graphRepository.GetMqttEdge(graphEdgeGuid)).OfType<MqttEdge>());
 
         OrderType orderType;
-        string sourceToSend = string.Empty;
-        string destinationToSend = string.Empty;
+        StationInfo? sourceToSend = null;
+        StationInfo? destinationToSend = null;
         string agvSerialNumber = context.Message.SerialNumber;
+
+        bool agvShouldRotate = action.InfoToAgv?.NeedsRotation() ?? false;
+        double? liftHeight = null;
+
         var assignedAgv = context.Message.CorrelationId;
 
         if (string.IsNullOrEmpty(agvSerialNumber))
@@ -69,22 +74,37 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
         {
             case ActionType.Pick:
                 orderType = OrderType.Pick;
-                sourceToSend = targetNodeId;
+                sourceToSend = new StationInfo
+                {
+                    Id = targetNodeId,
+                    Rotate = agvShouldRotate,
+                    LiftHeight = liftHeight
+                };
                 break;
 
             case ActionType.Drop:
                 orderType = OrderType.Drop;
-                destinationToSend = targetNodeId;
+                destinationToSend = new StationInfo
+                {
+                    Id = targetNodeId,
+                    LiftHeight = liftHeight
+                };
                 break;
 
             case ActionType.Move:
                 orderType = OrderType.Move;
-                destinationToSend = targetNodeId;
+                destinationToSend = new StationInfo
+                {
+                    Id = targetNodeId
+                };
                 break;
 
             case ActionType.Charge:
                 orderType = OrderType.Charge;
-                destinationToSend = targetNodeId;
+                destinationToSend = new StationInfo
+                {
+                    Id = targetNodeId
+                };
                 break;
 
             default:
@@ -101,8 +121,8 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
             RecordType = OrderRecordType.Order,
             Stations = new Stations
             {
-                FromStationIdentifier = sourceToSend,
-                ToStationIdentifier = destinationToSend
+                FromStation = sourceToSend,
+                ToStation = destinationToSend
             },
             Route = new Route()
             {

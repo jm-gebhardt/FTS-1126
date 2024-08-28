@@ -75,9 +75,11 @@ public class StartActionCommandConsumerTest
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             // For pick action Karis expects destination as source ...
-            mqttMessage.Stations?.FromStationIdentifier.ShouldBe(toStationId);
+            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
+            mqttMessage.Stations?.FromStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
             // ... and empty destination.
-            mqttMessage.Stations?.ToStationIdentifier.ShouldBe(string.Empty);
+            mqttMessage.Stations?.ToStation.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Pick);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -152,8 +154,10 @@ public class StartActionCommandConsumerTest
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
 
-            mqttMessage.Stations?.FromStationIdentifier.ShouldBe(string.Empty);
-            mqttMessage.Stations?.ToStationIdentifier.ShouldBe(toStationId);
+            mqttMessage.Stations?.FromStation.ShouldBeNull();
+            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
+            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Move);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -214,8 +218,10 @@ public class StartActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Stations?.FromStationIdentifier.ShouldBe(string.Empty);
-            mqttMessage.Stations?.ToStationIdentifier.ShouldBe(toStationId);
+            mqttMessage.Stations?.FromStation.ShouldBeNull();
+            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
+            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Charge);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -229,7 +235,78 @@ public class StartActionCommandConsumerTest
     /// </summary>
     /// <returns></returns>
     [TestMethod]
-    public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT_CorrectNodesAndEdges()
+    public async Task Test_Send_PickAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
+    {
+        var fixture = new StartActionCommandConsumerTestFixture();
+
+        // Create a publish observer
+        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        {
+            var actionCorrelationId = Guid.NewGuid();
+            const string agvSerialNumber = "agv0";
+            const string orderId = "1234";
+            const string needsRotation = "2";
+            var orderCorrelationId = orderId.ToGuid();
+            const string toStationId = "Drop5";
+
+            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
+            {
+                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
+                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
+                InfoToAgv =  new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, needsRotation } }
+            };
+            var correlationId = Guid.NewGuid();
+            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
+
+            // Publish ExecuteTransportOrder
+            await fixture.TestHarness.Bus.Publish(message);
+
+            // Get Consumer Harness
+            IConsumerTestHarness<StartActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<StartActionCommandConsumer>();
+
+            // Check if consumed
+            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
+            // Get consumed message
+            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
+            action = consumedMessage.Context.Message.Action;
+
+            // Get published MqttOrder Mqtt message
+            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
+
+            // Check content
+            var mqttMessage = publishedMessage.Context.Message;
+
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+            // For pick action Karis expects destination as source ...
+            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
+            mqttMessage.Stations?.FromStation?.Rotate.ShouldBeTrue();
+            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            // ... and empty destination.
+            mqttMessage.Stations?.ToStation.ShouldBeNull();
+            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
+            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
+
+            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
+            // Check nodes and edges, should not contain pick station and edge to pick station
+            mqttMessage.Route?.Edges.Count.ShouldBe(2);
+            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
+            List<object>? routeNodes = mqttMessage.Route?.Nodes;
+            if (routeNodes != null)
+            {
+                routeNodes.Select(node => ((MqttNode)node).NodeId)
+                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Test consuming a StartActionCommand message (the drop action) and
+    /// publish an MqttOrder Mqtt message with correct nodes and edges.
+    /// </summary>
+    /// <returns></returns>
+    [TestMethod]
+    public async Task Test_Send_DropAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
     {
         var fixture = new StartActionCommandConsumerTestFixture();
 
@@ -243,7 +320,7 @@ public class StartActionCommandConsumerTest
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Drop5";
 
-            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
+            var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId)
             {
                 Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
                 Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()]
@@ -270,15 +347,17 @@ public class StartActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            // For pick action Karis expects destination as source ...
-            mqttMessage.Stations?.FromStationIdentifier.ShouldBe(toStationId);
-            // ... and empty destination.
-            mqttMessage.Stations?.ToStationIdentifier.ShouldBe(string.Empty);
-            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
+            // For drop action Karis expects destination ToStation values ...
+            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
+            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
+            // ... and empty fromStation.
+            mqttMessage.Stations?.FromStation.ShouldBeNull();
+            mqttMessage.OrderType.ShouldBe(OrderType.Drop);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
             mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-            // Check nodes and edges, should not contain pick station and edge to pick station
+            // Check nodes and edges, should not contain drop station and edge to drop station
             mqttMessage.Route?.Edges.Count.ShouldBe(2);
             mqttMessage.Route?.Nodes.Count.ShouldBe(3);
             List<object>? routeNodes = mqttMessage.Route?.Nodes;

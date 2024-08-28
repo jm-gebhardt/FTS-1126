@@ -106,12 +106,33 @@ public record Route
 public record Stations
 {
     /// <summary>
-    /// The unique identifier of the station where to pick from
+    /// The properties of the station where to pick from
     /// </summary>
-    public string? FromStationIdentifier { get; set; }
+    public StationInfo? FromStation { get; set; }
 
     /// <summary>
-    /// The unique identifier of the station where to drop
+    /// The properties of the station where to drop
     /// </summary>
-    public string? ToStationIdentifier { get; set; }
+    public StationInfo? ToStation{ get; set; }
+}
+
+/// <summary>
+/// The station properties for pick or drop action.
+/// </summary>
+public record StationInfo
+{
+    /// <summary>
+    /// The unique identifier of the station.
+    /// </summary>
+    public string? Id { get; init; }
+
+    /// <summary>
+    /// Flag if agv should rotate before accessing the station.
+    /// </summary>
+    public bool Rotate { get; init; }
+
+    /// <summary>
+    /// The height where to pick (fromStation) or to drop (toStation) in [m].
+    /// </summary>
+    public double? LiftHeight { get; init; }
 }

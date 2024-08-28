@@ -38,10 +38,11 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
        
         var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, hu, orderDetails.CreationDate);
 
+        // Cargo on 1020/1040 may have delivered with wrong orientation which is indicated by HuRot in order details.
         Dictionary<InfoToAgvKey, string> infoToAgv = GenerateRotationInformation(context.Message);
 
-        hostOrder.AddAction(orderDetails.Source, ActionType.Pick);
-        hostOrder.AddAction(orderDetails.Destination, ActionType.Drop, infoToAgv);
+        hostOrder.AddAction(orderDetails.Source, ActionType.Pick, infoToAgv);
+        hostOrder.AddAction(orderDetails.Destination, ActionType.Drop);
 
         hostOrderRepository.Add(hostOrder);
         await hostOrderRepository.SaveAsync();
@@ -91,11 +92,17 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     /// <summary>
     /// Generates rotation information for a host order.
     /// </summary>
-    /// <param name="_">The message to generate cargo rotation information from.</param>
+    /// <param name="createHostOrderMessage">The message to generate cargo rotation information from.</param>
     /// <returns></returns>
-    private static Dictionary<InfoToAgvKey, string> GenerateRotationInformation(CreateHostOrder _)
+    private static Dictionary<InfoToAgvKey, string> GenerateRotationInformation(CreateHostOrder createHostOrderMessage)
     {
-        return new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, "0" } };
+        const string noRotation = "4";
+
+        // ReSharper disable once UnusedVariable
+        var orderDetails = createHostOrderMessage.OrderDetails;
+        // orderDetails.HuRot will contain info about orientation in future version.
+
+        return new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, noRotation } };
     }
 
     /// <summary>

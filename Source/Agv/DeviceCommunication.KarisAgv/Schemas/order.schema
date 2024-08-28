@@ -40,35 +40,71 @@
         "stations": {
             "type": "object",
             "properties": {
-                "fromStationIdentifier": {
-                    "type": "string",
-                    "description": "The unique identifier of the station where to pick from.",
-                    "examples": [
-                        "Source1",
-                        "Source31"
-                    ]
+                "fromStation": {
+                    "type": "object",
+                    "description": "The station where to pick from.",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "description": "The unique identifier of the station where to pick from.",
+                            "examples": [
+                                "Source1",
+                                "Source31"
+                            ]
+                        },
+                        "rotate": {
+                            "type": "boolean",
+                            "description": "Flag, if agv should rotate before accessing the station (to handle cargo which must be picked from back).",
+                            "examples": [
+                                true,
+                                false
+                            ]
+                        },
+                        "liftHeight": {
+                            "type": "number",
+                            "description": "The height where the cargo has to be picked [m]."
+                        }
+                    }
                 },
-                "toStationIdentifier": {
-                    "type": "string",
-                    "description": "The unique identifier of the station where to drop.",
-                    "examples": [
-                        "Destination2",
-                        "Destination42"
-                    ]
-                }
-            },
-            "oneOf": [
-                {
-                    "required": [
-                        "fromStationIdentifier"
-                    ]
+                "toStation": {
+                    "type": "object",
+                    "description": "The station where to drop.",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "description": "The unique identifier of the station where to drop.",
+                            "examples": [
+                                "Destination2",
+                                "Destination42"
+                            ]
+                        },
+                        "rotate": {
+                            "type": "boolean",
+                            "description": "Flag, if agv should rotate before accessing the station.",
+                            "examples": [
+                                true,
+                                false
+                            ]
+                        },
+                        "liftHeight": {
+                            "type": "number",
+                            "description": "The height where the cargo has to be dropped [m]."
+                        }
+                    }
                 },
-                {
-                    "required": [
-                        "toStationIdentifier"
-                    ]
-                }
-            ]
+                "oneOf": [
+                    {
+                        "required": [
+                            "fromStationProperties"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "toStationProperties"
+                        ]
+                    }
+                ]
+            }
         },
         "coordinates": {
             "type": "object",
