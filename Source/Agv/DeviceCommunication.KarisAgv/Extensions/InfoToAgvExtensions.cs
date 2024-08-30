@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using System.Globalization;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
@@ -35,5 +36,27 @@ public static class InfoToAgvExtensions
         }
 
         return needsRotation;
+    }
+
+    /// <summary>
+    /// Returns lift height value in [m] from InfoToAgv dictionary, if available.
+    /// </summary>
+    /// <param name="infoToAgv"></param>
+    /// <returns></returns>
+    public static double? GetLiftHeight(this Dictionary<InfoToAgvKey, string> infoToAgv)
+    {
+        double? liftHeight = null;
+
+        infoToAgv.TryGetValue(InfoToAgvKey.LiftHeight, out string? liftHeightValue);
+
+        if (!liftHeightValue.IsNullOrEmpty())
+        {
+            if (double.TryParse(liftHeightValue, CultureInfo.InvariantCulture, out double parsedLiftHeight))
+            {
+                liftHeight = parsedLiftHeight;
+            }
+        }
+
+        return liftHeight;
     }
 }

@@ -130,7 +130,12 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
 public enum InfoToAgvKey
 {
     /// <summary>
-    /// Information about cargo rotation in degrees.
+    /// Information about cargo rotation.
     /// </summary>
-    CargoRotation
+    CargoRotation,
+
+    /// <summary>
+    /// The lift height in [m] at the station for action.
+    /// </summary>
+    LiftHeight
 }

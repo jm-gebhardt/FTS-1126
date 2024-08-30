@@ -38,11 +38,12 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
        
         var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, hu, orderDetails.CreationDate);
 
-        // Cargo on 1020/1040 may have delivered with wrong orientation which is indicated by HuRot in order details.
-        Dictionary<InfoToAgvKey, string> infoToAgv = GenerateRotationInformation(context.Message);
+        (Dictionary<InfoToAgvKey, string>? pickInfoToAgv, Dictionary<InfoToAgvKey, string>? dropInfoToAgv) = GeneratePickAndDropInformation(context.Message, configuration);
+        logger.LogDebug("pickInfoToAgv: {PickInfoToAgv}", pickInfoToAgv == null ? "empty" : string.Join(", ", pickInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
+        logger.LogDebug("dropInfoToAgv: {DropInfoToAgv}", dropInfoToAgv == null ? "empty" : string.Join(", ", dropInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
 
-        hostOrder.AddAction(orderDetails.Source, ActionType.Pick, infoToAgv);
-        hostOrder.AddAction(orderDetails.Destination, ActionType.Drop);
+        hostOrder.AddAction(orderDetails.Source, ActionType.Pick, pickInfoToAgv);
+        hostOrder.AddAction(orderDetails.Destination, ActionType.Drop, dropInfoToAgv);
 
         hostOrderRepository.Add(hostOrder);
         await hostOrderRepository.SaveAsync();
@@ -90,19 +91,40 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     }
 
     /// <summary>
-    /// Generates rotation information for a host order.
+    /// Generates pick information for a host order.
     /// </summary>
     /// <param name="createHostOrderMessage">The message to generate cargo rotation information from.</param>
+    /// <param name="configuration">The configuration with lift height information.</param>
     /// <returns></returns>
-    private static Dictionary<InfoToAgvKey, string> GenerateRotationInformation(CreateHostOrder createHostOrderMessage)
+    private static (Dictionary<InfoToAgvKey, string>?, Dictionary<InfoToAgvKey, string>?) GeneratePickAndDropInformation(CreateHostOrder createHostOrderMessage, KaeserGraphConfiguration configuration)
     {
-        const string noRotation = "4";
+        Dictionary<InfoToAgvKey, string>? pickInfoToAgv = null;
+        Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null;
 
-        // ReSharper disable once UnusedVariable
         var orderDetails = createHostOrderMessage.OrderDetails;
-        // orderDetails.HuRot will contain info about orientation in future version.
+        
+        double? liftHeightPick = configuration.GetLiftHeight(orderDetails.Source);
+        double? liftHeightDrop = configuration.GetLiftHeight(orderDetails.Destination);
 
-        return new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, noRotation } };
+        if (orderDetails.LeRotation != "" || liftHeightPick.HasValue)
+        {
+            pickInfoToAgv = new Dictionary<InfoToAgvKey, string>();
+            if (orderDetails.LeRotation != "")
+            {
+                pickInfoToAgv.Add(InfoToAgvKey.CargoRotation, orderDetails.LeRotation);
+            }
+            if (liftHeightPick.HasValue)
+            {
+                pickInfoToAgv.Add(InfoToAgvKey.LiftHeight, liftHeightPick.ToString()!);
+            }
+        }
+
+        if (liftHeightDrop.HasValue)
+        {
+            dropInfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeightDrop.ToString()! } };
+        }
+
+        return (pickInfoToAgv, dropInfoToAgv);
     }
 
     /// <summary>

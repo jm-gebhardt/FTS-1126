@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using MassTransit;
 
-// ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.Acc.Common.Messages;
 
 /// <summary>
@@ -34,6 +33,11 @@ public record OrderDetails : CorrelatedBy<Guid>
     public string LeNo { get; }
 
     /// <summary>
+    /// The rotation info for the orders handled box or transportation good
+    /// </summary>
+    public string LeRotation { get; }
+
+    /// <summary>
     /// The creator of the host order
     /// </summary>
     public HostOrderCreator Creator { get; }
@@ -53,14 +57,16 @@ public record OrderDetails : CorrelatedBy<Guid>
     /// <param name="leNo"></param>
     /// <param name="creator"></param>
     /// <param name="creationDate"></param>
+    /// <param name="leRotation"></param>
     [JsonConstructor]
-    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, DateTime creationDate)
+    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, DateTime creationDate, string leRotation = "")
     {
         CorrelationId = correlationId;
         OrderId = orderId;
         Source = source;
         Destination = destination;
         LeNo = leNo;
+        LeRotation = leRotation;
         Creator = creator;
         CreationDate = creationDate;
     }
@@ -74,8 +80,9 @@ public record OrderDetails : CorrelatedBy<Guid>
     /// <param name="destination"></param>
     /// <param name="leNo"></param>
     /// <param name="creator"></param>
-    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator)
-        : this(correlationId, orderId, source, destination, leNo, creator, DateTime.UtcNow)
+    /// <param name="leRotation"></param>
+    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, string leRotation = "")
+        : this(correlationId, orderId, source, destination, leNo, creator, DateTime.UtcNow, leRotation)
     {
     }
 }

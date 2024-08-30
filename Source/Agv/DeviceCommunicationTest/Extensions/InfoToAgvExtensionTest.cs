@@ -42,4 +42,18 @@ public class InfoToAgvMessageExtension
 
         rotationNeeded.ShouldBeFalse();
     }
+
+    [DataTestMethod]
+    [DataRow("1", 1d)]
+    [DataRow("1.5", 1.5d)]
+    [DataRow("3.35", 3.35d)]
+    [DataRow("0.4", 0.4d)]
+    public void GetLiftHeight_ValidData_ReturnDoubleValue(string liftHeightValue, double doubleValue)
+    {
+        var infoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeightValue } };
+
+        double? liftHeightDouble = infoToAgv.GetLiftHeight();
+
+        liftHeightDouble.ShouldBe(doubleValue);
+    }
 }

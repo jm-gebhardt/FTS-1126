@@ -42,7 +42,7 @@ public class HostOrderCommandHandlerTest
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false);
-   
+        
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
 
@@ -65,7 +65,8 @@ public class HostOrderCommandHandlerTest
             .WithDropOrdersHeadingTowardsShortLoopTriggerPoint(false)
             .WithHostCommunicator();
 
-        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        const string needsRotation = "2";
+        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true, needsRotation);
 
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
@@ -79,6 +80,11 @@ public class HostOrderCommandHandlerTest
 
         pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
         dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
+        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
+
+        pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.CargoRotation, out string? _).ShouldBeTrue();
+        pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.LiftHeight, out string? _).ShouldBeFalse();
+        dropAction.InfoToAgv?.TryGetValue(InfoToAgvKey.LiftHeight, out string? _).ShouldBeTrue();
     }
 
     [TestMethod]

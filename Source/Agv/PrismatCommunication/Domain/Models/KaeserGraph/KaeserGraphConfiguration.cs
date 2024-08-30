@@ -61,6 +61,22 @@ public class KaeserGraphConfiguration
     public Dictionary<string, string> ConveyorStationMapping { get; private set; }
 
     /// <summary>
+    /// Provides a mapping of pick and drop lift height at stations 5-8.
+    /// </summary>
+    public Dictionary<string, double> TargetLiftHeight { get; private set; } =
+        new()
+        {
+            { "2110", 2.211d },
+            { "2130", 1.213d },
+            { "2210", 2.221d },
+            { "2230", 1.223d },
+            { "2310", 2.231d },
+            { "2330", 1.233d },
+            { "2410", 2.241d },
+            { "2430", 1.243d }
+        };
+
+    /// <summary>
     /// Provides a mapping of trigger points to nodes.
     /// </summary>
     public IConcurrentDictionaryProvider<string, string> TriggerPointMapping { get; }
@@ -140,5 +156,14 @@ public class KaeserGraphConfiguration
         {
             PrismatAklPickTarget = yamlData.PrismatAklPickTarget;
         }
+    }
+
+    /// <summary>
+    /// Get the lift height for target station.
+    /// </summary>
+    /// <param name="target">Target station for pick or drop.</param>
+    public double? GetLiftHeight(string target)
+    {
+        return TargetLiftHeight.TryGetValue(target, out double liftHeight) ? liftHeight : null;
     }
 }

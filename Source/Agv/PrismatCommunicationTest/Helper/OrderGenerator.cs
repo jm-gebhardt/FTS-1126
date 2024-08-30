@@ -32,7 +32,7 @@ public static class OrderGenerator
         }
     }
 
-    public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020 = true)
+    public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020 = true, string huRotation = "")
     {
         if (pickAt1020)
         {
@@ -41,14 +41,15 @@ public static class OrderGenerator
                 "1020",
                 KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
                 "leNo",
-                HostOrderCreator.Wms);
+                HostOrderCreator.Wms,
+                huRotation);
         }
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
             KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
             "1050",
             "leNo",
-            HostOrderCreator.Wms);
+            HostOrderCreator.Wms, huRotation);
     }
 
     public static OrderDetails GenerateUnknownPickTargetOrder()
