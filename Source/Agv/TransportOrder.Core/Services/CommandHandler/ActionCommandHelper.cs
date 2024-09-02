@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -26,6 +28,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 public class ActionCommandHelper
 {
     private readonly ILogger<ActionCommandHelper> _logger;
+    private readonly IStationRepository _stationRepository;
     private readonly IRouteService _routeService;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
@@ -35,7 +38,15 @@ public class ActionCommandHelper
     private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="ActionCommandHelper"/>>
-    public ActionCommandHelper(ILogger<ActionCommandHelper> logger, IRouteService routeService, IAgvDb agvDb, IActionGroupRepository actionGroupRepository, IChooseAgvActionGroupService chooseAgvActionGroupService, ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider, IBus bus, IMapper mapper)
+    public ActionCommandHelper(ILogger<ActionCommandHelper> logger,
+        IRouteService routeService,
+        IAgvDb agvDb,
+        IActionGroupRepository actionGroupRepository,
+        IChooseAgvActionGroupService chooseAgvActionGroupService,
+        IStationRepository stationRepository,
+        ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider,
+        IBus bus,
+        IMapper mapper)
     {
         _logger = logger;
         _routeService = routeService;
@@ -43,6 +54,7 @@ public class ActionCommandHelper
         _actionGroupRepository = actionGroupRepository;
         _chooseAgvActionGroupService = chooseAgvActionGroupService;
         _actionManagerSemaphoreProvider = actionManagerSemaphoreProvider;
+        _stationRepository = stationRepository;
         _mapper = mapper;
         _bus = bus;
     }
@@ -99,6 +111,48 @@ public class ActionCommandHelper
             return false;
         }
         return true;
+    }
+
+    /// <summary>
+    /// Log update in station context
+    /// </summary>
+    /// <param name="agv">The agv.</param>
+    /// <param name="action">The action.</param>
+    /// <param name="actionGroup">The action group.</param>
+    /// <returns></returns>
+    public async Task LogStationUpdate(Domain.Models.Agv.Agv agv, AgvAction action, Domain.Models.ActionGroup.ActionGroup actionGroup)
+    {
+        if (action.Target.NodeId == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var station = await _stationRepository.GetStation(action.Target.NodeId);
+            switch (action.ActionType)
+            {
+                case ActionType.Drop:
+                    _logger.LogStationInformation(LogCodes.StationAgvDropping, station.Id, "AGV Dropping", $"AGV {agv.SerialNumber} is heading towards station to drop order {actionGroup.OrderId}");
+                    break;
+
+                case ActionType.Pick:
+                    _logger.LogStationInformation(LogCodes.StationAgvPicking, station.Id, "Agv Picking", $"AGV {agv.SerialNumber} is heading towards station to pick order {actionGroup.OrderId}");
+                    break;
+
+                case ActionType.Move:
+                    _logger.LogStationInformation(LogCodes.StationAgvMoving, station.Id, "AGV Moving", $"AGV {agv.SerialNumber} is heading towards station");
+                    break;
+
+                case ActionType.Charge:
+                    _logger.LogStationInformation(LogCodes.StationAgvCharging, station.Id, "AGV Charging", $"AGV {agv.SerialNumber} starts charging at station");
+                    break;
+            }
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 
     private async Task PublishStateChange(Domain.Models.Agv.Agv agv)

@@ -120,6 +120,7 @@ public class ActionCommandHandler :
                     await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
                 }
                 _logger.LogOrderInformation(LogCodes.OrderActionStarted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{action.ActionType} of order {actionGroup.OrderId} has been started");
+                await _actionService.LogStationUpdate(assignedAgv, action, actionGroup);
             }
         }, context.CancellationToken);
     }

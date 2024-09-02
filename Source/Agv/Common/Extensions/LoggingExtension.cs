@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Extensions;
 
@@ -116,6 +117,47 @@ public static class LoggingExtension
     {
         logger.LogWarning("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {AgvCorrelationId} {ActionGroupCorrelationId} {LogCategory} {Title} {Message}", DateTime.UtcNow, code, agvId, actionGroupId, nameof(Categories.Order), title, message);
     }
+
+    /// <summary>
+    /// Log messages for stations with information severity.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    /// <param name="code">The log message code.</param>
+    /// <param name="stationId">The id of the station.</param>
+    /// <param name="title">The title of the message.</param>
+    /// <param name="message">The message.</param>
+    public static void LogStationInformation(this ILogger logger, int code, Guid stationId, string title, string message)
+    {
+        logger.LogInformation("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {StationId}  {LogCategory} {Title} {Message}", DateTime.UtcNow, code, stationId, nameof(Categories.Station), title, message);
+    }
+
+    /// <summary>
+    /// Log messages for stations with warning severity.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    /// <param name="code">The log message code.</param>
+    /// <param name="stationId">The id of the station.</param>
+    /// <param name="title">The title of the message.</param>
+    /// <param name="message">The message.</param>
+    [PublicAPI]
+    public static void LogStationWarning(this ILogger logger, int code, Guid stationId, string title, string message)
+    {
+        logger.LogWarning("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {StationId}  {LogCategory} {Title} {Message}", DateTime.UtcNow, code, stationId, nameof(Categories.Station), title, message);
+    }
+
+    /// <summary>
+    /// Log messages for stations with error severity.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    /// <param name="code">The log message code.</param>
+    /// <param name="stationId">The id of the station.</param>
+    /// <param name="title">The title of the message.</param>
+    /// <param name="message">The message.</param>
+    [PublicAPI]
+    public static void LogStationError(this ILogger logger, int code, Guid stationId, string title, string message)
+    {
+        logger.LogError("{Timestamp:yyyy-MM-dd HH:mm:ss.fffff} {LogCode} {StationId}  {LogCategory} {Title} {Message}", DateTime.UtcNow, code, stationId, nameof(Categories.Station), title, message);
+    }
 }
 
 /// <summary>
@@ -136,5 +178,10 @@ public enum Categories
     /// <summary>
     /// Order (action group) related logs.
     /// </summary>
-    Order
+    Order,
+
+    /// <summary>
+    /// Station related logs.
+    /// </summary>
+    Station
 }

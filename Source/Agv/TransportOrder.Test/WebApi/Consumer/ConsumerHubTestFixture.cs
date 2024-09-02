@@ -43,6 +43,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         Build();
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
     }
 
     public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();

@@ -1,7 +1,10 @@
-﻿using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
@@ -9,22 +12,15 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 /// Represents the handler for node state changes.
 /// </summary>
 [UsedImplicitly]
-public class NodeStateChangedConsumer : IConsumer<NodeStateChanged>
+public class NodeStateChangedConsumer(IMapPublisher mapPublisher, ILogger<NodeStateChangedConsumer> logger) : IConsumer<NodeStateChanged>
 {
-    private readonly IMapPublisher _mapPublisher;
-
-    /// <inheritdoc cref="NodeStateChangedConsumer"/>>.
-    public NodeStateChangedConsumer(IMapPublisher mapPublisher)
-    {
-        _mapPublisher = mapPublisher;
-    }
-
     /// <summary>
     /// Handles the <see cref="NodeStateChanged"/> command.
     /// </summary>
     public async Task Consume(ConsumeContext<NodeStateChanged> context)
     {
-        var nodeState = context.Message.NodeState;
-        await _mapPublisher.SendNodeStateChangedAsync(nodeState, context.Message.StationId);
+        var (nodeState, stationId) = context.Message;
+        logger.LogStationInformation(LogCodes.StationStateChanged, stationId, "State changed", $"State of station changed to '{nodeState.NodeState}'");
+        await mapPublisher.SendNodeStateChangedAsync(nodeState, stationId);
     }
 }

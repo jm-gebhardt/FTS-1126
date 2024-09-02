@@ -47,4 +47,13 @@ public static class LogCodes
     public const int OrderIncomplete = 109;
     public const int OrderPaused = 110;
     public const int OrderResumed = 111;
+
+    //Station
+    public const int StationStateChanged = 400;
+    public const int StationAgvDropping = 401;
+    public const int StationAgvPicking = 402;
+    public const int StationAgvCharging = 404;
+    public const int StationAgvMoving= 405;
+    public const int StationAgvReached= 406;
+    public const int StationAgvLeft= 407;
 }

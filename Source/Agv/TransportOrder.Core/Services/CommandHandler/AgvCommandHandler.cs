@@ -25,6 +25,8 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
@@ -174,7 +176,7 @@ public class AgvCommandHandler :
         var cancellationToken = context.CancellationToken;
         await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
-            ICollection<Domain.Models.Agv.Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync();
+            ICollection<Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync();
 
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
@@ -321,7 +323,7 @@ public class AgvCommandHandler :
         await TryAutoAccept(context, agv, context.CancellationToken);
     }
 
-    private async Task ResetOfflineWatchDog(ConsumeContext context, Domain.Models.Agv.Agv agv, AgvSettingsReadModel agvSettings)
+    private async Task ResetOfflineWatchDog(ConsumeContext context, Agv agv, AgvSettingsReadModel agvSettings)
     {
         if (agv.AgvOfflineTokenId != null)
         {
@@ -336,7 +338,7 @@ public class AgvCommandHandler :
     }
 
     private async Task PublishAgvStatusUpdateEvents(IPublishEndpoint context,
-        Domain.Models.Agv.Agv agv,
+        Agv agv,
         bool batteryChargeChanged,
         AgvStatus? oldStatus,
         bool lastNodeIdChanged,
@@ -357,7 +359,7 @@ public class AgvCommandHandler :
  
         if (lastNodeIdChanged)
         {
-            await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldStatus!.LastNodeId, agvStatus.LastNodeId));
+            await PublishLastNodeIdChange(context, agv, oldStatus!.LastNodeId, agvStatus.LastNodeId);
         }
         bool isIdle = agv.CurrentAgvState == AgvState.Idle && !agvStatus.Busy;
         if (isIdle && oldStatus!.Busy)
@@ -373,6 +375,30 @@ public class AgvCommandHandler :
             {
                 await context.Publish(new AgvBecameIdle(agv.CorrelationId));
             }
+        }
+    }
+
+    private async Task PublishLastNodeIdChange(IPublishEndpoint context, Agv agv, string? oldLastNodeId, string? newLastNodeId)
+    {
+        await context.Publish(new AgvLastNodeIdChanged(agv.CorrelationId, oldLastNodeId, newLastNodeId));
+        Station? station;
+        if (newLastNodeId != null)
+        {
+            station = await _stationRepository.GetRequiredStationBaseInformation(newLastNodeId);
+            if (station != null)
+            {
+                _logger.LogStationInformation(LogCodes.StationAgvReached, station.Id, "Agv reached station", $"Agv {agv.SerialNumber} reached station");
+            }
+        }
+        if (oldLastNodeId == null)
+        {
+            return;
+        }
+
+        station = await _stationRepository.GetRequiredStationBaseInformation(oldLastNodeId);
+        if (station != null)
+        {
+            _logger.LogStationInformation(LogCodes.StationAgvLeft, station.Id, "Agv left station", $"Agv {agv.SerialNumber} left station");
         }
     }
 
@@ -686,7 +712,7 @@ public class AgvCommandHandler :
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
-    private async Task<Domain.Models.Agv.Agv?> TryGetAgv(Guid agvCorrelationId)
+    private async Task<Agv?> TryGetAgv(Guid agvCorrelationId)
     {
         var agv = await _agvDb.Agvs.TryGetAgvAsync(agvCorrelationId);
         if (agv == null)
@@ -696,7 +722,7 @@ public class AgvCommandHandler :
         return agv;
     }
 
-    private async Task TryAutoAccept(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
+    private async Task TryAutoAccept(IPublishEndpoint context, Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
         if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
@@ -706,7 +732,7 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task TransitionToIdleAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
+    private async Task TransitionToIdleAsync(IPublishEndpoint context, Agv agv, CancellationToken cancellationToken)
     {
         bool stateChanged = agv.TransitionToIdle();
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
@@ -728,20 +754,20 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task PublishStateChange(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    private async Task PublishStateChange(IPublishEndpoint context, Agv agv)
     {
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
         await context.Publish(new AgvStateChanged(agv.CorrelationId, agv.CurrentAgvState, agv.PreviousAgvState, agvMessageContent));
     }
 
-    private async Task PublishGraphRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    private async Task PublishGraphRequestAsync(IPublishEndpoint context, Agv agv)
     {
         _logger.LogDebug("Requesting graph for agv {AgvCorrelationId}", agv.CorrelationId);
         await context.Publish(new RequestAgvGraph(agv.CorrelationId, agv.SerialNumber));
         agv.AgvGraphRequestedLastTime = DateTime.UtcNow;
     }
 
-    private async Task PublishDataRequestAsync(IPublishEndpoint context, Domain.Models.Agv.Agv agv)
+    private async Task PublishDataRequestAsync(IPublishEndpoint context, Agv agv)
     {
         _logger.LogDebug("Requesting data for agv {AgvCorrelationId}", agv.CorrelationId);
         await context.Publish(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
@@ -758,7 +784,7 @@ public class AgvCommandHandler :
         _logger.LogAgvInformation(LogCodes.AgvDiscovered, correlationId, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered");
        
         var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
-        var agv = new Domain.Models.Agv.Agv(correlationId, settingsGroup.Id,  agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
+        var agv = new Agv(correlationId, settingsGroup.Id,  agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
         settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
         agv.AgvSettingsGroup = settingsGroup.Id;
         bool graphExists = await _agvDb.Graphs.ExistsAsync(correlationId);

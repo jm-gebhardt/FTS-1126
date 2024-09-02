@@ -34,6 +34,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 {
     private readonly Mock<IActionGroupRetrievalService> _retrievalServiceMock = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepositoryMock = new();
+    private readonly Mock<IStationRepository> _stationRepository= new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
@@ -53,6 +54,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         {
             sc.AddTransient(_ => _retrievalServiceMock.Object);
             sc.AddTransient(_ => _actionGroupRepositoryMock.Object);
+            sc.AddTransient(_ => _stationRepository.Object);
             sc.AddTransient(_ => _actionGroupDurationEstimationService.Object);
             sc.AddTransient(_ => _routeService.Object);
             sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
@@ -63,7 +65,9 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
             sc.AddTransient<ActionCommandHelper>();
         });
-
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
         _actionGroupRepositoryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
         {

@@ -146,6 +146,15 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
+    public async Task<Station?> GetRequiredStationBaseInformation(string name)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+
+        return await context.Set<Station>()
+            .SingleOrDefaultAsync(s => s.Name == name);
+    }
+
+    /// <inheritdoc cref="IStationRepository"/>>
     public async Task<ICollection<Station>> GetStations(string? mapName = null)
     {
         var context = await dbContextFactory.CreateDbContextAsync();

@@ -30,6 +30,13 @@ public interface IStationRepository
     Task<Station> GetStation(string name);
 
     /// <summary>
+    /// Gets the base information of the station (w/o agvs and node state)
+    /// </summary>
+    /// <param name="name">The name of the station.</param>
+    /// <returns>The station base information with the given name or null.</returns>
+    Task<Station?> GetRequiredStationBaseInformation(string name);
+
+    /// <summary>
     /// Get all stations.
     /// </summary>
     /// <param name="mapName">Optional map name.</param>
