@@ -91,7 +91,7 @@ public class TriggerTest
     [TestMethod]
     public void AddLocation_Polygon_LocationAdded()
     {
-        List<PolygonPoint> polygon = [new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())];
+        List<PolygonPoint> polygon = [new(42.0, 42.0, 0, Guid.NewGuid())];
         var map = Guid.NewGuid();
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [new ConfigurationParameter("parameter name", "description", "value", "validation regex")]);
 

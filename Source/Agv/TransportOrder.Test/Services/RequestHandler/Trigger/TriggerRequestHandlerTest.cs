@@ -19,7 +19,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetTriggers_ValidData_RespondsGotTriggers()
     {
-        List<TransportOrder.Domain.Models.Trigger.Trigger> triggers = [new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [])];
+        List<TransportOrder.Domain.Models.Trigger.Trigger> triggers = [new(Guid.NewGuid(), "urn", "name", "version", "description", null, [])];
         TriggerRequestHandlerTestFixture<GetTriggers> fixture = new TriggerRequestHandlerTestFixture<GetTriggers>()
             .WithTriggers(triggers)
             .Build();

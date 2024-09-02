@@ -297,8 +297,8 @@ public class GraphEdge : IEquatable<GraphEdge>
         double outAngle = 2 * Math.PI + angle; // 
         List<GraphNode> virtualNodes =
         [
-            new GraphNode(Guid.NewGuid().ToString()) { X = sourceNode.X - (float)(distance * Math.Sin(angle)), Y = sourceNode.Y - (float)(distance * Math.Cos(angle)) },
-            new GraphNode(Guid.NewGuid().ToString()) { X = targetNode.X + (float)(distance * Math.Sin(outAngle)), Y = targetNode.Y + (float)(distance * Math.Cos(outAngle)) }
+            new(Guid.NewGuid().ToString()) { X = sourceNode.X - (float)(distance * Math.Sin(angle)), Y = sourceNode.Y - (float)(distance * Math.Cos(angle)) },
+            new(Guid.NewGuid().ToString()) { X = targetNode.X + (float)(distance * Math.Sin(outAngle)), Y = targetNode.Y + (float)(distance * Math.Cos(outAngle)) }
         ];
         foreach (var virtualNode in virtualNodes)
         {

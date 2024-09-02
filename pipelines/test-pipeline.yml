@@ -58,7 +58,7 @@ stages:
           arguments: '--configuration $(Build.Configuration)'
       - powershell: |
           echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
-          dotnet tool install --global JetBrains.ReSharper.GlobalTools --version 2024.2.1
+          dotnet tool install --global JetBrains.ReSharper.GlobalTools --version 2024.2.3
           dotnet tool restore
           dotnet tool install --global dotnet-script
           dotnet tool restore

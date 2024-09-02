@@ -12,19 +12,19 @@ public class GraphRepositoryTestFixture
  
     private static readonly MqttNode[] _mqttNodes =
     [
-        new MqttNode { NodeId = "WP-001", X = -2f, Y = 3f, Z = 0f },
-        new MqttNode { NodeId = "WP-002", X = 0f, Y = 3f, Z = 0f },
-        new MqttNode { NodeId = "WP-003", X = 4f, Y = 3f, Z = 0f },
-        new MqttNode { NodeId = "WP-004", X = 6f, Y = 3f, Z = 0f },
-        new MqttNode { NodeId = "WP-005", X = 8f, Y = 3f, Z = 0f }
+        new() { NodeId = "WP-001", X = -2f, Y = 3f, Z = 0f },
+        new() { NodeId = "WP-002", X = 0f, Y = 3f, Z = 0f },
+        new() { NodeId = "WP-003", X = 4f, Y = 3f, Z = 0f },
+        new() { NodeId = "WP-004", X = 6f, Y = 3f, Z = 0f },
+        new() { NodeId = "WP-005", X = 8f, Y = 3f, Z = 0f }
     ];
 
     private static readonly MqttEdge[] _mqttEdges =
     [
-        new MqttEdge { EdgeId = "E-1", StartId = _mqttNodes[0].NodeId, EndId = _mqttNodes[1].NodeId, Bidirectional = false },
-        new MqttEdge { EdgeId = "E-2", StartId = _mqttNodes[1].NodeId, EndId = _mqttNodes[2].NodeId, Bidirectional = false },
-        new MqttEdge { EdgeId = "E-3", StartId = _mqttNodes[2].NodeId, EndId = _mqttNodes[3].NodeId, Bidirectional = false },
-        new MqttEdge { EdgeId = "E-4", StartId = _mqttNodes[3].NodeId, EndId = _mqttNodes[4].NodeId, Bidirectional = true }
+        new() { EdgeId = "E-1", StartId = _mqttNodes[0].NodeId, EndId = _mqttNodes[1].NodeId, Bidirectional = false },
+        new() { EdgeId = "E-2", StartId = _mqttNodes[1].NodeId, EndId = _mqttNodes[2].NodeId, Bidirectional = false },
+        new() { EdgeId = "E-3", StartId = _mqttNodes[2].NodeId, EndId = _mqttNodes[3].NodeId, Bidirectional = false },
+        new() { EdgeId = "E-4", StartId = _mqttNodes[3].NodeId, EndId = _mqttNodes[4].NodeId, Bidirectional = true }
     ];
 
     private static readonly GraphNode[] _graphNodes =
