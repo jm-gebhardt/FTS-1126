@@ -1,13 +1,10 @@
-﻿using AutoMapper;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Services;
+﻿using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
@@ -22,24 +19,20 @@ public class EfMapRepository : IMapRepository
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
     private readonly ILogger<EfMapRepository> _logger;
     private readonly ISemaphoreProvider<IMapRepositorySemaphore> _semaphoreProvider;
-    private readonly IMapper _mapper;
 
     /// <summary>
     /// Constructor of the EF MapRepository.
     /// </summary>
     /// <param name="dbContextFactory"></param>
-    /// <param name="mapper"></param>
     /// <param name="logger"></param>
     /// <param name="semaphoreProvider">The semaphore provider.</param>
     public EfMapRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory,
-        IMapper mapper,
         ISemaphoreProvider<IMapRepositorySemaphore> semaphoreProvider,
         ILogger<EfMapRepository> logger)
     {
         _dbContextFactory = dbContextFactory;
         _logger = logger;
         _semaphoreProvider = semaphoreProvider;
-        _mapper = mapper;
     }
 
     private IQueryable<Map> Maps =>
@@ -162,28 +155,7 @@ public class EfMapRepository : IMapRepository
             }, CancellationToken.None
         );
     }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<GraphNode>> GetStationNodesForMapAsync(Guid mapCorrelationId)
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        List<EfNode> stationNodes = await context.Set<EfNode>()
-            .Where(NodeFilters.IsStation)
-            .Where(n => n.Maps.Any(m => m.CorrelationId == mapCorrelationId))
-            .AsNoTracking()
-            .ToListAsync();
-
-        if (!stationNodes.Any() && !Exists(mapCorrelationId))
-        {
-            throw new MapNotFoundException(mapCorrelationId);
-        }
-
-        var stations = _mapper.Map<List<GraphNode>>(stationNodes);
-
-        return stations;
-    }
-
+    
     private async Task<bool> AddOrUpdateAsync(Map map)
     {
         try

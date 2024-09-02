@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
@@ -19,6 +20,7 @@ public class AgvGraphReceivedEventHandlerTest
             fixture.AgvGraphReceived);
 
         agvGraphChanged.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.CorrelationId);
+        fixture.VerifyStationsAdded(Times.Once());
     }
 
     [TestMethod]
@@ -31,5 +33,6 @@ public class AgvGraphReceivedEventHandlerTest
             fixture.AgvGraphReceived);
 
         graphMissing.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.CorrelationId);
+        fixture.VerifyStationsAdded(Times.Never());
     }
 }

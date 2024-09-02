@@ -19,6 +19,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     private readonly Mock<IActionGroupRepository> _actionGroupRepositoryMock = new();
     public readonly Mock<THubContext> PublisherMock = new();
     public readonly Mock<INodeStateRepository> NodeStateRepositoryMock = new();
+    private readonly Mock<IStationRepository> _stationRepository = new();
 
     protected override IEnumerable<Profile> GetProfiles() =>
     [
@@ -40,6 +41,8 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     {
         AddServices(services);
         Build();
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
     }
 
     public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
@@ -52,6 +55,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         collection.AddTransient(_ => _actionGroupRetrievalServiceMock.Object);
         collection.AddTransient(_ => AgvRouteServiceMock.Object);
         collection.AddTransient(_ => _actionGroupRepositoryMock.Object);
+        collection.AddTransient(_ => _stationRepository.Object);
         collection.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         return this;
     }

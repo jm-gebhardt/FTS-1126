@@ -1,7 +1,5 @@
 using AutoMapper;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Station;
@@ -18,10 +16,7 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     where TRequestHandler : class, IConsumer
 {
     [UsedImplicitly]
-    private readonly Mock<IAgvDb> _agvDb = new();
-
-    [UsedImplicitly]
-    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IStationRepository> _stationRepository = new();
 
     [UsedImplicitly]
     private readonly Mock<IMapRepository> _mapRepository = new();
@@ -42,21 +37,24 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     {
         AddServices(sc =>
         {
-            sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _mapRepository.Object);
-            sc.AddTransient(_ => _agvGraphRepository.Object);
+            sc.AddTransient(_ => _stationRepository.Object);
         });
 
         base.Build();
         return this;
     }
 
-    public StationControllerTestFixture<TRequest, TRequestHandler> WithGraphNode(GraphNode graphNode)
+    public StationControllerTestFixture<TRequest, TRequestHandler> WithStation(TransportOrder.Domain.Models.Station.Station station)
     {
-        _agvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(graphNode);
-        _agvDb.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(true);
-        _agvDb.Setup(x => x.Data.GetLargestAgvDimensionAsync()).ReturnsAsync((0, 0));
-        _agvGraphRepository.Setup(x => x.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(graphNode);
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<string?>())).ReturnsAsync([station]);
+        return this;
+    }
+
+    public StationControllerTestFixture<TRequest, TRequestHandler> WithMap(TransportOrder.Domain.Models.Map.Map map)
+    {
+        _mapRepository.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ReturnsAsync(map);
         return this;
     }
 }

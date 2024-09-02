@@ -1,12 +1,14 @@
 ﻿using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Filters;
 
 /// <summary>
 /// Node filters for Entity Framework.
 /// </summary>
+[PublicAPI]
 public static class NodeFilters
 {
     /// <summary>

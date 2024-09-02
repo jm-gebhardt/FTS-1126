@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -17,10 +18,13 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
-
+    private readonly Mock<IStationRepository> _stationRepository = new();
+    
     public SendAgvToChargerRequestHandlerTestFixture()
     {
         Build();
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new Station());
     }
     
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
@@ -32,6 +36,7 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _nodeStateRepository.Object);
         collection.AddTransient(_ => ChargingPointManager.Object);
+        collection.AddTransient(_ => _stationRepository.Object);
         return this;
     }
 

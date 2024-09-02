@@ -10,6 +10,7 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -42,7 +43,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
-
+    private readonly Mock<IStationRepository> _stationRepository = new();
+    
     private static IEnumerable<Profile> Profiles => [new AgvStatusProfile(), new AgvProfile(), new CargoProfile()];
 
     protected override IEnumerable<Profile> GetProfiles() => Profiles;
@@ -50,6 +52,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture()
     {
         Build();
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new Station());
     }
 
     protected override MassTransitConsumerTestFixture<AgvCommandHandler> AddServices(IServiceCollection collection)
@@ -67,6 +71,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
+        collection.AddTransient(_ => _stationRepository.Object);
         _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
         return this;
     }

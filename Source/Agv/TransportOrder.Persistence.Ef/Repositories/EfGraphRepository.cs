@@ -176,11 +176,12 @@ public class EfGraphRepository : IGraphRepository
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             await using var context = await _dbContextFactory.CreateDbContextAsync();
+
             var efGraph = _mapper.Map<EfAgvGraph>(agvGraph);
 
             var existingGraph = await context.Set<EfAgvGraph>()
                 .SingleOrDefaultAsync(g => g.CorrelationId == agvGraph.CorrelationId);
-
+            
             if (await context.Set<EfNode>()
                     .Where(node => efGraph.Nodes.Select(n => n.Id).Contains(node.Id))
                     .CountAsync() != efGraph.Nodes.Count ||
@@ -323,7 +324,7 @@ public class EfGraphRepository : IGraphRepository
                 .Where(efNode => graph.Nodes.Select(n => n.Id).Contains(efNode.Id))
                 .ToListAsync();
 
-            IEnumerable<EfNode> newNodes = efNodes.Where(efNode => !existingNodes.Select(n => n.Id).Contains(efNode.Id));
+            List<EfNode> newNodes = efNodes.Where(efNode => !existingNodes.Select(n => n.Id).Contains(efNode.Id)).ToList();
             context.AddRange(newNodes);
 
             List<EfEdge> existingEdges = await context.Set<EfEdge>()

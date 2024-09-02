@@ -1,4 +1,5 @@
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using JetBrains.Annotations;
 
@@ -14,6 +15,8 @@ public class StationProfile : WebApiProfile
     public StationProfile()
     {
         CreateMap<Station, StationDto>()
-            .ForMember(x => x.NodeId, x => x.MapFrom(c => c.Id));
+            .ForMember(x => x.State, x => x.MapFrom(c =>
+                c.NodeLock != null ? c.NodeLock.NodeState : NodeLockState.Free
+            ));
     }
 }

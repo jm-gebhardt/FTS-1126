@@ -55,6 +55,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
 
     private readonly Mock<IMapRepository> _mapRepository = new();
+    
+    private readonly Mock<IStationRepository> _stationRepository = new();
 
     private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
 
@@ -310,6 +312,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => AgvDb.Object);
             sc.AddTransient(_ => ActionGroupRetrievalService.Object);
             sc.AddTransient(_ => _agvPositionRepository);
+            sc.AddTransient(_ => _stationRepository.Object);
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
@@ -323,7 +326,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _restrictedAreaRepository.Object);
         });
         base.Build();
-
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         return this;
     }
 }

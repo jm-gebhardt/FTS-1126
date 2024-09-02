@@ -29,12 +29,13 @@ public class StationController : Controller
     /// <summary>
     /// Get station.
     /// </summary>
-    /// <returns>Station</returns>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Station with given id not found.</response>
     [HttpGet]
-    [Route("/station/{correlationId}")]
-    public async Task<ActionResult<StationDto>> GetStation(string correlationId)
+    [Route("/station/{id:Guid}")]
+    public async Task<ActionResult<StationDto>> GetStation(Guid id)
     {
-        Response<GotStation> response = await _getStationClient.GetResponse<GotStation>(new GetStation(correlationId));
+        Response<GotStation> response = await _getStationClient.GetResponse<GotStation>(new GetStation(id));
         var stationDto = _mapper.Map<StationDto>(response.Message.Station);
         return Ok(stationDto);
     }

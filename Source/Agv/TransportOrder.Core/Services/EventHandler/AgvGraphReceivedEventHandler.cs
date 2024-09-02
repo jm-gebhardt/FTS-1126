@@ -18,16 +18,16 @@ public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
     private readonly IGraphRepository _graphRepository;
     private readonly IMapRepository _mapRepository;
     private readonly ILogger<AgvGraphReceivedEventHandler> _logger;
+    private readonly IStationRepository _stationRepository;
 
     /// <inheritdoc cref="AgvGraphReceivedEventHandler" />
-    /// <param name="graphRepository"></param>
-    /// <param name="mapRepository"></param>
-    /// <param name="logger"></param>
     public AgvGraphReceivedEventHandler(IGraphRepository graphRepository,
         IMapRepository mapRepository,
+        IStationRepository stationRepository,
         ILogger<AgvGraphReceivedEventHandler> logger)
     {
         _graphRepository = graphRepository;
+        _stationRepository = stationRepository;
         _mapRepository = mapRepository;
         _logger = logger;
     }
@@ -40,6 +40,7 @@ public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
         if (await _graphRepository.AddOrUpdateAgvGraphAsync(agvGraph))
         {
             await context.Publish(new AgvGraphChanged(agvGraph.CorrelationId));
+            await _stationRepository.AddStations(agvGraph);
 
             _logger.LogInformation("Graph {GraphCorrelationId} added or updated in repository.", agvGraph.CorrelationId);
         }

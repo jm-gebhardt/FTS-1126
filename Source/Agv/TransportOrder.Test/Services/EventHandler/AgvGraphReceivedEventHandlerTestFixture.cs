@@ -12,6 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 internal class AgvGraphReceivedEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvGraphReceivedEventHandler>
 {
     private Mock<IGraphRepository> _graphRepositoryMock = null!;
+    private Mock<IStationRepository> _stationRepositoryMock = null!;
 
     public AgvGraphReceived AgvGraphReceived { get; } = new(Guid.NewGuid(), "agv", AgvGraphGenerator.CreateDefaultGraph());
 
@@ -24,7 +25,10 @@ internal class AgvGraphReceivedEventHandlerTestFixture : MassTransitConsumerTest
     {
         base.AddServices(collection);
         _graphRepositoryMock = new Mock<IGraphRepository>();
+        _stationRepositoryMock = new Mock<IStationRepository>();
+        _stationRepositoryMock.Setup(x => x.AddStations(It.IsAny<AgvGraph>())).Verifiable();
         collection.AddSingleton(_graphRepositoryMock.Object);
+        collection.AddSingleton(_stationRepositoryMock.Object);
         collection.AddSingleton(Mock.Of<IMapRepository>());
         return this;
     }
@@ -35,5 +39,10 @@ internal class AgvGraphReceivedEventHandlerTestFixture : MassTransitConsumerTest
             .ReturnsAsync(result);
 
         return this;
+    }
+
+    public void VerifyStationsAdded(Times times)
+    {
+        _stationRepositoryMock.Verify(x => x.AddStations(It.IsAny<AgvGraph>()), times);
     }
 }

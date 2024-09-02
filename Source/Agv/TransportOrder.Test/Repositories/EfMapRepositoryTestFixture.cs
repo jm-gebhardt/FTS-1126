@@ -22,16 +22,16 @@ public class EfMapRepositoryTestFixture : TransportOrderDbFixture
     public EfMapRepositoryTestFixture()
     {
         var mockLogger = new Mock<ILogger<EfMapRepository>>();
-        Repository = new EfMapRepository(ContextFactory, Mapper, new SemaphoreProvider<IMapRepositorySemaphore>(), mockLogger.Object);
+        Repository = new EfMapRepository(ContextFactory, new SemaphoreProvider<IMapRepositorySemaphore>(), mockLogger.Object);
     }
 
-    public Map GetNewMap(string mapId = "default")
+    public Map GetNewMap(string mapName = "default")
     {
         const float resolution = 1;
         const float xOffset = 1;
         const float yOffset = 1;
         var modificationDate = DateTime.UtcNow;
 
-        return new Map(mapId.ToGuid(), mapId, Convert.FromBase64String(SmallImage1), 8, 8, resolution, xOffset, yOffset, modificationDate);
+        return new Map(mapName.ToGuid(), mapName, Convert.FromBase64String(SmallImage1), 8, 8, resolution, xOffset, yOffset, modificationDate);
     }
 }

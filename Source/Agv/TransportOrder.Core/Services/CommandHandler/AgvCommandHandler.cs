@@ -73,6 +73,7 @@ public class AgvCommandHandler :
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IMetricCollectionService _metricCollectionService;
+    private readonly IStationRepository _stationRepository;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
@@ -84,6 +85,7 @@ public class AgvCommandHandler :
         IMetricCollectionService metricCollectionService,
         IMapper mapper,
         ProductionOptions productionOptions,
+        IStationRepository stationRepository,
         ILogger<AgvCommandHandler> logger
     )
     {
@@ -97,6 +99,7 @@ public class AgvCommandHandler :
         _metricCollectionService = metricCollectionService;
         _productionOptions = productionOptions;
         _chargingPointManager = chargingPointManager;
+        _stationRepository = stationRepository;
     }
 
     /// <summary>
@@ -836,7 +839,8 @@ public class AgvCommandHandler :
             _logger.LogError("Could not retrieve node state for node {NodeId}", nodeId);
             return;
         }
-        await context.Publish(new NodeStateChanged(nodeState));
+        var station = await _stationRepository.GetStation(nodeId);
+        await context.Publish(new NodeStateChanged(nodeState, station.Id));
     }
 
     private async Task ResetLastNodeId(AgvStatus oldStatus, AgvStatus newStatus)

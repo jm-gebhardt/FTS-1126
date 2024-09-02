@@ -15,11 +15,13 @@ public class NodeCommandHandler : IConsumer<FreeNode>
 {
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly ILogger<NodeCommandHandler> _logger;
+    private readonly IStationRepository _stationRepository;
 
     /// <inheritdoc cref="NodeCommandHandler"/>>
-    public NodeCommandHandler(INodeStateRepository nodeStateRepository, ILogger<NodeCommandHandler> logger)
+    public NodeCommandHandler(INodeStateRepository nodeStateRepository, IStationRepository stationRepository, ILogger<NodeCommandHandler> logger)
     {
         _nodeStateRepository = nodeStateRepository;
+        _stationRepository = stationRepository;
         _logger = logger;
     }
 
@@ -29,6 +31,7 @@ public class NodeCommandHandler : IConsumer<FreeNode>
     public async Task Consume(ConsumeContext<FreeNode> context)
     {
         string nodeId = context.Message.NodeId;
+        var station = await _stationRepository.GetStation(nodeId);
         if (!await _nodeStateRepository.FreeNodeAsync(nodeId))
         {
             _logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
@@ -40,6 +43,6 @@ public class NodeCommandHandler : IConsumer<FreeNode>
             _logger.LogWarning("Could not retrieve node state for node {NodeId}", nodeId);
             return;
         }
-        await context.Publish(new NodeStateChanged(nodeState));
+        await context.Publish(new NodeStateChanged(nodeState, station.Id));
     }
 }

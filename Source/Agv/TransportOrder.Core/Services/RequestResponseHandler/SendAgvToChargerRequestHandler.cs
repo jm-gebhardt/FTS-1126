@@ -22,12 +22,14 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     private readonly IActionGroupRepository _actionGroupDb;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly INodeStateRepository _nodeStateRepository;
+    private readonly IStationRepository _stationRepository;
     private readonly IBus _bus;
 
     /// <inheritdoc cref="SendAgvToChargerRequestHandler"/>
     public SendAgvToChargerRequestHandler(IAgvDb agvDb,
         IActionGroupRepository actionGroupDb,
         IChargingPointManager chargingPointManager,
+        IStationRepository stationRepository,
         INodeStateRepository nodeStateRepository,
         IBus bus
     )
@@ -36,6 +38,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         _actionGroupDb = actionGroupDb;
         _chargingPointManager = chargingPointManager;
         _nodeStateRepository = nodeStateRepository;
+        _stationRepository = stationRepository;
         _bus = bus;
     }
 
@@ -64,6 +67,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     private async Task PublishNodeStateChange(string nodeId)
     {
         var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
-        await _bus.Publish(new NodeStateChanged(nodeState!));
+        var station = await _stationRepository.GetStation(nodeId);
+        await _bus.Publish(new NodeStateChanged(nodeState!, station.Id));
     }
 }

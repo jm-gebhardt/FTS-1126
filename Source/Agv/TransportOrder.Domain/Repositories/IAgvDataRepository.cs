@@ -33,10 +33,4 @@ public interface IAgvDataRepository
     /// <param name="correlationIds">The correlation id of the selected agvs.</param>
     /// <returns></returns>
     public Task<ICollection<AgvData>> GetSelectedAgvDataAsync(ICollection<Guid> correlationIds);
-
-    /// <summary>
-    /// Gets the maximum width and length of all agvs.
-    /// </summary>
-    /// <returns></returns>
-    public Task<(double maxWidth, double maxLength)> GetLargestAgvDimensionAsync();
 }

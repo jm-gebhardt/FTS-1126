@@ -25,6 +25,7 @@ public class AgvPositionChangedConsumer :
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
+    private readonly IStationRepository _stationRepository;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -35,7 +36,8 @@ public class AgvPositionChangedConsumer :
         INodeStateRepository nodeStateRepository,
         IActionGroupRepository actionGroupRepository,
         IActionGroupRetrievalService actionGroupRetrievalService,
-        IAgvRouteRetrievalService agvRouteRetrievalService,
+        IStationRepository stationRepository,
+    IAgvRouteRetrievalService agvRouteRetrievalService,
         IMapper mapper)
     {
         _logger = logger;
@@ -43,6 +45,7 @@ public class AgvPositionChangedConsumer :
         _nodeStateRepository = nodeStateRepository;
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _agvRouteRetrievalService = agvRouteRetrievalService;
+        _stationRepository = stationRepository;
         _mapper = mapper;
     }
 
@@ -94,11 +97,12 @@ public class AgvPositionChangedConsumer :
     private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
     {
         var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        var station = await _stationRepository.GetStation(nodeId);
         if (nodeState != null)
         {
-            await context.Publish(new NodeStateChanged(nodeState));
+            await context.Publish(new NodeStateChanged(nodeState, station.Id));
             return;
         }
-        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow)));
+        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow), station.Id));
     }
 }

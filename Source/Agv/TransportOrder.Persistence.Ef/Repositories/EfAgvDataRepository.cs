@@ -57,25 +57,4 @@ public class EfAgvDataRepository : IAgvDataRepository
     {
         return await AgvData.Where(a => correlationIds.Contains(a.CorrelationId)).ToListAsync();
     }
-
-    /// <inheritdoc/>
-    public async Task<(double, double)> GetLargestAgvDimensionAsync()
-    {
-        double maxWidth = 0.0;
-        double maxLength = 0.0;
-        if (await AgvData.AnyAsync())
-        {
-            var agvDimension = AgvData.GroupBy(a => 1)
-                .Select(g => new
-                {
-                    MaxWidth = g.Max(a => a.Width),
-                    MaxLength = g.Max(a => a.Length)
-                }).First();
-
-            maxWidth = agvDimension.MaxWidth;
-            maxLength = agvDimension.MaxLength;
-        }
-
-        return (maxWidth, maxLength);
-    }
 }

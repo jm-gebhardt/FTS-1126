@@ -10,7 +10,8 @@ public interface IMapPublisher
     /// <summary>
     /// Publishes a node state change.
     /// </summary>
-    /// <param name="nodeState"></param>
+    /// <param name="nodeState">The new node state.</param>
+    /// <param name="stationId">The id of the station.</param>
     /// <returns></returns>
-    Task SendNodeStateChangedAsync(NodeLock nodeState);
+    Task SendNodeStateChangedAsync(NodeLock nodeState, Guid stationId);
 }

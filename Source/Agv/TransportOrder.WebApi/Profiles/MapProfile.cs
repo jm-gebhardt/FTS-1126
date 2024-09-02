@@ -16,6 +16,7 @@ public class MapProfile : WebApiProfile
     public MapProfile()
     {
         CreateMap<Map, MapDto>();
-        CreateMap<NodeLock, NodeStateDto>();
+        CreateMap<NodeLock, NodeStateDto>()
+            .ForMember(m => m.StationId, opt => opt.Ignore());
     }
 }

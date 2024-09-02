@@ -25,6 +25,6 @@ public class NodeStateChangedConsumer : IConsumer<NodeStateChanged>
     public async Task Consume(ConsumeContext<NodeStateChanged> context)
     {
         var nodeState = context.Message.NodeState;
-        await _mapPublisher.SendNodeStateChangedAsync(nodeState);
+        await _mapPublisher.SendNodeStateChangedAsync(nodeState, context.Message.StationId);
     }
 }

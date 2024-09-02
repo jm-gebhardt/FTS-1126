@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -48,11 +47,4 @@ public interface IMapRepository
     /// <param name="agvId"></param>
     /// <returns></returns>
     Task AssignAgvGraphToMapsAsync(Guid agvId);
-
-    /// <summary>
-    /// Get all station graph nodes for the map.
-    /// </summary>
-    /// <param name="mapCorrelationId">The Guid of the map.</param>
-    /// <returns></returns>
-    Task<IEnumerable<GraphNode>> GetStationNodesForMapAsync(Guid mapCorrelationId);
 }

@@ -26,7 +26,8 @@ public class MoveAgvRequestHandler(
     INodeStateRepository nodeStateRepository,
     IParkPointService parkPointService,
     IChargingPointManager chargingPointManager,
-    IRestrictedAreaRepository restrictedAreaRepository
+    IRestrictedAreaRepository restrictedAreaRepository, 
+    IStationRepository stationRepository
 ) :
     IConsumer<MoveAgv>,
     IConsumer<ChargeAgv>,
@@ -179,6 +180,7 @@ public class MoveAgvRequestHandler(
     private async Task PublishNodeStateChange(string nodeId)
     {
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
-        await bus.Publish(new NodeStateChanged(nodeState!));
+        var station = await stationRepository.GetStation(nodeId);
+        await bus.Publish(new NodeStateChanged(nodeState!, station.Id));
     }
 }

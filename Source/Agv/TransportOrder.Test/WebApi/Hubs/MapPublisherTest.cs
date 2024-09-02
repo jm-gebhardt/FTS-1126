@@ -14,11 +14,11 @@ public class MapPublisherTest
     {
         PublisherFixture<MapPublisher, MapHub, IMapClient> fixture = new PublisherFixture<MapPublisher, MapHub, IMapClient>().Build();
         var data = new NodeLock("NodeId", NodeLockState.Free, true, null, DateTime.UtcNow);
-        var expectedDto = new NodeStateDto("NodeId", NodeLockState.Free, true, null);
+        var expectedDto = new NodeStateDto("NodeId", NodeLockState.Free, true, null, Guid.NewGuid());
 
         fixture.MapperMock.Setup(m => m.Map<NodeStateDto>(It.IsAny<NodeLock>())).Returns(expectedDto);
 
-        await fixture.Publisher.SendNodeStateChangedAsync(data);
+        await fixture.Publisher.SendNodeStateChangedAsync(data, expectedDto.StationId);
 
         fixture.HubContextMock.Verify(c => c.Clients.All.NodeStateChanged(It.IsAny<NodeStateDto>()), Times.Once);
     }

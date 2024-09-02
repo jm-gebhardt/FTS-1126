@@ -1,4 +1,4 @@
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 

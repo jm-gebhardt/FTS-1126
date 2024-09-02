@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
@@ -6,41 +7,73 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 /// <summary>
 /// The station dto.
 /// </summary>
-[UsedImplicitly]
+[PublicAPI]
 public record StationDto
 {
-    /// <summary>The Id of the node.</summary>
-    public string NodeId { get; init; }
+    /// <summary>
+    /// The id of the station.
+    /// </summary>
+    public Guid Id { get; set; }
 
-    /// <summary>Node type of the station.</summary>
-    public AgvGraph.NodeType StationType { get; init; }
+    /// <summary>
+    /// The name of the station.
+    /// </summary>
+    public string Name { get; set; }
 
-    /// <summary>Length of the station [m].</summary>
-    public double Length { get; init; }
+    /// <summary>
+    /// The name of the map station is on.
+    /// </summary>
+    public string? MapName { get; set; }
 
-    /// <summary>Width of the station [m].</summary>
-    public double Width { get; init; }
+    /// <summary>
+    /// Length of the station [m].
+    /// </summary>
+    public double Length { get;  set; }
+
+    /// <summary>
+    /// Width of the station [m].
+    /// </summary>
+    public double Width { get;  set; }
+
+    /// <summary>
+    /// The primary type of the station.
+    /// </summary>
+    public AgvGraph.NodeType PrimaryType { get; set; }
+
+    /// <summary>
+    /// Additional station types.
+    /// </summary>
+    [PublicAPI]
+    public ICollection<AgvGraph.NodeType> AdditionalTypes { get; set; } = [];
+
+    /// <summary>
+    /// The agvs currently heading towards this node.
+    /// </summary>
+    [PublicAPI]
+    public ICollection<Guid> Agvs { get; set; } = [];
+
+    /// <summary>
+    /// Node lock state
+    /// </summary>
+    [PublicAPI]
+    public NodeLockState State { get; set; }
+
+    /// <summary>
+    /// The user that locked the station.
+    /// </summary>
+
+    public string? LockedBy { get; set; }
+
+    /// <summary>
+    /// The reason the station was locked.
+    /// </summary>
+    public string? LockReason { get; set; }
 
     /// <summary>
     /// ctor called by AutoMapper.
     /// </summary>
     private StationDto()
     {
-        NodeId = null!;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="nodeId">The Id of the node.</param>
-    /// <param name="stationType">The node type of the station.</param>
-    /// <param name="length">Length of the station [m].</param>
-    /// <param name="width">Width of the station [m].</param>
-    public StationDto(string nodeId, AgvGraph.NodeType stationType, double length, double width)
-    {
-        NodeId = nodeId;
-        StationType = stationType;
-        Length = length;
-        Width = width;
+        Name = string.Empty;
     }
 }

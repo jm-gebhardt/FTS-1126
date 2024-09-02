@@ -1,7 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -14,14 +13,15 @@ public class StationControllerTests
     [TestMethod]
     public async Task GetStation_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
     {
-        string correlationId = Guid.NewGuid().ToString();
-        var graphNode = NodeGenerator.GenerateNode(nodeId: correlationId, nodeType: AgvGraph.NodeType.PickDrop);
+        var map = new TransportOrder.Domain.Models.Map.Map("map".ToGuid(), "map", [], 8, 8, 1, 1, 1, DateTime.UtcNow);
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = map.MapId };
 
         StationControllerTestFixture<GetStation, GetStationsRequestHandler> fixture = new StationControllerTestFixture<GetStation, GetStationsRequestHandler>()
-            .WithGraphNode(graphNode)
+            .WithMap(map)
+            .WithStation(station)
             .Build();
 
-        var response = await fixture.GetControllerResultAsync(c => c.GetStation(correlationId));
+        var response = await fixture.GetControllerResultAsync(c => c.GetStation(station.Id));
 
         response.ShouldNotBeNull();
 
@@ -32,20 +32,5 @@ public class StationControllerTests
 
         (await harness.Published.Any<GetStation>()).ShouldBeTrue();
         (await harness.Published.Any<GotStation>()).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task GetStation_ThrowsException_WhereNodeTypeIsNotStation()
-    {
-        string correlationId = Guid.NewGuid().ToString();
-        var graphNode = NodeGenerator.GenerateNode(nodeId: correlationId, nodeType: AgvGraph.NodeType.WayPoint);
-
-        StationControllerTestFixture<GetStation, GetStationsRequestHandler> fixture = new StationControllerTestFixture<GetStation, GetStationsRequestHandler>()
-            .WithGraphNode(graphNode)
-            .Build();
-
-        var requestException = await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () => await fixture.GetControllerResultAsync(c => c.GetStation(correlationId)));
-
-        requestException.Message.ShouldBe($"Node {graphNode.Id} has invalid type {graphNode.Type}, expected station");
     }
 }

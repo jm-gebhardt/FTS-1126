@@ -6,4 +6,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 /// Represents the event raised when the state of a node changed.
 /// </summary>
 /// <param name="NodeState">The node state.</param>
-public record NodeStateChanged(NodeLock NodeState);
+/// <param name="StationId">The id of the station.</param>
+public record NodeStateChanged(NodeLock NodeState, Guid StationId);

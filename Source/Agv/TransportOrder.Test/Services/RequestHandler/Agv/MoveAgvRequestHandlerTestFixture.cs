@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -17,6 +18,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 {
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
 
     public Mock<IParkPointService> ParkPointService { get; } = new();
@@ -29,6 +31,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         {
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _nodeStateRepository.Object);
+            s.AddTransient(_ => _stationRepository.Object);
             s.AddTransient(_ => ParkPointService.Object);
             s.AddTransient(_ => ChargingPointManager.Object);
             s.AddTransient(_ => _restrictedAreaRepository.Object);
@@ -36,6 +39,8 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
         _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new Station());
         base.Build();
         return this;
     }
