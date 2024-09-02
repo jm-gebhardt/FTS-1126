@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.SmartLinkCommunication.Models;
 using RestSharp;
+using System.Text.Json;
 
 namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
@@ -29,13 +30,17 @@ public class SmartLinkService : ISmartLinkService
         {
             Timeout = TimeSpan.FromSeconds(_moduleConfigProvider.ModuleConfig.RequestTimeout)
         };
-        var response = await _restClient.GetAsync<SmartLinkData>(request);
-
-        if (response == null)
+        var response = await _restClient.ExecuteAsync(request);
+        if (response == null || !response.IsSuccessful || response.Content == null)
         {
             throw new RequestFailedException("Empty response from SmartLink");
         }
-
-        return response;
+        var data = JsonSerializer.Deserialize<Dictionary<string, PinStatus>>(response.Content);
+        if (data == null)
+        {
+            throw new RequestFailedException("Empty response from SmartLink");
+        }
+        var smartLinkData = new SmartLinkData(data);
+        return smartLinkData;
     }
 }
