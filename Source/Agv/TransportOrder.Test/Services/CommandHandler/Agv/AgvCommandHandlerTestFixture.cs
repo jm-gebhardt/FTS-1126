@@ -188,6 +188,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
                 It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(),
                 It.IsAny<SortBy>(), It.IsAny<bool>()))
             .ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
 
         return this;
     }

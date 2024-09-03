@@ -53,22 +53,22 @@ public class ActionEventHandler :
     public async Task Consume(ConsumeContext<ActionGroupCreatedForAgv> context)
     {
         var (actionGroupInMessage, assignedAgv) = context.Message;
-        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupInMessage.CorrelationId);
+        var newlyCreatedActionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupInMessage.CorrelationId);
 
-        var chargeAction = await _actionGroupRepository.GetCurrentAgvActionAsync(assignedAgv);
-        if (chargeAction?.ActionType == ActionType.Charge)
+        var currentAction = await _actionGroupRepository.GetCurrentAgvActionAsync(assignedAgv);
+        if (currentAction?.ActionType == ActionType.Charge)
         {
             var agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv);
             var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
             if (agv.AgvStatus?.BatteryCharge >= agvSettings.MinChargeUp)
             {
-                _logger.LogInformation("Aborting charging for action group: {ActionGroupCorrelationId}", chargeAction.ParentId);
+                _logger.LogInformation("Aborting charging for action group: {ActionGroupCorrelationId}", currentAction.ParentId);
                 await context.Publish(new AbortChargeAction(assignedAgv));
                 return;
             }
         }
 
-        var firstNotStartedAction = actionGroup.FirstNotStartedAction;
+        var firstNotStartedAction = newlyCreatedActionGroup.FirstNotStartedAction;
         var action = actionGroupInMessage.Actions.First(a => a.CorrelationId == firstNotStartedAction!.CorrelationId);
         _logger.LogInformation("Received action group created for agv {AgvCorrelationId}, action group {ActionGroupCorrelationId}, starting action {Action} next.", assignedAgv, action.ParentId, action.CorrelationId);
         await context.Publish(new SelectNodesForAction(action, assignedAgv));

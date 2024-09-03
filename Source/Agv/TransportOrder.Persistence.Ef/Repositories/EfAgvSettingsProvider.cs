@@ -18,7 +18,7 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
     /// <summary>
     /// Default settings.
     /// </summary>
-    public static AgvSettingsReadModel DefaultSettings { get; } = new(15000, 20000, 15, 40, 60, 80);
+    public static AgvSettingsReadModel DefaultSettings { get; } = new(15000, 20000, 20, 40, 60, 80);
 
     /// <summary>
     /// Initializes a new <see cref="EfAgvSettingsProvider"/> instance.

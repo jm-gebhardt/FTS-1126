@@ -351,8 +351,9 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         List<ActionGroup> notStartedActionGroups = await queryable
-            .Where(actionGroup => actionGroup.State == ActionGroupState.Created &&
-                                  (actionGroup.AssignedAgv == null || actionGroup.AssignedAgv == agvCorrelationId)
+            .Where(actionGroup => 
+                actionGroup.State == ActionGroupState.Created 
+                && (actionGroup.AssignedAgv == null || actionGroup.AssignedAgv == agvCorrelationId)
             )
             .OrderBy(g => g.CreatedDate)
             .ThenByDescending(g => g.IsManual)
@@ -492,8 +493,8 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
+        // Actions are auto-included
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
-            .Include(ag => ag.Actions)
             .AsNoTracking();
 
         // The SQL created is less than optimal. If this becomes problematic, 
@@ -505,5 +506,60 @@ public class EfActionGroupRepository : IActionGroupRepository
                 a.ActionType == ActionType.Charge
                 && a.State == ActionState.Created))
             .FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> HasCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // Actions are auto-included
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .AsNoTracking();
+
+        // The SQL created is less than optimal. If this becomes problematic, 
+        // may want to create a stored procedure and call that instead.
+        return await actionGroups.Where(ag =>
+                ag.AssignedAgv == agvCorrelationId
+                && ag.State == ActionGroupState.Created
+                && ag.Actions.Any(a =>
+                    a.ActionType == ActionType.Charge
+                    && a.State == ActionState.Created))
+            .AnyAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetStartedActionGroupForAgvAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // Actions are auto-included.
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .AsNoTracking();
+
+        return await actionGroups.FirstOrDefaultAsync(ag =>
+                ag.AssignedAgv == agvCorrelationId
+                && ag.State == ActionGroupState.Started);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<ActionGroup>> GetCreatedAndStartedActionGroupsForAgvAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // Actions are auto-included.
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .AsNoTracking();
+
+        var actionGroupStates = new List<ActionGroupState>() 
+        { 
+            ActionGroupState.Created,
+            ActionGroupState.Started
+        };
+
+        return await actionGroups.Where(ag =>
+                ag.AssignedAgv == agvCorrelationId
+                && actionGroupStates.Contains(ag.State))
+            .ToListAsync();
     }
 }

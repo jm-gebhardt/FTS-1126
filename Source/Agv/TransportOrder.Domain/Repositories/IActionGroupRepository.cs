@@ -236,4 +236,25 @@ public interface IActionGroupRepository
     /// <param name="agvCorrelationId"></param>
     /// <returns>Assigned ActionGroup</returns>
     Task<ActionGroup?> GetCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Returns boolean specifying that an AGV already has a charging group in created state.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns></returns>
+    Task<bool> HasCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Gets the started action group for an AGV assuming one exists.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>Started action group.</returns>
+    Task<ActionGroup?> GetStartedActionGroupForAgvAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Gets list of action groups that are assigned to an AGV in created or started state.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>Action groups.</returns>
+    Task<IReadOnlyList<ActionGroup>> GetCreatedAndStartedActionGroupsForAgvAsync(Guid agvCorrelationId);
 }

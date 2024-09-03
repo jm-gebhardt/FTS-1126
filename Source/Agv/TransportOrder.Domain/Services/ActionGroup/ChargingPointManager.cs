@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -77,5 +78,12 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     {
         List<string> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
         return await NodeStateRepository.IsAnyNodeReservedForAgv(agvCorrelationId, nodes);
+    }
+
+    /// <inheritdoc />
+    public async Task<NodeLock?> GetReservedChargerForAgvAsync(Guid agvCorrelationId)
+    {
+        List<string> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
+        return await NodeStateRepository.GetReservedNodeLockForAgv(agvCorrelationId, nodes);
     }
 }

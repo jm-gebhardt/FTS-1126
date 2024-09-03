@@ -97,7 +97,10 @@ public class ActionCommandHelper
             action.Nodes = [];
         }
 
-        _logger.LogDebug("Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}. Setting Agv to busy in next step.", action.CorrelationId, action.ParentId, assignedAgv.CorrelationId);
+        _logger.LogInformation("For AGV:{CorrelationID}, Last action was move to coordinate:{LastActionWasMoveToCoordinate} & action is move to coordinate:{IsMoveToCoordinate}",
+            assignedAgv.CorrelationId,
+            lastActionWasMoveToCoordinate,
+            action.IsMoveToCoordinate);
         try
         {
             if ((action.Nodes == null || !action.Nodes.Any()) && assignedAgv.AgvStatus!.LastNodeId != action.Target.NodeId! && !action.IsMoveToCoordinate)
@@ -110,6 +113,12 @@ public class ActionCommandHelper
             _logger.LogWarning("Node selection failed for action: {Action} of group {ActionGroupCorrelationId}.", action, action.ParentId);
             return false;
         }
+
+        _logger.LogDebug(
+            "Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}. AGV set to busy", 
+            action.CorrelationId, 
+            action.ParentId, 
+            assignedAgv.CorrelationId);
         return true;
     }
 
@@ -284,9 +293,10 @@ public class ActionCommandHelper
             return false;
         }
 
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> startedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Started }, assignedAgvCorrelationId: assignedAgv.CorrelationId);
-        bool otherActionGroupsStarted = startedActionGroups.Any(a => a.CorrelationId != action.ParentId);
-        if (!otherActionGroupsStarted)
+        // Does the AGV have a started action group? If not or the started action group is the action group we are attempting
+        // to start, we can continue.
+        var startedActionGroup = await _actionGroupRepository.GetStartedActionGroupForAgvAsync(assignedAgv.CorrelationId);
+        if (startedActionGroup == null || startedActionGroup.CorrelationId == action.ParentId)
         {
             return true;
         }

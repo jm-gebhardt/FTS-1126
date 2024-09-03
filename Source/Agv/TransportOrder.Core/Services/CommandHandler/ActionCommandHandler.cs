@@ -116,10 +116,21 @@ public class ActionCommandHandler :
                 await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
                 if (action.IsFirstAction)
                 {
-                    _logger.LogOrderInformation(LogCodes.OrderStarted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Started", $"Order {actionGroup.OrderId} has been started");
+                    _logger.LogOrderInformation(
+                        LogCodes.OrderStarted, 
+                        actionGroup.AssignedAgv.GetValueOrDefault(), 
+                        actionGroup.CorrelationId, 
+                        "Order Started", 
+                        $"Order {actionGroup.OrderId} has been started");
                     await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
                 }
-                _logger.LogOrderInformation(LogCodes.OrderActionStarted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{action.ActionType} of order {actionGroup.OrderId} has been started");
+                _logger.LogOrderInformation(
+                    LogCodes.OrderActionStarted, 
+                    actionGroup.AssignedAgv.GetValueOrDefault(), 
+                    actionGroup.CorrelationId, 
+                    "Order Updated", 
+                    $"{action.ActionType} of order {actionGroup.OrderId} has been started");
+                _logger.LogInformation("{ActionType} for action group {CorrelationId} has started.", action.ActionType, actionGroup.CorrelationId);
                 await _actionService.LogStationUpdate(assignedAgv, action, actionGroup);
             }
         }, context.CancellationToken);
@@ -319,15 +330,26 @@ public class ActionCommandHandler :
         var cancellationToken = context.CancellationToken;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
+        // When checking to see if a new action group can be started, make sure to check the battery levels of the AGV. Do not
+        // proceed if the AGV is in critical condition unless there is already existing charging action group because that will be
+        // picked and prioritized in _chooseAgvActionGroupService. This is required because the chain of events that create a
+        // charging action group might miss a window to start charging before the next action group is assigned to an idle AGV and
+        // the AGV battery dies before moving to the charger is complete.
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
-        bool needsCharging = agv.CheckMustCharge(agvSettings);
+        bool agvMustCharge = agv.CheckMustCharge(agvSettings);
+        bool hasChargingActionGroup = await _actionGroupRepository.HasCreatedChargingActionGroupForAgvAsync(agvCorrelationId);
         bool hasUnfinishedDropAction = await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId);
-
-        bool canStartNewAction = !agv.NeedsMaintenance && !hasUnfinishedDropAction && !agv.IsLocked;
-
+        bool canStartNewAction = !agv.NeedsMaintenance && !hasUnfinishedDropAction && !agv.IsLocked && (!agvMustCharge || hasChargingActionGroup);
         if (!canStartNewAction)
         {
-            _logger.LogWarning("Can not start new action group for agv {AgvCorrelationId} (is locked: {IsLocked}/ has unfinished drop action: {HasUnfinishedDropAction}/ needs charging: {NeedsCharging}).", agv.CorrelationId, agv.IsLocked, hasUnfinishedDropAction, needsCharging);
+            _logger.LogWarning(
+                "Can not start new action group for AGV {AgvCorrelationId} (is locked: {IsLocked}/ has unfinished drop action: {HasUnfinishedDropAction}/ needs maintenance: {NeedsMaintenance}/ AGV must charge: {AgvMustCharge}/ AGV has charging action group: {HasChargingActionGroup}).", 
+                agv.CorrelationId, 
+                agv.IsLocked, 
+                hasUnfinishedDropAction, 
+                agv.NeedsMaintenance,
+                agvMustCharge,
+                hasChargingActionGroup);
             return;
         }
 
@@ -395,33 +417,64 @@ public class ActionCommandHandler :
     public async Task Consume(ConsumeContext<CreateChargingActionGroup> context)
     {
         (var groupCorrelationId, var agvCorrelationId, string chargeStationId, var initiator) = context.Message;
+        var cancellationToken = context.CancellationToken;
+
         bool triggeredByWebApi = initiator == ActionGroupCreator.TransportOrderWebApi;
 
-        var cancellationToken = context.CancellationToken;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-
-        bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
-        _logger.LogDebug("Evaluating {Name}, has unfinished action: {HasUnfinishedActionGroup} for agv {AgvCorrelationId}.", nameof(CreateChargingActionGroup), hasUnfinishedActionGroup, agv.CorrelationId);
 
         if (agv.IsLocked || (!agv.CanStartAutomaticAction && !triggeredByWebApi))
         {
+            _logger.LogInformation("Could not create charging action group for AGV:{CorrelationId}. locked:{IsLocked}, CanStartAutomaticAction:{CanStartAutomaticAction}, TriggeredByWebApi:{TriggeredByWebApi}.",
+                agv.CorrelationId,
+                agv.IsLocked,
+                agv.CanStartAutomaticAction,
+                triggeredByWebApi);
             return;
         }
 
-        if (agv.IsCharging || await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
+        if (agv.IsCharging)
         {
-            _logger.LogDebug("No need for another charge action because the agv {SerialNumber}/{AgvCorrelationId} is already charging", agv.SerialNumber, agv.CorrelationId);
+            _logger.LogInformation("AGV: {SerialNumber}/{AgvCorrelationId} is already charging", agv.SerialNumber, agv.CorrelationId);
             // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
             return;
         }
 
-        // Yes, we want to charge
-        _logger.LogInformation("Starting charge action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+        if (await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
+        {
+            _logger.LogInformation("AGV:{SerialNumber}/{AgvCorrelationId} is already heading to a charging station.", agv.SerialNumber, agv.CorrelationId);
+            // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
+            return;
+        }
 
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        bool agvMustCharge = agv.CheckMustCharge(agvSettings);
+        bool hasNotStartedActionGroups = actionGroups.Any();
+
+        var startedChargingAction = actionGroups
+            .FirstOrDefault(ag => ag.State == ActionGroupState.Started && ag.Actions.Any(a => a.ActionType == ActionType.Charge));
+        if(startedChargingAction != null)
+        {
+            _logger.LogInformation("AGV:{CorrelationID} has already started an action group for charging.", agv.CorrelationId);
+            return;
+        }
+        
+        if(!agvMustCharge && hasNotStartedActionGroups)
+        {
+            _logger.LogInformation("Skip charging for AGV:{CorrelationID}. Must charge: {AgvMustCharge}. Action groups not started: {HasNotStartedActionGroups}",
+                agv.CorrelationId,
+                agvMustCharge,
+                hasNotStartedActionGroups);
+            return;
+        }
+
+        // Yes, we want to charge
+        _logger.LogInformation("Creating charge action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+ 
         // Let's see if there is a pending charge action group
         var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
-
         if (actionGroup == null)
         {
             actionGroup = new Domain.Models.ActionGroup.ActionGroup(
@@ -449,10 +502,8 @@ public class ActionCommandHandler :
             _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId, "Order created", $"Order {actionGroup.OrderId} was created successfully");
             _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId, "Agv was assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
         }
-        if (!agv.IsLocked && !hasUnfinishedActionGroup && !agv.IsCharging)
-        {
-            await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);
-        }
+
+        await context.Publish(new ActionGroupCreatedForAgv(_mapper.Map<ActionGroup>(actionGroup), agv.CorrelationId), cancellationToken);   
     }
 
     /// <summary>
@@ -508,7 +559,15 @@ public class ActionCommandHandler :
         {
             _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId, "Agv was assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
 
-            await context.Publish(new ActionGroupCreatedForAgv(actionGroupMessageContent, agv.CorrelationId), cancellationToken);
+            var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+            bool agvMustCharge = agv.CheckMustCharge(agvSettings);
+
+            // Do not publish ActionGroupCreatedForAgv if we must charge. ActionGroupCreatedForAgv will trigger
+            // a chain of events resulting in attempting to start this ActionGroup.
+            if(!agvMustCharge)
+            {
+                await context.Publish(new ActionGroupCreatedForAgv(actionGroupMessageContent, agv.CorrelationId), cancellationToken);
+            }
         }
     }
 

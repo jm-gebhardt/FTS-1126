@@ -662,7 +662,28 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_PrepareChargingOfAgv_HasAlreadyAReservedCharger_DoesNotPublishChargingNodeSelectedForAgv()
+    public async Task Consume_PrepareChargingOfAgv_HasChargingActionGroupAlready_DoesNotPublishChargingNodeSelectedForAgv()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string chargeNodeName = "Charger-1";
+        var chargingAction = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv:agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .HasAlreadyReservedNode(false)
+            .WithUnfinishedActionGroup(false)
+            .WithActionGroups([chargingAction])
+            .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
+
+        var command = new PrepareChargingOfAgv(agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareChargingOfAgv_HasAlreadyAReservedCharger_PublishChargingNodeSelectedForAgv()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         const string chargeNodeName = "Charger-1";
@@ -677,8 +698,8 @@ public class AgvCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
         
         await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
-        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
+        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
     }
 
     [TestMethod]

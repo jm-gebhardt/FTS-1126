@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -46,4 +47,11 @@ public interface IChargingPointManager
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     /// <returns>True if a charger has been reserved previously for this agv.</returns>
     Task<bool> AgvHasReservedChargerAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Gets NodeLock currently reserved for charging for an AGV
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns></returns>
+    Task<NodeLock?> GetReservedChargerForAgvAsync(Guid agvCorrelationId);
 }

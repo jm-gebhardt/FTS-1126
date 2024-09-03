@@ -66,7 +66,7 @@ public class AgvSettingsTest
         agvSettings.BatteryLevelCritical.ShouldNotBe(null!);
         var defaultId = agvSettings.BatteryLevelCritical.Id;
 
-        var newSettings = new AgvSettingsReadModel(batteryLevelCritical: 20);
+        var newSettings = new AgvSettingsReadModel(batteryLevelCritical: 27);
         agvSettings.Update(newSettings, false);
         agvSettings.BatteryLevelCritical.Value.ShouldBe(newSettings.BatteryLevelCritical.ToString());
         agvSettings.BatteryLevelCriticalId.ShouldNotBe(defaultId);

@@ -113,34 +113,47 @@ public class AgvCommandHandler :
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-        _logger.LogDebug("Evaluating {Name}, has unfinished action: {HasUnfinishedActionGroup} for agv {AgvCorrelationId}.", nameof(PrepareChargingOfAgv), hasUnfinishedActionGroup, agv.CorrelationId);
-
-        if (agv.IsLocked || hasUnfinishedActionGroup)
+        if (agv.IsLocked)
         {
+            _logger.LogInformation("AGV:{CorrelationId} is locked. Do not prepare for charging.", agv.CorrelationId);
             return;
         }
 
-        if (agv.IsCharging || await _chargingPointManager.AgvHasReservedChargerAsync(agvCorrelationId))
+        if (agv.IsCharging)
         {
             _logger.LogDebug("No need for another charge action because the agv {SerialNumber}/{AgvCorrelationId} is already charging", agv.SerialNumber, agv.CorrelationId);
             // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
             return;
         }
 
-        // Let's see if there is a pending charge action group
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(new[] { ActionGroupState.Created }, assignedAgvCorrelationId: agvCorrelationId);
+        // Let's see if there is a created charge action group
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
         var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
         if (actionGroup != null)
         {
-            _logger.LogDebug("No need for another charge action because the agv {SerialNumber}/{AgvCorrelationId} has already an assigned a charge action group", agv.SerialNumber, agv.CorrelationId);
+            _logger.LogWarning("No need for another charge action because the agv {SerialNumber}/{AgvCorrelationId} has already an assigned a charge action group", agv.SerialNumber, agv.CorrelationId);
             // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
             return;
         }
 
-        var chargingNode = await _chargingPointManager.ReserveChargerAsync(agv);
-        await PublishNodeStateChange(context, chargingNode.Id);
-        await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, chargingNode.Id, initiator));
+        // Are there any existing action groups in progress? We shouldn't attempt to charge unless the battery level is critical.
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        bool agvMustCharge = agv.CheckMustCharge(agvSettings);
+        bool hasNotStartedActionGroups = actionGroups.Any();
+        if(!agvMustCharge && hasNotStartedActionGroups)
+        {
+            _logger.LogInformation("Did not prepare AGV:{CorrelationID} for charging. AGV has {Count} action groups that are not started and the following battery charge: {BatteryCharge}.",
+                agv.CorrelationId,
+                actionGroups.Count,
+                agv.AgvStatus!.BatteryCharge);
+            return;
+        }
+
+        var reservedChargingNode = await _chargingPointManager.GetReservedChargerForAgvAsync(agvCorrelationId);
+        string nodeIdToPublish = reservedChargingNode?.NodeId ?? (await _chargingPointManager.ReserveChargerAsync(agv)).Id;
+
+        await PublishNodeStateChange(context, nodeIdToPublish);
+        await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, nodeIdToPublish, initiator));
     }
 
     /// <summary>
@@ -664,12 +677,12 @@ public class AgvCommandHandler :
 
         if (!isAvailable)
         {
-            _logger.LogWarning("Agv {AgvCorrelationId} is not available for busy", agv.CorrelationId);
+            _logger.LogInformation("Agv {AgvCorrelationId} is not available for busy", agv.CorrelationId);
             return;
         }
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+            _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
             return;
         }
 
