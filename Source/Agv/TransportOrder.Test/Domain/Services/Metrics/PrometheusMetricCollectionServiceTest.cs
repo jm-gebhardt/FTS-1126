@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -234,5 +235,35 @@ public class PrometheusMetricCollectionServiceTest
         PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime);
         PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
         PrometheusMetricCollector.AgvStateBusyGauge.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
+    }
+
+    [TestMethod]
+    public void CollectSafetyFieldViolationMetrics_NoSafetyFieldViolations_MetricsNotUpdated()
+    {
+        var agv = Guid.NewGuid();
+
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+
+        fixture.Service.CollectSafetyFieldViolationMetrics(agv, [], []);
+
+        PrometheusMetricCollector.AgvSafetyFieldViolationCounter.WithLabels(agv.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvSafetyFieldDurationGauge.WithLabels(agv.ToString()).Value.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public void CollectSafetyFieldViolationMetrics_ValidData_MetricsUpdated()
+    {
+        var agv = Guid.NewGuid();
+        const double timePassed = 60;
+        var fieldViolation = new FieldViolation(
+            agv,
+            DateTime.UtcNow.AddSeconds(-timePassed)
+        );
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+
+        fixture.Service.CollectSafetyFieldViolationMetrics(agv, [fieldViolation], [fieldViolation]);
+
+        PrometheusMetricCollector.AgvSafetyFieldViolationCounter.WithLabels(agv.ToString()).Value.ShouldBe(1);
+        PrometheusMetricCollector.AgvSafetyFieldDurationGauge.WithLabels(agv.ToString()).Value.ShouldBeGreaterThanOrEqualTo(timePassed);
     }
 }

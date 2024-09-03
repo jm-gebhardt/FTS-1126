@@ -1,9 +1,10 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 
@@ -165,5 +166,21 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
             return;
         }
         PrometheusMetricCollector.BatteryChargeGauge.WithLabels(agvStatus.CorrelationId.ToString()).Set(agvStatus.BatteryCharge);
+    }
+
+    /// <inheritdoc cref="IMetricCollectionService"/>>
+    public void CollectSafetyFieldViolationMetrics(Guid agvCorrelationId, List<AgvError> newErrors, List<AgvError> resolvedErrors)
+    {
+        foreach (var _ in newErrors.Where(e => e.IsFieldViolation()))
+        {
+            PrometheusMetricCollector.AgvSafetyFieldViolationCounter.WithLabels(agvCorrelationId.ToString()).Inc();
+        }
+
+        var now = DateTime.UtcNow;
+        foreach(var violation in   resolvedErrors.Where(e => e.IsFieldViolation()))
+        {
+            double timePassed = (now - violation.ErrorReceived).TotalSeconds;
+            PrometheusMetricCollector.AgvSafetyFieldDurationGauge.WithLabels(agvCorrelationId.ToString()).Set(timePassed);
+        }
     }
 }

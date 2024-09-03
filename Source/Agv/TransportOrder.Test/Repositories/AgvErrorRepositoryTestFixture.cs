@@ -14,7 +14,7 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
 
     public AgvErrorRepositoryTestFixture WithAgvErrorStatus(AgvErrorStatusReceived agvErrorStatus)
     {
-        AddInitTask(AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId));
+        AddInitTask(AgvErrorRepository.AddOrUpdateAgvErrorStatus(agvErrorStatus.Errors, agvErrorStatus.CorrelationId));
         return this;
     }
 

@@ -62,4 +62,20 @@ public static class PrometheusMetricCollector
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
+
+    /// <summary>
+    /// The safety field violation by agv counter.
+    /// </summary>
+    public static readonly Counter AgvSafetyFieldViolationCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvSafetyFieldViolationCount, "Safety field violation count", new CounterConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
+
+    /// <summary>
+    /// The agv safety field duration gauge metric.
+    /// </summary>
+    public static readonly Gauge AgvSafetyFieldDurationGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.AgvSafetyFieldViolationDuration, "Agv safety field violation duration [s]", new GaugeConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
 }

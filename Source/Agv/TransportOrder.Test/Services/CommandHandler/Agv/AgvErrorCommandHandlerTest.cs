@@ -23,7 +23,8 @@ public class AgvErrorCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new UpdateErrorStatus(agv.CorrelationId, new List<AgvError>(), new AgvPosition(true, 1, 1, 1, 0)));
 
         (await fixture.ConsumerHarness.Consumed.Any<UpdateErrorStatus>()).ShouldBeTrue();
-        fixture.AgvDbMock.Verify(x => x.Errors.AddOrUpdateAgvErrorStatusAsync(It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), Times.Once());
+        fixture.AgvDbMock.Verify(x => x.Errors.AddOrUpdateAgvErrorStatus(It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), Times.Once());
+        fixture.VerifyMetricsCollected(Times.Never());
     }
 
     [TestMethod]
@@ -38,6 +39,7 @@ public class AgvErrorCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<UpdateErrorStatus>();
         await fixture.ShouldHavePublishedAsync<AgvErrorChanged>();
         await fixture.ShouldNotHavePublishedAsync<AgvErrorReceived>();
+        fixture.VerifyMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -53,5 +55,6 @@ public class AgvErrorCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<UpdateErrorStatus>();
         await fixture.ShouldHavePublishedAsync<AgvErrorChanged>();
         await fixture.ShouldHavePublishedAsync<AgvErrorReceived>();
+        fixture.VerifyMetricsCollected(Times.Once());
     }
 }

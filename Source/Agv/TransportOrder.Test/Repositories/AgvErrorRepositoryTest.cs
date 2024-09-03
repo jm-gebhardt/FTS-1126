@@ -37,7 +37,7 @@ public class AgvErrorRepositoryTest
         var agvErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(errorCount, agvCorrelationId);
         var fixture = new AgvErrorRepositoryTestFixture();
 
-        await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
+        await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatus(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
         IList<AgvError> agvErrorsInRepository = await fixture.AgvErrorRepository.GetActiveErrorsAsync(agvCorrelationId);
 
         agvErrorsInRepository.ShouldNotBeNull();
@@ -45,22 +45,23 @@ public class AgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task AddOrUpdateAgvErrorStatusAsync_WhenErrorBecomesAWarning_ReturnsTrue()
+    public async Task AddOrUpdateAgvErrorStatus_WhenErrorBecomesAWarning_ReturnsTrue()
     {
         var agvCorrelationId = Guid.NewGuid();
         var agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agvCorrelationId, errorLevel: ErrorLevel.Fatal);
         var fixture = new AgvErrorRepositoryTestFixture();
 
-        await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync([agvError], agvCorrelationId);  
+        await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatus([agvError], agvCorrelationId);
         agvError = AgvErrorGenerator.GenerateAgvError(agvCorrelationId: agvCorrelationId, errorLevel: ErrorLevel.Warning);
 
-        (bool changed, List<AgvError> newErrors) = await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync([agvError], agvCorrelationId);
+        (bool changed, List<AgvError> newErrors, List<AgvError> resolvedErrors) = await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatus([agvError], agvCorrelationId);
         changed.ShouldBeTrue();
         newErrors.Single().ShouldBe(agvError);
+        resolvedErrors.Count.ShouldBe(1);
     }
 
     [TestMethod]
-    public async Task AddOrUpdateAgvErrorStatusAsync_WhenErrorTypeNotIncludedInAgvErrorStatus_ResolveAgvError()
+    public async Task AddOrUpdateAgvErrorStatus_WhenErrorTypeNotIncludedInAgvErrorStatus_ResolveAgvError()
     {
         const int errorCount = 5;
         var agvCorrelationId = Guid.NewGuid();
@@ -75,10 +76,13 @@ public class AgvErrorRepositoryTest
         }
 
         agvErrorStatus.Errors = null;
-        await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatusAsync(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
+        (bool changed, List<AgvError> newErrors, List<AgvError> resolvedErrors) = await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatus(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
 
         agvErrorsInRepository = await fixture.AgvErrorRepository.GetActiveErrorsAsync(agvCorrelationId);
-        //all errors resolved
+
+        changed.ShouldBeTrue();
+        newErrors.ShouldBeEmpty();
+        resolvedErrors.Count.ShouldBe(errorCount);
         agvErrorsInRepository.ShouldBeEmpty();
     }
 
