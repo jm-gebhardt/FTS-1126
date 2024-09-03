@@ -84,6 +84,7 @@ public static class HostBuilderExtension
             });
             services.AddTransient<IAgvSettingsService, AgvSettingsService>();
             services.AddSingleton<IStationRepository, StationRepository>();
+            services.AddSingleton<IOrderRepository, OrderRepository>();
             services.TryAddKaeserGraphConfiguration(simulateOptions != null);
             if (simulateOptions != null)
             {

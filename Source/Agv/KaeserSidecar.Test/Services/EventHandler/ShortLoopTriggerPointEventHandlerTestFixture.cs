@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
+using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
@@ -16,6 +17,7 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
     private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
+    public readonly IOrderRepository OrderRepository = new OrderRepository();
 
     /// <inheritdoc cref="MassTransitConsumerTestFixture{ShortLoopTriggerPointEventHandler}"/>>
     protected override MassTransitConsumerTestFixture<ShortLoopTriggerPointEventHandler> AddServices(IServiceCollection collection)
@@ -27,6 +29,7 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
         collection.AddSingleton(_ => _communicator.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddTransient(_ => _agvSettingsService.Object);
+        collection.AddSingleton(_ => OrderRepository);
         return this;
     }
 
@@ -38,13 +41,15 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
         Build();
     }
 
-    public ShortLoopTriggerPointEventHandlerTestFixture WithHostOrder(HostOrder? order)
+    public ShortLoopTriggerPointEventHandlerTestFixture WithPickHostOrder(HostOrder? order)
     {
-        if (order != null)
-        {
-            _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
-        }
         _hostOrderRepository.Setup(x => x.GetNextPickOnShortLoop()).ReturnsAsync(order);
+        return this;
+    }
+
+    public ShortLoopTriggerPointEventHandlerTestFixture WithHostOrder(HostOrder order)
+    {
+        _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
         return this;
     }
 

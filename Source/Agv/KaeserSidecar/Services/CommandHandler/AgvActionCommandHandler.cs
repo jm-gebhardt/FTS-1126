@@ -1,5 +1,7 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
@@ -11,7 +13,12 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 /// Handles agv action related messages.
 /// </summary>
 [UsedImplicitly]
-public class AgvActionCommandHandler(ILogger<AgvActionCommandHandler> logger, ITransportOrderDb transportOrderDb, KaeserGraphConfiguration configuration, IStationRepository stationRepository) :
+public class AgvActionCommandHandler(
+    ILogger<AgvActionCommandHandler> logger,
+    ITransportOrderDb transportOrderDb,
+    KaeserGraphConfiguration configuration,
+    IPrismatCommunicationHostOrderRepository hostOrderRepository,
+    IStationRepository stationRepository) :
     IConsumer<ActionStarted>,
     IConsumer<ActionCompleted>
 {
@@ -24,12 +31,24 @@ public class AgvActionCommandHandler(ILogger<AgvActionCommandHandler> logger, IT
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Nodes.First()));
-        if (action != null)
+        if (action == null)
         {
-            string station = action.Nodes.First();
-            logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station);
-            stationRepository.FreeStation(station, agvCorrelationId);
+            return;
         }
+        string? station = action.Nodes.FirstOrDefault();
+
+        if (action.ActionType == ActionType.Pick)
+        {
+            var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
+            string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
+            if (action.Nodes.Length == 1 && station == action.Target.NodeId) 
+            {
+                configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation);
+                await context.Publish(new AgvStartedShortLoopPick(targetStation!, order.CorrelationId, pickTarget));
+            }
+        }
+        logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station);
+        stationRepository.FreeStation(station!, agvCorrelationId);
     }
 
     /// <summary>
@@ -41,11 +60,23 @@ public class AgvActionCommandHandler(ILogger<AgvActionCommandHandler> logger, IT
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
         var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Target.NodeId!));
-        if (action != null)
+        if (action == null)
         {
-            string station = action.Target.NodeId!;
-            logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
-            stationRepository.OccupyStation(station, agvCorrelationId);
+            return;
         }
+
+        if (action.ActionType == ActionType.Pick)
+        {
+            var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
+            if (order.Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node)))
+            {
+                string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
+                await context.Publish(new AgvFinishedShortLoopPick(order.CorrelationId, pickTarget));
+            }
+        }
+
+        string station = action.Target.NodeId!;
+        logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
+        stationRepository.OccupyStation(station, agvCorrelationId);
     }
 }

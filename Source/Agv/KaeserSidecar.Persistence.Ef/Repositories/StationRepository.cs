@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IStationRepository"/>>
-public class StationRepository: IStationRepository
+public class StationRepository : IStationRepository
 {
-    private readonly ConcurrentDictionary<string, List<Guid>> _stationOccupancies= new();
+    private readonly ConcurrentDictionary<string, List<Guid>> _stationOccupancies = new();
     private readonly ILogger<StationRepository> _logger;
 
     /// <inheritdoc cref="IStationRepository"/>>

@@ -92,12 +92,14 @@ public class DecisionPointEventHandler (ILogger<DecisionPointEventHandler> logge
             if (pendingPickOrder != null)
             {
                 pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
+                logger.LogInformation("Reporting order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
             }
             return pickTarget;
         }
 
         pendingPickOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
         pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
+        logger.LogInformation("Reporting order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
         return pickTarget;
     }
 }

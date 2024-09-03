@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,7 +17,10 @@ public class AgvActionCommandHandlerTest
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [station];
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
         fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
@@ -26,7 +30,52 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionStarted_ShortLoopPickAgvAlreadyAtStation_PublishesAgvStartedShortLoopPick()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        actionGroup.Actions.First().Nodes = [station];
+      
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
+        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+
+        var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
+
+        await fixture.TestHarness.Bus.Publish(actionStarted);
+        await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldHavePublishedAsync<AgvStartedShortLoopPick>();
+        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionStarted_ShortLoopDropAgvAlreadyAtStation_DoesNotPublishPublishAgvStartedShortLoopPick()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        actionGroup.Actions.Last().Nodes = [station, "other nodes"];
+
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        var actionStarted = new ActionStarted(actionGroup.Actions.Last().CorrelationId, actionGroup.AssignedAgv!.Value);
+
+        await fixture.TestHarness.Bus.Publish(actionStarted);
+        await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
     }
 
     [TestMethod]
@@ -44,6 +93,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(1);
     }
 
@@ -62,6 +112,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
@@ -78,6 +129,29 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvFinishedShortLoopPick>();
+        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionCompleted_PickOnShortLoop_PublishesAgvFinishedShortLoopPick()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        actionGroup.Actions.First().Nodes = [station];
+
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
+
+        var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(actionCompleted);
+        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<AgvFinishedShortLoopPick>();
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
@@ -94,6 +168,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvFinishedShortLoopPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
     }
 
@@ -110,6 +185,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvFinishedShortLoopPick>();
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
     }
 }
