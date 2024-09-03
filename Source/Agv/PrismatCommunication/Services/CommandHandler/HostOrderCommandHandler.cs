@@ -18,6 +18,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 [UsedImplicitly]
 public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IHostOrderRepository hostOrderRepository, IHostCommunicator hostCommunicator, KaeserGraphConfiguration configuration) :
     IConsumer<CreateHostOrder>,
+    IConsumer<CancelHostOrder>,
     IConsumer<HandleHostOrderStart>,
     IConsumer<FinishHostOrder>,
     IConsumer<PassDecisionPoint>,
@@ -49,8 +50,13 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         await hostOrderRepository.SaveAsync();
         logger.LogInformation("Host order for order {OrderId} created", orderDetails.OrderId);
 
+        await QueueHostOrder(context, hostOrder, orderDetails.CreationDate);
+    }
+
+    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate)
+    {
         // Short circuit
-        var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, orderDetails);
+        var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
         if (actionGroup != null)
         {
             bool picksAt1020 = hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node == configuration.PrismatAklPickTarget;
@@ -60,6 +66,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
                 return;
             }
             await context.Publish(new QueueActionGroup(actionGroup, false));
+            hostOrder.IsQueued = true;
+            await hostOrderRepository.SaveAsync();
             return;
         }
 
@@ -72,8 +80,10 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
                 return;
             }  
             // Call for any idle agv to handle this order
-            actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, orderDetails);
+            actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
             await context.Publish(new QueueActionGroup(actionGroup, false));
+            hostOrder.IsQueued = true;
+            await hostOrderRepository.SaveAsync();
             return;
         }
 
@@ -87,6 +97,47 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             // Call for any idle agv to handle this order
             actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
             await context.Publish(new QueueActionGroup(actionGroup, false));
+            hostOrder.IsQueued = true;
+            await hostOrderRepository.SaveAsync();
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CancelHostOrder"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CancelHostOrder> context)
+    {
+        string hu = context.Message.Hu;
+        var hostOrder = await hostOrderRepository.GetByHu(hu);
+        if (hostOrder == null)
+        {
+            logger.LogError("Could not cancel HostOrder with HandlingUnit {Hu}; None exist.", hu);
+            return;
+        }
+        hostOrder.Cancel(DateTime.UtcNow);
+        await hostOrderRepository.SaveAsync();
+
+        await context.Publish(new CancelOrAbortActionGroup(hostOrder.CorrelationId));
+
+        HostOrder? reverseHostOrder = null;
+        if (hostOrder.Actions.Any(a => a.ActionType == ActionType.Pick && configuration.PrismatKnownTargets.Contains(a.Node)))
+        {
+            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(configuration.PrismatAklPickTarget);
+        }
+
+        if (hostOrder.HasUnknownDropTarget(configuration))
+        {
+            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null);
+        }
+
+        if (hostOrder.HasUnknownPickTarget(configuration))
+        {
+            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, true);
+        }
+
+        if (reverseHostOrder != null)
+        {
+            await QueueHostOrder(context, reverseHostOrder, reverseHostOrder.CreatedDate);
         }
     }
 
@@ -176,6 +227,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         var actionGroup = hostOrder.CreatePickDropActionGroupForAgv(pickNodeId, shouldNotPickNext? null: assignedAgv, configuration);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await context.Publish(new QueueActionGroup(actionGroup, false));
+        hostOrder.IsQueued = true;
+        await hostOrderRepository.SaveAsync();
     }
 
     /// <summary>
@@ -208,6 +261,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         var actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration, assignedAgv);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await context.Publish(new QueueActionGroup(actionGroup, false));
+        hostOrder.IsQueued = true;
+        await hostOrderRepository.SaveAsync();
     }
 
     /// <summary>

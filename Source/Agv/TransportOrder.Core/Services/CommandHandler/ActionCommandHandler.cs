@@ -47,7 +47,8 @@ public class ActionCommandHandler :
     IConsumer<SetTargetForAction>,
     IConsumer<EstimateActionGroupDuration>,
     IConsumer<PauseActionGroup>,
-    IConsumer<ResumeActionGroup>
+    IConsumer<ResumeActionGroup>,
+    IConsumer<CancelOrAbortActionGroup>
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
@@ -808,5 +809,20 @@ public class ActionCommandHandler :
 
         await context.Publish(new TargetForActionSet(_mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionGroup.FirstNotStartedAction!), actionGroup.AssignedAgv), cancellationToken);
         _logger.LogOrderInformation(LogCodes.OrderIncomplete, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Action target set", $"Target {targetNodeId} set for action {action.ActionType.ToString()}");
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CancelOrAbortActionGroup"/>
+    /// </summary>
+    public async Task Consume(ConsumeContext<CancelOrAbortActionGroup> context)
+    {
+        var actionGroupId = context.Message.CorrelationId;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionGroupId);
+        if (actionGroup.AssignedAgv == null)
+        {
+            await context.Publish(new CancelActionGroup(actionGroupId, CancelReason.External));
+            return;
+        }
+        await context.Publish(new AbortActionGroup(actionGroupId, AbortReason.External));
     }
 }

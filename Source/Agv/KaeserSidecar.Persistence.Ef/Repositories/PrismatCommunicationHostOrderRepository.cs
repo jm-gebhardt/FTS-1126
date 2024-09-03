@@ -28,6 +28,7 @@ public class PrismatCommunicationHostOrderRepository: EfHostOrderRepository, IPr
                 h => !h.PassedTriggerPoint
                      && h.AssignedAgv == null
                      && h.StartedDate == null
+                     && !h.IsQueued
                      && h.Actions.Any(a => a.Node == _configuration.PrismatAklPickTarget && a.ActionType == ActionType.Pick))
             .OrderBy(h => h.CreatedDate).FirstOrDefaultAsync();
     }

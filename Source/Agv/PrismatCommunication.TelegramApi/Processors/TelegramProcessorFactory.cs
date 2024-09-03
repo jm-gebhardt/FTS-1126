@@ -32,6 +32,12 @@ public class TelegramProcessorFactory(IServiceProvider provider, ILogger<Telegra
                 return provider.GetRequiredService<LifeProcessor>();
             }
 
+            case nameof(TordDelete):
+            {
+                logger.LogInformation("TordDelete processor requested.");
+                return provider.GetRequiredService<TordDeleteProcessor>();
+            }
+
             default:
                 logger.LogWarning("No telegram processor found");
                 return null;

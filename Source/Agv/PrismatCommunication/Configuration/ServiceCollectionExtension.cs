@@ -100,6 +100,7 @@ public static class ServiceCollectionExtension
         serviceCollection.AddSingleton<ToPrismatTelegramProcessor>();
         serviceCollection.AddSingleton<FromPrismatTelegramProcessor>();
         serviceCollection.AddSingleton<TordProcessor>();
+        serviceCollection.AddSingleton<TordDeleteProcessor>();
         serviceCollection.AddSingleton<LifeProcessor>();
         serviceCollection.AddTransient<TelegramProcessorFactory>();
         return serviceCollection;

@@ -18,5 +18,12 @@ public class TelegramProvider(ILogger<TelegramProvider> logger, PrismatTelegramP
         var tord = new Tord();
         tord.Load(testTelegram);
         telegramProcessor.EnqueueTelegram(tord);
+
+        await Task.Delay(10, stoppingToken);
+        const string testDeleteTelegram = "/Seq:002/Send:EWM...../Rec:FTS01.../Time:2021:11:02:08:12:19:122/Func:TordDelete........../HU:1234567890........../$$:";
+        logger.LogInformation("Providing test tord delete {Telegram}", testDeleteTelegram);
+        var tordDelete = new TordDelete();
+        tordDelete.Load(testDeleteTelegram);
+        telegramProcessor.EnqueueTelegram(tordDelete);
     }
 }

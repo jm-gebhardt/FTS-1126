@@ -20,7 +20,7 @@ public class ShortLoopTriggerPointEventHandlerTest
     {
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails);
+        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
 
@@ -47,7 +47,7 @@ public class ShortLoopTriggerPointEventHandlerTest
     {
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails);
+        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
 
         var fixture = new ShortLoopTriggerPointEventHandlerTestFixture()
@@ -73,7 +73,7 @@ public class ShortLoopTriggerPointEventHandlerTest
     {
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails);
+        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Pick).State = ActionState.Started;
 
         var fixture = new ShortLoopTriggerPointEventHandlerTestFixture()
@@ -97,7 +97,7 @@ public class ShortLoopTriggerPointEventHandlerTest
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
-        var actionGroup = order.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails);
+        var actionGroup = order.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails.CreationDate);
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Pick).State = ActionState.Started;
        
         var fixture = new ShortLoopTriggerPointEventHandlerTestFixture()
@@ -120,7 +120,7 @@ public class ShortLoopTriggerPointEventHandlerTest
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
-        var actionGroup = order.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails);
+        var actionGroup = order.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails.CreationDate);
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
 
         var fixture = new ShortLoopTriggerPointEventHandlerTestFixture()

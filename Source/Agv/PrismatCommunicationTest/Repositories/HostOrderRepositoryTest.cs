@@ -158,4 +158,46 @@ public class HostOrderRepositoryTest
 
         (await fixture.Repository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ShouldBeFalse();
     }
+
+    [TestMethod]
+    public async Task GetNextNotQueuedHostOrderPickingAt_ShortLoop_ReturnsHostOrder()
+    {
+        var pickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var longLoopPick = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(pickAt1020, longLoopOrder, longLoopPick);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetNextNotQueuedHostOrderPickingAt("1020")).ShouldBeEquivalentTo(pickAt1020);
+    }
+
+    [TestMethod]
+    public async Task GetNextNotQueuedHostOrderPickingAt_LongLoop_ReturnsHostOrder()
+    {
+        var pickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var longLoopPick = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(pickAt1020, longLoopOrder, longLoopPick);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetNextNotQueuedHostOrderPickingAt(null, true)).ShouldBeEquivalentTo(longLoopOrder);
+    }
+
+    [TestMethod]
+    public async Task GetNextNotQueuedHostOrderPickingAt_LongLoopPick_ReturnsHostOrder()
+    {
+        var pickAt1020 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        var longLoopOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var longLoopPick = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(pickAt1020, longLoopOrder, longLoopPick);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetNextNotQueuedHostOrderPickingAt(null)).ShouldBeEquivalentTo(longLoopPick);
+    }
 }

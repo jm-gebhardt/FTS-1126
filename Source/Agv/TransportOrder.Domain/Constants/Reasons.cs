@@ -33,7 +33,9 @@ public static class Reasons
 
     public const string ActionGroupAbortedToReactivateFromCharging = "ActionGroup aborted to reactivate Agv from charging";
     public const string ActionGroupAbortedByWebApi = "ActionGroup was aborted manually";
+    public const string ActionGroupAbortedByExternal = "ActionGroup was aborted by an external system";
 
     public const string ActionGroupCanceledByWebApi = "ActionGroup was canceled manually";
+    public const string ActionGroupCanceledByExternal = "ActionGroup was canceled by an external system";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

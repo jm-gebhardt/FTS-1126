@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -15,7 +14,7 @@ public class HostOrder
     private readonly List<Action> _actions = new();
 
     /// <summary>
-    /// The correlation id order the host order /action group
+    /// The correlation id of the host order
     /// </summary>
     public Guid CorrelationId { get; init; }
 
@@ -63,6 +62,11 @@ public class HostOrder
     /// True, if the host order passed a trigger point.
     /// </summary>
     public bool PassedTriggerPoint { get; private set; }
+
+    /// <summary>
+    /// True, if the host order has been queued.
+    /// </summary>
+    public bool IsQueued { get; set; }
 
     /// <summary>
     /// The assigned agv.
@@ -166,9 +170,9 @@ public class HostOrder
     /// Try to create an action group with a pick and a drop action from the host order.
     /// </summary>
     /// <param name="configuration">The graph configuration.</param>
-    /// <param name="orderDetails">The details of the host order.</param>
+    /// <param name="creationDate">The creation date of the order.</param>
     /// <returns>Action group with pick and drop actions.</returns>
-    public ActionGroup? TryCreatePickDropActionGroup(KaeserGraphConfiguration configuration, OrderDetails orderDetails)
+    public ActionGroup? TryCreatePickDropActionGroup(KaeserGraphConfiguration configuration, DateTime creationDate)
     {
         bool canCreatePickDropActionGroup = Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node));
         if (canCreatePickDropActionGroup)
@@ -177,8 +181,8 @@ public class HostOrder
                 OrderId,
                 Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv)
                     { Sequence = a.SequenceNumber }).ToList(),
-                orderDetails.Creator.ConvertToActionGroupCreator(),
-                orderDetails.CreationDate);
+                ActionGroupCreator.Wms,
+                creationDate);
         }
         return null;
     }
@@ -187,9 +191,9 @@ public class HostOrder
     /// Try to create an action group with a move, pick, and a drop action from the host order.
     /// </summary>
     /// <param name="configuration">The graph configuration.</param>
-    /// <param name="orderDetails">The details of the host order.</param>
+    /// <param name="creationDate">The creation date of the host order.</param>
     /// <returns>Action group with move, pick, drop actions, whereby the pick action has no target.</returns>
-    public ActionGroup CreateMovePickDropActionGroup(KaeserGraphConfiguration configuration, OrderDetails orderDetails)
+    public ActionGroup CreateMovePickDropActionGroup(KaeserGraphConfiguration configuration, DateTime creationDate)
     {
         return new ActionGroup(
                 CorrelationId, 
@@ -199,8 +203,8 @@ public class HostOrder
                     Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 1} ).First(),
                     Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 2} ).First()
                 ], 
-                orderDetails.Creator.ConvertToActionGroupCreator(), 
-                orderDetails.CreationDate);
+                ActionGroupCreator.Wms, 
+                creationDate);
     }
 
     /// <summary>

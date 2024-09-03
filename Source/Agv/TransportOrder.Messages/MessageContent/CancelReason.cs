@@ -11,7 +11,12 @@ public enum CancelReason : byte
     /// <summary>
     /// Triggered by Web Api.
     /// </summary>
-    WebApi = 0
+    WebApi = 0,
+
+    /// <summary>
+    /// Triggered by external command.
+    /// </summary>
+    External = 1
 }
 
 /// <summary>
@@ -29,6 +34,7 @@ public static class CancelReasonExtensions
         string? template = cancelReason switch
         {
             CancelReason.WebApi => Reasons.ActionGroupCanceledByWebApi,
+            CancelReason.External => Reasons.ActionGroupCanceledByExternal,
             _ => null
         };
         return template != null ? new Reason(template) : null;

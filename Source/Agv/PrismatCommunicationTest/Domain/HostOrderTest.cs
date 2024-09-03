@@ -14,7 +14,7 @@ public class HostOrderTest
         var shortCircuitOrder = OrderGenerator.GenerateShortCircuitOrder();
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(shortCircuitOrder);
 
-        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, shortCircuitOrder);
+        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, shortCircuitOrder.CreationDate);
         actionGroup.ShouldNotBeNull();
         actionGroup.Actions.Count.ShouldBe(2);
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
@@ -33,7 +33,7 @@ public class HostOrderTest
         var longCircuitOrder = OrderGenerator.GenerateUnknownPickTargetOrder();
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(longCircuitOrder);
 
-        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, longCircuitOrder);
+        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, longCircuitOrder.CreationDate);
         actionGroup.ShouldBeNull();
     }
 
@@ -42,7 +42,7 @@ public class HostOrderTest
     {
         var longCircuitOrder = OrderGenerator.GenerateUnknownPickTargetOrder();
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(longCircuitOrder);
-        var actionGroup = hostOrder.CreateMovePickDropActionGroup(OrderGenerator.KaeserConfiguration, longCircuitOrder);
+        var actionGroup = hostOrder.CreateMovePickDropActionGroup(OrderGenerator.KaeserConfiguration, longCircuitOrder.CreationDate);
 
         actionGroup.Actions.Count.ShouldBe(3);
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);

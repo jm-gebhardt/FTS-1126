@@ -109,7 +109,7 @@ public class ActionGroupEventHandlerTest
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
-        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails);
+        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails.CreationDate);
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
        
         var agvPassedShortLoopTriggerPoint = new DroppingAgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()), actionGroup, false);

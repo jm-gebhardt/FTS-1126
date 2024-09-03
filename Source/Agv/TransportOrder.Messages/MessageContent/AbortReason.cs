@@ -16,7 +16,12 @@ public enum AbortReason : byte
     /// <summary>
     /// The Agv was reactivated from charging.
     /// </summary>
-    ReactivatedFromCharging = 1
+    ReactivatedFromCharging = 1,
+
+    /// <summary>
+    /// Triggered by external service.
+    /// </summary>
+    External = 2
 }
 
 /// <summary>
@@ -35,6 +40,7 @@ public static class AbortReasonExtensions
         {
             AbortReason.ReactivatedFromCharging => Reasons.ActionGroupAbortedToReactivateFromCharging,
             AbortReason.WebApi => Reasons.ActionGroupAbortedByWebApi,
+            AbortReason.External => Reasons.ActionGroupAbortedByExternal,
             _ => null
         };
         return template != null ? new Reason(template) : null;

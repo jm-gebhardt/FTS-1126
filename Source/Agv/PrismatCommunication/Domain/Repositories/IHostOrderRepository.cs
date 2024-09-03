@@ -45,4 +45,18 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// Gets the next order picking at 1020 for dual operation.
     /// </summary>
     Task<HostOrder?> GetNextPickOrderForShortLoopDualOperation();
+
+    /// <summary>
+    /// Get a host order by handling unit.
+    /// </summary>
+    /// <param name="hu">The handling unit.</param>
+    /// <returns></returns>
+    Task<HostOrder?> GetByHu(string hu);
+
+    /// <summary>
+    /// Get the next host order picking at one of the pick targets that has not been queued.
+    /// </summary>
+    /// <param name="pickTarget">The pick target to check.</param>
+    /// <param name="unknownDrop">If the drop is known</param>
+    Task<HostOrder?> GetNextNotQueuedHostOrderPickingAt(string? pickTarget, bool unknownDrop = false);
 }
