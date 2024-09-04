@@ -83,12 +83,24 @@ public class ActionGroupEventHandlerTest
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
 
-        var agvPassedLoadTriggerPoint = new AgvPassedCargoTriggerPoint(Guid.NewGuid(), Guid.NewGuid(), true);
+        var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(Guid.NewGuid(), Guid.NewGuid(), true);
 
-        var passLoadTriggerPoint = await fixture.PublishAndGetFirstMessageAsync<AgvPassedCargoTriggerPoint, PassCargoTriggerPoint>(agvPassedLoadTriggerPoint);
+        var passCargoTriggerPoint = await fixture.PublishAndGetFirstMessageAsync<AgvPassedCargoTriggerPoint, PassCargoTriggerPoint>(agvPassedCargoTriggerPoint);
 
-        passLoadTriggerPoint.CorrelationId.ShouldBe(agvPassedLoadTriggerPoint.ActionGroupCorrelationId.GetValueOrDefault());
-        passLoadTriggerPoint.AgvCorrelationId.ShouldBe(agvPassedLoadTriggerPoint.CorrelationId);
+        passCargoTriggerPoint.CorrelationId.ShouldBe(agvPassedCargoTriggerPoint.ActionGroupCorrelationId.GetValueOrDefault());
+        passCargoTriggerPoint.AgvCorrelationId.ShouldBe(agvPassedCargoTriggerPoint.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task AgvPassedCargoTriggerPoint_NoActionGroup_DoesNotPublishPassCargoTriggerPoint()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+
+        var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(Guid.NewGuid(), null, true);
+
+        await fixture.TestHarness.Bus.Publish(agvPassedCargoTriggerPoint);
+        await fixture.ShouldHaveConsumedAsync<AgvPassedCargoTriggerPoint>();
+        await fixture.ShouldNotHavePublishedAsync<PassCargoTriggerPoint>();
     }
 
     [TestMethod]

@@ -237,17 +237,19 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     public async Task Consume(ConsumeContext<PassCargoTriggerPoint> context)
     {
         var (assignedAgv, correlationId) = context.Message;
-        if (correlationId == default)
+        try
         {
-            return;
+            var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+            if (hostOrder.HasUnknownPickTarget(configuration))
+            {
+                hostOrder.PassTriggerPoint();
+                await hostOrderRepository.UpdateAsync(hostOrder);
+                await context.Publish(new CargoTriggerPointPassed(assignedAgv));
+            }
         }
-
-        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        if (hostOrder.HasUnknownPickTarget(configuration))
+        catch (InvalidOperationException)
         {
-            hostOrder.PassTriggerPoint();
-            await hostOrderRepository.UpdateAsync(hostOrder);
-            await context.Publish(new CargoTriggerPointPassed(assignedAgv));
+            // not id of host order
         }
     }
 

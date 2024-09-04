@@ -60,7 +60,10 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     public async Task Consume(ConsumeContext<AgvPassedCargoTriggerPoint> context)
     {
         (var agv, Guid? actionGroupId, bool _) = context.Message;
-        await context.Publish(new PassCargoTriggerPoint(agv, actionGroupId.GetValueOrDefault()));
+        if(actionGroupId !=null)
+        {
+            await context.Publish(new PassCargoTriggerPoint(agv, actionGroupId.Value));
+        }
     }
 
     /// <summary>
