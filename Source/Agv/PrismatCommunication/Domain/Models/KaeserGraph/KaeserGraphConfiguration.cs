@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
 using JetBrains.Annotations;
+using Microsoft.IdentityModel.Tokens;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -155,6 +156,22 @@ public class KaeserGraphConfiguration
         if (!string.IsNullOrEmpty(yamlData.PrismatAklPickTarget))
         {
             PrismatAklPickTarget = yamlData.PrismatAklPickTarget;
+        }
+        if (!yamlData.TargetLiftHeight.IsNullOrEmpty())
+        {
+            UpdateLiftHeights(yamlData.TargetLiftHeight);
+        }
+    }
+
+    /// <summary>
+    /// Update lift heights.
+    /// </summary>
+    /// <param name="updatedLiftHeights">The updated lift heights.</param>
+    public void UpdateLiftHeights(Dictionary<string, double> updatedLiftHeights)
+    {
+        foreach ((string station, double liftHeight) in updatedLiftHeights)
+        {
+            TargetLiftHeight[station] = liftHeight;
         }
     }
 

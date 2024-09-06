@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Globalization;
+using System.Reflection;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
@@ -319,8 +320,8 @@ public class StartActionCommandConsumerTest
             const string orderId = "1234";
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Drop5";
-
-            var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId)
+            const double liftHeight = 1.23d;
+            var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>(){ {InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture)} })
             {
                 Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
                 Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()]
@@ -350,7 +351,7 @@ public class StartActionCommandConsumerTest
             // For drop action Karis expects destination ToStation values ...
             mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
             mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
-            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
             // ... and empty fromStation.
             mqttMessage.Stations?.FromStation.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Drop);

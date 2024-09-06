@@ -61,7 +61,7 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
         string agvSerialNumber = context.Message.SerialNumber;
 
         bool agvShouldRotate = action.InfoToAgv?.NeedsRotation() ?? false;
-        double? liftHeight = null;
+        double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
 
         var assignedAgv = context.Message.CorrelationId;
 

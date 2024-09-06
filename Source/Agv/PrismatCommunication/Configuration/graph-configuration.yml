@@ -1,21 +1,30 @@
-DecisionPoint1TriggerName: "DP1"
-CheckCargoTriggerName: "DP2"
-ShortLoopTriggerName: "DP3"
+DecisionPoint1TriggerName: DP1
+CheckCargoTriggerName: DP2
+ShortLoopTriggerName: DP3
 StationMapping:
   "1020": "3"
   "1050": "3"
+  "2110": "5"
+  "2130": "5"
+  "2210": "6"
+  "2230": "6"
+  "2310": "7"
+  "2330": "7"
+  "2410": "8"
+  "2430": "8"
   "9060": "4"
   "9070": "4"
-  "2130": "5"
-  "2110": "5"
-  "2230": "6"
-  "2210": "6"
-  "2330": "7"
-  "2310": "7"
-  "2430": "8"
-  "2410": "8"
 ConveyorStationMapping:
-  "1": "WE01"
-  "2": "WE02"
-  "3": "WE03"
+  "1": WE01
+  "2": WE02
+  "3": WE03
+TargetLiftHeight:
+  "2110": 2.211
+  "2130": 1.213
+  "2210": 2.221
+  "2230": 1.223
+  "2310": 2.231
+  "2330": 1.233
+  "2410": 2.241
+  "2430": 1.243
 
