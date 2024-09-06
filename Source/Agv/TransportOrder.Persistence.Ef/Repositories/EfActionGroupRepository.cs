@@ -29,11 +29,11 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAsync(ActionGroup actionGroup)
+    public async Task<bool> AddAsync(ActionGroup actionGroup)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         await context.AddAsync(actionGroup);
-        await context.SaveChangesAsync();
+        return await context.SaveChangesAsync() > 0;
     }
 
     /// <inheritdoc />
@@ -47,7 +47,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
-            .Where(a => a.AssignedAgv == assignedAgv && a.IsManual)
+            .Where(a => a.AssignedAgv == assignedAgv && a.IsManual && a.State == ActionGroupState.Created)
             .AsNoTracking();
 
         if (allowedActionTypes != null)

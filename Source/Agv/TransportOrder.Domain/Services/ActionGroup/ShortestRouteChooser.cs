@@ -29,47 +29,15 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
     }
 
     /// <summary>
-    /// Tries to find a AGV with shortest route to the pick action with the condition, that all actions are reachable
-    /// </summary>
-    public async Task<Agv?> GetAgvAsync(Models.ActionGroup.ActionGroup actionGroup, IList<Agv> agvs, IList<AgvData> agvData, CancellationToken cancellationToken = default)
-    {
-        Agv? bestAgv = null;
-        double minCosts = double.MaxValue;
-        foreach (var agv in agvs)
-        {
-            if (await _actionGroupRepository.HasUnfinishedDropActionsAsync(agv.CorrelationId) || await _actionGroupRepository.AgvHasPriorityActionGroups(agv.CorrelationId))
-            {
-                continue;
-            }
-            try
-            {
-                double? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, agvData.SingleOrDefault(d => d.CorrelationId == agv.CorrelationId), cancellationToken);
-                if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) > minCosts)
-                {
-                    continue;
-                }
-
-                minCosts = firstActionCost.Value;
-                bestAgv = agv;
-            }
-            catch (AgvLocationUnknownException exception)
-            {
-                _logger.LogError(exception, "{message}", exception.Message);
-            }
-        }
-
-        return bestAgv;
-    }
-
-    /// <summary>
     /// Returns the first ActionGroup that satisfies these conditions:
     /// <para>- Is a charging action group</para>
     /// <para>- Is a manual action group</para>
+    /// <para>- Is an action group assigned to the agv with an existing route for all actions and the cost of the first action is the lowest.</para>
     /// <para>- Is an action group with an existing route for all actions and the cost of the first action is the lowest.</para>
     /// </summary>
-    /// <param name="agv"></param>
-    /// <param name="agvData"></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="agv">The agv.</param>
+    /// <param name="agvData">The data of the agv.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>ActionGroup</returns>
     /// <exception cref="AgvLocationUnknownException"></exception>
     public async Task<Models.ActionGroup.ActionGroup?> GetNotStartedActionGroupAsync(Agv agv, AgvData? agvData, CancellationToken cancellationToken = default)
@@ -77,15 +45,12 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         var chargingActionGroup = await _actionGroupRepository.GetCreatedChargingActionGroupForAgvAsync(agv.CorrelationId);
         if (chargingActionGroup != null)
         {
-            _logger.LogDebug($@"ShortestRouteChooser.GetNotStartedActionGroupAsync: 
-                Found charging action group {chargingActionGroup.CorrelationId} for AGV: {agv.CorrelationId}");
+            _logger.LogDebug("ShortestRouteChooser.GetNotStartedActionGroupAsync: Found charging action group {ActionGroupCorrelationId} for AGV: {AgvCorrelationId}",chargingActionGroup.CorrelationId, agv.CorrelationId);
             return chargingActionGroup;
         }
 
         IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
-
         var manualActionGroup = notStartedActionGroups.OrderByDescending(g => g.HasPriority).FirstOrDefault(g => g.IsManual);
-
         if (manualActionGroup != null)
         {
             // If there is a manual action group, return this action group. The list of actionGroups is already ordered by the CreationDate, so the first is fine 
@@ -98,8 +63,14 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         {
             return nextActionGroup;
         }
-
-        return await SelectNextActionGroup(agv, agvData, cancellationToken, notStartedActionGroups.Except(priorityActionGroups).ToList());
+        List<Models.ActionGroup.ActionGroup> nextActionGroups = notStartedActionGroups.Except(priorityActionGroups).ToList();
+        List<Models.ActionGroup.ActionGroup> nextActionGroupsForAgv = nextActionGroups.Where(a => a.AssignedAgv == agv.CorrelationId).ToList();
+        nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroupsForAgv);
+        if (nextActionGroup != null)
+        {
+            return nextActionGroup;
+        }
+        return await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroups.Except(nextActionGroupsForAgv).ToList());
     }
 
     private async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups)
@@ -107,11 +78,15 @@ public class ShortestRouteChooser : IChooseAgvActionGroupService
         double minCosts = double.MaxValue;
 
         Models.ActionGroup.ActionGroup? nextActionGroup = null;
-        foreach (var actionGroup in notStartedActionGroups)
+        foreach (var actionGroup in notStartedActionGroups.OrderBy(g => g.CreatedDate))
         {
+            if (actionGroup.FirstNotStartedAction!.IsIncomplete)
+            {
+                continue;
+            }
             double? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, agvData, cancellationToken);
 
-            if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) > minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
+            if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) >= minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {
                 continue;
             }

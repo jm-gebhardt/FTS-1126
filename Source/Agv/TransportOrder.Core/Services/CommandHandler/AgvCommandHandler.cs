@@ -63,7 +63,8 @@ public class AgvCommandHandler :
     IConsumer<ResetOfflineWatchdog>,
     IConsumer<PrepareParkingOfAgv>,
     IConsumer<PrepareChargingOfAgv>,
-    IConsumer<UpdateAgvSettingsGroupReference>
+    IConsumer<UpdateAgvSettingsGroupReference>,
+    IConsumer<TryReactivateParkingAgvs>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -723,6 +724,18 @@ public class AgvCommandHandler :
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         await ResetOfflineWatchDog(context, agv, agvSettings);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryReactivateParkingAgvs"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryReactivateParkingAgvs> context)
+    {
+        ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        foreach (var agv in readyAgvs)
+        {
+            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+        }
     }
 
     private async Task<Agv?> TryGetAgv(Guid agvCorrelationId)

@@ -196,11 +196,6 @@ public class EfNodeStateRepository : INodeStateRepository
             .Any(n => n.NodeId == nodeId && n.NodeState != NodeLockState.Free);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="nodeId"></param>
-    /// <returns></returns>
     private NodeLock? GetNodeLock(string nodeId)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();

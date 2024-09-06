@@ -162,19 +162,6 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetReadyAgvsAsync(int minBatteryLevel = 0)
-    {
-        return await Agvs.Where(Agv.IsReadyStatic)
-            .Where(a => a.GraphExists &&
-                        !a.IsLocked &&
-                        a.Mode.Type == ModeType.Normal &&
-                        a.CurrentAgvState == AgvState.Idle &&
-                        !a.AgvStatus!.Busy &&
-                        a.AgvStatus!.BatteryCharge >= minBatteryLevel
-            ).ToListAsync();
-    }
-
-    /// <inheritdoc />
     public async Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

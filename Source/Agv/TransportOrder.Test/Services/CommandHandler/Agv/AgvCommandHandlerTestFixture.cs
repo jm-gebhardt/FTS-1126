@@ -37,7 +37,6 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     public readonly Mock<IAgvDb> AgvDb = new();
     private readonly Mock<IParkPointService> _parkPointService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
@@ -66,7 +65,6 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _productionOptions);
         collection.AddTransient(_ => AgvDb.Object);
         collection.AddTransient(_ => _chargingPointManager.Object);
-        collection.AddTransient(_ => _nodeStateRepository.Object);
         collection.AddTransient(_ => _parkPointService.Object);
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);

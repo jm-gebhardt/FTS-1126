@@ -16,7 +16,6 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Filters;
 [UsedImplicitly]
 public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<TryStartNewActionGroup>>,
-    IFilter<ConsumeContext<SelectNodesForAction>>,
     IFilter<ConsumeContext<TryStartNextActionInActionGroup>>,
     IFilter<ConsumeContext<StartActionOfActionGroup>>,
     IFilter<ConsumeContext<CompleteActionOfActionGroup>>,
@@ -34,13 +33,6 @@ public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<TryStartNewActionGroup> context, IPipe<ConsumeContext<TryStartNewActionGroup>> next)
-    {
-        LogDebug(context);
-        await next.Send(context);
-    }
-
-    /// <inheritdoc cref="IFilter{TContext}"/>>
-    public async Task Send(ConsumeContext<SelectNodesForAction> context, IPipe<ConsumeContext<SelectNodesForAction>> next)
     {
         LogDebug(context);
         await next.Send(context);

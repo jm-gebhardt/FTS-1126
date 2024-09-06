@@ -143,7 +143,7 @@ public class CompleteOrderTest
         await context.AddNewOrder(orderId, leNo, source, destination);
         await context.SaveChangesAsync();
         
-        var actionGroup = await _restApi!.WaitForFinishedActionGroupForOrder(orderId);
+        var actionGroup = await _restApi!.WaitForFinishedActionGroupForOrder(orderId, true);
         actionGroup.ShouldNotBeNull();
         
         context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();

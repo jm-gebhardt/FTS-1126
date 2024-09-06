@@ -29,7 +29,7 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
-    public static AgvAction GenerateChargeAction(Guid? groupId = null, string targetNodeId = "charger", int sequence = 0) => GenerateAction(groupId, targetNodeId, ActionType.Charge, sequence);
+    private static AgvAction GenerateChargeAction(Guid? groupId = null, string targetNodeId = "charger", int sequence = 0) => GenerateAction(groupId, targetNodeId, ActionType.Charge, sequence);
 
     public static AgvAction GenerateAction(Guid? groupId = null, string targetNodeId = "targetNode", ActionType actionType = ActionType.Move, int sequence = 0) =>
         new(Guid.NewGuid(), actionType, targetNodeId, groupId ?? Guid.NewGuid())

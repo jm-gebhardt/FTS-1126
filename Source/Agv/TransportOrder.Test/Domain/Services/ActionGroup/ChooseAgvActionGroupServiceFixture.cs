@@ -65,16 +65,4 @@ public class ChooseAgvActionGroupServiceFixture
         NotStartedActionGroups.Add(actionGroup);
         return this;
     }
-
-    public ChooseAgvActionGroupServiceFixture WithHasUnfinishedDropAction(bool hasUnfinishedDropAction)
-    {
-        AgvActionRepository.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedDropAction);
-        return this;
-    }
-
-    public ChooseAgvActionGroupServiceFixture WithHasPriorityAction(bool hasPriorityAction)
-    {
-        AgvActionRepository.Setup(x => x.AgvHasPriorityActionGroups(It.IsAny<Guid>())).ReturnsAsync(hasPriorityAction);
-        return this;
-    }
 }

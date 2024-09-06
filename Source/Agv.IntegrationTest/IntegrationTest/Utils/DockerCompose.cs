@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Polly;
@@ -177,6 +178,7 @@ public class DockerCompose
     /// <returns>Returns true if exit code is zero</returns>
     private bool RunCommand(string args, out string stdout, bool dockerComposeCommand = true, int timeout = 120000)
     {
+        var cmdOutput = new StringBuilder();
         var composeFiles = $"-f {string.Join(" -f ", _composeFiles)}";
         var cmd = dockerComposeCommand
             ? $"docker compose {composeFiles} --env-file \"{_envFile.FilePath}\" "
@@ -196,29 +198,44 @@ public class DockerCompose
                 RedirectStandardError = true
             }
         };
-        var stdOutWriter = new StringWriter();
-        process.OutputDataReceived += (_, e) =>
+        
+        using var outputWaitHandle = new AutoResetEvent(false);
+        process.OutputDataReceived += (sender, e) =>
         {
             Console.WriteLine(e.Data);
-            stdOutWriter.Write(e.Data);
+            
+            if (e.Data == null)
+            {
+                outputWaitHandle.Set();
+            }
+            else
+            {
+                cmdOutput.AppendLine(e.Data);
+            }
         };
-        process.ErrorDataReceived += (_, e) => { Console.Error.WriteLine(e.Data); };
-
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            Console.Error.WriteLine(e.Data);
+        };
+           
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        process.WaitForExit(timeout);
-        stdout = stdOutWriter.ToString();
-        if (!process.HasExited)
+            
+            
+        if (process.WaitForExit(timeout) &&
+            outputWaitHandle.WaitOne(timeout))
         {
-            process.Kill();
-            _logger.LogError("Command timeout {CommandArguments}", args);
-            process.WaitForExit();
-            return false;
+            stdout = cmdOutput.ToString();
+            var exitCode = process.ExitCode;
+            process.Close();
+            return exitCode == 0;
         }
 
-        var exitCode = process.ExitCode;
-        process.Close();
-        return exitCode == 0;
+        process.Kill();
+        _logger.LogError("Command timeout {CommandArguments}", args);
+        process.WaitForExit();
+        stdout = string.Empty;
+        return false;
     }
 }

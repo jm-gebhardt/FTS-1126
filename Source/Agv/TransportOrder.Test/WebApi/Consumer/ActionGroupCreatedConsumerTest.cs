@@ -17,7 +17,7 @@ public class ActionGroupCreatedConsumerTest
         var fixture = new ConsumerHubTestFixture<ActionGroupCreatedConsumer, IActionGroupPublisher>();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
-        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId));
+        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(actionGroup, actionGroup.CorrelationId, Guid.NewGuid()));
         
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();

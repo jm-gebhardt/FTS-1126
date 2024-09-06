@@ -6,12 +6,6 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
 public static class AgvGenerator
 {
-    public static Agv GenerateReadyAgv(int index = 0,  int batteryCharge = 100)
-    {
-        var agv = GenerateAgv(AgvState.Idle, index, "A", batteryCharge: batteryCharge);
-        return agv;
-    }
-
     public static Agv GenerateBusyAgv(int index = 0,int batteryCharge = 100, bool hasError = false)
     {
         var agv = GenerateAgv(AgvState.Busy, index, "A", batteryCharge: batteryCharge, hasError: hasError);

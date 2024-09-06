@@ -58,9 +58,9 @@ public class CreateActionGroupRequestHandler :
 
         var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, agvCorrelationId, hasPriority, creator);
         await _actionGroupRepository.AddAsync(actionGroup);
-        _logger.LogOrderInformation(LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(), actionGroup.CorrelationId, "Order created", $"Order {actionGroup.OrderId} was created successfully");
+        _logger.LogOrderInformation(LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(), actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully");
 
-        await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId));
+        await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agvCorrelationId));
         await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));
     }
 

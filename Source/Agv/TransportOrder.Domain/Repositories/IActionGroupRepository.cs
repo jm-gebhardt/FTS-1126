@@ -18,7 +18,7 @@ public interface IActionGroupRepository
     /// Saves the action
     /// </summary>
     /// <param name="actionGroup">Agv Action</param>
-    Task AddAsync(ActionGroup actionGroup);
+    Task<bool> AddAsync(ActionGroup actionGroup);
 
     /// <summary>
     /// Get a list of ActionGroup.

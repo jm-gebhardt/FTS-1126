@@ -9,12 +9,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 public interface IChooseAgvActionGroupService
 {
     /// <summary>
-    /// Tries to find a suitable AGV for this ActionGroup
-    /// Find AGV with shortest route to pick
-    /// </summary>
-    Task<Models.Agv.Agv?> GetAgvAsync(Models.ActionGroup.ActionGroup actionGroup, IList<Models.Agv.Agv> agvs, IList<AgvData> agvData, CancellationToken cancellationToken);
-
-    /// <summary>
     /// Get not started ActionGroups, returns the best action in the first ActionGroup that Agv can handle all actions
     /// </summary>
     /// <exception cref="AgvLocationUnknownException"></exception>

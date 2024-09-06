@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -785,5 +786,29 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.Setter.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryReactivateParkingAgvs_NoOccupiedParkers_DoesNotPublishAgvBecameIdle()
+    {
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([]);
+
+        await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
+
+        await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryReactivateParkingAgvs_OccupiedParkers_PublishesAgvBecameIdle()
+    {
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow)]);
+
+        await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
+
+        await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 }

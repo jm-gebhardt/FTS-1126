@@ -75,16 +75,9 @@ public class AgvEventHandler :
         _logger.LogInformation("Trying to prepare AGV:{CorrelationId} for charging.", agv.CorrelationId);
         await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            if (agv.ShouldStartManualAction)
+            if (!agv.CanStartAutomaticAction || agv.ShouldStartManualAction)
             {
-                _logger.LogDebug("AGV with CorrelationId {AgvCorrelationId} is in mode {Mode}. Try start manual action", agvCorrelationId, agv.Mode.Type.ToString());
-                await context.Publish(new TryStartManualAction(agv.CorrelationId));
-                return;
-            }
-
-            if (!agv.CanStartAutomaticAction)
-            {
-                _logger.LogDebug("AGV with CorrelationId {AgvCorrelationId} is in mode {Mode} and can not start any automatic actions", agvCorrelationId, agv.Mode.Type.ToString());
+                _logger.LogDebug("AGV with CorrelationId {AgvCorrelationId} is in mode {Mode} and can not create automatic charge action", agvCorrelationId, agv.Mode.Type.ToString());
                 return;
             }
 
@@ -127,32 +120,16 @@ public class AgvEventHandler :
             return;
         }
 
-        await _semaphoreProvider.ExecuteLockedAsync(async () =>
+        bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
+        if (hasUnfinishedActionGroup)
         {
-            bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-            if (hasUnfinishedActionGroup)
-            {
-                _logger.LogInformation("Starting next action for agv: {AgvCorrelationId}", agv.CorrelationId);
-                await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
-                return;
-            }
+            _logger.LogInformation("Starting next action for agv: {AgvCorrelationId}", agv.CorrelationId);
+            await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
+            return;
+        }
 
-            if (agv.ShouldStartManualAction)
-            {
-                _logger.LogInformation("AGV:{CorrelationID} should start manual action.", agv.CorrelationId);
-                await context.Publish(new TryStartManualAction(agv.CorrelationId));
-                return;
-            }
-
-            if (!agv.CanStartAutomaticAction)
-            {
-                _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} is in mode {Mode} and can not start any automatic actions", agvCorrelationId, agv.Mode.Type.ToString());
-                return;
-            }
-
-            _logger.LogInformation("Try starting new action group for agv: {AgvCorrelationId}", agv.CorrelationId);
-            await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
-        }, context.CancellationToken);
+        _logger.LogInformation("Try starting new action group for agv: {AgvCorrelationId}", agv.CorrelationId);
+        await context.Publish(new TryStartNewActionGroup(agv.CorrelationId));
     }
 
     /// <summary>

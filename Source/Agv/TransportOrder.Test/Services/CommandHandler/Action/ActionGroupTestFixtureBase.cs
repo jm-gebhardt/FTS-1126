@@ -107,7 +107,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     {
         _agvDb.AddAgvData(AgvDataGenerator.GenerateAgvData(correlationId:agv.CorrelationId));
         _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        _chooseAgvActionGroupService.Setup(x => x.GetAgvAsync(It.IsAny<ActionGroup>(), It.IsAny<IList<TransportOrder.Domain.Models.Agv.Agv>>(), It.IsAny<IList<AgvData>>(), It.IsAny<CancellationToken>())).ReturnsAsync(agv);
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithAddActionGroupIsSuccessful(bool isSuccessful = true)
+    {
+        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).ReturnsAsync(isSuccessful);
         return this;
     }
 
@@ -125,6 +130,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
             _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
             ActionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
             ActionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync([ actionGroup ]);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync(actionGroup);
         }
         else
         {
@@ -132,19 +138,13 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
             _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(null as ActionGroup);
             ActionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(null as ActionGroup);
             ActionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync([]);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync((ActionGroup?)null);
         }
         ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         ActionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
         ActionGroupRepository.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
         ActionGroupRepository.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-        ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync(actionGroup);
         
-        return this;
-    }
-
-    public ActionGroupTestFixtureBase<T> WithLastActionIsMoveToCoordinate(bool isMoveToCoordinate)
-    {
-        ActionGroupRepository.Setup(x => x.IsLastCompletedActionMoveToCoordinate(It.IsAny<Guid>())).ReturnsAsync(isMoveToCoordinate);
         return this;
     }
 

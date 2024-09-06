@@ -41,7 +41,7 @@ public class ActionGroupCreatedConsumer : IConsumer<ActionGroupCreated>
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
-        var (actionGroup, correlationId) = context.Message;
+        var (actionGroup, correlationId, _) = context.Message;
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(ActionGroupCreated), correlationId);
         var actionGroupReadModel = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(_mapper.Map<ActionGroup>(actionGroup));
         await _actionGroupPublisher.SendActionGroupCreatedAsync(actionGroupReadModel);

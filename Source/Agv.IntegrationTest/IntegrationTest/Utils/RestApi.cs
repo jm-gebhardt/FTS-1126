@@ -289,7 +289,7 @@ public class RestApi
     /// Wait for finished action group for order.
     /// </summary>
     /// <param name="orderId"></param>
-    /// <param name="longJob">Indicates that waiting can take a long time. Currently max. 10 min for long job. Default 30s for not long job [false] </param>
+    /// <param name="longJob">Indicates that waiting can take a long time. Currently max. 4 min for long job. Default 2 min for not long job [false] </param>
     /// <returns>JObject of Order or null if not found or unsuccessful.</returns>
     public async Task<JToken?> WaitForFinishedActionGroupForOrder(string orderId, bool longJob = false)
     {
@@ -312,7 +312,7 @@ public class RestApi
 
             WriteSuccess($"Action group {actionGroup} for '{orderId}' fetched!");
             return actionGroup;
-        }, longJob ? 600000 : 120000);
+        }, longJob ? 240000:120000);
     }
 
     /// <summary>

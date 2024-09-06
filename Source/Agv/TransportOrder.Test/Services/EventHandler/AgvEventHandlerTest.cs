@@ -21,34 +21,6 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 public class AgvEventHandlerTest
 {
     [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvIsInUserMode_PublishesTryStartManualAction()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        agv.SetUserMode();
-        fixture.AddAgv(agv);
-        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
-
-        await fixture.PublishMessageAsync(agvNeedsCharging);
-        
-        await fixture.ShouldHavePublishedAsync<TryStartManualAction>();
-    }
-
-    [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvIsInMaintenanceMode_PublishesTryStartManualAction()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        agv.SetMaintenanceMode(null);
-        fixture.AddAgv(agv);
-        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
-
-        await fixture.PublishMessageAsync(agvNeedsCharging);
-
-        await fixture.ShouldHavePublishedAsync<TryStartManualAction>();
-    }
-
-    [TestMethod]
     public async Task Consume_AgvNeedsCharging_AgvNotReadyForBusy_NothingPublished()
     {
         var fixture = new AgvEventHandlerTestFixture();
@@ -59,7 +31,6 @@ public class AgvEventHandlerTest
         await fixture.PublishMessageAsync(agvNeedsCharging);
         
         await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
-        await fixture.ShouldNotHavePublishedAsync<TryStartManualAction>();
         await fixture.ShouldNotHavePublishedAsync<CreateChargingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
     }
@@ -76,37 +47,8 @@ public class AgvEventHandlerTest
         await fixture.PublishMessageAsync(agvNeedsCharging);
 
         await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
-        await fixture.ShouldNotHavePublishedAsync<TryStartManualAction>();
         await fixture.ShouldNotHavePublishedAsync<CreateChargingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
-    }
-
-    [TestMethod]
-    public async Task Consume_AgvBecameIdle_AgvIsInMaintenanceMode_PublishesTryStartManualAction()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        agv.SetMaintenanceMode(null);
-        fixture.AddAgv(agv);
-        var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
-
-        await fixture.PublishMessageAsync(agvBecameIdle);
-
-        await fixture.ShouldHavePublishedAsync<TryStartManualAction>();
-    }
-
-    [TestMethod]
-    public async Task Consume_AgvBecameIdle_AgvIsInUserMode_PublishesTryStartManualAction()
-    {
-        var fixture = new AgvEventHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
-        agv.SetUserMode();
-        fixture.AddAgv(agv);
-        var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
-
-        await fixture.PublishMessageAsync(agvBecameIdle);
-
-        await fixture.ShouldHavePublishedAsync<TryStartManualAction>();
     }
 
     [TestMethod]
@@ -166,7 +108,6 @@ public class AgvEventHandlerTest
         await fixture.PublishMessageAsync(agvBecameIdle);
 
         await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
-        await fixture.ShouldNotHavePublishedAsync<TryStartManualAction>();
         await fixture.ShouldHavePublishedAsync<TryStartNewActionGroup>();
     }
 

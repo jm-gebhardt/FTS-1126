@@ -1,13 +1,9 @@
 ﻿using AutoMapper;
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
-using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
-using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -31,8 +27,6 @@ public class ActionCommandHelper
     private readonly IStationRepository _stationRepository;
     private readonly IRouteService _routeService;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly IChooseAgvActionGroupService _chooseAgvActionGroupService;
-    private readonly ISemaphoreProvider<IAgvsSemaphore> _actionManagerSemaphoreProvider;
     private readonly IMapper _mapper;
     private readonly IBus _bus;
     private readonly IAgvDb _agvDb;
@@ -42,9 +36,7 @@ public class ActionCommandHelper
         IRouteService routeService,
         IAgvDb agvDb,
         IActionGroupRepository actionGroupRepository,
-        IChooseAgvActionGroupService chooseAgvActionGroupService,
         IStationRepository stationRepository,
-        ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider,
         IBus bus,
         IMapper mapper)
     {
@@ -52,8 +44,6 @@ public class ActionCommandHelper
         _routeService = routeService;
         _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
-        _chooseAgvActionGroupService = chooseAgvActionGroupService;
-        _actionManagerSemaphoreProvider = actionManagerSemaphoreProvider;
         _stationRepository = stationRepository;
         _mapper = mapper;
         _bus = bus;
@@ -188,50 +178,6 @@ public class ActionCommandHelper
         }
     }
 
-    private async Task<Domain.Models.Agv.Agv?> SelectAgvForActionGroup(Domain.Models.ActionGroup.ActionGroup actionGroup, CancellationToken cancellationToken)
-    {
-        Domain.Models.Agv.Agv? agv = null;
-        await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
-        {
-            ICollection<Domain.Models.Agv.Agv> goodAgvs = (await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ToList();
-            ICollection<AgvData> agvData = await _agvDb.Data.GetSelectedAgvDataAsync(goodAgvs.Select(a => a.CorrelationId).ToList());
-            agv = await _chooseAgvActionGroupService.GetAgvAsync(actionGroup, goodAgvs.ToList(), agvData.ToList(), cancellationToken);
-        }, cancellationToken);
-
-        if (agv != null && !actionGroup.FirstNotStartedAction!.IsIncomplete)
-        {
-            actionGroup.Assign(agv);
-        }
-        return agv;
-    }
-
-    /// <summary>
-    /// Get an agv for an action group (either from db or select a new one).
-    /// </summary>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <param name="assignedAgv">The assigned agv.</param>
-    /// <param name="actionGroup">The action group.</param>
-    /// <returns>An agv or null if none was selected.</returns>
-    public async Task<Domain.Models.Agv.Agv?> GetAgvForActionGroup(CancellationToken cancellationToken, Guid? assignedAgv, Domain.Models.ActionGroup.ActionGroup actionGroup)
-    {
-        if (assignedAgv == null && actionGroup.AssignedAgv == null)
-        {
-            var agv = await SelectAgvForActionGroup(actionGroup, cancellationToken);
-            if (agv != null)
-            {
-                actionGroup.Assign(agv);
-            }
-            return agv;
-        }
-
-        if(assignedAgv == null)
-        {
-            return  await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv!.Value);
-        }
-
-        return  await _agvDb.Agvs.GetAgvAsync(assignedAgv.Value);
-    }
-
     /// <summary>
     /// Check if an action can be started.
     /// </summary>
@@ -304,5 +250,39 @@ public class ActionCommandHelper
         _logger.LogError("Could not start action {Action} of group {ActionGroupCorrelationId}, there are other started action groups for this agv.", action.CorrelationId, action.ParentId);
         await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
         return false;
+    }
+
+    /// <summary>
+    /// Get the next manual action for the given agv.
+    /// </summary>
+    /// <param name="agv">The agv.</param>
+    /// <returns>The manual action.</returns>
+    public async Task<AgvAction?> GetManualAction(Domain.Models.Agv.Agv agv)
+    {
+        List<ActionType>? allowedActionTypes = null;
+        if (agv.CanStartManualPickDropAction)
+        {
+            allowedActionTypes = [ActionType.Pick, ActionType.Drop];
+        }
+
+        if (agv.CanStartManualOperationalAction)
+        {
+            if (allowedActionTypes == null)
+            {
+                allowedActionTypes = [ActionType.Charge, ActionType.Move];
+            }
+            else
+            {
+                allowedActionTypes.AddRange([ActionType.Charge, ActionType.Move]);
+            }
+        }
+
+        var actionGroup = await _actionGroupRepository.GetNextManualActionGroupForAgvAsync(agv.CorrelationId, allowedActionTypes);
+        if (actionGroup == null)
+        {
+            _logger.LogInformation("There is no manual action group available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
+            return null;
+        }
+        return actionGroup.FirstNotStartedAction;
     }
 }
