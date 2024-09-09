@@ -20,7 +20,7 @@ public class NodeStateChangedConsumer(IMapPublisher mapPublisher, ILogger<NodeSt
     public async Task Consume(ConsumeContext<NodeStateChanged> context)
     {
         var (nodeState, stationId) = context.Message;
-        logger.LogStationInformation(LogCodes.StationStateChanged, stationId, "State changed", $"State of station changed to '{nodeState.NodeState}'");
+        logger.LogStationInformation(LogCodes.StationStateChanged, stationId, "State Changed", $"State of station changed to '{nodeState.NodeState}'");
         await mapPublisher.SendNodeStateChangedAsync(nodeState, stationId);
     }
 }

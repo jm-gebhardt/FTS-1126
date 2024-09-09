@@ -401,7 +401,7 @@ public class AgvCommandHandler :
             station = await _stationRepository.GetRequiredStationBaseInformation(newLastNodeId);
             if (station != null)
             {
-                _logger.LogStationInformation(LogCodes.StationAgvReached, station.Id, "Agv reached station", $"Agv {agv.SerialNumber} reached station");
+                _logger.LogStationInformation(LogCodes.StationAgvReached, station.Id, "AGV Reached Station", $"AGV {agv.SerialNumber} reached station");
             }
         }
         if (oldLastNodeId == null)
@@ -412,7 +412,7 @@ public class AgvCommandHandler :
         station = await _stationRepository.GetRequiredStationBaseInformation(oldLastNodeId);
         if (station != null)
         {
-            _logger.LogStationInformation(LogCodes.StationAgvLeft, station.Id, "Agv left station", $"Agv {agv.SerialNumber} left station");
+            _logger.LogStationInformation(LogCodes.StationAgvLeft, station.Id, "AGV Left Station", $"AGV {agv.SerialNumber} left station");
         }
     }
 
@@ -504,7 +504,7 @@ public class AgvCommandHandler :
         agv.SetUserMode(setter);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
-        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "Agv mode changed", $"AGV { agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
+        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV { agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
     }
 
@@ -519,7 +519,7 @@ public class AgvCommandHandler :
         agv.SetNormalMode(setter);
 
          await _agvDb.Agvs.UpdateAgvAsync(agv);
-        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "Agv mode changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
+        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
 
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
         await context.Publish(new AgvBecameIdle(agv.CorrelationId));
@@ -537,7 +537,7 @@ public class AgvCommandHandler :
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
 
-        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "Agv mode changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
+        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode, cancelManualActions));
     }
 
