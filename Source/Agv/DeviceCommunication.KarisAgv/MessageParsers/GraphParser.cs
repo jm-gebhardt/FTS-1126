@@ -96,7 +96,7 @@ public class GraphParser
 
         double length = edgeType switch
         {
-            EdgeType.Bezier1 or EdgeType.Bezier2 => mqttEdge.ToBezier(start, end).GetLength(BezierResolution),
+            EdgeType.Bezier2 or EdgeType.Bezier3 or EdgeType.Bezier5 => mqttEdge.ToBezier(start, end).GetLength(BezierResolution),
             EdgeType.Polypath => mqttEdge.ToPolypath(start, end).GetLength(),
             EdgeType.Slanted => mqttEdge.ToSlanted(start, end).GetLength(),
             EdgeType.Direct => mqttEdge.ToDirect(start, end).GetLength(),
@@ -156,20 +156,27 @@ public class GraphParser
             case EdgeType.Direct:
                 return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id);
 
-            case EdgeType.Bezier1:
+            case EdgeType.Bezier2:
 
                 if (controlPoints?.Count != 1)
                 {
-                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier1)} curve");
-                }
-                return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, id);
-
-            case EdgeType.Bezier2:
-                if (controlPoints?.Count != 2)
-                {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier2)} curve");
                 }
-                return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id);
+                return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, id);
+
+            case EdgeType.Bezier3:
+                if (controlPoints?.Count != 2)
+                {
+                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier3)} curve");
+                }
+                return GraphEdge.CreateBezier3(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id);
+
+            case EdgeType.Bezier5:
+                if (controlPoints?.Count != 4)
+                {
+                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier5)} curve");
+                }
+                return GraphEdge.CreateBezier5(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray(), id);
 
             case EdgeType.Polypath:
                 if (controlPoints == null || controlPoints.Count < 1)

@@ -300,7 +300,7 @@ public class AStar : BaseRouteAlgorithm
         time += edge.Variant switch
         {
             EdgeType.Direct => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
-            EdgeType.Bezier1 or EdgeType.Bezier2 => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
+            EdgeType.Bezier2 or EdgeType.Bezier3 or EdgeType.Bezier5 => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
             _ => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost)
         };
 
@@ -316,7 +316,7 @@ public class AStar : BaseRouteAlgorithm
         return edge.Variant switch
         {
             EdgeType.Direct => MaxVelocityStraight,
-            EdgeType.Bezier1 or EdgeType.Bezier2 => MaxVelocityTurn,
+            EdgeType.Bezier2 or EdgeType.Bezier3 or EdgeType.Bezier5 => MaxVelocityTurn,
             _ => MaxVelocityStraight
         };
     }
@@ -394,7 +394,7 @@ public class AStar : BaseRouteAlgorithm
         return edge.Variant switch
         {
             EdgeType.Direct => toNodeVector - fromNodeVector,
-            EdgeType.Bezier1 or EdgeType.Bezier2 => toNodeVector - edge.VariantParameters.Last().ToVector2(),
+            EdgeType.Bezier2 or EdgeType.Bezier3 or EdgeType.Bezier5 => toNodeVector - edge.VariantParameters.Last().ToVector2(),
             // Fallback is Direct
             _ => toNodeVector - fromNodeVector
         };
@@ -412,7 +412,7 @@ public class AStar : BaseRouteAlgorithm
         return edge.Variant switch
         {
             EdgeType.Direct => toNodeVector - fromNodeVector,
-            EdgeType.Bezier1 or EdgeType.Bezier2 => edge.VariantParameters.First().ToVector2() - fromNodeVector,
+            EdgeType.Bezier2 or EdgeType.Bezier3 or EdgeType.Bezier5 => edge.VariantParameters.First().ToVector2() - fromNodeVector,
             // Fallback is Direct
             _ => toNodeVector - fromNodeVector
         };

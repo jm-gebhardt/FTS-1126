@@ -199,7 +199,7 @@ public class GraphParserTest
     }
 
     [TestMethod]
-    public void Parse_Bezier1_NotSingleControlPointProvided_ThrowsException()
+    public void Parse_Bezier2_NotSingleControlPointProvided_ThrowsException()
     {
         var nodes = new MqttNode[]
         {
@@ -208,44 +208,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier1", ControlPoints = new List<MqttControlPoint> { new(), new() } }
-        };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
-        Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
-    }
-
-    [TestMethod]
-    public void Parse_Bezier1_ReturnsBezier1Curve()
-    {
-        var nodes = new MqttNode[]
-        {
-            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = "2", X = 100f, Y = 100f, Z = 0f }
-        };
-        var edges = new MqttEdge[]
-        {
-            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier1", ControlPoints = new List<MqttControlPoint> { new() } }
-        };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
-        var graph = parser.Graph;
-        parser.SerialNumber.ShouldBe(AgvSerialNumber2);
-        graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-        graph.Nodes.Count.ShouldBe(2);
-        graph.Edges.Count.ShouldBe(1);
-        graph.Edges.Select(e => e.Variant).First().ShouldBe(EdgeType.Bezier1);
-    }
-
-    [TestMethod]
-    public void Parse_Bezier2_NotTwoControlPointsProvided_ThrowsException()
-    {
-        var nodes = new MqttNode[]
-        {
-            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
-            new() { NodeId = "2", X = 100f, Y = 100f, Z = 0f }
-        };
-        var edges = new MqttEdge[]
-        {
-            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new() } }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
@@ -261,7 +224,7 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new(), new() } }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
         var graph = parser.Graph;
@@ -273,7 +236,44 @@ public class GraphParserTest
     }
 
     [TestMethod]
-    public void Parse_Bezier2_Bidirectional_ReverseControlPoints()
+    public void Parse_Bezier3_NotTwoControlPointsProvided_ThrowsException()
+    {
+        var nodes = new MqttNode[]
+        {
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 100f, Y = 100f, Z = 0f }
+        };
+        var edges = new MqttEdge[]
+        {
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier3", ControlPoints = new List<MqttControlPoint> { new() } }
+        };
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
+    }
+
+    [TestMethod]
+    public void Parse_Bezier3_ReturnsBezier3Curve()
+    {
+        var nodes = new MqttNode[]
+        {
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 100f, Y = 100f, Z = 0f }
+        };
+        var edges = new MqttEdge[]
+        {
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier3", ControlPoints = new List<MqttControlPoint> { new(), new() } }
+        };
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var graph = parser.Graph;
+        parser.SerialNumber.ShouldBe(AgvSerialNumber2);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+        graph.Nodes.Count.ShouldBe(2);
+        graph.Edges.Count.ShouldBe(1);
+        graph.Edges.Select(e => e.Variant).First().ShouldBe(EdgeType.Bezier3);
+    }
+
+    [TestMethod]
+    public void Parse_Bezier3_Bidirectional_ReverseControlPoints()
     {
         var nodes = new MqttNode[]
         {
@@ -284,7 +284,7 @@ public class GraphParserTest
         {
             new()
             {
-                EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1, EdgeType = "Bezier2",
+                EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1, EdgeType = "Bezier3",
                 ControlPoints = new List<MqttControlPoint> { new() { X = 1, Y = 1 }, new() { X = 2, Y = 2 } }
             }
         };
@@ -294,9 +294,74 @@ public class GraphParserTest
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
         graph.Nodes.Count.ShouldBe(2);
         var edge = graph.Edges.First();
-        edge.Variant.ShouldBe(EdgeType.Bezier2);
+        edge.Variant.ShouldBe(EdgeType.Bezier3);
         var reverseEdge = graph.Edges.Last();
-        reverseEdge.Variant.ShouldBe(EdgeType.Bezier2);
+        reverseEdge.Variant.ShouldBe(EdgeType.Bezier3);
+        edge.VariantParameters.ShouldBe(reverseEdge.VariantParameters.Reverse());
+    }
+
+    [TestMethod]
+    public void Parse_Bezier5_NotFourControlPointsProvided_ThrowsException()
+    {
+        var nodes = new MqttNode[]
+        {
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 100f, Y = 100f, Z = 0f }
+        };
+        var edges = new MqttEdge[]
+        {
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier5", ControlPoints = new List<MqttControlPoint> { new() } }
+        };
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
+    }
+
+    [TestMethod]
+    public void Parse_Bezier5_ReturnsBezier5Curve()
+    {
+        var nodes = new MqttNode[]
+        {
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 100f, Y = 100f, Z = 0f }
+        };
+        var edges = new MqttEdge[]
+        {
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier5", ControlPoints = new List<MqttControlPoint> { new(), new(), new(), new() } }
+        };
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var graph = parser.Graph;
+        parser.SerialNumber.ShouldBe(AgvSerialNumber2);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+        graph.Nodes.Count.ShouldBe(2);
+        graph.Edges.Count.ShouldBe(1);
+        graph.Edges.Select(e => e.Variant).First().ShouldBe(EdgeType.Bezier5);
+    }
+
+    [TestMethod]
+    public void Parse_Bezier5_Bidirectional_ReverseControlPoints()
+    {
+        var nodes = new MqttNode[]
+        {
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 100f, Y = 100f, Z = 0f }
+        };
+        var edges = new MqttEdge[]
+        {
+            new()
+            {
+                EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1, EdgeType = "Bezier5",
+                ControlPoints = new List<MqttControlPoint> { new() { X = 1, Y = 1 }, new() { X = 2, Y = 2 }, new() { X = 3, Y = 3 }, new() { X = 4, Y = 4 } }
+            }
+        };
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var graph = parser.Graph;
+        parser.SerialNumber.ShouldBe(AgvSerialNumber2);
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+        graph.Nodes.Count.ShouldBe(2);
+        var edge = graph.Edges.First();
+        edge.Variant.ShouldBe(EdgeType.Bezier5);
+        var reverseEdge = graph.Edges.Last();
+        reverseEdge.Variant.ShouldBe(EdgeType.Bezier5);
         edge.VariantParameters.ShouldBe(reverseEdge.VariantParameters.Reverse());
     }
 

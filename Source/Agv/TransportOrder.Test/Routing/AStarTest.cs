@@ -420,7 +420,7 @@ public class AStarTest
                 GraphEdge.CreateDirect("01", "02Dir", (float)Math.Sqrt(2)),
                 GraphEdge.CreateDirect("02Dir", "03"),
                 GraphEdge.CreateDirect("02Dir", "04", (float)Math.Sqrt(2)),
-                GraphEdge.CreateBezier1("01", "02Bez", (float)bezier.GetLength(100), 1, 0),
+                GraphEdge.CreateBezier2("01", "02Bez", (float)bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("02Bez", "03"),
                 GraphEdge.CreateDirect("02Bez", "04", (float)Math.Sqrt(2))
             }
@@ -463,7 +463,7 @@ public class AStarTest
             new List<GraphEdge>
             {
                 GraphEdge.CreateDirect("01", "Dir", (float)Math.Sqrt(Math.Pow(0.9, 2) + 4)),
-                GraphEdge.CreateBezier1("01", "Bez", (float)bezier.GetLength(100), 1, 0),
+                GraphEdge.CreateBezier2("01", "Bez", (float)bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("Bez", "03"),
                 GraphEdge.CreateDirect("Dir", "03", 0.1f)
             }

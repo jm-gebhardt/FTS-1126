@@ -7,7 +7,7 @@ using Gebhardt.Acc.Common.Extensions;
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 
 /// <summary>
-/// Represents a <see cref="BaseEdge"/> of type <see cref="EdgeType.Bezier1"/> or <see cref="EdgeType.Bezier2"/> .
+/// Represents a <see cref="BaseEdge"/> of type <see cref="EdgeType.Bezier2"/>, <see cref="EdgeType.Bezier3"/>,  or <see cref="EdgeType.Bezier5"/> .
 /// </summary>
 public class BezierEdge : SimpleEdge
 {

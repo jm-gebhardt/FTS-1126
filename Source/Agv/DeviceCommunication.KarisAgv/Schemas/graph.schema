@@ -123,18 +123,19 @@
                 },
                 "edgeType": {
                     "type": "string",
-                    "description": "The edge type (DIRECT/SLANTED/BEZIER1/BEZIER2/POLYPATH).",
+                    "description": "The edge type (DIRECT/SLANTED/BEZIER2/BEZIER3/BEZIER5/POLYPATH).",
                     "enum": [
                         "DIRECT",
                         "SLANTED",
-                        "BEZIER1",
                         "BEZIER2",
+                        "BEZIER3",
+                        "BEZIER5",
                         "POLYPATH"
                     ]
                 },
                 "controlPoints": {
                     "type": "array",
-                    "description": "The list of control points (absolute locations). BEZIER1 has one, BEZIER2 has two and SLANTED at least one control points.",
+                    "description": "The list of control points (absolute locations, w/o start end end of edge). BEZIER2 has one, BEZIER3 has two, BEZIER5 has four, and SLANTED at least one control points.",
                     "items": [
                         {
                             "type": "object",

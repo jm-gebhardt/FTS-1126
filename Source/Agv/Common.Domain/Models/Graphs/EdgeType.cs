@@ -18,16 +18,22 @@ public enum EdgeType
     Slanted,
 
     /// <summary>
-    /// Bézier curve with two control points where both are the same.
-    /// </summary>
-    [UsedImplicitly]
-    Bezier1,
-
-    /// <summary>
-    /// Bezier curve with two different control points.
+    /// Bézier curve of 2nd grade with three control points (including start and end).
     /// </summary>
     [UsedImplicitly]
     Bezier2,
+
+    /// <summary>
+    /// Bézier curve of 3rd grade with four control points (including start and end).
+    /// </summary>
+    [UsedImplicitly]
+    Bezier3,
+
+    /// <summary>
+    /// Bézier curve of 5th grade with six control points (including start and end).
+    /// </summary>
+    [UsedImplicitly]
+    Bezier5,
 
     /// <summary>
     /// Path with up to ten points.

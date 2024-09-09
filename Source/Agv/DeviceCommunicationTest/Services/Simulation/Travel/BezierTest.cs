@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
 [TestClass]
 public class BezierTest
 {
-    ///////// Graph with Bezier2  /////////////////
+    ///////// Graph with Bezier3  /////////////////
     // 0 ---- 1 ---- 2 ---- 3 ---- 4 ---- 5 ---- //
     // |                                         //
     // 1                   C2             Src3   //
@@ -26,9 +26,9 @@ public class BezierTest
 
     private GraphNode C2 { get; } = new("C2") { X = 3, Y = 1 };
 
-    private GraphEdge Edge { get; } = GraphEdge.CreateBezier2("Way2", "Src3", 4, 5, 3, 3, 1);
+    private GraphEdge Edge { get; } = GraphEdge.CreateBezier3("Way2", "Src3", 4, 5, 3, 3, 1);
 
-    private GraphEdge StraightEdge { get; } = GraphEdge.CreateBezier2("C2", "Src3", 2, 3.5, 1, 4.5, 1);
+    private GraphEdge StraightEdge { get; } = GraphEdge.CreateBezier3("C2", "Src3", 2, 3.5, 1, 4.5, 1);
 
     [TestMethod]
     public void Construct_ValidData_PropertiesSet()

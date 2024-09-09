@@ -148,24 +148,24 @@ public class FixedGraphGenerator : GraphGeneratorBase
             CreateDirect(Way0010, Way0015, nodes),
             CreateDirect(Way0011, Way0016, nodes),
             CreateDirect(Way0012, Way0009, nodes),
-            CreateBezier1(Way0013, Way0009, 22.75d, 67.25d, nodes),
+            CreateBezier2(Way0013, Way0009, 22.75d, 67.25d, nodes),
             CreateDirect(Way0013, Way0012, nodes),
             CreateDirect(Way0014, Way0013, nodes),
             CreatePolypath(Way0014, Way0029,  new List<EdgeCoefficient> { new(32.25d, 50d) }, nodes),
-            CreateBezier1(Way0014, Way0032, 31.375d, 51.125d, nodes),
+            CreateBezier2(Way0014, Way0032, 31.375d, 51.125d, nodes),
             CreateDirect(Way0015, Way0014, nodes),
 
             CreatePolypath(Way0015, Way0017, new List<EdgeCoefficient>
             {
                 new(76.875d, 51.875d), new(88.2d, 51.875d)
             },nodes),
-            CreateBezier1(Way0015, Way0018, 47.625d, 58.625d, nodes),
+            CreateBezier2(Way0015, Way0018, 47.625d, 58.625d, nodes),
             CreateDirect(Way0016, Way0015, nodes),
-            CreateBezier2(Way0017, Way0018, 80d, 52d, 54.375d, 45d, nodes),
+            CreateBezier3(Way0017, Way0018, 80d, 52d, 54.375d, 45d, nodes),
             CreateDirect(Way0123, Way0017, nodes),
             CreateDirect(Way0017, Way0123, nodes),
             CreateSlanted(Way0018, Way0014, East, 3.375, nodes),
-            CreateBezier1(Way0018, Way0022, 40.625d, 48.4d, nodes),
+            CreateBezier2(Way0018, Way0022, 40.625d, 48.4d, nodes),
             CreateDirect(Way0022, Way0023, nodes),
             CreateDirect(Way0023, Way0024, nodes),
             CreatePolypath(Way0024, Way0030, new List<EdgeCoefficient> { new(31.25d, 25.125d) }, nodes),
@@ -211,11 +211,11 @@ public class FixedGraphGenerator : GraphGeneratorBase
         return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, length, toNodeId));
     }
 
-    /// <inheritdoc cref="GraphEdge.CreateBezier1"/>
-    private static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)
+    /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
+    private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)
     {
         float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x, (float)y) });
-        return GraphEdge.CreateBezier1(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(EdgeType.Bezier1,fromNodeId, length, toNodeId));
+        return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(EdgeType.Bezier2,fromNodeId, length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreatePolypath"/>
@@ -230,11 +230,11 @@ public class FixedGraphGenerator : GraphGeneratorBase
         return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float)length, toNodeId));
     }
 
-    /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
-    private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
+    /// <inheritdoc cref="GraphEdge.CreateBezier3"/>
+    private static GraphEdge CreateBezier3(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
     {
         float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x1, (float)y1), new((float)x2, (float)y2) });
-        return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(EdgeType.Bezier2, fromNodeId, length, toNodeId));
+        return GraphEdge.CreateBezier3(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(EdgeType.Bezier3, fromNodeId, length, toNodeId));
     }
 
     /// <inheritdoc cref="GraphEdge.CreateSlanted"/>

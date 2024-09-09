@@ -182,7 +182,7 @@ public class GraphEdge : IEquatable<GraphEdge>
     }
 
     /// <summary>
-    /// Creates a new <see cref="EdgeType.Bezier1"/> <see cref="GraphEdge"/> instance.
+    /// Creates a new <see cref="EdgeType.Bezier2"/> <see cref="GraphEdge"/> instance.
     /// </summary>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
@@ -191,13 +191,13 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="y">The y coordinate of the bezier curve control polygon point.</param>
     /// <param name="id">Optional id.</param>
     [UsedImplicitly]
-    public static GraphEdge CreateBezier1(string fromNodeId, string toNodeId, float length, double x, double y, Guid? id = null)
+    public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float length, double x, double y, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier1, new List<EdgeCoefficient> { new(x, y) });
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> { new(x, y) });
     }
 
     /// <summary>
-    /// Creates a new <see cref="EdgeType.Bezier2"/> <see cref="GraphEdge"/> instance.
+    /// Creates a new <see cref="EdgeType.Bezier3"/> <see cref="GraphEdge"/> instance.
     /// </summary>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
@@ -208,9 +208,27 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="y2">The y coordinate of the second bezier curve control polygon point.</param>
     /// <param name="id">Optional id.</param>
     [UsedImplicitly]
-    public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float length, double x1, double y1, double x2, double y2, Guid? id = null)
+    public static GraphEdge CreateBezier3(string fromNodeId, string toNodeId, float length, double x1, double y1, double x2, double y2, Guid? id = null)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> { new(x1, y1), new(x2, y2) });
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier3, new List<EdgeCoefficient> { new(x1, y1), new(x2, y2) });
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="EdgeType.Bezier5"/> <see cref="GraphEdge"/> instance.
+    /// </summary>
+    /// <param name="fromNodeId">The start point of the edge.</param>
+    /// <param name="toNodeId">The end point of the edge.</param>
+    /// <param name="length">Length of the edge in [m].</param>
+    /// <param name="controlPoints">The control points except start and end of the edge.</param>
+    /// <param name="id">Optional id.</param>
+    [UsedImplicitly]
+    public static GraphEdge CreateBezier5(string fromNodeId, string toNodeId, float length, EdgeCoefficient[] controlPoints, Guid? id = null)
+    {
+        if (controlPoints.Length != 4)
+        {
+            throw new Exception("Wrong number of control points, should be 4 excluding source and target for Bezier 5");
+        }
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier5, controlPoints);
     }
 
     /// <summary>

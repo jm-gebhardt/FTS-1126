@@ -83,8 +83,9 @@ public class AgvTravelSimulator : IAgvTravelSimulator
                 EdgeType.Direct => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
                 EdgeType.Polypath => new PolypathEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
                 EdgeType.Slanted => new SlantedEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
-                EdgeType.Bezier1 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
                 EdgeType.Bezier2 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
+                EdgeType.Bezier3 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
+                EdgeType.Bezier5 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
                 _ => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards)
             };
             Edges.Add(edge);

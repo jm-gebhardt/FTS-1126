@@ -49,8 +49,8 @@ public class GraphTest
     {
         var id = Guid.NewGuid();
         var fixture = new GraphTestFixture()
-            .WithGraphEdges(EdgeGenerator.Generate(variant: EdgeType.Bezier1, id: id))
-            .WithAgvGraphEdges(EdgeGenerator.Generate(variant: EdgeType.Bezier2, id: id))
+            .WithGraphEdges(EdgeGenerator.Generate(variant: EdgeType.Bezier2, id: id))
+            .WithAgvGraphEdges(EdgeGenerator.Generate(variant: EdgeType.Bezier3, id: id))
             .Build();
 
         Should.Throw<InvalidOperationException>(() => fixture.Graph.Merge(fixture.AgvGraph));
