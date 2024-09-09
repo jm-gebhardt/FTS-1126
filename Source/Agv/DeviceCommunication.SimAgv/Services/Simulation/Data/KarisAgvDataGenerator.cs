@@ -3,11 +3,33 @@ using Gebhardt.Acc.Common.Domain.Models;
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
 
 /// <summary>
-/// Karis Agv Data Generator where types are generated in a round robin fashion
+/// Karis Agv Data Generator where types are generated in a round-robin fashion
 /// </summary>
-public class KarisAgvDataGenerator : IAgvDataGenerator
+public class KarisAgvDataGenerator: IAgvDataGenerator
 {
+    private readonly int[] _karisTypes = [1, 2, 3];
+
     private const string IpAddressBase = "192.168.0.2";
+
+    /// <summary>
+    /// Get karis types from command line.
+    /// </summary>
+    public KarisAgvDataGenerator(int[]? karisTypes)
+    {
+        if (karisTypes == null || karisTypes.Length == 0)
+        {
+            return;
+        }
+        if (karisTypes.All(k => k is 1 or 2 or 3))
+        {
+            _karisTypes = karisTypes;
+        }
+        else
+        {
+            string karisTypeString = string.Join(",", karisTypes);
+            throw new ArgumentException($"Option '--KarisTypes' contains invalid values [{karisTypeString}]. Valid values are 1, 2, or 3.");
+        }
+    }
 
     /// <summary>
     /// Karis Types
@@ -48,10 +70,12 @@ public class KarisAgvDataGenerator : IAgvDataGenerator
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    private static AgvType RoundRobinAgvType(int index)
+    private AgvType RoundRobinAgvType(int index)
     {
-        int typeCount = Enum.GetNames(typeof(AgvType)).Length;
-        return (AgvType)(index % typeCount);
+        int typeCount = _karisTypes.Length;
+        int arrayIndex = index % typeCount;
+
+        return (AgvType)(_karisTypes[arrayIndex]  - 1);
     }
 
     /// <summary>

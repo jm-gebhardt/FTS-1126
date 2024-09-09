@@ -144,6 +144,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private double BatteryChargeRate => _options.BatteryChargeRate; // Rate at which the battery charge increases during charge in [%/s]
 
+    private string[]? SpawnAt => _options.SpawnAt?.ToArray(); // Id of nodes where AGVs will spawn at simulation start up
+
     /// <summary>
     /// SimulatedAgvStateMachine Constructor
     /// </summary>
@@ -215,7 +217,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private void SetSagaFactory()
     {
         Event(() => CreateAgvEvent, e =>
-            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.SimulationSpeed, GetInitialBatteryCharge(), BatteryChargeRate, _timeProvider))
+            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.SimulationSpeed, GetInitialBatteryCharge(), BatteryChargeRate, _timeProvider,  null, SpawnAt))
         );
     }
 

@@ -207,4 +207,53 @@ public class SimulatedAgvSagaTest
         var expectedRemaining = (DateTime)saga.ActionFinishDate! - now;
         remainingDuration.TotalSeconds.ShouldBe(expectedRemaining.TotalSeconds);
     }
+
+    [TestMethod]
+    public void Construct_WithValidSpawnNodes_SpawnNodeIdSet()
+    {
+        const int simulationSpeed = 2;
+        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1");
+        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
+
+        var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
+        var agvGraph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
+
+        var agvData = new KarisType1(Guid.NewGuid(), "ip address");
+        var agv = new SimulatedAgv(agvData.CorrelationId, "id", "",
+            true,
+            false,
+            false,
+            true,
+            DateTime.MinValue,
+            DateTime.MinValue,
+            AgvGraph: agvGraph, AgvData: agvData);
+            var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node2.Id]);
+            saga.SpawnNodeIds.ShouldNotBeNull();
+            saga.SpawnNodeIds.Length.ShouldBe(1);
+            saga.SpawnNodeIds[0].ShouldBe(node2.Id);
+    }
+
+    [TestMethod]
+    public void Construct_WithInvalidValidSpawnNodes_ShouldThrowArgumentException()
+    {
+        const int simulationSpeed = 2;
+        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1");
+        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
+        const string unknownNode = "Unknown";
+
+        var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
+        var agvGraph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
+
+        var agvData = new KarisType1(Guid.NewGuid(), "ip address");
+        var agv = new SimulatedAgv(agvData.CorrelationId, "id", "",
+            true,
+            false,
+            false,
+            true,
+            DateTime.MinValue,
+            DateTime.MinValue,
+            AgvGraph: agvGraph, AgvData: agvData);
+ 
+        Should.Throw<ArgumentException>(() => new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node1.Id, node2.Id, unknownNode]));
+    }
 }

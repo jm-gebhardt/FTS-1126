@@ -48,7 +48,7 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
         _bus = bus;
         _clientFactory = clientFactory;
         _options = options;
-        _agvDataGenerator = new KarisAgvDataGenerator();
+        _agvDataGenerator = new KarisAgvDataGenerator(_options.KarisTypes?.ToArray());
         _graph = _graphGenerator.GenerateGraph();
         _maps = _graphGenerator.GenerateMaps().ToList();
     }

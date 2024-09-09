@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -70,5 +71,24 @@ public class SimulatedAgvProviderTest
 
             (await fixture.TestHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgvResponse>(c => c.Context.CorrelationId == $"SimAgv-{i}".ToGuid())).ShouldBeTrue();
         }
+    }
+    
+    [TestMethod]
+    [DataRow(1, "Type 1")]
+    [DataRow(2, "Type 2")]
+    [DataRow(3, "Type 3")]
+    public void CreateAgvData_WithValidKarisTypes_AgvDataCreated(int karisType, string expectedType)
+    {
+        var agvData = new KarisAgvDataGenerator([karisType]).Generate(0, Guid.NewGuid());
+        agvData.ShouldNotBeNull();
+        agvData.Type.ShouldBe(expectedType);
+    }
+
+    [TestMethod]
+    public void CreateAgvData_WithInValidKarisTypes_AgvDataCreated()
+    {
+        const int invalidKarisType = 0;
+
+        Should.Throw<ArgumentException>(() => new KarisAgvDataGenerator([invalidKarisType]).Generate(0, Guid.NewGuid()));
     }
 }

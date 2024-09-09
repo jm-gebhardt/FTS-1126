@@ -24,6 +24,13 @@ public sealed class Options
     public int Agvs { get; init; }
 
     /// <summary>
+    /// List of Karis AGV types to use separated by comma (1: BF1, 2: BF2, 3: BF3) e.g. "1,2".
+    /// </summary>
+    [UsedImplicitly]
+    [Option("karisTypes", HelpText = "List of Karis AGV types [1, 2, 3]", Required = false, Min = 1, Separator = ',')]
+    public IEnumerable<int>? KarisTypes { get; init; }
+
+    /// <summary>
     /// The factor applied to agv velocities and acceleration to speed up the simulation.
     /// </summary>
     [UsedImplicitly]
@@ -107,6 +114,13 @@ public sealed class Options
     [UsedImplicitly]
     [Option('d', "destinations", HelpText = "List of simulation destinations", Required = false, Min = 1, Separator = ',', SetName = GridGraphSet)]
     public IEnumerable<string>? Destinations { get; init; }
+
+    /// <summary>
+    /// List of node ids where AGVs should spawn
+    /// </summary>  
+    [UsedImplicitly]
+    [Option("spawnAt", HelpText = "List of node ids where AGVs should spawn.", Required = false, Min = 1, Separator = ',')]
+    public IEnumerable<string>? SpawnAt { get; init; }
 
     /// <summary>
     /// Number of grid rows [3..[
