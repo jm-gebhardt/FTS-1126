@@ -32,9 +32,9 @@ try
     parser.ParseArguments<Options>(args)
         .WithParsed(simulationOptions =>
         {
-            if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false })
+            if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false, BezierGridGraph:false })
             {
-                throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph})");
+                throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph} / KaeserGraph {simulationOptions.KaeserGraph} / BezierGraph {simulationOptions.BezierGridGraph})");
             }
             // Enable serialization/deserialization of enum values as string.
             SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
@@ -51,6 +51,11 @@ try
                     else if (simulationOptions.GridGraph)
                     {
                         services.AddTransient<IGraphGenerator, GridGraphGenerator>();
+                        services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
+                    }
+                    else if (simulationOptions.BezierGridGraph)
+                    {
+                        services.AddSingleton<IGraphGenerator, BezierGraphGenerator>();
                         services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
                     }
                     else if (simulationOptions.KaeserGraph)

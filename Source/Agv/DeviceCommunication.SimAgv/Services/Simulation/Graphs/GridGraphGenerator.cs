@@ -38,17 +38,35 @@ public class GridGraphGenerator : GraphGeneratorBase
     private const float NodeOffset = 5;
     private const float EdgeMetric = 1;
 
-    private int GridWidth => Math.Max(Destinations.Length, Sources.Length);
+    /// <summary>
+    /// The width of the grid.
+    /// </summary>
+    protected int GridWidth => Math.Max(Destinations.Length, Sources.Length);
 
-    private readonly List<GraphNode> _gridNodes = new();
-    private readonly List<GraphNode> _otherNodes = new();
-    private readonly List<GraphEdge> _edges = new();
+    /// <summary>
+    /// The grid nodes.
+    /// </summary>
+    protected readonly List<GraphNode> GridNodes = new();
+    
+    /// <summary>
+    /// Other nodes in the graph (e.g. service nodes).
+    /// </summary>
+    protected readonly List<GraphNode> OtherNodes = new();
+    
+    /// <summary>
+    /// Edges of the graph.
+    /// </summary>
+    protected readonly List<GraphEdge> Edges = new();
 
-    private readonly int _gridRows;
+    /// <summary>
+    /// The number of grid rows.
+    /// </summary>
+    protected readonly int GridRows;
+    
     private readonly AgvGraph.NodeType[] _serviceNodeTypes;
 
     /// <inheritdoc />
-    protected override Guid GraphId => $"SIM_{GridWidth}x{_gridRows}".ToGuid();
+    protected override Guid GraphId => $"SIM_{GridWidth}x{GridRows}".ToGuid();
 
     /// <summary>
     /// Initializes a new <see cref="GridGraphGenerator"/> instance based on simulation options.
@@ -58,7 +76,7 @@ public class GridGraphGenerator : GraphGeneratorBase
             options.Destinations != null ? options.Destinations.ToArray() : Array.Empty<string>(),
             mapGenerator)
     {
-        _gridRows = options.GridRows;
+        GridRows = options.GridRows;
         _serviceNodeTypes = CreateServiceNodes();
     }
 
@@ -78,7 +96,7 @@ public class GridGraphGenerator : GraphGeneratorBase
         AgvGraph.NodeType[]? serviceNodes = null)
         : base(sources, destinations, mapGenerator)
     {
-        _gridRows = gridRows;
+        GridRows = gridRows;
         _serviceNodeTypes = serviceNodes ?? Array.Empty<AgvGraph.NodeType>();
     }
 
@@ -96,29 +114,32 @@ public class GridGraphGenerator : GraphGeneratorBase
 
         return new AgvGraph(
             correlationId,
-            _otherNodes.Concat(_gridNodes).ToArray(),
-            _edges.ToArray()
+            OtherNodes.Concat(GridNodes).ToArray(),
+            Edges.ToArray()
         );
     }
 
     /// <summary>
     /// Clear internal state
     /// </summary>
-    private void Clear()
+    protected void Clear()
     {
-        _gridNodes.Clear();
-        _otherNodes.Clear();
-        _edges.Clear();
+        GridNodes.Clear();
+        OtherNodes.Clear();
+        Edges.Clear();
     }
 
-    private void AddGrid()
+    /// <summary>
+    /// Add grid.
+    /// </summary>
+    protected void AddGrid()
     {
         // Generate grid nodes
-        for (int y = 0; y < _gridRows; y++)
+        for (int y = 0; y < GridRows; y++)
         {
             for (int x = 0; x < GridWidth; x++)
             {
-                _gridNodes.Add(new GraphNode($"N{x:000}-{y:000}")
+                GridNodes.Add(new GraphNode($"N{x:000}-{y:000}")
                 {
                     Type = AgvGraph.NodeType.WayPoint,
                     X = x * NodeOffset + OriginXOffset,
@@ -127,7 +148,7 @@ public class GridGraphGenerator : GraphGeneratorBase
             }
         }
         // Connect grid nodes
-        for (int y = 0; y < _gridRows; y++)
+        for (int y = 0; y < GridRows; y++)
         {
             for (int x = 0; x < GridWidth; x++)
             {
@@ -135,17 +156,17 @@ public class GridGraphGenerator : GraphGeneratorBase
                 if (x != GridWidth - 1)
                 {
                     AddEdge(
-                        _gridNodes[y * GridWidth + x],
-                        _gridNodes[y * GridWidth + x + 1]
+                        GridNodes[y * GridWidth + x],
+                        GridNodes[y * GridWidth + x + 1]
                     );
                 }
 
                 // Connect vertical
-                if (y != _gridRows - 1)
+                if (y != GridRows - 1)
                 {
                     AddEdge(
-                        _gridNodes[y * GridWidth + x],
-                        _gridNodes[(y + 1) * GridWidth + x]
+                        GridNodes[y * GridWidth + x],
+                        GridNodes[(y + 1) * GridWidth + x]
                     );
                 }
             }
@@ -155,9 +176,9 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// <summary>
     /// Add sources nodes and edges
     /// </summary>
-    private void AddSourceNodes()
+    protected void AddSourceNodes()
     {
-        if (_gridNodes.Count == 0)
+        if (GridNodes.Count == 0)
         {
             return;
         }
@@ -165,7 +186,7 @@ public class GridGraphGenerator : GraphGeneratorBase
         for (int index = 0; index < Sources.Length; index++)
         {
             string nodeId = Sources[index];
-            var gridNode = _gridNodes[index];
+            var gridNode = GridNodes[index];
             var sourceNode = new GraphNode(nodeId)
             {
                 Type = AgvGraph.NodeType.Pick,
@@ -173,7 +194,7 @@ public class GridGraphGenerator : GraphGeneratorBase
                 Y = gridNode.Y - OriginYOffset / 2,
                 Theta = North
             };
-            _otherNodes.Add(sourceNode);
+            OtherNodes.Add(sourceNode);
             AddEdge(sourceNode, gridNode);
         }
     }
@@ -181,9 +202,9 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// <summary>
     /// Add destination nodes and edges
     /// </summary>
-    private void AddDestinationNodes()
+    protected void AddDestinationNodes()
     {
-        if (_gridNodes.Count == 0)
+        if (GridNodes.Count == 0)
         {
             return;
         }
@@ -191,7 +212,7 @@ public class GridGraphGenerator : GraphGeneratorBase
         for (int index = 0; index < Destinations.Length; index++)
         {
             string nodeId = Destinations[Destinations.Length - index - 1];
-            var gridNode = _gridNodes[_gridNodes.Count - index - 1];
+            var gridNode = GridNodes[GridNodes.Count - index - 1];
             var destinationNode = new GraphNode(nodeId)
             {
                 Type = AgvGraph.NodeType.Drop,
@@ -199,7 +220,7 @@ public class GridGraphGenerator : GraphGeneratorBase
                 Y = gridNode.Y + OriginYOffset / 2,
                 Theta = South
             };
-            _otherNodes.Add(destinationNode);
+            OtherNodes.Add(destinationNode);
             AddEdge(destinationNode, gridNode);
         }
     }
@@ -207,7 +228,7 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// <summary>
     /// Add services nodes and edges using <see cref="AddServiceNode"/>
     /// </summary>
-    private void AddServiceNodes()
+    protected void AddServiceNodes()
     {
         for (int index = 0; index < _serviceNodeTypes.Length; index++)
         {
@@ -226,7 +247,7 @@ public class GridGraphGenerator : GraphGeneratorBase
     private void AddServiceNode(AgvGraph.NodeType nodeType, int index)
     {
         int connectedGridNodeIdx = FindConnectedGridNodeIndex(index, out int side);
-        var gridNode = _gridNodes[connectedGridNodeIdx];
+        var gridNode = GridNodes[connectedGridNodeIdx];
         string nodeId = $"{Enum.GetName(nodeType)}-{index}";
 
         var serviceNode = new GraphNode(nodeId)
@@ -236,7 +257,7 @@ public class GridGraphGenerator : GraphGeneratorBase
             Y = gridNode.Y,
             Theta = side == -1 ? West : East
         };
-        _otherNodes.Add(serviceNode);
+        OtherNodes.Add(serviceNode);
         AddEdge(serviceNode, gridNode);
     }
 
@@ -246,12 +267,12 @@ public class GridGraphGenerator : GraphGeneratorBase
         {
             throw new IndexOutOfRangeException("Number of service nodes must be greater than 0.");
         }
-        if (_serviceNodeTypes.Length > 2 * _gridRows)
+        if (_serviceNodeTypes.Length > 2 * GridRows)
         {
             throw new IndexOutOfRangeException("Grid is too small to add service nodes.");
         }
 
-        float step = 2.0f * _gridRows / _serviceNodeTypes.Length;
+        float step = 2.0f * GridRows / _serviceNodeTypes.Length;
         int nodeIdx = (int)(step * serviceNodeIndex + 0.5);
 
         if (nodeIdx % 2 == 0)
@@ -271,14 +292,14 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// <param name="fromNode"></param>
     /// <param name="toNode"></param>
     /// <param name="bidirectional"></param>
-    private void AddEdge(GraphNode fromNode, GraphNode toNode, bool bidirectional = true)
+    protected virtual void AddEdge(GraphNode fromNode, GraphNode toNode, bool bidirectional = true)
     {
         string fromNodeId = fromNode.Id;
         string toNodeId = toNode.Id;
-        _edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, EdgeMetric, toNodeId)));
+        Edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, EdgeMetric, toNodeId)));
         if (bidirectional)
         {
-            _edges.Add(GraphEdge.CreateDirect(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, toNodeId, EdgeMetric, fromNodeId)));
+            Edges.Add(GraphEdge.CreateDirect(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, toNodeId, EdgeMetric, fromNodeId)));
         }
     }
 
@@ -289,7 +310,7 @@ public class GridGraphGenerator : GraphGeneratorBase
     /// <returns></returns>
     private AgvGraph.NodeType[] CreateServiceNodes()
     {
-        int serviceNodeCount = _gridRows * 2;
+        int serviceNodeCount = GridRows * 2;
         var serviceNodes = new AgvGraph.NodeType[serviceNodeCount];
         for (int idx = 0; idx < serviceNodeCount; idx++)
         {

@@ -108,7 +108,7 @@ public class GraphEdgeTest
     [TestMethod]
     public void CreateBezier5_Not4ControlPoints_ThrowsException()
     {
-        EdgeCoefficient[] edgeCoefficients = Enumerable.Range(0, 2).Select(_ => new EdgeCoefficient(1, 1)).ToArray();
+        EdgeCoefficient[] edgeCoefficients = Enumerable.Range(0,2).Select(_ => new EdgeCoefficient(1, 1)).ToArray();
         Should.Throw<Exception>(() => GraphEdge.CreateBezier5("source", "target", 12.0f, edgeCoefficients, Guid.NewGuid()));
     }
 

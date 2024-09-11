@@ -95,6 +95,13 @@ public sealed class Options
     public bool GridGraph { get; init; }
 
     /// <summary>
+    /// Flag to use the bezier grid graph generator in simulation mode
+    /// </summary>
+    [UsedImplicitly]
+    [Option('b', "beziergraph", HelpText = "Use the bezier grid graph generator", SetName = GridGraphSet, Default = false)]
+    public bool BezierGridGraph { get; init; }
+
+    /// <summary>
     /// Flag to use the grid graph generator in simulation mode
     /// </summary>
     [UsedImplicitly]
