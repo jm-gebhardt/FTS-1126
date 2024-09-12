@@ -1,6 +1,8 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -32,5 +34,41 @@ public class StationControllerTests
 
         (await harness.Published.Any<GetStation>()).ShouldBeTrue();
         (await harness.Published.Any<GotStation>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task LockStation_ValidData_LocksStation()
+    {
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
+
+        StationControllerTestFixture<LockStation, StationCommandHandler> fixture = new StationControllerTestFixture<LockStation, StationCommandHandler>()
+            .WithStation(station)
+            .WithUser(null, "user")
+            .Build();
+
+        bool result = await fixture.GetControllerResultValueAsync(c => c.LockStation(station.Id, "reason", "description", LockedOrderHandlingType.AllowFinish));
+
+        result.ShouldBeFalse();
+
+        (await fixture.MediatorTestHarness.Consumed.Any<LockStation>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Published.Any<LockedUnlockedStation>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task UnlockStation_ValidData_LocksStation()
+    {
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
+
+        StationControllerTestFixture<UnlockStation, StationCommandHandler> fixture = new StationControllerTestFixture<UnlockStation, StationCommandHandler>()
+            .WithStation(station)
+            .WithUser(null, "user")
+            .Build();
+
+        bool result = await fixture.GetControllerResultValueAsync(c => c.UnlockStation(station.Id));
+
+        result.ShouldBeFalse();
+
+        (await fixture.MediatorTestHarness.Consumed.Any<UnlockStation>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Published.Any<LockedUnlockedStation>()).ShouldBeTrue();
     }
 }

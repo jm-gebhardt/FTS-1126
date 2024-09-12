@@ -63,9 +63,19 @@ public class Station
     public string? LockedBy { get; set; }
 
     /// <summary>
-    /// The reason the station was locked.
+    /// The reason the station was locked. For internal logging only.
     /// </summary>
     public string? LockReason { get; set; }
+
+    /// <summary>
+    /// Description of the lock.
+    /// </summary>
+    public string? LockDescription { get; set; }
+
+    /// <summary>
+    /// Defines how already started orders will be handled that involve a locked station.
+    /// </summary>
+    public LockedOrderHandlingType? LockedOrderHandling { get; set; }
 
     /// <inheritdoc cref="Station"/>>
     public Station(string name, AgvGraph.NodeType primaryType, ICollection<AgvGraph.NodeType> additionalTypes)
@@ -109,9 +119,34 @@ public class Station
     /// </summary>
     /// <param name="user">The user that locked the station.</param>
     /// <param name="reason">The reason for locking the station.</param>
-    public void UpdateLockState(string? user, string? reason)
+    /// <param name="lockDescription">The description of the lock.</param>
+    /// <param name="lockedOrderHandling">How orders concerning this station should be handled.</param>
+    public void UpdateLockState(string? user, string? reason, string? lockDescription, LockedOrderHandlingType? lockedOrderHandling)
     {
         LockedBy = user;
         LockReason = reason;
+        LockDescription = lockDescription;
+        LockedOrderHandling = lockedOrderHandling;
     }
+}
+
+/// <summary>
+/// Defines how orders involving a locked station will be handled that have already started.
+/// </summary>
+public enum LockedOrderHandlingType
+{
+    /// <summary>
+    /// Abort the orders.
+    /// </summary>
+    Abort,
+
+    /// <summary>
+    /// Pause the orders.
+    /// </summary>
+    OnHold,
+
+    /// <summary>
+    /// Allow the orders to finish.
+    /// </summary>
+    AllowFinish
 }

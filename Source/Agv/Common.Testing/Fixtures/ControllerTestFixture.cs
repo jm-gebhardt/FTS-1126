@@ -26,6 +26,8 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
         return typeof(TRequest) == typeof(TClient) ? (IRequestClient<TClient>)GetRequestClient() : null!;
     }
 
+    protected HttpContext? HttpContextOverride { get; set; }
+
     public override MediatorTestFixture<TRequest, TRequestHandler, MockConsumer> Build()
     {
         base.Build();
@@ -33,7 +35,7 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
         Controller = GetController();
         Controller.ControllerContext = new ControllerContext(
             new ActionContext(
-                new DefaultHttpContext(),
+                HttpContextOverride ?? new DefaultHttpContext(),
                 new RouteData(),
                 new ControllerActionDescriptor()));
 

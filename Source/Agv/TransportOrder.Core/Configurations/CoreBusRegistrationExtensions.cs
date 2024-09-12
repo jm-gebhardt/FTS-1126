@@ -126,7 +126,15 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
         busRegistrationConfigurator.AddConsumer<GraphEventHandler>();
 
-        busRegistrationConfigurator.AddConsumer<NodeCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<StationCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<LockStation, StationCommandHandler>(c);
+            partitioner.PartitionMessageById<UnlockStation, StationCommandHandler>(c);
+        });
+
+        busRegistrationConfigurator.AddRequestClient<LockStation>();
+        busRegistrationConfigurator.AddRequestClient<UnlockStation>();
 
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 

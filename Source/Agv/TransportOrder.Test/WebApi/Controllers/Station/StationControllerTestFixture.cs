@@ -8,6 +8,8 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Station;
 
@@ -19,12 +21,17 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     private readonly Mock<IStationRepository> _stationRepository = new();
 
     [UsedImplicitly]
+    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+
+    [UsedImplicitly]
     private readonly Mock<IMapRepository> _mapRepository = new();
 
     protected override StationController GetController()
     {
         IRequestClient<GetStation> getStationRequestClient = GetRequestClient<GetStation>();
-        var controller = new StationController(Mapper, getStationRequestClient);
+        IRequestClient<LockStation> lockStationRequestClient = GetRequestClient<LockStation>();
+        IRequestClient<UnlockStation> unlockStationRequestClient = GetRequestClient<UnlockStation>();
+        var controller = new StationController(Mapper, getStationRequestClient, lockStationRequestClient, unlockStationRequestClient);
         return controller;
     }
 
@@ -39,9 +46,30 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
         {
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _stationRepository.Object);
+            sc.AddTransient(_ => _nodeStateRepository.Object);
         });
 
         base.Build();
+        return this;
+    }
+
+    public StationControllerTestFixture<TRequest, TRequestHandler> WithUser(string? role, string? email)
+    {
+        var httpContext = new Mock<HttpContext>();
+
+        if (role != null)
+        {
+            httpContext.Setup(
+                x => x.User.IsInRole(It.Is<string>(s => s.Equals(role)))
+            ).Returns(true);
+        }
+        if (email != null)
+        {
+            httpContext.Setup(x => x.User.FindFirst(ClaimTypes.Email)).Returns(new Claim(ClaimTypes.Email, email));
+        }
+
+        HttpContextOverride = httpContext.Object;
+
         return this;
     }
 

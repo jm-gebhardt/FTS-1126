@@ -56,4 +56,6 @@ public static class LogCodes
     public const int StationAgvMoving= 405;
     public const int StationAgvReached= 406;
     public const int StationAgvLeft= 407;
+    public const int StationLocked = 408;
+    public const int StationUnlocked = 409;
 }

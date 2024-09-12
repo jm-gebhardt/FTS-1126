@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
@@ -68,6 +69,16 @@ public record StationDto
     /// The reason the station was locked.
     /// </summary>
     public string? LockReason { get; set; }
+
+    /// <summary>
+    /// The description of the lock.
+    /// </summary>
+    public string? LockDescription { get; set; }
+
+    /// <summary>
+    /// The handling of orders that involve this station.
+    /// </summary>
+    public LockedOrderHandlingType LockedOrderHandling { get; set; }
 
     /// <summary>
     /// ctor called by AutoMapper.

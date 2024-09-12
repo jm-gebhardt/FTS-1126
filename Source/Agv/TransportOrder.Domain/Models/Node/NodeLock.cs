@@ -7,7 +7,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 /// </summary>
 public enum NodeLockState
 {
-    /// <summary>Node is Free to ise</summary>
+    /// <summary>Node is Free to use</summary>
     Free,
 
     /// <summary>Node is Reserved for an agv</summary>

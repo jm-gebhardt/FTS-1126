@@ -204,4 +204,34 @@ public class EfStationRepositoryTest
             station.Agvs.ShouldBeEmpty();
         }
     }
+
+    [TestMethod]
+    public async Task LockUnlockStation_ValidData_StationLockedUnlocked()
+    {
+        var fixture = new EfStationRepositoryTestFixture();
+        var agvId = Guid.NewGuid();
+        var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
+        
+        await fixture.Repository.AddStations(graph);
+
+        var station = (await fixture.Repository.GetStations()).First();
+
+        await fixture.Repository.LockStation(station.Id, "User", "Reason", "Description", LockedOrderHandlingType.AllowFinish);
+
+        var lockedStation = await fixture.Repository.GetStation(station.Id);
+
+        lockedStation.LockedBy.ShouldBe("User");
+        lockedStation.LockedOrderHandling.ShouldBe(LockedOrderHandlingType.AllowFinish);
+        lockedStation.LockReason.ShouldBe("Reason");
+        lockedStation.LockDescription.ShouldBe("Description");
+
+        await fixture.Repository.UnlockStation(station.Id);
+
+        var unlockedStation = await fixture.Repository.GetStation(station.Id);
+
+        unlockedStation.LockedBy.ShouldBeNull();
+        unlockedStation.LockedOrderHandling.ShouldBeNull();
+        unlockedStation.LockReason.ShouldBeNull();
+        unlockedStation.LockDescription.ShouldBeNull();
+    }
 }
