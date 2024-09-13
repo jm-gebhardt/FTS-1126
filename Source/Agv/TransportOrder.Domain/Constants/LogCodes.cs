@@ -47,6 +47,7 @@ public static class LogCodes
     public const int OrderIncomplete = 109;
     public const int OrderPaused = 110;
     public const int OrderResumed = 111;
+    public const int OrderWithLockedStation = 112;
 
     //Station
     public const int StationStateChanged = 400;

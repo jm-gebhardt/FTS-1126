@@ -16,19 +16,27 @@ public class ChooseAgvActionGroupServiceFixture
     public List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = new();
 
     [UsedImplicitly]
+    public List<string> LockedNodes { get; } = new();
+
+    [UsedImplicitly]
     public Mock<IRouteService> RouteService { get; } = new();
 
     [UsedImplicitly]
     public Mock<IActionGroupRepository> AgvActionRepository { get; } = new();
+
+    [UsedImplicitly]
+    public Mock<INodeStateRepository> NodeStateRepository { get; } = new();
 
     public ShortestRouteChooser ShortestRouteChooser { get; private set; }
 
     public ChooseAgvActionGroupServiceFixture(bool realRouteService = false)
     {
         AgvActionRepository.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
+        NodeStateRepository.Setup(n => n.GetLockedNodes()).ReturnsAsync(LockedNodes);
         ShortestRouteChooser = new ShortestRouteChooser(
             realRouteService ? new RouteService(new Mock<IGraphRepository>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object) : RouteService.Object,
             AgvActionRepository.Object,
+            NodeStateRepository.Object,
             new Mock<ILogger<ShortestRouteChooser>>().Object
         );
     }
@@ -60,9 +68,21 @@ public class ChooseAgvActionGroupServiceFixture
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture AddNotStartedActionGroup(TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup)
+    public ChooseAgvActionGroupServiceFixture WithNotStartedActionGroup(TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup)
     {
         NotStartedActionGroups.Add(actionGroup);
+        return this;
+    }
+
+    public ChooseAgvActionGroupServiceFixture WithLockedNodes(List<string> lockedNodeIds)
+    {
+        LockedNodes.AddRange(lockedNodeIds);
+        return this;
+    }
+
+    public ChooseAgvActionGroupServiceFixture GetCreatedChargingActionGroupForAgvAsync(TransportOrder.Domain.Models.ActionGroup.ActionGroup chargingActionGroup)
+    {
+        AgvActionRepository.Setup(x => x.GetCreatedChargingActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(chargingActionGroup);
         return this;
     }
 }

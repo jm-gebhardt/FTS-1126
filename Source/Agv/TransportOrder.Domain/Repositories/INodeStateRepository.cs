@@ -99,4 +99,10 @@ public interface INodeStateRepository
     /// <param name="nodes">Collection of nodes to check</param>
     /// <returns></returns>
     public Task<NodeLock?> GetReservedNodeLockForAgv(Guid agvCorrelationId, ICollection<string> nodes);
+
+    /// <summary>
+    /// Get ids of nodes which are in state Locked.
+    /// </summary>
+   /// <returns></returns>
+    public Task<IReadOnlyCollection<string>?> GetLockedNodes();
 }

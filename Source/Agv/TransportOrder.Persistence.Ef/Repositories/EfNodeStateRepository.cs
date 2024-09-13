@@ -174,6 +174,15 @@ public class EfNodeStateRepository : INodeStateRepository
                 && n.NodeState == NodeLockState.Reserved);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyCollection<string>?> GetLockedNodes()
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Set<NodeLock>()
+            .Where(nl => nl.IsLocked).Select(nl => nl.NodeId)
+            .ToListAsync();
+   }
+
     private bool IsLocked(string nodeId)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();
