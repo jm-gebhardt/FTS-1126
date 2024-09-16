@@ -19,12 +19,12 @@ public static class TriggerGenerator
 
         public TriggerProperties Properties { get; } = new("unique", "name", "description");
 
-        public ConcurrentDictionary<string, ConfigurationParameter> GetConfigurationParameters()
+        public ConcurrentDictionary<string, ConfigurationParameter> GetDefaultConfigurationParameters()
         {
             return Parameters;
         }
 
-        public void UpdateConfigurationParameter(string name, string value)
+        public void UpdateDefaultConfigurationParameter(string name, string value)
         {
             Parameters.TryGetValue(name, out var oldParameter);
             Parameters.TryUpdate(name, new ConfigurationParameter(oldParameter!.Name, oldParameter.Description, value, oldParameter.Validation), oldParameter);
@@ -35,7 +35,7 @@ public static class TriggerGenerator
             return Properties;
         }
 
-        public Task Invoke(AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+        public Task Invoke(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
         {
             return Task.CompletedTask;
         }

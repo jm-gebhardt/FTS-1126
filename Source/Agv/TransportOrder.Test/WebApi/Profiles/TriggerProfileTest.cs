@@ -88,8 +88,9 @@ public class TriggerProfileTest
         triggerDto.Locations.Count.ShouldBe(1);
         triggerDto.Locations.First().NodeId.ShouldBe(location.NodeId);
         triggerDto.Locations.First().EdgeId.ShouldBe(location.EdgeId);
-        triggerDto.Locations.First().Polygon.First().X.ShouldBe(location.Polygon.First().X);
-        triggerDto.Locations.First().Polygon.First().Y.ShouldBe(location.Polygon.First().Y);
+        triggerDto.Locations.First().Polygon.ShouldNotBeNull();
+        triggerDto.Locations.First().Polygon!.First().X.ShouldBe(location.Polygon.First().X);
+        triggerDto.Locations.First().Polygon!.First().Y.ShouldBe(location.Polygon.First().Y);
         triggerDto.Locations.First().Id.ShouldBe(location.Id);
         triggerDto.Locations.First().MapId.ShouldBe(location.MapId);
     }

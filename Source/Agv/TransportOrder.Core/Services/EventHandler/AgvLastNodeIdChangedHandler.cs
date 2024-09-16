@@ -50,9 +50,10 @@ public class AgvLastNodeIdChangedEventHandler : IConsumer<AgvLastNodeIdChanged>
     /// <returns></returns>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        if (context.Message.NewLastNodeId != null)
+        string? newLastNodeId = context.Message.NewLastNodeId;
+        if (newLastNodeId != null)
         {
-            List<Guid> triggersOnNode = _triggerRepository.GetTriggersAssignedToNode(context.Message.NewLastNodeId).ToList();
+            List<Guid> triggersOnNode = _triggerRepository.GetTriggersAssignedToNode(newLastNodeId).ToList();
             if (triggersOnNode.Count > 0)
             {
                 var agvId = context.Message.CorrelationId;
@@ -70,8 +71,9 @@ public class AgvLastNodeIdChangedEventHandler : IConsumer<AgvLastNodeIdChanged>
 
                 foreach (var triggerId in triggersOnNode)
                 {
-                    await context.Publish(new AgvReachedTrigger(triggerId, agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList));
                     var trigger = await _triggerRepository.GetById(triggerId);
+                    var location = trigger.Locations.Single(t => t.NodeId == newLastNodeId);
+                    await context.Publish(new AgvReachedTrigger(triggerId, location.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList));
                     _logger.LogAgvInformation(LogCodes.AgvReachedTrigger, agvId, "AGV Reached Trigger", $"AGV {agv.SerialNumber} reached trigger {trigger.DisplayName}");
                 }
             }

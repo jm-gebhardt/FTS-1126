@@ -114,7 +114,9 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<CreateTrigger, TriggerCommandHandler>(c);
             partitioner.PartitionMessageById<AddTriggerLocation, TriggerCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveTriggerLocation, TriggerCommandHandler>(c);
-            partitioner.PartitionMessageById<UpdateConfigurationParameter, TriggerCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateDefaultConfigurationParameter, TriggerCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateLocationConfigurationParameter, TriggerCommandHandler>(c);
+            partitioner.PartitionMessageById<ResetLocationConfigurationParameter, TriggerCommandHandler>(c);
         });
     }
 
@@ -225,7 +227,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<AssignTriggerToLocation>();
         configurator.AddRequestClient<TryRemoveTriggerLocation>();
         configurator.AddRequestClient<GetTrigger>();
-        configurator.AddRequestClient<TryUpdateConfigurationParameter>();
+        configurator.AddRequestClient<TryUpdateDefaultConfigurationParameter>();
+        configurator.AddRequestClient<TryUpdateLocationConfigurationParameter>();
+        configurator.AddRequestClient<TryResetLocationConfigurationParameter>();
     }
 
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)

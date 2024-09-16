@@ -26,7 +26,12 @@ public record TriggerLocationDto
     /// <summary>
     /// The polygon, if set.
     /// </summary>
-    public ICollection<PolygonPointDto> Polygon { get; set; }
+    public ICollection<PolygonPointDto>? Polygon { get; set; }
+
+    /// <summary>
+    /// The optional configuration parameters at the location.
+    /// </summary>
+    public ICollection<ConfigurationParameterDto>? ConfigurationParameters { get; set; }
 
     /// <summary>
     /// The id of the map the location is on.

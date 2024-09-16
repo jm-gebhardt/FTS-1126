@@ -13,24 +13,24 @@ namespace Gebhardt.Acc.TriggerService.Services;
 [UsedImplicitly]
 public class TriggerEventHandler(ITriggerManager triggerManager): 
     IConsumer<AgvReachedTrigger>,
-    IConsumer<TriggerConfigurationUpdated>
+    IConsumer<DefaultTriggerConfigurationUpdated>
 {
     /// <summary>
     /// Handles the <see cref="AgvReachedTrigger"/> event.
     /// </summary>
     public async Task Consume(ConsumeContext<AgvReachedTrigger> context)
     {
-        (var triggerId, var agvData, var agvStatus, var actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors) = context.Message;
+        (var triggerId, Dictionary<string, ConfigurationParameter> parameters, var agvData, var agvStatus, var actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors) = context.Message;
 
-        await triggerManager.InvokeTrigger(triggerId, agvData, agvStatus, actionGroup, cargo, errors);
+        await triggerManager.InvokeTrigger(triggerId, parameters, agvData, agvStatus, actionGroup, cargo, errors);
     }
 
     /// <summary>
-    /// Handles the <see cref="TriggerConfigurationUpdated"/> event.
+    /// Handles the <see cref="DefaultTriggerConfigurationUpdated"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<TriggerConfigurationUpdated> context)
+    public async Task Consume(ConsumeContext<DefaultTriggerConfigurationUpdated> context)
     {
         (var triggerId, ICollection<ConfigurationParameter> updatedParameters) = context.Message;
-        await triggerManager.UpdateConfigurationParameters(triggerId, updatedParameters);
+        await triggerManager.UpdateDefaultConfigurationParameters(triggerId, updatedParameters);
     }
 }

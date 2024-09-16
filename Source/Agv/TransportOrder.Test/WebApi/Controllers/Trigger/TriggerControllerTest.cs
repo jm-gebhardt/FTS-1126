@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -25,14 +25,32 @@ public class TriggerControllerTest
     [TestMethod]
     public async Task AssignTriggerToLocation_ValidData_ReturnsLocationDto()
     {
-        var location = new Location();
+        var location = new TriggerLocationDto();
 
         var fixture = new TriggerControllerTestFixture()
             .WithTriggerLocation(location)
             .Build();
 
-        var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(location.TriggerId, location.MapId, location.NodeId, location.EdgeId, []));
+        var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(Guid.NewGuid(), location.NodeId, location));
         locationDto.Id.ShouldBe(location.Id);
+    }
+
+    [TestMethod]
+    public async Task UpdateLocationConfigurationParameter_ValidData_Returns()
+    {
+        var fixture = new TriggerControllerTestFixture()
+            .Build();
+
+        await fixture.GetControllerResultAsync<ActionResult>(c => c.UpdateLocationConfigurationParameter(Guid.NewGuid(), Guid.NewGuid(), "name", "new value"));
+    }
+
+    [TestMethod]
+    public async Task ResetLocationConfigurationParameter_ValidData_Returns()
+    {
+        var fixture = new TriggerControllerTestFixture()
+            .Build();
+
+        await fixture.GetControllerResultAsync<ActionResult>(c => c.ResetLocationConfigurationParameter(Guid.NewGuid(), Guid.NewGuid(), "name"));
     }
 
     [TestMethod]
@@ -50,6 +68,6 @@ public class TriggerControllerTest
         var fixture = new TriggerControllerTestFixture()
             .Build();
 
-        await fixture.GetControllerResultAsync<ActionResult>(c => c.UpdateConfigurationParameter(Guid.NewGuid(), "name", "new value"));
+        await fixture.GetControllerResultAsync<ActionResult>(c => c.UpdateDefaultConfigurationParameter(Guid.NewGuid(), "name", "new value"));
     }
 }

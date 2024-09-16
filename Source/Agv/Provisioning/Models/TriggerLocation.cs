@@ -67,6 +67,12 @@ internal class TriggerLocation
     public ICollection<PolygonPoint>? PolygonPoints { get; init; }
 
     /// <summary>
+    /// The configuration parameters at the location, if set.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<ConfigurationParameter>? ConfigurationParameters { get; init; }
+
+    /// <summary>
     /// The correlation id of the map.
     /// </summary>
     public Guid? MapId
@@ -77,7 +83,7 @@ internal class TriggerLocation
     }
 
     /// <inheritdoc cref="TriggerLocation"/>
-    public TriggerLocation(string triggerUrn, string triggerVersion, string? nodeId, Guid? edgeId, List<PolygonPoint>? polygonPoints, Guid? mapId)
+    public TriggerLocation(string triggerUrn, string triggerVersion, string? nodeId, Guid? edgeId, List<PolygonPoint>? polygonPoints, Guid? mapId, List<ConfigurationParameter>? configurationParameters)
     {
         TriggerUrn = triggerUrn;
         TriggerVersion = triggerVersion;
@@ -86,5 +92,6 @@ internal class TriggerLocation
         EdgeId = edgeId;
         MapId = mapId;
         PolygonPoints = polygonPoints;
+        ConfigurationParameters=configurationParameters;
     }
 }

@@ -7,6 +7,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Trigger;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -15,11 +16,13 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// Provides handlers for trigger-related commands.
 /// </summary>
 [UsedImplicitly]
-public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper mapper) :
+public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper mapper, ILogger<TriggerCommandHandler> logger) :
     IConsumer<CreateTrigger>,
     IConsumer<AddTriggerLocation>,
     IConsumer<RemoveTriggerLocation>,
-    IConsumer<UpdateConfigurationParameter>
+    IConsumer<UpdateDefaultConfigurationParameter>,
+    IConsumer<UpdateLocationConfigurationParameter>,
+    IConsumer<ResetLocationConfigurationParameter>
 {
     /// <summary>
     /// Handles the <see cref="CreateTrigger"/> command.
@@ -32,6 +35,8 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         var trigger = new Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, configurationParameters);
 
         await triggerRepository.Add(trigger);
+
+        logger.LogInformation("Trigger {Name} created", trigger.DisplayName);
     }
 
     /// <summary>
@@ -43,8 +48,9 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         string? nodeId = context.Message.NodeId;
         var triggerId = context.Message.TriggerId;
         Guid? mapId = context.Message.MapId;
-      
-        ICollection<PolygonPoint> polygon =  mapper.Map<List<PolygonPoint>>(context.Message.Polygon);
+        ICollection<ConfigurationParameter>? configurationParameters = context.Message.ConfigurationParameters;
+
+        ICollection<PolygonPoint> polygon = mapper.Map<List<PolygonPoint>>(context.Message.Polygon);
 
         Location? location = null;
         Exception? exception = null;
@@ -55,15 +61,15 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
             trigger = await triggerRepository.GetById(triggerId);
             if (edgeId != null)
             {
-                location= trigger.AddLocation(edgeId.Value, mapId);
+                location = trigger.AddLocation(edgeId.Value, mapId, configurationParameters);
             }
             if (nodeId != null)
             {
-                location= trigger.AddLocation(nodeId, mapId);
+                location = trigger.AddLocation(nodeId, mapId, configurationParameters);
             }
             if (polygon.Count > 0)
             {
-                location= trigger.AddLocation(polygon, mapId);
+                location = trigger.AddLocation(polygon, mapId, configurationParameters);
             }
             await triggerRepository.Update(trigger);
         }
@@ -75,6 +81,8 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
 
         if (nodeId != null && exception == null)
         {
+            logger.LogInformation("Trigger {Name} assigned to location {Location}", trigger.DisplayName, location);
+
             await context.Publish(new TriggerAssignedToNode(triggerId, trigger.DisplayName, nodeId));
         }
     }
@@ -90,23 +98,62 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         var trigger = await triggerRepository.GetById(triggerId);
         trigger.RemoveLocation(locationId);
         await triggerRepository.Update(trigger);
+        logger.LogInformation("Trigger {Name} location {LocationId} removed", trigger.DisplayName, locationId);
     }
 
     /// <summary>
-    /// Handles the <see cref="UpdateConfigurationParameter"/> command.
+    /// Handles the <see cref="UpdateDefaultConfigurationParameter"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<UpdateConfigurationParameter> context)
+    public async Task Consume(ConsumeContext<UpdateDefaultConfigurationParameter> context)
     {
         var triggerId = context.Message.TriggerId;
         string parameterName = context.Message.ParameterName;
         string newValue = context.Message.NewValue;
 
         var trigger = await triggerRepository.GetById(triggerId);
-        var updatedParameter = trigger.UpdateConfigurationParameter(parameterName, newValue);
-        if(updatedParameter!= null)
+        var updatedParameter = trigger.UpdateDefaultConfigurationParameter(parameterName, newValue);
+        if (updatedParameter != null)
         {
             await triggerRepository.Update(trigger);
-            await context.Publish(new TriggerConfigurationUpdated(triggerId, [updatedParameter]));
+            await context.Publish(new DefaultTriggerConfigurationUpdated(triggerId, [updatedParameter]));
+            logger.LogInformation("Trigger {Name} default parameter {ParameterName} updated to value {Value}", trigger.DisplayName, parameterName, newValue);
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UpdateLocationConfigurationParameter"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UpdateLocationConfigurationParameter> context)
+    {
+        var triggerId = context.Message.TriggerId;
+        var locationId = context.Message.LocationId;
+        string parameterName = context.Message.ParameterName;
+        string newValue = context.Message.NewValue;
+
+        var trigger = await triggerRepository.GetById(triggerId);
+        var updatedParameter = trigger.UpdateConfigurationParameterAtLocation(locationId, parameterName, newValue);
+        if (updatedParameter != null)
+        {
+            await triggerRepository.Update(trigger);
+            logger.LogInformation("Trigger {Name} parameter {ParameterName} at location {LocationId} updated to value {Value}", trigger.DisplayName, locationId, parameterName, newValue);
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResetLocationConfigurationParameter"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResetLocationConfigurationParameter> context)
+    {
+        var triggerId = context.Message.TriggerId;
+        var locationId = context.Message.LocationId;
+        string parameterName = context.Message.ParameterName;
+        var trigger = await triggerRepository.GetById(triggerId);
+
+        var updatedParameter = trigger.ResetConfigurationParameterAtLocation(locationId, parameterName);
+        if (updatedParameter != null)
+        {
+            await triggerRepository.Update(trigger);
+            logger.LogInformation("Trigger {Name} parameter {ParameterName} at location {LocationId} reset to default value {Value}", trigger.DisplayName, locationId, parameterName, updatedParameter.Value);
         }
     }
 }

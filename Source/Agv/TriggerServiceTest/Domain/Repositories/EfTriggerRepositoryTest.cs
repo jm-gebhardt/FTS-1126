@@ -37,7 +37,7 @@ public class EfTriggerRepositoryTest
 
         await fixture.Repository.TryAdd(trigger.Properties.Id, trigger);
 
-        trigger.UpdateConfigurationParameter("name", "newValue");
+        trigger.UpdateDefaultConfigurationParameter("name", "newValue");
 
         await fixture.Repository.UpdateTrigger(trigger.Properties.Id, trigger);
 
@@ -53,7 +53,7 @@ public class EfTriggerRepositoryTest
 
         await fixture.Repository.TryAdd(trigger.Properties.Id, trigger);
 
-        trigger.UpdateConfigurationParameter("name", "newValue");
+        trigger.UpdateDefaultConfigurationParameter("name", "newValue");
 
         await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.UpdateTrigger(Guid.NewGuid(), trigger));
     }

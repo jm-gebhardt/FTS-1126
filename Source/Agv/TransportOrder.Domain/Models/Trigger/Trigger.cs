@@ -83,15 +83,16 @@ public class Trigger
     /// </summary>
     /// <param name="edgeId">The edge id.</param>
     /// <param name="mapId">Id of the map the edge is on.</param>
+    /// <param name="configurationParameters">The configuration parameters at the location.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(Guid edgeId, Guid? mapId)
+    public Location AddLocation(Guid edgeId, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {
             throw new TriggerInstanceCountException(InstanceMaximum!.Value);
         }
-        var location = new Location(edgeId, mapId, Id);
+        var location = new Location(edgeId, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters));
         Locations.Add(location);
         return location ;
     }
@@ -101,15 +102,16 @@ public class Trigger
     /// </summary>
     /// <param name="nodeId">The node id.</param>
     /// <param name="mapId">Id of the map the node is on.</param>
+    /// <param name="configurationParameters">The configuration parameters at the location.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(string nodeId, Guid? mapId)
+    public Location AddLocation(string nodeId, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {
             throw new TriggerInstanceCountException(InstanceMaximum!.Value);
         }
-        var location = new Location(nodeId, mapId, Id);
+        var location = new Location(nodeId, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters));
         Locations.Add(location);
         return location;
     }
@@ -119,17 +121,30 @@ public class Trigger
     /// </summary>
     /// <param name="polygon">The polygon.</param>
     /// <param name="mapId">Id of the map the polygon is on.</param>
+    /// <param name="configurationParameters">The configuration parameters at the location.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(ICollection<PolygonPoint> polygon, Guid? mapId)
+    public Location AddLocation(ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {
             throw new TriggerInstanceCountException(InstanceMaximum!.Value);
         }
-        var location = new Location(polygon, mapId, Id);
+        var location = new Location(polygon, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters));
         Locations.Add(location);
         return location;
+    }
+
+    private ICollection<ConfigurationParameter> GetUpdatedConfigurationParameters(ICollection<ConfigurationParameter>? configurationParameters)
+    {
+        return ConfigurationParameters.Select(c =>
+            new ConfigurationParameter(
+                c.Name,
+                c.Description,
+                configurationParameters?.FirstOrDefault(n => n.Name == c.Name)?.Value ?? c.Value,
+                c.Validation
+            )
+        ).ToList();
     }
 
     /// <summary>
@@ -148,19 +163,61 @@ public class Trigger
     }
 
     /// <summary>
-    /// Update configuration parameter.
+    /// Update a default configuration parameter.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="value"></param>
-    public ConfigurationParameter? UpdateConfigurationParameter(string name, string value)
+    /// <param name="name">The name of the parameter.</param>
+    /// <param name="value">The new value of the parameter.</param>
+    public ConfigurationParameter? UpdateDefaultConfigurationParameter(string name, string value)
     {
         var parameter = ConfigurationParameters.SingleOrDefault(p => p.Name == name);
         if (parameter == null)
         {
             return null;
         }
+        foreach (var location in Locations)
+        {
+            location.TryUpdateDefaultParameter(name, parameter.Value, value);
+        }
         parameter.Value = value;
         return parameter;
+    }
+
+    /// <summary>
+    /// Update a configuration parameter at a location.
+    /// </summary>
+    /// <param name="locationId">The id of the location.</param>
+    /// <param name="name">The name of the parameter.</param>
+    /// <param name="value">The new value of the parameter.</param>
+    public ConfigurationParameter? UpdateConfigurationParameterAtLocation(Guid locationId, string name, string value)
+    {
+        var location = Locations.SingleOrDefault(l => l.Id == locationId);
+        if (location == null)
+        {
+            throw new TriggerLocationNotFoundException(locationId);
+        }
+
+        return location.UpdateConfigurationParameter(name, value);
+    }
+
+    /// <summary>
+    /// Reset a configuration parameter at a location to its default value.
+    /// </summary>
+    /// <param name="locationId">The id of the location.</param>
+    /// <param name="name">The name of the parameter.</param>
+    public ConfigurationParameter? ResetConfigurationParameterAtLocation(Guid locationId, string name)
+    {
+        var location = Locations.SingleOrDefault(l => l.Id == locationId);
+        if (location == null)
+        {
+            throw new TriggerLocationNotFoundException(locationId);
+        }
+        var parameter = ConfigurationParameters.SingleOrDefault(p => p.Name == name);
+        if (parameter == null)
+        {
+            return null;
+        }
+
+        return location.UpdateConfigurationParameter(name, parameter.Value);
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ public class TriggerEntityConfiguration : IEntityTypeConfiguration<Domain.Models
         builder.HasKey(e => e.Id);
         builder.OwnsMany(e => e.ConfigurationParameters, o =>
         {
-            o.ToTable("TriggerConfigurationParameters");
+            o.ToTable("DefaultTriggerConfigurationParameters");
         });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
         builder.HasMany(e => e.Locations)

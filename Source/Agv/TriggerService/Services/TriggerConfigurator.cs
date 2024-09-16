@@ -20,7 +20,7 @@ public class TriggerConfigurator(ITriggerManager triggerManager, IBus bus, Trigg
             IReadOnlyCollection<IFfcTrigger> triggers = await triggerManager.LoadTriggers();
             foreach (var trigger in triggers)
             {
-                await bus.Publish(new TriggerConfigured(trigger.GetProperties(), trigger.GetConfigurationParameters().Values), stoppingToken);
+                await bus.Publish(new TriggerConfigured(trigger.GetProperties(), trigger.GetDefaultConfigurationParameters().Values), stoppingToken);
             }
             await Task.Delay(config.TriggerReloadIntervalMs, stoppingToken);
         }

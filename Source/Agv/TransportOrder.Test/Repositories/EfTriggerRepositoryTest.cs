@@ -62,7 +62,7 @@ public class EfTriggerRepositoryTest
         await fixture.AddAsync(trigger);
 
         const string updatedValue = "new";
-        trigger.UpdateConfigurationParameter(parameter.Name, updatedValue);
+        trigger.UpdateDefaultConfigurationParameter(parameter.Name, updatedValue);
         await fixture.Repository.Update(trigger);
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);

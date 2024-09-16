@@ -34,7 +34,7 @@ public record ConfigurationParameterDto
     /// <summary>
     /// The parameter description.
     /// </summary>
-    public string Description { get; init; }
+    public string? Description { get; init; }
 
     /// <summary>
     /// The parameter value.
@@ -44,5 +44,5 @@ public record ConfigurationParameterDto
     /// <summary>
     /// The parameter validation regex.
     /// </summary>
-    public string Validation { get; init; }
+    public string? Validation { get; init; }
 }

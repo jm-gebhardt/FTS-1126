@@ -1,19 +1,22 @@
-﻿namespace Gebhardt.Acc.Common.Messages.Triggers;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.Common.Messages.Triggers;
 
 /// <summary>
 /// A polygon point.
 /// </summary>
+[PublicAPI]
 public record PolygonPoint
 {
     /// <summary>
     /// X-position [m]
     /// </summary>
-    public double X { get; }
+    public double X { get; init; }
 
     /// <summary>
     /// Y-position [m]
     /// </summary>
-    public double Y { get; }
+    public double Y { get; init; }
 
     /// <inheritdoc cref="PolygonPoint"/>
     /// <param name="x">X-position [m]</param>

@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Trigger;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Trigger;
@@ -20,7 +22,9 @@ public class TriggerControllerTestFixture: MockRequestClientControllerTestFixtur
         AddRequestClient<GetTrigger, GotTrigger>(() => _gotTrigger);
         AddRequestClient<AssignTriggerToLocation, TriggerLocationAssigned>(() => _triggerLocationAssigned);
         AddRequestClient<TryRemoveTriggerLocation, Success>(() => new Success());
-        AddRequestClient<TryUpdateConfigurationParameter, Success>(() => new Success());
+        AddRequestClient<TryUpdateDefaultConfigurationParameter, Success>(() => new Success());
+        AddRequestClient<TryUpdateLocationConfigurationParameter, Success>(() => new Success());
+        AddRequestClient<TryResetLocationConfigurationParameter, Success>(() => new Success());
     }
 
     public new TriggerControllerTestFixture Build()
@@ -35,9 +39,10 @@ public class TriggerControllerTestFixture: MockRequestClientControllerTestFixtur
         return this;
     }
 
-    public TriggerControllerTestFixture WithTriggerLocation(Location location)
+    public TriggerControllerTestFixture WithTriggerLocation(TriggerLocationDto location)
     {
-        _triggerLocationAssigned = new TriggerLocationAssigned(location);
+        var mapper = MappingHelper.GetMapper(GetProfiles().ToArray());
+        _triggerLocationAssigned = new TriggerLocationAssigned(mapper.Map<Location>(location));
         return this;
     }
 }

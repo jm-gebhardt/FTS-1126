@@ -10,6 +10,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -22,7 +23,9 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     IConsumer<AssignTriggerToLocation>,
     IConsumer<TryRemoveTriggerLocation>,
     IConsumer<GetTrigger>,
-    IConsumer<TryUpdateConfigurationParameter>
+    IConsumer<TryUpdateDefaultConfigurationParameter>,
+    IConsumer<TryUpdateLocationConfigurationParameter>,
+    IConsumer<TryResetLocationConfigurationParameter>
 {
     /// <summary>
     /// Handles the <see cref="GetTriggers"/> request.
@@ -38,13 +41,13 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     /// </summary>
     public async Task Consume(ConsumeContext<AssignTriggerToLocation> context)
     {
-        (var triggerId, string? nodeId, Guid? edgeId, ICollection <PolygonPoint> polygon, Guid? mapId) = context.Message;
+        (var triggerId, string? nodeId, Guid? edgeId, ICollection <PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters) = context.Message;
 
-        await ValidateMessageContent(triggerId, nodeId, edgeId,  polygon, mapId);
+        await ValidateMessageContent(triggerId, nodeId, edgeId,  polygon, mapId, configurationParameters);
 
         IRequestClient<AddTriggerLocation>? requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
         
-        Response<TriggerLocationAdded> response =  await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, nodeId, edgeId, polygon, mapId));
+        Response<TriggerLocationAdded> response =  await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, nodeId, edgeId, polygon, mapId, configurationParameters));
 
         if (response.Message.Exception != null)
         {
@@ -55,9 +58,20 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new TriggerLocationAssigned(response.Message.Location!));
     }
 
-    private async Task ValidateMessageContent(Guid triggerId, string? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId)
+    private async Task ValidateMessageContent(Guid triggerId, string? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters)
     {
-        await triggerRepository.GetById(triggerId);
+        var trigger = await triggerRepository.GetById(triggerId);
+
+        if (!configurationParameters.IsNullOrEmpty())
+        {
+            foreach (var parameter in configurationParameters!)
+            {
+                if (!trigger.ValidateConfigurationParameterValue(parameter.Name, parameter.Value))
+                {
+                    throw new TriggerAssignmentFailedException($"Parameter {parameter.Name}:{parameter.Value} is not valid");
+                }
+            }
+        }
 
         if (!OnlyOneLocationSet(nodeId, edgeId, polygon))
         {
@@ -132,9 +146,9 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     }
 
     /// <summary>
-    /// Handles the <see cref="TryUpdateConfigurationParameter"/> request.
+    /// Handles the <see cref="TryUpdateDefaultConfigurationParameter"/> request.
     /// </summary>
-    public async Task Consume(ConsumeContext<TryUpdateConfigurationParameter> context)
+    public async Task Consume(ConsumeContext<TryUpdateDefaultConfigurationParameter> context)
     {
         (var triggerId, string parameterName, string newValue) = context.Message;
        
@@ -144,7 +158,41 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             throw new TriggerConfigurationUpdateFailedException($"Value {newValue} is not valid");
         }
 
-        await bus.Publish(new UpdateConfigurationParameter(triggerId, parameterName, newValue));
+        await bus.Publish(new UpdateDefaultConfigurationParameter(triggerId, parameterName, newValue));
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryUpdateLocationConfigurationParameter"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryUpdateLocationConfigurationParameter> context)
+    {
+        (var triggerId, var locationId, string parameterName, string newValue) = context.Message;
+        var trigger = await triggerRepository.GetById(triggerId);
+        if (!trigger.ValidateConfigurationParameterValue(parameterName, newValue))
+        {
+            throw new TriggerConfigurationUpdateFailedException($"Value {newValue} is not valid");
+        }
+        if (trigger.Locations.All(l => l.Id != locationId))
+        {
+            throw new TriggerLocationNotFoundException(locationId);
+        }
+        await bus.Publish(new UpdateLocationConfigurationParameter(triggerId, locationId, parameterName, newValue));
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryResetLocationConfigurationParameter"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryResetLocationConfigurationParameter> context)
+    {
+        (var triggerId, var locationId, string parameterName) = context.Message;
+        var trigger = await triggerRepository.GetById(triggerId);
+        if (trigger.Locations.All(l => l.Id != locationId))
+        {
+            throw new TriggerLocationNotFoundException(locationId);
+        }
+        await bus.Publish(new ResetLocationConfigurationParameter(triggerId, locationId, parameterName));
         await context.RespondAsync(new Success());
     }
 }

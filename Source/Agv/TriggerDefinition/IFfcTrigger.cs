@@ -15,17 +15,17 @@ using ConfigurationParameters = ConcurrentDictionary<string, ConfigurationParame
 public interface IFfcTrigger
 {
     /// <summary>
-    /// Gets the configuration parameters of the trigger.
+    /// Gets the default configuration parameters of the trigger.
     /// </summary>
     /// <returns></returns>
-    ConfigurationParameters GetConfigurationParameters();
+    ConfigurationParameters GetDefaultConfigurationParameters();
 
     /// <summary>
-    /// Updates a configuration parameter of the trigger
+    /// Updates a default configuration parameter of the trigger
     /// </summary>
     /// <param name="name">The parameter name. </param>
     /// <param name="value">The parameter value.</param>
-    void UpdateConfigurationParameter(string name, string value);
+    void UpdateDefaultConfigurationParameter(string name, string value);
 
     /// <summary>
     /// Get trigger properties
@@ -36,5 +36,5 @@ public interface IFfcTrigger
     /// <summary>
     /// Invoke trigger.
     /// </summary>
-    Task Invoke(AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
+    Task Invoke(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
 }

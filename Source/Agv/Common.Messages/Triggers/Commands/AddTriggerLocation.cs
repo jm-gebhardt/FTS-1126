@@ -11,8 +11,9 @@ namespace Gebhardt.Acc.Common.Messages.Triggers.Commands;
 /// <param name="EdgeId">The edge id, if set.</param>
 /// <param name="Polygon">The polygon, if set.</param>
 /// <param name="MapId">The map the location is on.</param>
+/// <param name="ConfigurationParameters">Optional custom configuration parameters for the location.</param>
 [PublicAPI]
-public record AddTriggerLocation(Guid TriggerId, string? NodeId, Guid? EdgeId, ICollection<PolygonPoint> Polygon, Guid? MapId) : CorrelatedBy<Guid>
+public record AddTriggerLocation(Guid TriggerId, string? NodeId, Guid? EdgeId, ICollection<PolygonPoint> Polygon, Guid? MapId, ICollection<ConfigurationParameter>? ConfigurationParameters) : CorrelatedBy<Guid>
 {
     /// <inheritdoc cref="CorrelatedBy{TKey}"/>>
     public Guid CorrelationId => TriggerId;

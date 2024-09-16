@@ -15,7 +15,7 @@ public class TriggerEventHandlerTest
     {
         var fixture = new TriggerMessageConsumerTestFixture<TriggerEventHandler>();
 
-        var message = new AgvReachedTrigger(Guid.NewGuid(), AgvDataGenerator.GenerateAgvData(), new AgvStatus(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
+        var message = new AgvReachedTrigger(Guid.NewGuid(), new Dictionary<string, ConfigurationParameter>(), AgvDataGenerator.GenerateAgvData(), new AgvStatus(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
 
         await fixture.TestHarness.Bus.Publish(message);
         
@@ -28,10 +28,10 @@ public class TriggerEventHandlerTest
     {
         var fixture = new TriggerMessageConsumerTestFixture<TriggerEventHandler>();
 
-        var message = new TriggerConfigurationUpdated(Guid.NewGuid(), [new ConfigurationParameter("name", "description", "value", "validation")]);
+        var message = new DefaultTriggerConfigurationUpdated(Guid.NewGuid(), [new ConfigurationParameter("name", "description", "value", "validation")]);
         await fixture.TestHarness.Bus.Publish(message);
         
-        await fixture.ShouldHaveConsumedAsync<TriggerConfigurationUpdated>();
+        await fixture.ShouldHaveConsumedAsync<DefaultTriggerConfigurationUpdated>();
         fixture.VerifyConfigurationParametersUpdated(message.TriggerId, message.UpdatedParameters);
     }
 }

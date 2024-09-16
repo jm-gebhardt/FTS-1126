@@ -50,6 +50,44 @@ public class TriggerTest
     }
 
     [TestMethod]
+    public void AddLocation_NodeId_WithParametersNoCustomParameterGiven_LocationAddedWithParameterValuesFromDefault()
+    {
+        const string node = "a node id";
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        
+        var location = trigger.AddLocation(node, map);
+        trigger.Locations.Count.ShouldBe(1);
+        trigger.Locations.First().ShouldBe(location);
+        location.EdgeId.ShouldBeNull();
+        location.Polygon.ShouldBeEmpty();
+        location.NodeId.ShouldBe(node);
+        location.MapId.ShouldBe(map);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldBeEquivalentTo(parameter);
+    }
+
+    [TestMethod]
+    public void AddLocation_NodeId_WithParametersCustomParameterGiven_LocationAddedWithCustomParameterValues()
+    {
+        const string custom = "custom";
+        const string node = "a node id";
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        var location = trigger.AddLocation(node, map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+        trigger.Locations.Count.ShouldBe(1);
+        trigger.Locations.First().ShouldBe(location);
+        location.EdgeId.ShouldBeNull();
+        location.Polygon.ShouldBeEmpty();
+        location.NodeId.ShouldBe(node);
+        location.MapId.ShouldBe(map);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldNotBe(parameter);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
+    }
+
+    [TestMethod]
     public void AddLocation_NodeId_InstanceMaximumExceeded_ThrowsTriggerInstanceCountException()
     {
         const int instances = 1;
@@ -58,6 +96,24 @@ public class TriggerTest
         trigger.Locations.Count.ShouldBe(instances);
 
         Should.Throw<TriggerInstanceCountException>(() =>trigger.AddLocation("a node", Guid.NewGuid()));
+    }
+
+    [TestMethod]
+    public void AddLocation_EdgeId_WithParametersNoCustomParameterGiven_LocationAddedWithParameterValuesFromDefault()
+    {
+        var edge = Guid.NewGuid();
+        var map = Guid.NewGuid(); 
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var location = trigger.AddLocation(edge, map);
+
+        trigger.Locations.Count.ShouldBe(1);
+        trigger.Locations.First().ShouldBe(location);
+        location.EdgeId.ShouldBe(edge);
+        location.Polygon.ShouldBeEmpty();
+        location.NodeId.ShouldBeNull();
+        location.MapId.ShouldBe(map);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldBeEquivalentTo(parameter);
     }
 
     [TestMethod]
@@ -78,6 +134,26 @@ public class TriggerTest
     }
 
     [TestMethod]
+    public void AddLocation_EdgeId_WithParametersCustomParameterGiven_LocationAddedWithCustomParameterValues()
+    {
+        const string custom = "custom";
+        var edge = Guid.NewGuid();
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var location = trigger.AddLocation(edge, map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+
+        trigger.Locations.Count.ShouldBe(1);
+        trigger.Locations.First().ShouldBe(location);
+        location.EdgeId.ShouldBe(edge);
+        location.Polygon.ShouldBeEmpty();
+        location.NodeId.ShouldBeNull();
+        location.MapId.ShouldBe(map);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldNotBe(parameter);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
+    }
+
+    [TestMethod]
     public void AddLocation_EdgeId_InstanceMaximumExceeded_ThrowsTriggerInstanceCountException()
     {
         const int instances = 1;
@@ -86,6 +162,46 @@ public class TriggerTest
         trigger.Locations.Count.ShouldBe(instances);
 
         Should.Throw<TriggerInstanceCountException>(() => trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [TestMethod]
+    public void AddLocation_Polygon_WithParametersNoCustomParameterGiven_LocationAddedWithParameterValuesFromDefault()
+    {
+        List<PolygonPoint> polygon = [new(42.0, 42.0, 0, Guid.NewGuid())];
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var location = trigger.AddLocation(polygon, map);
+
+        trigger.Locations.Count.ShouldBe(1);
+        trigger.Locations.First().ShouldBe(location);
+        location.EdgeId.ShouldBeNull();
+        location.Polygon.First().X.ShouldBe(polygon.First().X);
+        location.Polygon.First().Y.ShouldBe(polygon.First().Y);
+        location.NodeId.ShouldBeNull();
+        location.MapId.ShouldBe(map);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldBeEquivalentTo(parameter);
+    }
+
+    [TestMethod]
+    public void AddLocation_Polygon_WithParametersCustomParameterGiven_LocationAddedWithCustomParameterValues()
+    {
+        const string custom = "custom";
+        List<PolygonPoint> polygon = [new(42.0, 42.0, 0, Guid.NewGuid())];
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var location = trigger.AddLocation(polygon, map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+
+        trigger.Locations.Count.ShouldBe(1);
+        trigger.Locations.First().ShouldBe(location);
+        location.EdgeId.ShouldBeNull();
+        location.Polygon.First().X.ShouldBe(polygon.First().X);
+        location.Polygon.First().Y.ShouldBe(polygon.First().Y);
+        location.NodeId.ShouldBeNull();
+        location.MapId.ShouldBe(map);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldNotBe(parameter);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
     }
 
     [TestMethod]
@@ -187,13 +303,13 @@ public class TriggerTest
     }
 
     [TestMethod]
-    public void UpdateConfigurationParameter_ValidData_UpdatesParameterValue()
+    public void UpdateDefaultConfigurationParameter_ValidData_UpdatesParameterValue()
     {
         var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         const string newValue = "a new value";
 
-        var updatedParameter = trigger.UpdateConfigurationParameter(parameter.Name, newValue);
+        var updatedParameter = trigger.UpdateDefaultConfigurationParameter(parameter.Name, newValue);
         
         updatedParameter.ShouldNotBeNull();
         updatedParameter.Name.ShouldBe(parameter.Name);
@@ -202,11 +318,99 @@ public class TriggerTest
     }
 
     [TestMethod]
-    public void UpdateConfigurationParameter_UnknownParameter_ReturnsNull()
+    public void UpdateDefaultConfigurationParameter_WithLocations_UpdatesParameterValueAtLocationsThatUseDefault()
+    {
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var locationThatUsesDefault = trigger.AddLocation("a node", Guid.NewGuid());
+        var locationWithCustomValue = trigger.AddLocation("another node", Guid.NewGuid());
+        trigger.UpdateConfigurationParameterAtLocation(locationWithCustomValue.Id, parameter.Name, "different value");
+
+        trigger.Locations.Single(l => l.Id == locationThatUsesDefault.Id).ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(parameter.Value);
+        trigger.Locations.Single(l => l.Id == locationWithCustomValue.Id).ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldNotBe(parameter.Value);
+        
+        const string newValue = "a new value";
+        var updatedParameter = trigger.UpdateDefaultConfigurationParameter(parameter.Name, newValue);
+
+        updatedParameter.ShouldNotBeNull();
+        updatedParameter.Name.ShouldBe(parameter.Name);
+        updatedParameter.Validation.ShouldBe(parameter.Validation);
+        updatedParameter.Value.ShouldBe(newValue);
+        trigger.Locations.Single(l => l.Id == locationThatUsesDefault.Id).ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(newValue);
+        trigger.Locations.Single(l => l.Id == locationWithCustomValue.Id).ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldNotBe(newValue);
+    }
+
+    [TestMethod]
+    public void UpdateDefaultConfigurationParameter_UnknownParameter_ReturnsNull()
     {
         var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
-        trigger.UpdateConfigurationParameter("unknown", "any new value").ShouldBeNull();
+        trigger.UpdateDefaultConfigurationParameter("unknown", "any new value").ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void UpdateConfigurationParameterAtLocation_ValidData_ParameterUpdated()
+    {
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var location = trigger.AddLocation("a node", Guid.NewGuid());
+        // initialized with default
+        trigger.Locations.Single(l => l.Id == location.Id).ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(parameter.Value);
+
+        const string newValue = "a new value";
+        trigger.UpdateConfigurationParameterAtLocation(location.Id, parameter.Name, newValue);
+        trigger.Locations.Single(l => l.Id == location.Id).ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(newValue);
+        trigger.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(parameter.Value);
+    }
+
+    [TestMethod]
+    public void ResetConfigurationParameterAtLocation_ValidData_ResetsConfigurationParameterAtLocationToDefault()
+    {
+        const string custom = "custom";
+        const string node = "a node id";
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        var location = trigger.AddLocation(node, map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
+
+        var updatedParameter = trigger.ResetConfigurationParameterAtLocation(location.Id, parameter.Name);
+        updatedParameter.ShouldNotBeNull();
+        updatedParameter.Value.ShouldBe(parameter.Value);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(parameter.Value);
+    }
+
+    [TestMethod]
+    public void ResetConfigurationParameterAtLocation_UnknownLocation_ThrowsTriggerLocationNotFoundException()
+    {
+        const string custom = "custom";
+        const string node = "a node id";
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        var location = trigger.AddLocation(node, map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
+
+        Should.Throw<TriggerLocationNotFoundException>(() => trigger.ResetConfigurationParameterAtLocation("unknown".ToGuid(), parameter.Name));
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
+    }
+
+    [TestMethod]
+    public void ResetConfigurationParameterAtLocation_UnknownParameter_ReturnsNullDoesNotResetParameter()
+    {
+        const string custom = "custom";
+        const string node = "a node id";
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        var location = trigger.AddLocation(node, map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
+
+        trigger.ResetConfigurationParameterAtLocation(location.Id, "unknown").ShouldBeNull();
+        location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
     }
 }

@@ -20,7 +20,7 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<TriggerEventHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(16);
-            partitioner.PartitionMessageById<TriggerConfigurationUpdated, TriggerEventHandler>(c);
+            partitioner.PartitionMessageById<DefaultTriggerConfigurationUpdated, TriggerEventHandler>(c);
         });
         return cfg;
     }

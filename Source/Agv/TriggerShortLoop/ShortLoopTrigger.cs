@@ -15,14 +15,14 @@ namespace Gebhardt.Acc.TriggerShortLoop;
 public class ShortLoopTrigger(IBus bus) : IFfcTrigger
 {
     /// <inheritdoc cref="IFfcTrigger"/>>
-    public ConcurrentDictionary<string, ConfigurationParameter> GetConfigurationParameters()
+    public ConcurrentDictionary<string, ConfigurationParameter> GetDefaultConfigurationParameters()
     {
         var config = new ConcurrentDictionary<string, ConfigurationParameter>();
         return config;
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
-    public void UpdateConfigurationParameter(string name, string value)
+    public void UpdateDefaultConfigurationParameter(string name, string value)
     {
         throw new NotImplementedException();
     }
@@ -35,7 +35,7 @@ public class ShortLoopTrigger(IBus bus) : IFfcTrigger
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
-    public async Task Invoke(AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    public async Task Invoke(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
         await bus.Publish(new AgvPassedShortLoopTriggerPoint(agvData, agvStatus, actionGroup, cargo, errors));
     }

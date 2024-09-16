@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Trigger;
 public class TriggerCommandHandlerTestFixture: MassTransitConsumerTestFixture<TriggerCommandHandler>
 {
     private readonly Mock<ITriggerRepository> _triggerRepository = new();
-    public TransportOrder.Domain.Models.Trigger.Trigger Trigger = null!;
+    public TransportOrder.Domain.Models.Trigger.Trigger UpdatedTrigger = null!;
 
     public TriggerCommandHandlerTestFixture()
     {
@@ -22,9 +22,9 @@ public class TriggerCommandHandlerTestFixture: MassTransitConsumerTestFixture<Tr
             s.AddTransient<IMapper>(_ => MappingHelper.GetMapper(new PolygonPointProfile()));
         });
         _triggerRepository.Setup(x => x.Add(It.IsAny<TransportOrder.Domain.Models.Trigger.Trigger>()))
-            .Callback((TransportOrder.Domain.Models.Trigger.Trigger t) => Trigger = t);
+            .Callback((TransportOrder.Domain.Models.Trigger.Trigger t) => UpdatedTrigger = t);
         _triggerRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Trigger.Trigger>()))
-            .Callback((TransportOrder.Domain.Models.Trigger.Trigger t) => Trigger = t);
+            .Callback((TransportOrder.Domain.Models.Trigger.Trigger t) => UpdatedTrigger = t);
         Build();
     }
 

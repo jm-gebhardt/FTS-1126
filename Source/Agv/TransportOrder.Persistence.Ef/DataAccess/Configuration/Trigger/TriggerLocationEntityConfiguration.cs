@@ -17,6 +17,11 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
             .HasForeignKey(p => p.LocationId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(e => e.Polygon).AutoInclude();
+        builder.OwnsMany(e => e.ConfigurationParameters, o =>
+        {
+            o.ToTable("TriggerLocationConfigurationParameters");
+        });
+        builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
         builder.Property(e => e.MapId);
         builder.Property(e => e.EdgeId);
         builder.Property(e => e.NodeId);

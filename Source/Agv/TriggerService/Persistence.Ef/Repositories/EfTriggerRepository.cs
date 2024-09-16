@@ -61,7 +61,7 @@ public class EfTriggerRepository(IDbContextFactory<TriggerServiceDbContext> dbCo
         {
             foreach (var parameter in storedTrigger.ConfigurationParameters)
             {
-                ffcTrigger.UpdateConfigurationParameter(parameter.Name, parameter.Value);
+                ffcTrigger.UpdateDefaultConfigurationParameter(parameter.Name, parameter.Value);
             }
             return true;
         }
@@ -74,12 +74,12 @@ public class EfTriggerRepository(IDbContextFactory<TriggerServiceDbContext> dbCo
         var storedTrigger = await context.Set<Trigger>().SingleOrDefaultAsync(t => t.Id == id);
         if (storedTrigger != null)
         {
-            storedTrigger.UpdateParameters(ffcTrigger.GetConfigurationParameters().Values);
+            storedTrigger.UpdateParameters(ffcTrigger.GetDefaultConfigurationParameters().Values);
             context.Set<Trigger>().Update(storedTrigger);
         }
         else
         {
-            storedTrigger = new Trigger(id, ffcTrigger.GetConfigurationParameters().Values);
+            storedTrigger = new Trigger(id, ffcTrigger.GetDefaultConfigurationParameters().Values);
             context.Set<Trigger>().Add(storedTrigger);
         }
         await context.SaveChangesAsync();

@@ -19,7 +19,7 @@ public class DecisionPoint1Trigger(IBus bus) : IFfcTrigger
     private int _propertyValue = 3;
 
     /// <inheritdoc cref="IFfcTrigger"/>>
-    public ConcurrentDictionary<string, ConfigurationParameter> GetConfigurationParameters()
+    public ConcurrentDictionary<string, ConfigurationParameter> GetDefaultConfigurationParameters()
     {
         var config = new ConcurrentDictionary<string, ConfigurationParameter>();
         config.TryAdd(PropertyName, new ConfigurationParameter(PropertyName, PropertyDescription, _propertyValue.ToString(), @"^\d+$"));
@@ -27,7 +27,7 @@ public class DecisionPoint1Trigger(IBus bus) : IFfcTrigger
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
-    public void UpdateConfigurationParameter(string name, string value)
+    public void UpdateDefaultConfigurationParameter(string name, string value)
     {
         _propertyValue = int.Parse(value);
     }
@@ -40,9 +40,11 @@ public class DecisionPoint1Trigger(IBus bus) : IFfcTrigger
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
-    public async Task Invoke(AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    public async Task Invoke(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
-        int stationCount = int.Parse(GetConfigurationParameters().GetValueOrDefault(PropertyName)!.Value);
+        var stationCountParameter = parameters.GetValueOrDefault(PropertyName) ??
+                                    GetDefaultConfigurationParameters().GetValueOrDefault(PropertyName);
+        int stationCount = int.Parse(stationCountParameter!.Value);
 
         await bus.Publish(new AgvPassedDecisionPoint1(agvData, agvStatus, actionGroup, cargo, errors, stationCount));
     }

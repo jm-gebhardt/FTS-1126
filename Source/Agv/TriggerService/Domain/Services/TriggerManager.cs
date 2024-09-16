@@ -39,22 +39,22 @@ public class TriggerManager(ReflectionService reflectionService, ILogger<Trigger
     }
 
     /// <inheritdoc cref="ITriggerManager"/>>
-    public async Task InvokeTrigger(Guid triggerId, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    public async Task InvokeTrigger(Guid triggerId, Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
         var trigger = await triggerRepository.GetById(triggerId);
         var triggerInfo = trigger.GetProperties();
         logger.LogInformation("Invoke trigger: {Id} / {Name} for agv {AgvCorrelationId}", triggerInfo.Id, triggerInfo.DisplayName, agvStatus.CorrelationId);
-        await trigger.Invoke(agvData, agvStatus, actionGroup, cargo, errors);
+        await trigger.Invoke(parameters, agvData, agvStatus, actionGroup, cargo, errors);
     }
 
     /// <inheritdoc cref="ITriggerManager"/>>
-    public async Task UpdateConfigurationParameters(Guid triggerId, ICollection<ConfigurationParameter> updatedParameters)
+    public async Task UpdateDefaultConfigurationParameters(Guid triggerId, ICollection<ConfigurationParameter> updatedParameters)
     {
         var trigger = await triggerRepository.GetById(triggerId);
         foreach (var parameter in updatedParameters)
         {
             logger.LogInformation("Updating trigger configuration parameter {Name}: {Value}", parameter.Name, parameter.Value);
-            trigger.UpdateConfigurationParameter(parameter.Name, parameter.Value);
+            trigger.UpdateDefaultConfigurationParameter(parameter.Name, parameter.Value);
         }
 
         await triggerRepository.UpdateTrigger(triggerId, trigger);

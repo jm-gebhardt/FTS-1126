@@ -18,7 +18,7 @@ public class TriggerManagerTest
 
         const string updatedValue = "new value";
         var parameter = new ConfigurationParameter(configuration.Name, configuration.Description, updatedValue, configuration.Validation);
-        await fixture.TriggerManager.UpdateConfigurationParameters(fixture.TestTrigger.Properties.Id, [parameter]);
+        await fixture.TriggerManager.UpdateDefaultConfigurationParameters(fixture.TestTrigger.Properties.Id, [parameter]);
 
         fixture.TestTrigger.Parameters[configuration.Name].Value.ShouldBe(updatedValue);
         fixture.VerifyTriggerUpdated();

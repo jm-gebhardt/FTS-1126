@@ -28,8 +28,7 @@ internal class TriggerLocationSeeder : JsonSeeder<TriggerLocation>
         var triggerGuid = TriggerProperties.GetTriggerId(data.TriggerUrn, data.TriggerVersion);
         
         ICollection<PolygonPoint> polygonPoints = data.PolygonPoints ?? [];
-        
-        var addTriggerLocation = new AddTriggerLocation(triggerGuid, data.NodeId, data.EdgeId, polygonPoints, data.MapId);
+        var addTriggerLocation = new AddTriggerLocation(triggerGuid, data.NodeId, data.EdgeId, polygonPoints, data.MapId, data.ConfigurationParameters);
 
         return await Task.FromResult(addTriggerLocation);
     }

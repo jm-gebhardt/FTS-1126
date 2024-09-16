@@ -24,15 +24,16 @@ public class TriggerMessageConsumerTestFixture<TConsumer> : MassTransitConsumerT
     public TriggerMessageConsumerTestFixture()
     {
         Build();
-        _triggerManagerMock.Setup(x => x.InvokeTrigger(It.IsAny<Guid>(), It.IsAny<AgvData>(), It.IsAny<AgvStatus>(),
+        _triggerManagerMock.Setup(x => x.InvokeTrigger(It.IsAny<Guid>(), It.IsAny<Dictionary<string, ConfigurationParameter>>(),  It.IsAny<AgvData>(), It.IsAny<AgvStatus>(),
                 It.IsAny<ActionGroup?>(), It.IsAny<ICollection<Cargo>>(), It.IsAny<ICollection<AgvError>>()))
             .Verifiable();
-        _triggerManagerMock.Setup(x => x.UpdateConfigurationParameters(It.IsAny<Guid>(), It.IsAny<ICollection<ConfigurationParameter>>())).Verifiable();
+        _triggerManagerMock.Setup(x => x.UpdateDefaultConfigurationParameters(It.IsAny<Guid>(), It.IsAny<ICollection<ConfigurationParameter>>())).Verifiable();
     }
 
     public void VerifyTriggerInvoked(Guid triggerId, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
        _triggerManagerMock.Verify(x => x.InvokeTrigger(triggerId,
+           It.IsAny<Dictionary<string, ConfigurationParameter>>(),
                 It.Is<AgvData>(a => a.CorrelationId == agvData.CorrelationId), 
             It.Is<AgvStatus>(a => a.CorrelationId == agvStatus.CorrelationId),
             It.Is<ActionGroup?>( a => (a == null && actionGroup == null)|| a!.CorrelationId == actionGroup!.CorrelationId), 
@@ -43,7 +44,7 @@ public class TriggerMessageConsumerTestFixture<TConsumer> : MassTransitConsumerT
 
     public void VerifyConfigurationParametersUpdated(Guid triggerId, ICollection<ConfigurationParameter> parameters)
     {
-        _triggerManagerMock.Verify(x => x.UpdateConfigurationParameters(triggerId, 
+        _triggerManagerMock.Verify(x => x.UpdateDefaultConfigurationParameters(triggerId, 
             It.Is<ICollection<ConfigurationParameter>>( c=> c.All(p => parameters.Any(a => a.Value == p.Value && a.Name == p.Name && a.Validation == p.Validation)))), Times.Once());
     }
 }
