@@ -115,7 +115,7 @@ public class GraphParser
             return;
         }
         _checkedVelocity = true;
-        _considerVelocity = _graph.Edges!.All(x => x.MaxVelocity > 0.00001f); // Precision of single is about 6 to 9 digits.
+        _considerVelocity = _graph.Edges!.All(x => x.MaxVelocity > Mathematics.FloatComparator); // Precision of single is about 6 to 9 digits.
     }
 
     /// <summary>

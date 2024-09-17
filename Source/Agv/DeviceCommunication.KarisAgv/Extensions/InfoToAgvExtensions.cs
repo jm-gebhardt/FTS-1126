@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Microsoft.IdentityModel.Tokens;
 
@@ -9,8 +10,7 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 /// </summary>
 public static class InfoToAgvExtensions
 {
-    private const string NoRotation = "4";
-    private static readonly string[] _allowedValues = [ "", "1", "2", "3", "4" ];
+    private const double RotationValue = Math.PI;
 
     /// <summary>
     /// Check if value for CargoRotation in InfoToAgv requests rotation.
@@ -19,23 +19,26 @@ public static class InfoToAgvExtensions
     /// <returns>True if the agv needs to rotate.</returns>
     public static bool NeedsRotation(this Dictionary<InfoToAgvKey, string> infoToAgv)
     {
-        bool needsRotation = false;
-
         infoToAgv.TryGetValue(InfoToAgvKey.CargoRotation, out string? rotationValue);
 
-        if (!rotationValue.IsNullOrEmpty())
+        if (string.IsNullOrEmpty(rotationValue))
         {
-            if (!_allowedValues.Contains(rotationValue))
-            {
-                throw new ArgumentOutOfRangeException(nameof(InfoToAgvKey.CargoRotation), "Value out of range.");
-            }
-            if (!rotationValue!.Equals(NoRotation, StringComparison.OrdinalIgnoreCase))
-            { 
-                needsRotation = true;
-            }
+            return false;
         }
 
-        return needsRotation;
+        double parsedRotationValue = double.Parse(rotationValue, CultureInfo.InvariantCulture);
+
+        if (Math.Abs(parsedRotationValue - RotationValue) < Mathematics.DoubleComparator)
+        {
+            return true;
+        }
+
+        if (Math.Abs(parsedRotationValue) > RotationValue * 2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(InfoToAgvKey.CargoRotation), "Value out of range.");
+        }
+
+        return false;
     }
 
     /// <summary>

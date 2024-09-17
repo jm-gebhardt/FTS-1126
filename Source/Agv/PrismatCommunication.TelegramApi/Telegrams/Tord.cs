@@ -23,6 +23,11 @@ public class Tord: PrismatTelegram
     public string Dest { get; private set; } = null!;
 
     /// <summary>
+    /// The rotation of the handling unit.
+    /// </summary>
+    public int HuRot { get; private set; }
+
+    /// <summary>
     /// The order id.
     /// </summary>
     public string OId { get; private set; } = null!;
@@ -58,6 +63,7 @@ public class Tord: PrismatTelegram
             Src = fields["Src"].TrimEnd('.');
             Dest = fields["Dest"].TrimEnd('.');
             OId = fields["OID"].TrimEnd('.');
+            HuRot = int.Parse(fields["HuRot"].TrimEnd('.'));
             SortId = int.Parse(fields["SortID"].TrimEnd('.'));
             OfO = int.Parse(fields["OfO"].TrimEnd('.'));
         }
@@ -80,6 +86,6 @@ public class Tord: PrismatTelegram
     /// </summary>
     public override string ToString()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/HU:{Hu.PadRight(20, '.')}/{nameof(Src)}:{Src.PadRight(10, '.')}/{nameof(Dest)}:{Dest.PadRight(10, '.')}/OID:{OId.PadRight(12, '.')}/SortID:{SortId.ToString().PadRight(2, '.')}/OfO:{OfO.ToString().PadRight(2,'.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/HU:{Hu.PadRight(20, '.')}/{nameof(Src)}:{Src.PadRight(10, '.')}/{nameof(Dest)}:{Dest.PadRight(10, '.')}/{nameof(HuRot)}:{HuRot}/OID:{OId.PadRight(12, '.')}/SortID:{SortId.ToString().PadRight(2, '.')}/OfO:{OfO.ToString().PadRight(2,'.')}/{EndSymbol}";
     }
 }

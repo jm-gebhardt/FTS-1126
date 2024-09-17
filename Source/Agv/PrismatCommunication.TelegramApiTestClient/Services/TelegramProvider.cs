@@ -13,7 +13,7 @@ public class TelegramProvider(ILogger<TelegramProvider> logger, PrismatTelegramP
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Delay(10, stoppingToken);
-        const string testTelegram = "/Seq:001/Send:EWM...../Rec:FTS01.../Time:2021:11:02:08:12:09:122/Func:Tord................/HU:1234567890........../Src:1040....../Dest:2410....../OID:1234567890../SortID:1./OfO:3./$$:";
+        const string testTelegram = "/Seq:001/Send:EWM...../Rec:FTS01.../Time:2021:11:02:08:12:09:122/Func:Tord................/HU:1234567890........../Src:1040....../Dest:2410....../HuRot:1/OID:1234567890../SortID:1./OfO:3./$$:";
         logger.LogInformation("Providing test tord {Telegram}", testTelegram);
         var tord = new Tord();
         tord.Load(testTelegram);

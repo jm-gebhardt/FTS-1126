@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using System.Globalization;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -9,10 +10,8 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
 public class InfoToAgvMessageExtension
 {
     [DataTestMethod]
-    [DataRow("1", true)]
-    [DataRow("2", true)]
-    [DataRow("3", true)]
-    [DataRow("4", false)]
+    [DataRow("3.14159265358979323846", true)]
+    [DataRow("0", false)]
     [DataRow("", false)]
     public void GetNeedsRotation_ValidData_ReturnTrueOrFalse(string rotationValue, bool needsRotation)
     {
@@ -26,7 +25,7 @@ public class InfoToAgvMessageExtension
     [TestMethod]
     public void GetNeedsRotation_InvalidValue_ThrowsArgumentOutOfRangeException()
     {
-        const string invalidValue = "5";
+        string invalidValue = (Math.PI * 2.0 + 0.5).ToString(CultureInfo.InvariantCulture);
 
         var infoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, invalidValue } };
 

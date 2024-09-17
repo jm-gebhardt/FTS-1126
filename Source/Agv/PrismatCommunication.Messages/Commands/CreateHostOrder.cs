@@ -24,7 +24,7 @@ public record CreateHostOrder : CorrelatedBy<Guid>
     /// Handling unit
     /// </summary>
     public string Hu { get; }
-
+    
     /// <inheritdoc cref="CreateHostOrder"/>
     public CreateHostOrder(string hu, OrderDetails orderDetails)
     {

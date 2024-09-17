@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages;
@@ -33,9 +34,9 @@ public record OrderDetails : CorrelatedBy<Guid>
     public string LeNo { get; }
 
     /// <summary>
-    /// The rotation info for the orders handled box or transportation good
+    /// The rotation info for the orders handled box or transportation good in rad
     /// </summary>
-    public string LeRotation { get; }
+    public double LeRotation { get; }
 
     /// <summary>
     /// The creator of the host order
@@ -59,7 +60,7 @@ public record OrderDetails : CorrelatedBy<Guid>
     /// <param name="creationDate"></param>
     /// <param name="leRotation"></param>
     [JsonConstructor]
-    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, DateTime creationDate, string leRotation = "")
+    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, DateTime creationDate, double leRotation = 0)
     {
         CorrelationId = correlationId;
         OrderId = orderId;
@@ -72,6 +73,22 @@ public record OrderDetails : CorrelatedBy<Guid>
     }
 
     /// <summary>
+    /// Initializes a new instance of <see cref="OrderDetails"/> with a specific creation date
+    /// </summary>
+    /// <param name="correlationId"></param>
+    /// <param name="orderId"></param>
+    /// <param name="source"></param>
+    /// <param name="destination"></param>
+    /// <param name="leNo"></param>
+    /// <param name="creator"></param>
+    /// <param name="creationDate"></param>
+    /// <param name="huRot"></param>
+    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, DateTime creationDate, int huRot)
+        : this(correlationId, orderId, source, destination, leNo, creator, creationDate, ConvertHuRotToRadians(huRot))
+    {
+    }
+
+    /// <summary>
     /// Initializes a new instance of <see cref="OrderDetails"/> with creation date 'now'
     /// </summary>
     /// <param name="correlationId"></param>
@@ -81,8 +98,28 @@ public record OrderDetails : CorrelatedBy<Guid>
     /// <param name="leNo"></param>
     /// <param name="creator"></param>
     /// <param name="leRotation"></param>
-    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, string leRotation = "")
+    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, double leRotation = 0)
         : this(correlationId, orderId, source, destination, leNo, creator, DateTime.UtcNow, leRotation)
     {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="OrderDetails"/> with creation date 'now'
+    /// </summary>
+    /// <param name="correlationId"></param>
+    /// <param name="orderId"></param>
+    /// <param name="source"></param>
+    /// <param name="destination"></param>
+    /// <param name="leNo"></param>
+    /// <param name="creator"></param>
+    /// <param name="huRot"></param>
+    public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, int huRot)
+        : this(correlationId, orderId, source, destination, leNo, creator, DateTime.UtcNow, ConvertHuRotToRadians(huRot))
+    {
+    }
+
+    private static double ConvertHuRotToRadians(int huRot)
+    {
+        return Mathematics.ConvertToRadians((huRot - 1) * 90.0);
     }
 }

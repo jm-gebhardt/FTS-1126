@@ -28,7 +28,7 @@ public class TordProcessorTest
         (await fixture.TestHarness.Published.Any<CreateHostOrder>()).ShouldBeTrue();
         var createHostOrder = await fixture.GetFirstPublishedMessageAsync<CreateHostOrder>();
         createHostOrder.Hu.ShouldBe(tord.Hu);
-        createHostOrder.OrderDetails.ShouldBeEquivalentTo(new OrderDetails(tord.OId.ToGuid(), tord.OId, tord.Src, tord.Dest, tord.Hu, HostOrderCreator.Wms, tord.Time));
+        createHostOrder.OrderDetails.ShouldBeEquivalentTo(new OrderDetails(tord.OId.ToGuid(), tord.OId, tord.Src, tord.Dest, tord.Hu, HostOrderCreator.Wms, tord.Time, tord.HuRot));
         fixture.Processor.ShouldReceiveTelegram().ShouldBeFalse();
     }
 

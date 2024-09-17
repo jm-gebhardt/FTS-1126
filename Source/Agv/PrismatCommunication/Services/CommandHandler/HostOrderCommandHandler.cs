@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -157,12 +159,12 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         double? liftHeightPick = configuration.GetLiftHeight(orderDetails.Source);
         double? liftHeightDrop = configuration.GetLiftHeight(orderDetails.Destination);
 
-        if (orderDetails.LeRotation != "" || liftHeightPick.HasValue)
+        if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator || liftHeightPick.HasValue)
         {
             pickInfoToAgv = new Dictionary<InfoToAgvKey, string>();
-            if (orderDetails.LeRotation != "")
+            if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator)
             {
-                pickInfoToAgv.Add(InfoToAgvKey.CargoRotation, orderDetails.LeRotation);
+                pickInfoToAgv.Add(InfoToAgvKey.CargoRotation, orderDetails.LeRotation.ToString(CultureInfo.InvariantCulture));
             }
             if (liftHeightPick.HasValue)
             {

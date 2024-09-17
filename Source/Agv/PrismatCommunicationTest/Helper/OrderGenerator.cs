@@ -32,7 +32,7 @@ public static class OrderGenerator
         }
     }
 
-    public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020 = true, string huRotation = "")
+    public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020 = true, int huRotation = 1)
     {
         if (pickAt1020)
         {

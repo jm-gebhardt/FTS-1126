@@ -10,6 +10,16 @@ namespace Gebhardt.Acc.Common.Domain.Utilities;
 public static class Mathematics
 {
     /// <summary>
+    /// Comparison value to check for double equality.
+    /// </summary>
+    public const double DoubleComparator = 0.000001;
+
+    /// <summary>
+    /// Comparison value to check for float equality
+    /// </summary>
+    public const float FloatComparator = (float)DoubleComparator;
+
+    /// <summary>
     /// Converts an angle in degrees to radians.
     /// </summary>
     /// <param name="angle">The angle in degrees</param>

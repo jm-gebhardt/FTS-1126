@@ -247,7 +247,7 @@ public class StartActionCommandConsumerTest
             var actionCorrelationId = Guid.NewGuid();
             const string agvSerialNumber = "agv0";
             const string orderId = "1234";
-            const string needsRotation = "2";
+            string needsRotation = Math.PI.ToString(CultureInfo.InvariantCulture);
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Drop5";
 

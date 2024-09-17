@@ -65,8 +65,7 @@ public class HostOrderCommandHandlerTest
             .WithDropOrdersHeadingTowardsShortLoopTriggerPoint(false)
             .WithHostCommunicator();
 
-        const string needsRotation = "2";
-        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true, needsRotation);
+        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
 
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
