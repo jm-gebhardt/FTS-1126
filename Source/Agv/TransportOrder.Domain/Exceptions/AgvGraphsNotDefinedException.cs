@@ -1,7 +1,7 @@
 namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 /// <summary>
-/// The graph of any of the Agvs is null.
+/// A graph of is null.
 /// </summary>
 public class AgvGraphsNotDefinedException : BatchQueryException
 {

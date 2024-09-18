@@ -34,7 +34,7 @@ try
 
             foreach (var moduleConfig in config.Modules)
             {
-                // we must construct the PollingBackgroundService manually, as there is no other way to inject the this specific instance of the moduleConfig
+                // we must construct the PollingBackgroundService manually, as there is no other way to inject  this specific instance of the moduleConfig
                 services.AddHostedService(sp => new PollingBackgroundService<ModulePollingService>(
                     sp.GetRequiredService<ILogger<PollingBackgroundService<ModulePollingService>>>(),
                     new ModulePollingService(sp, moduleConfig)

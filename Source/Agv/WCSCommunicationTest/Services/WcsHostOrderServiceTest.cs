@@ -82,7 +82,7 @@ public class WcsHostOrderServiceTest
     }
 
     /// <summary>
-    /// A valid new order was found in ToAgv which results in a entry in FromAgv
+    /// A valid new order was found in ToAgv which results in an entry in FromAgv
     /// </summary>
     [TestMethod]
     [DataRow("sc1", "")]

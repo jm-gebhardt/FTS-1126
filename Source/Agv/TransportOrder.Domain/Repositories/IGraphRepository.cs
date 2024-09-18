@@ -25,7 +25,7 @@ public interface IGraphRepository
     /// <summary>
     /// Gets the graph of selected agvs.
     /// </summary>
-    /// <param name="correlationIds">The agv correlation ids,.</param>
+    /// <param name="correlationIds">The agv correlation ids.</param>
     /// <returns></returns>
     Task<ICollection<AgvGraph>> GetSelectedAgvGraphsAsync(ICollection<Guid> correlationIds);
 

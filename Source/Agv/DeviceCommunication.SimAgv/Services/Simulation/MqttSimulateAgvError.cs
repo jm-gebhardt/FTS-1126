@@ -10,6 +10,7 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 /// </summary>
 [PublicAPI]
 [EntityName("amq.topic")]
+// ReSharper disable once StringLiteralTypo
 [RoutingKey("simulatedagv.errors.simulate")]
 public record MqttSimulateAgvError : CorrelatedBy<Guid>
 {

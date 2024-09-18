@@ -78,7 +78,7 @@ public record ActionGroupDto : DatedMessage
     public bool IsManual { get; set; }
 
     /// <summary>
-    /// Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled.
+    /// Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled.
     /// </summary>
     [UsedImplicitly]
     public List<Reason> Reasons { get; set; } = new();

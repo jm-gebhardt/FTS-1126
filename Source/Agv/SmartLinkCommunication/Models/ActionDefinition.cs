@@ -39,7 +39,7 @@ public record ActionDefinition
 
     /// <inheritdoc cref="ActionDefinition"/>>
     /// <param name="actionType">Type of the action</param>
-    /// <param name="nodeId">Destination node Id of the action </param>
+    /// <param name="nodeId">Destination node id of the action </param>
     public ActionDefinition(ActionType actionType, string nodeId)
     {
         Type = actionType;

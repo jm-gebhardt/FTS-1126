@@ -35,7 +35,7 @@ public interface IRouteService
     Task<double?> GetCostsForFirstActionAsync(Models.Agv.Agv agv, Models.ActionGroup.ActionGroup actionGroup, AgvData? agvData, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Returns true once it found the first Agv which can handle the whole ActionGroup (based on it's current node)
+    /// Returns true once it found the first Agv which can handle the whole ActionGroup (based on its current node)
     /// </summary>
     /// <param name="actionGroup">The ActionGroup containing one or more Actions of which the target node Id will be considered</param>
     /// <param name="agvs">Agvs to consider</param>
@@ -74,7 +74,7 @@ public interface IRouteService
     /// <param name="availableNodes"></param>
     /// <param name="agvData">The agv data.</param>>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
-    /// <returns>The found destination node with lowest cost route</returns>
+    /// <returns>The found destination node with the lowest route cost </returns>
     /// <exception cref="RouteNotFoundException" />
     [PublicAPI]
     Task<GraphNode> GetNodeWithLowestCostsAsync(Models.Agv.Agv agv, IList<GraphNode> availableNodes, AgvData? agvData, string? startNodeId = null);

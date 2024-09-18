@@ -1,7 +1,7 @@
 ﻿namespace Gebhardt.Acc.Common.MassTransit;
 
 /// <summary>
-/// Service to wait for a specific message with a specific condition to be received. Additionally it has a timeout.
+/// Service to wait (with timeout) for a specific message with a specific condition to be received.
 /// </summary>
 public interface IMessageAwaiter<TMessage> where TMessage : class
 {

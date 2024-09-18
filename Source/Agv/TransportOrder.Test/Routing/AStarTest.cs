@@ -287,7 +287,7 @@ public class AStarTest
     }
 
     /// <summary>
-    /// Test path to or from non existent node.
+    /// Test path to or from not existent node.
     /// </summary>
     [TestMethod]
     [DataRow("01/01", "XX/XX")]

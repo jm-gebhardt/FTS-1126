@@ -103,7 +103,7 @@ public class ActionGroup
     public bool HasPriority { get; set; }
 
     /// <summary>
-    /// Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
+    /// Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
     /// </summary>
     [UsedImplicitly]
     public List<Reason> Reasons { get; set; } = new();

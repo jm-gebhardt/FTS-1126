@@ -44,7 +44,7 @@ public record AgvErrorDto
     public ErrorCategory ErrorCategory { get; init; }
 
     /// <summary>
-    ///  List of above mentioned ErrorReferences
+    ///  List of error references
     /// </summary>
     public List<ErrorReference>? ErrorReferences { get; init; }
 

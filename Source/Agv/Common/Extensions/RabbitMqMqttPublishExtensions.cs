@@ -16,7 +16,7 @@ public static class RabbitMqMqttPublishExtensions
     /// </summary>
     /// <typeparam name="T">Type of the message that shall be sent</typeparam>
     /// <param name="endpoint">The IPublishEndpoint for extension</param>
-    /// <param name="values">The values to be send in <ref>T</ref></param>
+    /// <param name="values">The values to be sent in <ref>T</ref></param>
     /// <param name="callback">The callback action to be invoked after sending</param>
     /// <param name="cancellationToken">The cancellation token</param>
     /// <returns>Task</returns>
@@ -40,7 +40,7 @@ public static class RabbitMqMqttPublishExtensions
     /// </summary>
     /// <typeparam name="T">Type of the message that shall be sent</typeparam>
     /// <param name="endpoint">The IPublishEndpoint for extension</param>
-    /// <param name="values">The values to be send in <ref>T</ref></param>
+    /// <param name="values">The values to be sent in <ref>T</ref></param>
     /// <param name="cancellationToken">The cancellation token</param>
     /// <returns>Task</returns>
     public static Task PublishMqtt<T>(this IPublishEndpoint endpoint, T values, CancellationToken cancellationToken = default) where T : class

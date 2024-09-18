@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.Statistics.Services.CommandHandler;
 /// Handles housekeeping related commands.
 /// </summary>
 [UsedImplicitly]
-public class HousekeepingCommandHandler : IConsumer<HousekeepAgvPositions>
+public class HousekeepingCommandHandler : IConsumer<HouseKeepAgvPositions>
 {
     private readonly IStatisticsDb _db;
     private readonly ILogger<HousekeepingCommandHandler> _logger;
@@ -24,9 +24,9 @@ public class HousekeepingCommandHandler : IConsumer<HousekeepAgvPositions>
     }
 
     /// <summary>
-    /// Handles the <see cref="HousekeepAgvPositions"/> command.
+    /// Handles the <see cref="HouseKeepAgvPositions"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<HousekeepAgvPositions> context)
+    public async Task Consume(ConsumeContext<HouseKeepAgvPositions> context)
     {
         var timestamp = DateTime.UtcNow - TimeSpan.FromDays(30);
 

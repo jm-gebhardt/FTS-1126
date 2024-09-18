@@ -7,7 +7,7 @@ using Gebhardt.Acc.Common.Services.Significance;
 namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
-/// Compares <see cref="AgvPositionReceived"/> (separated by Guid( in memory and uses <see cref="AgvPositionReceivedFilter"/> to detect if it should be acted on.
+/// Compares <see cref="AgvPositionReceived"/> (separated by Guid) in memory and uses <see cref="AgvPositionReceivedFilter"/> to detect if it should be acted on.
 /// </summary>
 /// <param name="semaphoreProvider"></param>
 /// <param name="concurrentDictionaryProvider"></param>

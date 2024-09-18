@@ -18,7 +18,7 @@ public static class EntityTypeBuilderExtensions
     /// </summary>
     /// <param name="builder"></param>
     /// <param name="onlyInclude">If set, only true returning items will be configured</param>
-    /// <param name="except">If set the provided property names wont be configured</param>
+    /// <param name="except">If set the provided property names won't be configured</param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     // ReSharper disable once UnusedMethodReturnValue.Global

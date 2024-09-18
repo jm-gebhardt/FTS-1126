@@ -1,7 +1,7 @@
 ﻿namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 /// <summary>
-/// The data of any of the given agvs was not found.
+/// No data was found for any of the given agvs.
 /// </summary>
 public class AgvsDataBatchQueryException : BatchQueryException
 {

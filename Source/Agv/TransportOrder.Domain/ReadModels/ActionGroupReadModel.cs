@@ -19,7 +19,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="Actions">The action.</param>
 /// <param name="IsManual">The manual creation mode flag.</param>
 /// <param name="HasPriority">The priority flag.</param>
-/// <param name="Reasons">Are set when the ActionGroup went into a non successful state, like invalid, aborted or canceled.</param>
+/// <param name="Reasons">Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled.</param>
 public record ActionGroupReadModel(
     Guid CorrelationId,
     string OrderId,

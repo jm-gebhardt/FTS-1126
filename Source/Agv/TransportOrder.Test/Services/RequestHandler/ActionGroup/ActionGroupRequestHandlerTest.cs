@@ -186,7 +186,7 @@ public class ActionGroupRequestHandlerTest
         ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup)
-                .WithFakeTriggerredAbortAction()
+                .WithFakeTriggeredAbortAction()
                 .BuildAsync();
         Response<ActionGroupAbortionTriggered> response = await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.WebApi));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
@@ -244,7 +244,7 @@ public class ActionGroupRequestHandlerTest
         ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup)
-                .WithFakeTriggerredResetAction()
+                .WithFakeTriggeredResetAction()
                 .BuildAsync();
         Response<ActionGroupResetTriggered> response = await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset(actionGroup.CorrelationId));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);

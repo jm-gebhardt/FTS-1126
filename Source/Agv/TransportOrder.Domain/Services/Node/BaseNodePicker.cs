@@ -80,7 +80,7 @@ public abstract class BaseNodePicker
     protected abstract Expression<Func<GraphNode, bool>> NodeFilter { get; }
 
     /// <summary>
-    /// Logic for selection of best node. This method can be overriden, but it's base implementation does a lowest cost route selection
+    /// Logic for selection of the best node. This method can be overriden, but it's base implementation does a selected based on the cost of the route
     /// </summary>
     /// <param name="availableNodes">The nodes which can be selected, it is ensured that it contains at least one available node</param>
     /// <param name="agv">The agv</param>

@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 
 /// <summary>
-/// Execute processing of a agv graph request.
+/// Execute processing of an agv graph request.
 /// </summary>
 /// <remarks>
 /// Request station list and graph and merge both to an internal graph passed to the service AgvManagement.

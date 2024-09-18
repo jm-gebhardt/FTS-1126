@@ -4,7 +4,7 @@ using MassTransit;
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 
 /// <summary>
-/// Represents the request which returns the route for the given Agv from it's current node to the destination node.
+/// Represents the request which returns the route for the given Agv from its current node to the destination node.
 /// </summary>
 public record GetRoute : CorrelatedBy<Guid>
 {

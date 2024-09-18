@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.TransportOrder.Routing.Base;
 public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 {
     /// <summary>
-    /// The fallback value for max non spot turn angle.
+    /// The fallback value for max on spot turn angle.
     /// </summary>
     protected const double MaxNonSpotTurnAngleFallback = 5 * Math.PI / 180d;
 

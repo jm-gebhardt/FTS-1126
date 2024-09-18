@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 public class Bezier
 {
     /// <summary>
-    /// The control polygon of the bezier curve.
+    /// The control polygon of the Bezier curve.
     /// </summary>
     private IReadOnlyCollection<Vector2> ControlPolygon { get; }
 
@@ -54,10 +54,10 @@ public class Bezier
     }
 
     /// <summary>
-    /// Performs the DeCasteljau algorithm on the provided bezier curve.
+    /// Performs the DeCasteljau algorithm on the provided Bezier curve.
     /// </summary>
     /// <param name="intervalPosition">The position on the interval [0,1] for which to calculate the point on the curve.</param>
-    /// <exception cref="ArgumentOutOfRangeException">If the intervalPosition is outside of the interval [0,1].</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If the intervalPosition is outside of interval [0,1].</exception>
     public Vector2 DeCasteljau(double intervalPosition)
     {
         return DeCasteljau(intervalPosition, out _, out _);
@@ -99,7 +99,7 @@ public class Bezier
     }
 
     /// <summary>
-    /// Calculates the length of this bezier curve with the provided resolution.
+    /// Calculates the length of this Bezier curve with the provided resolution.
     /// </summary>
     /// <param name="resolution">The resolution of the interpolation used to calculate the length.</param>
     public double GetLength(int resolution)

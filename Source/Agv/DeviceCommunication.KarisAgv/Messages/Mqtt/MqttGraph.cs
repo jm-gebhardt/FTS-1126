@@ -51,7 +51,7 @@ public record MqttGraph
     /// <param name="modificationDate">Modification date of the graph. Timestamp in ISO8601 format.</param>
     /// <param name="nodes">List of nodes.</param>
     /// <param name="edges">List of edges.</param>
-    /// <param name="relatedMapId">The unique ID ID of the map that belongs to the graph.</param>
+    /// <param name="relatedMapId">The unique ID of the map that belongs to the graph.</param>
     /// <param name="requestId">The unique ID replied from the request.</param>
     public MqttGraph(
         string serialNumber,
@@ -92,7 +92,7 @@ public record MqttNode
     public float Y { get; set; }
 
     /// <summary>
-    /// The z coordinate of the node (e.g. if there is a another floor).
+    /// The z coordinate of the node (e.g. if there is another floor).
     /// This field is not required.
     /// </summary>
     public float? Z { get; set; }

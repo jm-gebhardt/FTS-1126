@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.Common.Configurations;
 public interface ISettings;
 
 /// <summary>
-/// An interface for implementing a settings class. Properties should be non nullable
+/// An interface for implementing a settings class. Properties should be not nullable
 /// </summary>
 /// <typeparam name="TSettings">Marker interface for the settings class</typeparam>
 // ReSharper disable once UnusedTypeParameter

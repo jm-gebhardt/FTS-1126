@@ -57,7 +57,7 @@ public interface IAgvRepository
     Task ThrowIfAgvNotExistsAsync(Guid correlationId);
 
     /// <summary>
-    /// Throws an <see cref="AgvNotFoundException"/> for all of the non existing agvs.
+    /// Throws an <see cref="AgvNotFoundException"/> for all not existing agvs.
     /// </summary>
     /// <param name="correlationIds">The CorrelationIds of the Agv to check.</param>
     /// <returns></returns>

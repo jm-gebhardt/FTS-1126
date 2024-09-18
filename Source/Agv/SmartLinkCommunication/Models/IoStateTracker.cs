@@ -44,7 +44,7 @@ public class IoStateTracker : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// Sets up a timer that will execute the specified callback action if the <see cref="CurrentState"/> remains the same as inState" as long as specified in duration>.
+    /// Sets up a timer that will execute the specified callback action if the <see cref="CurrentState"/> remains the same as inState as long as specified in duration>.
     /// </summary>
     /// <param name="duration">How long the state must remain the same before the action is executed.</param>
     /// <param name="inState">The state he has to be in.</param>

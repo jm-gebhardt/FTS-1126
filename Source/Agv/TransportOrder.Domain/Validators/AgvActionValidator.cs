@@ -7,7 +7,7 @@ using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvActio
 namespace Gebhardt.Acc.TransportOrder.Domain.Validators;
 
 /// <summary>
-/// Responsible for the validation of an Agv action it it's valid
+/// Responsible for the validation of an Agv action if it's valid
 /// </summary>
 public class AgvActionValidator : AbstractValidator<AgvAction>
 {

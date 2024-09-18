@@ -187,8 +187,8 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="fromNodeId">The start point of the edge.</param>
     /// <param name="toNodeId">The end point of the edge.</param>
     /// <param name="length">Length of the edge in [m].</param>
-    /// <param name="x">The x coordinate of the bezier curve control polygon point.</param>
-    /// <param name="y">The y coordinate of the bezier curve control polygon point.</param>
+    /// <param name="x">The x coordinate of the Bezier curve control polygon point.</param>
+    /// <param name="y">The y coordinate of the Bezier curve control polygon point.</param>
     /// <param name="id">Optional id.</param>
     [UsedImplicitly]
     public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float length, double x, double y, Guid? id = null)

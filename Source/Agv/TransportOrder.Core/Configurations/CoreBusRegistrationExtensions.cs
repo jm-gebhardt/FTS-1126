@@ -177,10 +177,9 @@ public static class CoreBusRegistrationExtensions
     }
 
     /// <summary>
-    /// Adds the MassTransit Mediator
-    /// MassTransit Mediator runs in-process and in-memory, no transport is required.
+    /// Add the mediator
     /// </summary>
-    /// <param name="configurator"></param>
+    /// <param name="configurator">The registration configurator</param>
     public static void AddMediator(this IMediatorRegistrationConfigurator configurator)
     {
         RegisterMediatorMapHandlers(configurator);

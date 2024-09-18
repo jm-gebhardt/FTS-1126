@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.Common.Persistence.Ef;
 
 /// <summary>
-/// Provides extension methods for queryables.
+/// Provides extension methods for queryable.
 /// </summary>
 public static class QueryableExtensions
 {

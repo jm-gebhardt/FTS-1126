@@ -109,7 +109,7 @@ public record MqttState
 
     /// <summary>
     /// True: AGV is almost at the end of the base and will reduce speed if no new base is
-    /// transmitted. Trigger for MC to send ne base
+    /// transmitted. Trigger for MC to send new base
     /// False: no base update required
     /// </summary>
     public bool? NewBaseRequest { get; set; }
@@ -203,7 +203,7 @@ public record MqttActionState
     public string? ActionType { get; set; }
 
     /// <summary>
-    /// Description of the result, e.g. the result of a RFID read.
+    /// Description of the result, e.g. the result of an RFID read.
     /// </summary>
     public string? ResultDescription { get; set; }
 }
@@ -220,7 +220,7 @@ public record MqttAgvPosition
     public float? DeviationRange { get; set; }
 
     /// <summary>
-    /// Describes the quality of the localization and therefore, can be used e. g. by SLAM-AGVs
+    /// Describes the quality of the localization and therefore, can be used e.g. by SLAM-AGVs
     /// to describe how accurate the current position information is.
     /// 0.0: position unknown
     /// 1.0: position known
@@ -499,14 +499,14 @@ public record MqttLoad
     public MqttLoadDimensions? LoadDimensions { get; set; }
 
     /// <summary>
-    /// Unique identification number of the load (e. g. barcode or RFID)
+    /// Unique identification number of the load (e.g. barcode or RFID)
     /// Empty field if the AGV can identify the load but didn't identify the load yet.
     /// Optional if the AGV has cannot identify the load.
     /// </summary>
     public string? LoadId { get; set; }
 
     /// <summary>
-    /// Indicates which load handling/carrying unit of the AGV is used, e. g. in case the AGV has
+    /// Indicates which load handling/carrying unit of the AGV is used, for example in case the AGV has
     /// multiple spots/positions to carry loads.
     /// For example: front, back, positionC1, etc.
     /// Optional for vehicles with only one loadPosition.

@@ -55,7 +55,7 @@ public class ConfigurationType
     public IEnumerable<ConfigurationTypeProperty> Properties { get; }
 
     /// <summary>
-    /// An object of the type constructed by using the default ctor with it's default values
+    /// An object of the type constructed by using the default ctor with its default values
     /// </summary>
     [UsedImplicitly]
     public object DefaultInstance { get; }

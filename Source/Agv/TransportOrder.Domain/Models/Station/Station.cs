@@ -133,6 +133,7 @@ public class Station
 /// <summary>
 /// Defines how orders involving a locked station will be handled that have already started.
 /// </summary>
+[PublicAPI]
 public enum LockedOrderHandlingType
 {
     /// <summary>

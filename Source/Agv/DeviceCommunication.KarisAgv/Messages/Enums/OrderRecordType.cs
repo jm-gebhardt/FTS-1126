@@ -3,7 +3,7 @@
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 
 /// <summary>
-/// The record type of an order to the AGV
+/// The order record type
 /// </summary>
 [PublicAPI]
 public enum OrderRecordType

@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Gebhardt.Acc.SmartLinkCommunication.Services;
 
 /// <summary>
-/// Creates a <see cref="IServiceScope"/> scope with it's corresponding <see cref="ModuleConfig"/> registered.
+/// Creates a <see cref="IServiceScope"/> scope with its corresponding <see cref="ModuleConfig"/> registered.
 /// </summary>
 public interface IModuleScopeFactory
 {

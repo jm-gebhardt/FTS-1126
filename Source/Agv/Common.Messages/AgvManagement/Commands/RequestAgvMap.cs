@@ -23,7 +23,7 @@ public record RequestAgvMap : CorrelatedBy<Guid>, IAgv
     public Guid MapCorrelationId { get; }
 
     /// <summary>
-    /// The human readable unique ID if the requested map
+    /// The human-readable unique ID if the requested map
     /// </summary>
     public string MapId { get; }
 

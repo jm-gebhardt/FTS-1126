@@ -36,7 +36,7 @@ public class FromPrismatTelegramProcessorTest
     }
 
     [TestMethod]
-    public void GetNextTelegramToSend_WithoutProcessorWithCurrentTelegram_ReturnsAcknowlegementOfTelegram()
+    public void GetNextTelegramToSend_WithoutProcessorWithCurrentTelegram_ReturnsAcknowledgementOfTelegram()
     {
         var tord = new Tord();
         tord.Load(TestTelegram.Tord);

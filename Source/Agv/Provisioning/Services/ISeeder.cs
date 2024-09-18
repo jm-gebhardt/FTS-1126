@@ -6,7 +6,7 @@
 internal interface ISeeder
 {
     /// <summary>
-    /// The human readable name of the seeder.
+    /// The human-readable name of the seeder.
     /// </summary>
     public string Name { get; }
 

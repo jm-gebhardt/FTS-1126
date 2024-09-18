@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 public static class NodeTypeHelper
 {
     /// <summary>
-    /// Determines whether the NodeType is a action node type
+    /// Determines whether the NodeType is an action node type
     /// </summary>
     /// <param name="nodeType">The node type to check</param>
     /// <returns>True if the mode type is Pick, Drop or PickDrop</returns>

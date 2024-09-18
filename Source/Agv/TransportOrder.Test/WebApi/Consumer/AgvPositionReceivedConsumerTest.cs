@@ -20,7 +20,7 @@ public class AgvPositionReceivedConsumerTest
     private const string AgvSerialNumber2 = "#0815#";
 
     /// <summary>
-    /// Test creation of repository and try to access AGV that doesn't exits.
+    /// Test creation of repository and try to access AGV that doesn't exist.
     /// </summary>
     [TestMethod]
     public async Task PublishPosition_RepositoryCreated_AccessWrongAgv_NotFound()

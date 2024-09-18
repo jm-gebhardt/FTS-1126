@@ -63,7 +63,7 @@ public class AgvGraphBuilderStateMachineTest
 
         // Publish RequestAgvGraph ...
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
-        // ... expect it's gonna be consumed by the state machine.
+        // ... expect it's going to be consumed by the state machine.
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
 
         // Get the instance which correlates to the AGV.
@@ -87,7 +87,7 @@ public class AgvGraphBuilderStateMachineTest
             requestIdList);
         // Publish StationListReceived ...
         await fixture.TestHarness.Bus.Publish(new InternalStationListReceived(correlationId, stationList));
-        // ... expect it's gonna be consumed by the state machine.
+        // ... expect it's going to be consumed by the state machine.
         (await fixture.SagaHarness.Consumed.Any<InternalStationListReceived>()).ShouldBeTrue();
 
         // Ensure that state machine did send MqttRequestGraph ...
@@ -147,7 +147,7 @@ public class AgvGraphBuilderStateMachineTest
 
         // Publish RequestAgvGraph ...
         await fixture.TestHarness.Bus.Publish(new RequestAgvGraph(correlationId, AgvSerialNumber));
-        // ... expect it's gonna be consumed by the state machine.
+        // ... expect it's going to be consumed by the state machine.
         (await fixture.SagaHarness.Consumed.Any<RequestAgvGraph>()).ShouldBeTrue();
 
         // Get the instance which correlates to the AGV.
@@ -169,7 +169,7 @@ public class AgvGraphBuilderStateMachineTest
             requestIdList);
         // Publish StationListReceived ...
         await fixture.TestHarness.Bus.Publish(new InternalStationListReceived(correlationId, stationList));
-        // ... expect it's gonna be consumed by the state machine.
+        // ... expect it's going to be consumed by the state machine.
         (await fixture.SagaHarness.Consumed.Any<InternalStationListReceived>()).ShouldBeTrue();
 
         // Ensure that state machine did send MqttRequestGraph ...
@@ -192,7 +192,7 @@ public class AgvGraphBuilderStateMachineTest
             requestIdGraph);
         // Publish GraphReceived ...
         await fixture.TestHarness.Bus.Publish(new InternalGraphReceived(correlationId, graph));
-        // ... expect it's gonna be consumed by the state machine.
+        // ... expect it's going to be consumed by the state machine.
         (await fixture.SagaHarness.Consumed.Any<InternalGraphReceived>()).ShouldBeTrue();
 
         // Check if the state machine published AgvGraphReceived finally.

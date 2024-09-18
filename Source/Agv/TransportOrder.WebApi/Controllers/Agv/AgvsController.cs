@@ -106,7 +106,7 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Get list of selected agvs' positions.
+    /// Get list of selected agvs positions.
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="400">One or more of given correlation ids is unknown.</response>
@@ -121,7 +121,7 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Get list of selected agvs' graphs.
+    /// Get list of selected agvs graphs.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <response code="200">Ok</response>
@@ -140,7 +140,7 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Get list of selected agvs' data.
+    /// Get list of selected agvs data.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <response code="200">Ok</response>
@@ -155,7 +155,7 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Get list of selected agvs' battery.
+    /// Get list of selected agvs battery.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <response code="200">Ok</response>
@@ -211,7 +211,7 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    ///Get mapping of selected agvs' active and solved error lists.
+    ///Get mapping of selected agvs active and solved error lists.
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <param name="dateFrom">Only consider errors with a ErrorReceived newer than this parameter (if set)</param>
@@ -260,7 +260,7 @@ public class AgvsController : Controller
     }
 
     /// <summary>
-    /// Get list of selected agvs' settings
+    /// Get list of selected agvs settings
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <response code="200">Ok</response>

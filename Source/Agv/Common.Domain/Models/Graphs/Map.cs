@@ -13,7 +13,7 @@ public record Map : CorrelatedBy<Guid>, IGraph
     public Guid CorrelationId { get; init; }
 
     /// <summary>
-    /// The human readable unique ID if the requested map
+    /// The human-readable unique ID if the requested map
     /// </summary>
     public string MapId { get; init; }
 
@@ -64,7 +64,7 @@ public record Map : CorrelatedBy<Guid>, IGraph
     /// Constructor
     /// </summary>
     /// <param name="correlationId">Map correlation ID</param>
-    /// <param name="mapId">The human readable unique ID if the requested map</param>
+    /// <param name="mapId">The human-readable unique ID if the requested map</param>
     /// <param name="modificationDate">Timestamp of last modification.</param>
     /// <param name="imageData">The base64 encoded image data as string</param>
     /// <param name="width">The width of the map [px]</param>

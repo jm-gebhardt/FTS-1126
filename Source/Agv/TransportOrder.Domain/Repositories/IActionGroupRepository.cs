@@ -194,6 +194,7 @@ public interface IActionGroupRepository
     /// Checks if the agv has any assigned action groups that have priority.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id.</param>
+    [UsedImplicitly]
     Task<bool> AgvHasPriorityActionGroups(Guid agvCorrelationId);
 
     /// <summary>

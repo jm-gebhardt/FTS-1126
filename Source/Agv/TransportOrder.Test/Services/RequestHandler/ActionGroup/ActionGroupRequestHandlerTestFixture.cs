@@ -74,13 +74,13 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         return this;
     }
 
-    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggerredAbortAction()
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggeredAbortAction()
     {
         AddConsumers<AbortActionGroupSuccessRequestHandler>();
         return this;
     }
 
-    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggerredResetAction()
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggeredResetAction()
     {
         AddConsumers<SuccessRequestHandlerMock<ResetActionGroup>>();
         return this;

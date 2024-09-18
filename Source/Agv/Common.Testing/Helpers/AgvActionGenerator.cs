@@ -95,7 +95,7 @@ public static class AgvActionGenerator
     }
 
     /// <summary>
-    /// Generates a action with the given parameters.
+    /// Generates an action with the given parameters.
     /// </summary>
     /// <param name="startNodeId"></param>
     /// <param name="actionType"></param>

@@ -47,6 +47,6 @@ public class HousekeepingStartup : BackgroundService, IJob
     /// <inheritdoc/>
     public async Task Execute(IJobExecutionContext _)
     {
-        await _bus.Publish(new HousekeepAgvPositions());
+        await _bus.Publish(new HouseKeepAgvPositions());
     }
 }
