@@ -17,6 +17,9 @@ updates:
       efcore:
           patterns:
             - "Microsoft.EntityFrameworkCore*"
+      mstest:
+          patterns:
+            - "MSTest.*"      
       fluentvalidation:
           patterns:
             - "FluentValidation*"
