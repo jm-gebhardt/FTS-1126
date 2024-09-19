@@ -39,11 +39,11 @@ public class AgvModeRequestHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
     {
-        (var agvCorrelationId, string? setter, string? reason, bool cancelManualActions) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, string? reason, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        await _bus.Publish(new SetMaintenanceMode(agv.CorrelationId, setter, reason, cancelManualActions), context.CancellationToken);
+        await _bus.Publish(new SetMaintenanceMode(agv.CorrelationId, initiatingUser, reason, assignedActionPolicy, currentActionPolicy, cancelManualActions), context.CancellationToken);
 
         await context.RespondAsync(new Success());
     }
@@ -53,7 +53,7 @@ public class AgvModeRequestHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<SetNormalMode> context)
     {
-        (var agvCorrelationId, string? setter) = context.Message;
+        (var agvCorrelationId, string? initiatingUser) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         if (agv.IsLocked)
         {
@@ -67,7 +67,7 @@ public class AgvModeRequestHandler:
         if (pausedActionGroups.Count == 0)
         {
             _logger.LogDebug("Triggering set normal mode for agv {AgvCorrelationId}", agvCorrelationId );
-            await _bus.Publish(new SetNormalMode(agv.CorrelationId, setter));
+            await _bus.Publish(new SetNormalMode(agv.CorrelationId, initiatingUser));
             await context.RespondAsync(new Success());
             return;
         }
@@ -75,7 +75,7 @@ public class AgvModeRequestHandler:
         foreach (var actionGroup in pausedActionGroups)
         {
             _logger.LogDebug("Triggering resuming of action group {ActionGroupCorrelationId} for agv {AgvCorrelationId}", actionGroup.CorrelationId, agvCorrelationId );
-            await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, setter));
+            await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, initiatingUser));
             await context.RespondAsync(new Success());
         }
     }
@@ -85,9 +85,9 @@ public class AgvModeRequestHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<SetUserMode> context)
     {
-        (var agvCorrelationId, string? setter) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        await _bus.Publish(new SetUserMode(agv.CorrelationId, setter));
+        await _bus.Publish(new SetUserMode(agv.CorrelationId, initiatingUser, assignedActionPolicy, currentActionPolicy, cancelManualActions));
         await context.RespondAsync(new Success());
     }
 }

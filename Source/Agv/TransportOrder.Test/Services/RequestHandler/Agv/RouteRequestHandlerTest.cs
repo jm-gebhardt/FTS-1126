@@ -52,7 +52,7 @@ public class RouteRequestHandlerTest
     public async Task Consume_SendAgvToCharger_AgvIsLocked_DoesNotPublishNodeStateChange()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
+        agv.PrepareLockedMode();
         var chargingNode = NodeGenerator.GenerateChargingNode();
         var fixture = new SendAgvToChargerRequestHandlerTestFixture()
             .WithAgv(agv)

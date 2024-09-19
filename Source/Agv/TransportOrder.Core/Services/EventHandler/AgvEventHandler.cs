@@ -37,7 +37,7 @@ public class AgvEventHandler :
     IConsumer<AgvLoadStatusReceived>,
     IConsumer<ParkingNodeSelectedForAgv>,
     IConsumer<ChargingNodeSelectedForAgv>,
-    IConsumer<AgvModeChanged>
+    IConsumer<AgvModeChangePending>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -121,10 +121,17 @@ public class AgvEventHandler :
         }
 
         bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
-        if (hasUnfinishedActionGroup)
+        bool agvModeAllowsStartingNextAction = !agv.HasPendingModeSwitch || agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.FinishActionGroup };
+        if (hasUnfinishedActionGroup && agvModeAllowsStartingNextAction)
         {
             _logger.LogInformation("Starting next action for agv: {AgvCorrelationId}", agv.CorrelationId);
             await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
+            return;
+        }
+
+        if (agv.HasPendingModeSwitch)
+        {
+            _logger.LogDebug("Do not try starting new action group for agv {AgvCorrelationId} until mode has been switched", agv.CorrelationId);
             return;
         }
 
@@ -268,31 +275,35 @@ public class AgvEventHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="AgvModeChanged"/> event.
+    /// Handles the <see cref="AgvModeChangePending"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<AgvModeChanged> context)
+    public async Task Consume(ConsumeContext<AgvModeChangePending> context)
     {
-        (var agvCorrelationId, var agvMode, bool cancelManualActions) = context.Message;
-
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(states:[ActionGroupState.Created, ActionGroupState.Started], assignedAgvCorrelationId: agvCorrelationId);
+        var (agvCorrelationId, agvMode) = context.Message;
+        if (agvMode.PendingType is ModeType.Normal)
+        {
+            return;
+        }
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
         foreach (var actionGroup in actionGroups)
         {
-            if (agvMode.Type == ModeType.Maintenance && actionGroup.State == ActionGroupState.Created)
+            if (actionGroup.State == ActionGroupState.Created)
             {
-                if (!actionGroup.IsManual)
+                if (!actionGroup.IsManual && agvMode.AssignedActionGroupPolicy == AssignedActionGroupPolicy.Reset)
                 {
                     _logger.LogDebug("Resetting action group {CorrelationId}", actionGroup.CorrelationId);
                     await context.Publish(new ResetActionGroup(actionGroup.CorrelationId));
                 }
 
-                if (actionGroup.IsManual && cancelManualActions)
+                if (actionGroup.IsManual && agvMode.CancelManualActions)
                 {
                     _logger.LogDebug("Cancelling action group {CorrelationId}", actionGroup.CorrelationId);
                     await context.Publish(new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi));
                 }
+                continue;
             }
 
-            if (agvMode.Type is ModeType.Maintenance or ModeType.UserMode)
+            if (agvMode.CurrentActionGroupPolicy == CurrentActionGroupPolicy.Pause)
             {
                 _logger.LogDebug("Pausing action group {CorrelationId}", actionGroup.CorrelationId);
                 await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));

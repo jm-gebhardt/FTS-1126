@@ -6,6 +6,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
@@ -46,8 +47,7 @@ public class MoveAgvRequestHandlerTest
     [TestMethod]
     public async Task Consume_MoveAgv_AgvIsLocked_ThrowsActionNotAllowedInModeException()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .BuildAsync();
@@ -145,8 +145,7 @@ public class MoveAgvRequestHandlerTest
     [TestMethod]
     public async Task Consume_ChargeAgv_AgvIsLocked_ThrowsActionNotAllowedInModeException()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .BuildAsync();
@@ -220,8 +219,7 @@ public class MoveAgvRequestHandlerTest
     [TestMethod]
     public async Task Consume_MoveAgvToCoordinate_AgvIsLocked_ThrowsActionNotAllowedInModeException()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .BuildAsync();
@@ -246,7 +244,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgvToCoordinate_TargetPositionIsInRestrictedArea_ThrowsPositionIsInRestrictedAreaException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetMaintenanceMode("maintenance");
+        agv.PrepareMaintenanceMode("maintenance");
         MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(true)
@@ -260,7 +258,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgvToCoordinate_ValidData_MaintenanceMode_RespondsAgvMoveSuccessfulPublishesQueueActionGroup()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetMaintenanceMode("maintenance");
+        agv.PrepareMaintenanceMode("maintenance");
         MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(false)
@@ -273,8 +271,7 @@ public class MoveAgvRequestHandlerTest
     [TestMethod]
     public async Task Consume_MoveAgvToCoordinate_ValidData_UserMode_RespondsAgvMoveSuccessfulPublishesQueueActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetUserMode();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.UserMode));
         MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(false)

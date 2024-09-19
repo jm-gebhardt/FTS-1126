@@ -111,7 +111,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupResumed> context)
     {
-        await context.Publish(new SetNormalMode(context.Message.AgvCorrelationId, context.Message.Setter));
+        await context.Publish(new SetNormalMode(context.Message.AgvCorrelationId, context.Message.InitiatingUser));
     }
 
     /// <summary>

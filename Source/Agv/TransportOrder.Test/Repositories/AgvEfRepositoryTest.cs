@@ -165,8 +165,7 @@ public class AgvEfRepositoryTest
     public async Task GetReadyAgvsWithAtLeastLowBatteryLevel_InUserMode_NoAgvReturned()
     {
         var fixture = new EfAgvRepositoryTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
-        agv.SetUserMode();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.UserMode));
         await fixture.Add(agv);
         ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.ShouldBeEmpty();
@@ -176,8 +175,7 @@ public class AgvEfRepositoryTest
     public async Task GetReadyAgvsWithAtLeastLowBatteryLevel_InMaintenanceMode_NoAgvReturned()
     {
         var fixture = new EfAgvRepositoryTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
-        agv.SetMaintenanceMode("reason");
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.Maintenance));
         await fixture.Add(agv);
         ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.ShouldBeEmpty();
@@ -187,8 +185,7 @@ public class AgvEfRepositoryTest
     public async Task GetChargingAgvsWithMinBatteryLevelAsync_AgvIsLocked_DoesNotReturnLockedAgv()
     {
         var fixture = new EfAgvRepositoryTestFixture();
-        var lockedAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp);
-        lockedAgv.Lock();
+        var lockedAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp, mode: new AgvMode(ModeType.Locked));
         await fixture.Add(lockedAgv);
 
         ICollection<Agv> agvs = await fixture.Repository.GetChargingAgvsWithMinBatteryLevelAsync();

@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
@@ -32,8 +33,7 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_AssignedAgvCanNotStartManualPickDropAction_ThrowsActionNotAllowedInModeException()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetUserMode();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.UserMode));
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithAgvs([agv])
             .Build();

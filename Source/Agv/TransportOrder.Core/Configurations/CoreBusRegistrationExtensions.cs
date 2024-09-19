@@ -12,6 +12,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
@@ -85,6 +86,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<PrepareParkingOfAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<PrepareChargingOfAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvSettingsGroupReference, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<SwitchMode, AgvCommandHandler>(c);
         });
 
         busRegistrationConfigurator.AddConsumer<AgvEventHandler>(c =>
@@ -98,7 +100,6 @@ public static class CoreBusRegistrationExtensions
 
         busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
         busRegistrationConfigurator.AddRequestClient<LockAgv>();
-        busRegistrationConfigurator.AddRequestClient<UnlockAgv>();
         busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
 
         busRegistrationConfigurator.AddConsumer<AgvErrorCommandHandler>();

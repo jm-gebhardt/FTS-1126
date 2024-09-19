@@ -1,10 +1,13 @@
-﻿using MassTransit;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
 /// Represents the LockAgv request
 /// </summary>
+[PublicAPI]
 public record LockAgv : CorrelatedBy<Guid>
 {
     /// <summary>
@@ -20,18 +23,31 @@ public record LockAgv : CorrelatedBy<Guid>
     /// <summary>
     /// The email of the user who requested lock.
     /// </summary>
-    public string? Setter { get; }
+    public string? InitiatingUser { get; }
 
     /// <summary>
-    /// <inheritdoc cref="LockAgv"/>
+    /// The policy what to do with assigned action groups
     /// </summary>
-    /// <param name="correlationId">The agv correlation id.</param>
-    /// <param name="reason">The lock reason.</param>
-    /// <param name="setter">The email of the user who requested lock.</param>
-    public LockAgv(Guid correlationId, string reason, string? setter)
+    public AssignedActionGroupPolicy AssignedActionPolicy { get; set; }
+
+    /// <summary>
+    /// The policy what to do with the manual actions, if true, cancel.
+    /// </summary>
+    public CurrentActionGroupPolicy CurrentActionPolicy { get; set; }
+
+    /// <summary>
+    /// The policy what to do with the currently running action group.
+    /// </summary>
+    public bool CancelManualActions { get; set; }
+
+    /// <inheritdoc cref="LockAgv"/>
+    public LockAgv(Guid correlationId, string reason, string? initiatingUser, AssignedActionGroupPolicy assignedActionPolicy, CurrentActionGroupPolicy currentActionPolicy, bool cancelManualActions)
     {
         CorrelationId = correlationId;
         Reason = reason;
-        Setter = setter;
+        InitiatingUser = initiatingUser;
+        AssignedActionPolicy = assignedActionPolicy;
+        CurrentActionPolicy = currentActionPolicy;
+        CancelManualActions = cancelManualActions;
     }
 }

@@ -44,7 +44,6 @@ using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
 using ResetAgvErrors = Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
-using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Agv;
 
@@ -138,7 +137,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             agv = AgvGenerator.SetAgvState(state, agv, false);
             if (setUserMode)
             {
-                agv.SetUserMode();
+                agv.PrepareUserMode();
             }
             agvs.Add(agv);
             data[correlationId] = agvData;
@@ -215,7 +214,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetRoute> getRouteRequestClient = GetRequestClient<GetRoute>();
         IRequestClient<GetAgvPosition> getAgvPositionRequestClient = GetRequestClient<GetAgvPosition>();
         IRequestClient<AcceptAgvCommand> acceptAgvRequestClient = GetRequestClient<AcceptAgvCommand>();
-        IRequestClient<UnlockAgv> unlockAgvRequestClient = GetRequestClient<UnlockAgv>();
         IRequestClient<LockAgv> lockAgvRequestClient = GetRequestClient<LockAgv>();
         IRequestClient<RequestAgvData> emitRequestDataRequestClient = GetRequestClient<RequestAgvData>();
         IRequestClient<RequestAgvGraph> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraph>();
@@ -245,7 +243,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getRouteRequestClient,
             getAgvPositionRequestClient,
             acceptAgvRequestClient,
-            unlockAgvRequestClient,
             lockAgvRequestClient,
             emitRequestDataRequestClient,
             emitRequestGraphRequestClient,

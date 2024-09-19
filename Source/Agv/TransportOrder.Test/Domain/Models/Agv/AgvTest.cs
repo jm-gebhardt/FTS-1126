@@ -116,8 +116,7 @@ public class AgvTest
     [TestMethod]
     public void IsAvailable_IsReadyIdleAndLocked_IsAvailableIfLockedIsIgnored(bool ignoreLocked, bool expectedIsAvailable)
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "node");
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "node", mode: new AgvMode(ModeType.Locked));
         agv.IsAvailable(ignoreLocked: ignoreLocked).ShouldBe(expectedIsAvailable);
     }
 
@@ -163,28 +162,190 @@ public class AgvTest
     }
 
     [TestMethod]
-    public void Lock_ReasonAndSetterGiven_IsLockedModeIsLocked()
+    public void PrepareLockedMode_ReasonInitiatingUserAndPoliciesGiven_ModeSwitchPreparedWithGivenProperties()
     {
         var agv = AgvGenerator.GenerateRawAgv();
-        const string setter = "a name";
+        const string initiatingUser = "a name";
         const string reason = "a reason";
-        agv.Lock(reason, setter);
+        const AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.LeaveAssigned;
+        const CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause;
+        const bool cancelManualActions = true;
+        agv.PrepareLockedMode(reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
 
-        agv.IsLocked.ShouldBeTrue();
-        agv.Mode.Type.ShouldBe(ModeType.Locked);
-        agv.Mode.Setter.ShouldBe(setter);
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.PendingType.ShouldBe(ModeType.Locked);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
         agv.Mode.Reason.ShouldBe(reason);
+        agv.Mode.AssignedActionGroupPolicy.ShouldBe(assignedActionPolicy);
+        agv.Mode.CurrentActionGroupPolicy.ShouldBe(currentActionPolicy);
+        agv.Mode.CancelManualActions.ShouldBe(cancelManualActions);
     }
 
     [TestMethod]
-    public void Lock_ReasonAndSetterNotGiven_IsLockedModeIsLocked()
+    public void PrepareLockedMode_ReasonInitiatingUserAndPoliciesNotGiven_ModeSwitchPreparedWithDefaults()
     {
         var agv = AgvGenerator.GenerateRawAgv();
-        agv.Lock();
+        agv.PrepareLockedMode();
+
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.PendingType.ShouldBe(ModeType.Locked);
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.InitiatingUser.ShouldBeNull();
+        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.Reset);
+        agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.FinishAction);
+        agv.Mode.CancelManualActions.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void Unlock_ValidData_ModeSwitched()
+    {
+        var agv = AgvGenerator.GenerateRawAgv(mode: new AgvMode(ModeType.Locked));
+        agv.IsLocked.ShouldBeTrue();
+        agv.Mode.Type.ShouldBe(ModeType.Locked);
+
+        const string initiatingUser = "a name";
+        agv.Unlock(initiatingUser);
+
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.PendingType.ShouldBeNull();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
+        agv.Mode.Reason.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void PrepareUserMode_InitiatingUserAndPoliciesGiven_ModeSwitchPreparedWithGivenProperties()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        const string initiatingUser = "a name";
+        const AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset;
+        const CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishActionGroup;
+        const bool cancelManualActions = true;
+        agv.PrepareUserMode(initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
+
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.PendingType.ShouldBe(ModeType.UserMode);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
+        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.AssignedActionGroupPolicy.ShouldBe(assignedActionPolicy);
+        agv.Mode.CurrentActionGroupPolicy.ShouldBe(currentActionPolicy);
+        agv.Mode.CancelManualActions.ShouldBe(cancelManualActions);
+    }
+
+    [TestMethod]
+    public void PrepareUserMode_InitiatingUserAndPoliciesGiven_ModeSwitchPreparedWithDefaults()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        agv.PrepareUserMode();
+
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.PendingType.ShouldBe(ModeType.UserMode);
+        agv.Mode.InitiatingUser.ShouldBeNull();
+        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.LeaveAssigned);
+        agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.Pause);
+        agv.Mode.CancelManualActions.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void PrepareMaintenanceMode_ReasonInitiatingUserAndPoliciesGiven_ModeSwitchPreparedWithGivenProperties()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        const string initiatingUser = "a name";
+        const string reason = "a reason";
+        const AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.LeaveAssigned;
+        const CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishActionGroup;
+        const bool cancelManualActions = true;
+        agv.PrepareMaintenanceMode(reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
+
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.PendingType.ShouldBe(ModeType.Maintenance);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
+        agv.Mode.Reason.ShouldBe(reason);
+        agv.Mode.AssignedActionGroupPolicy.ShouldBe(assignedActionPolicy);
+        agv.Mode.CurrentActionGroupPolicy.ShouldBe(currentActionPolicy);
+        agv.Mode.CancelManualActions.ShouldBe(cancelManualActions);
+    }
+
+    [TestMethod]
+    public void PrepareMaintenanceMode_InitiatingUserAndPoliciesNotGiven_ModeSwitchPreparedWithDefault()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        const string reason = "a reason";
+        agv.PrepareMaintenanceMode(reason);
+
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.PendingType.ShouldBe(ModeType.Maintenance);
+        agv.Mode.InitiatingUser.ShouldBeNull();
+        agv.Mode.Reason.ShouldBe(reason);
+        agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.Reset);
+        agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.Pause);
+        agv.Mode.CancelManualActions.ShouldBe(false);
+    }
+
+    [TestMethod]
+    public void SetNormalMode_ValidData_ModeSwitched()
+    {
+        var agv = AgvGenerator.GenerateRawAgv(mode: new AgvMode(ModeType.Locked));
+        agv.IsLocked.ShouldBeTrue();
+        agv.Mode.Type.ShouldBe(ModeType.Locked);
+
+        const string initiatingUser = "a name";
+        agv.SetNormalMode(initiatingUser);
+
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.PendingType.ShouldBeNull();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
+        agv.Mode.Reason.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void SwitchMode_PendingMode_ModeSwitched()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        agv.PrepareLockedMode();
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.Mode.PendingType.ShouldBe(ModeType.Locked);
+        agv.HasPendingModeSwitch.ShouldBeTrue();
+
+        agv.SwitchMode();
 
         agv.IsLocked.ShouldBeTrue();
         agv.Mode.Type.ShouldBe(ModeType.Locked);
-        agv.Mode.Setter.ShouldBeNull();
-        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.PendingType.ShouldBeNull();
+        agv.HasPendingModeSwitch.ShouldBeFalse();
+        agv.CurrentAgvState.ShouldBe(AgvState.Idle);
+    }
+
+    [DataRow(ModeType.Normal, null, false)]
+    [DataRow(ModeType.Normal, ModeType.Maintenance, true)]
+    [DataRow(ModeType.Normal, ModeType.UserMode, true)]
+    [DataRow(ModeType.UserMode, null, true)]
+    [DataRow(ModeType.UserMode, ModeType.Normal, true)]
+    [DataRow(ModeType.UserMode, ModeType.Maintenance, true)]
+    [DataRow(ModeType.UserMode, ModeType.Locked, true)]
+    [DataRow(ModeType.Maintenance, null, true)]
+    [DataRow(ModeType.Maintenance, ModeType.Normal, true)]
+    [DataRow(ModeType.Maintenance, ModeType.UserMode, true)]
+    [DataRow(ModeType.Maintenance, ModeType.Locked, true)]
+    [DataTestMethod]
+    public void ShouldStartManualAction_ValidData_ValueDependsOnPendingAndCurrentMode(ModeType currentMode, ModeType? pendingMode, bool expectedValue)
+    {
+        var mode = new AgvMode(currentMode, Guid.NewGuid());
+        if (pendingMode != null)
+        {
+            mode.PrepareSwitch(pendingMode.Value);
+        }
+        var agv = AgvGenerator.GenerateIdleAgv(mode : mode);
+
+        agv.ShouldStartManualAction.ShouldBe(expectedValue);
     }
 }

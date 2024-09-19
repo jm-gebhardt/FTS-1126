@@ -64,7 +64,8 @@ public class AgvCommandHandler :
     IConsumer<PrepareParkingOfAgv>,
     IConsumer<PrepareChargingOfAgv>,
     IConsumer<UpdateAgvSettingsGroupReference>,
-    IConsumer<TryReactivateParkingAgvs>
+    IConsumer<TryReactivateParkingAgvs>,
+    IConsumer<SwitchMode>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -141,7 +142,7 @@ public class AgvCommandHandler :
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         bool agvMustCharge = agv.CheckMustCharge(agvSettings);
         bool hasNotStartedActionGroups = actionGroups.Any();
-        if(!agvMustCharge && hasNotStartedActionGroups)
+        if (!agvMustCharge && hasNotStartedActionGroups)
         {
             _logger.LogInformation("Did not prepare AGV:{CorrelationID} for charging. AGV has {Count} action groups that are not started and the following battery charge: {BatteryCharge}.",
                 agv.CorrelationId,
@@ -290,7 +291,7 @@ public class AgvCommandHandler :
         _logger.LogDebug("Updating AgvStatus for agv {AgvCorrelationId}, {OldStatus} -> {NewStatus}", correlationId, agv.AgvStatus?.ToString(), agvStatus.ToString());
         var oldStatus = agv.AgvStatus;
         bool wasOnline = agv.IsOnline;
-       
+
         if (oldStatus != null && agv.GraphExists)
         {
             await ResetLastNodeId(oldStatus, agvStatus);
@@ -300,7 +301,7 @@ public class AgvCommandHandler :
         bool wasReady = agv.IsReady;
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
         bool isReady = agv.IsReady;
-        
+
         LogBatteryStates(oldStatus, agv.AgvStatus, agvSettings);
         _metricCollectionService.CollectBatteryChargeMetrics(agvStatus);
 
@@ -370,7 +371,7 @@ public class AgvCommandHandler :
 
             await context.Publish(new AgvBatteryChargeChanged(oldStatus!.BatteryCharge, agvBatteryStatus));
         }
- 
+
         if (lastNodeIdChanged)
         {
             await PublishLastNodeIdChange(context, agv, oldStatus!.LastNodeId, agvStatus.LastNodeId);
@@ -498,14 +499,14 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SetUserMode> context)
     {
-        (var agvCorrelationId, string? setter) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        agv.SetUserMode(setter);
+        agv.PrepareUserMode(initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
-        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV { agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
-        await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
+        await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
+        _logger.LogAgvInformation(LogCodes.AgvModeChangePending, agv.CorrelationId, "AGV Mode Change Pending", $"AGV {agv.SerialNumber} is pending mode change to user mode");
     }
 
     /// <summary>
@@ -513,12 +514,12 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SetNormalMode> context)
     {
-        (var agvCorrelationId, string? setter) = context.Message;
+        (var agvCorrelationId, string? initiatingUser) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        agv.SetNormalMode(setter);
+        agv.SetNormalMode(initiatingUser);
 
-         await _agvDb.Agvs.UpdateAgvAsync(agv);
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
         _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
 
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
@@ -530,15 +531,14 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
     {
-        (var agvCorrelationId, string? setter, string? reason, bool cancelManualActions) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, string? reason, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        agv.SetMaintenanceMode(reason, setter);
+        agv.PrepareMaintenanceMode(reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
-
-        _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
-        await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode, cancelManualActions));
+        await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
+        _logger.LogAgvInformation(LogCodes.AgvModeChangePending, agv.CorrelationId, "AGV Mode Change Pending", $"AGV {agv.SerialNumber} is pending mode change to maintenance mode");
     }
 
     /// <summary>
@@ -553,14 +553,42 @@ public class AgvCommandHandler :
             await context.RespondAsync(new AgvNotFoundResult(agvCorrelationId));
             return;
         }
-        agv.Lock(context.Message.Reason, context.Message.Setter);
+        agv.PrepareLockedMode(context.Message.Reason, context.Message.InitiatingUser, context.Message.CurrentActionPolicy, context.Message.AssignedActionPolicy, context.Message.CancelManualActions);
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(LockAgv), agv.CorrelationId);
         }
-        _logger.LogAgvInformation(LogCodes.AgvLocked, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked");
-        await context.Publish(new AgvLockedChanged(agv.CorrelationId, true));
         await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
+        await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
+        _logger.LogAgvInformation(LogCodes.AgvModeChangePending, agv.CorrelationId, "AGV Mode Change Pending", $"AGV {agv.SerialNumber} is pending mode change to locked mode");
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SwitchMode"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SwitchMode> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+        var agv = await TryGetAgv(agvCorrelationId);
+        if (agv == null)
+        {
+            _logger.LogError("Could not switch mode for agv {AgvCorrelationId}, agv not found", agvCorrelationId);
+            return;
+        }
+        agv.SwitchMode();
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        {
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(SwitchMode), agv.CorrelationId);
+        }
+        if (agv.IsLocked)
+        {
+            _logger.LogAgvInformation(LogCodes.AgvLocked, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked");
+            await context.Publish(new AgvLockedChanged(agv.CorrelationId, true));
+        }
+        else
+        {
+            _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'");
+        }
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
     }
 
@@ -808,9 +836,9 @@ public class AgvCommandHandler :
         (var correlationId, string agvSerialNumber, var agvStatus) = context.Message;
 
         _logger.LogAgvInformation(LogCodes.AgvDiscovered, correlationId, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered");
-       
+
         var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
-        var agv = new Agv(correlationId, settingsGroup.Id,  agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
+        var agv = new Agv(correlationId, settingsGroup.Id, agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
         settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
         agv.AgvSettingsGroup = settingsGroup.Id;
         bool graphExists = await _agvDb.Graphs.ExistsAsync(correlationId);

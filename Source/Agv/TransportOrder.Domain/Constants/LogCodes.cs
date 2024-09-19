@@ -33,6 +33,7 @@ public static class LogCodes
     public const int AgvSettingsReset = 313;
     public const int AgvModeChanged = 314;
     public const int AgvReachedTrigger = 315;
+    public const int AgvModeChangePending = 315;
 
     // Order
     public const int OrderCreated = 100;
@@ -48,6 +49,7 @@ public static class LogCodes
     public const int OrderPaused = 110;
     public const int OrderResumed = 111;
     public const int OrderWithLockedStation = 112;
+    public const int OrderReset = 113;
 
     //Station
     public const int StationStateChanged = 400;

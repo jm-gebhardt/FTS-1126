@@ -7,5 +7,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 /// </summary>
 /// <param name="ActionGroupCorrelationId">The action group correlation id</param>
 /// <param name="AgvCorrelationId">The assigned agv correlation id.</param>
-/// <param name="Setter">User that resumed the action group.</param>
-public record ActionGroupResumed([PublicAPI] Guid ActionGroupCorrelationId, Guid AgvCorrelationId, string? Setter);
+/// <param name="InitiatingUser">User that resumed the action group.</param>
+public record ActionGroupResumed([PublicAPI] Guid ActionGroupCorrelationId, Guid AgvCorrelationId, string? InitiatingUser);

@@ -352,16 +352,14 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_LockAgv_ValidData_LocksAgvPublishesAgvLockedChangedRespondsLockAgvResult()
+    public async Task Consume_LockAgv_ValidData_PublishesAgvModeChangePendingRespondsLockAgvResult()
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId, "reason", "agv"));
+        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId, "reason", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
-        await fixture.ShouldHavePublishedAsync<AgvLockedChanged>();
-        var agvLockedChanged = fixture.TestHarness.Published.Select<AgvLockedChanged>().Single().Context.Message;
-        agvLockedChanged.IsNowLocked.ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
     }
 
     [TestMethod]
@@ -370,7 +368,7 @@ public class AgvCommandHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithoutAgv();
-        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId, "reason", "agv"));
+        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId, "reason", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
 
@@ -378,7 +376,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_UnlockAgv_ValidData_UnlocksAgvPublishesAgvLockedChangedRespondsUnlockResult()
     {
         var fixture = new AgvCommandHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         Response<UnlockAgvResult> response = await fixture.GetResponseAsync<UnlockAgvResult, UnlockAgv>(new UnlockAgv(agv.CorrelationId));
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
@@ -461,8 +459,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_PrepareAgvForStartingAction_AgvIsLocked_AgvPreparedForStartingActionNotPublished()
     {
         var fixture = new AgvCommandHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: NodeGenerator.GenerateParkingNode().Id);
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: NodeGenerator.GenerateParkingNode().Id, mode: new AgvMode(ModeType.Locked));
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -567,8 +564,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareParkingOfAgv_AgvIsLocked_DoesNotPublishParkingNodeSelectedForAgv()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         const string parkNodeName = "Park-1";
 
         var fixture = new AgvCommandHandlerTestFixture()
@@ -624,8 +620,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareChargingOfAgv_AgvIsLocked_DoesNotPublishChargingNodeSelectedForAgv()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         const string chargeNodeName = "Charger-1";
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
@@ -719,63 +714,63 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_SetUserMode_ValidData_PublishesAgvModeChanged()
+    public async Task Consume_SetUserMode_ValidData_PublishesAgvModeChangePending()
     {
-        const string setter = "user";
+        const string initiatingUser = "user";
 
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        var command = new SetUserMode(agv.CorrelationId, setter);
+        var command = new SetUserMode(agv.CorrelationId, initiatingUser, AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.FinishActionGroup, false);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<SetUserMode>();
-        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
-        agv.Mode.Type.ShouldBe(ModeType.UserMode);
-        agv.Mode.Setter.ShouldBe(setter);
+        await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
+        agv.Mode.PendingType.ShouldBe(ModeType.UserMode);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
     }
 
     [TestMethod]
-    public async Task Consume_SetMaintenanceMode_ValidData_PublishesAgvModeChanged()
+    public async Task Consume_SetMaintenanceMode_ValidData_PublishesAgvModeChangePending()
     {
-        const string setter = "user";
+        const string initiatingUser = "user";
         const string reason = "That is the reason";
 
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        var command = new SetMaintenanceMode(agv.CorrelationId, setter, reason, false);
+        var command = new SetMaintenanceMode(agv.CorrelationId, initiatingUser, reason, AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.FinishActionGroup, false);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<SetMaintenanceMode>();
-        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
-        agv.Mode.Type.ShouldBe(ModeType.Maintenance);
-        agv.Mode.Setter.ShouldBe(setter);
+        await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
+        agv.Mode.PendingType.ShouldBe(ModeType.Maintenance);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
         agv.Mode.Reason.ShouldBe(reason);
     }
 
     [TestMethod]
-    public async Task Consume_SetNormalModeWithSetter_ValidData_PublishesAgvModeChanged()
+    public async Task Consume_SetNormalModeWithInitiatingUser_ValidData_PublishesAgvModeChanged()
     {
-        const string setter = "user";
+        const string initiatingUser = "user";
 
-        var agv = AgvGenerator.GenerateIdleAgv();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Maintenance));
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        var command = new SetNormalMode(agv.CorrelationId, setter);
+        var command = new SetNormalMode(agv.CorrelationId, initiatingUser);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
-        agv.Mode.Setter.ShouldBe(setter);
+        agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
     }
 
     [TestMethod]
     public async Task Consume_SetNormalMode_ValidData_PublishesAgvModeChanged()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Maintenance));
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
         var command = new SetNormalMode(agv.CorrelationId, null);
@@ -785,7 +780,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
-        agv.Mode.Setter.ShouldBeNull();
+        agv.Mode.InitiatingUser.ShouldBeNull();
     }
 
     [TestMethod]
@@ -810,5 +805,30 @@ public class AgvCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+    }
+
+    [DataRow(ModeType.Normal, ModeType.Maintenance)]
+    [DataRow(ModeType.Normal, ModeType.UserMode)]
+    [DataRow(ModeType.Normal, ModeType.Locked)]
+    [DataRow(ModeType.Maintenance, ModeType.Locked)]
+    [DataTestMethod]
+    public async Task Consume_SwitchMode_ValidData_PublishesAgvModeChanged(ModeType previousType, ModeType pendingType)
+    {
+        var mode = new AgvMode(previousType, Guid.NewGuid());
+        mode.PrepareSwitch(pendingType);
+        var agv = AgvGenerator.GenerateIdleAgv(mode: mode );
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.TestHarness.Bus.Publish(new SwitchMode(agv.CorrelationId));
+
+        await fixture.ShouldHaveConsumedAsync<SwitchMode>();
+        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
+        agv.Mode.Type.ShouldBe(pendingType);
+        agv.Mode.PendingType.ShouldBeNull();
+        if (pendingType == ModeType.Locked)
+        {
+            await fixture.ShouldHavePublishedAsync<AgvLockedChanged>();
+        }
     }
 }

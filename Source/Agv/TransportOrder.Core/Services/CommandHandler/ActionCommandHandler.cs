@@ -11,6 +11,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -23,6 +24,7 @@ using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using MessageAgvAction = Gebhardt.Acc.Common.Messages.ActionGroups.AgvAction;
 
@@ -150,7 +152,7 @@ public class ActionCommandHandler :
         }
 
         Task<Domain.Models.ActionGroup.ActionGroup> actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
-        Task<Domain.Models.Agv.Agv> agvTask = _agvDb.Agvs.GetAgvAsync(agvId);
+        Task<Agv> agvTask = _agvDb.Agvs.GetAgvAsync(agvId);
         Task<AgvData?> agvDataTask = _agvDb.Data.GetAgvDataAsync(agvId);
         await Task.WhenAll(actionGroupTask, agvTask, agvDataTask);
         var actionGroup = actionGroupTask.Result;
@@ -209,6 +211,13 @@ public class ActionCommandHandler :
             _logger.LogWarning("No succeeding action  for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
             return;
         }
+
+        if (agv.HasPendingModeSwitch && agv.Mode.CurrentActionGroupPolicy != CurrentActionGroupPolicy.FinishActionGroup)
+        {
+            _logger.LogWarning("Can not start next action in group: Agv is pending mode switch with current action group policy {Policy}", agv.Mode.CurrentActionGroupPolicy);
+            return;
+        }
+
         try
         {
             var action = await _actionGroupRepository.GetSubsequentActionAsync(agv.CorrelationId);
@@ -336,6 +345,17 @@ public class ActionCommandHandler :
             creator: ActionGroupCreator.TransportOrder,
             hasPriority: false
         );
+
+        bool agvModeProhibitsCreation = agv.IsLocked || !agv.CanStartAutomaticAction || agv.HasPendingModeSwitch;
+
+        if (agvModeProhibitsCreation)
+        {
+            _logger.LogInformation("Could not create parking action group for AGV:{CorrelationId}. locked:{IsLocked}, CanStartAutomaticAction:{CanStartAutomaticAction}, pending mode :{PendingMode}",
+                agv.CorrelationId,
+                agv.IsLocked,
+                agv.CanStartAutomaticAction, agv.Mode.PendingType);
+            return;
+        }
         _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully");
         _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId, "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
 
@@ -359,13 +379,15 @@ public class ActionCommandHandler :
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        if (agv.IsLocked || (!agv.CanStartAutomaticAction && !triggeredByWebApi))
+        bool agvModeProhibitsCreation = agv.IsLocked || ((!agv.CanStartAutomaticAction || agv.HasPendingModeSwitch) && !triggeredByWebApi);
+
+        if (agvModeProhibitsCreation)
         {
-            _logger.LogInformation("Could not create charging action group for AGV:{CorrelationId}. locked:{IsLocked}, CanStartAutomaticAction:{CanStartAutomaticAction}, TriggeredByWebApi:{TriggeredByWebApi}.",
+            _logger.LogInformation("Could not create charging action group for AGV:{CorrelationId}. locked:{IsLocked}, CanStartAutomaticAction:{CanStartAutomaticAction}, TriggeredByWebApi:{TriggeredByWebApi}, pending mode :{PendingMode}",
                 agv.CorrelationId,
                 agv.IsLocked,
                 agv.CanStartAutomaticAction,
-                triggeredByWebApi);
+                triggeredByWebApi, agv.Mode.PendingType);
             return;
         }
 
@@ -528,7 +550,16 @@ public class ActionCommandHandler :
         if (actionGroup.State != ActionGroupState.Completed)
         {
             _logger.LogOrderInformation(LogCodes.OrderActionCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{actionGroup.Actions.First(a => a.CorrelationId == correlationId).ActionType} of order {actionGroup.OrderId} has been completed");
+            if (agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.FinishAction })
+            {
+                await context.Publish(new SwitchMode(agv.CorrelationId), cancellationToken);
+            }
             return;
+        }
+
+        if (agv.HasPendingModeSwitch && agv.Mode.CurrentActionGroupPolicy != CurrentActionGroupPolicy.Pause)
+        {
+            await context.Publish(new SwitchMode(agv.CorrelationId), cancellationToken);
         }
 
         await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
@@ -654,6 +685,7 @@ public class ActionCommandHandler :
         }
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
+        _logger.LogOrderWarning(LogCodes.OrderReset, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Reset", $"Order {actionGroup.OrderId} was reset ");
         await context.RespondAsync(new Success());
     }
 
@@ -670,7 +702,7 @@ public class ActionCommandHandler :
             _logger.LogWarning("Can not pause action group {ActionGroupId} because it is in state {ActionGroupState}.", actionGroupId, actionGroup.State);
             return;
         }
-
+        var agv = await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv.GetValueOrDefault());
         var activeAction = actionGroup.FirstNotCompletedAction;
         ActionState? actionState = activeAction?.State;
 
@@ -680,6 +712,11 @@ public class ActionCommandHandler :
         if (actionState == ActionState.Started && activeAction != null)
         {
             await context.Publish(new ActionAborted(activeAction.CorrelationId, _mapper.Map<MessageAgvAction>(activeAction)));
+        }
+
+        if (agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.Pause })
+        {
+            await context.Publish(new SwitchMode(agv.CorrelationId));
         }
 
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
@@ -710,7 +747,7 @@ public class ActionCommandHandler :
 
         _logger.LogOrderInformation(LogCodes.OrderResumed, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId, "Order Resumed", $"Order {actionGroup.OrderId} has been resumed");
 
-        await context.Publish(new ActionGroupResumed(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, context.Message.Setter));
+        await context.Publish(new ActionGroupResumed(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, context.Message.InitiatingUser));
     }
 
     /// <summary>

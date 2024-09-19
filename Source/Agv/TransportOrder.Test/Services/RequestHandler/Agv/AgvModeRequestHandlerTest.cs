@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -18,7 +19,7 @@ public class AgvModeRequestHandlerTest
         AgvRequestsHandlerTestFixture<SetMaintenanceMode, AgvModeRequestHandler > fixture = new AgvRequestsHandlerTestFixture<SetMaintenanceMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
-        await fixture.GetResponseAsync<Success>(new SetMaintenanceMode(agv.CorrelationId, "user", "reason", false));
+        await fixture.GetResponseAsync<Success>(new SetMaintenanceMode(agv.CorrelationId, "user", "reason", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
 
         await fixture.ShouldHavePublishedAsync<SetMaintenanceMode>();
     }
@@ -30,7 +31,7 @@ public class AgvModeRequestHandlerTest
         AgvRequestsHandlerTestFixture<SetUserMode, AgvModeRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SetUserMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
-        await fixture.GetResponseAsync<Success>(new SetUserMode(agv.CorrelationId, "user"));
+        await fixture.GetResponseAsync<Success>(new SetUserMode(agv.CorrelationId, "user", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
         await fixture.ShouldHavePublishedAsync<SetUserMode>();
     }
 
@@ -60,8 +61,7 @@ public class AgvModeRequestHandlerTest
     [TestMethod]
     public async Task Consume_SetNormalMode_LockedAgv_PublishesUnlockAgvRespondsSuccess()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.Lock();
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();

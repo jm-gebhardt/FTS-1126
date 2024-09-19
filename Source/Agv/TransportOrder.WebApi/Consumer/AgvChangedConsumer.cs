@@ -20,7 +20,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvBecameIdle>,
     IConsumer<CargoChanged>,
     IConsumer<HasCargoChanged>,
-    IConsumer<AgvModeChanged>
+    IConsumer<AgvModeChanged>,
+    IConsumer<AgvModeChangePending>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -128,6 +129,14 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     /// Handles the <see cref="AgvModeChanged"/> event.
     /// </summary>
     public async Task Consume(ConsumeContext<AgvModeChanged> context)
+    {
+        await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, context.Message.Mode);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvModeChangePending"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvModeChangePending> context)
     {
         await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, context.Message.Mode);
     }

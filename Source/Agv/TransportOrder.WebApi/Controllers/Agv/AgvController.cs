@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
@@ -22,7 +23,6 @@ using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
 using ResetAgvErrors = Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
-using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
 
@@ -42,7 +42,6 @@ public class AgvController : Controller
     private readonly IRequestClient<GetRoute> _getRouteClient;
     private readonly IRequestClient<GetAgvPosition> _getAgvPositionClient;
     private readonly IRequestClient<AcceptAgvCommand> _acceptAgvClient;
-    private readonly IRequestClient<UnlockAgv> _unlockAgvClient;
     private readonly IRequestClient<LockAgv> _lockAgvClient;
     private readonly IRequestClient<RequestAgvData> _emitRequestDataClient;
     private readonly IRequestClient<RequestAgvGraph> _emitRequestGraphClient;
@@ -77,7 +76,6 @@ public class AgvController : Controller
         IRequestClient<GetRoute> getRouteClient,
         IRequestClient<GetAgvPosition> getAgvPositionClient,
         IRequestClient<AcceptAgvCommand> acceptAgvClient,
-        IRequestClient<UnlockAgv> unlockAgvClient,
         IRequestClient<LockAgv> lockAgvClient,
         IRequestClient<RequestAgvData> emitRequestDataClient,
         IRequestClient<RequestAgvGraph> emitRequestGraphClient,
@@ -107,7 +105,6 @@ public class AgvController : Controller
         _getRouteClient = getRouteClient;
         _getAgvPositionClient = getAgvPositionClient;
         _acceptAgvClient = acceptAgvClient;
-        _unlockAgvClient = unlockAgvClient;
         _lockAgvClient = lockAgvClient;
         _emitRequestDataClient = emitRequestDataClient;
         _emitRequestGraphClient = emitRequestGraphClient;
@@ -372,32 +369,16 @@ public class AgvController : Controller
     }
 
     /// <summary>
-    /// Unlock agv to allow it to be assigned to transport orders.
+    /// Lock agv to prevent it from being assigned to transport orders. Mode will be transitioned 
+    /// after the assigned action group policy is finished.
     /// </summary>
-    /// <response code="200">Ok: Agv was successfully unlocked</response>
-    /// <response code="404">Agv with given correlationId not found.</response>
-    [HttpPatch]
-    [Route("/agv/{correlationId:guid}/unlock")]
-    public async Task<ActionResult> UnlockAgv(Guid correlationId)
-    {
-        Response<UnlockAgvResult, AgvNotFoundResult> response = await _unlockAgvClient.GetResponse<UnlockAgvResult, AgvNotFoundResult>(new UnlockAgv(correlationId));
-        if (response.Message is AgvNotFoundResult)
-        {
-            return NotFound();
-        }
-        return Ok();
-    }
-
-    /// <summary>
-    /// Lock agv to prevent it from being assigned to transport orders.
-    /// </summary>
-    /// <response code="200">Ok: Agv was successfully locked</response>
+    /// <response code="200">Ok: Transition to locked mode pending.</response>
     /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/lock")]
-    public async Task<ActionResult> LockAgv(Guid correlationId, [FromQuery] string reason)
+    public async Task<ActionResult> LockAgv(Guid correlationId, [FromQuery] string reason, [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.FinishAction, [FromQuery] bool cancelManualActions = false)
     {
-        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId, reason, User.GetEmail()));
+        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId, reason, User.GetEmail(), assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
         if (response.Message is AgvNotFoundResult)
         {
             return NotFound();
@@ -406,28 +387,30 @@ public class AgvController : Controller
     }
 
     /// <summary>
-    /// Set agv to user mode.
+    /// Set agv to user mode. Mode will be transitioned
+    /// after the assigned action group policy is finished.
     /// </summary>
-    /// <response code="200">Ok: Agv was successfully set to user mode.</response>
+    /// <response code="200">Ok: Transition to user mode pending.</response>
     /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/userMode")]
-    public async Task<ActionResult> SetUserMode(Guid correlationId)
+    public async Task<ActionResult> SetUserMode(Guid correlationId, [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.LeaveAssigned, [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause, [FromQuery] bool cancelManualActions = false)
     {
-        await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, User.GetEmail()));
+        await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, User.GetEmail(), assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
         return Ok();
     }
 
     /// <summary>
-    /// Set agv to maintenance mode.
+    /// Set agv to maintenance mode.Mode will be transitioned
+    /// after the assigned action group policy is finished.
     /// </summary>
-    /// <response code="200">Ok: Agv was successfully set to maintenance mode.</response>
+    /// <response code="200">Ok: Transition to maintenance mode pending.</response>
     /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/maintenanceMode")]
-    public async Task<ActionResult> SetMaintenanceMode(Guid correlationId, [FromQuery] string reason, [FromQuery] bool cancelManualActions)
+    public async Task<ActionResult> SetMaintenanceMode(Guid correlationId, [FromQuery] string reason, [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause, [FromQuery] bool cancelManualActions = false)
     {
-        await _setMaintenanceModeClient.GetResponse<Success>(new SetMaintenanceMode(correlationId, User.GetEmail(), reason, cancelManualActions));
+        await _setMaintenanceModeClient.GetResponse<Success>(new SetMaintenanceMode(correlationId, User.GetEmail(), reason, assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
         return Ok();
     }
 

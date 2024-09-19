@@ -78,7 +78,20 @@ public class Agv : IAgv
     /// <summary>
     /// The agv should start manual action next.
     /// </summary>
-    public bool ShouldStartManualAction => new List<ModeType> { ModeType.Maintenance, ModeType.UserMode }.Contains(Mode.Type);
+    public bool ShouldStartManualAction =>
+        new List<ModeType> { ModeType.Maintenance, ModeType.UserMode }.Contains(Mode.Type) ||
+        new List<ModeType> { ModeType.Maintenance, ModeType.UserMode }.Contains(Mode.PendingType.GetValueOrDefault());
+
+    /// <summary>
+    /// True, if the agv is going to switch to a different mode (apart from reset to normal).
+    /// </summary>
+
+    public bool HasPendingModeSwitch => Mode.PendingType != null && Mode.PendingType != ModeType.Normal;
+
+    /// <summary>
+    /// True, if the agv can start a new action of the group.
+    /// </summary>
+    public bool CanStartNewAction => !HasPendingModeSwitch && Mode.CurrentActionGroupPolicy == CurrentActionGroupPolicy.FinishActionGroup;
 
     /// <summary>
     /// Gets the previous state of the agv.
@@ -395,49 +408,62 @@ public class Agv : IAgv
     }
 
     /// <summary>
-    /// Lock the agv.
+    /// Prepare transition to locked mode.
     /// </summary>
-    public void Lock(string? reason=null, string? setter = null)
+    public void PrepareLockedMode(string? reason=null, string? initiatingUser = null, CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishAction, AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, bool cancelManualActions = false)
     {
-        Mode.Switch(ModeType.Locked, reason, setter) ;
-        IsLocked = true;
+        Mode.PrepareSwitch(ModeType.Locked, reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions) ;
     }
 
     /// <summary>
-    /// Set IsLocked to false and sets agv to idle state.
+    /// Unlock the agv.
     /// </summary>
-    public void Unlock(string? setter = null)
+    public void Unlock(string? initiatingUser = null)
     {
         SetIdle();
-        Mode.Switch(ModeType.Normal, modeModeSetter: setter);
+        Mode.PrepareSwitch(ModeType.Normal, null, initiatingUser);
+        Mode.Switch();
         IsLocked = false;
     }
 
     /// <summary>
-    /// Set the agv into user mode.
+    /// Prepare transition to user mode.
     /// </summary>
-    public void SetUserMode(string? setter = null)
+    public void PrepareUserMode(string? initiatingUser = null, CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause, AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.LeaveAssigned, bool cancelManualActions = false)
     {
-        Mode.Switch(ModeType.UserMode, modeModeSetter: setter);
-        SetIdle();
+        Mode.PrepareSwitch(ModeType.UserMode, initiatingUser: initiatingUser, currentActionPolicy : currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions);
     }
 
     /// <summary>
     /// Set the agv into normal mode.
     /// </summary>
-    public void SetNormalMode(string? setter = null)
+    public void SetNormalMode(string? initiatingUser = null)
     {
-        Mode.Switch(ModeType.Normal, modeModeSetter: setter);
+        Mode.PrepareSwitch(ModeType.Normal, null, initiatingUser);
+        Mode.Switch();
         SetIdle();
+        IsLocked = false;
     }
 
     /// <summary>
-    /// Set the agv into maintenance mode.
+    /// Prepare transition to maintenance mode.
     /// </summary>
-    public void SetMaintenanceMode(string? reason, string? setter = null)
+    public void PrepareMaintenanceMode(string? reason, string? initiatingUser = null, CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause, AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, bool cancelManualActions = false)
     {
-        Mode.Switch(ModeType.Maintenance, reason: reason, modeModeSetter: setter);
+        Mode.PrepareSwitch(ModeType.Maintenance, reason: reason, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions);
+    }
+
+    /// <summary>
+    /// Perform switch to pending mode.
+    /// </summary>
+    public void SwitchMode()
+    {
+        Mode.Switch();
         SetIdle();
+        if (Mode.Type == ModeType.Locked)
+        {
+            IsLocked = true;
+        }
     }
 
     /// <summary>
