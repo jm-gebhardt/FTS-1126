@@ -456,6 +456,9 @@ public class AgvController : Controller
     /// <summary>
     /// Move agv manually to a specific node. 
     /// </summary>
+    /// <param name="correlationId">Id of the agv.</param>
+    /// <param name="destinationNodeId">Id of the destination node.</param>
+    /// <param name="theta">Angle in rad.</param>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
     /// <response code="400">Target node does not exist or is reserved or occupied or agv is locked.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
@@ -463,9 +466,9 @@ public class AgvController : Controller
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/move")]
-    public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId, [FromQuery] bool rotate = false)
+    public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId, [FromQuery] double theta = 0)
     {
-        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi, rotate ? Math.PI : 0));
+        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi, theta));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
