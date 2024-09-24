@@ -463,9 +463,9 @@ public class AgvController : Controller
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/move")]
-    public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId)
+    public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId, [FromQuery] bool rotate = false)
     {
-        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi));
+        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi, rotate ? Math.PI : 0));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }

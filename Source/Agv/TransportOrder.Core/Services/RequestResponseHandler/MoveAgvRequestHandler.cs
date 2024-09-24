@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -38,7 +39,7 @@ public class MoveAgvRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<MoveAgv> context)
     {
-        (var agvCorrelationId, string targetNodeId, var creator) = context.Message;
+        (var agvCorrelationId, string targetNodeId, var creator, double theta) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -53,13 +54,17 @@ public class MoveAgvRequestHandler(
         {
             await ReserveNodeForAgv(targetNode, agvCorrelationId);
         }
+        
+        var rotationInfo = new Dictionary<InfoToAgvKey, string> { {InfoToAgvKey.CargoRotation, theta.ToString(CultureInfo.InvariantCulture)} };
+        
         var actionGroupId = Guid.NewGuid();
         await QueueNewActionGroup(context,
             [
                 new AgvAction(Guid.NewGuid(),
                     ActionType.Move,
                     targetNode.Id,
-                    actionGroupId)
+                    actionGroupId,
+                    rotationInfo)
             ],
             $"Manual {ActionType.Move}",
             agvCorrelationId,

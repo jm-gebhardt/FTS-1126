@@ -95,7 +95,8 @@ public class StartActionCommandConsumer : IConsumer<StartActionCommand>
                 orderType = OrderType.Move;
                 destinationToSend = new StationInfo
                 {
-                    Id = targetNodeId
+                    Id = targetNodeId,
+                    Rotate = agvShouldRotate
                 };
                 break;
 
