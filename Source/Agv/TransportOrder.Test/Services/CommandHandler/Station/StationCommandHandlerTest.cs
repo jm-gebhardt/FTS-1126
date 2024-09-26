@@ -12,21 +12,6 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Station;
 public class StationCommandHandlerTest
 {
     [TestMethod]
-    public async Task Consume_FreeNode_ValidData_FreeNodeCalled()
-    {
-        const string nodeId = "Charge-0";
-        var fixture = new StationCommandHandlerTestFixture()
-            .WithNodeState(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow))
-            .WithAnyStation();
-
-        await fixture.TestHarness.Bus.Publish(new FreeNode(nodeId));
-        
-        await fixture.ShouldHaveConsumedAsync<FreeNode>();
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Once);
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-    }
-
-    [TestMethod]
     public async Task Consume_LockStation_ValidData_NodeStateChangedCalled()
     {
         const string nodeId = "PD-0";
@@ -41,6 +26,7 @@ public class StationCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<LockStation>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         fixture.VerifyStationUpdated(Times.Once());
+        fixture.NodeStateRepository.Verify(r => r.LockNodeAsync(nodeId), Times.Once);
     }
 
     [TestMethod]
@@ -58,6 +44,7 @@ public class StationCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<UnlockStation>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         fixture.VerifyStationUpdated(Times.Once());
+        fixture.NodeStateRepository.Verify(r => r.UnlockNodeAsync(nodeId), Times.Once);
     }
 
     [TestMethod]

@@ -11,6 +11,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
@@ -50,7 +51,9 @@ public class AgvLastNodeIdChangedEventHandler : IConsumer<AgvLastNodeIdChanged>
     /// <returns></returns>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        string? newLastNodeId = context.Message.NewLastNodeId;
+        (var agvCorrelationId, string? oldLastNodeId, string? newLastNodeId) = context.Message;
+        await context.Publish(new UpdateNodeOccupancy(agvCorrelationId, oldLastNodeId, newLastNodeId));
+
         if (newLastNodeId != null)
         {
             List<Guid> triggersOnNode = _triggerRepository.GetTriggersAssignedToNode(newLastNodeId).ToList();

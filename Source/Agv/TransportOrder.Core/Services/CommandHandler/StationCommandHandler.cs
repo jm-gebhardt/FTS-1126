@@ -10,36 +10,17 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
 /// <summary>
-/// Provides handlers for node- and station-related commands.
+/// Provides handlers for station-related commands.
 /// </summary>
 /// <inheritdoc cref="StationCommandHandler"/>>
 [UsedImplicitly]
-public class StationCommandHandler(INodeStateRepository nodeStateRepository, IStationRepository stationRepository, ILogger<StationCommandHandler> logger) : 
-    IConsumer<FreeNode>,
-    IConsumer<LockStation>, 
+public class StationCommandHandler(
+    INodeStateRepository nodeStateRepository,
+    IStationRepository stationRepository,
+    ILogger<StationCommandHandler> logger) :
+    IConsumer<LockStation>,
     IConsumer<UnlockStation>
 {
-    /// <summary>
-    /// Handles the <see cref="FreeNode"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<FreeNode> context)
-    {
-        string nodeId = context.Message.NodeId;
-        var station = await stationRepository.GetStation(nodeId);
-        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
-        {
-            logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
-        }
-
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
-        if (nodeState == null)
-        {
-            logger.LogWarning("Could not retrieve node state for node {NodeId}", nodeId);
-            return;
-        }
-        await context.Publish(new NodeStateChanged(nodeState, station.Id));
-    }
-
     /// <summary>
     /// Handles the <see cref="LockStation"/> command.
     /// </summary>

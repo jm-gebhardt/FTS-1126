@@ -62,28 +62,13 @@ public class AgvPositionChangedConsumer :
     }
 
     /// <summary>
-    /// Last node Id has changed
-    /// UnOccupy previous node and occupy new node
+    /// Send route changed message to all clients. 
     /// </summary>
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        (var agvCorrelationId, string? oldLastNodeId, string? newLastNodeId) = context.Message;
+        (var agvCorrelationId, string? _, string? newLastNodeId) = context.Message;
         _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvLastNodeIdChanged), agvCorrelationId, agvCorrelationId);
-
-        var oldLastNode = await _nodeStateRepository.GetNodeStateAsync(oldLastNodeId!);
-        var newLastNode = await _nodeStateRepository.GetNodeStateAsync(newLastNodeId!);
-        if (oldLastNode != null && oldLastNode.IsOccupiedByAgv(agvCorrelationId))
-        {
-            await _nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
-            await PublishNodeStateChange(context, oldLastNodeId!);
-        }
-
-        if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
-        {
-            await _nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
-            await PublishNodeStateChange(context, newLastNodeId!);
-        }
 
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);
         if (agvRoute != null)

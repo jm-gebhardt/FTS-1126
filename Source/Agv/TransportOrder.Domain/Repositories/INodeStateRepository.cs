@@ -103,6 +103,13 @@ public interface INodeStateRepository
     /// <summary>
     /// Get ids of nodes which are in state Locked.
     /// </summary>
-   /// <returns></returns>
+    /// <returns></returns>
     public Task<IReadOnlyCollection<string>?> GetLockedNodes();
+
+    /// <summary>
+    /// Get all node locks that are concerning the given agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    /// <returns>Collection of node locks.</returns>
+    public Task<ICollection<NodeLock>> GetNodeLocksForAgv(Guid agvCorrelationId);
 }

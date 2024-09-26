@@ -43,14 +43,7 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         return this;
     }
 
-    public StationCommandHandlerTestFixture WithAnyStation()
-    {
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        return this;
-    }
-
-    public StationCommandHandlerTestFixture WithLockableAndUnlockableNode(string nodeId)
+   public StationCommandHandlerTestFixture WithLockableAndUnlockableNode(string nodeId)
     {
         NodeStateRepository.Setup(x => x.LockNodeAsync(nodeId)).ReturnsAsync(true);
         NodeStateRepository.Setup(x => x.UnlockNodeAsync(nodeId)).ReturnsAsync(true);

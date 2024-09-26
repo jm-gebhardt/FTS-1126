@@ -8,19 +8,6 @@ namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
 public class AgvPositionChangedConsumerTestFixture : ConsumerHubTestFixture<AgvPositionChangedConsumer, IAgvPublisher>
 {
-    public AgvPositionChangedConsumerTestFixture WithNodeReserved(string nodeId, bool reserve = true)
-    {
-        NodeStateRepositoryMock.Setup(x => x.OccupyNodeAsync(nodeId, It.IsAny<Guid>())).Verifiable();
-        NodeStateRepositoryMock.Setup(x => x.IsNodeReservedAsync(nodeId)).ReturnsAsync(reserve);
-        return this;
-    }
-
-    public AgvPositionChangedConsumerTestFixture WithNodeOccupied(Guid agvId)
-    {
-        NodeStateRepositoryMock.Setup(x => x.UnOccupyNodeAsync(agvId)).ReturnsAsync(true);
-        return this;
-    }
-
     public AgvPositionChangedConsumerTestFixture WithNodeStates(NodeLock? oldNodeState, NodeLock? newNodeState)
     {
         NodeStateRepositoryMock.SetupSequence(x => x.GetNodeStateAsync(It.IsAny<string>()))

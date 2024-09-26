@@ -181,7 +181,14 @@ public class EfNodeStateRepository : INodeStateRepository
         return await dbContext.Set<NodeLock>()
             .Where(nl => nl.IsLocked).Select(nl => nl.NodeId)
             .ToListAsync();
-   }
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<NodeLock>> GetNodeLocksForAgv(Guid agvCorrelationId)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Set<NodeLock>().AsNoTracking().Where(n => n.AgvCorrelationId == agvCorrelationId).ToListAsync();
+    }
 
     private bool IsLocked(string nodeId)
     {

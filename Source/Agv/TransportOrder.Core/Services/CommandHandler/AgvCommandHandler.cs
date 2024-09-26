@@ -26,6 +26,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -460,6 +461,7 @@ public class AgvCommandHandler :
                 _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(GoOffline), agv.CorrelationId);
                 return;
             }
+            await context.Publish(new ClearNodesFromAgv(agv.CorrelationId));
             await context.Publish(new AgvOnlineChanged(agv.CorrelationId, false));
             _logger.LogAgvInformation(LogCodes.AgvOffline, agv.CorrelationId, "AGV Offline", $"AGV {agv.SerialNumber} is offline");
         }

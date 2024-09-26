@@ -18,7 +18,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalServiceMock = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepositoryMock = new();
     public readonly Mock<THubContext> PublisherMock = new();
-    public readonly Mock<INodeStateRepository> NodeStateRepositoryMock = new();
+    protected readonly Mock<INodeStateRepository> NodeStateRepositoryMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
 
     protected override IEnumerable<Profile> GetProfiles() =>

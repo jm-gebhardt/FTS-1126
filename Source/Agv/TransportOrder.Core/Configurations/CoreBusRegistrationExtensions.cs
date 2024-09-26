@@ -137,6 +137,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<UnlockStation, StationCommandHandler>(c);
         });
 
+        busRegistrationConfigurator.AddConsumer<NodeCommandHandler>();
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 
         busRegistrationConfigurator.AddConsumer<RestrictedAreaCommandHandler>(c =>

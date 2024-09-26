@@ -264,4 +264,11 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="stationName">The name of the station.</param>
     Task<IReadOnlyCollection<ActionGroup>> GetCurrentActionGroupsForStation(string stationName);
+    
+    /// <summary>
+    /// Gets list of action groups that are assigned to an AGV in created, paused, or started state.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>Action groups.</returns>
+    Task<ICollection<ActionGroup>> GetPendingActionGroupsForAgvAsync(Guid agvCorrelationId);
 }

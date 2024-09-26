@@ -545,17 +545,35 @@ public class EfActionGroupRepository : IActionGroupRepository
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ActionGroup>> GetCreatedAndStartedActionGroupsForAgvAsync(Guid agvCorrelationId)
     {
+        var actionGroupStates = new List<ActionGroupState>()
+        {
+            ActionGroupState.Created,
+            ActionGroupState.Started
+        };
+
+        return await GetAgvActionGroupsInState(agvCorrelationId, actionGroupStates);
+    }
+
+    /// <inheritdoc/>
+    public async Task<ICollection<ActionGroup>> GetPendingActionGroupsForAgvAsync(Guid agvCorrelationId)
+    {
+        var actionGroupStates = new List<ActionGroupState>()
+        {
+            ActionGroupState.Created,
+            ActionGroupState.Started,
+            ActionGroupState.Paused
+        };
+
+        return (await GetAgvActionGroupsInState(agvCorrelationId, actionGroupStates)).ToList();
+    }
+
+    private async Task<IReadOnlyList<ActionGroup>> GetAgvActionGroupsInState(Guid agvCorrelationId, List<ActionGroupState> actionGroupStates)
+    {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Actions are auto-included.
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking();
-
-        var actionGroupStates = new List<ActionGroupState>() 
-        { 
-            ActionGroupState.Created,
-            ActionGroupState.Started
-        };
 
         return await actionGroups.Where(ag =>
                 ag.AssignedAgv == agvCorrelationId
