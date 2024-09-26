@@ -24,7 +24,7 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         collection.AddTransient(_ => NodeStateRepository.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
-       
+        _stationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Verifiable();
         return this;
     }
 
@@ -55,5 +55,10 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         NodeStateRepository.Setup(x => x.LockNodeAsync(nodeId)).ReturnsAsync(true);
         NodeStateRepository.Setup(x => x.UnlockNodeAsync(nodeId)).ReturnsAsync(true);
         return this;
+    }
+
+    public void VerifyStationUpdated(Times times)
+    {
+        _stationRepository.Verify(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>()), times);
     }
 }

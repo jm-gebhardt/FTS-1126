@@ -24,6 +24,7 @@ public static class Reasons
     public const string TargetNodeDoesNotExist = "Node \"{0}\" does not exist";
     public const string ActionsMustBeSet = "Actions must be set";
     public const string ManualActionMustHaveExactlyOneAction = "Manual action must have exactly one action";
+    public const string LockedStation = "A target station is locked";
 
     public const string ManualActionMustHaveAgvAssigned = "Manual action must have an Agv assigned";
 

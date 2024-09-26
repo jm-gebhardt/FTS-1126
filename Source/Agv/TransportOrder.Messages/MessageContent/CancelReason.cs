@@ -16,7 +16,12 @@ public enum CancelReason : byte
     /// <summary>
     /// Triggered by external command.
     /// </summary>
-    External = 1
+    External = 1,
+
+    /// <summary>
+    /// Triggered during station lock.
+    /// </summary>
+    LockedStation = 2
 }
 
 /// <summary>
@@ -35,6 +40,7 @@ public static class CancelReasonExtensions
         {
             CancelReason.WebApi => Reasons.ActionGroupCanceledByWebApi,
             CancelReason.External => Reasons.ActionGroupCanceledByExternal,
+            CancelReason.LockedStation => Reasons.LockedStation,
             _ => null
         };
         return template != null ? new Reason(template) : null;

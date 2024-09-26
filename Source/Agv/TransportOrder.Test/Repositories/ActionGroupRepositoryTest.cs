@@ -951,4 +951,30 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.IsLastCompletedActionMoveToCoordinate(agvCorrelationId)).ShouldBeFalse();
     }
+
+    [TestMethod]
+    public async Task GetCurrentActionGroupsForStation_ValidData_ReturnsActionGroupsHeadingTowardsStationsAndActionGroupsThatReservedTheStation()
+    {
+        const string station = "a station";
+        var startedGroupPickTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Started);
+        var startedGroupDropTarget = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, dropActionState: ActionState.Started);
+        var createdGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: station);
+        var startedGroupOtherTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: "to somewhere else", pickActionState: ActionState.Started);
+        var chargeGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeId: station);
+        var parkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId:station);
+        var startedParkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId:station);
+        startedParkGroup.StartAction(startedParkGroup.Actions.First().CorrelationId, [], []);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([startedGroupPickTarget, startedGroupDropTarget, createdGroup, startedGroupOtherTarget, chargeGroup, parkGroup, startedParkGroup])
+            .BuildAsync();
+
+        IReadOnlyCollection<ActionGroup> groupsForStation = await fixture.ActionGroupRepository.GetCurrentActionGroupsForStation(station);
+
+        groupsForStation.Select(g => g.CorrelationId).ToList().ShouldBe(
+        [
+            startedGroupDropTarget.CorrelationId, startedGroupPickTarget.CorrelationId, // started pick-drop action groups where station is either source or destination
+            chargeGroup.CorrelationId, parkGroup.CorrelationId, startedParkGroup.CorrelationId // charge and park action groups that reserved the station or are already started
+        ], ignoreOrder: true);
+    }
 }

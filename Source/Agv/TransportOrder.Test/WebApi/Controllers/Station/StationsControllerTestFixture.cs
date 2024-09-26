@@ -21,6 +21,8 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
     [UsedImplicitly]
     private readonly Mock<IMapRepository> _mapRepository = new();
 
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
+
     protected override StationsController GetController()
     {
         IRequestClient<GetStations> getStationRequestClient = GetRequestClient<GetStations>();
@@ -39,6 +41,7 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
         {
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _stationRepository.Object);
+            sc.AddTransient(_ => _actionGroupRepository.Object);
         });
 
         base.Build();

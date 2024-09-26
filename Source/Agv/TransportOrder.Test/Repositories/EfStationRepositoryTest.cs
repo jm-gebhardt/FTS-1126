@@ -206,32 +206,18 @@ public class EfStationRepositoryTest
     }
 
     [TestMethod]
-    public async Task LockUnlockStation_ValidData_StationLockedUnlocked()
+    public async Task Update_ValidData_StationUpdated()
     {
+        var station = new Station("name", AgvGraph.NodeType.PickDrop, []);
         var fixture = new EfStationRepositoryTestFixture();
-        var agvId = Guid.NewGuid();
-        var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
-        
-        await fixture.Repository.AddStations(graph);
+        await fixture.AddAsync(station);
 
-        var station = (await fixture.Repository.GetStations()).First();
+        station.Lock("user", "reason", "description", LockedOrderHandlingType.Abort);
 
-        await fixture.Repository.LockStation(station.Id, "User", "Reason", "Description", LockedOrderHandlingType.AllowFinish);
+        await fixture.Repository.Update(station);
 
-        var lockedStation = await fixture.Repository.GetStation(station.Id);
+        var updatedStation = await fixture.Repository.GetStation(station.Id);
 
-        lockedStation.LockedBy.ShouldBe("User");
-        lockedStation.LockedOrderHandling.ShouldBe(LockedOrderHandlingType.AllowFinish);
-        lockedStation.LockReason.ShouldBe("Reason");
-        lockedStation.LockDescription.ShouldBe("Description");
-
-        await fixture.Repository.UnlockStation(station.Id);
-
-        var unlockedStation = await fixture.Repository.GetStation(station.Id);
-
-        unlockedStation.LockedBy.ShouldBeNull();
-        unlockedStation.LockedOrderHandling.ShouldBeNull();
-        unlockedStation.LockReason.ShouldBeNull();
-        unlockedStation.LockDescription.ShouldBeNull();
+        updatedStation.IsLocked.ShouldBe(station.IsLocked);
     }
 }

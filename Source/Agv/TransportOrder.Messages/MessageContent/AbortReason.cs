@@ -21,7 +21,12 @@ public enum AbortReason : byte
     /// <summary>
     /// Triggered by external service.
     /// </summary>
-    External = 2
+    External = 2,
+
+    /// <summary>
+    /// Triggered during station lock.
+    /// </summary>
+    LockedStation = 3
 }
 
 /// <summary>
@@ -32,7 +37,6 @@ public static class AbortReasonExtensions
     /// <summary>
     /// Converts the <see cref="AbortReason"/> to a <see cref="Reason"/>.
     /// </summary>
-    /// <param name="abortReason"></param>
     /// <returns></returns>
     public static Reason? ToReason(this AbortReason abortReason)
     {
@@ -41,6 +45,7 @@ public static class AbortReasonExtensions
             AbortReason.ReactivatedFromCharging => Reasons.ActionGroupAbortedToReactivateFromCharging,
             AbortReason.WebApi => Reasons.ActionGroupAbortedByWebApi,
             AbortReason.External => Reasons.ActionGroupAbortedByExternal,
+            AbortReason.LockedStation => Reasons.LockedStation,
             _ => null
         };
         return template != null ? new Reason(template) : null;

@@ -73,6 +73,11 @@ public class Station
     public string? LockDescription { get; set; }
 
     /// <summary>
+    /// True, if the station is locked.
+    /// </summary>
+    public bool IsLocked => LockedBy != null;
+
+    /// <summary>
     /// Defines how already started orders will be handled that involve a locked station.
     /// </summary>
     public LockedOrderHandlingType? LockedOrderHandling { get; set; }
@@ -115,18 +120,29 @@ public class Station
     }
 
     /// <summary>
-    /// Update the state of a station
+    /// Lock the station.
     /// </summary>
     /// <param name="user">The user that locked the station.</param>
     /// <param name="reason">The reason for locking the station.</param>
     /// <param name="lockDescription">The description of the lock.</param>
     /// <param name="lockedOrderHandling">How orders concerning this station should be handled.</param>
-    public void UpdateLockState(string? user, string? reason, string? lockDescription, LockedOrderHandlingType? lockedOrderHandling)
+    public void Lock(string? user, string? reason, string? lockDescription, LockedOrderHandlingType? lockedOrderHandling)
     {
         LockedBy = user;
         LockReason = reason;
         LockDescription = lockDescription;
         LockedOrderHandling = lockedOrderHandling;
+    }
+
+    /// <summary>
+    /// Unlock a station.
+    /// </summary>
+    public void Unlock()
+    {
+        LockedBy = null;
+        LockDescription = null;
+        LockReason = null;
+        LockedOrderHandling = null;
     }
 }
 

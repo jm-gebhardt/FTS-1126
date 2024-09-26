@@ -78,7 +78,7 @@ public record StationDto
     /// <summary>
     /// The handling of orders that involve this station.
     /// </summary>
-    public LockedOrderHandlingType LockedOrderHandling { get; set; }
+    public LockedOrderHandlingType? LockedOrderHandling { get; set; }
 
     /// <summary>
     /// ctor called by AutoMapper.

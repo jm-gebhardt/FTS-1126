@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
@@ -135,9 +136,6 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<LockStation, StationCommandHandler>(c);
             partitioner.PartitionMessageById<UnlockStation, StationCommandHandler>(c);
         });
-
-        busRegistrationConfigurator.AddRequestClient<LockStation>();
-        busRegistrationConfigurator.AddRequestClient<UnlockStation>();
 
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 
@@ -332,10 +330,12 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetMapList>();
         configurator.AddRequestClient<GetMap>();
 
-        configurator.AddConsumer<GetStationsRequestHandler>();
+        configurator.AddConsumer<StationsRequestHandler>();
         configurator.AddRequestClient<GetMapStations>();
         configurator.AddRequestClient<GetStations>();
         configurator.AddRequestClient<GetStation>();
+        configurator.AddRequestClient<TryLockStation>();
+        configurator.AddRequestClient<TryUnlockStation>();
     }
 
     private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)

@@ -562,4 +562,15 @@ public class EfActionGroupRepository : IActionGroupRepository
                 && actionGroupStates.Contains(ag.State))
             .ToListAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyCollection<ActionGroup>> GetCurrentActionGroupsForStation(string stationName)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<ActionGroup>().AsNoTracking().Where(a =>
+            a.Actions.Any(action => action.Target.NodeId == stationName) &&
+            (a.State == ActionGroupState.Started || // currently running orders to this station
+             a.Actions.Any(action => action.ActionType == ActionType.Charge) || (a.Actions.Count == 1 && a.Actions.First().ActionType == ActionType.Move)) // park and charge actions
+            ).ToListAsync();
+    }
 }

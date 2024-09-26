@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
@@ -18,7 +17,7 @@ public class StationControllerTests
         var map = new TransportOrder.Domain.Models.Map.Map("map".ToGuid(), "map", [], 8, 8, 1, 1, 1, DateTime.UtcNow);
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = map.MapId };
 
-        StationControllerTestFixture<GetStation, GetStationsRequestHandler> fixture = new StationControllerTestFixture<GetStation, GetStationsRequestHandler>()
+        StationControllerTestFixture<GetStation, StationsRequestHandler> fixture = new StationControllerTestFixture<GetStation, StationsRequestHandler>()
             .WithMap(map)
             .WithStation(station)
             .Build();
@@ -37,38 +36,38 @@ public class StationControllerTests
     }
 
     [TestMethod]
-    public async Task LockStation_ValidData_LocksStation()
+    public async Task LockStation_ValidData_TryLockStation()
     {
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
 
-        StationControllerTestFixture<LockStation, StationCommandHandler> fixture = new StationControllerTestFixture<LockStation, StationCommandHandler>()
+        StationControllerTestFixture<TryLockStation, StationsRequestHandler> fixture = new StationControllerTestFixture<TryLockStation, StationsRequestHandler>()
             .WithStation(station)
             .WithUser(null, "user")
             .Build();
 
         bool result = await fixture.GetControllerResultValueAsync(c => c.LockStation(station.Id, "reason", "description", LockedOrderHandlingType.AllowFinish));
 
-        result.ShouldBeFalse();
+        result.ShouldBeTrue();
 
-        (await fixture.MediatorTestHarness.Consumed.Any<LockStation>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Consumed.Any<TryLockStation>()).ShouldBeTrue();
         (await fixture.MediatorTestHarness.Published.Any<LockedUnlockedStation>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task UnlockStation_ValidData_LocksStation()
+    public async Task UnlockStation_ValidData_TryUnlockStation()
     {
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
-
-        StationControllerTestFixture<UnlockStation, StationCommandHandler> fixture = new StationControllerTestFixture<UnlockStation, StationCommandHandler>()
+        station.Lock("user", "reason", "description", LockedOrderHandlingType.AllowFinish);
+        StationControllerTestFixture<TryUnlockStation, StationsRequestHandler> fixture = new StationControllerTestFixture<TryUnlockStation, StationsRequestHandler>()
             .WithStation(station)
             .WithUser(null, "user")
             .Build();
 
         bool result = await fixture.GetControllerResultValueAsync(c => c.UnlockStation(station.Id));
 
-        result.ShouldBeFalse();
+        result.ShouldBeTrue();
 
-        (await fixture.MediatorTestHarness.Consumed.Any<UnlockStation>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Consumed.Any<TryUnlockStation>()).ShouldBeTrue();
         (await fixture.MediatorTestHarness.Published.Any<LockedUnlockedStation>()).ShouldBeTrue();
     }
 }

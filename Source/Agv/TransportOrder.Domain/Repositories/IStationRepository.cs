@@ -44,18 +44,8 @@ public interface IStationRepository
     Task<ICollection<Station>> GetStations(string? mapName=null);
 
     /// <summary>
-    /// Locks a station.
+    /// Update a station.
     /// </summary>
-    /// <param name="id">The station to lock.</param>
-    /// <param name="user">The user that locked the station.</param>
-    /// <param name="reason">The reason that the node was locked.</param>
-    /// <param name="lockDescription">The description of the lock.</param>
-    /// <param name="lockedOrderHandling">How orders concerning the station should be handled.</param>
-    Task LockStation(Guid id, string user, string reason, string lockDescription, LockedOrderHandlingType lockedOrderHandling);
-
-    /// <summary>
-    /// Unlocks a station.
-    /// </summary>
-    /// <param name="id">The station to unlock.</param>
-    Task UnlockStation(Guid id);
+    /// <param name="station">The station to update.</param>
+    Task Update(Station station);
 }

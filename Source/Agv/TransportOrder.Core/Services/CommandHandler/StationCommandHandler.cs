@@ -3,7 +3,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
-using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -61,12 +60,11 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository, ISt
                 await context.Publish(new NodeStateChanged(nodeState, id));
             }
         }
+        station.Lock(user, reason, lockDescription, lockOrderHandling);
 
-        await stationRepository.LockStation(id, user, reason, lockDescription, lockOrderHandling);
+        await stationRepository.Update(station);
 
         logger.LogStationInformation(LogCodes.StationLocked, id, "Station Locked", $"User {user} locked station because {reason}");
-
-        await context.RespondAsync(new LockedUnlockedStation(lockResult));
     }
 
     /// <summary>
@@ -89,11 +87,9 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository, ISt
                 await context.Publish(new NodeStateChanged(nodeState, id));
             }
         }
-
-        await stationRepository.UnlockStation(id);
+        station.Unlock();
+        await stationRepository.Update(station);
 
         logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked", "Station was unlocked");
-
-        await context.RespondAsync(new LockedUnlockedStation(unlockResult));
     }
 }

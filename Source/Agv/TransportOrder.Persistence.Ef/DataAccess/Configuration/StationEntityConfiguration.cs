@@ -23,5 +23,6 @@ public class StationEntityConfiguration : IEntityTypeConfiguration<Station>
         builder.Ignore(e => e.AdditionalTypes);
         builder.Ignore(e => e.NodeLock);
         builder.Ignore(e => e.Agvs);
+        builder.Ignore(e => e.IsLocked);
     }
 }

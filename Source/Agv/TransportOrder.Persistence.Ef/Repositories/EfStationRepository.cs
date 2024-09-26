@@ -187,34 +187,10 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     }
     
     /// <inheritdoc cref="IStationRepository"/>
-    public async Task LockStation(Guid id, string user, string reason, string lockDescription, LockedOrderHandlingType lockedOrderHandling)
+    public async Task Update(Station station)
     {
         var context = await dbContextFactory.CreateDbContextAsync();
-        var station = await context.Set<Station>().FirstOrDefaultAsync(s => s.Id == id);
-
-        if (station == null)
-        {
-            throw new NodeNotFoundException("Station not found");
-        }
-
-        station.UpdateLockState(user, reason, lockDescription, lockedOrderHandling);
-
-        await context.SaveChangesAsync();
-    }
-
-    /// <inheritdoc cref="IStationRepository"/>
-    public async Task UnlockStation(Guid id)
-    {
-        var context = await dbContextFactory.CreateDbContextAsync();
-        var station = await context.Set<Station>().FirstOrDefaultAsync(s => s.Id == id);
-
-        if (station == null)
-        {
-            throw new NodeNotFoundException("Station not found");
-        }
-
-        station.UpdateLockState(null, null, null, null);
-
+        context.Update(station);
         await context.SaveChangesAsync();
     }
 }

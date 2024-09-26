@@ -22,6 +22,8 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
 
     [UsedImplicitly]
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
     [UsedImplicitly]
     private readonly Mock<IMapRepository> _mapRepository = new();
@@ -29,8 +31,8 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     protected override StationController GetController()
     {
         IRequestClient<GetStation> getStationRequestClient = GetRequestClient<GetStation>();
-        IRequestClient<LockStation> lockStationRequestClient = GetRequestClient<LockStation>();
-        IRequestClient<UnlockStation> unlockStationRequestClient = GetRequestClient<UnlockStation>();
+        IRequestClient<TryLockStation> lockStationRequestClient = GetRequestClient<TryLockStation>();
+        IRequestClient<TryUnlockStation> unlockStationRequestClient = GetRequestClient<TryUnlockStation>();
         var controller = new StationController(Mapper, getStationRequestClient, lockStationRequestClient, unlockStationRequestClient);
         return controller;
     }
@@ -42,11 +44,13 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
 
     public new StationControllerTestFixture<TRequest, TRequestHandler> Build()
     {
+        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsForStation(It.IsAny<string>())).ReturnsAsync([]);
         AddServices(sc =>
         {
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _stationRepository.Object);
             sc.AddTransient(_ => _nodeStateRepository.Object);
+            sc.AddTransient(_ => _actionGroupRepository.Object);
         });
 
         base.Build();

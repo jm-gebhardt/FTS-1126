@@ -19,13 +19,13 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Station;
 public class StationController : Controller
 {
     private readonly IRequestClient<GetStation> _getStationClient;
-    private readonly IRequestClient<UnlockStation> _unlockStationClient;
-    private readonly IRequestClient<LockStation> _lockStationClient;
+    private readonly IRequestClient<TryUnlockStation> _unlockStationClient;
+    private readonly IRequestClient<TryLockStation> _lockStationClient;
     private readonly IMapper _mapper;
 
     /// <inheritdoc cref="StationController"/>
     public StationController(IMapper mapper,
-        IRequestClient<GetStation> getStationClient, IRequestClient<LockStation> lockStationClient, IRequestClient<UnlockStation> unlockStationClient)
+        IRequestClient<GetStation> getStationClient, IRequestClient<TryLockStation> lockStationClient, IRequestClient<TryUnlockStation> unlockStationClient)
     {
         _getStationClient = getStationClient;
         _lockStationClient = lockStationClient;
@@ -68,7 +68,7 @@ public class StationController : Controller
             return Unauthorized();
         }
 
-        Response<LockedUnlockedStation> response = await _lockStationClient.GetResponse<LockedUnlockedStation>(new LockStation(id, email, reason, lockDescription, lockedOrderHandling));
+        Response<LockedUnlockedStation> response = await _lockStationClient.GetResponse<LockedUnlockedStation>(new TryLockStation(id, email, reason, lockDescription, lockedOrderHandling));
         bool result = response.Message.Result;
         return Ok(result);
     }
@@ -82,7 +82,7 @@ public class StationController : Controller
     [Route("/station/{id:Guid}/unlock")]
     public async Task<ActionResult<bool>> UnlockStation([Required]Guid id)
     {
-        Response<LockedUnlockedStation> response = await _unlockStationClient.GetResponse<LockedUnlockedStation>(new UnlockStation(id));
+        Response<LockedUnlockedStation> response = await _unlockStationClient.GetResponse<LockedUnlockedStation>(new TryUnlockStation(id));
         bool result = response.Message.Result;
         return Ok(result);
     }
