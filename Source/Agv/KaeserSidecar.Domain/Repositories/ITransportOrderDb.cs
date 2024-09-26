@@ -18,4 +18,9 @@ public interface ITransportOrderDb: IUnitOfWork
     /// The <see cref="ITransportOrderAgvRepository"/>.
     /// </summary>
     ITransportOrderAgvRepository Agvs { get; }
+
+    /// <summary>
+    /// The <see cref="ITransportOrderStationRepository"/>.
+    /// </summary>
+    ITransportOrderStationRepository Stations { get; }
 }

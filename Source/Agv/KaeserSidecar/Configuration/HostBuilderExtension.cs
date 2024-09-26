@@ -73,6 +73,7 @@ public static class HostBuilderExtension
             services.AddTransient<ITransportOrderDb, TransportOrderDb>();
             services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
             services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();
+            services.AddTransient<ITransportOrderStationRepository, TransportOrderStationRepository>();
             services.AddTransient<ITransportOrderAgvSettingsProvider, TransportOrderAgvSettingsProvider>();
             services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
             // Add transport order db connection

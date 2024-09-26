@@ -7,6 +7,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,14 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 /// Handles messages related to the decision trigger point
 /// </summary>
 [UsedImplicitly]
-public class DecisionPointEventHandler (ILogger<DecisionPointEventHandler> logger, IStationRepository stationRepository, IPrismatCommunicationHostOrderRepository hostOrderRepository, IConveyorCommunicator conveyorCommunicator, KaeserGraphConfiguration configuration, IAgvSettingsService agvSettingsService): 
+public class DecisionPointEventHandler(
+    ILogger<DecisionPointEventHandler> logger,
+    IStationRepository stationRepository,
+    IPrismatCommunicationHostOrderRepository hostOrderRepository,
+    IConveyorCommunicator conveyorCommunicator,
+    KaeserGraphConfiguration configuration,
+    IAgvSettingsService agvSettingsService,
+    ITransportOrderDb transportOrderDb) : 
     IConsumer<AgvPassedDecisionPoint1>
 {
     private string _lastChosenStation = string.Empty;
@@ -34,26 +42,59 @@ public class DecisionPointEventHandler (ILogger<DecisionPointEventHandler> logge
             return;
         }
         bool hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(actionGroup.AssignedAgv.GetValueOrDefault());
-        string targetNode = SelectTarget(consideredStations);
+        string? targetNode = await SelectTarget(consideredStations);
+        if (targetNode == null)
+        {
+            logger.LogError("Could not select target for action group {ActionGroupId}", actionGroup.CorrelationId);
+            return;
+        }
         await ReportTarget(context, agvStatus, targetNode, actionGroup, hasLowBatteryLevel);
     }
 
-    private string SelectTarget(int consideredStations)
+    private async Task<string?> SelectTarget(int consideredStations)
     {
         ICollection<StationOccupancy> occupancies = stationRepository.GetStationOccupancy();
-        
-        //Take station that is not occupied and was not chosen last (to compensate for the delay between setting target and starting action)
-        foreach (var occupancy in occupancies.Take(consideredStations).OrderBy(o => o.Station))
+        ICollection<Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
+       
+        //Try to take the station that is not occupied, is not locked,  and was not chosen last (to compensate for the delay between setting target and starting action)
+        ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
+        foreach (var occupancy in availableStations)
         {
-            if (occupancy.Count != 0 || _lastChosenStation == occupancy.Station)
+            if (occupancy.Count != 0 || (_lastChosenStation == occupancy.Station && availableStations.Count > 1))
             {
                 continue;
             }
             return occupancy.Station;
         }
-        // or the one of 1&2 that is least occupied and was not chosen last 
-        string target = occupancies.OrderBy(o => o.Station).Take(2).OrderBy(o => o.Count).First(o => o.Station != _lastChosenStation).Station;
-        return target;
+
+        // or the one of WE01&WE02 that is least occupied and was not chosen last and is not locked
+        availableStations = GetAvailableStations(Math.Min(consideredStations, 2), occupancies, stations);
+        foreach (var occupancy in availableStations.OrderBy(o => o.Count))
+        {
+            if (_lastChosenStation != occupancy.Station || availableStations.Count <= 1)
+            {
+                return occupancy.Station;
+            }
+        }
+        return null;
+    }
+
+    private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies, ICollection<Station> stations)
+    {
+        // By agreement conveyor stations are named "WE01", "WE02", "WE03", thus ordering by conveyor station
+        // name ensures priority of WE01 over WE02 and WE03
+        IOrderedEnumerable<KeyValuePair<string, string>> orderedConveyorStations = configuration.ConveyorStationMapping.OrderBy(m => m.Value); 
+        ICollection<StationOccupancy> orderedOccupancies = [];
+        foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Take(consideredStations))
+        {
+            var occupancy = unorderedOccupancies.SingleOrDefault(o => o.Station == conveyorStationMapping.Key) ??
+                            new StationOccupancy(conveyorStationMapping.Key, 0);
+            if (!stations.First(s => s.Name == occupancy.Station).IsLocked)
+            {
+                orderedOccupancies.Add(occupancy);
+            }
+        }
+        return orderedOccupancies;
     }
 
     private async Task SetTarget(IPublishEndpoint context, string target, AgvStatus agvStatus, ActionGroup actionGroup, Guid action, bool shouldNotPickNext)

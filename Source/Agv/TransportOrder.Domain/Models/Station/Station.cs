@@ -73,14 +73,14 @@ public class Station
     public string? LockDescription { get; set; }
 
     /// <summary>
-    /// True, if the station is locked.
-    /// </summary>
-    public bool IsLocked => LockedBy != null;
-
-    /// <summary>
     /// Defines how already started orders will be handled that involve a locked station.
     /// </summary>
     public LockedOrderHandlingType? LockedOrderHandling { get; set; }
+
+    /// <summary>
+    /// True, if the station is locked.
+    /// </summary>
+    public bool IsLocked => LockedBy != null;
 
     /// <inheritdoc cref="Station"/>>
     public Station(string name, AgvGraph.NodeType primaryType, ICollection<AgvGraph.NodeType> additionalTypes)

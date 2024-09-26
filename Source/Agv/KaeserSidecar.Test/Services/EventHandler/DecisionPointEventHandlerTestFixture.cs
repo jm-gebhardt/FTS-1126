@@ -7,6 +7,7 @@ using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -19,6 +20,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixture<DecisionPointEventHandler>
 {
     private readonly IStationRepository _repository;
+    private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
     private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
@@ -35,6 +37,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         collection.AddSingleton(_ => _communicator.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddTransient(_ => _agvSettingsService.Object);
+        collection.AddTransient(_ => _transportOrderDb.Object);
         return this;
     }
 
@@ -59,6 +62,12 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
                 _repository.OccupyStation(occupancy.Station, Guid.NewGuid());
             }
         }
+        return this;
+    }
+
+    public DecisionPointEventHandlerTestFixture WithStations(ICollection<Station> stations)
+    {
+        _transportOrderDb.Setup(x => x.Stations.GetStationsByNames(It.IsAny<string[]>())).ReturnsAsync(stations);
         return this;
     }
 

@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.TriggerDecisionPoint1;
 public class DecisionPoint1Trigger(IBus bus) : IFfcTrigger
 {
     private const string PropertyName = "StationCount";
-    private const string PropertyDescription = "Anzahl der Stationen, die als Ziel für APL 1060 verwendet werden können.";
+    private const string PropertyDescription = "Anzahl der Stationen, die als Ziel für APL 1060 verwendet werden können, d.h. wenn 3 : WE01, WE02, WE03, wenn 2: WE01, WE02, wenn 1: WE01";
     private int _propertyValue = 3;
 
     /// <inheritdoc cref="IFfcTrigger"/>>
