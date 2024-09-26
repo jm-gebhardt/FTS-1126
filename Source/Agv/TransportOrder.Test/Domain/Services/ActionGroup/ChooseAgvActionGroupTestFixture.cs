@@ -1,47 +1,65 @@
-using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
-using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
-public class ChooseAgvActionGroupServiceFixture
+public class ChooseAgvActionGroupTestFixture<TChooser>: FixtureBase
+where TChooser : class, IChooseAgvActionGroupService
 {
-    [UsedImplicitly]
+    public TChooser Service = null!;
+
     public List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = new();
 
-    [UsedImplicitly]
     public List<string> LockedNodes { get; } = new();
 
-    [UsedImplicitly]
     public Mock<IRouteService> RouteService { get; } = new();
 
-    [UsedImplicitly]
     public Mock<IActionGroupRepository> AgvActionRepository { get; } = new();
 
-    [UsedImplicitly]
     public Mock<INodeStateRepository> NodeStateRepository { get; } = new();
 
-    public ShortestRouteChooser ShortestRouteChooser { get; private set; }
-
-    public ChooseAgvActionGroupServiceFixture(bool realRouteService = false)
+    public ChooseAgvActionGroupTestFixture(bool realRouteService = false)
     {
         AgvActionRepository.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
         NodeStateRepository.Setup(n => n.GetLockedNodes()).ReturnsAsync(LockedNodes);
-        ShortestRouteChooser = new ShortestRouteChooser(
-            realRouteService ? new RouteService(new Mock<IGraphRepository>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object) : RouteService.Object,
-            AgvActionRepository.Object,
-            NodeStateRepository.Object,
-            new Mock<ILogger<ShortestRouteChooser>>().Object
-        );
+        AddServices(s =>
+        {
+            if (realRouteService)
+            {
+                s.AddTransient<IRouteService>(_ => new RouteService(new Mock<IGraphRepository>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object));
+            }
+            else
+            {
+                s.AddTransient(_ => RouteService.Object);
+            }
+            s.AddTransient(_ => AgvActionRepository.Object);
+            s.AddTransient(_ => NodeStateRepository.Object);
+            s.AddTransient<IChooseAgvActionGroupService, TChooser>();
+            RegisterLoggerMock<TChooser>(s);
+        });
     }
 
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
+    private void RegisterLoggerMock<T>(IServiceCollection services) where T : class
+    {
+        services.AddTransient<ILogger<T>>(_ => new Mock<ILogger<T>>().Object);
+    }
+
+    public new ChooseAgvActionGroupTestFixture<TChooser>  Build()
+    {
+      base.Build();
+      Service = (TChooser)Provider.GetRequiredService<IChooseAgvActionGroupService>();
+        return this;
+    }
+
+    public ChooseAgvActionGroupTestFixture<TChooser> WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
         RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<string>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
@@ -53,7 +71,7 @@ public class ChooseAgvActionGroupServiceFixture
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, string sourceNodeId, string destinationNodeId, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
+    public ChooseAgvActionGroupTestFixture<TChooser> WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, string sourceNodeId, string destinationNodeId, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
         RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
@@ -68,19 +86,19 @@ public class ChooseAgvActionGroupServiceFixture
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture WithNotStartedActionGroup(TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup)
+    public ChooseAgvActionGroupTestFixture<TChooser> WithNotStartedActionGroup(TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup)
     {
         NotStartedActionGroups.Add(actionGroup);
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture WithLockedNodes(List<string> lockedNodeIds)
+    public ChooseAgvActionGroupTestFixture<TChooser> WithLockedNodes(List<string> lockedNodeIds)
     {
         LockedNodes.AddRange(lockedNodeIds);
         return this;
     }
 
-    public ChooseAgvActionGroupServiceFixture GetCreatedChargingActionGroupForAgvAsync(TransportOrder.Domain.Models.ActionGroup.ActionGroup chargingActionGroup)
+    public ChooseAgvActionGroupTestFixture<TChooser> GetCreatedChargingActionGroupForAgvAsync(TransportOrder.Domain.Models.ActionGroup.ActionGroup chargingActionGroup)
     {
         AgvActionRepository.Setup(x => x.GetCreatedChargingActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(chargingActionGroup);
         return this;

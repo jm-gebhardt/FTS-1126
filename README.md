@@ -263,3 +263,18 @@ To provision a trigger location, you must stored the desired data under data\Tri
 - TriggerLocation.json
   For each trigger location you have to create a separate folder with a TriggerLocation.json.
   To use it with docker compose, copy the data directory to the AgvDevComb\Config\provisioning directory and provide profile "provisioning" to the COMPOSE_PROFILES environment variable in your .env file.
+
+
+### Order selection policies
+When an agv becomes idle, the next action group is selected based on charging needs, whether there is a manual
+action that needs to be priorised, and if both does not apply based on the policy for automatic pick drop action group selection.
+Following action group selection policies can be chosen by configuration of transportorder  
+- *FASTESTROUTE* - Take the order with the fastest route based on a* (default)
+- *DYNAMIC* - Take order with smallest score : Score = cost[s] / (1 + waiting time[min]**2) 
+- *OLDESTORDER* - Take the oldest order
+- *ALTERNATING* - Alternate between: fastest route and oldest order mode 
+- *FASTESTOFXOLDEST* - Take the fastest of the x (=2) oldest
+- *THRESHOLD* - Take the fastest order, if there are orders older than 2min, take the oldest of those
+
+Configuration of transportorder can be done by setting the environment variable `ORDERSELECTION__MODE` to one of 
+`DYNAMIC|FASTESTROUTE|OLDESTORDER|ALTERNATING|FASTESTOFXOLDEST|THRESHOLD`

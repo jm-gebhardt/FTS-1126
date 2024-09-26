@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
+using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -40,9 +41,6 @@ public static class TransportOrderHostBuilderExtensions
     /// <summary>
     /// Configures the HostBuilder used by the TransportOrderCore <paramref name="hostBuilder" />
     /// </summary>
-    /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
-    /// <param name="productionOptions"><see cref="ProductionOptions"/></param>
-    /// <returns><see cref="IHostBuilder"/></returns>
     public static IHostBuilder AddTransportOrderCore(this IHostBuilder hostBuilder, ProductionOptions productionOptions)
     {
         hostBuilder.ConfigureServices((context, services) =>
@@ -51,7 +49,7 @@ public static class TransportOrderHostBuilderExtensions
 
             RegisterMapServices(services);
 
-            RegisterAgvServices(services);
+            RegisterAgvServices(services, context.Configuration);
 
             RegisterRepositoryServices(services);
 
@@ -96,11 +94,42 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IRoutingPlausibilityChecker, NoCheckPlausibilityChecker>();
     }
 
-    private static void RegisterAgvServices(IServiceCollection services)
+    private static void RegisterAgvServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddHostedService<OfflineWatchdogInitializer>();
         // Actions
-        services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
+        string selectionMode = OrderSelectionMode.GetModeFromConfiguration(configuration);
+        Console.WriteLine($"Using order selection mode {selectionMode}");
+        switch (selectionMode)
+        {
+            case OrderSelectionMode.FastestRoute:
+                services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
+                break;
+
+            case OrderSelectionMode.OldestOrder:
+                services.AddTransient<IChooseAgvActionGroupService, OldestActionGroupChooser>();
+                break;
+
+            case OrderSelectionMode.Alternating:
+                services.AddSingleton<IChooseAgvActionGroupService, AlternatingModeChooser>();
+                break;
+
+            case OrderSelectionMode.FastestOfXOldest:
+                services.AddTransient<IChooseAgvActionGroupService, FastestRouteOfXOldestActionGroupsChooser>();
+                break;
+
+            case OrderSelectionMode.Threshold:
+                services.AddTransient<IChooseAgvActionGroupService, FastestRouteAndThresholdChooser>();
+                break;
+        
+            case OrderSelectionMode.Dynamic:
+                services.AddTransient<IChooseAgvActionGroupService, DynamicPriorisationChooser>();
+                break;
+
+            default:
+                services.AddTransient<IChooseAgvActionGroupService, ShortestRouteChooser>();
+                break;
+        }
 
         // Agv behaviour
         services.AddTransient<IMaintenanceService, MaintenanceService>();
