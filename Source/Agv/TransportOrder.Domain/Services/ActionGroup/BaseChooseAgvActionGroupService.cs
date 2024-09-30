@@ -61,8 +61,10 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             }
             if (lockedNodeIds is { Count: > 0 })
             {
-                _logger.LogOrderWarning(LogCodes.OrderWithLockedStation, agv.CorrelationId, chargingActionGroup.CorrelationId, "Order Contains Locked Station",
-                    $"Charging Order {chargingActionGroup.OrderId} contains locked station.");
+                _logger.LogOrderWarning(LogCodes.OrderWithLockedStation, agv.CorrelationId,
+                    chargingActionGroup.CorrelationId, "Order Contains Locked Station",
+                    $"Order {chargingActionGroup.OrderId} contains locked station.",
+                    new Dictionary<string, object?>{{LogLabels.OrderId, chargingActionGroup.OrderId } });
             }
         }
 
@@ -73,7 +75,8 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             if (lockedNodeIds is { Count: > 0 }  && manualActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.NodeId)))
             {
                 _logger.LogOrderWarning(LogCodes.OrderWithLockedStation, agv.CorrelationId, manualActionGroup.CorrelationId, "Order Contains Locked Station",
-                    $"Order {manualActionGroup.OrderId} contains locked station.");
+                    $"Order {manualActionGroup.OrderId} contains locked station.",
+                    new Dictionary<string, object?> { { LogLabels.OrderId, manualActionGroup.OrderId } });
             }
             // If there is a manual action group, return this action group. The list of actionGroups is already ordered by the CreationDate, so the first is fine 
             return manualActionGroup;

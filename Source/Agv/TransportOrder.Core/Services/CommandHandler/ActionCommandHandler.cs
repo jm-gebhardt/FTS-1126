@@ -320,7 +320,12 @@ public class ActionCommandHandler :
             {
                 var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(chosenActionGroup.CorrelationId);
                 actionGroup.Assign(agv);
-                _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId, "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
+                _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId,
+                    "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
+                    new Dictionary<string, object?>
+                    {
+                        { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber }
+                    });
 
                 await _actionService.TryUpdateActionGroup(actionGroup);
                 await context.Publish(new NodesSelectedForAction(action, agv.CorrelationId), cancellationToken);
@@ -356,8 +361,12 @@ public class ActionCommandHandler :
                 agv.CanStartAutomaticAction, agv.Mode.PendingType);
             return;
         }
-        _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully");
-        _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId, "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
+        _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId,
+            "Order Created", $"Order {actionGroup.OrderId} was created successfully",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
+        _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId,
+            "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber } });
 
         if (!await _actionGroupRepository.AddAsync(actionGroup))
         {
@@ -461,8 +470,13 @@ public class ActionCommandHandler :
                 throw new ActionsInActionGroupEmptyException(actionGroup.CorrelationId);
             }
             await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agv.CorrelationId), cancellationToken);
-            _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully");
-            _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId, "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
+            _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId,
+                "Order Created", $"Order {actionGroup.OrderId} was created successfully",
+                new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
+            _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId,
+                "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
+                new Dictionary<string, object?>
+                    { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber } });
         }
     }
 
@@ -496,7 +510,9 @@ public class ActionCommandHandler :
             throw new ActionsInActionGroupEmptyException(domainActionGroup.CorrelationId);
         }
 
-        _logger.LogOrderInformation(LogCodes.OrderCreated, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully");
+        _logger.LogOrderInformation(LogCodes.OrderCreated, actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(domainActionGroup);
         await _bus.Publish(new ActionGroupCreated(actionGroupMessageContent, actionGroup.CorrelationId, actionGroup.AssignedAgv), cancellationToken);
@@ -504,7 +520,10 @@ public class ActionCommandHandler :
         if (!isValid)
         {
             List<string> validationFailureReasons = validationResult.Errors.Select(error => error.ErrorMessage).ToList();
-            _logger.LogOrderWarning(LogCodes.OrderInvalid, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Invalid", $"Order {actionGroup.OrderId} is invalid due to {string.Join(",", validationFailureReasons)}");
+            _logger.LogOrderWarning(LogCodes.OrderInvalid, actionGroup.AssignedAgv.GetValueOrDefault(),
+                actionGroup.CorrelationId, "Order Invalid",
+                $"Order {actionGroup.OrderId} is invalid due to {string.Join(",", validationFailureReasons)}",
+                new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.Reason, string.Join(",", validationFailureReasons) } });
 
             await _bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroupMessageContent, validationFailureReasons), cancellationToken);
             return;
@@ -512,7 +531,11 @@ public class ActionCommandHandler :
         if (actionGroup.AssignedAgv != null)
         {
             var agv = await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv.Value);
-            _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, actionGroup.AssignedAgv.Value, actionGroup.CorrelationId, "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}");
+            _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, actionGroup.AssignedAgv.Value,
+                actionGroup.CorrelationId, "AGV Assigned",
+                $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
+                new Dictionary<string, object?>
+                    { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber } });
             await context.RespondAsync(new Success());
         }
     }
@@ -549,7 +572,14 @@ public class ActionCommandHandler :
 
         if (actionGroup.State != ActionGroupState.Completed)
         {
-            _logger.LogOrderInformation(LogCodes.OrderActionCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Updated", $"{actionGroup.Actions.First(a => a.CorrelationId == correlationId).ActionType} of order {actionGroup.OrderId} has been completed");
+            _logger.LogOrderInformation(LogCodes.OrderActionCompleted, actionGroup.AssignedAgv.GetValueOrDefault(),
+                actionGroup.CorrelationId, "Order Updated",
+                $"{actionGroup.Actions.First(a => a.CorrelationId == correlationId).ActionType.ToString()} of order {actionGroup.OrderId} has been completed",
+                new Dictionary<string, object?>
+                {
+                    { LogLabels.ActionType, actionGroup.Actions.First(a => a.CorrelationId == correlationId).ActionType.ToString() },
+                    { LogLabels.OrderId, actionGroup.OrderId }
+                });
             if (agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.FinishAction })
             {
                 await context.Publish(new SwitchMode(agv.CorrelationId), cancellationToken);
@@ -563,7 +593,9 @@ public class ActionCommandHandler :
         }
 
         await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
-        _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully");
+        _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
         await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
     }
 
@@ -596,7 +628,11 @@ public class ActionCommandHandler :
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
         await context.RespondAsync(new Success());
-        _logger.LogOrderWarning(LogCodes.OrderAborted, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Aborted", $"Order {actionGroup.OrderId} was aborted due to {context.Message.AbortReason}");
+        _logger.LogOrderWarning(LogCodes.OrderAborted, actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Order Aborted",
+            $"Order {actionGroup.OrderId} was aborted due to {context.Message.AbortReason}",
+            new Dictionary<string, object?>
+                { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.Reason, context.Message.AbortReason } });
 
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
@@ -648,7 +684,11 @@ public class ActionCommandHandler :
 
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction ?? actionGroup.Actions.First(), null, ActionState.Canceled, context.Message.CancelReason.ToReason());
         await context.PublishAndRespond(new ActionGroupCanceled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
-        _logger.LogOrderWarning(LogCodes.OrderCanceled, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Canceled", $"Order {actionGroup.OrderId} was canceled due to {context.Message.CancelReason}");
+        _logger.LogOrderWarning(LogCodes.OrderCanceled, actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Order Canceled",
+            $"Order {actionGroup.OrderId} was canceled due to {context.Message.CancelReason}",
+            new Dictionary<string, object?>
+                { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.Reason, context.Message.CancelReason } });
 
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
@@ -685,7 +725,9 @@ public class ActionCommandHandler :
         }
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
-        _logger.LogOrderWarning(LogCodes.OrderReset, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Order Reset", $"Order {actionGroup.OrderId} was reset ");
+        _logger.LogOrderWarning(LogCodes.OrderReset, actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Order Reset", $"Order {actionGroup.OrderId} was reset ",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
         await context.RespondAsync(new Success());
     }
 
@@ -722,7 +764,9 @@ public class ActionCommandHandler :
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
 
-        _logger.LogOrderInformation(LogCodes.OrderPaused, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId, "Order Paused", $"Order {actionGroup.OrderId} has been paused");
+        _logger.LogOrderInformation(LogCodes.OrderPaused, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId,
+            "Order Paused", $"Order {actionGroup.OrderId} has been paused",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
     }
 
     /// <summary>
@@ -745,7 +789,9 @@ public class ActionCommandHandler :
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
 
-        _logger.LogOrderInformation(LogCodes.OrderResumed, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId, "Order Resumed", $"Order {actionGroup.OrderId} has been resumed");
+        _logger.LogOrderInformation(LogCodes.OrderResumed, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId,
+            "Order Resumed", $"Order {actionGroup.OrderId} has been resumed",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
         await context.Publish(new ActionGroupResumed(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, context.Message.InitiatingUser));
     }
@@ -770,7 +816,15 @@ public class ActionCommandHandler :
         {
             await context.Publish(new AgvBecameIdle(assignedAgv.Value), cancellationToken);
         }
-        _logger.LogOrderInformation(LogCodes.OrderIncomplete, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Action Target Set", $"Target {targetNodeId} set for action {action.ActionType.ToString()}");
+        _logger.LogOrderInformation(LogCodes.OrderIncomplete, actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Action Target Set",
+            $"Target {targetNodeId} set for action {action.ActionType.ToString()} of order {actionGroup.OrderId}",
+            new Dictionary<string, object?>
+            {
+                { LogLabels.NodeId, targetNodeId },
+                { LogLabels.ActionType, action.ActionType.ToString() },
+                { LogLabels.OrderId, actionGroup.OrderId }
+            });
     }
 
     /// <summary>

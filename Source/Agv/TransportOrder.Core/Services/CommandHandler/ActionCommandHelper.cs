@@ -67,7 +67,7 @@ public class ActionCommandHelper
         // here the state has changed in all cases
         await PublishStateChange(assignedAgv);
         bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
-        if ( !lastActionWasMoveToCoordinate && !action.IsMoveToCoordinate)
+        if (!lastActionWasMoveToCoordinate && !action.IsMoveToCoordinate)
         {
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
             var route = await _routeService.GetRouteAsync(assignedAgv, action.Target.NodeId!, null, agvData, cancellationToken);
@@ -105,9 +105,9 @@ public class ActionCommandHelper
         }
 
         _logger.LogDebug(
-            "Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}. AGV set to busy", 
-            action.CorrelationId, 
-            action.ParentId, 
+            "Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}. AGV set to busy",
+            action.CorrelationId,
+            action.ParentId,
             assignedAgv.CorrelationId);
         return true;
     }
@@ -132,19 +132,37 @@ public class ActionCommandHelper
             switch (action.ActionType)
             {
                 case ActionType.Drop:
-                    _logger.LogStationInformation(LogCodes.StationAgvDropping, station.Id, "AGV Dropping", $"AGV {agv.SerialNumber} is heading towards station to drop order {actionGroup.OrderId}");
+                    _logger.LogStationInformation(LogCodes.StationAgvDropping, station.Id, "AGV Dropping",
+                        $"AGV {agv.SerialNumber} is heading towards station to drop order {actionGroup.OrderId}",
+                        new Dictionary<string, object?>
+                        {
+                            { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.OrderId, actionGroup.OrderId }
+                        });
                     break;
 
                 case ActionType.Pick:
-                    _logger.LogStationInformation(LogCodes.StationAgvPicking, station.Id, "Agv Picking", $"AGV {agv.SerialNumber} is heading towards station to pick order {actionGroup.OrderId}");
+                    _logger.LogStationInformation(LogCodes.StationAgvPicking, station.Id, "Agv Picking",
+                        $"AGV {agv.SerialNumber} is heading towards station to pick order {actionGroup.OrderId}",
+                        new Dictionary<string, object?>
+                        {
+                            { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.OrderId, actionGroup.OrderId }
+                        });
                     break;
 
                 case ActionType.Move:
-                    _logger.LogStationInformation(LogCodes.StationAgvMoving, station.Id, "AGV Moving", $"AGV {agv.SerialNumber} is heading towards station");
+                    _logger.LogStationInformation(LogCodes.StationAgvMoving, station.Id, "AGV Moving",
+                        $"AGV {agv.SerialNumber} is heading towards station", new Dictionary<string, object?>
+                        {
+                            { LogLabels.AgvSerialNumber, agv.SerialNumber }
+                        });
                     break;
 
                 case ActionType.Charge:
-                    _logger.LogStationInformation(LogCodes.StationAgvCharging, station.Id, "AGV Charging", $"AGV {agv.SerialNumber} starts charging at station");
+                    _logger.LogStationInformation(LogCodes.StationAgvCharging, station.Id, "AGV Charging",
+                        $"AGV {agv.SerialNumber} starts charging at station", new Dictionary<string, object?>
+                        {
+                            { LogLabels.AgvSerialNumber, agv.SerialNumber }
+                        });
                     break;
             }
         }
@@ -217,7 +235,7 @@ public class ActionCommandHelper
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
-        
+
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
         if (!isNextActionInGroup)
         {

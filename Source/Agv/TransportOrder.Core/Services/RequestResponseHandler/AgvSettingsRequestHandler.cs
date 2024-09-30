@@ -137,7 +137,8 @@ public class AgvSettingsRequestHandler :
     {
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         await _agvDb.AgvSettings.ResetSettingPropertyToDefaultAsync(agv.AgvSettingsGroup, propertyName);
-        _logger.LogAgvInformation(LogCodes.AgvSettingsReset, agv.CorrelationId, "AGV Setting Reset", $"{propertyName} reset to default");
+        _logger.LogAgvInformation(LogCodes.AgvSettingsReset, agv.CorrelationId, "AGV Setting Reset", $"{propertyName} reset to default",
+            new Dictionary<string, object?>{{LogLabels.PropertyName, propertyName}});
     }
 
     private async Task UpdateAgvSetting(Guid correlationId, AgvSettingsReadModel settings)
@@ -152,7 +153,8 @@ public class AgvSettingsRequestHandler :
     {
         foreach ((string? name, object? value) in settings.GetValidPropertiesInformation())
         {
-            _logger.LogAgvInformation(LogCodes.AgvSettingUpdated, correlationId, "AGV Setting Updated", $"{name} updated to {value}");
+            _logger.LogAgvInformation(LogCodes.AgvSettingUpdated, correlationId, "AGV Setting Updated", $"{name} updated to {value}",
+            new Dictionary<string, object?> { { LogLabels.PropertyName, name }, {LogLabels.PropertyValue, value} });
         }
     }
 }

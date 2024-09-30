@@ -45,7 +45,9 @@ public class StationCommandHandler(
 
         await stationRepository.Update(station);
 
-        logger.LogStationInformation(LogCodes.StationLocked, id, "Station Locked", $"User {user} locked station because {reason}");
+        logger.LogStationInformation(LogCodes.StationLocked, id, "Station Locked",
+            $"User {user} locked station because {reason}",
+            new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Reason, reason}});
     }
 
     /// <summary>

@@ -4,6 +4,8 @@ using MassTransit;
 using MassTransit.Mediator;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
 using MediatorTestHarness = Gebhardt.Acc.Common.Testing.TestHarness.MediatorTestHarness;
 
 namespace Gebhardt.Acc.Common.Testing.Fixtures;
@@ -41,6 +43,8 @@ public class MediatorTestFixture<TRequest, TConsumer, TBusConsumer> : MassTransi
     {
         AddServices(s =>
         {
+            s.AddSingleton(new Mock<ILogger<TConsumer>>().Object);
+            s.AddSingleton(new Mock<ILogger<TBusConsumer>>().Object);
             s.AddMediator(configurator =>
             {
                 AddRequestClient<TConsumer, TRequest>(configurator);

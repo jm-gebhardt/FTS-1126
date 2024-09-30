@@ -77,7 +77,13 @@ public class AgvLastNodeIdChangedEventHandler : IConsumer<AgvLastNodeIdChanged>
                     var trigger = await _triggerRepository.GetById(triggerId);
                     var location = trigger.Locations.Single(t => t.NodeId == newLastNodeId);
                     await context.Publish(new AgvReachedTrigger(triggerId, location.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList));
-                    _logger.LogAgvInformation(LogCodes.AgvReachedTrigger, agvId, "AGV Reached Trigger", $"AGV {agv.SerialNumber} reached trigger {trigger.DisplayName}");
+                    _logger.LogAgvInformation(LogCodes.AgvReachedTrigger, agvId, "AGV Reached Trigger",
+                        $"AGV {agv.SerialNumber} reached trigger {trigger.DisplayName}",
+                        new Dictionary<string, object?>
+                        {
+                            { LogLabels.AgvSerialNumber, agv.SerialNumber },
+                            { LogLabels.TriggerName, trigger.DisplayName }
+                        });
                 }
             }
         }

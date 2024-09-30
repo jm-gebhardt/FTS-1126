@@ -33,7 +33,7 @@ public static class LogCodes
     public const int AgvSettingsReset = 313;
     public const int AgvModeChanged = 314;
     public const int AgvReachedTrigger = 315;
-    public const int AgvModeChangePending = 315;
+    public const int AgvModeChangePending = 316;
 
     // Order
     public const int OrderCreated = 100;
@@ -55,10 +55,10 @@ public static class LogCodes
     public const int StationStateChanged = 400;
     public const int StationAgvDropping = 401;
     public const int StationAgvPicking = 402;
-    public const int StationAgvCharging = 404;
-    public const int StationAgvMoving= 405;
-    public const int StationAgvReached= 406;
-    public const int StationAgvLeft= 407;
-    public const int StationLocked = 408;
-    public const int StationUnlocked = 409;
+    public const int StationAgvCharging = 403;
+    public const int StationAgvMoving= 404;
+    public const int StationAgvReached= 405;
+    public const int StationAgvLeft= 406;
+    public const int StationLocked = 407;
+    public const int StationUnlocked = 408;
 }
