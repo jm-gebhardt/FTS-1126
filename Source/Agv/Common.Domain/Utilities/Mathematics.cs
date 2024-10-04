@@ -40,6 +40,36 @@ public static class Mathematics
     }
 
     /// <summary>
+    /// Calculates the orientation angle of a vector relative to the positive X-axis.
+    /// </summary>
+    /// <param name="start">The starting point of the vector.</param>
+    /// <param name="end">The ending point of the vector.</param>
+    /// <returns>
+    /// The angle in radians between the vector and the positive X-axis, rotated 90 degrees clockwise.
+    /// The result is in the range [-π, π].
+    /// </returns>
+    /// <remarks>
+    /// - If both vectors are equal, the method returns π/2 (90 degrees).
+    /// - If either vector is Zero, the method uses the other vector to calculate the tangent.
+    /// - The angle is measured counterclockwise from the positive X-axis.
+    /// - The result is adjusted by adding π/2 (90 degrees) to the calculated angle.
+    /// </remarks>
+    public static double OrientationToXAxis(Vector2 start, Vector2 end)
+    {
+        if (end == Vector2.Zero && start != Vector2.Zero)
+        {
+            // use tangent
+            end -= start;
+        }
+        if (start == Vector2.Zero && end != Vector2.Zero)
+        {
+            // use tangent
+            start -= end;
+        }
+        return (float)(Math.Atan2(end.Y - start.Y, end.X - start.X) + Math.PI / 2);
+    }
+
+    /// <summary>
     /// Calculates the euclidean distance between two <see cref="Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode"/>.
     /// </summary>
     /// <param name="first">The first node.</param>

@@ -12,7 +12,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Gebhardt.Acc.DeviceCommunication.SimAgv;
+namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Configuration;
 
 /// <summary>
 /// Provides extension methods for <see cref="IWebHostBuilder"/>

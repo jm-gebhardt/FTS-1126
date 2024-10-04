@@ -45,7 +45,7 @@ public class GraphNode : IEquatable<GraphNode>
     /// <summary>
     /// The Theta coordinate of the node
     /// </summary>
-    public float Theta { get; init; }
+    public float Theta { get; set; }
 
     /// <summary>
     /// Simple string representation.
@@ -140,6 +140,7 @@ public class GraphNode : IEquatable<GraphNode>
     /// <inheritdoc />
     public override int GetHashCode()
     {
+        // ReSharper disable once NonReadonlyMemberInGetHashCode
         return HashCode.Combine(Id, (int)Type, X, Y, Z, Theta);
     }
 }

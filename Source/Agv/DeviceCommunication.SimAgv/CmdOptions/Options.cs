@@ -13,6 +13,7 @@ public sealed class Options
     private const string GridGraphSet = "GridGraph";
     private const string FixedGraphSet = "FixedGraph";
     private const string KaeserGraphSet = "KaeserGraph";
+    private const string ExportedGraphSet = "ExportedGraph";
 
     /// <summary>
     /// Number of AGVs
@@ -102,11 +103,18 @@ public sealed class Options
     public bool BezierGridGraph { get; init; }
 
     /// <summary>
-    /// Flag to use the grid graph generator in simulation mode
+    /// Flag to use the Kaeser graph generator in simulation mode
     /// </summary>
     [UsedImplicitly]
     [Option('k', "kaesergraph", HelpText = "Use the kaeser graph generator", SetName = KaeserGraphSet, Default = false)]
     public bool KaeserGraph { get; init; }
+
+    /// <summary>
+    /// Flag to use the exported graph in simulation mode
+    /// </summary>
+    [UsedImplicitly]
+    [Option('e', "exportedgraph", HelpText = "Use the exported graph from Karis", SetName = ExportedGraphSet, Default = false)]
+    public bool ExportedGraph { get; init; }
 
     /// <summary>
     /// List of simulation sources

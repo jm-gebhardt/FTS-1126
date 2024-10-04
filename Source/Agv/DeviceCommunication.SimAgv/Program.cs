@@ -7,7 +7,6 @@ using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
-using Gebhardt.Acc.DeviceCommunication.SimAgv;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
@@ -18,10 +17,13 @@ using MassTransit;
 using MassTransit.Serialization;
 using Quartz;
 using Prometheus;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Configuration;
 
 const string quartzSchedulerName = "MassTransit-DeviceCommunication";
 const string quartzSchedulerId = "AUTO";
 const string quartzQueueName = "quartz-DeviceCommunication";
+const string karisExportSection = "KARISEXPORT";
+const string exportDir = "DIRECTORY";
 
 var initialLogger = InitialLogger.Create<Program>();
 
@@ -32,7 +34,7 @@ try
     parser.ParseArguments<Options>(args)
         .WithParsed(simulationOptions =>
         {
-            if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false, BezierGridGraph:false })
+            if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false, BezierGridGraph:false, ExportedGraph:false })
             {
                 throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph} / KaeserGraph {simulationOptions.KaeserGraph} / BezierGraph {simulationOptions.BezierGridGraph})");
             }
@@ -62,6 +64,16 @@ try
                     {
                         services.AddTransient<IGraphGenerator, KaeserGraphGenerator>();
                         services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
+                    }
+                    else if (simulationOptions.ExportedGraph)
+                    {
+                        string? exportDirectory = context.Configuration.GetSection(karisExportSection)[exportDir];
+                        var config = new KarisExportConfiguration(exportDirectory);
+                        config.LoadFromYaml();
+                        services.AddSingleton(config);
+                        services.AddTransient<IGraphReader, JsonGraphReader>();
+                        services.AddTransient<IGraphGenerator, ExportedGraphGenerator>();
+                        services.AddTransient<IMapGenerator, ExportedGraphMapGenerator>();
                     }
                     services.AddHostedService<SimulatedAgvProvider>();
 
