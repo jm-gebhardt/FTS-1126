@@ -352,4 +352,19 @@ public class AgvEventHandlerTest
         await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
         (await fixture.TestHarness.Published.Any<CancelActionGroup>()).ShouldBe(cancelManualActions);
     }
+
+    [TestMethod]
+    public async Task Consume_AgvModeChangePending_NoStartedActionGroups_PublishesSwitchMode()
+    {
+        var mode = new AgvMode(ModeType.Normal);
+        mode.PrepareSwitch(ModeType.Maintenance, cancelManualActions: false);
+        var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        actionGroup.IsManual = true;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([actionGroup]);
+
+        await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
+        await fixture.ShouldHavePublishedAsync<SwitchMode>();
+    }
 }

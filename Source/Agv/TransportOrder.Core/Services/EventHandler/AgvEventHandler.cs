@@ -309,5 +309,11 @@ public class AgvEventHandler :
                 await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));
             }
         }
+
+        //If no running action group, switch now
+        if (actionGroups.All(a => a.State != ActionGroupState.Started))
+        {
+            await context.Publish(new SwitchMode(agvCorrelationId));
+        }
     }
 }
