@@ -9,7 +9,6 @@ using Shouldly;
 namespace Gebhardt.Acc.PrismatCommunicationTest.PrismatApi.TelegramApi.Processors;
 
 [TestClass]
-[Ignore]
 public class TordDeleteProcessorTest
 {
     [TestMethod]

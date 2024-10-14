@@ -8,7 +8,6 @@ using Shouldly;
 namespace Gebhardt.Acc.PrismatCommunicationTest.PrismatApi.TelegramApi.Processors;
 
 [TestClass]
-[Ignore]
 public class LifeProcessorTest
 {
     [TestMethod]

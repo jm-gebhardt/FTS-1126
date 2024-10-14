@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.PrismatApi.TelegramApi.Processors;
 
@@ -23,7 +24,7 @@ public class FromPrismatTelegramProcessorTestFixture : TelegramProcessorTestFixt
 
         AddServices(s =>
         {
-            s.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
+            s.AddKeyedSingleton(ServiceKeyProvider.FromPrismat, (_, _) => TestConfigurationProvider.GetConfiguration());
             s.AddSingleton(_ => _processorFactory.Object);
         });
         _processorMock.Setup(s => s.ProcessReceivedTelegram(It.IsAny<string>())).Verifiable();

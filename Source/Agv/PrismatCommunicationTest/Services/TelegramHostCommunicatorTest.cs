@@ -6,7 +6,6 @@ using Shouldly;
 namespace Gebhardt.Acc.PrismatCommunicationTest.Services;
 
 [TestClass]
-[Ignore]
 public class TelegramHostCommunicatorTest
 {
     [TestMethod]

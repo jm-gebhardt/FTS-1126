@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,11 +14,16 @@ public class TelegramProcessorTestFixture<TProcessor, TTelegramType> : MassTrans
 {
     public TProcessor Processor { get; private set; } = null!;
 
-    public TelegramProcessorTestFixture()
+    public TelegramProcessorTestFixture(bool? useToPrismatConfiguration=false)
     {
+        string serviceKey = useToPrismatConfiguration != null && useToPrismatConfiguration.Value ? ServiceKeyProvider.ToPrismat : ServiceKeyProvider.FromPrismat;
         AddServices(s =>
         {
-            s.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
+            s.AddKeyedSingleton(serviceKey, (_, _) => TestConfigurationProvider.GetConfiguration());
+            if (useToPrismatConfiguration == null)
+            {
+                s.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
+            }
             s.AddSingleton(_ => new Mock<ILogger<TProcessor>>().Object);
             s.AddSingleton<TProcessor>();
         });

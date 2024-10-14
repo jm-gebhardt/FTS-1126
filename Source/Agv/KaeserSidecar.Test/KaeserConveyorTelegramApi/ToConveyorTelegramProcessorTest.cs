@@ -13,7 +13,7 @@ public class ToConveyorTelegramProcessorTest
     [TestMethod]
     public void TrySendLifeTelegram_NoTelegramToSend_LifeTelegramQueued()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>()
+        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
             .Build();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.TrySendLifeTelegram();
@@ -26,7 +26,7 @@ public class ToConveyorTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoDemandLifeTelegramDue_ReturnsLifeTelegram()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>()
+        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
             .Build();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
@@ -40,7 +40,7 @@ public class ToConveyorTelegramProcessorTest
     [TestMethod]
     public void ProcessReceivedTelegram_FullSendReceiveCycle_AcknowledgementHandled()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>()
+        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
             .Build();
         var telegram = new Life(DateTime.UtcNow);
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
@@ -56,7 +56,7 @@ public class ToConveyorTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoAcknowledgementReceived_ResendUntilMaxRetryIsReached()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>()
+        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
             .Build();
 
         var now = DateTime.UtcNow;

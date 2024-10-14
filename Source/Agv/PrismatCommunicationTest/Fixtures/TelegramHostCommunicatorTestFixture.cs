@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -18,7 +19,7 @@ public class TelegramHostCommunicatorTestFixture : FixtureBase
     {
         AddServices(s =>
         {
-            s.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
+            s.AddKeyedSingleton(ServiceKeyProvider.ToPrismat, (_, _) => TestConfigurationProvider.GetConfiguration());
             s.AddSingleton(_ => new Mock<ILogger<ToPrismatTelegramProcessor>>().Object);
             s.AddSingleton(_ => new Mock<ILogger<TelegramHostCommunicator>>().Object);
             s.AddSingleton<ToPrismatTelegramProcessor>();
