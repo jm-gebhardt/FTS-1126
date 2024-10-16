@@ -62,7 +62,6 @@ public class TriggerController: Controller
     /// Assign a trigger to a location.
     /// </summary>
     /// <param name="id">The id of the trigger.</param>
-    /// <param name="nodeId">The node id, if the trigger is assigned to a node.</param>
     /// <param name="location">The location of the trigger.</param>
     /// <returns>The new location.</returns>
     /// <response code="200">Ok</response>
@@ -70,12 +69,11 @@ public class TriggerController: Controller
     /// <response code="400">More than one location set.</response>
     [HttpPatch]
     [Route("/trigger/{id:guid}/location")]
-    public async Task<ActionResult<TriggerLocationDto>> AssignTriggerToLocation([FromRoute] Guid id, [FromQuery] string? nodeId, [FromBody] TriggerLocationDto? location)
+    public async Task<ActionResult<TriggerLocationDto>> AssignTriggerToLocation([FromRoute] Guid id, [FromBody] TriggerLocationDto location)
     {
-        ICollection<PolygonPoint> polygonPoints = location?.Polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(location.Polygon) : [];
-        ICollection<ConfigurationParameter>? parameters = location?.ConfigurationParameters != null ? _mapper.Map<ICollection<ConfigurationParameter>>(location.ConfigurationParameters) : null;
-        string? node = location?.NodeId ?? nodeId;
-        Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, node, location?.EdgeId, polygonPoints, location?.MapId, parameters));
+        ICollection<PolygonPoint> polygonPoints = location.Polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(location.Polygon) : [];
+        ICollection<ConfigurationParameter>? parameters = location.ConfigurationParameters != null ? _mapper.Map<ICollection<ConfigurationParameter>>(location.ConfigurationParameters) : null;
+        Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, location.NodeId, location.EdgeId, polygonPoints, location.MapId, parameters));
         return Ok(_mapper.Map<TriggerLocationDto>(response.Message.Location));
     }
 

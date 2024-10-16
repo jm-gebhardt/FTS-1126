@@ -31,7 +31,7 @@ public class TriggerControllerTest
             .WithTriggerLocation(location)
             .Build();
 
-        var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(Guid.NewGuid(), location.NodeId, location));
+        var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(Guid.NewGuid(), location));
         locationDto.Id.ShouldBe(location.Id);
     }
 

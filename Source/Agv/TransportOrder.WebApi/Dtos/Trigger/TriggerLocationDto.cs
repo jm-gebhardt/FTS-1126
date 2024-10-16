@@ -11,7 +11,7 @@ public record TriggerLocationDto
     /// <summary>
     /// The id of the location.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
 
     /// <summary>
     /// The node id, if set.
@@ -43,6 +43,5 @@ public record TriggerLocationDto
     {
         Id = Guid.NewGuid();
         Polygon = [];
-        MapId = Guid.NewGuid();
     }
 }
