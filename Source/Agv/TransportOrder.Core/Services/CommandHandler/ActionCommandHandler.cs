@@ -121,7 +121,11 @@ public class ActionCommandHandler :
                     actionGroup.AssignedAgv.GetValueOrDefault(),
                     actionGroup.CorrelationId,
                     "Order Started",
-                    $"Order {actionGroup.OrderId} has been started");
+                    $"Order {actionGroup.OrderId} has been started",
+                    new Dictionary<string, object?>
+                    {
+                        { LogLabels.OrderId, actionGroup.OrderId }
+                    });
                 await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
             }
             _logger.LogOrderInformation(
@@ -129,7 +133,12 @@ public class ActionCommandHandler :
                 actionGroup.AssignedAgv.GetValueOrDefault(),
                 actionGroup.CorrelationId,
                 "Order Updated",
-                $"{action.ActionType} of order {actionGroup.OrderId} has been started");
+                $"{action.ActionType} of order {actionGroup.OrderId} has been started",
+                new Dictionary<string, object?>
+                {
+                    { LogLabels.OrderId, actionGroup.OrderId },
+                    { LogLabels.ActionType, action.ActionType}
+                });
             _logger.LogInformation("{ActionType} for action group {CorrelationId} has started.", action.ActionType, actionGroup.CorrelationId);
             await _actionService.LogStationUpdate(assignedAgv, action, actionGroup);
         }
