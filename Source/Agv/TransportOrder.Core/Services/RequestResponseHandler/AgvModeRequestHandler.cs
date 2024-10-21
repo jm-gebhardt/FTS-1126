@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using MassTransit;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -39,11 +40,11 @@ public class AgvModeRequestHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
     {
-        (var agvCorrelationId, string? initiatingUser, string? reason, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, MaintenanceReason? maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        await _bus.Publish(new SetMaintenanceMode(agv.CorrelationId, initiatingUser, reason, assignedActionPolicy, currentActionPolicy, cancelManualActions), context.CancellationToken);
+        await _bus.Publish(new SetMaintenanceMode(agv.CorrelationId, initiatingUser, maintenanceReason, reasonDescription, assignedActionPolicy, currentActionPolicy, cancelManualActions), context.CancellationToken);
 
         await context.RespondAsync(new Success());
     }

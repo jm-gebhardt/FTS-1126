@@ -13,6 +13,7 @@ public static class LogLabels
     public const string ActionType = "ActionType";
     public const string NodeId = "NodeId";
     public const string Reason = "Reason";
+    public const string ReasonDescription = "ReasonDescription";
     public const string NodeState = "NodeState";
     public const string User = "User";
     public const string AgvMode = "AgvMode";

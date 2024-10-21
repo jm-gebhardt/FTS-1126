@@ -166,17 +166,20 @@ public class AgvTest
     {
         var agv = AgvGenerator.GenerateRawAgv();
         const string initiatingUser = "a name";
-        const string reason = "a reason";
+        const LockReason lockReason = LockReason.Other;
+        const string reasonDescription = "a reason description";
         const AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.LeaveAssigned;
         const CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause;
         const bool cancelManualActions = true;
-        agv.PrepareLockedMode(reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
+        agv.PrepareLockedMode(lockReason, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
 
         agv.IsLocked.ShouldBeFalse();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.PendingType.ShouldBe(ModeType.Locked);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
-        agv.Mode.Reason.ShouldBe(reason);
+        agv.Mode.LockReason.ShouldBe(lockReason);
+        agv.Mode.MaintenanceReason.ShouldBeNull();
+        agv.Mode.ReasonDescription.ShouldBe(reasonDescription);
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(assignedActionPolicy);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(currentActionPolicy);
         agv.Mode.CancelManualActions.ShouldBe(cancelManualActions);
@@ -192,7 +195,9 @@ public class AgvTest
         agv.Mode.PendingType.ShouldBe(ModeType.Locked);
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.InitiatingUser.ShouldBeNull();
-        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.LockReason.ShouldBeNull();
+        agv.Mode.MaintenanceReason.ShouldBeNull();
+        agv.Mode.ReasonDescription.ShouldBeNull();
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.Reset);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.FinishAction);
         agv.Mode.CancelManualActions.ShouldBeFalse();
@@ -212,7 +217,8 @@ public class AgvTest
         agv.Mode.PendingType.ShouldBeNull();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
-        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.LockReason.ShouldBeNull();
+        agv.Mode.ReasonDescription.ShouldBeNull();
     }
 
     [TestMethod]
@@ -229,7 +235,9 @@ public class AgvTest
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.PendingType.ShouldBe(ModeType.UserMode);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
-        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.LockReason.ShouldBeNull();
+        agv.Mode.MaintenanceReason.ShouldBeNull();
+        agv.Mode.ReasonDescription.ShouldBeNull();
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(assignedActionPolicy);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(currentActionPolicy);
         agv.Mode.CancelManualActions.ShouldBe(cancelManualActions);
@@ -245,7 +253,9 @@ public class AgvTest
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.PendingType.ShouldBe(ModeType.UserMode);
         agv.Mode.InitiatingUser.ShouldBeNull();
-        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.LockReason.ShouldBeNull();
+        agv.Mode.MaintenanceReason.ShouldBeNull();
+        agv.Mode.ReasonDescription.ShouldBeNull();
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.LeaveAssigned);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.Pause);
         agv.Mode.CancelManualActions.ShouldBeFalse();
@@ -256,17 +266,19 @@ public class AgvTest
     {
         var agv = AgvGenerator.GenerateRawAgv();
         const string initiatingUser = "a name";
-        const string reason = "a reason";
+        const MaintenanceReason maintenanceReason = MaintenanceReason.Other;
+        const string reasonDescription = "a reason";
         const AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.LeaveAssigned;
         const CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishActionGroup;
         const bool cancelManualActions = true;
-        agv.PrepareMaintenanceMode(reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
+        agv.PrepareMaintenanceMode(maintenanceReason, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
 
         agv.IsLocked.ShouldBeFalse();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.PendingType.ShouldBe(ModeType.Maintenance);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
-        agv.Mode.Reason.ShouldBe(reason);
+        agv.Mode.MaintenanceReason.ShouldBe(maintenanceReason);
+        agv.Mode.ReasonDescription.ShouldBe(reasonDescription);
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(assignedActionPolicy);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(currentActionPolicy);
         agv.Mode.CancelManualActions.ShouldBe(cancelManualActions);
@@ -276,14 +288,16 @@ public class AgvTest
     public void PrepareMaintenanceMode_InitiatingUserAndPoliciesNotGiven_ModeSwitchPreparedWithDefault()
     {
         var agv = AgvGenerator.GenerateRawAgv();
-        const string reason = "a reason";
-        agv.PrepareMaintenanceMode(reason);
+        const MaintenanceReason maintenanceReason = MaintenanceReason.Other;
+        const string reasonDescription = "reason description";
+        agv.PrepareMaintenanceMode(maintenanceReason, reasonDescription);
 
         agv.IsLocked.ShouldBeFalse();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.PendingType.ShouldBe(ModeType.Maintenance);
         agv.Mode.InitiatingUser.ShouldBeNull();
-        agv.Mode.Reason.ShouldBe(reason);
+        agv.Mode.MaintenanceReason.ShouldBe(maintenanceReason);
+        agv.Mode.ReasonDescription.ShouldBe(reasonDescription);
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.Reset);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.Pause);
         agv.Mode.CancelManualActions.ShouldBe(false);
@@ -303,7 +317,9 @@ public class AgvTest
         agv.Mode.PendingType.ShouldBeNull();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
-        agv.Mode.Reason.ShouldBeNull();
+        agv.Mode.LockReason.ShouldBeNull();
+        agv.Mode.MaintenanceReason.ShouldBeNull();
+        agv.Mode.ReasonDescription.ShouldBeNull();
     }
 
     [TestMethod]

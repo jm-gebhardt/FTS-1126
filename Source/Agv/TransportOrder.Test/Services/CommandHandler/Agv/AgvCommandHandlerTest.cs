@@ -357,7 +357,10 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(new LockAgv(agv.CorrelationId, "reason", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
+        
+        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(
+            new LockAgv(agv.CorrelationId, LockReason.Other, "reason description", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
+        
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
     }
@@ -368,7 +371,8 @@ public class AgvCommandHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithoutAgv();
-        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(new LockAgv(agvCorrelationId, "reason", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
+        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(
+            new LockAgv(agvCorrelationId, LockReason.Other, "reason", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
 
@@ -734,19 +738,20 @@ public class AgvCommandHandlerTest
     public async Task Consume_SetMaintenanceMode_ValidData_PublishesAgvModeChangePending()
     {
         const string initiatingUser = "user";
-        const string reason = "That is the reason";
+        const MaintenanceReason maintenanceReason = MaintenanceReason.Other;
+        const string reasonDescription = "reason description";
 
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        var command = new SetMaintenanceMode(agv.CorrelationId, initiatingUser, reason, AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.FinishActionGroup, false);
+        var command = new SetMaintenanceMode(agv.CorrelationId, initiatingUser, maintenanceReason, reasonDescription, AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.FinishActionGroup, false);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<SetMaintenanceMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
         agv.Mode.PendingType.ShouldBe(ModeType.Maintenance);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
-        agv.Mode.Reason.ShouldBe(reason);
+        agv.Mode.MaintenanceReason.ShouldBe(maintenanceReason);
     }
 
     [TestMethod]

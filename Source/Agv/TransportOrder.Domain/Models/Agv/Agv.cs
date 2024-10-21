@@ -410,9 +410,15 @@ public class Agv : IAgv
     /// <summary>
     /// Prepare transition to locked mode.
     /// </summary>
-    public void PrepareLockedMode(string? reason=null, string? initiatingUser = null, CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishAction, AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, bool cancelManualActions = false)
+    public void PrepareLockedMode(
+        LockReason? lockReason = null,
+        string? reasonDescription = null,
+        string? initiatingUser = null, 
+        CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishAction, 
+        AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, 
+        bool cancelManualActions = false)
     {
-        Mode.PrepareSwitch(ModeType.Locked, reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions) ;
+        Mode.PrepareSwitch(ModeType.Locked, lockReason, null, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
     }
 
     /// <summary>
@@ -421,7 +427,7 @@ public class Agv : IAgv
     public void Unlock(string? initiatingUser = null)
     {
         SetIdle();
-        Mode.PrepareSwitch(ModeType.Normal, null, initiatingUser);
+        Mode.PrepareSwitch(ModeType.Normal, initiatingUser: initiatingUser);
         Mode.Switch();
         IsLocked = false;
     }
@@ -439,7 +445,7 @@ public class Agv : IAgv
     /// </summary>
     public void SetNormalMode(string? initiatingUser = null)
     {
-        Mode.PrepareSwitch(ModeType.Normal, null, initiatingUser);
+        Mode.PrepareSwitch(ModeType.Normal, initiatingUser: initiatingUser);
         Mode.Switch();
         SetIdle();
         IsLocked = false;
@@ -448,9 +454,15 @@ public class Agv : IAgv
     /// <summary>
     /// Prepare transition to maintenance mode.
     /// </summary>
-    public void PrepareMaintenanceMode(string? reason, string? initiatingUser = null, CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause, AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, bool cancelManualActions = false)
+    public void PrepareMaintenanceMode(
+        MaintenanceReason? maintenanceReason,
+        string? reasonDescription,
+        string? initiatingUser = null, 
+        CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause, 
+        AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, 
+        bool cancelManualActions = false)
     {
-        Mode.PrepareSwitch(ModeType.Maintenance, reason: reason, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions);
+        Mode.PrepareSwitch(ModeType.Maintenance, maintenanceReason:maintenanceReason, reasonDescription: reasonDescription, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions);
     }
 
     /// <summary>

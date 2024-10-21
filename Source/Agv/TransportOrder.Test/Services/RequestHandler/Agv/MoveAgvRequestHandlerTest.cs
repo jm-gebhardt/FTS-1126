@@ -244,7 +244,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgvToCoordinate_TargetPositionIsInRestrictedArea_ThrowsPositionIsInRestrictedAreaException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.PrepareMaintenanceMode("maintenance");
+        agv.PrepareMaintenanceMode(MaintenanceReason.Other, "Reason Description");
         MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(true)
@@ -258,7 +258,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgvToCoordinate_ValidData_MaintenanceMode_RespondsAgvMoveSuccessfulPublishesQueueActionGroup()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.PrepareMaintenanceMode("maintenance");
+        agv.PrepareMaintenanceMode(MaintenanceReason.Other, "Reason Description");
         MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(false)

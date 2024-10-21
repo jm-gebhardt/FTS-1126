@@ -8,8 +8,10 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the agv.</param>
 /// <param name="InitiatingUser">The email of the user that set the mode.</param>
-/// <param name="Reason">The reason for setting the mode.</param>
+/// <param name="MaintenanceReason">The reason for setting the mode.</param>
+/// <param name="ReasonDescription">The description of the reason.</param>
 /// <param name="AssignedActionPolicy">The policy what to do with assigned action groups.</param>
 /// <param name="CurrentActionPolicy">The policy what to do with the currently running action group.</param>
 /// <param name="CancelManualActions">Cancel manual actions, if true.</param>
-public record SetMaintenanceMode(Guid CorrelationId, string? InitiatingUser, string? Reason, AssignedActionGroupPolicy AssignedActionPolicy, CurrentActionGroupPolicy CurrentActionPolicy, bool CancelManualActions): CorrelatedBy<Guid>;
+public record SetMaintenanceMode(
+    Guid CorrelationId, string? InitiatingUser, MaintenanceReason? MaintenanceReason, string? ReasonDescription, AssignedActionGroupPolicy AssignedActionPolicy, CurrentActionGroupPolicy CurrentActionPolicy, bool CancelManualActions): CorrelatedBy<Guid>;

@@ -18,7 +18,12 @@ public record LockAgv : CorrelatedBy<Guid>
     /// <summary>
     /// The lock reason.
     /// </summary>
-    public string Reason {get; }
+    public LockReason LockReason {get; }
+
+    /// <summary>
+    /// The description of the reason for being locked.
+    /// </summary>
+    public string ReasonDescription { get; }
 
     /// <summary>
     /// The email of the user who requested lock.
@@ -41,10 +46,18 @@ public record LockAgv : CorrelatedBy<Guid>
     public bool CancelManualActions { get; set; }
 
     /// <inheritdoc cref="LockAgv"/>
-    public LockAgv(Guid correlationId, string reason, string? initiatingUser, AssignedActionGroupPolicy assignedActionPolicy, CurrentActionGroupPolicy currentActionPolicy, bool cancelManualActions)
+    public LockAgv(
+        Guid correlationId, 
+        LockReason lockReason, 
+        string reasonDescription, 
+        string? initiatingUser, 
+        AssignedActionGroupPolicy assignedActionPolicy, 
+        CurrentActionGroupPolicy currentActionPolicy, 
+        bool cancelManualActions)
     {
         CorrelationId = correlationId;
-        Reason = reason;
+        LockReason = lockReason;
+        ReasonDescription = reasonDescription;
         InitiatingUser = initiatingUser;
         AssignedActionPolicy = assignedActionPolicy;
         CurrentActionPolicy = currentActionPolicy;

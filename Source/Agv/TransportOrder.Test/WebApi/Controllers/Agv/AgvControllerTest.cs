@@ -45,13 +45,39 @@ public class AgvControllerTest
 
         var agvDto = await fixture.GetControllerResultAsync(c => c.GetAgv(correlationId));
 
-        var expectedAgvDto = new AgvDto(correlationId, agvSerialNumber, agvSerialNumber, AgvStateType.Idle, agvDto.TimeOfStateTransition, DateTime.MinValue, false, false, true, true, 10d, true, null, new List<AgvErrorDto>(), new GraphNodeDto {Id = "WAY1", Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f}, new AgvMode(ModeType.Normal, correlationId));
+        var expectedAgvDto = new AgvDto(
+            correlationId, 
+            agvSerialNumber, 
+            agvSerialNumber, 
+            AgvStateType.Idle, 
+            agvDto.TimeOfStateTransition, 
+            DateTime.MinValue, 
+            false, 
+            false, 
+            true, 
+            true, 
+            10d, 
+            true, 
+            null,
+            new List<AgvErrorDto>(), 
+            new GraphNodeDto 
+            {
+                Id = "WAY1", 
+                Type = AgvGraph.NodeType.WayPoint, 
+                X = 1.0f, 
+                Y = 2.0f, 
+                Z = 0.0f, 
+                Theta = 0.0f
+            }, 
+            new AgvMode(ModeType.Normal, correlationId));
+
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
         agvDto.SerialNumber.ShouldBe(expectedAgvDto.SerialNumber);
         agvDto.BatteryCharge.ShouldBe(expectedAgvDto.BatteryCharge);
         agvDto.IsCharging.ShouldBe(expectedAgvDto.IsCharging);
         agvDto.IsLocked.ShouldBe(expectedAgvDto.IsLocked);
+        agvDto.AgvMode.ReasonDescription.ShouldBeNull();
         agvDto.IsOnline.ShouldBe(expectedAgvDto.IsOnline);
         agvDto.IsDisturbed.ShouldBe(expectedAgvDto.IsDisturbed);
         agvDto.IsAutomatic.ShouldBe(expectedAgvDto.IsAutomatic);
@@ -268,7 +294,7 @@ public class AgvControllerTest
         var controller = fixture.Controller;
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
-        var result = await controller.LockAgv(correlationId, "reason") as OkResult;
+        var result = await controller.LockAgv(correlationId, LockReason.Other, "reason description") as OkResult;
         result.ShouldNotBeNull();
 
         var harness = fixture.MediatorTestHarness;
@@ -469,7 +495,7 @@ public class AgvControllerTest
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        var actionResult = await fixture.Controller.SetMaintenanceMode(fixture.AgvSerialNumbers[2].ToGuid(), "reason", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, true);
+        var actionResult = await fixture.Controller.SetMaintenanceMode(fixture.AgvSerialNumbers[2].ToGuid(), MaintenanceReason.Other, "reason description", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, true);
         var result = actionResult as OkObjectResult;
         result.ShouldBeAssignableTo<OkResult>();
         (await fixture.TestHarness.Published.Any<SetMaintenanceMode>()).ShouldBeTrue();

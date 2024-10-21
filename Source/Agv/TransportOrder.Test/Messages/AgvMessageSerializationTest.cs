@@ -12,7 +12,7 @@ public class AgvMessageSerializationTest
     [TestMethod]
     public void LockAgv_ValidaData_SerializesAllProperties()
     {
-        var message = new LockAgv(Guid.NewGuid(), "reason", "InitiatingUser", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, true);
+        var message = new LockAgv(Guid.NewGuid(), LockReason.Other, "description", "InitiatingUser", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, true);
         var fixture = new MessageSerialisationTestFixture();
 
         fixture.ValidateSerialization(message);
@@ -30,7 +30,7 @@ public class AgvMessageSerializationTest
     [TestMethod]
     public void SetMaintenanceMode_ValidaData_SerializesAllProperties()
     {
-        var message = new SetMaintenanceMode(Guid.NewGuid(), "reason", "InitiatingUser", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, true);
+        var message = new SetMaintenanceMode(Guid.NewGuid(), "InitiatingUser", MaintenanceReason.Other, "description",  AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, true);
         var fixture = new MessageSerialisationTestFixture();
 
         fixture.ValidateSerialization(message);
@@ -40,7 +40,16 @@ public class AgvMessageSerializationTest
     public void AgvModeChangePending_ValidData_SerializedAllProperties()
     {
         var agvMode = new AgvMode(ModeType.Normal, Guid.NewGuid());
-        agvMode.PrepareSwitch(ModeType.Maintenance, "reason", "InitiatingUser", CurrentActionGroupPolicy.Pause, AssignedActionGroupPolicy.LeaveAssigned, true);
+        
+        agvMode.PrepareSwitch(
+            ModeType.Maintenance, 
+            lockReason:LockReason.Other,
+            reasonDescription: "reason description",
+            initiatingUser:"InitiatingUser", 
+            currentActionPolicy: CurrentActionGroupPolicy.Pause, 
+            assignedActionPolicy: AssignedActionGroupPolicy.LeaveAssigned, 
+            cancelManualActions: true);
+        
         var message = new AgvModeChangePending(agvMode.AgvCorrelationId, agvMode);
         var fixture = new MessageSerialisationTestFixture();
 

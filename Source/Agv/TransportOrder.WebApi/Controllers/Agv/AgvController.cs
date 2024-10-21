@@ -376,9 +376,25 @@ public class AgvController : Controller
     /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/lock")]
-    public async Task<ActionResult> LockAgv(Guid correlationId, [FromQuery] string reason, [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.FinishAction, [FromQuery] bool cancelManualActions = false)
+    public async Task<ActionResult> LockAgv(
+        Guid correlationId, 
+        [FromQuery] LockReason lockReason, 
+        [FromQuery] string reasonDescription,
+        [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, 
+        [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.FinishAction, 
+        [FromQuery] bool cancelManualActions = false)
     {
-        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(new LockAgv(correlationId, reason, User.GetEmail(), assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
+        var lockAgvCommand = new LockAgv(
+            correlationId, 
+            lockReason, 
+            reasonDescription, 
+            User.GetEmail(), 
+            assignedActionGroupsPolicy,
+            currentActionGroupPolicy,
+            cancelManualActions);
+        
+        Response <LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(lockAgvCommand);
+        
         if (response.Message is AgvNotFoundResult)
         {
             return NotFound();
@@ -408,9 +424,25 @@ public class AgvController : Controller
     /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/maintenanceMode")]
-    public async Task<ActionResult> SetMaintenanceMode(Guid correlationId, [FromQuery] string reason, [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause, [FromQuery] bool cancelManualActions = false)
+    public async Task<ActionResult> SetMaintenanceMode(
+        Guid correlationId, 
+        [FromQuery] MaintenanceReason maintenanceReason,
+        [FromQuery] string reasonDescription,
+        [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, 
+        [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause, 
+        [FromQuery] bool cancelManualActions = false)
     {
-        await _setMaintenanceModeClient.GetResponse<Success>(new SetMaintenanceMode(correlationId, User.GetEmail(), reason, assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
+        var setMaintenanceModeCommand = new SetMaintenanceMode(
+            correlationId,
+            User.GetEmail(),
+            maintenanceReason,
+            reasonDescription,
+            assignedActionGroupsPolicy,
+            currentActionGroupPolicy,
+            cancelManualActions);
+
+        await _setMaintenanceModeClient.GetResponse<Success>(setMaintenanceModeCommand);
+
         return Ok();
     }
 

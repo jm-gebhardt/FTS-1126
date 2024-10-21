@@ -547,7 +547,13 @@ public class AgvCommandHandler :
         _logger.LogAgvInformation(LogCodes.AgvModeChangePending, agv.CorrelationId, "AGV Mode Change Pending",
             $"AGV {agv.SerialNumber} is pending mode change to {agv.Mode.PendingType.ToString()}",
             new Dictionary<string, object?>
-                { { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.AgvMode, agv.Mode.PendingType.ToString() }, { LogLabels.User, agv.Mode.InitiatingUser}, {LogLabels.Reason, agv.Mode.Reason} });
+            { 
+                { LogLabels.AgvSerialNumber, agv.SerialNumber }, 
+                { LogLabels.AgvMode, agv.Mode.PendingType.ToString() }, 
+                { LogLabels.User, agv.Mode.InitiatingUser}, 
+                { LogLabels.Reason, agv.Mode.LockReason.ToString() ?? agv.Mode.MaintenanceReason.ToString() }, 
+                { LogLabels.ReasonDescription, agv.Mode.ReasonDescription } 
+            });
     }
 
     /// <summary>
@@ -562,8 +568,15 @@ public class AgvCommandHandler :
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed",
-            $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'",new Dictionary<string, object?>
-                { { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.AgvMode, agv.Mode.Type.ToString()  } , { LogLabels.User, agv.Mode.InitiatingUser}, {LogLabels.Reason, agv.Mode.Reason}});
+            $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'",
+            new Dictionary<string, object?>
+            { 
+                { LogLabels.AgvSerialNumber, agv.SerialNumber }, 
+                { LogLabels.AgvMode, agv.Mode.Type.ToString() } , 
+                { LogLabels.User, agv.Mode.InitiatingUser }, 
+                { LogLabels.Reason, agv.Mode.LockReason.ToString() ?? agv.Mode.MaintenanceReason.ToString() },
+                { LogLabels.ReasonDescription, agv.Mode.ReasonDescription }
+            });
 
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
         await context.Publish(new AgvBecameIdle(agv.CorrelationId));
@@ -574,16 +587,23 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
     {
-        (var agvCorrelationId, string? initiatingUser, string? reason, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, MaintenanceReason? maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        agv.PrepareMaintenanceMode(reason, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
+        agv.PrepareMaintenanceMode(maintenanceReason, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
         _logger.LogAgvInformation(LogCodes.AgvModeChangePending, agv.CorrelationId, "AGV Mode Change Pending",
-            $"AGV {agv.SerialNumber} is pending mode change to {agv.Mode.PendingType.ToString()}", new Dictionary<string, object?>
-            { { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.AgvMode, agv.Mode.PendingType.ToString() }, { LogLabels.User, agv.Mode.InitiatingUser}, {LogLabels.Reason, agv.Mode.Reason} });
+            $"AGV {agv.SerialNumber} is pending mode change to {agv.Mode.PendingType.ToString()}", 
+            new Dictionary<string, object?>
+            { 
+                { LogLabels.AgvSerialNumber, agv.SerialNumber }, 
+                { LogLabels.AgvMode, agv.Mode.PendingType.ToString() }, 
+                { LogLabels.User, agv.Mode.InitiatingUser},
+                { LogLabels.Reason, agv.Mode.MaintenanceReason.ToString() },
+                { LogLabels.ReasonDescription, agv.Mode.ReasonDescription } 
+            });
     }
 
     /// <summary>
@@ -598,7 +618,7 @@ public class AgvCommandHandler :
             await context.RespondAsync(new AgvNotFoundResult(agvCorrelationId));
             return;
         }
-        agv.PrepareLockedMode(context.Message.Reason, context.Message.InitiatingUser, context.Message.CurrentActionPolicy, context.Message.AssignedActionPolicy, context.Message.CancelManualActions);
+        agv.PrepareLockedMode(context.Message.LockReason, context.Message.ReasonDescription, context.Message.InitiatingUser, context.Message.CurrentActionPolicy, context.Message.AssignedActionPolicy, context.Message.CancelManualActions);
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(LockAgv), agv.CorrelationId);
@@ -606,8 +626,15 @@ public class AgvCommandHandler :
         await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
         await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
         _logger.LogAgvInformation(LogCodes.AgvModeChangePending, agv.CorrelationId, "AGV Mode Change Pending",
-            $"AGV {agv.SerialNumber} is pending mode change to locked mode", new Dictionary<string, object?>
-            { { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.AgvMode, agv.Mode.Type.ToString() } , { LogLabels.User, agv.Mode.InitiatingUser}, {LogLabels.Reason, agv.Mode.Reason}});
+            $"AGV {agv.SerialNumber} is pending mode change to locked mode", 
+            new Dictionary<string, object?>
+            { 
+                { LogLabels.AgvSerialNumber, agv.SerialNumber }, 
+                { LogLabels.AgvMode, agv.Mode.Type.ToString() } , 
+                { LogLabels.User, agv.Mode.InitiatingUser},
+                { LogLabels.Reason, agv.Mode.LockReason.ToString() },
+                { LogLabels.ReasonDescription, agv.Mode.ReasonDescription }
+            });
     }
 
     /// <summary>
@@ -629,19 +656,27 @@ public class AgvCommandHandler :
         }
         if (agv.IsLocked)
         {
-            _logger.LogAgvInformation(LogCodes.AgvLocked, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked", new Dictionary<string, object?>
+            _logger.LogAgvInformation(LogCodes.AgvLocked, agv.CorrelationId, "AGV Locked", $"AGV {agv.SerialNumber} is locked", 
+                new Dictionary<string, object?>
                 {
-                    { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.AgvMode, agv.Mode.Type.ToString() },
-                    { LogLabels.User, agv.Mode.InitiatingUser }, { LogLabels.Reason, agv.Mode.Reason }
+                    { LogLabels.AgvSerialNumber, agv.SerialNumber }, 
+                    { LogLabels.AgvMode, agv.Mode.Type.ToString() },
+                    { LogLabels.User, agv.Mode.InitiatingUser },
+                    { LogLabels.Reason, agv.Mode.LockReason.ToString() ?? agv.Mode.MaintenanceReason.ToString() },
+                    { LogLabels.ReasonDescription, agv.Mode.ReasonDescription }
                 });
             await context.Publish(new AgvLockedChanged(agv.CorrelationId, true));
         }
         else
         {
-            _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'", new Dictionary<string, object?>
+            _logger.LogAgvInformation(LogCodes.AgvModeChanged, agv.CorrelationId, "AGV Mode Changed", $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'", 
+                new Dictionary<string, object?>
                 {
-                    { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.AgvMode, agv.Mode.Type.ToString() },
-                    { LogLabels.User, agv.Mode.InitiatingUser }, { LogLabels.Reason, agv.Mode.Reason }
+                    { LogLabels.AgvSerialNumber, agv.SerialNumber }, 
+                    { LogLabels.AgvMode, agv.Mode.Type.ToString() },
+                    { LogLabels.User, agv.Mode.InitiatingUser },
+                    { LogLabels.Reason, agv.Mode.LockReason.ToString() ?? agv.Mode.MaintenanceReason.ToString() },
+                    { LogLabels.ReasonDescription, agv.Mode.ReasonDescription }
                 });
         }
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));

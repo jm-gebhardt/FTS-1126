@@ -19,7 +19,7 @@ public class AgvModeRequestHandlerTest
         AgvRequestsHandlerTestFixture<SetMaintenanceMode, AgvModeRequestHandler > fixture = new AgvRequestsHandlerTestFixture<SetMaintenanceMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
-        await fixture.GetResponseAsync<Success>(new SetMaintenanceMode(agv.CorrelationId, "user", "reason", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
+        await fixture.GetResponseAsync<Success>(new SetMaintenanceMode(agv.CorrelationId, "user", MaintenanceReason.Other, "reason description", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
 
         await fixture.ShouldHavePublishedAsync<SetMaintenanceMode>();
     }
