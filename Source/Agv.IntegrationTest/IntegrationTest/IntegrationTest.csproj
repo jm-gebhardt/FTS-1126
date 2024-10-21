@@ -6,7 +6,7 @@
     </PropertyGroup>
     <Import Project="..\..\Agv\SharedProjectSettings.csproj" />
     <ItemGroup>
-      <PackageReference Include="Azure.Identity" Version="1.12.1" />
+      <PackageReference Include="Azure.Identity" Version="1.13.0" />
       <PackageReference Include="IdentityModel" Version="7.0.0" />
       <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
