@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,5 +12,6 @@ public class SettingEntityConfiguration : IEntityTypeConfiguration<Setting>
     public void Configure(EntityTypeBuilder<Setting> builder)
     {
         builder.HasKey(e => e.Id);
+        builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Description);
     }
 }

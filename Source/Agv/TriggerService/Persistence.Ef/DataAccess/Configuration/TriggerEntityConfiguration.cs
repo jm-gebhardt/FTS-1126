@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TriggerService.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,6 +16,7 @@ public class TriggerEntityConfiguration : IEntityTypeConfiguration<Trigger>
         builder.OwnsMany<ConfigurationParameter>(e => e.ConfigurationParameters, o =>
         {
             o.ToTable("TriggerServiceConfigurationParameters");
+            o.Property(c => c.Name).HasMaxLength(DbStringLimits.Description);
         });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
     }

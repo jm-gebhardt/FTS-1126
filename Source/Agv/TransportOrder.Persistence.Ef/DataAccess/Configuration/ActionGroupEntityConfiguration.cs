@@ -8,9 +8,6 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 /// <inheritdoc />
 public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGroup>
 {
-    private const int MaxStateLength = 50;
-    private const int MaxActionTypeLength = 50;
-
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<ActionGroup> builder)
     {
@@ -19,9 +16,10 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.IsMovingCargo);
         builder.Ignore(e => e.IsChargingOrder);
         builder.Ignore(e => e.IsIncomplete);
-        builder.Property(g => g.State).HasMaxLength(MaxStateLength);
+        builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);
         builder.HasIndex(g => g.AssignedAgv);
         builder.Property(e => e.AssignedAgv);
+        builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
 
         // Reasons is just an information, we will never want to query it, so we can simply store it as json without introducing new tables
         builder.Property(g => g.Reasons).HasJsonConversion();
@@ -33,10 +31,11 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             a.Ignore(o => o.IsMoveToCoordinate);
             a.Property(e => e.Sequence);
             a.Property(e => e.Nodes).HasJsonConversion();
-            a.Property(e => e.State).HasMaxLength(MaxStateLength);
-            a.Property(e => e.ActionType).HasMaxLength(MaxActionTypeLength);
+            a.Property(e => e.State).HasMaxLength(DbStringLimits.State);
+            a.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
             a.OwnsOne(e => e.Target, c =>
             {
+                c.Property(t => t.NodeId).HasMaxLength(DbStringLimits.NodeId);
                 c.OwnsOne(t => t.Position);
             });
             a.Property(o => o.InfoToAgv).HasJsonConversion();

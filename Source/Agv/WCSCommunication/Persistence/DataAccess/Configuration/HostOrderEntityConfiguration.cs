@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,8 +18,11 @@ public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>
         {
             o.HasKey(e => e.CorrelationId);
             o.Property(e => e.ActionGroupId);
+            o.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
+            o.Property(e => e.Node).HasMaxLength(DbStringLimits.NodeId);
             o.ToTable(HostOrderActions);
         });
+        builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
         builder.Navigation(e => e.Actions).AutoInclude();
     }
 }

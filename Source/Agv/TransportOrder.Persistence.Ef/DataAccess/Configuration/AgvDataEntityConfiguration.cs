@@ -19,6 +19,8 @@ public class AgvDataEntityConfiguration : IEntityTypeConfiguration<AgvData>
 
         builder.HasKey(e => e.CorrelationId);
         builder.Property(e => e.Type).HasMaxLength(MaxLength);
+        builder.Property(e => e.SoftwareVersion).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.Model).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.IpV4Address).HasMaxLength(15);
         builder.Property(e => e.Sensors).HasJsonConversion();
     }

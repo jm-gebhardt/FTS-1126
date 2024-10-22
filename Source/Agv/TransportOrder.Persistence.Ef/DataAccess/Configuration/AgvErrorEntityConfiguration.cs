@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -12,6 +13,8 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
     public void Configure(EntityTypeBuilder<AgvError> builder)
     {
         builder.HasKey(o => o.CorrelationId);
-        builder.Property(o => o.ErrorReferences).HasJsonConversion();
+        ValueConversionExtensions.HasJsonConversion(builder.Property(o => o.ErrorReferences));
+        builder.Property(o => o.ErrorCode).HasMaxLength(DbStringLimits.Description);
+        builder.Property(o => o.ErrorType).HasMaxLength(DbStringLimits.Description);
     }
 }

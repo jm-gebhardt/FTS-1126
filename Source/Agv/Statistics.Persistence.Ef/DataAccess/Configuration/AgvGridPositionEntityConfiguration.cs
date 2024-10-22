@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Statistics.Domain.Models;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.Statistics.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,5 +14,6 @@ public class AgvGridPositionEntityConfiguration : IEntityTypeConfiguration<GridA
         builder.ToTable("StatisticsGridAgvPositions");
         builder.HasKey(a => a.PositionId);
         builder.Property(m => m.GridId);
+        builder.Property(e => e.SerialNumber).HasMaxLength(DbStringLimits.Description);
     }
 }

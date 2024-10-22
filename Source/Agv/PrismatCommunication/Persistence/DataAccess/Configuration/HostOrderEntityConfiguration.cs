@@ -19,10 +19,13 @@ public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>
         builder.OwnsMany(e => e.Actions, o =>
         {
             o.HasKey(e => e.CorrelationId);
-            o.Property(e => e.ActionGroupId);
             o.ToTable(HostOrderActionsTable);
+            o.Property(e => e.ActionGroupId);
+            o.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
             o.Property(p => p.InfoToAgv).HasJsonConversion();
         });
+        builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
+        builder.Property(e => e.Hu).HasMaxLength(DbStringLimits.Hu);
         builder.Navigation(e => e.Actions).AutoInclude();
     }
 }

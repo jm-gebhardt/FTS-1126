@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Trigger;
@@ -10,9 +11,11 @@ public class TriggerEntityConfiguration : IEntityTypeConfiguration<Domain.Models
     public void Configure(EntityTypeBuilder<Domain.Models.Trigger.Trigger> builder)
     {
         builder.HasKey(e => e.Id);
+        builder.Property(e => e.DisplayName).HasMaxLength(DbStringLimits.Description);
         builder.OwnsMany(e => e.ConfigurationParameters, o =>
         {
             o.ToTable("DefaultTriggerConfigurationParameters");
+            o.Property(e => e.Name).HasMaxLength(DbStringLimits.Description);
         });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
         builder.HasMany(e => e.Locations)

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,6 +25,6 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
         builder.Property(e => e.MapId);
         builder.Property(e => e.EdgeId);
-        builder.Property(e => e.NodeId);
+        builder.Property(e => e.NodeId).HasMaxLength(DbStringLimits.NodeId);
     }
 }

@@ -15,6 +15,7 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<EfNode>
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).HasMaxLength(DbStringLimits.NodeId);
 
         builder.ConfigureAllProperties(except: new[] { nameof(EfNode.Maps), nameof(EfNode.AgvGraphs) });
     }

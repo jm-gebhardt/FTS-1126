@@ -14,11 +14,13 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
         builder.ToTable("StatisticsAgvErrors");
         builder.HasKey(e => e.ErrorId);
         builder.Property(e => e.PositionId);
+        builder.Property(o => o.ErrorCode).HasMaxLength(DbStringLimits.Description);
+        builder.Property(o => o.ErrorType).HasMaxLength(DbStringLimits.Description);
         builder.HasOne(e => e.Position)
             .WithMany(p => p.AgvErrors) 
             .HasForeignKey(e => e.PositionId)
             .OnDelete(DeleteBehavior.NoAction); // 
         builder.Navigation(e => e.Position).AutoInclude();
-        builder.ConfigureAllProperties(except: new[] { nameof(AgvError.Position) });
+        builder.ConfigureAllProperties(except: new[] { nameof(AgvError.Position), nameof(AgvError.ErrorCode), nameof(AgvError.ErrorType) });
     }
 }
