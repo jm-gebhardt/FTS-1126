@@ -142,6 +142,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IAgvRepository, AgvRepository>();
         services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
         services.AddTransient<IStationRepository, EfStationRepository>();
+        services.AddTransient<IQueueRepository, EfQueueRepository>();
 
         services.AddTransient<IMapRepository, EfMapRepository>();
 
