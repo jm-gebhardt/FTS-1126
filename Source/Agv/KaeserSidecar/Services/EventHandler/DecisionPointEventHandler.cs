@@ -125,6 +125,7 @@ public class DecisionPointEventHandler(
         HostOrder? pendingPickOrder;
         if (isDropping && hasLowBatteryLevel)
         {
+            logger.LogInformation("Reporting long loop order {Order} for dropping at WE03 at {Time}", actionGroup.OrderId, DateTime.UtcNow);
             return pickTarget;
         }
         if (isDropping)
@@ -133,14 +134,14 @@ public class DecisionPointEventHandler(
             if (pendingPickOrder != null)
             {
                 pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-                logger.LogInformation("Reporting order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
+                logger.LogInformation("Reporting long loop order {Order} for picking at target {Target} after dropping order {DropOrder} at {Time}", pendingPickOrder.OrderId, pickTarget, actionGroup.OrderId, DateTime.UtcNow);
             }
             return pickTarget;
         }
 
         pendingPickOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
         pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-        logger.LogInformation("Reporting order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
+        logger.LogInformation("Reporting long loop order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
         return pickTarget;
     }
 }

@@ -79,11 +79,50 @@ public class AgvActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionStarted_AlreadyAtConveyorStation_NoShortLoopAction_DoesNotPublishPublishAgvStartedShortLoopPick()
+    {
+        var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.OrderBy(c => c.Value).Last().Key;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        actionGroup.Actions.First().Nodes = [station, "other nodes"];
+
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
+
+        await fixture.TestHarness.Bus.Publish(actionStarted);
+        await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionStarted_StartNodeNotConveyorStation_AgvNotRemovedFromStationOccupancy()
     {
         const string station = "not conveyor station";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [station];
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithActionGroup(actionGroup);
+        fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
+        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+
+        var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
+
+        await fixture.TestHarness.Bus.Publish(actionStarted);
+        await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionStarted_NoNodes_AgvNotRemovedFromStationOccupancy()
+    {
+        const string station = "not conveyor station";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        actionGroup.Actions.First().Nodes = [];
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
         fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);

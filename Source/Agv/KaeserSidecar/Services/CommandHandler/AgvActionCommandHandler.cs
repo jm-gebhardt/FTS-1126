@@ -30,7 +30,7 @@ public class AgvActionCommandHandler(
         var actionCorrelationId = context.Message.CorrelationId;
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Nodes.First()));
+        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Nodes.FirstOrDefault()??""));
         if (action == null)
         {
             return;
@@ -41,7 +41,7 @@ public class AgvActionCommandHandler(
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-            if (action.Nodes.Length == 1 && station == action.Target.NodeId) 
+            if (action.Nodes.Length == 1 && station == action.Target.NodeId && order.Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node))) 
             {
                 configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation);
                 await context.Publish(new AgvStartedShortLoopPick(targetStation!, order.CorrelationId, pickTarget));

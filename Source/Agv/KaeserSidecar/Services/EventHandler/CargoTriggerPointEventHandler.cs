@@ -51,7 +51,7 @@ public class CargoTriggerPointEventHandler(ILogger<CargoTriggerPointEventHandler
         {
             logger.LogWarning("Inconsistent information on APL cargo state for Agv {Agv}: message content {MessageContent} / host order {HostOrder}", agv, hasCargo, isDropping);
         }
-
+        logger.LogInformation("Reporting cargo state of agv {Agv} running action group {ActionGroupCorrelationId} with cargo {HasCargo}", agv, actionGroup, hasCargo);
         conveyorCommunicator.ReportAplCargoState(hasCargo);
     }
 }

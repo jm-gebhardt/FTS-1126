@@ -86,16 +86,17 @@ public class ShortLoopTriggerPointEventHandler(
         
         if (isDropping && hasLowBatteryLevel)
         {
+            logger.LogInformation("Reporting order {Order} for dropping at WE03 at {Time}", hostOrder.OrderId, DateTime.UtcNow);
             return pickTarget;
         }
 
         if (isDropping)
         {
-            var pendingPickOrder = await hostOrderRepository.GetNextPickOnShortLoop();
+            var pendingPickOrder = await hostOrderRepository.GetNextPickOrderForShortLoopDualOperation();
             if (pendingPickOrder != null)
             {
                 pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-                logger.LogInformation("Reporting order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
+                logger.LogInformation("Reporting order {Order} for picking at target {Target} after dropping order {DropOrder}, at {Time}", pendingPickOrder.OrderId, pickTarget, hostOrder.OrderId, DateTime.UtcNow);
                 orderRepository.StorePickOrderReport(pickTarget, pendingPickOrder.CorrelationId);
             }
             return pickTarget;
@@ -118,7 +119,7 @@ public class ShortLoopTriggerPointEventHandler(
             conveyorCommunicator.ReportPalletPickDropStation(targetStation, false, pickStation);
             var pendingPickOrder = await hostOrderRepository.GetByIdAsync(orderId);
 
-            logger.LogInformation("Reporting order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickStation, DateTime.UtcNow);
+            logger.LogInformation("Late reporting of order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickStation, DateTime.UtcNow);
             orderRepository.StorePickOrderReport(pickStation, orderId);
         }
     }

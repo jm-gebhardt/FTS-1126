@@ -43,7 +43,7 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
 
     public ShortLoopTriggerPointEventHandlerTestFixture WithPickHostOrder(HostOrder? order)
     {
-        _hostOrderRepository.Setup(x => x.GetNextPickOnShortLoop()).ReturnsAsync(order);
+        _hostOrderRepository.Setup(x => x.GetNextPickOrderForShortLoopDualOperation()).ReturnsAsync(order);
         return this;
     }
 
