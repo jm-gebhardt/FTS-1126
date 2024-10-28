@@ -74,6 +74,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
         services.AddHostedService<AgvSettingsInitializer>();
         services.AddHostedService<TriggerLocationsInitializer>();
+        services.AddHostedService<FactoryTimeZoneInitializer>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
         services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
         // -  database
@@ -159,6 +160,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IRestrictedAreaRepository, EfRestrictedAreaRepository>();
         services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
         services.AddTransient<ICargoRepository, CargoRepository>();
+        services.AddTransient<IFactoryTimeRepository, FactoryTimeRepository>();
         services.AddTransient<IAgvDb, AgvDb>();
     }
 

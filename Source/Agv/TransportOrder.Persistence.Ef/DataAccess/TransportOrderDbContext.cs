@@ -49,6 +49,7 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new AgvSettingsGroupEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvSettingEntityConfiguration());
         modelBuilder.ApplyConfiguration(new SettingEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new FactoryTimeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TriggerEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TriggerLocationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TriggerPolygonEntityConfiguration());

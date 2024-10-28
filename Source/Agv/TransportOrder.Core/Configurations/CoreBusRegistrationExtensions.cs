@@ -220,6 +220,9 @@ public static class CoreBusRegistrationExtensions
     {
         configurator.AddConsumer<SystemRequestHandler>();
         configurator.AddRequestClient<GetSystemTime>();
+        configurator.AddConsumer<FactoryTimeRequestHandler>();
+        configurator.AddRequestClient<GetFactoryTimeZone>();
+        configurator.AddRequestClient<UpdateFactoryTimeZone>();
     }
 
     private static void RegisterMediatorTriggerHandlers(IMediatorRegistrationConfigurator configurator)
