@@ -34,7 +34,8 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
             nodeBuilder.HasOne(n => n.State)
                 .WithMany()
                 .HasForeignKey(n => n.NodeId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             nodeBuilder.Navigation(n => n.State)
                 .AutoInclude();

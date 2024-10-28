@@ -20,6 +20,7 @@ try
             services.AddScoped<ISeeder, GraphAndMapSeeder>();
             services.AddScoped<ISeeder, TriggerLocationsSeeder>();
             services.AddScoped<ISeeder, AgvsSeeder>();
+            services.AddScoped<ISeeder, QueuesSeeder>();
             services.AddSingleton<AgvSeederFactory>();
         });
 

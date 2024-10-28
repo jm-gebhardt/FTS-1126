@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using System.Text.Json.Serialization;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 
@@ -15,7 +16,7 @@ public class Queue
     /// <summary>
     /// The name of the queue.
     /// </summary>
-    public string Name { get; init; }
+    public string Name { get; init; } = string.Empty;
 
     /// <summary>
     /// The id of the queue.
@@ -35,6 +36,12 @@ public class Queue
         Id = id;
         Name = name;
         Nodes = nodes;
+    }
+
+    /// <inheritdoc cref="Queue"/>>
+    [JsonConstructor]
+    public Queue()
+    {
     }
 
     /// <summary>

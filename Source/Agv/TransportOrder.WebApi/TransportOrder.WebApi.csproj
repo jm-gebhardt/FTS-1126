@@ -31,7 +31,4 @@
             <_Parameter1>Gebhardt.Acc.$(MSBuildProjectName)Test</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Dtos\RestrictedArea\" />
-    </ItemGroup>
 </Project>

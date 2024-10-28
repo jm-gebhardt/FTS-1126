@@ -19,6 +19,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
@@ -147,6 +148,8 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<UpdateRestrictedArea, RestrictedAreaCommandHandler>(c);
             partitioner.PartitionMessageById<DeleteRestrictedArea, RestrictedAreaCommandHandler>(c);
         });
+
+        busRegistrationConfigurator.AddConsumer<QueueCommandHandler>();
     }
 
     private static void RegisterCoreActionGroupHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
@@ -337,6 +340,12 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetStation>();
         configurator.AddRequestClient<TryLockStation>();
         configurator.AddRequestClient<TryUnlockStation>();
+
+        configurator.AddConsumer<QueueRequestHandler>();
+        configurator.AddRequestClient<GetQueues>();
+        configurator.AddRequestClient<GetQueue>();
+        configurator.AddRequestClient<TryAddQueue>();
+        configurator.AddRequestClient<DeleteQueue>();
     }
 
     private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)

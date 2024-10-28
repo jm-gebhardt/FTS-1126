@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
@@ -18,4 +19,19 @@ public interface IQueueRepository
     /// </summary>
     /// <returns>A collection of queues</returns>
     Task<ICollection<Queue>> GetQueues();
+
+    /// <summary>
+    /// Get a single queue by its id.
+    /// </summary>
+    /// <param name="id">The id of the queue.</param>
+    /// <returns>The queue.</returns>
+    /// <exception cref="QueueNotFoundException">When no queue with the given id exists.</exception>
+    Task<Queue> GetQueueById(Guid id);
+
+    /// <summary>
+    /// Remove a queue.
+    /// </summary>
+    /// <param name="id">The id of the queue.</param>
+    /// <exception cref="QueueNotFoundException">When no queue with the given id exists.</exception>
+    Task RemoveQueue(Guid id);
 }

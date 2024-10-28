@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 
@@ -50,6 +51,7 @@ public class EfNode
     /// </summary>
     public ICollection<EfAgvGraph> AgvGraphs { get; init; }
 
+    [JsonConstructor]
     private EfNode()
     {
         Id = null!;

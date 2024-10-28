@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+﻿using System.Text.Json.Serialization;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
@@ -11,7 +12,7 @@ public class QueueNode
     /// <summary>
     /// The id of the node.
     /// </summary>
-    public string NodeId { get; set; }
+    public string NodeId { get; set; } = string.Empty;
 
     /// <summary>
     /// The position of the node in the queue.
@@ -21,12 +22,18 @@ public class QueueNode
     /// <summary>
     /// The corresponding <see cref="EfNode"/>.
     /// </summary>
-    public EfNode Node { get; init; } = null!;
+    public EfNode? Node { get; set; } 
 
     /// <summary>
     /// The state of the node, i.e. corresponding <see cref="NodeLock"/>
     /// </summary>
-    public NodeLock? State { get; init; }
+    public NodeLock? State { get; set; }
+
+    /// <inheritdoc cref="QueueNode"/>>
+    [JsonConstructor]
+    public QueueNode()
+    {
+    }
 
     /// <inheritdoc cref="QueueNode"/>>
     public QueueNode(string nodeId, int position)

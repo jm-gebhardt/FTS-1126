@@ -186,6 +186,7 @@ public enum ModeType
 /// <summary>
 /// Reason for locking
 /// </summary>
+[PublicAPI]
 public enum LockReason
 {
     /// <summary>
@@ -230,6 +231,7 @@ public enum LockReason
 /// <summary>
 /// Reason for maintenance
 /// </summary>
+[PublicAPI]
 public enum MaintenanceReason
 {
     /// <summary/>
