@@ -112,7 +112,7 @@ public class TriggerCommandHandlerTest
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
         fixture.UpdatedTrigger.Locations.First().Polygon.Count.ShouldBe(command.Polygon.Count);
  
-        await fixture.ShouldNotHavePublishedAsync<TriggerAssignedToNode>();
+        await fixture.ShouldHavePublishedAsync<TriggerAssignedToArea>();
         await fixture.ShouldHavePublishedAsync<TriggerLocationAdded>();
     }
 

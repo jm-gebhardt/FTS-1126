@@ -12,7 +12,7 @@ public class EfTriggerRepositoryTestFixture : TransportOrderDbFixture
     public EfTriggerRepositoryTestFixture()
     {
         var mockLogger = new Mock<ILogger<EfTriggerRepository>>();
-        var nodeTriggersDictionaryProvider = new NodeTriggersDictionaryProvider();
-        Repository = new EfTriggerRepository(ContextFactory, nodeTriggersDictionaryProvider, mockLogger.Object);
+        var triggerLocationDictionaryProvider = new TriggerLocationDictionaryProvider();
+        Repository = new EfTriggerRepository(ContextFactory, triggerLocationDictionaryProvider,  mockLogger.Object);
     }
 }

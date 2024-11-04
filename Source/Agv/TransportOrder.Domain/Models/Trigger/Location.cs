@@ -3,13 +3,15 @@ using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using JetBrains.Annotations;
 
+// ReSharper disable NonReadonlyMemberInGetHashCode
+
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 
 /// <summary>
 /// A location of a trigger.
 /// </summary>
 [PublicAPI]
-public class Location
+public class Location : IEquatable<Location>
 {
     /// <summary>
     /// The id of the location.
@@ -44,23 +46,29 @@ public class Location
     /// <summary>
     /// The configuration parameters of the trigger.
     /// </summary>
-    public ICollection<ConfigurationParameter> ConfigurationParameters { get;  set; }
+    public ICollection<ConfigurationParameter> ConfigurationParameters { get; set; }
+
+    /// <summary>
+    /// AGV Ids which are currently located within the polygon.
+    /// </summary>
+    public ICollection<Guid> Agvs { get; set; }
 
     /// <inheritdoc cref="Location"/>>
     public Location()
     {
         Id = Guid.NewGuid();
         Polygon = [];
-        MapId =  Guid.NewGuid();
+        Agvs = [];
         TriggerId = Guid.NewGuid();
         ConfigurationParameters = [];
     }
 
     /// <inheritdoc cref="Location"/>>
-    public Location(string nodeId, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters )
+    public Location(string nodeId, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters)
     {
         Id = Guid.NewGuid();
         Polygon = [];
+        Agvs = [];
         NodeId = nodeId;
         TriggerId = triggerId;
         MapId =  mapId ?? null;
@@ -72,6 +80,7 @@ public class Location
     {
         Id = Guid.NewGuid();
         Polygon = [];
+        Agvs = [];
         EdgeId = edgeId;
         MapId =  mapId ?? null;
         TriggerId = triggerId;
@@ -83,6 +92,18 @@ public class Location
     {
         Id = Guid.NewGuid();
         Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, p.Index, Id)).ToList();
+        Agvs = [];
+        MapId =  mapId ?? null;
+        TriggerId = triggerId;
+        ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
+    }
+
+    /// <inheritdoc cref="Location"/>>
+    public Location(ICollection<Polygon.PolygonPoint> polygon, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters, ICollection<Guid> agvs)
+    {
+        Id = Guid.NewGuid();
+        Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, p.Index, Id)).ToList();
+        Agvs = agvs;
         MapId =  mapId ?? null;
         TriggerId = triggerId;
         ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
@@ -128,5 +149,73 @@ public class Location
             return;
         }
         parameter.Value = newValue;
+    }
+
+    /// <inheritdoc />
+    public bool Equals(Location? other)
+    {
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+        if (!Id.Equals(other.Id))
+        {
+            return false;
+        }
+        if (TriggerId != other.TriggerId)
+        {
+            return false;
+        }
+        if (EdgeId != other.EdgeId)
+        {
+            return false;
+        }
+        if (NodeId != other.NodeId)
+        {
+            return false;
+        }
+        if (MapId != other.MapId)
+        {
+            return false;
+        }
+        if (!Agvs.SequenceEqual(other.Agvs))
+        {
+            return false;
+        }
+        if (!Polygon.SequenceEqual(other.Polygon))
+        {
+            return false;
+        }
+        if (!ConfigurationParameters.SequenceEqual(other.ConfigurationParameters))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        return obj.GetType() == GetType() && Equals((Location)obj);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, TriggerId, EdgeId, NodeId, MapId, Agvs, ConfigurationParameters, Polygon);
     }
 }

@@ -21,6 +21,9 @@ public class PolygonPointProfile: WebApiProfile
             .ForMember(s => s.LocationId, opt => opt.Ignore())
             .ForMember(s => s.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Index, opt => opt.Ignore());
+
+        CreateMap<PolygonPointDto, Gebhardt.Acc.Common.Messages.Triggers.PolygonPoint>().ReverseMap();
+
         CreateMap<List<PolygonPointDto>, List<TriggerPolygonPoint>>()
             .ConvertUsing((src, _, context) =>
             {

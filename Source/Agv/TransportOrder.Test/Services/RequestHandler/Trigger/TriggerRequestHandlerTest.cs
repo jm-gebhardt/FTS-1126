@@ -10,6 +10,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Trigger;
 
@@ -335,7 +336,7 @@ public class TriggerRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AssignTriggerToLocation_ValidData_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
+    public async Task Consume_AssignTriggerToLocation_ValidNode_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
     {
         const string node = "a node";
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
@@ -349,6 +350,45 @@ public class TriggerRequestHandlerTest
 
         Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, location.NodeId!, null, [], location.MapId, null));
         response.Message.Location.ShouldBeEquivalentTo(location);
+        await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
+    }
+    
+    [TestMethod]
+    public async Task Consume_AssignTriggerToLocation_ValidEdge_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
+    {
+        var edgeId = "an edge".ToGuid();
+        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var edgeLocation = new Location(edgeId, Guid.NewGuid(), trigger.Id, []);
+         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+            .WithTriggers([trigger])
+            .WithGraphElementExists(true)
+            .WithMapExists(true)
+            .WithLocationResponse(edgeLocation)
+            .Build();
+
+        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, edgeLocation.EdgeId!, [], edgeLocation.MapId, null));
+        response.Message.Location.ShouldBeEquivalentTo(edgeLocation);
+        await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AssignTriggerToLocation_ValidPolygon_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
+    {
+        ICollection<PolygonPoint> domainPolygon = [ new(-8.900d, -10.000d, 0), new(-9.5d, -10.000d, 1), new(-8.900d, -11.000d, 2) ];
+        ICollection<Gebhardt.Acc.Common.Messages.Triggers.PolygonPoint> triggerPolygon = [ new(-8.900d, -10.000d), new(-9.5d, -10.000d), new(-8.900d, -11.000d) ];
+
+        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var polygonLocation = new Location(domainPolygon, Guid.NewGuid(), trigger.Id, []);
+
+        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+            .WithTriggers([trigger])
+            .WithGraphElementExists(true)
+            .WithMapExists(true)
+            .WithLocationResponse(polygonLocation)
+            .Build();
+
+        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, null, triggerPolygon, polygonLocation.MapId, null));
+        response.Message.Location.ShouldBeEquivalentTo(polygonLocation);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }
 

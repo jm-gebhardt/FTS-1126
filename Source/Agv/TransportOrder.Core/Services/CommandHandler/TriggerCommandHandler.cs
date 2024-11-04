@@ -79,11 +79,19 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         }
         await context.RespondAsync(new TriggerLocationAdded(location, exception?.Message));
 
-        if (nodeId != null && exception == null)
+        if (exception == null)
         {
-            logger.LogInformation("Trigger {Name} assigned to location {Location}", trigger.DisplayName, location);
+            logger.LogInformation("Trigger {Name} assigned to location {Location}", trigger.DisplayName, location!.Id);
 
-            await context.Publish(new TriggerAssignedToNode(triggerId, trigger.DisplayName, nodeId));
+            if (nodeId != null)
+            {
+                await context.Publish(new TriggerAssignedToNode(triggerId, trigger.DisplayName, nodeId));
+            }
+            if (polygon.Count > 0)
+            {
+                await context.Publish(new TriggerAssignedToArea(triggerId, trigger.DisplayName, location.Id));
+                logger.LogDebug("Location {Location} with polygon: {Polygon}", location.Id, location.Polygon.OrderBy(p => p.Index).Select(p => $"({p.X}, {p.Y})"));
+            }
         }
     }
 
@@ -98,7 +106,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         var trigger = await triggerRepository.GetById(triggerId);
         trigger.RemoveLocation(locationId);
         await triggerRepository.Update(trigger);
-        logger.LogInformation("Trigger {Name} location {LocationId} removed", trigger.DisplayName, locationId);
+        logger.LogDebug("Trigger {Name} removed from location {LocationId}", trigger.DisplayName, locationId);
     }
 
     /// <summary>

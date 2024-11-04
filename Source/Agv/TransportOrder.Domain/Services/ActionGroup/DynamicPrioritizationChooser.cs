@@ -7,18 +7,18 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
-/// Uses route cost as base score and scales it with the acion group waiting time
+/// Uses route cost as base score and scales it with the action group waiting time
 /// </summary>
-public class DynamicPriorisationChooser : BaseChooseAgvActionGroupService
+public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
 {
     private readonly IRouteService _routeService;
 
     /// <inheritdoc cref="ShortestRouteChooser"/>>
-    public DynamicPriorisationChooser(
+    public DynamicPrioritizationChooser(
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
-        ILogger<DynamicPriorisationChooser> logger
+        ILogger<DynamicPrioritizationChooser> logger
     ) : base(actionGroupRepository, nodeStateRepository, logger)
     {
         _routeService = routeService;

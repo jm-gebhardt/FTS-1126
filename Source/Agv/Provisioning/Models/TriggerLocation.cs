@@ -64,7 +64,7 @@ internal class TriggerLocation
     /// The polygon, if set.
     /// </summary>
     [UsedImplicitly]
-    public ICollection<PolygonPoint>? PolygonPoints { get; init; }
+    public ICollection<PolygonPoint>? Polygon { get; init; }
 
     /// <summary>
     /// The configuration parameters at the location, if set.
@@ -91,7 +91,7 @@ internal class TriggerLocation
         NodeId = nodeId;
         EdgeId = edgeId;
         MapId = mapId;
-        PolygonPoints = polygonPoints;
+        Polygon = polygonPoints;
         ConfigurationParameters=configurationParameters;
     }
 }

@@ -1,12 +1,14 @@
 ﻿using JetBrains.Annotations;
 
+// ReSharper disable NonReadonlyMemberInGetHashCode
+
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 
 /// <summary>
 /// A point defining the polygon.
 /// </summary>
 [PublicAPI]
-public class PolygonPoint
+public class PolygonPoint : IEquatable<PolygonPoint>
 {
     /// <summary>
     /// The id of the polygon point.
@@ -59,5 +61,63 @@ public class PolygonPoint
     {
         Id = Guid.NewGuid();
         LocationId = Guid.NewGuid();
+    }
+
+    /// <inheritdoc />
+    public bool Equals(PolygonPoint? other)
+    {
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+        if (Id != other.Id)
+        {
+            return false;
+        }
+        if (LocationId != other.LocationId)
+        {
+            return false;
+        }
+        if (!X.Equals(other.X))
+        {
+            return false;
+        }
+        if (!Y.Equals(other.Y))
+        {
+            return false;
+        }
+        if (!Index.Equals(other.Index))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+        return Equals((PolygonPoint)obj);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, LocationId, X, Y, Index);
     }
 }

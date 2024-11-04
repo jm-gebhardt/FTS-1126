@@ -21,10 +21,12 @@ public class TriggerProfile : WebApiProfile
         CreateMap<ConfigurationParameterDto, ConfigurationParameter>()
             .ForSourceMember(s => s.Description, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.Validation, opt => opt.DoNotValidate());
-       
+
         CreateMap<Location, TriggerLocationDto>()
-            .ForSourceMember(s => s.TriggerId, opt => opt.DoNotValidate());
+            .ForSourceMember(s => s.TriggerId, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.Agvs, opt => opt.DoNotValidate());
         CreateMap<TriggerLocationDto,Location>()
-            .ForMember(d => d.TriggerId, opt => opt.Ignore());
+            .ForMember(d => d.TriggerId, opt => opt.Ignore())
+            .ForMember(d => d.Agvs, opt => opt.Ignore());
     }
 }

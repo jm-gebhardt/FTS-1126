@@ -22,7 +22,7 @@ public class DynamicPriorizationChooserTest
         var newerFastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id, createdDate: now);
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
 
-        ChooseAgvActionGroupTestFixture<DynamicPriorisationChooser> fixture = new ChooseAgvActionGroupTestFixture<DynamicPriorisationChooser>()
+        ChooseAgvActionGroupTestFixture<DynamicPrioritizationChooser> fixture = new ChooseAgvActionGroupTestFixture<DynamicPrioritizationChooser>()
             .WithNotStartedActionGroup(oldestSlowActionGroup)
             .WithNotStartedActionGroup(oldestFastActionGroup)
             .WithNotStartedActionGroup(oldSlowActionGroup)

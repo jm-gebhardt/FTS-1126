@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
@@ -12,21 +14,20 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 public class EfTriggerRepository : ITriggerRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
-    private readonly IConcurrentDictionaryProvider<string, List<Guid>> _nodeTriggersDictionaryProvider;
+    private readonly IConcurrentDictionaryProvider<Guid, Location> _triggerLocationDictionaryProvider;
     private readonly ILogger<EfTriggerRepository> _logger;
 
     /// <summary>
     /// Initializes a new <see cref="EfTriggerRepository"/> instance.
     /// </summary>
     /// <param name="dbContextFactory">Database context factory.</param>
-    /// <param name="concurrentDictionaryProvider">The provider of the node to trigger in memory dictionary.</param>
+    /// <param name="triggerLocationDictionaryProvider">The provider of the location to polygon in memory dictionary.</param>
     /// <param name="logger">The logger.</param>
-    public EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IConcurrentDictionaryProvider<string, List<Guid>> concurrentDictionaryProvider,
-        ILogger<EfTriggerRepository> logger
+    public EfTriggerRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IConcurrentDictionaryProvider<Guid, Location> triggerLocationDictionaryProvider, ILogger<EfTriggerRepository> logger
     )
     {
         _dbContextFactory = dbContextFactory;
-        _nodeTriggersDictionaryProvider = concurrentDictionaryProvider;
+        _triggerLocationDictionaryProvider = triggerLocationDictionaryProvider;
         _logger = logger;
     }
 
@@ -103,7 +104,7 @@ public class EfTriggerRepository : ITriggerRepository
                     {
                         context.Set<TriggerPolygonPoint>().RemoveRange(location.Polygon);
                     }
-                    RemoveTriggerFromLocationRepository(trigger, location);
+                    RemoveTriggerFromLocationDictionary(location);
                 }
                 context.Set<Location>().RemoveRange(locationToRemove);
             }
@@ -120,9 +121,21 @@ public class EfTriggerRepository : ITriggerRepository
                     AddTriggerToLocationDictionary(trigger, location);
                     await context.Set<Location>().AddAsync(location);
                 }
+            } else if (triggerToUpdate.Locations.Count > 0 && triggerToUpdate.Locations.Count == trigger.Locations.Count)
+            {
+                _logger.LogInformation("Update(trigger):  Location count {LocCount}.", trigger.Locations.Count);
+                ICollection<Location> locationsToUpdate = triggerToUpdate.Locations;
+                ICollection<Location> newLocations = trigger.Locations;
+                bool updateLocations = !locationsToUpdate.SequenceEqual(newLocations);
+
+                if (updateLocations)
+                {
+                    context.Set<Location>().RemoveRange(triggerToUpdate.Locations);
+                    await context.Set<Location>().AddRangeAsync(trigger.Locations);
+                }
             }
         }
-
+        
         if (!triggerToUpdate.ConfigurationParameters.Equals(trigger.ConfigurationParameters))
         {
             var parameter = triggerToUpdate.ConfigurationParameters.SingleOrDefault(t => t.Value != trigger.ConfigurationParameters.Single(tt => tt.Name == t.Name).Value);
@@ -135,43 +148,83 @@ public class EfTriggerRepository : ITriggerRepository
         await context.SaveChangesAsync();
     }
 
-    private void RemoveTriggerFromLocationRepository(Trigger trigger, Location location)
+    private void RemoveTriggerFromLocationDictionary(Location location)
     {
-        if (location.NodeId != null)
-        {
-            if (_nodeTriggersDictionaryProvider.ConcurrentDict.TryGetValue(location.NodeId, out List<Guid>? triggerIds))
-            {
-                triggerIds.Remove(location.TriggerId);
-                _logger.LogDebug("{Method}: Removed trigger {TriggerId} from node {NodeId}", nameof(RemoveTriggerFromLocationRepository), trigger.Id, location.NodeId);
-            }
-        }
+        _ = _triggerLocationDictionaryProvider.ConcurrentDict.TryRemove(location.Id, out _);
     }
 
     private void AddTriggerToLocationDictionary(Trigger trigger, Location location)
     {
-        if (location.NodeId != null)
-        {
-            _nodeTriggersDictionaryProvider.ConcurrentDict.AddOrUpdate(location.NodeId,
-                addValueFactory: (_) => [location.TriggerId],
-                updateValueFactory: (_, oldValue) =>
-                {
-                    oldValue.Add(location.TriggerId);
-                    return oldValue;
-                });
-            _logger.LogDebug("{Method}: Added trigger {TriggerId} to node {NodeId}", nameof(AddTriggerToLocationDictionary), trigger.Id, location.NodeId);
-        }
+        _triggerLocationDictionaryProvider.ConcurrentDict.AddOrUpdate(location.Id, location, (_, _) => location);
+        _logger.LogDebug("{Method}: Added trigger {TriggerId} to location {LocationId} (NodeId: {NodeId}, EdgeId: {EdgeId}, Polygon: {IsPolygon}, Number of AGVs: {AgvCount})", 
+            nameof(AddTriggerToLocationDictionary), trigger.Id, location.Id, location.NodeId, location.EdgeId, location.Polygon.Count > 0, location.Agvs.Count);
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public ICollection<Guid> GetTriggersAssignedToNode(string nodeId)
+    public ICollection<Location> GetNodeTriggerLocations(string nodeId)
     {
-        return _nodeTriggersDictionaryProvider.ConcurrentDict.GetValueOrDefault(nodeId, []);
+        return _triggerLocationDictionaryProvider.ConcurrentDict.Values.Where(l => l.NodeId == nodeId).ToList();
+    }
+
+    /// <inheritdoc  cref="ITriggerRepository"/>>
+    public async Task<ICollection<Location>> GetPolygonTriggerLocations(Guid agvId, AgvPosition agvPosition)
+    {
+        ICollection<Location> locationsWithPolygon = _triggerLocationDictionaryProvider.ConcurrentDict.Values.Where(l => l.Polygon.Count > 0).ToList();
+        List<Location> locationsWithTriggerToCall = [];
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        foreach (var location in locationsWithPolygon)
+        {
+            bool pointIsInPolygon = location.Polygon.PointIsInPolygon(agvPosition.X, agvPosition.Y);
+            if (pointIsInPolygon)
+            {
+                if (!location.Agvs.Contains(agvId))
+                {
+                    location.Agvs.Add(agvId);
+                    locationsWithTriggerToCall.Add(location);
+                    _logger.LogDebug("{Method}: AGV {AgvId} entered polygon", nameof(GetPolygonTriggerLocations), agvId);
+
+                    var locationRecord = await context.Set<Location>().Where(l => l.Id == location.Id).FirstOrDefaultAsync();
+                    if (locationRecord != null)
+                    {
+                        locationRecord.Agvs.Add(agvId);
+                    }
+
+                    int count = await context.SaveChangesAsync();
+                    _logger.LogTrace("{Method}: locationRecord.Agvs: {Agvs}. Saved {Count} records!", nameof(GetPolygonTriggerLocations), locationRecord?.Agvs.Count, count);
+                }
+                else
+                {
+                    _logger.LogTrace("{Method}: AGV {AgvId} is within polygon but already registered", nameof(GetPolygonTriggerLocations), agvId);
+                }
+            }
+            else
+            {
+                if (location.Agvs.Contains(agvId))
+                {
+                    location.Agvs.Remove(agvId);
+                    _logger.LogDebug("{Method}: AGV {AgvId} left polygon.", nameof(GetPolygonTriggerLocations), agvId);
+
+                    var locationRecord = await context.Set<Location>().Where(l => l.Id == location.Id).FirstOrDefaultAsync();
+                    if (locationRecord != null)
+                    {
+                        locationRecord.Agvs.Remove(agvId);
+                        _logger.LogTrace("{Method}: After remove agvGuidString is {AgvGuidString}", nameof(GetPolygonTriggerLocations), string.Join(',', locationRecord.Agvs));
+                    }
+                    int count =  await context.SaveChangesAsync();
+                   _logger.LogTrace("{Method}: Saved {Count} records!", nameof(GetPolygonTriggerLocations), count);
+                }
+            }
+        }
+        return locationsWithTriggerToCall;
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task LoadTriggerToLocationDictionary()
     {
-        _nodeTriggersDictionaryProvider.ConcurrentDict.Clear();
+        _triggerLocationDictionaryProvider.ConcurrentDict.Clear();
+
         ICollection<Trigger> triggers = await GetTriggers();
         foreach (var trigger in triggers)
         {
@@ -181,16 +234,7 @@ public class EfTriggerRepository : ITriggerRepository
             }
             foreach (var location in trigger.Locations)
             {
-                if (location.NodeId != "")
-                {
-                    _nodeTriggersDictionaryProvider.ConcurrentDict.AddOrUpdate(location.NodeId!,
-                        addValueFactory: (_) => [location.TriggerId],
-                        updateValueFactory: (_, oldValue) =>
-                        {
-                            oldValue.Add(location.TriggerId);
-                            return oldValue;
-                        });
-                }
+                AddTriggerToLocationDictionary(trigger, location);
             }
         }
     }

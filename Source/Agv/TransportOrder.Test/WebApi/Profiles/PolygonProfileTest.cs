@@ -133,4 +133,16 @@ public class PolygonProfileTest
             p => p.Y
         );
     }
+
+    [TestMethod]
+    public void Map_PolygonPointDtoICollection_MapsToMessageTriggerPolygonPointICollection()
+    {
+        var mapper = MappingHelper.GetMapper(new PolygonPointProfile());
+
+        ICollection<PolygonPointDto> polygonPointDtos = new List<PolygonPointDto> { new(1, 2), new(2, 3) };
+
+        var polygonPoints = mapper.Map<ICollection<Gebhardt.Acc.Common.Messages.Triggers.PolygonPoint>>(polygonPointDtos);
+
+        polygonPoints.Count.ShouldBe(polygonPointDtos.Count);
+    }
 }

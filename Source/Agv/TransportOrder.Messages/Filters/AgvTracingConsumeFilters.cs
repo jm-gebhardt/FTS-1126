@@ -18,7 +18,8 @@ public class AgvTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<AgvPreparedForStartingAction>>,
     IFilter<ConsumeContext<AgvBecameIdle>>,
     IFilter<ConsumeContext<AgvNeedsCharging>>,
-    IFilter<ConsumeContext<AgvLastNodeIdChanged>>
+    IFilter<ConsumeContext<AgvLastNodeIdChanged>>,
+    IFilter<ConsumeContext<AgvPositionChanged>>
 {
     /// <inheritdoc cref="AgvTracingConsumeFilters"/>>
     public AgvTracingConsumeFilters(ILogger<AgvTracingConsumeFilters> logger) : base(logger)
@@ -62,6 +63,13 @@ public class AgvTracingConsumeFilters : BaseTracingFilter,
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<AgvLastNodeIdChanged> context, IPipe<ConsumeContext<AgvLastNodeIdChanged>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<AgvPositionChanged> context, IPipe<ConsumeContext<AgvPositionChanged>> next)
     {
         LogDebug(context);
         await next.Send(context);

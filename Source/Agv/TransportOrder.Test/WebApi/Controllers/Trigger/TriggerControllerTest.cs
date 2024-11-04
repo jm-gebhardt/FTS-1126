@@ -23,9 +23,13 @@ public class TriggerControllerTest
     }
 
     [TestMethod]
-    public async Task AssignTriggerToLocation_ValidData_ReturnsLocationDto()
+    public async Task AssignTriggerToNodeLocation_ValidData_ReturnsLocationDto()
     {
-        var location = new TriggerLocationDto();
+        const string nodeToUse = "WP-0001";
+        var location = new TriggerLocationDto
+        {
+            NodeId = nodeToUse
+        };
 
         var fixture = new TriggerControllerTestFixture()
             .WithTriggerLocation(location)
@@ -33,6 +37,29 @@ public class TriggerControllerTest
 
         var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(Guid.NewGuid(), location));
         locationDto.Id.ShouldBe(location.Id);
+        locationDto.NodeId.ShouldBe(nodeToUse);
+    }
+
+    [TestMethod]
+    public async Task AssignTriggerToPolygonLocation_ValidData_ReturnsLocationDto()
+    {
+        var location = new TriggerLocationDto
+        {
+            Polygon = new List<PolygonPointDto>
+            {
+                { new(1.0d, 1.0d) },
+                { new(1.0d, 2.0d) },
+                { new(2.0d, 1.0d) }
+            }
+        };
+
+        var fixture = new TriggerControllerTestFixture()
+            .WithTriggerLocation(location)
+            .Build();
+
+        var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(Guid.NewGuid(), location));
+        locationDto.Id.ShouldBe(location.Id);
+        locationDto.Polygon?.Count.ShouldBe(location.Polygon.Count);
     }
 
     [TestMethod]

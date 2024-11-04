@@ -16,7 +16,7 @@ namespace Gebhardt.Acc.TriggerExample;
 public class TestTrigger(IBus bus) : IFfcTrigger
 {
     private const string PropertyName = "Number";
-    private const string PropertyDescription = "Test Trigger Description";
+    private const string PropertyDescription = "Test1 Trigger Description";
     private int _propertyValue;
 
     /// <inheritdoc cref="IFfcTrigger"/>>
@@ -36,8 +36,8 @@ public class TestTrigger(IBus bus) : IFfcTrigger
     /// <inheritdoc cref="IFfcTrigger"/>>
     public TriggerProperties GetProperties()
     {
-        const string name = "test trigger";
-        return new TriggerProperties("www.wobe-systems.com:", name, "");
+        const string name = "Test1_Trigger";
+        return new TriggerProperties("www.gebhardt-group.com:TEST1", name, "Test 1 trigger.", instancesMax: 3);
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>

@@ -73,6 +73,10 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             }
         }
 
+        if (nodeId is null && edgeId is null && polygon.Count == 0)
+        {
+            throw new TriggerAssignmentFailedException("No location set: edge id, node id, and polygon are null");
+        }
         if (!OnlyOneLocationSet(nodeId, edgeId, polygon))
         {
             throw new TriggerAssignmentFailedException("More then one location set: only one of edge id, node id, or polygon must be provided");

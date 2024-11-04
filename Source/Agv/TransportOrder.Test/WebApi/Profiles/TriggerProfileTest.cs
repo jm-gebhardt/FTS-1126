@@ -94,4 +94,19 @@ public class TriggerProfileTest
         triggerDto.Locations.First().Id.ShouldBe(location.Id);
         triggerDto.Locations.First().MapId.ShouldBe(location.MapId);
     }
+
+    [TestMethod]
+    public void Map_TriggerDtoLocation_MapsToLocation()
+    {
+        var mapper = MappingHelper.GetMapper(new TriggerProfile(), new PolygonPointProfile());
+
+        var triggerLocationDto = new TriggerLocationDto { Id = Guid.NewGuid(), Polygon = [ new PolygonPointDto( -1.0d, -8.0d), new PolygonPointDto(-1.0d, -8.0d), new PolygonPointDto(-1.0d, -8.0d)], MapId = Guid.NewGuid()};
+
+        var location = mapper.Map<Location>(triggerLocationDto);
+
+        location.MapId.ShouldBe(triggerLocationDto.MapId);
+        location.Polygon.Count.ShouldBe(triggerLocationDto.Polygon.Count);
+        location.Polygon.First().X.ShouldBe(triggerLocationDto.Polygon.First().X);
+        location.Polygon.First().Y.ShouldBe(triggerLocationDto.Polygon.First().Y);
+    }
 }

@@ -16,6 +16,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
@@ -125,7 +126,7 @@ public static class TransportOrderHostBuilderExtensions
                 break;
         
             case OrderSelectionMode.Dynamic:
-                services.AddTransient<IChooseAgvActionGroupService, DynamicPriorisationChooser>();
+                services.AddTransient<IChooseAgvActionGroupService, DynamicPrioritizationChooser>();
                 break;
 
             default:
@@ -154,7 +155,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<INodeStateRepository, EfNodeStateRepository>();
 
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
-        services.AddSingleton<IConcurrentDictionaryProvider<string, List<Guid>>, NodeTriggersDictionaryProvider>();
+        services.AddSingleton<IConcurrentDictionaryProvider<Guid, Location>, TriggerLocationDictionaryProvider>();
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
         services.AddTransient<ITriggerRepository, EfTriggerRepository>();
         services.AddTransient<IRestrictedAreaRepository, EfRestrictedAreaRepository>();

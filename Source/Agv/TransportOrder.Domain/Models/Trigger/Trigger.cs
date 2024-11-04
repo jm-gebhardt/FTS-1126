@@ -122,15 +122,16 @@ public class Trigger
     /// <param name="polygon">The polygon.</param>
     /// <param name="mapId">Id of the map the polygon is on.</param>
     /// <param name="configurationParameters">The configuration parameters at the location.</param>
+    /// <param name="agvs">List of agv Guids which are within polygon.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null)
+    public Location AddLocation(ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null, ICollection<Guid>? agvs = null)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {
             throw new TriggerInstanceCountException(InstanceMaximum!.Value);
         }
-        var location = new Location(polygon, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters));
+        var location = new Location(polygon, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters), agvs ?? []);
         Locations.Add(location);
         return location;
     }
