@@ -17,7 +17,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
+        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
