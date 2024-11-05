@@ -58,7 +58,7 @@ public class WcsDbContext : DbContext
     public WcsDbContext(): base(
         new DbContextOptionsBuilder()
             .UseSqlServer(
-                $"Server=127.0.0.1;Database=master;User Id=sa;Password={EnvFile.DefaultPassword};Encrypt=False;MultipleActiveResultSets=True"
+                $"Server=127.0.0.1;Database=ffcmain;User Id={EnvFile.DefaultUser};Password={EnvFile.DefaultPassword};Encrypt=False;MultipleActiveResultSets=True"
             )
             .Options
     )

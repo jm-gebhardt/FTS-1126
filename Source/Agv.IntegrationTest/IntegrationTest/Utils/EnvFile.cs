@@ -15,12 +15,17 @@ public class EnvFile
     /// <summary>
     /// Default user
     /// </summary>
-    public const string DefaultUser = "user";
+    public const string DefaultUser = "defaultuser";
 
     /// <summary>
     /// Default password
     /// </summary>
     public const string DefaultPassword = "agvs!Ar3Aw3som3";
+    
+    /// <summary>
+    /// Default connectionString
+    /// </summary>
+    public const string DefaultConnectionString = $"Server=mssql;Database=ffcmain;User Id={DefaultUser};Password={DefaultPassword};Encrypt=False";
 
     /// <summary>
     /// Default docker compose profiles
@@ -62,7 +67,7 @@ public class EnvFile
         _dict = envTemplate
             .Where(l => !string.IsNullOrEmpty(l) && !l.StartsWith('#'))
             .Select(line => line.Split('='))
-            .ToDictionary(split => split[0], split => split[1]);
+            .ToDictionary(split => split[0], split => string.Join('=', split[1..split.Length]));
 
         foreach (var key in _dict.Keys)
         {
@@ -73,6 +78,8 @@ public class EnvFile
                 "PROFILES" => DefaultComposeProfiles,
                 _ => _dict[key]
             };
+
+            _dict[key] = key.Contains("CONNECTIONSTRING") ? DefaultConnectionString : _dict[key];
         }
 
         FilePath = Path.GetTempFileName();
