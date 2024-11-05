@@ -28,5 +28,9 @@ public class TriggerProfile : WebApiProfile
         CreateMap<TriggerLocationDto,Location>()
             .ForMember(d => d.TriggerId, opt => opt.Ignore())
             .ForMember(d => d.Agvs, opt => opt.Ignore());
+        CreateMap<LocationDto, Location>()
+            .ForMember(d => d.Id, opt => opt.Ignore())
+            .ForMember(d => d.TriggerId, opt => opt.Ignore())
+            .ForMember(d => d.Agvs, opt => opt.Ignore());
     }
 }

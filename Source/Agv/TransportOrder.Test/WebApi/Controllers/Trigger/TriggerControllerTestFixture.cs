@@ -39,7 +39,7 @@ public class TriggerControllerTestFixture: MockRequestClientControllerTestFixtur
         return this;
     }
 
-    public TriggerControllerTestFixture WithTriggerLocation(TriggerLocationDto location)
+    public TriggerControllerTestFixture WithTriggerLocation(LocationDto location)
     {
         var mapper = MappingHelper.GetMapper(GetProfiles().ToArray());
         _triggerLocationAssigned = new TriggerLocationAssigned(mapper.Map<Location>(location));
