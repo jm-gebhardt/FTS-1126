@@ -1,5 +1,7 @@
+using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using JetBrains.Annotations;
 using MassTransit;
@@ -25,16 +27,20 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
+    private readonly IMapper _mapper;
 
     /// <inheritdoc cref="AgvChangedConsumer"/>
     /// <param name="logger"></param>
     /// <param name="agvPublisher"></param>
+    /// <param name="mapper"></param>
     public AgvChangedConsumer(
         ILogger<AgvChangedConsumer> logger,
-        IAgvPublisher agvPublisher)
+        IAgvPublisher agvPublisher,
+        IMapper mapper)
     {
         _logger = logger;
         _agvPublisher = agvPublisher;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -130,7 +136,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     /// </summary>
     public async Task Consume(ConsumeContext<AgvModeChanged> context)
     {
-        await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, context.Message.Mode);
+        var agvModeDto = _mapper.Map<AgvModeDto>(context.Message.Mode);
+        await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, agvModeDto);
     }
 
     /// <summary>
@@ -138,6 +145,7 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     /// </summary>
     public async Task Consume(ConsumeContext<AgvModeChangePending> context)
     {
-        await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, context.Message.Mode);
+        var agvModeDto = _mapper.Map<AgvModeDto>(context.Message.Mode);
+        await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, agvModeDto);
     }
 }

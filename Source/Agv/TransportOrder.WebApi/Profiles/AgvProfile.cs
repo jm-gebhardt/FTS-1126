@@ -22,5 +22,6 @@ public class AgvProfile : WebApiProfile
             .ForMember(c => c.CurrentRoute, c => c.MapFrom(o => o));
         CreateMap<AgvState, AgvStateType>();
         CreateMap<AgvBatteryStatus, AgvBatteryStatusDto>();
+        CreateMap<AgvMode, AgvModeDto>().ReverseMap();
     }
 }

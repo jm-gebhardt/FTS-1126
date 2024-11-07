@@ -111,7 +111,7 @@ public class StartActionCommandConsumerTest
     {
         var fixture = new StartActionCommandConsumerTestFixture();
 
-        // Create a publish observer
+        // Create a Publish observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {

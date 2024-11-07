@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Messages;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using JetBrains.Annotations;
@@ -64,7 +63,7 @@ public record AgvDto : DatedMessage
     /// <summary>
     /// The mode of the agv.
     /// </summary>
-    public AgvMode AgvMode { get; init; }
+    public AgvModeDto AgvMode { get; init; }
 
     /// <param name="correlationId">CorrelationId.</param>
     /// <param name="serialNumber">AGV Serial Number.</param>
@@ -98,7 +97,7 @@ public record AgvDto : DatedMessage
         ActionGroupDto? currentActionGroup,
         List<AgvErrorDto> agvErrorDto,
         GraphNodeDto? lastNode,
-        AgvMode mode)
+        AgvModeDto mode)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;

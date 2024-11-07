@@ -418,7 +418,7 @@ public class Agv : IAgv
         AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, 
         bool cancelManualActions = false)
     {
-        Mode.PrepareSwitch(ModeType.Locked, lockReason, null, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
+        Mode.PrepareSwitch(ModeType.Locked, lockReason, null, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions, DateTime.UtcNow);
     }
 
     /// <summary>
@@ -427,7 +427,7 @@ public class Agv : IAgv
     public void Unlock(string? initiatingUser = null)
     {
         SetIdle();
-        Mode.PrepareSwitch(ModeType.Normal, initiatingUser: initiatingUser);
+        Mode.PrepareSwitch(ModeType.Normal, initiatingUser: initiatingUser, modeChangeTime: DateTime.UtcNow);
         Mode.Switch();
         IsLocked = false;
     }
@@ -437,7 +437,7 @@ public class Agv : IAgv
     /// </summary>
     public void PrepareUserMode(string? initiatingUser = null, CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause, AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.LeaveAssigned, bool cancelManualActions = false)
     {
-        Mode.PrepareSwitch(ModeType.UserMode, initiatingUser: initiatingUser, currentActionPolicy : currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions);
+        Mode.PrepareSwitch(ModeType.UserMode, initiatingUser: initiatingUser, currentActionPolicy : currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions, modeChangeTime: DateTime.UtcNow);
     }
 
     /// <summary>
@@ -445,7 +445,7 @@ public class Agv : IAgv
     /// </summary>
     public void SetNormalMode(string? initiatingUser = null)
     {
-        Mode.PrepareSwitch(ModeType.Normal, initiatingUser: initiatingUser);
+        Mode.PrepareSwitch(ModeType.Normal, initiatingUser: initiatingUser, modeChangeTime: DateTime.UtcNow);
         Mode.Switch();
         SetIdle();
         IsLocked = false;
@@ -462,7 +462,7 @@ public class Agv : IAgv
         AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, 
         bool cancelManualActions = false)
     {
-        Mode.PrepareSwitch(ModeType.Maintenance, maintenanceReason:maintenanceReason, reasonDescription: reasonDescription, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions);
+        Mode.PrepareSwitch(ModeType.Maintenance, maintenanceReason:maintenanceReason, reasonDescription: reasonDescription, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions, modeChangeTime: DateTime.UtcNow);
     }
 
     /// <summary>

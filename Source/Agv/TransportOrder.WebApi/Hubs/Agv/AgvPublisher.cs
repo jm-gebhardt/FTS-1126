@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Filters;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
@@ -44,10 +43,10 @@ public class AgvPublisher : IAgvPublisher
     }
 
     /// <inheritdoc/>
-    public Task SendAgvModeChangedAsync(Guid agvCorrelationId, AgvMode mode)
+    public Task SendAgvModeChangedAsync(Guid agvCorrelationId, AgvModeDto mode)
     {
-        var agvModeDto = new AgvModeDto(agvCorrelationId, mode);
-        return _hubContext.Clients.All.AgvModeChanged(agvModeDto);
+        var agvModeChangedDto = new AgvModeChangedDto(agvCorrelationId, mode);
+        return _hubContext.Clients.All.AgvModeChanged(agvModeChangedDto);
     }
 
     /// <inheritdoc />

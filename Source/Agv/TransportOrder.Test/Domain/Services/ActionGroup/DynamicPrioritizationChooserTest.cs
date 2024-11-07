@@ -8,7 +8,7 @@ using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGene
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
 [TestClass]
-public class DynamicPriorizationChooserTest
+public class DynamicPrioritizationChooserTest
 {
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_Automatic_SelectsAccordingToAgeAndCost()

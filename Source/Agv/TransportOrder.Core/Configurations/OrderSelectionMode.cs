@@ -22,7 +22,7 @@ public static class OrderSelectionMode
     /// <summary> Take the fastest order, if there are orders older than 2min, take the oldest of those</summary>
     public const string Threshold = "THRESHOLD";
 
-    /// <summary> Take order with smallest score : Score = cost[s] / (1 + waiting time[min]**2)</summary>
+    /// <summary> Take order with the smallest score : Score = cost[s] / (1 + waiting time[min]**2)</summary>
     public const string Dynamic = "Dynamic";
 
     /// <summary>

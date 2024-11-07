@@ -59,6 +59,11 @@ public record AgvMode
     /// </summary>
     public bool CancelManualActions { get;  set; }
 
+    /// <summary>
+    /// The date when mode change was requested.
+    /// </summary>
+    public DateTime? ChangeTime { get; set; }
+
     /// <inheritdoc cref="AgvMode"/>>
     public AgvMode(
         ModeType type, 
@@ -66,7 +71,8 @@ public record AgvMode
         LockReason? lockReason = null,
         MaintenanceReason? maintenanceReason = null,
         string? reasonDescription=null, 
-        string? initiatingUser=null)
+        string? initiatingUser=null,
+        DateTime? changeTime=null)
     {
         Type = type;
         AgvCorrelationId = agvCorrelationId;
@@ -74,6 +80,7 @@ public record AgvMode
         MaintenanceReason = maintenanceReason;
         ReasonDescription = reasonDescription;
         InitiatingUser = initiatingUser;
+        ChangeTime = changeTime;
     }
 
     /// <inheritdoc cref="AgvMode"/>>
@@ -82,7 +89,8 @@ public record AgvMode
         LockReason? lockReason = null,
         MaintenanceReason? maintenanceReason = null,
         string? reasonDescription = null, 
-        string? initiatingUser = null)
+        string? initiatingUser = null,
+        DateTime? changeTime = null)
     {
         Type = type;
         AgvCorrelationId = Guid.NewGuid();
@@ -90,6 +98,7 @@ public record AgvMode
         MaintenanceReason = maintenanceReason;
         ReasonDescription = reasonDescription;
         InitiatingUser = initiatingUser;
+        ChangeTime = changeTime;
     }
 
     /// <inheritdoc cref="AgvMode"/>>
@@ -105,7 +114,8 @@ public record AgvMode
         //string? reason=null,
         LockReason? lockReason = null,
         MaintenanceReason? maintenanceReason = null,
-        string? reasonDescription = null
+        string? reasonDescription = null,
+        DateTime? changeTime = null
         )
     {
         Type = type;
@@ -118,6 +128,7 @@ public record AgvMode
         CurrentActionGroupPolicy = currentActionGroupPolicy;
         AssignedActionGroupPolicy = assignedActionGroupPolicy;
         CancelManualActions = cancelManualActions;
+        ChangeTime = changeTime;
     }
 
     /// <summary>
@@ -131,6 +142,7 @@ public record AgvMode
     /// <param name="currentActionPolicy">The policy what to do with the currently running action group.</param>
     /// <param name="assignedActionPolicy">The policy what to do with assigned action groups.</param>
     /// <param name="cancelManualActions">The policy what to do with manual action groups, if true, cancel.</param>
+    /// <param name="modeChangeTime">The timestamp when mode change was requested.</param>
     public void PrepareSwitch(
         ModeType newType, 
         LockReason? lockReason = null,
@@ -139,7 +151,8 @@ public record AgvMode
         string? initiatingUser = null, 
         CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishAction, 
         AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, 
-        bool cancelManualActions = false)
+        bool cancelManualActions = false,
+        DateTime? modeChangeTime = null)
     {
         PendingType = newType;
         LockReason = lockReason;
@@ -149,6 +162,7 @@ public record AgvMode
         CurrentActionGroupPolicy = currentActionPolicy;
         AssignedActionGroupPolicy = assignedActionPolicy;
         CancelManualActions = cancelManualActions;
+        ChangeTime = modeChangeTime;
     }
 
     /// <summary>

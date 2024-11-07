@@ -15,7 +15,7 @@ public static class CustomSchemaSelector
     public static string RemoveDtoSuffix(Type type)
     {
         const string suffix = "DTO";
-        if (type == typeof(Dtos.Agv.AgvModeDto))
+        if (type == typeof(Dtos.Agv.AgvModeChangedDto))
         {
             return ModeSchemaId;
         }

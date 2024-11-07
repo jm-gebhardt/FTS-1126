@@ -183,6 +183,7 @@ public class AgvTest
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(assignedActionPolicy);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(currentActionPolicy);
         agv.Mode.CancelManualActions.ShouldBe(cancelManualActions);
+        agv.Mode.ChangeTime.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -219,6 +220,7 @@ public class AgvTest
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
         agv.Mode.LockReason.ShouldBeNull();
         agv.Mode.ReasonDescription.ShouldBeNull();
+        agv.Mode.ChangeTime.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -259,6 +261,7 @@ public class AgvTest
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.LeaveAssigned);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.Pause);
         agv.Mode.CancelManualActions.ShouldBeFalse();
+        agv.Mode.ChangeTime.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -301,6 +304,7 @@ public class AgvTest
         agv.Mode.AssignedActionGroupPolicy.ShouldBe(AssignedActionGroupPolicy.Reset);
         agv.Mode.CurrentActionGroupPolicy.ShouldBe(CurrentActionGroupPolicy.Pause);
         agv.Mode.CancelManualActions.ShouldBe(false);
+        agv.Mode.ChangeTime.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -320,6 +324,7 @@ public class AgvTest
         agv.Mode.LockReason.ShouldBeNull();
         agv.Mode.MaintenanceReason.ShouldBeNull();
         agv.Mode.ReasonDescription.ShouldBeNull();
+        agv.Mode.ChangeTime.ShouldNotBeNull();
     }
 
     [TestMethod]

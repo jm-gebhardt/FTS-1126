@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -6,6 +7,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -93,7 +95,16 @@ public class AgvChangedConsumerTest
         await fixture.TestHarness.Bus.Publish(new AgvModeChanged(agv.CorrelationId, agv.Mode));
 
         (await fixture.ConsumerHarness.Consumed.Any<AgvModeChanged>()).ShouldBeTrue();
-        fixture.PublisherMock.Verify(h => h.SendAgvModeChangedAsync(agv.CorrelationId, agv.Mode),
+
+        var mapper = GetMapper();
+        var agvModeDto = mapper.Map<AgvModeDto>(agv.Mode);
+
+        fixture.PublisherMock.Verify(h => h.SendAgvModeChangedAsync(agv.CorrelationId, agvModeDto),
             Times.Once);
+    }
+
+    private static Mapper GetMapper()
+    {
+        return MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.AgvModeProfile());
     }
 }
