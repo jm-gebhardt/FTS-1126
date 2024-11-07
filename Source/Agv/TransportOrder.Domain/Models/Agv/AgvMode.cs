@@ -196,9 +196,6 @@ public enum LockReason
 
     /// <summary/>
     SensorFailures,
-
-    /// <summary/>
-    HardwareAdjustments,
     
     /// <summary/>
     OperationalAdjustments,
@@ -207,22 +204,7 @@ public enum LockReason
     SystemReboot,
 
     /// <summary/>
-    PreventiveMaintenance,
-
-    /// <summary/>
-    SoftwareFirmwareUpdate,
-
-    /// <summary/>
-    MechanicalFailure,
-
-    /// <summary/>
-    BatteryIssues,
-
-    /// <summary/>
-    SensorMalfunctions,
-
-    /// <summary/>
-    WheelsTiresWearingOut,
+    InspectionAudits,
 
     /// <summary/>
     Other
@@ -234,6 +216,9 @@ public enum LockReason
 [PublicAPI]
 public enum MaintenanceReason
 {
+    /// <summary/>
+    HardwareAdjustment,
+
     /// <summary/>
     PreventiveMaintenance,
 
