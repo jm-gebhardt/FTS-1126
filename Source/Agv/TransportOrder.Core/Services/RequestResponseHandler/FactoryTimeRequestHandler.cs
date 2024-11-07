@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -7,6 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// <summary>
 /// Handles factory time related requests.
 /// </summary>
+[PublicAPI]
 public class FactoryTimeRequestHandler(IFactoryTimeRepository factoryTimeRepository) : 
     IConsumer<UpdateFactoryTimeZone>,
     IConsumer<GetFactoryTimeZone>

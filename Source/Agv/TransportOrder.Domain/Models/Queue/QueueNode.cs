@@ -12,12 +12,12 @@ public class QueueNode
     /// <summary>
     /// The id of the node.
     /// </summary>
-    public string NodeId { get; set; } = string.Empty;
+    public string NodeId { get; init; } = string.Empty;
 
     /// <summary>
     /// The position of the node in the queue.
     /// </summary>
-    public int Position { get; set; }
+    public int Position { get; init; }
 
     /// <summary>
     /// The corresponding <see cref="EfNode"/>.

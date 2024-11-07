@@ -16,15 +16,15 @@ where TChooser : class, IChooseAgvActionGroupService
 {
     public TChooser Service = null!;
 
-    public List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = new();
+    private List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = [];
 
-    public List<string> LockedNodes { get; } = new();
+    private List<string> LockedNodes { get; } = [];
 
-    public Mock<IRouteService> RouteService { get; } = new();
+    private Mock<IRouteService> RouteService { get; } = new();
 
-    public Mock<IActionGroupRepository> AgvActionRepository { get; } = new();
+    private Mock<IActionGroupRepository> AgvActionRepository { get; } = new();
 
-    public Mock<INodeStateRepository> NodeStateRepository { get; } = new();
+    private Mock<INodeStateRepository> NodeStateRepository { get; } = new();
 
     public ChooseAgvActionGroupTestFixture(bool realRouteService = false)
     {
