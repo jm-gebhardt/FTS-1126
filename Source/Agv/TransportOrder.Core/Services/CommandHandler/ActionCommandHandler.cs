@@ -532,7 +532,12 @@ public class ActionCommandHandler :
             _logger.LogOrderWarning(LogCodes.OrderInvalid, actionGroup.AssignedAgv.GetValueOrDefault(),
                 actionGroup.CorrelationId, "Order Invalid",
                 $"Order {actionGroup.OrderId} is invalid due to {string.Join(",", validationFailureReasons)}",
-                new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.Reason, string.Join(",", validationFailureReasons) } });
+                new Dictionary<string, object?>
+                {
+                    { LogLabels.OrderId, actionGroup.OrderId }, 
+                    { LogLabels.Reason, string.Join(",", validationFailureReasons) },
+                    { LogLabels.ReasonDescription, string.Join(",", validationFailureReasons) }
+                });
 
             await _bus.Publish(new ActionGroupInvalid(actionGroup.CorrelationId, actionGroupMessageContent, validationFailureReasons), cancellationToken);
             return;
@@ -641,7 +646,11 @@ public class ActionCommandHandler :
             actionGroup.CorrelationId, "Order Aborted",
             $"Order {actionGroup.OrderId} was aborted due to {context.Message.AbortReason}",
             new Dictionary<string, object?>
-                { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.Reason, context.Message.AbortReason } });
+                { 
+                    { LogLabels.OrderId, actionGroup.OrderId },
+                    { LogLabels.Reason, context.Message.AbortReason },
+                    { LogLabels.ReasonDescription, context.Message.AbortReason}
+                });
 
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
@@ -697,7 +706,11 @@ public class ActionCommandHandler :
             actionGroup.CorrelationId, "Order Canceled",
             $"Order {actionGroup.OrderId} was canceled due to {context.Message.CancelReason}",
             new Dictionary<string, object?>
-                { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.Reason, context.Message.CancelReason } });
+            {
+                { LogLabels.OrderId, actionGroup.OrderId },
+                { LogLabels.Reason, context.Message.CancelReason },
+                { LogLabels.ReasonDescription, context.Message.CancelReason }
+            });
 
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
