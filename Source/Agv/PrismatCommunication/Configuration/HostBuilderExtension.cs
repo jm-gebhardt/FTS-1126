@@ -90,9 +90,9 @@ public static class HostBuilderExtension
             services.AddHostedService<PollingBackgroundService<ShortLoopSimulator>>();
             services.AddHostedService<PollingBackgroundService<InputLoopSimulator>>();
 
-            services.AddTransient<LongLoopSimulator>();
-            services.AddTransient<ShortLoopSimulator>();
-            services.AddTransient<InputLoopSimulator>();
+            services.AddSingleton<LongLoopSimulator>();
+            services.AddSingleton<ShortLoopSimulator>();
+            services.AddSingleton<InputLoopSimulator>();
         });
         return hostBuilder;
     }
