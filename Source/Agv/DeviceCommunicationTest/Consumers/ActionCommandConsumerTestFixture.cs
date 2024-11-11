@@ -8,11 +8,11 @@ using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
-public class StartActionCommandConsumerTestFixture : MqttConsumerTestFixture<StartActionCommandConsumer>
+public class ActionCommandConsumerTestFixture : MqttConsumerTestFixture<ActionCommandConsumer>
 {
     private readonly IGraphRepository _graphRepository = new GraphRepositoryTestFixture().WithGraphRepository().GraphRepository;
 
-    public StartActionCommandConsumerTestFixture()
+    public ActionCommandConsumerTestFixture()
     {
         AddServices(s => s.AddTransient<IAgvRepository>(_ => Mock.Of<IAgvRepository>()));
         AddServices(s => s.AddTransient<IGraphRepository>(_ => _graphRepository));

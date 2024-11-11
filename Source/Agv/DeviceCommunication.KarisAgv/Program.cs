@@ -43,7 +43,7 @@ try
                             configurator.AddMqttConsumer<MqttOrderEventConsumer>();
                             configurator.AddMqttConsumer<MqttMapConsumer>();
                             configurator.AddSagaStateMachine<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>().InMemoryRepository();
-                            configurator.AddConsumer<StartActionCommandConsumer>();
+                            configurator.AddConsumer<ActionCommandConsumer>();
                             configurator.AddConsumer<RequestAgvMapConsumer>();
                             configurator.AddConsumer<RequestAgvDataConsumer>();
                             configurator.AddConsumer<ActionAbortedConsumer>();
