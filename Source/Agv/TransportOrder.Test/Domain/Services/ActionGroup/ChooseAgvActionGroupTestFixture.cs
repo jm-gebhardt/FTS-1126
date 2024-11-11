@@ -16,15 +16,17 @@ where TChooser : class, IChooseAgvActionGroupService
 {
     public TChooser Service = null!;
 
-    private List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = [];
+    private List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = new();
 
-    private List<string> LockedNodes { get; } = [];
+    private List<string> LockedNodes { get; } = new();
 
     private Mock<IRouteService> RouteService { get; } = new();
 
     private Mock<IActionGroupRepository> AgvActionRepository { get; } = new();
 
     private Mock<INodeStateRepository> NodeStateRepository { get; } = new();
+
+    private Mock<IQueueRepository> QueueRepository{ get; } = new();
 
     public ChooseAgvActionGroupTestFixture(bool realRouteService = false)
     {
@@ -41,10 +43,12 @@ where TChooser : class, IChooseAgvActionGroupService
                 s.AddTransient(_ => RouteService.Object);
             }
             s.AddTransient(_ => AgvActionRepository.Object);
+            s.AddTransient(_ => QueueRepository.Object);
             s.AddTransient(_ => NodeStateRepository.Object);
-            s.AddTransient<IChooseAgvActionGroupService, TChooser>();
+            s.AddSingleton<IChooseAgvActionGroupService, TChooser>();
             RegisterLoggerMock<TChooser>(s);
         });
+        QueueRepository.Setup(x => x.GetBlockedQueueNodes()).ReturnsAsync([]);
     }
 
     private void RegisterLoggerMock<T>(IServiceCollection services) where T : class
@@ -66,6 +70,8 @@ where TChooser : class, IChooseAgvActionGroupService
 
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
+        RouteService.Setup(x => x.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<ICollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(routeCosts);
 
         RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>(), Array.Empty<Guid>()));
         return this;
@@ -80,6 +86,8 @@ where TChooser : class, IChooseAgvActionGroupService
             .ReturnsAsync(routeCosts);
 
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(routeCosts);
+        RouteService.Setup(x => x.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<ICollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
         RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>(), Array.Empty<Guid>()));

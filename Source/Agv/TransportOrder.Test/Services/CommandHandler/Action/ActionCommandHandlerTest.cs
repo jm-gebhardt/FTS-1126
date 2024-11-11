@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
@@ -442,6 +443,24 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
         await fixture.ShouldHavePublishedAsync<PauseActionGroup>();
+        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_AgvIsQueueingActionIsTargetingNodeActionGroupComplete_PublishesTryEnqueueAgv()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Started, assignedAgv: agv.CorrelationId);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup);
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Last().CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
+        await fixture.ShouldHavePublishedAsync<TryEnqueueAgv>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
@@ -1123,6 +1142,47 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateQueueingActionGroup_ValidAgv_PublishedActionGroupCreated()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string queueNodeName = "Park-1";
+
+        var queueActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: queueNodeName) };
+        var queueActionGroup = AgvActionGenerator.GenerateActionGroup(queueActions);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithAddActionGroupIsSuccessful()
+            .AddAgv(agv)
+            .AddActionGroup(queueActionGroup, hasUnfinishedAction: false);
+
+        var command = new CreateQueueingActionGroup(Guid.NewGuid(), agv.CorrelationId, queueNodeName);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+    }
+
+    [DataRow(ModeType.Maintenance)]
+    [DataRow(ModeType.UserMode)]
+    [DataRow(ModeType.Locked)]
+    [DataTestMethod]
+    public async Task Consume_CreateQueueingActionGroup_PendingModeChange_DoesNotPublishActionGroupCreated(ModeType pendingMode)
+    {
+        var mode = new AgvMode(ModeType.Normal);
+        mode.PrepareSwitch(pendingMode);
+        var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
+        const string queueNodeName = "Node-1";
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv);
+
+        var command = new CreateQueueingActionGroup(Guid.NewGuid(), agv.CorrelationId, queueNodeName);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
     }
 

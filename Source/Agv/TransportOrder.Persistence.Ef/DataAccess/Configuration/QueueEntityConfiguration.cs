@@ -17,6 +17,9 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
             .IsRequired()
             .HasMaxLength(DbStringLimits.Description);
 
+        builder.Ignore(e => e.Head);
+        builder.Ignore(e => e.Tail);
+
         builder.OwnsMany(q => q.Nodes, nodeBuilder =>
         {
             nodeBuilder.WithOwner().HasForeignKey("QueueId");

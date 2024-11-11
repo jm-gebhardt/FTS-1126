@@ -89,6 +89,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<PrepareChargingOfAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvSettingsGroupReference, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SwitchMode, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<TryReachQueueHead, AgvCommandHandler>(c);
         });
 
         busRegistrationConfigurator.AddConsumer<AgvEventHandler>(c =>
@@ -171,6 +172,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<EstimateActionGroupDuration, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<StartActionOfActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CompleteActionOfActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<CreateQueueingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CreateParkingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<SetTargetForAction, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResumeActionGroup, ActionCommandHandler>(c);

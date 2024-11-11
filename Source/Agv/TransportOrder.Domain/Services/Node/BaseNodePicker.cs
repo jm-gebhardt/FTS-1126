@@ -25,7 +25,11 @@ public abstract class BaseNodePicker
     protected readonly INodeStateRepository NodeStateRepository;
 
     private readonly IRouteService _routeService;
-    private readonly ILogger<BaseNodePicker> _logger;
+    
+    /// <summary>
+    /// The logger.
+    /// </summary>
+    protected readonly ILogger<BaseNodePicker> Logger;
 
     /// <inheritdoc cref="BaseNodePicker"/>>
     protected BaseNodePicker(
@@ -36,7 +40,7 @@ public abstract class BaseNodePicker
     {
         NodeStateRepository = nodeStateRepository;
         _routeService = routeService;
-        _logger = logger;
+        Logger = logger;
         AgvDb = agvDb;
     }
 
@@ -90,7 +94,7 @@ public abstract class BaseNodePicker
     [PublicAPI]
     protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv, AgvData? agvData, string? startNodeId = null)
     {
-        _logger.LogDebug("Choosing node with lowest costs");
+        Logger.LogDebug("Choosing node with lowest costs");
         return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList(), agvData, startNodeId);
     }
 

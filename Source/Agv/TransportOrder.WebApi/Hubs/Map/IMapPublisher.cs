@@ -13,5 +13,5 @@ public interface IMapPublisher
     /// <param name="nodeState">The new node state.</param>
     /// <param name="stationId">The id of the station.</param>
     /// <returns></returns>
-    Task SendNodeStateChangedAsync(NodeLock nodeState, Guid stationId);
+    Task SendNodeStateChangedAsync(NodeLock nodeState, Guid? stationId);
 }

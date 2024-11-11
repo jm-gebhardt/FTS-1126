@@ -288,6 +288,14 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_QueueNodeSelectedForAgv_PublishesCreateQueueingActionGroup()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+        await fixture.PublishMessageAsync(new QueueNodeSelectedForAgv(Guid.NewGuid(), "a queue node"));
+        await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
+    }
+
+    [TestMethod]
     public async Task Consume_AgvModeChangePending_NormalMode_NothingPublished()
     {
         var mode = new AgvMode(ModeType.Maintenance);

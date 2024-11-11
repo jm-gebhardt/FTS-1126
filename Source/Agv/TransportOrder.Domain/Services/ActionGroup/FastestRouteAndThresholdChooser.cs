@@ -19,22 +19,29 @@ public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
+        IQueueRepository queueRepository,
         ILogger<FastestRouteAndThresholdChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, logger)
     {
         _routeService = routeService;
         _orderWaitingTimeThreshold = 2;
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
-    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups)
+    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
     {
         var now = DateTime.UtcNow;
-        var priorityGroup = notStartedActionGroups.OrderBy(a => a.CreatedDate).FirstOrDefault(a => ( now - a.CreatedDate).TotalMinutes > _orderWaitingTimeThreshold);
-        if (priorityGroup != null)
+        IOrderedEnumerable<Models.ActionGroup.ActionGroup> priorityGroups = notStartedActionGroups.Where(a => ( now - a.CreatedDate).TotalMinutes > _orderWaitingTimeThreshold).OrderBy(a => a.CreatedDate);
+
+        foreach (var priorityGroup in priorityGroups)
         {
-            return priorityGroup;
+            double? cost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, priorityGroup, agvData, nodesToAvoid, cancellationToken);
+            if (cost != null)
+            {
+                return priorityGroup;
+            }
         }
+       
         double minCosts = double.MaxValue;
 
         Models.ActionGroup.ActionGroup? nextActionGroup = null;
@@ -44,7 +51,7 @@ public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, agvData, cancellationToken);
+            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) >= minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {

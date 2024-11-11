@@ -23,24 +23,25 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
+        IQueueRepository queueRepository,
         ILogger<AlternatingModeChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, logger)
     {
         _routeService = routeService;
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
-    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups)
+    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
     {
         FastestRouteMode = !FastestRouteMode;
         if (FastestRouteMode)
         {
-            return await SelectBasedOnShortestRoute(agv, agvData, cancellationToken, notStartedActionGroups);
+            return await SelectBasedOnShortestRoute(agv, agvData, cancellationToken, notStartedActionGroups, nodesToAvoid);
         }
-        return notStartedActionGroups.OrderBy(a => a.CreatedDate).FirstOrDefault();
+        return await SelectBasedOnOldestRoute(agv, agvData, cancellationToken, notStartedActionGroups, nodesToAvoid);
     }
 
-    private async Task<Models.ActionGroup.ActionGroup?> SelectBasedOnShortestRoute(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups)
+    private async Task<Models.ActionGroup.ActionGroup?> SelectBasedOnShortestRoute(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
     {
         double minCosts = double.MaxValue;
 
@@ -51,7 +52,7 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, agvData, cancellationToken);
+            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) >= minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {
@@ -61,6 +62,29 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
             minCosts = firstActionCost.Value;
 
             nextActionGroup = actionGroup;
+        }
+
+        return nextActionGroup;
+    }
+
+    private async Task<Models.ActionGroup.ActionGroup?> SelectBasedOnOldestRoute(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
+    {
+        Models.ActionGroup.ActionGroup? nextActionGroup = null;
+        foreach (var actionGroup in notStartedActionGroups.OrderBy(g => g.CreatedDate))
+        {
+            if (actionGroup.FirstNotStartedAction!.IsIncomplete)
+            {
+                continue;
+            }
+            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
+
+            if (firstActionCost == null  || actionGroup.FirstNotStartedAction!.IsIncomplete)
+            {
+                continue;
+            }
+
+            nextActionGroup = actionGroup;
+            break;
         }
 
         return nextActionGroup;

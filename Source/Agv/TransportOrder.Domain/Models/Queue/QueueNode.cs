@@ -50,4 +50,13 @@ public class QueueNode
         Node = node;
         State = state;
     }
+
+    /// <summary>
+    /// Reserve a queue node for an agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv to reserve the queue node for.</param>
+    public void Reserve(Guid agvCorrelationId)
+    {
+        State = new NodeLock(NodeId, NodeLockState.Reserved, false, agvCorrelationId, DateTime.UtcNow);
+    }
 }

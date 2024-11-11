@@ -36,6 +36,7 @@ public class AgvEventHandler :
     IConsumer<AgvPreparedForStartingAction>,
     IConsumer<AgvLoadStatusReceived>,
     IConsumer<ParkingNodeSelectedForAgv>,
+    IConsumer<QueueNodeSelectedForAgv>,
     IConsumer<ChargingNodeSelectedForAgv>,
     IConsumer<AgvModeChangePending>
 {
@@ -264,6 +265,14 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<ParkingNodeSelectedForAgv> context)
     {
         await context.Publish(new CreateParkingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.ParkingNode));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="QueueNodeSelectedForAgv"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<QueueNodeSelectedForAgv> context)
+    {
+        await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.QueueNode));
     }
 
     /// <summary>

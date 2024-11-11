@@ -15,10 +15,24 @@ public interface IQueueRepository
     Task AddQueue(Queue queue);
 
     /// <summary>
+    /// Update the queue size.
+    /// </summary>
+    /// <param name="queueId">The queue id</param>
+    /// <param name="newSize">The new size</param>
+    /// <returns></returns>
+    Task UpdateQueueSize(Guid queueId, int newSize);
+
+    /// <summary>
     /// Get all queues
     /// </summary>
     /// <returns>A collection of queues</returns>
     Task<ICollection<Queue>> GetQueues();
+
+    /// <summary>
+    /// Get the id of queue nodes that are blocked by agvs.
+    /// </summary>
+    /// <returns>Collection of node ids.</returns>
+    Task<ICollection<string>> GetBlockedQueueNodes();
 
     /// <summary>
     /// Get a single queue by its id.
@@ -34,4 +48,30 @@ public interface IQueueRepository
     /// <param name="id">The id of the queue.</param>
     /// <exception cref="QueueNotFoundException">When no queue with the given id exists.</exception>
     Task RemoveQueue(Guid id);
+
+    /// <summary>
+    /// Get all queues that are not full.
+    /// </summary>
+    /// <returns></returns>
+    Task<ICollection<Queue>> GetQueuesWithCapacity();
+
+    /// <summary>
+    /// Get the queue that has the given entry node.
+    /// </summary>
+    /// <param name="entryNode">The id of the entry node.</param>
+    /// <returns>The (first) queue that has the given entry node.</returns>
+    Task<Queue?> GetQueueByEntryNode(string entryNode);
+
+    /// <summary>
+    /// Get all queues that are occupied by agvs.
+    /// </summary>
+    /// <returns></returns>
+    Task<ICollection<Queue>> GetOccupiedQueues();
+
+    /// <summary>
+    /// Get the queue an agv is in.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <returns>Queue, if agv is in any.</returns>
+    Task<Queue?> GetQueueForAgv(Guid agvCorrelationId);
 }

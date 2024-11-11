@@ -18,14 +18,15 @@ public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
+        IQueueRepository queueRepository,
         ILogger<DynamicPrioritizationChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository,  logger)
     {
         _routeService = routeService;
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
-    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups)
+    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
     {
         foreach (var actionGroup in notStartedActionGroups.OrderBy(g => g.CreatedDate))
         {
@@ -33,7 +34,7 @@ public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, agvData, cancellationToken);
+            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
             if (firstActionCost == null)
             {
                 continue;

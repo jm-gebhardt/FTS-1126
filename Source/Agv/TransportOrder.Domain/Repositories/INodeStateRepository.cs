@@ -33,6 +33,24 @@ public interface INodeStateRepository
     public Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId);
 
     /// <summary>
+    /// Force reserving a node for an agv independent of previous occupancy/reservation
+    /// Node can not be reserved when locked
+    /// </summary>
+    /// <param name="nodeId"></param>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns></returns>
+    public Task<bool> ForceReserveNodeAsync(string nodeId, Guid agvCorrelationId);
+
+    /// <summary>
+    /// Force to occupy a node for an agv independent of previous occupancy/reservation
+    /// Node can not be reserved when locked
+    /// </summary>
+    /// <param name="nodeId"></param>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns></returns>
+    Task<bool> ForceOccupyNodeAsync(string nodeId, Guid agvCorrelationId);
+
+    /// <summary>
     /// Un-reserve a node.
     /// If the node is locked, it will not be un-reserved.
     /// </summary>

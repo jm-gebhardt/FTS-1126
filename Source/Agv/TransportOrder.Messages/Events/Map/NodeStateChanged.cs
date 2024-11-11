@@ -7,4 +7,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 /// </summary>
 /// <param name="NodeState">The node state.</param>
 /// <param name="StationId">The id of the station.</param>
-public record NodeStateChanged(NodeLock NodeState, Guid StationId);
+public record NodeStateChanged(NodeLock NodeState, Guid? StationId);

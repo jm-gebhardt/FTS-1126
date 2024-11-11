@@ -19,7 +19,7 @@ public class MapPublisher : IMapPublisher
     }
 
     /// <inheritdoc/>
-    public Task SendNodeStateChangedAsync(NodeLock nodeState, Guid stationId)
+    public Task SendNodeStateChangedAsync(NodeLock nodeState, Guid? stationId)
     {
         var nodeStateDto = _mapper.Map<NodeStateDto>(nodeState);
         nodeStateDto = nodeStateDto with { StationId = stationId };

@@ -91,6 +91,7 @@ public static class TransportOrderHostBuilderExtensions
     {
         services.AddTransient<IChargingPointManager, ChargingPointManager>();
         services.AddTransient<IParkPointService, ParkPointService>();
+        services.AddTransient<IQueueManager, QueueManager>();
         services.AddTransient<IRouteService, RouteService>();
         services.AddTransient<IAgvRouteRetrievalService, AgvRouteRetrievalService>();
         services.AddSingleton<IRouteFinder, AStarRouteFinder>();

@@ -140,6 +140,7 @@ public class AgvRepository : IAgvRepository
         List<Agv> agvs = await Agvs.Where(Agv.IsReadyStatic)
             .Where(a => a.GraphExists &&
                         !a.IsLocked &&
+                        !a.IsQueueing &&
                         a.Mode.Type == ModeType.Normal &&
                         a.CurrentAgvState == AgvState.Idle &&
                         !a.AgvStatus!.Busy).ToListAsync();

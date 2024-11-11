@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,7 +35,8 @@ public class NodeCommandHandlerTest
         var fixture = new NodeCommandHandlerTestFixture()
             .WithNodeStates([oldLastNodeState])
             .WithNodeOccupied(AgvSerialNumber.ToGuid())
-            .WithStation(oldLastNodeState.NodeId);
+            .WithStation(oldLastNodeState.NodeId)
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(
@@ -44,6 +46,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Once);
     }
 
@@ -56,7 +59,8 @@ public class NodeCommandHandlerTest
         var oldLastNodeState = new NodeLock("old", NodeLockState.Occupied, false, "different".ToGuid(), DateTime.UtcNow);
         var fixture = new NodeCommandHandlerTestFixture()
             .WithNodeStates([oldLastNodeState])
-            .WithNodeOccupied("different".ToGuid());
+            .WithNodeOccupied("different".ToGuid())
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(
@@ -66,6 +70,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync("different".ToGuid()), Times.Never);
     }
@@ -74,7 +79,8 @@ public class NodeCommandHandlerTest
     public async Task Consume_UpdateNodeOccupancy_OldLastNodeWasNotOccupied_UnOccupyNodeNotCalled()
     {
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([]);
+            .WithNodeStates([])
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(
@@ -84,6 +90,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
     }
 
@@ -94,7 +101,8 @@ public class NodeCommandHandlerTest
         var fixture = new NodeCommandHandlerTestFixture()
             .WithNodeStates([newLastNodeState])
             .WithNodeReserved(newLastNodeState.NodeId)
-            .WithStation(newLastNodeState.NodeId);
+            .WithStation(newLastNodeState.NodeId)
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(
@@ -104,6 +112,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, AgvSerialNumber.ToGuid()), Times.Once);
     }
 
@@ -116,7 +125,8 @@ public class NodeCommandHandlerTest
         var newLastNodeState = new NodeLock("new", NodeLockState.Reserved, false, "different".ToGuid(), DateTime.UtcNow);
         var fixture = new NodeCommandHandlerTestFixture()
             .WithNodeStates([newLastNodeState])
-            .WithNodeReserved(newLastNodeState.NodeId);
+            .WithNodeReserved(newLastNodeState.NodeId)
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(
@@ -126,6 +136,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, "different".ToGuid()), Times.Never);
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, AgvSerialNumber.ToGuid()), Times.Never);
     }
@@ -134,7 +145,8 @@ public class NodeCommandHandlerTest
     public async Task Consume_UpdateNodeOccupancy_NewLastNodeNotReserved_NewLastNodeNotOccupied()
     {
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([]);
+            .WithNodeStates([])
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(
@@ -156,7 +168,8 @@ public class NodeCommandHandlerTest
         var fixture = new NodeCommandHandlerTestFixture()
             .WithNodeStates([oldLastNodeState, newLastNodeState])
             .WithAnyStation()
-            .WithNodeOccupied(AgvSerialNumber.ToGuid());
+            .WithNodeOccupied(AgvSerialNumber.ToGuid())
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(
@@ -171,7 +184,7 @@ public class NodeCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateNodeOccupancy_UnusedNodeLock_NodeFreed()
+    public async Task Consume_UpdateNodeOccupancy_UnusedNodeLockAgvNotInQueue_NodeFreed()
     {
         var unusedNodeState = new NodeLock("unused", NodeLockState.Occupied, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
         var usedNodeState = new NodeLock("usedNode", NodeLockState.Reserved, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
@@ -179,7 +192,8 @@ public class NodeCommandHandlerTest
         var fixture = new NodeCommandHandlerTestFixture()
             .WithActionGroups([actionGroupToUsedNode])
             .WithNodeStates([unusedNodeState, usedNodeState])
-            .WithAnyStation();
+            .WithAnyStation()
+            .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
             new UpdateNodeOccupancy(

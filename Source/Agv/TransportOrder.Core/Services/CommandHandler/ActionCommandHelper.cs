@@ -87,10 +87,6 @@ public class ActionCommandHelper
             action.Nodes = [];
         }
 
-        _logger.LogInformation("For AGV:{CorrelationID}, Last action was move to coordinate:{LastActionWasMoveToCoordinate} & action is move to coordinate:{IsMoveToCoordinate}",
-            assignedAgv.CorrelationId,
-            lastActionWasMoveToCoordinate,
-            action.IsMoveToCoordinate);
         try
         {
             if ((action.Nodes == null || !action.Nodes.Any()) && assignedAgv.AgvStatus!.LastNodeId != action.Target.NodeId! && !action.IsMoveToCoordinate)

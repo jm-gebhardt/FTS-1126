@@ -126,6 +126,42 @@ public class RouteService : IRouteService
         return firstActionCost;
     }
 
+    /// <inheritdoc />
+    public async Task<double?> GetCostsForFirstActionNotPassingNodesAsync(Models.Agv.Agv agv, Models.ActionGroup.ActionGroup actionGroup, AgvData? agvData, ICollection<string> nodesToAvoid, CancellationToken cancellationToken = default)
+    {
+        AgvAction? firstAction = null;
+        double? firstActionCost = null;
+
+        if (actionGroup.Actions.All(a => a.IsMoveToCoordinate))
+        {
+            return 0;
+        }
+
+        foreach (var action in actionGroup.Actions.Where(a => a is { IsIncomplete: false, IsMoveToCoordinate: false }))
+        {
+            var route  = await GetRouteIfExistingAsync(agv, action.Target.NodeId!, null, true, agvData, cancellationToken); 
+            if (route == null)
+            {
+                return null; // Break if a target node is not reachable
+            }
+
+            if (route.Nodes.Intersect(nodesToAvoid).Any())
+            {
+                return null; // Break if a route passes nodes to avoid.
+            }
+
+            // keep first action and it's costs
+            if (firstAction != null)
+            {
+                continue;
+            }
+            firstAction = action;
+            firstActionCost = route.Costs;
+        }
+
+        return firstActionCost;
+    }
+
     /// <inheritdoc/>
     public async Task<bool> HasAnyAgvRouteAsync(Models.ActionGroup.ActionGroup actionGroup, IEnumerable<Models.Agv.Agv> agvs, CancellationToken cancellationToken = default)
     {

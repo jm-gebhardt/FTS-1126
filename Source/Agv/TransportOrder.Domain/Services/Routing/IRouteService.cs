@@ -35,6 +35,20 @@ public interface IRouteService
     Task<double?> GetCostsForFirstActionAsync(Models.Agv.Agv agv, Models.ActionGroup.ActionGroup actionGroup, AgvData? agvData, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks if given AGV has route for given ActionGroup
+    /// firstAction contains the first action of the ActionGroup or null if no route is found
+    /// firstActionCost contains the costs for the first action of the ActionGroup or float.MaxValue if no route is found
+    /// </summary>
+    /// <param name="agv"></param>
+    /// <param name="actionGroup"></param>
+    /// <param name="agvData">The agv data.</param>
+    /// <param name="nodesToAvoid">The nodes to avoid.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    [PublicAPI]
+    Task<double?> GetCostsForFirstActionNotPassingNodesAsync(Models.Agv.Agv agv, Models.ActionGroup.ActionGroup actionGroup, AgvData? agvData, ICollection<string> nodesToAvoid, CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Returns true once it found the first Agv which can handle the whole ActionGroup (based on its current node)
     /// </summary>
     /// <param name="actionGroup">The ActionGroup containing one or more Actions of which the target node Id will be considered</param>

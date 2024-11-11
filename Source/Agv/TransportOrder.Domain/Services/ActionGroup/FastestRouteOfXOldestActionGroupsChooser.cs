@@ -20,15 +20,16 @@ public class FastestRouteOfXOldestActionGroupsChooser : BaseChooseAgvActionGroup
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
+        IQueueRepository queueRepository,
         ILogger<FastestRouteOfXOldestActionGroupsChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, logger)
     {
         _routeService = routeService;
         _numberOfOrders = 2;
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
-    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups)
+    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
     {
         double minCosts = double.MaxValue;
 
@@ -39,7 +40,7 @@ public class FastestRouteOfXOldestActionGroupsChooser : BaseChooseAgvActionGroup
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionAsync(agv, actionGroup, agvData, cancellationToken);
+            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) >= minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {

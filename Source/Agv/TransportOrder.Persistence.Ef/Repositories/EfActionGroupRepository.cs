@@ -345,6 +345,21 @@ public class EfActionGroupRepository : IActionGroupRepository
         return hasNotStartedActions;
     }
 
+    /// <inheritdoc />
+    public async Task<bool> HasCurrentAssignedActionGroupAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        bool hasActions = await queryable.Where(actionGroup =>
+                actionGroup.AssignedAgv == agvCorrelationId &&
+                (actionGroup.State == ActionGroupState.Started || actionGroup.State == ActionGroupState.Created)
+            )
+            .AsNoTracking()
+            .AnyAsync();
+
+        return hasActions;
+    }
+
     /// <inheritdoc/>
     public async Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId)
     {

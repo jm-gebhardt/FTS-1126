@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// <summary>
 /// Handles factory time related requests.
 /// </summary>
-[PublicAPI]
+[UsedImplicitly]
 public class FactoryTimeRequestHandler(IFactoryTimeRepository factoryTimeRepository) : 
     IConsumer<UpdateFactoryTimeZone>,
     IConsumer<GetFactoryTimeZone>

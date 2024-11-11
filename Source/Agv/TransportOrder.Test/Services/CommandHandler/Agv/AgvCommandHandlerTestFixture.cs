@@ -36,6 +36,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
+    private readonly Mock<IQueueManager> _queueManager = new();
     public readonly Mock<IAgvDb> AgvDb = new();
     private readonly Mock<IParkPointService> _parkPointService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
@@ -65,11 +66,37 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => AgvDb.Object);
         collection.AddTransient(_ => _chargingPointManager.Object);
         collection.AddTransient(_ => _parkPointService.Object);
+        collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithAgvsAtQueueHead(ICollection<Guid> agvs)
+    {
+        _queueManager.Setup(x => x.GetAgvsAtQueueHeads()).ReturnsAsync(agvs);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithAgvsToMove(Dictionary<Guid, string>? agvsToMove)
+    {
+        _queueManager.Setup(x => x.TryDequeueAgv(It.IsAny<Guid>())).ReturnsAsync(agvsToMove);
+        _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>())).ReturnsAsync(agvsToMove);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithIsOnAQueueNode(bool isOnAQueueNode)
+    {
+        _queueManager.Setup(x => x.IsOnAQueueNode(It.IsAny<Guid>())).ReturnsAsync(isOnAQueueNode);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithEnqueueingTarget(string? queueNode)
+    {
+        _queueManager.Setup(x => x.TryEnqueueAgv(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(queueNode); 
         return this;
     }
 
@@ -103,6 +130,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithCurrentAgvAction(AgvAction action)
     {
         _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
+        return this;
+    }
+
+    [PublicAPI]
+    public AgvCommandHandlerTestFixture WithCurrentAssignedActionGroup(bool hasAssignedActionGroup)
+    {
+        _actionGroupRepository.Setup(x => x.HasCurrentAssignedActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(hasAssignedActionGroup);
         return this;
     }
 
@@ -155,6 +189,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture HasAlreadyReservedNode(bool hasNodeReserved)
     {
+        _queueManager.Setup(x => x.IsOnAQueueNode(It.IsAny<Guid>())).ReturnsAsync(false);
         _parkPointService.Setup(x => x.AgvHasReservedParkingNodeAsync(It.IsAny<Guid>())).ReturnsAsync(hasNodeReserved);
         _chargingPointManager.Setup(x => x.AgvHasReservedChargerAsync(It.IsAny<Guid>())).ReturnsAsync(hasNodeReserved);
         return this;
@@ -176,6 +211,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithUnfinishedActionGroup(bool hasUnfinishedGroup)
     {
         _actionGroupRepository.Setup(x => x.HasUnfinishedActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedGroup);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithActionGroup(ActionGroup? actionGroup)
+    {
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         return this;
     }
 

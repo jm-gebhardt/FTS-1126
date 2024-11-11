@@ -13,8 +13,9 @@ public class OldestActionGroupChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_AutomaticActions_SelectsDependingOnAge()
     {
-        var oldSlowActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id);
-        var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id);
+        var now = DateTime.UtcNow;
+        var oldSlowActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id, createdDate:now.AddMinutes(-1));
+        var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id, createdDate:now);
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
 
         ChooseAgvActionGroupTestFixture<OldestActionGroupChooser> fixture = new ChooseAgvActionGroupTestFixture<OldestActionGroupChooser>()

@@ -33,6 +33,7 @@ public class AgvProfile : Profile
 
         CreateMap<Domain.Models.Agv.Agv, MessageContent.Agv>(MemberList.None)
             .ForMember(a => a.AgvMode, opt => opt.MapFrom(src => src.Mode))
+            .ForSourceMember(a => a.IsQueueing, opt => opt.DoNotValidate())
             .IncludeMembers(s => s.AgvStatus)
             .ForMember(nameof(MessageContent.Agv.CurrentState), opt => opt.MapFrom(src => src.CurrentAgvState));
 

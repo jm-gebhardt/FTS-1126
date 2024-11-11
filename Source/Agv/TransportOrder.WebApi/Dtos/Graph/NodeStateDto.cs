@@ -23,7 +23,7 @@ public record NodeStateDto : DatedMessage
     public Guid? AgvCorrelationId { get; set; }
 
     /// <summary >The id of the station.</summary>
-    public Guid StationId { get; set; }
+    public Guid? StationId { get; set; }
 
     /// <inheritdoc cref="NodeStateDto"/>>
     public NodeStateDto()

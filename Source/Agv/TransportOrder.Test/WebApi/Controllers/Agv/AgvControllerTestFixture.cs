@@ -65,6 +65,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
 
+    private readonly Mock<IQueueManager> _queueManager = new();
+
     public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -316,6 +318,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => ChargingPointManager.Object);
             sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _mapRepository.Object);
+            sc.AddTransient(_ => _queueManager.Object);
             sc.AddTransient(_ => _productionOptions);
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);

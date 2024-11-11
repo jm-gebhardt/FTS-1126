@@ -78,6 +78,21 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
+    public Task<bool> ForceReserveNodeAsync(string nodeId, Guid agvCorrelationId)
+    {
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            if (!IsLocked(nodeId) )
+            {
+                _logger.LogDebug("Force reserving node {NodeId}, for Agv {CorrelationId}", nodeId, agvCorrelationId);
+                return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId, true);
+            }
+            _logger.LogDebug("Could not reserve node {NodeId} for agv {CorrelationId} because node is locked or not free.", nodeId, agvCorrelationId);
+            return false;
+        });
+    }
+
+    /// <inheritdoc />
     public Task<bool> UnReserveNodeAsync(Guid agvCorrelationId)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
@@ -106,6 +121,20 @@ public class EfNodeStateRepository : INodeStateRepository
         
         _logger.LogDebug("Occupy node {NodeId} with AGV {CorrelationId}", nodeId, agvCorrelationId);
         return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ForceOccupyNodeAsync(string nodeId, Guid agvCorrelationId)
+    {
+        var currentState = GetNodeLock(nodeId);
+        if (currentState is { IsLocked: true })
+        {
+            _logger.LogDebug("Could not not occupy node {NodeId} because it is locked", nodeId);
+            return false;
+        }
+
+        _logger.LogDebug("Occupy node {NodeId} with AGV {CorrelationId}", nodeId, agvCorrelationId);
+        return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId, force:true);
     }
 
     /// <inheritdoc />
@@ -229,10 +258,9 @@ public class EfNodeStateRepository : INodeStateRepository
             .FirstOrDefault(n => n.AgvCorrelationId == agvCorrelationId && n.NodeState == nodeLockState);
     }
 
-    private async Task<bool> UpdateNodeAsync(string nodeId, NodeLockState nodeState, Guid? agvCorrelationId)
+    private async Task<bool> UpdateNodeAsync(string nodeId, NodeLockState nodeState, Guid? agvCorrelationId, bool force=false)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-
         var currentLock = await dbContext
             .Set<NodeLock>()
             .AsNoTracking()
@@ -240,19 +268,17 @@ public class EfNodeStateRepository : INodeStateRepository
         if (currentLock == null)
         {
             await dbContext.AddAsync(new NodeLock(nodeId, nodeState, false, agvCorrelationId, DateTime.UtcNow));
-        }
-        else if (currentLock.NodeState != nodeState)
-        {
-            dbContext.Update(new NodeLock(nodeId, nodeState, currentLock.IsLocked, agvCorrelationId, DateTime.UtcNow));
-        }
-        else
-        {
-            // node already in state
-            return false;
+            return await dbContext.SaveChangesAsync() > 0;
         }
 
-        int result = await dbContext.SaveChangesAsync();
-        return result > 0;
+        if (currentLock.NodeState != nodeState || force)
+        {
+            dbContext.Update(new NodeLock(nodeId, nodeState, currentLock.IsLocked, agvCorrelationId, DateTime.UtcNow));
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+       
+        // node already in state and no forced update
+        return false;
     }
 
     private async Task<bool> UpdateNodeLockAsync(string nodeId, bool isLocked)

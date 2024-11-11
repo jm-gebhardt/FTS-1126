@@ -61,6 +61,11 @@ public class Agv : IAgv
     }
 
     /// <summary>
+    /// The agv is queueing.
+    /// </summary>
+    public bool IsQueueing { get; set; }
+
+    /// <summary>
     /// The agv can start an automatic action.
     /// </summary>
     public bool CanStartAutomaticAction => Mode.Type == ModeType.Normal;

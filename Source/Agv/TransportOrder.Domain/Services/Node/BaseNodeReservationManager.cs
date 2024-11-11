@@ -13,7 +13,10 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Node;
 /// </summary>
 public abstract class BaseNodeReservationManager : BaseNodePicker
 {
-    private readonly ISemaphoreProvider _semaphoreProvider;
+    /// <summary>
+    /// The semaphore for reserving nodes.
+    /// </summary>
+    protected readonly ISemaphoreProvider SemaphoreProvider;
 
     /// <inheritdoc cref="BaseNodeReservationManager"/>>
     protected BaseNodeReservationManager(
@@ -24,7 +27,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
         ISemaphoreProvider semaphoreProvider
     ) : base(nodeStateRepository, routeService, agvDb, logger)
     {
-        _semaphoreProvider = semaphoreProvider;
+        SemaphoreProvider = semaphoreProvider;
     }
 
     /// <summary>
@@ -32,22 +35,26 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// </summary>
     /// <param name="agv"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
+    /// <param name="reserveNode"></param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickAndReserveNodeAsync(Models.Agv.Agv agv, string? startNodeId = null)
+    protected async Task<GraphNode> PickAndReserveNodeAsync(Models.Agv.Agv agv, string? startNodeId = null, bool reserveNode = true)
     {
-        return await _semaphoreProvider.ExecuteLockedAsync(async () =>
+        return await SemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var agvData = await AgvDb.Data.GetAgvDataAsync(agv.CorrelationId);
             var node = await PickNode(agv, agvData, startNodeId);
 
-            await ReserveNodeAsync(node.Id, agv.CorrelationId);
+            if(reserveNode)
+            {
+                await ReserveNodeAsync(node.Id, agv.CorrelationId);
+            }
             return node;
         });
     }
 
     ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
     [UsedImplicitly]
-    protected Task<bool> TryReserveNodeAsync(string nodeId)
+    protected Task<bool> TryLockNode(string nodeId)
     {
         return NodeStateRepository.LockNodeAsync(nodeId);
     }

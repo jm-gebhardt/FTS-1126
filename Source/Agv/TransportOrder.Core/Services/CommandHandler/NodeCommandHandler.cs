@@ -1,6 +1,8 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
@@ -16,6 +18,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class NodeCommandHandler(
     INodeStateRepository nodeStateRepository, 
+    IQueueRepository queueRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository, 
     ILogger<NodeCommandHandler> logger) :
@@ -83,6 +86,7 @@ public class NodeCommandHandler(
         if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
         {
             await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
+            await context.Publish(new TryReachQueueHead(agvCorrelationId, newLastNodeId));
             await PublishNodeStateChange(context, newLastNodeId!);
             nodeLocksForAgv.Remove(newLastNode);
         }
@@ -97,6 +101,11 @@ public class NodeCommandHandler(
 
     private async Task FreeUnusedNodes(IPublishEndpoint context, ICollection<NodeLock> nodeLocks, Guid agvCorrelationId)
     {
+        var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
+        if (queue != null)
+        {
+            nodeLocks = nodeLocks.Except(queue.Nodes.Where(n => n.State?.AgvCorrelationId == agvCorrelationId).Select(q => q.State!).ToList()).ToList();
+        }
         ICollection<ActionGroup> agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
         ICollection<Task<bool>> freeNodeTasks = [];
         ICollection<Task> publishTasks = [];
@@ -104,6 +113,7 @@ public class NodeCommandHandler(
         {
             if (!agvActionGroups.Any(a => a.Actions.Any(action => action.Target.NodeId == node.NodeId)))
             {
+                logger.LogWarning("For agv {AgvCorrelationId} free residual node {NodeId}", agvCorrelationId, node.NodeId);
                 freeNodeTasks.Add(nodeStateRepository.FreeNodeAsync(node.NodeId));
                 publishTasks.Add(PublishNodeStateChange(context, node.NodeId));
             }
@@ -115,12 +125,22 @@ public class NodeCommandHandler(
     private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
     {
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
-        var station = await stationRepository.GetStation(nodeId);
+        Guid? stationId;
+        try
+        {
+            var station = await stationRepository.GetStation(nodeId);
+            stationId = station.Id;
+        }
+        catch (NodeNotFoundException)
+        {
+            stationId = null;
+        }
+       
         if (nodeState != null)
         {
-            await context.Publish(new NodeStateChanged(nodeState, station.Id));
+            await context.Publish(new NodeStateChanged(nodeState, stationId));
             return;
         }
-        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow), station.Id));
+        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow), stationId));
     }
 }

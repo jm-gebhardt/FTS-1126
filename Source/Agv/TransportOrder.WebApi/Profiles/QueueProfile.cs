@@ -22,6 +22,10 @@ public class QueueProfile : WebApiProfile
             {
                 return src.Select((dto, _) => context.Mapper.Map<Common.Messages.Queue.QueueNode>(dto)).ToList();
             });
-        CreateMap<Queue, QueueDto>();
+        CreateMap<Queue, QueueDto>()
+            .ForSourceMember(s => s.Head , opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.AgvFillQuantity , opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.Tail , opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.IsFull, opt => opt.DoNotValidate());
     }
 }

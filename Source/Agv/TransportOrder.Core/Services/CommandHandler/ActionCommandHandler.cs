@@ -18,6 +18,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
@@ -40,6 +41,7 @@ public class ActionCommandHandler :
     IConsumer<TryStartNewActionGroup>,
     IConsumer<CreateParkingActionGroup>,
     IConsumer<CreateChargingActionGroup>,
+    IConsumer<CreateQueueingActionGroup>,
     IConsumer<CompleteActionOfActionGroup>,
     IConsumer<QueueActionGroup>,
     IConsumer<CancelActionGroup>,
@@ -137,7 +139,7 @@ public class ActionCommandHandler :
                 new Dictionary<string, object?>
                 {
                     { LogLabels.OrderId, actionGroup.OrderId },
-                    { LogLabels.ActionType, action.ActionType}
+                    { LogLabels.ActionType, action.ActionType }
                 });
             _logger.LogInformation("{ActionType} for action group {CorrelationId} has started.", action.ActionType, actionGroup.CorrelationId);
             await _actionService.LogStationUpdate(assignedAgv, action, actionGroup);
@@ -328,14 +330,16 @@ public class ActionCommandHandler :
             if (await _actionService.SelectNodesForAgvAction(action, agv, false, context.CancellationToken))
             {
                 var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(chosenActionGroup.CorrelationId);
-                actionGroup.Assign(agv);
-                _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId,
-                    "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
-                    new Dictionary<string, object?>
-                    {
-                        { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber }
-                    });
-
+                if (actionGroup.AssignedAgv == null)
+                {
+                    actionGroup.Assign(agv);
+                    _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId,
+                        "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
+                        new Dictionary<string, object?>
+                        {
+                            { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber }
+                        });
+                }
                 await _actionService.TryUpdateActionGroup(actionGroup);
                 await context.Publish(new NodesSelectedForAction(action, agv.CorrelationId), cancellationToken);
             }
@@ -365,6 +369,49 @@ public class ActionCommandHandler :
         if (agvModeProhibitsCreation)
         {
             _logger.LogInformation("Could not create parking action group for AGV:{CorrelationId}. locked:{IsLocked}, CanStartAutomaticAction:{CanStartAutomaticAction}, pending mode :{PendingMode}",
+                agv.CorrelationId,
+                agv.IsLocked,
+                agv.CanStartAutomaticAction, agv.Mode.PendingType);
+            return;
+        }
+        _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId,
+            "Order Created", $"Order {actionGroup.OrderId} was created successfully",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
+        _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, agv.CorrelationId, actionGroup.CorrelationId,
+            "AGV Assigned", $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber } });
+
+        if (!await _actionGroupRepository.AddAsync(actionGroup))
+        {
+            _logger.LogError("Failed to save action group {ActionGroupCorrelationId}", actionGroup.CorrelationId);
+            throw new ActionsInActionGroupEmptyException(actionGroup.CorrelationId);
+        }
+        await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agv.CorrelationId), cancellationToken);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CreateQueueingActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CreateQueueingActionGroup> context)
+    {
+        (var groupCorrelationId, var agvCorrelationId, string queueNode) = context.Message;
+        var cancellationToken = context.CancellationToken;
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
+            groupCorrelationId,
+            $"Internal queueing order for {agv.SerialNumber}",
+            actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, queueNode, groupCorrelationId) },
+            assignedAgv: agv.CorrelationId,
+            creator: ActionGroupCreator.TransportOrder,
+            hasPriority: true
+        );
+
+        bool agvModeProhibitsCreation = agv.IsLocked || !agv.CanStartAutomaticAction || agv.HasPendingModeSwitch;
+
+        if (agvModeProhibitsCreation)
+        {
+            _logger.LogInformation("Could not create queueing action group for AGV:{CorrelationId}. locked:{IsLocked}, CanStartAutomaticAction:{CanStartAutomaticAction}, pending mode :{PendingMode}",
                 agv.CorrelationId,
                 agv.IsLocked,
                 agv.CanStartAutomaticAction, agv.Mode.PendingType);
@@ -599,6 +646,11 @@ public class ActionCommandHandler :
                 await context.Publish(new SwitchMode(agv.CorrelationId), cancellationToken);
             }
             return;
+        }
+
+        if (agv.IsQueueing && action.Target.NodeId != null)
+        {
+            await context.Publish(new TryEnqueueAgv(agv.CorrelationId, action.Target.NodeId), cancellationToken);
         }
 
         if (agv.HasPendingModeSwitch && agv.Mode.CurrentActionGroupPolicy != CurrentActionGroupPolicy.Pause)

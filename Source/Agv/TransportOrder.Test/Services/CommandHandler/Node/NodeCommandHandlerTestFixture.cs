@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -14,6 +15,7 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     public readonly Mock<INodeStateRepository> NodeStateRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
+    private readonly Mock<IQueueRepository> _queueRepository = new();
 
     public NodeCommandHandlerTestFixture()
     {
@@ -26,6 +28,7 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         collection.AddTransient(_ => NodeStateRepository.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
+        collection.AddTransient(_ => _queueRepository.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
        
         return this;
@@ -34,6 +37,12 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     public NodeCommandHandlerTestFixture WithNodeState(NodeLock? nodeState)
     {
         NodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(nodeState);
+        return this;
+    }
+
+    public NodeCommandHandlerTestFixture WithQueue(Queue? queue)
+    {
+        _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
         return this;
     }
 

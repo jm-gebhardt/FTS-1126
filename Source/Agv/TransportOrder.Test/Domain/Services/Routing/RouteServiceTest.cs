@@ -173,4 +173,36 @@ public class RouteServiceTest
         double? costs = await fixture.RouteService.GetCostsForFirstActionAsync(agv, actionGroup, data, CancellationToken.None);
         costs.ShouldNotBeNull();
     }
+
+    [TestMethod]
+    public async Task GetCostsForFirstActionNotPassingNodesAsync_PickDropActionGroupNoAvoidedNodes_ReturnsActionCosts()
+    {
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+        string node = AgvGraphGenerator.Waypoint1.Id;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        var data = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        var fixture = new RouteServiceTestFixture()
+            .WithAgv(agv, agvGraph);
+
+        double? costs = await fixture.RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, data, [], CancellationToken.None);
+        costs.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetCostsForFirstActionNotPassingNodesAsync_NodesToAvoidOnRoute_ReturnsNull()
+    {
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+        string node = AgvGraphGenerator.Waypoint1.Id;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        var data = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        var fixture = new RouteServiceTestFixture()
+            .WithAgv(agv, agvGraph);
+
+        double? costs = await fixture.RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, data, [actionGroup.Actions.First().Target.NodeId!], CancellationToken.None);
+        costs.ShouldBeNull();
+    }
 }

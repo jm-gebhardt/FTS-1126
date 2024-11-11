@@ -89,6 +89,13 @@ public interface IActionGroupRepository
     Task<ActionGroup?> GetCurrentAssignedActionGroupAsync(Guid agvCorrelationId);
 
     /// <summary>
+    /// True if the agv has currently assigned action groups that are created or started.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id.</param>
+    [PublicAPI]
+    Task<bool> HasCurrentAssignedActionGroupAsync(Guid agvCorrelationId);
+
+    /// <summary>
     /// Get currently assigned action groups of provided agvs.
     /// </summary>
     /// <param name="agvCorrelationIds">A list of agv correlation ids.</param>
