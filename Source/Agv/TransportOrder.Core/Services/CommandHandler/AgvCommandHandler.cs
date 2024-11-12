@@ -831,11 +831,6 @@ public class AgvCommandHandler :
             _logger.LogInformation("Agv {AgvCorrelationId} is not available for busy", agv.CorrelationId);
             return;
         }
-        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
-        {
-            _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
-            return;
-        }
 
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(action.ParentId);
         if (actionGroup == null)
@@ -844,17 +839,33 @@ public class AgvCommandHandler :
             return;
         }
 
-        _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
-        await PublishStateChange(context, agv);
-
         if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Charge) || actionGroup.IsManual)
         {
-            await TryEscapeQueue(context, agv.CorrelationId);
+            if (await TryEscapeQueue(context, agv.CorrelationId))
+            {
+                agv.IsQueueing = false;
+            }
+
+            if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+            {
+                _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+                return;
+            }
+            _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
+            await PublishStateChange(context, agv);
             await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
             return;
         }
-        await TryDequeueAgv(context, agv.CorrelationId);
 
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        {
+            _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+            return;
+        }
+
+        await TryDequeueAgv(context, agv.CorrelationId);
+        _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
+        await PublishStateChange(context, agv);
         await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
     }
 
@@ -939,14 +950,14 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task TryEscapeQueue(IPublishEndpoint context, Guid agvCorrelationId)
+    private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Guid agvCorrelationId)
     {
         if (await _queueManager.IsOnAQueueNode(agvCorrelationId))
         {
             Dictionary<Guid, string>? agvsToMove = await _queueManager.TryEscapeQueue(agvCorrelationId);
             if (agvsToMove == null)
             {
-                return;
+                return false;
             }
             foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
             {
@@ -955,7 +966,9 @@ public class AgvCommandHandler :
             }
             //Trigger refilling of queue
             await context.Publish(new TryReactivateParkingAgvs());
+            return true;
         }
+        return false;
     }
 
     /// <summary>

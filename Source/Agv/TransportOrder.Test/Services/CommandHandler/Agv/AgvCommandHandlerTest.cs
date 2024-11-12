@@ -501,6 +501,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryReactivateParkingAgvs>();
+        agv.IsQueueing.ShouldBeFalse();
     }
 
     [TestMethod]
@@ -524,6 +525,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        agv.IsQueueing.ShouldBeFalse();
     }
 
     [TestMethod]
@@ -546,6 +548,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        agv.IsQueueing.ShouldBeFalse();
     }
 
     [TestMethod]
