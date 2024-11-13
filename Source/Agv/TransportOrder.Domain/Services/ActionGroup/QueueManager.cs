@@ -75,7 +75,7 @@ public class QueueManager : BaseNodeReservationManager, IQueueManager
                 Logger.LogInformation("Enqueuing agv {AgvCorrelationId} to node {TargetNode} of queue {QueueName}", agvCorrelationId, target, queue.Name);
                 if (entryNode != target)
                 {
-                    await ReserveNodeAsync(target, agvCorrelationId);
+                    await NodeStateRepository.ForceReserveNodeAsync(target, agvCorrelationId);
                 }
                 else
                 {

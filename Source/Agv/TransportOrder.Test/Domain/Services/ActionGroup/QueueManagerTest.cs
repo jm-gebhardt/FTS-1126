@@ -96,7 +96,7 @@ public class QueueManagerTest
 
         (await fixture.QueueManager.TryEnqueueAgv(agv, entryNode.NodeId)).ShouldBe(nodeToEnqueueTo.NodeId);
 
-        fixture.VerifyNodeWasReserved(nodeToEnqueueTo.NodeId, agv);
+        fixture.VerifyNodeWasReserved(nodeToEnqueueTo.NodeId, agv, force: true);
     }
 
     [TestMethod]
