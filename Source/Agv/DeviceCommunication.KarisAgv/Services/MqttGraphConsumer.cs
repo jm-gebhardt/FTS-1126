@@ -53,6 +53,20 @@ public class MqttGraphConsumer : IConsumer<MqttGraph>
             }
         }
 
+        if (reversedYGraph.Edges != null)
+        {
+            foreach (var e in reversedYGraph.Edges)
+            {
+                if (e.ControlPoints != null)
+                {
+                    foreach (var controlPoint in e.ControlPoints)
+                    {
+                        controlPoint.Y *= -1;
+                    }
+                }
+            }
+        }
+
         var graphParser = new GraphParser(reversedYGraph, _graphRepository);
         var agvGraph = graphParser.Graph;
         FeedAgvRepository(correlationId, agvGraph);
