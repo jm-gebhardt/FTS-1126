@@ -14,5 +14,5 @@ public interface IConveyorCommunicator
     /// <summary>
     /// Report the station for pick or drop to the conveyor.
     /// </summary>
-    void ReportPalletPickDropStation(string targetStation, bool hasCargo, string? pickStation);
+    void ReportPalletPickDropStation(string targetStation, string? pickStation, string? dropStation);
 }

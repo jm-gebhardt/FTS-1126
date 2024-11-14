@@ -15,9 +15,9 @@ public class SimulationConveyorCommunicator(ILogger<SimulationConveyorCommunicat
     }
     
     /// <inheritdoc cref="IConveyorCommunicator"/>>
-    public void ReportPalletPickDropStation(string targetStation, bool hasCargo, string? pickStation)
+    public void ReportPalletPickDropStation(string targetStation, string? pickStation, string? dropStation)
     {
-        var agvWeStation = new AgvWeStation(targetStation, hasCargo, pickStation, DateTime.UtcNow);
+        var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, DateTime.UtcNow);
         logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor", agvWeStation.ToString());
     }
 }

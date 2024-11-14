@@ -14,21 +14,21 @@ public class AgvWeStation: ConveyorTelegram
     public string Station { get; private set; }
 
     /// <summary>
-    /// True, if the agv comes with cargo.
-    /// </summary>
-    public bool Cargo { get; private set; }
-
-    /// <summary>
     /// The position of the hu to pick next.
     /// </summary>
     public string Pick { get; private set; }
 
+    /// <summary>
+    /// The position of the hu to drop.
+    /// </summary>
+    public string Drop { get; private set; }
+
     /// <inheritdoc cref="AgvWeStation"/>>
-    public AgvWeStation(string station, bool cargo, string? pick, DateTime time)
+    public AgvWeStation(string station, string? drop, string? pick, DateTime time)
     {
         Station = station;
-        Cargo = cargo;
         Pick = pick ?? "0000";
+        Drop = drop ?? "0000";
         Func = nameof(AgvWeStation);
         Time = time;
         Send = Fts;
@@ -50,7 +50,7 @@ public class AgvWeStation: ConveyorTelegram
         {
             Station = fields[nameof(Station)][..4].TrimEnd('.');
             Pick = fields[nameof(Pick)][..4].TrimEnd('.');
-            Cargo = fields[nameof(Cargo)] == "1";
+            Drop = fields[nameof(Drop)][..4].TrimEnd('.');
         }
         catch (KeyNotFoundException ex)
         {
@@ -70,6 +70,6 @@ public class AgvWeStation: ConveyorTelegram
     /// </summary>
     public override string ToString()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{nameof(Station)}:{Station.PadRight(4, '.')}/{nameof(Cargo)}:{(Cargo?"1":"0")}/{nameof(Pick)}:{Pick.PadRight(4, '.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{nameof(Station)}:{Station.PadRight(4, '.')}/{nameof(Pick)}:{Pick.PadRight(4, '.')}/{nameof(Drop)}:{Drop.PadRight(4, '.')}/{EndSymbol}";
     }
 }

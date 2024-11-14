@@ -38,7 +38,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.ShouldHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
         (await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedShortLoopTriggerPoint>()).ShouldNotPickNext.ShouldBe(hasLowBatteryLevel || pickStation == null);
 
-        fixture.VerifyReportingToConveyors("WE03", true, pickStation, Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, Times.Once());
         fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId).ShouldBe(pickStation!=null);
     }
 
@@ -63,7 +63,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.ShouldHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
         (await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedShortLoopTriggerPoint>()).ShouldNotPickNext.ShouldBeTrue();
         
-        fixture.VerifyReportingToConveyors("WE03", true, null, Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, Times.Once());
         fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId).ShouldBeFalse();
         fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId).ShouldBeFalse();
     }
@@ -87,7 +87,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
         await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
-        fixture.VerifyReportingToConveyors("WE03", true, null, Times.Never());
+        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, Times.Never());
         fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId).ShouldBeFalse();
         fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId).ShouldBeFalse();
     }
@@ -111,7 +111,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
         await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
-        fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Once());
         fixture.OrderRepository.HasOrderBeenReported(orderDetails.Source, order.CorrelationId).ShouldBeTrue();
     }
 
@@ -134,7 +134,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
         await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
-        fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Never());
+        fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Never());
     }
 
     [TestMethod]
@@ -150,7 +150,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopTriggerPoint>();
         await fixture.ShouldNotHavePublishedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
 
-        fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Never());
+        fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Never());
     }
 
     [TestMethod]
@@ -165,7 +165,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.TestHarness.Bus.Publish(new AgvStartedShortLoopPick("WE03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedShortLoopPick>();
 
-        fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Once());
         fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId).ShouldBeTrue();
     }
 
@@ -182,7 +182,7 @@ public class ShortLoopTriggerPointEventHandlerTest
         await fixture.TestHarness.Bus.Publish(new AgvStartedShortLoopPick("WE03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedShortLoopPick>();
 
-        fixture.VerifyReportingToConveyors("WE03", false, "1020", Times.Never());
+        fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Never());
     }
 
     [TestMethod]

@@ -13,20 +13,20 @@ public class TelegramCommunicatorTest
         var fixture = new TelegramConveyorCommunicatorTestFixture().Build();
 
         const string targetStation = "WE01";
-        const bool hasCargo = false;
         const string pickStation = "1040";
+        const string dropStation = "1060";
 
         fixture.Processor.HasSendDemand().ShouldBeFalse();
 
-        fixture.Communicator.ReportPalletPickDropStation(targetStation, hasCargo, pickStation);
+        fixture.Communicator.ReportPalletPickDropStation(targetStation, pickStation, dropStation);
 
         fixture.Processor.HasSendDemand().ShouldBeTrue();
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
 
-        var agvWeStation = new AgvWeStation("any", true, "any", DateTime.UtcNow);
+        var agvWeStation = new AgvWeStation("any", "any", "any", DateTime.UtcNow);
         agvWeStation.Load(nextTelegram);
 
-        agvWeStation.Cargo.ShouldBe(hasCargo);
+        agvWeStation.Drop.ShouldBe(dropStation);
         agvWeStation.Station.ShouldBe(targetStation);
         agvWeStation.Pick.ShouldBe(pickStation);
     }

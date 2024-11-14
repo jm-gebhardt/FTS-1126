@@ -113,35 +113,39 @@ public class DecisionPointEventHandler(
         }
         var action = actionGroup.Actions.FirstOrDefault(a => a.Target.NodeId == string.Empty);
         bool isDropping = action is { ActionType: ActionType.Drop };
-        string? pickTarget = await GetPickStation(actionGroup, isDropping, hasLowBatteryLevel);
-        conveyorCommunicator.ReportPalletPickDropStation(targetStation, isDropping, pickTarget);
+        (string? pickTarget, string? dropTarget) = await GetStations(actionGroup, isDropping, hasLowBatteryLevel);
+        conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, dropTarget);
         bool shouldNotPickNext = hasLowBatteryLevel || pickTarget == null;
         await SetTarget(context, targetNode, agvStatus, actionGroup, action!.CorrelationId, shouldNotPickNext);
     }
 
-    private async Task<string?> GetPickStation(ActionGroup actionGroup, bool isDropping, bool hasLowBatteryLevel)
+    private async Task<(string? pickTarget, string? dropTarget)> GetStations(ActionGroup actionGroup, bool isDropping, bool hasLowBatteryLevel)
     {
         string? pickTarget = null;
+        string? dropTarget = null;
         HostOrder? pendingPickOrder;
+        var currentOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
         if (isDropping && hasLowBatteryLevel)
         {
+            dropTarget = currentOrder.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
             logger.LogInformation("Reporting long loop order {Order} for dropping at WE03 at {Time}", actionGroup.OrderId, DateTime.UtcNow);
-            return pickTarget;
+            return (pickTarget, dropTarget);
         }
         if (isDropping)
         {
+            dropTarget = currentOrder.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
             pendingPickOrder = await hostOrderRepository.GetNextIncompleteOrderWithUnknownPickTarget();
             if (pendingPickOrder != null)
             {
                 pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
                 logger.LogInformation("Reporting long loop order {Order} for picking at target {Target} after dropping order {DropOrder} at {Time}", pendingPickOrder.OrderId, pickTarget, actionGroup.OrderId, DateTime.UtcNow);
             }
-            return pickTarget;
+            return (pickTarget, dropTarget);
         }
 
         pendingPickOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
         pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
         logger.LogInformation("Reporting long loop order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
-        return pickTarget;
+        return (pickTarget, dropTarget);
     }
 }

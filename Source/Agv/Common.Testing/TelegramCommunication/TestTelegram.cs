@@ -17,5 +17,5 @@ public static class TestTelegram
     public const string ResetCounter = "/Seq:000/Send:EWM...../Rec:FTS01.../Time:2020:12:13:20:12:09:122/Func:..................../$$:";
 
     public const string AgvAplCargoState = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:AgvAplCargoState..../Cargo:1/$$:";
-    public const string AgvWeStation = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:AgvWeStation......../Station:WE01/Cargo:1/Pick:1040/$$:";
+    public const string AgvWeStation = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:AgvWeStation......../Station:WE01/Pick:1040/Drop:1060/$$:";
 }

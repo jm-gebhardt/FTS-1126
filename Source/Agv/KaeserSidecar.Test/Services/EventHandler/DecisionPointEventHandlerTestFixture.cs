@@ -44,7 +44,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
     /// <inheritdoc cref="DecisionPointEventHandlerTestFixture"/>>
     public DecisionPointEventHandlerTestFixture()
     {
-        _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string?>())).Verifiable();
+        _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>())).Verifiable();
 
         Build();
         _repository = Provider.GetRequiredService<IStationRepository>();
@@ -71,14 +71,18 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         return this;
     }
 
-    public DecisionPointEventHandlerTestFixture WithHostOrder(HostOrder? order)
+    public DecisionPointEventHandlerTestFixture WithNextPickOrder(HostOrder? order)
+    {
+        _hostOrderRepository.Setup(x => x.GetNextIncompleteOrderWithUnknownPickTarget()).ReturnsAsync(order);
+        return this;
+    }
+
+    public DecisionPointEventHandlerTestFixture WithCurrentHostOrder(HostOrder? order)
     {
         if (order != null)
         {
             _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
         }
-       
-        _hostOrderRepository.Setup(x => x.GetNextIncompleteOrderWithUnknownPickTarget()).ReturnsAsync(order);
         return this;
     }
 
@@ -88,13 +92,13 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         return this;
     }
 
-    public void VerifyReportingToConveyors(string station="none", bool hasCargo=false, string? pickStation=null, Times? times=null)
+    public void VerifyReportingToConveyors(string station="none", string? dropStation = null, string? pickStation=null, Times? times=null)
     {
         times ??= Times.Once();
         if (times == Times.Never())
         {
-            _communicator.Verify(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string?>()), (Times)times);
+            _communicator.Verify(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()), (Times)times);
         }
-        _communicator.Verify(x => x.ReportPalletPickDropStation(station, hasCargo, pickStation), (Times)times);
+        _communicator.Verify(x => x.ReportPalletPickDropStation(station, pickStation, dropStation), (Times)times);
     }
 }

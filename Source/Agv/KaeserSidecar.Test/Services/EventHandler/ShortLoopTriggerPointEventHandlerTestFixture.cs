@@ -36,7 +36,7 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
     /// <inheritdoc cref="ShortLoopTriggerPointEventHandlerTestFixture"/>>
     public ShortLoopTriggerPointEventHandlerTestFixture()
     {
-        _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string?>())).Verifiable();
+        _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>())).Verifiable();
 
         Build();
     }
@@ -59,13 +59,13 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
         return this;
     }
 
-    public void VerifyReportingToConveyors(string station = "none", bool hasCargo = false, string? pickStation = null, Times? times = null)
+    public void VerifyReportingToConveyors(string station = "none", string? dropStation = null, string? pickStation = null, Times? times = null)
     {
         times ??= Times.Once();
         if (times == Times.Never())
         {
-            _communicator.Verify(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string?>()), (Times)times);
+            _communicator.Verify(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()), (Times)times);
         }
-        _communicator.Verify(x => x.ReportPalletPickDropStation(station, hasCargo, pickStation), (Times)times);
+        _communicator.Verify(x => x.ReportPalletPickDropStation(station, pickStation, dropStation), (Times)times);
     }
 }

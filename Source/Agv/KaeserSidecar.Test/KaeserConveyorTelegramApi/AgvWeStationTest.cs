@@ -12,14 +12,14 @@ public class AgvWeStationTest
     public void Construct_ValidData_PropertiesSet()
     {
         const string station = "WE01";
-        const bool cargo = true;
         const string pick = "1040";
+        const string drop = "1060";
         var time = DateTime.UtcNow;
 
-        var telegram = new AgvWeStation(station, cargo, pick, time);
+        var telegram = new AgvWeStation(station, drop, pick, time);
 
         telegram.Func.ShouldBe(nameof(AgvWeStation));
-        telegram.Cargo.ShouldBe(cargo);
+        telegram.Drop.ShouldBe(drop);
         telegram.Pick.ShouldBe(pick);
         telegram.Station.ShouldBe(station);
         telegram.Time.ShouldBe(time);
@@ -30,7 +30,7 @@ public class AgvWeStationTest
     [TestMethod]
     public void ToString_ValidData_TelegramFormat()
     {
-        var agvWeStation = new AgvWeStation("any", true, "any", DateTime.UtcNow);
+        var agvWeStation = new AgvWeStation("any", "any", "any", DateTime.UtcNow);
         agvWeStation.Load(TestTelegram.AgvWeStation);
         agvWeStation.ToString().ShouldBe(TestTelegram.AgvWeStation);
     }
