@@ -17,9 +17,11 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 public class StationCommandHandler(
     INodeStateRepository nodeStateRepository,
     IStationRepository stationRepository,
+    IGraphRepository graphRepository,
     ILogger<StationCommandHandler> logger) :
     IConsumer<LockStation>,
-    IConsumer<UnlockStation>
+    IConsumer<UnlockStation>,
+    IConsumer<Common.Messages.Maps.MapSaved>
 {
     /// <summary>
     /// Handles the <see cref="LockStation"/> command.
@@ -47,7 +49,7 @@ public class StationCommandHandler(
 
         logger.LogStationInformation(LogCodes.StationLocked, id, "Station Locked",
             $"User {user} locked station because {reason}",
-            new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Reason, reason}});
+            new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
     }
 
     /// <summary>
@@ -74,5 +76,22 @@ public class StationCommandHandler(
         await stationRepository.Update(station);
 
         logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked", "Station was unlocked");
+    }
+
+    /// <summary>
+    /// Handles the <see cref="Common.Messages.Maps.MapSaved"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<Common.Messages.Maps.MapSaved> context)
+    {
+        var agvMap = context.Message.Map;
+        ICollection<Guid> agvIds = await graphRepository.GetAgvIdsRelatedToNodesAsync(agvMap.Nodes);
+        if (agvIds.Count == 0)
+        {
+            logger.LogDebug("No agvs assigned to map, do not update stations");
+            return;
+        }
+        var agvGraph = await graphRepository.GetAgvGraphAsync(agvIds.First());
+        await stationRepository.AddStations(agvGraph);
+        logger.LogDebug("Stations updated");
     }
 }

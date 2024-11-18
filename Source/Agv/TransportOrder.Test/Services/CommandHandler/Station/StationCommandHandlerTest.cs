@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -59,5 +60,30 @@ public class StationCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UnlockStation>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_MapSaved_NoRelatedAgvs_DoesNotAddStations()
+    {
+        var fixture = new StationCommandHandlerTestFixture()
+            .WithAgvsRelatedToNodes([]);
+
+        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
+        
+        await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
+        fixture.VerifyStationsAdded(Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_MapSaved_ValidData_AddsStations()
+    {
+        var fixture = new StationCommandHandlerTestFixture()
+            .WithAgvsRelatedToNodes([Guid.NewGuid()])
+            .WithAgvsGraph();
+
+        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
+
+        await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
+        fixture.VerifyStationsAdded(Times.Once());
     }
 }
