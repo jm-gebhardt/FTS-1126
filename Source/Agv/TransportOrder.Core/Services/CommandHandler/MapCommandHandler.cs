@@ -67,6 +67,7 @@ public class MapCommandHandler :
         if (await _mapRepository.AddOrUpdateAsync(map, cancellationToken))
         {
             _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been added or updated in repository.", messageMap.MapId, messageMap.CorrelationId);
+            await publishEndpoint.Publish(new Common.Messages.Maps.MapSaved(messageMap), cancellationToken);
         }
         else
         {

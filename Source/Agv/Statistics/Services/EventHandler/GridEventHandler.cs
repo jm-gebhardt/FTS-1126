@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Maps;
 using Gebhardt.Acc.Statistics.Domain.Exceptions;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Extensions;
@@ -14,7 +15,8 @@ namespace Gebhardt.Acc.Statistics.Services.EventHandler;
 /// </summary>
 [UsedImplicitly]
 public class GridEventHandler :
-    IConsumer<GraphChanged>
+    IConsumer<GraphChanged>,
+    IConsumer<MapSaved>
 {
     private readonly IStatisticsDb _db;
     private readonly ILogger<GridEventHandler> _logger;
@@ -32,6 +34,11 @@ public class GridEventHandler :
     public async Task Consume(ConsumeContext<GraphChanged> context)
     {
         List<Map>? maps = context.Message.Maps;
+        if (maps == null)
+        {
+            _logger.LogTrace("{Module}: context.Message.Maps is empty", nameof(GraphChanged));
+        }
+
         var agvGraph = context.Message.Graph;
         ICollection<Guid> gridIds = await _db.Grids.GetAllIdsAsync();
 
@@ -47,31 +54,36 @@ public class GridEventHandler :
             {
                 _logger.LogError("Incompatible grids: {GridXStep}/{AgvGridXStep}, {GridYStep}/{AgvGridYStep}", grid.XStep, agvGrid.XStep, grid.YStep, agvGrid.YStep);
             }
-            if (maps == null)
+        }
+        await _db.SaveAsync();
+    }
+
+    /// <summary>
+    /// Handles the <see cref="MapSaved"/> event for the global graph.
+    /// </summary>
+    public async Task Consume(ConsumeContext<MapSaved> context)
+    {
+        var agvMap = context.Message.Map;
+        _logger.LogDebug("Consume MapSaved: agvMap is {MapId} with {NodeCount}", agvMap.MapId, agvMap.Nodes.Count);
+        ICollection<Guid> gridIds = await _db.Grids.GetAllIdsAsync();
+
+        foreach (var gridId in gridIds)
+        {
+            var grid = await _db.Grids.GetByIdAsync(gridId);
+            ICollection<Domain.Models.Map> mapsForGrid = await _db.Maps.GetMapsForGridAsync(grid.GridId);
+            var map = mapsForGrid.FirstOrDefault(m => m.MapId == agvMap.CorrelationId);
+
+            var gridFromMap = agvMap.Nodes.ToGrid(xStep: grid.XStep, yStep: grid.YStep, grid.GridName);
+            (int xiMin, int yiMin) = grid.GetXyIndex(gridFromMap.XStart, gridFromMap.YStart);
+            (double gridXMax, double gridYMax) = gridFromMap.GetXyMax();
+            (int xiMax, int yiMax) = grid.GetXyIndex(gridXMax, gridYMax);
+
+            if (map == null)
             {
+                _db.Maps.Add(new Domain.Models.Map(agvMap.CorrelationId, grid.GridId, xiMin, yiMin, xiMax, yiMax, agvMap.Nodes.Select(n => n.Z).First()));
                 continue;
             }
-
-            ICollection<Domain.Models.Map> mapsForGrid = await _db.Maps.GetMapsForGridAsync(grid.GridId);
-
-            //Create map objects for the grid based on the x and y index of the maximum and
-            //minimum x and y positions covered by the map.
-            foreach (var agvMap in maps)
-            {
-                var map = mapsForGrid.FirstOrDefault(m => m.MapId == agvMap.CorrelationId);
-
-                var gridFromMap = agvMap.Nodes.ToGrid(xStep: grid.XStep, yStep: grid.YStep, grid.GridName);
-                (int xiMin, int yiMin) = grid.GetXyIndex(gridFromMap.XStart, gridFromMap.YStart);
-                (double gridXMax, double gridYMax) = gridFromMap.GetXyMax();
-                (int xiMax, int yiMax) = grid.GetXyIndex(gridXMax, gridYMax);
-
-                if (map == null)
-                {
-                    _db.Maps.Add(new Domain.Models.Map(agvMap.CorrelationId, grid.GridId, xiMin, yiMin, xiMax, yiMax, agvMap.Nodes.Select(n => n.Z).First()));
-                    continue;
-                }
-                map.UpdateExtent(xiMin, yiMin, xiMax, yiMax);
-            }
+            map.UpdateExtent(xiMin, yiMin, xiMax, yiMax);
         }
         await _db.SaveAsync();
     }
