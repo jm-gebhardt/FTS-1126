@@ -3,4 +3,5 @@ ChargeRegexPattern: "^(charge|or)(?!.*/).*$"
 ParkRegexPattern: "^(park)(?!.*/).*$"
 PickRegexPattern: "^(pick)(?!.*/).*$"
 DropRegexPattern: "^(drop)(?!.*/).*$"
+MaintenanceRegexPattern: "^(maintenance)(?!.*/).*$"
 RenameWaypoints: true
