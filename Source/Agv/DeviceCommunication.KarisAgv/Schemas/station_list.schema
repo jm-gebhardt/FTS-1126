@@ -32,15 +32,18 @@
           "type": "object",
           "properties": {
             "function": {
-              "type": "string",
+              "type": "array",
               "description": "The function of the station: PICK/DROP/BOTH/CHARGE/PARK.",
-              "enum": [
-                "PICK",
-                "DROP",
-                "BOTH",
-                "CHARGE",
-                "PARK"
-              ]
+              "items": {
+                "enum": [
+                  "PICK",
+                  "DROP",
+                  "BOTH",
+                  "CHARGE",
+                  "PARK",
+                  "MAINTENANCE"
+                ]
+            }
             },
             "identifier": {
               "type": "string",
