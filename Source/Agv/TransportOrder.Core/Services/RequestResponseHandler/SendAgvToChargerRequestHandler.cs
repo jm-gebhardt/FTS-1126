@@ -68,6 +68,6 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     {
         var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
         var station = await _stationRepository.GetStation(nodeId);
-        await _bus.Publish(new NodeStateChanged(nodeState!, station.Id));
+        await _bus.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 }

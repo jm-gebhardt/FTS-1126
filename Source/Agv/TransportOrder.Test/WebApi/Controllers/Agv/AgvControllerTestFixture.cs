@@ -302,7 +302,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
     {
         _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync((NodeLock?)null);
+        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock("target", NodeLockState.Reserved, true, Guid.NewGuid(), DateTime.UtcNow));
 
         AddConsumers<FakeQueueActionGroupConsumer>();
 

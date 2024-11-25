@@ -99,8 +99,22 @@ public class MapController : Controller
     public async Task<ActionResult<ICollection<NodeStateDto>>> GetNodeStatesForMap(Guid correlationId)
     {
         Response<GotMapNodeStates> response = await _getMapNodeStatesClient.GetResponse<GotMapNodeStates>(new GetMapNodeStates(correlationId));
-        var nodeStates = _mapper.Map<List<NodeStateDto>>(response.Message.NodeLocks);
-        return Ok(nodeStates);
+
+        List<NodeStateDto> nodeStateDtos = response.Message.NodeStates.Select(x => {
+            var dto = _mapper.Map<NodeStateDto>(x.NodeLock);
+            dto = dto with
+            {
+                StationId = x.StationId,
+                User = x.LockedByUser,
+                LockReason = x.LockReason,
+                LockDescription = x.LockDescription
+            };
+
+            return dto;
+        })
+        .ToList();
+
+        return Ok(nodeStateDtos);
     }
 
     /// <summary>

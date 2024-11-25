@@ -25,20 +25,29 @@ public record NodeStateDto : DatedMessage
     /// <summary >The id of the station.</summary>
     public Guid? StationId { get; set; }
 
-    /// <inheritdoc cref="NodeStateDto"/>>
-    public NodeStateDto()
-    {
-        StationId = Guid.NewGuid();
-        NodeId = string.Empty;
-    }
+    /// <summary >User that locked station.</summary>
+    public string? User { get; set; }
+
+    /// <summary >Last modified date</summary>
+    public DateTime ModifiedDate { get; set; }
+
+    /// <summary >Reason for locking station.</summary>
+    public string? LockReason { get; set; }
+
+    /// <summary >Reason description for locking station.</summary>
+    public string? LockDescription { get; set; }
 
     /// <inheritdoc cref="NodeStateDto"/>>
-    public NodeStateDto(string nodeId, NodeLockState nodeState, bool isLocked, Guid? agvCorrelationId, Guid stationId)
+    public NodeStateDto(string nodeId, NodeLockState nodeState, bool isLocked, Guid? agvCorrelationId, DateTime modifiedDate, Guid? stationId = null, string? user = null, string? lockReason = null, string? lockDescription = null)
     {
         NodeId = nodeId;
         NodeState = nodeState;
         IsLocked = isLocked;
         AgvCorrelationId = agvCorrelationId;
         StationId = stationId;
+        User = user;
+        ModifiedDate = modifiedDate;
+        LockReason = lockReason;
+        LockDescription = lockDescription;
     }
 }

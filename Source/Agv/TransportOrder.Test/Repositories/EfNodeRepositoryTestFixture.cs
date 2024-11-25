@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
@@ -35,6 +36,13 @@ public class EfNodeRepositoryTestFixture : TransportOrderDbFixture, IDisposable
     {
         using var context = ContextFactory.CreateDbContext();
         context.Set<NodeLock>().AddRange(nodeLocks);
+        context.SaveChanges();
+    }
+
+    public void AddStations(List<Station> stations)
+    {
+        using var context = ContextFactory.CreateDbContext();
+        context.Set<Station>().AddRange(stations);
         context.SaveChanges();
     }
 }

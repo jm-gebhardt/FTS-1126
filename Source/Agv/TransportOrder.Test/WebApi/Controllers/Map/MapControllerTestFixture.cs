@@ -61,7 +61,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         return mapRepositoryMock;
     }
 
-    public MapControllerTestFixture(ICollection<NodeLock> nodeStates)
+    public MapControllerTestFixture(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> nodeStates)
     {
         var nodeRepositoryMock = new Mock<INodeRepository>();
         nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);

@@ -13,12 +13,16 @@ public class MapPublisherTest
     public async Task SendNodeStateChangedAsync_ValidData_NodeStateChangedSentToAllClients()
     {
         PublisherFixture<MapPublisher, MapHub, IMapClient> fixture = new PublisherFixture<MapPublisher, MapHub, IMapClient>().Build();
-        var data = new NodeLock("NodeId", NodeLockState.Free, true, null, DateTime.UtcNow);
-        var expectedDto = new NodeStateDto("NodeId", NodeLockState.Free, true, null, Guid.NewGuid());
 
+        const string nodeId = "NodeId";
+        var stationId = Guid.NewGuid();
+        var modifiedDate = DateTime.UtcNow;
+        var data = new NodeLock(nodeId, NodeLockState.Free, true, null, modifiedDate);
+        var expectedDto = new NodeStateDto(nodeId, NodeLockState.Free, true, null, modifiedDate, stationId);
+        
         fixture.MapperMock.Setup(m => m.Map<NodeStateDto>(It.IsAny<NodeLock>())).Returns(expectedDto);
 
-        await fixture.Publisher.SendNodeStateChangedAsync(data, expectedDto.StationId);
+        await fixture.Publisher.SendNodeStateChangedAsync(data, stationId, null, null, null);
 
         fixture.HubContextMock.Verify(c => c.Clients.All.NodeStateChanged(It.IsAny<NodeStateDto>()), Times.Once);
     }

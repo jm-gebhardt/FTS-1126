@@ -186,6 +186,6 @@ public class MoveAgvRequestHandler(
     {
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
         var station = await stationRepository.GetStation(nodeId);
-        await bus.Publish(new NodeStateChanged(nodeState!, station.Id));
+        await bus.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 }

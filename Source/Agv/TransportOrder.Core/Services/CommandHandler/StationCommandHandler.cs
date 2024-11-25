@@ -40,7 +40,7 @@ public class StationCommandHandler(
 
             if (nodeState != null)
             {
-                await context.Publish(new NodeStateChanged(nodeState, id));
+                await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
             }
         }
         station.Lock(user, reason, lockDescription, lockOrderHandling);
@@ -69,7 +69,7 @@ public class StationCommandHandler(
 
             if (nodeState != null)
             {
-                await context.Publish(new NodeStateChanged(nodeState, id));
+                await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
             }
         }
         station.Unlock();

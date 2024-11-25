@@ -1,8 +1,10 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -27,7 +29,12 @@ public class NodeStateRequestHandler : IConsumer<GetMapNodeStates>
     {
         var correlationId = context.Message.CorrelationId;
 
-        ICollection<NodeLock> nodeStates = await _nodeRepository.GetNodeStatesForMapAsync(correlationId);
+        ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> nodeStates = await _nodeRepository.GetNodeStatesForMapAsync(correlationId);
+
+        if (nodeStates.IsNullOrEmpty())
+        {
+            throw new MapNotFoundException(correlationId);
+        }
 
         await context.RespondAsync(new GotMapNodeStates(nodeStates));
     }

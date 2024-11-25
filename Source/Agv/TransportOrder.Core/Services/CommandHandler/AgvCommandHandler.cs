@@ -1159,11 +1159,11 @@ public class AgvCommandHandler :
         try
         {
             var station = await _stationRepository.GetStation(nodeId);
-            await context.Publish(new NodeStateChanged(nodeState, station.Id));
+            await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
         }
         catch (NodeNotFoundException)
         {
-            await context.Publish(new NodeStateChanged(nodeState, null));
+            await context.Publish(new NodeStateChanged(nodeState, null, null, null, null));
         }
     }
 

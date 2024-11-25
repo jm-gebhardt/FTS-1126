@@ -15,11 +15,15 @@ public class NodeStateChangedConsumerTest
     public async Task Consume_NodeStateChanged_ValidData_SendNodeStateChanged()
     {
         var fixture = new ConsumerHubTestFixture<NodeStateChangedConsumer, IMapPublisher>();
-        var nodeState = new NodeLock("NodeId", NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
+        
+        const string nodeId = "NodeId";
+        var dateModified = DateTime.UtcNow;
+        var nodeState = new NodeLock(nodeId, NodeLockState.Reserved, false, Guid.NewGuid(), dateModified);
         var stationId = Guid.NewGuid();
-        await fixture.TestHarness.Bus.Publish(new NodeStateChanged(nodeState, stationId));
+
+        await fixture.TestHarness.Bus.Publish(new NodeStateChanged(nodeState, stationId, null, null, null));
 
         (await fixture.ConsumerHarness.Consumed.Any<NodeStateChanged>()).ShouldBeTrue();
-        fixture.PublisherMock.Verify(h => h.SendNodeStateChangedAsync(nodeState, stationId),Times.Once);
+        fixture.PublisherMock.Verify(h => h.SendNodeStateChangedAsync(nodeState, stationId, null, null, null),Times.Once);
     }
 }

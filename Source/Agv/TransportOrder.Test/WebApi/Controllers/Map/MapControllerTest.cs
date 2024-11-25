@@ -42,14 +42,32 @@ public class MapControllerTest
     [TestMethod]
     public async Task GetNodeStatesForMap_ValidData_RespondsNodeStates()
     {
-        var nodeStates = new List<NodeLock> { new("NodeId", NodeLockState.Free, false, null, DateTime.UtcNow) };
+        var nodeStates = new List<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)>
+        {
+            (new NodeLock("nodeId", NodeLockState.Free, false, null, DateTime.UtcNow), Guid.NewGuid(), null, null, null)
+        };
+
         MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler>(nodeStates)
             .Build();
+
+        List<NodeStateDto> mappedNodeStates = nodeStates.Select(x => {
+                var dto = fixture.Mapper.Map<NodeStateDto>(x.NodeLock);
+                dto = dto with
+                {
+                    StationId = x.StationId,
+                    User = x.LockedByUser,
+                    LockReason = x.LockReason,
+                    LockDescription = x.LockDescription
+                };
+
+                return dto;
+            })
+            .ToList();
 
         ICollection<NodeStateDto> actualNodeStates = fixture.GetControllerResultAsync(c => c.GetNodeStatesForMap(Guid.NewGuid())).Result;
         actualNodeStates.ShouldNotBeNull();
         actualNodeStates.Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState })
-            .ShouldBe(fixture.Mapper.Map<ICollection<NodeStateDto>>(nodeStates).Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState }));
+            .ShouldBe(mappedNodeStates.Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState }));
         
         (await fixture.MediatorTestHarness.Published.Any<GetMapNodeStates>()).ShouldBeTrue();
         (await fixture.MediatorTestHarness.Consumed.Any<GotMapNodeStates>()).ShouldBeTrue();

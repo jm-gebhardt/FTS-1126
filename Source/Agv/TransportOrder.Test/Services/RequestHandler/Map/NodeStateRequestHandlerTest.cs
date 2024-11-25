@@ -15,14 +15,18 @@ public class NodeStateRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetMapNodeStates_ValidData_RespondsGotMapNodeStates()
     {
-        var nodeStates = new List<NodeLock> { new("nodeId", NodeLockState.Free, false, null, DateTime.UtcNow) };
+        var nodeStates = new List<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> 
+        { 
+            (new NodeLock("nodeId", NodeLockState.Free, false, null, DateTime.UtcNow), Guid.NewGuid(), null, null, null)
+        };
+
         NodeStateRequestHandlerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new NodeStateRequestHandlerTestFixture<GetMapNodeStates, NodeStateRequestHandler>()
             .WithEmptyRepository()
             .WithNodeStates(nodeStates)
             .Build();
 
         Response<GotMapNodeStates> response = await fixture.GetResponseAsync<GotMapNodeStates>(new GetMapNodeStates(Guid.NewGuid()));
-        response.Message.NodeLocks.ShouldBe(nodeStates, ignoreOrder: true);
+        response.Message.NodeStates.ShouldBe(nodeStates, ignoreOrder: true);
     }
 
     [TestMethod]

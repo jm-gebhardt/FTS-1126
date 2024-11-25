@@ -44,8 +44,8 @@ public class RouteRequestHandlerTest
         var nodeStateChanged = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, NodeStateChanged>(
             new SendAgvToCharger(agv.CorrelationId));
         
-        nodeStateChanged.NodeState.NodeId.ShouldBe(chargingNode.Id);
-        nodeStateChanged.NodeState.NodeState.ShouldBe(NodeLockState.Reserved);
+        nodeStateChanged.NodeLock.NodeId.ShouldBe(chargingNode.Id);
+        nodeStateChanged.NodeLock.NodeState.ShouldBe(NodeLockState.Reserved);
     }
 
     [TestMethod]

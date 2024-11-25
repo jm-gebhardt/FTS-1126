@@ -11,5 +11,5 @@ public interface INodeRepository
     /// Get states of all nodes on a given map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
-    Task<ICollection<NodeLock>> GetNodeStatesForMapAsync(Guid mapCorrelationId);
+    Task<ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)>> GetNodeStatesForMapAsync(Guid mapCorrelationId);
 }

@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -17,7 +19,7 @@ public class EfNodeRepositoryTest
     private static Mapper Mapper => MappingHelper.GetMapper(new GraphProfile());
 
     [TestMethod]
-    public async Task GetNodeStatesForMapAsync_UnknownMap_ThrowsMapNotFoundException()
+    public async Task GetNodeStatesForMapAsync_UnknownMap_ShouldBeEmpty()
     {
         await using var fixture = new EfNodeRepositoryTestFixture();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
@@ -25,7 +27,7 @@ public class EfNodeRepositoryTest
         fixture.AddGraph(Mapper.Map<EfAgvGraph>(agvGraph));
         fixture.AddNodeLocks(nodeLocks);
 
-        await Should.ThrowAsync<MapNotFoundException>(fixture.Repository.GetNodeStatesForMapAsync("unknown".ToGuid()));
+        (await fixture.Repository.GetNodeStatesForMapAsync("unknown".ToGuid())).IsNullOrEmpty().ShouldBeTrue();
     }
 
     [TestMethod]
@@ -39,7 +41,9 @@ public class EfNodeRepositoryTest
         fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<EfNode>>(agvGraph.Nodes)));
         fixture.AddNodeLocks(nodeLocks);
 
-        (await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId)).ToList().ShouldBe(nodeLocks, ignoreOrder: true);
+        List<NodeLock> actualNodeStates = (await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId)).Select(x => x.NodeLock).ToList();
+
+        actualNodeStates.ShouldBe(nodeLocks, ignoreOrder: true);
     }
 
     [TestMethod]
@@ -53,18 +57,21 @@ public class EfNodeRepositoryTest
         fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<EfNode>>(agvGraph.Nodes)));
         fixture.AddNodeLocks(nodeLocks);
 
-        ICollection<NodeLock> actualNodeStates = await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId);
+        List<Station> stations = agvGraph.Nodes.Take(5).Select(n => new Station(n.Id, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>())).ToList();
+        fixture.AddStations(stations);
+
+        ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> actualNodeStates = await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId);
         foreach (var agvGraphNode in agvGraph.Nodes)
         {
-            var actualNodeState = actualNodeStates.Single(ns => ns.NodeId == agvGraphNode.Id);
+            (NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser) actualNodeState = actualNodeStates.Single(ns => ns.NodeLock.NodeId == agvGraphNode.Id);
             if (nodeLocks.Select(nl => nl.NodeId).Contains(agvGraphNode.Id))
             {
-                actualNodeState.ShouldBe(nodeLocks.Single(nl => nl.NodeId == actualNodeState.NodeId));
+                actualNodeState.NodeLock.ShouldBe(nodeLocks.Single(nl => nl.NodeId == actualNodeState.NodeLock.NodeId));
                 continue;
             }
-            actualNodeState.IsLocked.ShouldBeFalse();
-            actualNodeState.NodeState.ShouldBe(NodeLockState.Free);
-            actualNodeState.AgvCorrelationId.ShouldBeNull();
+            actualNodeState.NodeLock.IsLocked.ShouldBeFalse();
+            actualNodeState.NodeLock.NodeState.ShouldBe(NodeLockState.Free);
+            actualNodeState.NodeLock.AgvCorrelationId.ShouldBeNull();
         }
     }
 }

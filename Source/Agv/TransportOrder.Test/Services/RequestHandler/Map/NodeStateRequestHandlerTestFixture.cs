@@ -20,7 +20,7 @@ public class NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> : Med
         return this;
     }
 
-    public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithNodeStates(ICollection<NodeLock> nodeStates)
+    public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithNodeStates(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> nodeStates)
     {
         _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
         return this;

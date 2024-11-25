@@ -44,7 +44,7 @@ public class NodeCommandHandler(
             logger.LogWarning("Could not retrieve node state for node {NodeId}", nodeId);
             return;
         }
-        await context.Publish(new NodeStateChanged(nodeState, station.Id));
+        await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 
     /// <summary>
@@ -126,21 +126,32 @@ public class NodeCommandHandler(
     {
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
         Guid? stationId;
+        string? user;
+        string? lockReason;
+        string? lockDescription;
+
         try
         {
             var station = await stationRepository.GetStation(nodeId);
             stationId = station.Id;
+            user = station.LockedBy;
+            lockReason = station.LockReason;
+            lockDescription = station.LockDescription;      
         }
         catch (NodeNotFoundException)
         {
             stationId = null;
+            user = null;
+            lockReason = null;
+            lockDescription = null;
         }
        
         if (nodeState != null)
         {
-            await context.Publish(new NodeStateChanged(nodeState, stationId));
+            await context.Publish(new NodeStateChanged(nodeState, stationId, user, lockReason, lockDescription));
             return;
         }
-        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow), stationId));
+        var dateModified = DateTime.UtcNow;
+        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, dateModified), stationId, user, lockReason, lockDescription));
     }
 }

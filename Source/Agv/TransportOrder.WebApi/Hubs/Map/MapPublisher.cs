@@ -12,17 +12,26 @@ public class MapPublisher : IMapPublisher
     private readonly IMapper _mapper;
 
     /// <inheritdoc cref="IMapPublisher"/>
-    public MapPublisher(IHubContext<MapHub, IMapClient> hubContext, IMapper mapper)
+    public MapPublisher(
+        IHubContext<MapHub, IMapClient> hubContext, 
+        IMapper mapper)
     {
         _hubContext = hubContext;
         _mapper = mapper;
     }
 
     /// <inheritdoc/>
-    public Task SendNodeStateChangedAsync(NodeLock nodeState, Guid? stationId)
-    {
+    public Task SendNodeStateChangedAsync(NodeLock nodeState, Guid? stationId, string? modifyingUser, string? lockReason, string? lockDescription)
+    { 
         var nodeStateDto = _mapper.Map<NodeStateDto>(nodeState);
-        nodeStateDto = nodeStateDto with { StationId = stationId };
+        nodeStateDto = nodeStateDto with 
+        { 
+            StationId = stationId,
+            User = modifyingUser,
+            LockReason = lockReason,
+            LockDescription = lockDescription
+        };
+   
         return _hubContext.Clients.All.NodeStateChanged(nodeStateDto);
     }
 }

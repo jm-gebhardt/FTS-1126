@@ -39,6 +39,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
         _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
+        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.Is<string>(y => y == "target"))).ReturnsAsync(new TransportOrder.Domain.Models.Node.NodeLock("target", TransportOrder.Domain.Models.Node.NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow));
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new Station());
         base.Build();

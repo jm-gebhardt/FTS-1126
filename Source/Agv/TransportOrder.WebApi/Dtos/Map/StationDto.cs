@@ -60,9 +60,19 @@ public record StationDto
     public NodeLockState State { get; set; }
 
     /// <summary>
+    /// Boolean to determine if station is locked.
+    /// </summary>
+    [PublicAPI]
+    public bool IsLocked { get; set; }
+
+    /// <summary>
+    /// Date the station was last modified.
+    /// </summary>
+    public DateTime ModifiedDate { get; set; }
+
+    /// <summary>
     /// The user that locked the station.
     /// </summary>
-
     public string? LockedBy { get; set; }
 
     /// <summary>

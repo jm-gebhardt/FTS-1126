@@ -3,7 +3,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using JetBrains.Annotations;
@@ -81,13 +80,10 @@ public class AgvPositionChangedConsumer :
 
     private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
     {
-        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
         var station = await _stationRepository.GetStation(nodeId);
-        if (nodeState != null)
-        {
-            await context.Publish(new NodeStateChanged(nodeState, station.Id));
-            return;
-        }
-        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow), station.Id));
+
+        station.NodeLock ??= new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow);
+       
+        await context.Publish(station);
     }
 }
