@@ -15,8 +15,8 @@
         <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.13.1" />
         <PackageReference Include="Quartz.Plugins.TimeZoneConverter" Version="3.13.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-        <PackageReference Include="SkiaSharp" Version="2.88.8" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+        <PackageReference Include="SkiaSharp" Version="2.88.9" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
         <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
