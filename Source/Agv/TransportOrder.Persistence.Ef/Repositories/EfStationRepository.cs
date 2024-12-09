@@ -90,59 +90,51 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     /// <inheritdoc cref="IStationRepository"/>>
     public async Task<Station> GetStation(Guid id)
     {
-        var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        var result = await context.Set<Station>()
+        var station = await context.Set<Station>()
             .Where(s => s.Id == id)
-            .Select(s => new
-            {
-                Station = s,
-                NodeLock = context.Set<NodeLock>().FirstOrDefault(n => n.NodeId == s.Name),
-                Agvs = context.Set<ActionGroup>()
-                    .Where(a => a.Actions.Any(ac => ac.Target.NodeId == s.Name && ac.State == ActionState.Started))
-                    .Select(a => a.AssignedAgv.GetValueOrDefault())
-                    .ToList()
-            })
+            .SingleOrDefaultAsync()
+            ?? throw new NodeNotFoundException(id, "Station not found");
+
+        var nodeLock = await context.Set<NodeLock>()
+            .Where(n => n.NodeId == station.Name)
             .SingleOrDefaultAsync();
 
-        if (result == null)
-        {
-            throw new NodeNotFoundException(id, "Station not found");
-        }
+        List<Guid> agvs = await context.Set<ActionGroup>()
+            .Where(a => a.Actions.Any(ac => ac.Target.NodeId == station.Name && ac.State == ActionState.Started))
+            .Select(x => x.AssignedAgv.GetValueOrDefault())
+            .ToListAsync();
+        
+        station.NodeLock = nodeLock;
+        station.Agvs = agvs;
 
-        result.Station.NodeLock = result.NodeLock;
-        result.Station.Agvs = result.Agvs;
-        await context.DisposeAsync();
-        return result.Station;
+        return station;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
     public async Task<Station> GetStation(string name)
     {
-        var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        var result = await context.Set<Station>()
+        var station = await context.Set<Station>()
             .Where(s => s.Name == name)
-            .Select(s => new
-            {
-                Station = s,
-                NodeLock = context.Set<NodeLock>().FirstOrDefault(n => n.NodeId == s.Name),
-                Agvs = context.Set<ActionGroup>()
-                    .Where(a => a.Actions.Any(ac => ac.Target.NodeId == s.Name && ac.State == ActionState.Started))
-                    .Select(a => a.AssignedAgv.GetValueOrDefault())
-                    .ToList()
-            })
+            .SingleOrDefaultAsync()
+            ?? throw new NodeNotFoundException(name);
+
+        var nodeLock = await context.Set<NodeLock>()
+            .Where(n => n.NodeId == station.Name)
             .SingleOrDefaultAsync();
 
-        if (result == null)
-        {
-            throw new NodeNotFoundException(name);
-        }
+        List<Guid> agvs = await context.Set<ActionGroup>()
+            .Where(a => a.Actions.Any(ac => ac.Target.NodeId == station.Name && ac.State == ActionState.Started))
+            .Select(x => x.AssignedAgv.GetValueOrDefault())
+            .ToListAsync();
 
-        result.Station.NodeLock = result.NodeLock;
-        result.Station.Agvs = result.Agvs;
-        await context.DisposeAsync();
-        return result.Station;
+        station.NodeLock = nodeLock;
+        station.Agvs = agvs;
+
+        return station;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
