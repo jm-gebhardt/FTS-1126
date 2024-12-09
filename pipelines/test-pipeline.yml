@@ -128,18 +128,12 @@ stages:
       - task: NuGetToolInstaller@1
         inputs:
           versionSpec: $(NugetVersion)
-      - task: reportgenerator@4
-        inputs:
-          reports: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml'
-          targetdir: '$(Agent.TempDirectory)/CoverageResults'
-          reporttypes: 'Cobertura'
-          classfilters: '-*Common.Testing*'
-      - task: PublishCodeCoverageResults@1
+      - task: PublishCodeCoverageResults@2
         displayName: 'Publish code coverage report'
         inputs:
           codeCoverageTool: 'Cobertura'
-          summaryFileLocation: '$(Agent.TempDirectory)/CoverageResults/Cobertura.xml'
-      - task: BuildQualityChecks@8
+          summaryFileLocation: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml'
+      - task: BuildQualityChecks@9
         displayName: 'Check build quality'
         inputs:
           checkCoverage: true
