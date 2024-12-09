@@ -26,6 +26,7 @@ public static class OrderGenerator
         get
         {
             Configuration.UpdateTriggerPointNodeId(Configuration.DecisionPoint1TriggerName, DecisionNode);
+            Configuration.UpdateLongLoopMoveTargetNode(DecisionNode);
             Configuration.UpdateTriggerPointNodeId(Configuration.CheckCargoTriggerName, CheckCargoTriggerNode);
             Configuration.UpdateTriggerPointNodeId(Configuration.ShortLoopTriggerName, ShortLoopTriggerNode);
             return Configuration;

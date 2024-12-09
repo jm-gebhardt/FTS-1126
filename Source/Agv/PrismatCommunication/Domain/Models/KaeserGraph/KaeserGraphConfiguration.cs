@@ -57,6 +57,12 @@ public class KaeserGraphConfiguration
     public string ShortLoopTriggerName { get; private set; } = "DP3";
 
     /// <summary>
+    /// The name of the node which is used as the move target in the long loop.
+    /// to conveyor management.
+    /// </summary>
+    public string LongLoopMoveTargetNode { get; private set; } = "";
+
+    /// <summary>
     /// Provides a mapping from station ids to naming in the conveyor management.
     /// </summary>
     public Dictionary<string, string> ConveyorStationMapping { get; private set; }
@@ -136,6 +142,15 @@ public class KaeserGraphConfiguration
     }
 
     /// <summary>
+    /// Updates the long loop move target node.
+    /// </summary>
+    /// <param name="targetNodeId">The target node id.</param>
+    public void UpdateLongLoopMoveTargetNode(string targetNodeId)
+    {
+        LongLoopMoveTargetNode = targetNodeId;
+    }
+
+    /// <summary>
     /// Update the configuration from a yaml file.
     /// </summary>
     /// <param name="configPath"></param>
@@ -151,6 +166,11 @@ public class KaeserGraphConfiguration
         DecisionPoint1TriggerName = yamlData.DecisionPoint1TriggerName;
         CheckCargoTriggerName = yamlData.CheckCargoTriggerName;
         ShortLoopTriggerName = yamlData.ShortLoopTriggerName;
+        LongLoopMoveTargetNode = yamlData.LongLoopMoveTargetNode;
+        if (!string.IsNullOrEmpty(yamlData.LongLoopMoveTargetNode))
+        {
+            LongLoopMoveTargetNode = yamlData.LongLoopMoveTargetNode;
+        }
         StationMapping = yamlData.StationMapping;
         ConveyorStationMapping = yamlData.ConveyorStationMapping;
         if (!string.IsNullOrEmpty(yamlData.PrismatAklPickTarget))

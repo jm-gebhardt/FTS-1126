@@ -27,9 +27,9 @@ public class TriggerEventHandler(KaeserGraphConfiguration configuration):
     /// </summary>
     public Task Consume(ConsumeContext<TriggerAssignedToArea> context)
     {
-        // Simulation for prismat communication needs in-memory configuration
-        // with all triggers "assigned" to a node so order creation is started. So dummy node name is set.
-        configuration.UpdateTriggerPointNodeId(context.Message.TriggerName, string.Join("Area-", context.Message.AreaId));
+        // Create a dummy node id from the area id.
+        string nodeId = "AREA-" + context.Message.AreaId;
+        configuration.UpdateTriggerPointNodeId(context.Message.TriggerName, nodeId);
         return Task.CompletedTask;
     }
 }

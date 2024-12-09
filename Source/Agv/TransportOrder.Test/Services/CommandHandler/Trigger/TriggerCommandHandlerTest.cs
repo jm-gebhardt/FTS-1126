@@ -101,6 +101,7 @@ public class TriggerCommandHandlerTest
     {
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, []);
         trigger.Locations.ShouldBeEmpty();
+
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
         var command = new AddTriggerLocation(trigger.Id, null, null, [new PolygonPoint(12,12)], Guid.NewGuid(), null);
