@@ -92,7 +92,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         if (hostOrder.HasUnknownDropTarget(configuration))
         {
             // Check if there are agvs that are to be selected to handle this order directly after dropping
-            if (await hostOrderRepository.HasDropOrdersHeadingTowardsCargoTriggerPoint())
+            // and if the queue is empty
+            if (await hostOrderRepository.HasDropOrdersHeadingTowardsCargoTriggerPoint() && !configuration.QueueIsOccupied)
             {
                 return;
             }

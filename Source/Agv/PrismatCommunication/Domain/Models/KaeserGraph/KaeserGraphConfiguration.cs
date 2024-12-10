@@ -88,6 +88,11 @@ public class KaeserGraphConfiguration
     /// </summary>
     public IConcurrentDictionaryProvider<string, string> TriggerPointMapping { get; }
 
+    /// <summary>
+    /// True, if the queue at APL is occupied by agvs.
+    /// </summary>
+    public bool QueueIsOccupied { get; private set; } = true;
+
     /// <inheritdoc cref="KaeserGraphConfiguration"/>>
     public KaeserGraphConfiguration(IConcurrentDictionaryProvider<string, string> triggerPointMapping)
     {
@@ -202,5 +207,14 @@ public class KaeserGraphConfiguration
     public double? GetLiftHeight(string target)
     {
         return TargetLiftHeight.TryGetValue(target, out double liftHeight) ? liftHeight : null;
+    }
+
+    /// <summary>
+    /// Set <see cref="QueueIsOccupied"/>.
+    /// </summary>
+    /// <param name="isOccupied">The new value.</param>
+    public void SetQueueIsOccupied(bool isOccupied)
+    {
+        QueueIsOccupied = isOccupied;
     }
 }

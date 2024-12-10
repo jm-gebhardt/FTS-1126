@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -484,6 +485,26 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_PrepareAgvForStartingAction_WasQueuingAtQueueHeadNoOtherAgvsInQueue_AutomaticPickDropAction_QueueBecameEmpty()
+    {
+        var agvsToMove = new Dictionary<Guid, string>();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithAgvsToMove(agvsToMove)
+            .WithActionGroup(actionGroup);
+
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
+        await fixture.ShouldHavePublishedAsync<QueueBecameEmpty>();
+        await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+    }
+
+    [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_NotQueueing_ChargeAction_DoesNotPublishCreateQueueingActionGroup()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "a node");
@@ -548,6 +569,30 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        agv.IsQueueing.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_NoOtherAgvsInQueue_QueueBecameEmpty()
+    {
+        var agvsToMove = new Dictionary<Guid, string>();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        agv.IsQueueing = true;
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsToMove(agvsToMove)
+            .WithActionGroup(actionGroup)
+            .WithIsOnAQueueNode(true);
+
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
+        await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<QueueBecameEmpty>();
         agv.IsQueueing.ShouldBeFalse();
     }
 
@@ -975,6 +1020,7 @@ public class AgvCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new TryEnqueueAgv(Guid.NewGuid(), "a queue node"));
         await fixture.ShouldHaveConsumedAsync<TryEnqueueAgv>();
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<QueueEntered>();
     }
 
     [TestMethod]
@@ -987,6 +1033,7 @@ public class AgvCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new TryEnqueueAgv(Guid.NewGuid(), entryNode));
         await fixture.ShouldHaveConsumedAsync<TryEnqueueAgv>();
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<QueueEntered>();
     }
 
     [TestMethod]
@@ -998,5 +1045,6 @@ public class AgvCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new TryEnqueueAgv(Guid.NewGuid(), "queue entry node"));
         await fixture.ShouldHaveConsumedAsync<TryEnqueueAgv>();
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<QueueEntered>();
     }
 }

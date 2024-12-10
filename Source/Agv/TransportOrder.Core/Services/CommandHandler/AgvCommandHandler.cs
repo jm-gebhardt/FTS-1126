@@ -21,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using System.Collections.ObjectModel;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
@@ -913,6 +914,10 @@ public class AgvCommandHandler :
         {
             return;
         }
+        if (agvsToMove.Count == 0)
+        {
+            await context.Publish(new QueueBecameEmpty());
+        }
         foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
         {
             _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
@@ -933,6 +938,12 @@ public class AgvCommandHandler :
         if (targetNode != null && targetNode != entryNode)
         {
             await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvCorrelationId, targetNode));
+            await context.Publish(new QueueEntered());
+        }
+
+        if (targetNode == entryNode)
+        {
+            await context.Publish(new QueueEntered());
         }
     }
 
@@ -958,6 +969,10 @@ public class AgvCommandHandler :
             if (agvsToMove == null)
             {
                 return false;
+            }
+            if (agvsToMove.Count == 0)
+            {
+                await context.Publish(new QueueBecameEmpty());
             }
             foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
             {

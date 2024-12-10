@@ -173,18 +173,36 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsCargoTriggerPoint_HostOrderOnlySaved()
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsCargoTriggerPoint_QueueIsEmpty_HostOrderOnlySaved()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrdersHeadingTowardsCargoTriggerPoint(true)
             .WithHostOrderRepository(null)
             .WithHostCommunicator();
+        fixture.Configuration.SetQueueIsOccupied(false);
 
         var order = OrderGenerator.GenerateUnknownDropTargetOrder();
 
         await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        fixture.VerifyHostOrderAdded();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsCargoTriggerPoint_QueueIsNotEmpty_QueueActionGroup()
+    {
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithDropOrdersHeadingTowardsCargoTriggerPoint(true)
+            .WithHostOrderRepository(null)
+            .WithHostCommunicator();
+        fixture.Configuration.SetQueueIsOccupied(true);
+
+        var order = OrderGenerator.GenerateUnknownDropTargetOrder();
+
+        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
+        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         fixture.VerifyHostOrderAdded();
     }
 
