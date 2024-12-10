@@ -47,7 +47,7 @@ public class DockerComposeTest
         dc.AreRunning(ExcludedContainers).ShouldBeTrue();
         dcVirtual.Login();
         dcVirtual.Pull();
-        dcVirtual.Up("karis0 mongo-provisioning").ShouldBeTrue();
+        dcVirtual.Up("taragv1").ShouldBeTrue();
         dcVirtual.AreRunning(ExcludedContainers).ShouldBeTrue();
         dcVirtual.Down().ShouldBeTrue();
         dcVirtual.AreRemoved().ShouldBeTrue();

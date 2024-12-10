@@ -1,0 +1,13 @@
+{
+  "TriggerUrn": "www.gebhardt-group.com:kaeser.DP1",
+  "TriggerVersion": "0.0.1",
+  "NodeId": "map/NODE-9",
+  "ConfigurationParameters": [
+    {
+      "Name": "StationCount",
+      "Description": "Anzahl der Stationen, die als Ziel für APL 1060 verwendet werden können.",
+      "Value": "3",
+      "Validation": "^\\d+$"
+    }
+  ]
+}

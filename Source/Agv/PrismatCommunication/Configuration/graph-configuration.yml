@@ -1,30 +1,31 @@
-DecisionPoint1TriggerName: "DP1"
-CheckCargoTriggerName: "DP2"
-ShortLoopTriggerName: "DP3"
-LongLoopMoveTargetNode: "WP-0078"
+DecisionPoint1TriggerName: DP1
+CheckCargoTriggerName: DP2
+ShortLoopTriggerName: DP3
+LongLoopMoveTargetNode: "map/NODE-9"
 StationMapping:
-  "1020": "O1"
-  "1050": "O1"
-  "2110": "U1"
-  "2130": "U1"
-  "2210": "U2"
-  "2230": "U2"
-  "2310": "U3"
-  "2330": "U3"
-  "2410": "U4"
-  "2430": "U4"
-  "9060": "UR1"
-  "9070": "UR1"
+  "1020": "WE1"
+  "1050": "WE1"
+  "2110": "AKL1"
+  "2130": "AKL1"
+  "2210": "AKL2"
+  "2230": "AKL2"
+  "2310": "AKL3"
+  "2330": "AKL3"
+  "2410": "AKL4"
+  "2430": "AKL4"
+  "9060": "APL1"
+  "9070": "APL1"
 ConveyorStationMapping:
-  "O3": "WE01"
-  "O2": "WE02"
-  "O1": "WE03"
+  "WE1": "WE01"
+  "WE2": "WE02"
+  "WE3": "WE03"
 TargetLiftHeight:
-  "2110": 2.211
-  "2130": 1.213
-  "2210": 2.221
-  "2230": 1.223
-  "2310": 2.231
-  "2330": 1.233
-  "2410": 2.241
-  "2430": 1.243
+  "2110": 1.0
+  "2130": 1.5
+  "2210": 1.0
+  "2230": 1.5
+  "2310": 1.0
+  "2330": 1.5
+  "2410": 1.0
+  "2430": 1.5
+

@@ -1,0 +1,17 @@
+{
+  "Name": "AplQueue",
+  "Nodes": [
+    {
+      "NodeId": "APL1/$map_2",
+      "Position": 0
+    },
+    {
+      "NodeId": "map/NODE-25",
+      "Position": 1
+    },
+    {
+      "NodeId": "map/NODE-24",
+      "Position": 2
+    }
+  ]
+}

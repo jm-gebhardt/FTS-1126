@@ -92,7 +92,7 @@ public class DockerCompose
     /// <returns>true if command execution was successful</returns>
     public bool Down()
     {
-        return RunDockerComposeCommand("down -v");
+        return RunDockerComposeCommand("down -v --remove-orphans");
     }
 
     /// <summary>

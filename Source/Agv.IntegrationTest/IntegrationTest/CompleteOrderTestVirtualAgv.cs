@@ -58,7 +58,7 @@ public class CompleteOrderTestVirtualAgv
         //Start Virtual AGV
         _dockerComposeVirtualAgv.Login().ShouldBeTrue();
         _dockerComposeVirtualAgv.Pull().ShouldBeTrue();
-        _dockerComposeVirtualAgv.Up("karis0 mongo-provisioning").ShouldBeTrue();
+        _dockerComposeVirtualAgv.Up("taragv1").ShouldBeTrue();
         _dockerComposeVirtualAgv.AreRunning(ExcludedContainers).ShouldBeTrue();
     }
 
@@ -84,11 +84,11 @@ public class CompleteOrderTestVirtualAgv
     [TestMethod]
     public async Task SingleVirtualAgvAdd_OrderProcessedSuccessful()
     {
-        const string agvSerialNumber = "karis0";
+        const string agvSerialNumber = "agv00";
         const string orderId = "Order#1";
         const string leNo = "123";
-        const string source = "PVB02";
-        const string destination = "PVB03";
+        const string source = "WE1";
+        const string destination = "APL1";
         
         var restAgv = await _restApi.WaitForAgv(agvSerialNumber);
         restAgv.ShouldNotBeNull();
