@@ -29,3 +29,8 @@ public interface INodeStateDbSemaphore;
 /// Provides an interface for the parking semaphore service.
 /// </summary>
 public interface IParkingSemaphore;
+
+/// <summary>
+/// Provides an interface for the queueing semaphore service.
+/// </summary>
+public interface IQueueingSemaphore;

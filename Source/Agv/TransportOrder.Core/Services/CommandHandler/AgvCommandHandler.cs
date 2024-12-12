@@ -842,7 +842,7 @@ public class AgvCommandHandler :
 
         if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Charge) || actionGroup.IsManual)
         {
-            if (await TryEscapeQueue(context, agv.CorrelationId))
+            if (await TryEscapeQueue(context, agv.CorrelationId, agv.AgvStatus?.LastNodeId))
             {
                 agv.IsQueueing = false;
             }
@@ -961,29 +961,25 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Guid agvCorrelationId)
+    private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Guid agvCorrelationId, string? agvLastNodeId)
     {
-        if (await _queueManager.IsOnAQueueNode(agvCorrelationId))
+        (Dictionary<Guid, string>? agvsToMove, int? queueSize) = await _queueManager.TryEscapeQueue(agvCorrelationId, agvLastNodeId);
+        if (agvsToMove == null)
         {
-            Dictionary<Guid, string>? agvsToMove = await _queueManager.TryEscapeQueue(agvCorrelationId);
-            if (agvsToMove == null)
-            {
-                return false;
-            }
-            if (agvsToMove.Count == 0)
-            {
-                await context.Publish(new QueueBecameEmpty());
-            }
-            foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
-            {
-                _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
-                await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMove.Key, agvToMove.Value));
-            }
-            //Trigger refilling of queue
-            await context.Publish(new TryReactivateParkingAgvs());
-            return true;
+            return false;
         }
-        return false;
+        if (queueSize == 0)
+        {
+            await context.Publish(new QueueBecameEmpty());
+        }
+        foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
+        {
+            _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
+            await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMove.Key, agvToMove.Value));
+        }
+        //Trigger refilling of queue
+        await context.Publish(new TryReactivateParkingAgvs());
+        return true;
     }
 
     /// <summary>

@@ -81,10 +81,10 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
-    public AgvCommandHandlerTestFixture WithAgvsToMove(Dictionary<Guid, string>? agvsToMove)
+    public AgvCommandHandlerTestFixture WithAgvsToMove(Dictionary<Guid, string>? agvsToMove, int? queueSize=null)
     {
         _queueManager.Setup(x => x.TryDequeueAgv(It.IsAny<Guid>())).ReturnsAsync(agvsToMove);
-        _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>())).ReturnsAsync(agvsToMove);
+        _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync((agvsToMove, queueSize));
         return this;
     }
 

@@ -76,7 +76,8 @@ public class QueueManagerTest
         var agv = Guid.NewGuid();
 
         var fixture = new QueueManagerTestFixture()
-            .WithQueue(queue);
+            .WithQueue(null)
+            .WithQueueByEntryNode(queue);
 
         (await fixture.QueueManager.TryEnqueueAgv(agv, entryNode.NodeId)).ShouldBe(entryNode.NodeId);
 
@@ -92,7 +93,8 @@ public class QueueManagerTest
         var nodeToEnqueueTo = queue.Nodes.OrderBy(n => n.Position).First(n => n.State?.NodeState == NodeLockState.Free);
 
         var fixture = new QueueManagerTestFixture()
-            .WithQueue(queue);
+            .WithQueue(null)
+            .WithQueueByEntryNode(queue);
 
         (await fixture.QueueManager.TryEnqueueAgv(agv, entryNode.NodeId)).ShouldBe(nodeToEnqueueTo.NodeId);
 
@@ -149,7 +151,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueue(null);
 
-        (await fixture.QueueManager.TryEscapeQueue(agv)).ShouldBeNull();
+        (await fixture.QueueManager.TryEscapeQueue(agv, "lastNodeId")).agvsToMove.ShouldBeNull();
     }
 
     [TestMethod]
@@ -160,7 +162,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
-        (await fixture.QueueManager.TryEscapeQueue(agv)).ShouldBeNull();
+        (await fixture.QueueManager.TryEscapeQueue(agv, "LastNodeId")).agvsToMove.ShouldBeNull();
     }
 
     [TestMethod]
@@ -175,13 +177,32 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
-        Dictionary<Guid, string>? agvsToMove = await fixture.QueueManager.TryEscapeQueue(agv);
+        (Dictionary<Guid, string>? agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv, nodeToEscape.NodeId);
 
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(nodeToEscape.NodeId);
         fixture.VerifyQueueWasUpdated();
-        queue.AgvFillQuantity.ShouldBe(queueSize - 1);
+        queueSizeAfterEscaping.ShouldBe(queueSize - 1);
         fixture.VerifyNodeWasReserved(nodeToEscape.NodeId, agvToMove, true);
+    }
+
+    [TestMethod]
+    public async Task TryEscapeQueue_AgvOnlyEntered_ReturnsNoAgvsToMoveAndUpdatedQueueSize()
+    {
+        const int queueSize = 3;
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Reserved, NodeLockState.Free], size: queueSize);
+        queue.AgvFillQuantity.ShouldBe(queueSize);
+        var nodeToEscape = queue.Nodes.Single(n => n.NodeId == queue.EntryNode);
+        var agv = Guid.NewGuid();
+        var fixture = new QueueManagerTestFixture()
+            .WithQueue(null)
+            .WithQueueByEntryNode(queue);
+
+        (Dictionary<Guid, string>? agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv, nodeToEscape.NodeId);
+
+        agvsToMove.ShouldBeEmpty();
+        fixture.VerifyQueueWasUpdated();
+        queueSizeAfterEscaping.ShouldBe(queueSize - 1);
     }
 
     [TestMethod]

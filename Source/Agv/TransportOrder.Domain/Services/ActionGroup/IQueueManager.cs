@@ -32,7 +32,7 @@ public interface IQueueManager
     /// Try to escape the queue.
     /// </summary>
     /// <returns>Object containing the agvs that need to move to the next queue node.</returns>
-    Task<Dictionary<Guid, string>?> TryEscapeQueue(Guid agvCorrelationId);
+    Task<(Dictionary<Guid, string>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, string? agvLastNodeId);
 
     /// <summary>
     /// True, if the agv is on a queue node.

@@ -581,7 +581,7 @@ public class AgvCommandHandlerTest
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
-            .WithAgvsToMove(agvsToMove)
+            .WithAgvsToMove(agvsToMove, 0)
             .WithActionGroup(actionGroup)
             .WithIsOnAQueueNode(true);
 

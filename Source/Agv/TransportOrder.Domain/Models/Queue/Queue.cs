@@ -75,12 +75,12 @@ public class Queue
     }
 
     /// <inheritdoc cref="Queue"/>>
-    public Queue(Guid id, string name, ICollection<QueueNode> nodes, int fillQuantity)
+    public Queue(Guid id, string name, ICollection<QueueNode> nodes, int agvFillQuantity)
     {
         Id = id;
         Name = name;
         Nodes = nodes;
-        AgvFillQuantity = fillQuantity;
+        AgvFillQuantity = agvFillQuantity;
     }
 
     /// <inheritdoc cref="Queue"/>>
@@ -144,10 +144,15 @@ public class Queue
     public bool TryEnqueue(Guid agvCorrelationId, [MaybeNullWhen(false)] out string targetNode)
     {
         ResolveDuplications();
-        if (AgvFillQuantity==0 || (AllAgvsEntered && ! IsEnqueued(agvCorrelationId)))
-        {
+        if (AgvFillQuantity==0 )
+        { 
             targetNode = default;
             return false;
+        }
+        if (AllAgvsEntered && !IsEnqueued(agvCorrelationId))
+        {
+            targetNode = EntryNode!;
+            return true;
         }
         int tail = Tail!.Position ;
         var node = Nodes.Single(n => n.Position == tail);
@@ -214,6 +219,7 @@ public class Queue
             return null;
         }
         AgvFillQuantity -= 1;
+        AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
         return agv;
     }
 
@@ -282,6 +288,16 @@ public class Queue
             return null;
         }
         AgvFillQuantity -= 1;
+        AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
         return node.NodeId;
+    }
+
+    /// <summary>
+    /// Remove an agv from the queue without updating other agvs positions.
+    /// </summary>
+    public void RemoveAgv()
+    {
+        AgvFillQuantity -= 1;
+        AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
     }
 }

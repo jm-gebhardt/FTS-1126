@@ -69,10 +69,10 @@ public class EfNodeStateRepository : INodeStateRepository
         {
             if (!IsLocked(nodeId) && IsFree(nodeId))
             {
-                _logger.LogDebug("Reserving node {NodeId}, for Agv {CorrelationId}", nodeId, agvCorrelationId);
+                _logger.LogDebug("Reserving node {NodeId}, for Agv {AgvCorrelationId}", nodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId);
             }
-            _logger.LogDebug("Could not reserve node {NodeId} for agv {CorrelationId} because node is locked or not free.", nodeId, agvCorrelationId);
+            _logger.LogDebug("Could not reserve node {NodeId} for agv {AgvCorrelationId} because node is locked or not free.", nodeId, agvCorrelationId);
             return false;
         });
     }
@@ -84,10 +84,10 @@ public class EfNodeStateRepository : INodeStateRepository
         {
             if (!IsLocked(nodeId) )
             {
-                _logger.LogDebug("Force reserving node {NodeId}, for Agv {CorrelationId}", nodeId, agvCorrelationId);
+                _logger.LogDebug("Force reserving node {NodeId}, for Agv {AgvCorrelationId}", nodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId, true);
             }
-            _logger.LogDebug("Could not reserve node {NodeId} for agv {CorrelationId} because node is locked or not free.", nodeId, agvCorrelationId);
+            _logger.LogDebug("Could not reserve node {NodeId} for agv {AgvCorrelationId} because node is locked .", nodeId, agvCorrelationId);
             return false;
         });
     }
@@ -100,11 +100,11 @@ public class EfNodeStateRepository : INodeStateRepository
             var nodeLock = GetNodeLockInState(agvCorrelationId, NodeLockState.Reserved);
             if (nodeLock != null)
             {
-                _logger.LogDebug("UnReserve node {NodeId}, reserved for Agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
+                _logger.LogDebug("UnReserve node {NodeId}, reserved for Agv {AgvCorrelationId}", nodeLock.NodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
             }
             // ReSharper disable once StringLiteralTypo
-            _logger.LogDebug("Could not unreserve any node because no node is reserved for agv {CorrelationId}", agvCorrelationId);
+            _logger.LogDebug("Could not unreserve any node because no node is reserved for agv {AgvCorrelationId}", agvCorrelationId);
             return false;
         });
     }
@@ -129,11 +129,11 @@ public class EfNodeStateRepository : INodeStateRepository
         var currentState = GetNodeLock(nodeId);
         if (currentState is { IsLocked: true })
         {
-            _logger.LogDebug("Could not not occupy node {NodeId} because it is locked", nodeId);
+            _logger.LogDebug("Could not not occupy node {NodeId} with agv {AgvCorrelationId} because it is locked", nodeId, agvCorrelationId);
             return false;
         }
 
-        _logger.LogDebug("Occupy node {NodeId} with AGV {CorrelationId}", nodeId, agvCorrelationId);
+        _logger.LogDebug("Occupy node {NodeId} with AGV {AgvCorrelationId}", nodeId, agvCorrelationId);
         return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId, force:true);
     }
 
@@ -145,11 +145,11 @@ public class EfNodeStateRepository : INodeStateRepository
             var nodeLock = GetNodeLockInState(agvCorrelationId, NodeLockState.Occupied);
             if (nodeLock != null)
             {
-                _logger.LogDebug("UnOccupy node {NodeId}, occupied by agv {CorrelationId}", nodeLock.NodeId, agvCorrelationId);
+                _logger.LogDebug("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}", nodeLock.NodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
             }
             // ReSharper disable once StringLiteralTypo
-            _logger.LogDebug("Could not unoccupy any node because no node is occupied by agv {CorrelationId}", agvCorrelationId);
+            _logger.LogDebug("Could not unoccupy any node because no node is occupied by agv {AgvCorrelationId}", agvCorrelationId);
             return false;
         });
     }

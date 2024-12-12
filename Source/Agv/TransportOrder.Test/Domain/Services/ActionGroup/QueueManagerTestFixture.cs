@@ -23,7 +23,7 @@ public class QueueManagerTestFixture: FixtureBase
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IRouteService> _routeService = new();
-    private readonly SemaphoreProvider<IParkingSemaphore> _semaphore = new();
+    private readonly SemaphoreProvider<IQueueingSemaphore> _semaphore = new();
     private readonly Mock<ILogger<BaseNodeReservationManager>> _logger = new();
     public readonly QueueManager QueueManager;
 
@@ -35,7 +35,7 @@ public class QueueManagerTestFixture: FixtureBase
             s.AddTransient(_ => _nodeStateRepository.Object);
             s.AddTransient(_ => _routeService.Object);
             s.AddTransient(_ => _agvDb.Object);
-            s.AddTransient<ISemaphoreProvider<IParkingSemaphore>>(_ => _semaphore);
+            s.AddTransient<ISemaphoreProvider<IQueueingSemaphore>>(_ => _semaphore);
             s.AddTransient(_ => _logger.Object);
             s.AddTransient<QueueManager>();
         });
@@ -60,6 +60,11 @@ public class QueueManagerTestFixture: FixtureBase
     public QueueManagerTestFixture WithQueue(Queue? queue)
     {
         _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
+        return this;
+    }
+
+    public QueueManagerTestFixture WithQueueByEntryNode(Queue? queue)
+    {
         _queueRepository.Setup(x => x.GetQueueByEntryNode(It.IsAny<string>())).ReturnsAsync(queue);
         return this;
     }

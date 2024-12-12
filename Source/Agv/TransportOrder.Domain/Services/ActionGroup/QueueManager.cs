@@ -22,7 +22,7 @@ public class QueueManager : BaseNodeReservationManager, IQueueManager
         INodeStateRepository nodeStateRepository,
         IRouteService routeService,
         ILogger<BaseNodeReservationManager> logger,
-        ISemaphoreProvider<IParkingSemaphore> semaphoreProvider) : base(agvDb, nodeStateRepository, routeService, logger, semaphoreProvider) // use parking semaphore to allow park nodes to be queue nodes
+        ISemaphoreProvider<IQueueingSemaphore> semaphoreProvider) : base(agvDb, nodeStateRepository, routeService, logger, semaphoreProvider) 
     {
         _queueRepository = queueRepository;
     }
@@ -129,7 +129,7 @@ public class QueueManager : BaseNodeReservationManager, IQueueManager
             }
             if (!queue.IsAgvAtQueueHead(agvCorrelationId, queue.Head?.NodeId ?? string.Empty))
             {
-                Logger.LogDebug("Could not dequeue agv from queue {QueueName}, agv {AgvCorrelationId} is not at head position", queue.Name, agvCorrelationId);
+                Logger.LogWarning("Could not dequeue agv from queue {QueueName}, agv {AgvCorrelationId} is not at head position", queue.Name, agvCorrelationId);
                 return null;
             }
 
@@ -145,21 +145,21 @@ public class QueueManager : BaseNodeReservationManager, IQueueManager
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<Dictionary<Guid, string>?> TryEscapeQueue(Guid agvCorrelationId)
+    public async Task<(Dictionary<Guid, string>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, string? agvLastNodeId)
     {
         return await SemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var queue = await _queueRepository.GetQueueForAgv(agvCorrelationId);
             if (queue == null)
             {
-                Logger.LogDebug("Agv {AgvCorrelationId} could not escape queue, no queue found", agvCorrelationId);
-                return null;
+                Logger.LogDebug("Agv {AgvCorrelationId} not enqueued, checking for escaping from queue entry node", agvCorrelationId);
+                return await TryEscapeFromQueueEntryNode(agvCorrelationId, agvLastNodeId);
             }
             string? node = queue.TryEscapeQueue(agvCorrelationId, out Dictionary<Guid, string> agvsToMove);
             if (node == null)
             {
-                Logger.LogDebug("Could not escape agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
-                return null;
+                Logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
+                return (null, null);
             }
             await _queueRepository.UpdateQueueSize(queue.Id, queue.AgvFillQuantity);
             foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
@@ -167,8 +167,27 @@ public class QueueManager : BaseNodeReservationManager, IQueueManager
                 await NodeStateRepository.ForceReserveNodeAsync(agvToMove.Value, agvToMove.Key);
             }
             Logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName}", agvCorrelationId, queue.Name);
-            return agvsToMove;
+            return (agvsToMove, queue.AgvFillQuantity);
         });
+    }
+
+    private async Task<(Dictionary<Guid, string>? agvsToMove, int? queueSize)> TryEscapeFromQueueEntryNode(Guid agvCorrelationId, string? agvLastNodeId)
+    {
+        if (agvLastNodeId == null)
+        {
+            Logger.LogDebug("Agv {AgvCorrelationId} could not escape queue, no last node id {AgvLastNodeId} of agv ", agvCorrelationId, agvLastNodeId);
+            return (null, null);
+        }
+        var queue = await _queueRepository.GetQueueByEntryNode(agvLastNodeId);
+        if (queue == null)
+        {
+            Logger.LogDebug("Agv {AgvCorrelationId} could not escape queue, no queue for last node id {AgvLastNodeId} of agv found", agvCorrelationId, agvLastNodeId);
+            return (null, null);
+        }
+        queue.RemoveAgv();
+        await _queueRepository.UpdateQueueSize(queue.Id, queue.AgvFillQuantity);
+        Logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName}", agvCorrelationId, queue.Name);
+        return (new Dictionary<Guid, string>(), queue.AgvFillQuantity);
     }
 
     /// <inheritdoc cref="IQueueManager"/>

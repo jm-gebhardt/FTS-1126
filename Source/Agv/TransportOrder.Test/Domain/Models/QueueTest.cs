@@ -66,19 +66,10 @@ public class QueueTest
     }
 
     [TestMethod]
-    public void TryEnqueue_QueueIsFull_ReturnsFalse()
-    {
-        var queue = QueueGenerator.GenerateFullQueue();
-
-        queue.TryEnqueue(Guid.NewGuid(), out string? targetNode).ShouldBeFalse();
-        targetNode.ShouldBeNull();
-    }
-
-    [TestMethod]
     public void TryEnterQueue_QueueIsFull_ReturnsNull()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-        
+
         queue.TryEnterQueue().ShouldBeNull();
     }
 
@@ -86,7 +77,7 @@ public class QueueTest
     public void TryEnterQueue_ValidData_ReturnsEntryNode()
     {
         const int size = 0;
-        var queue = QueueGenerator.GenerateEmptyQueue(nodes:3, size:size);
+        var queue = QueueGenerator.GenerateEmptyQueue(nodes: 3, size: size);
         string entryNode = queue.Nodes.OrderBy(n => n.Position).Last().NodeId;
         queue.TryEnterQueue().ShouldBe(entryNode);
         queue.AgvFillQuantity.ShouldBe(size + 1);
@@ -105,6 +96,24 @@ public class QueueTest
         targetNode.ShouldBe(tail.NodeId);
         queue.Tail!.Position.ShouldBe(tail.Position + 1);
         queue.Nodes.Single(n => n.NodeId == targetNode).State!.IsReservedForAgv(agv).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void TryEnqueue_QueueIsFull_ReturnsEntryNode()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+
+        queue.TryEnqueue(Guid.NewGuid(), out string? targetNode).ShouldBeTrue();
+        targetNode.ShouldBe(queue.EntryNode);
+    }
+
+    [TestMethod]
+    public void TryEnqueue_AgvFillQuantityIsZero_ReturnsFalse()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue(size: 0);
+
+        queue.TryEnqueue(Guid.NewGuid(), out string? targetNode).ShouldBeFalse();
+        targetNode.ShouldBe(default);
     }
 
     [DataRow(NodeLockState.Occupied, NodeLockState.Reserved, NodeLockState.Free)]
@@ -182,7 +191,7 @@ public class QueueTest
 
         queue.TryDequeue(out Dictionary<Guid, string> agvsToMove).ShouldBe(dequeuedAgv);
 
-        queue.IsFull.ShouldBeFalse(); 
+        queue.IsFull.ShouldBeFalse();
         agvsToMove.Count.ShouldBe(2);
         agvsToMove[agvMovingFromPosition2To1].ShouldBe(queue.Nodes.Single(n => n.Position == 1).NodeId);
         agvsToMove[agvMovingFromPosition1ToHead].ShouldBe(head.NodeId);
@@ -211,7 +220,7 @@ public class QueueTest
     [TestMethod]
     public void TryDequeue_OnlyHeadNodeTaken_ReturnsAgvFromHeadAllOthersMove()
     {
-        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates:[NodeLockState.Occupied, NodeLockState.Free, NodeLockState.Free]);
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Occupied, NodeLockState.Free, NodeLockState.Free]);
         var head = queue.Head!;
 
         queue.TryDequeue(out Dictionary<Guid, string> agvsToMove).ShouldBe(head.State!.AgvCorrelationId);
@@ -229,7 +238,7 @@ public class QueueTest
         var movingAgv = queue.Nodes.Single(n => n.Position == head.Position + 1).State!.AgvCorrelationId!.Value;
 
         queue.TryDequeue(out Dictionary<Guid, string> agvsToMove).ShouldBe(dequeuedAgv);
-        
+
         agvsToMove.Count.ShouldBe(1);
         agvsToMove[movingAgv].ShouldBe(head.NodeId);
     }
@@ -311,5 +320,25 @@ public class QueueTest
         string head = queue.Head!.NodeId;
         var agv = queue.Head!.State!.AgvCorrelationId!.Value;
         queue.IsAgvAtQueueHead(agv, head).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void RemoveAgv_ValidData_ReducesAgvFillQuantity()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        int queueSize = queue.AgvFillQuantity;
+
+        queue.RemoveAgv();
+        queue.AgvFillQuantity.ShouldBe(queueSize - 1);
+    }
+
+    [TestMethod]
+    public void RemoveAgv_EmptyQueue_DoesNotReduceAgvFillQuantity()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue(size: 0);
+        int queueSize = queue.AgvFillQuantity;
+
+        queue.RemoveAgv();
+        queue.AgvFillQuantity.ShouldBe(queueSize);
     }
 }
