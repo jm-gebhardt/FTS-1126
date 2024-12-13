@@ -1,13 +1,13 @@
 trigger: none # Disable CI trigger
 
 schedules:
-- cron: '0 3 * * 1' # on Mondays at 3 am
+- cron: '0 3 * * *' # daily at 3 am
   always: true # run even when there are no code changes
   branches:
     include:
       - master
   batch: true
-  displayName: Weekly dependency check
+  displayName: Daily dependency check
 
 pool:
   vmImage: 'ubuntu-latest' 
@@ -17,3 +17,5 @@ steps:
   inputs:
     dockerImageTag: 'latest'
     failOnException: false
+    useUpdateScriptVNext: true
+

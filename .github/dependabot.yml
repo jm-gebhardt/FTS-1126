@@ -4,12 +4,18 @@ updates:
     directory: /Source/Agv
     open-pull-requests-limit: 20
     schedule:
-      interval: weekly
+      interval: daily
     assignees:
        - "d57dc9ca-b7fe-401f-b7f7-c2ec2fcb5b3d" # is@odw42.onmicrosoft.com
        - "a1963800-1848-4394-a6ed-7d0f733b4359" # arne@odw42.onmicrosoft.com
        - "42f4ca0f-010d-6b7d-9420-a358bd5d6ed2" # s.schrader@gebhardt-group.com
-       - "affc89bd-574b-6f17-a7c0-7cce0e4800b7" # t.guy@gebhardtusa.com
+    ignore:
+     - dependency-name: "Microsoft.EntityFrameworkCore*"
+       update-types: ["version-update:semver-major"] 
+     - dependency-name: "Microsoft.Extensions*"
+       update-types: ["version-update:semver-major"]    
+     - dependency-name: "System.*"
+       update-types: ["version-update:semver-major"]      
     groups:
       masstransit:
           patterns:
@@ -19,7 +25,10 @@ updates:
             - "Microsoft.EntityFrameworkCore*"
       mstest:
           patterns:
-            - "MSTest.*"      
+            - "MSTest*"     
+      quartz:
+          patterns:
+            - "Quartz*"             
       fluentvalidation:
           patterns:
             - "FluentValidation*"
@@ -27,9 +36,8 @@ updates:
     directory: /Source/Agv.IntegrationTest
     open-pull-requests-limit: 20
     schedule:
-      interval: weekly
+      interval: daily
     assignees:
        - "d57dc9ca-b7fe-401f-b7f7-c2ec2fcb5b3d" # is@odw42.onmicrosoft.com
        - "a1963800-1848-4394-a6ed-7d0f733b4359" # arne@odw42.onmicrosoft.com
        - "42f4ca0f-010d-6b7d-9420-a358bd5d6ed2" # s.schrader@gebhardt-group.com
-       - "affc89bd-574b-6f17-a7c0-7cce0e4800b7" # t.guy@gebhardtusa.com
