@@ -6,9 +6,9 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="System.Runtime.Caching" Version="8.0.1" />
-        <PackageReference Include="System.Text.Json" Version="8.0.5" />
-        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+        <PackageReference Include="System.Runtime.Caching" />
+        <PackageReference Include="System.Text.Json"/>
+        <PackageReference Include="JetBrains.Annotations" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />

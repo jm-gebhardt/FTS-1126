@@ -5,8 +5,8 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
      <ItemGroup>
-        <PackageReference Include="System.Runtime.Caching" Version="8.0.1" />
-        <PackageReference Include="System.Text.Json" Version="8.0.5" />
+        <PackageReference Include="System.Runtime.Caching" />
+        <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />

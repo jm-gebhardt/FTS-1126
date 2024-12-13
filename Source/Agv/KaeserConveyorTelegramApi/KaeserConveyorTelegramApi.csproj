@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.KaeserConveyorTelegramApi</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+        <PackageReference Include="JetBrains.Annotations" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
