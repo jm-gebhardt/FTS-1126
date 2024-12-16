@@ -180,7 +180,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenActionsAreEmpty_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GenerateActionGroup(new List<AgvAction>(), correlationId: new Guid());
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(new List<AgvAction>(), correlationId: Guid.Empty);
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
             .WithRoute(agv, actionGroup)

@@ -533,7 +533,7 @@ public class Agv : IAgv
             return;
         }
         IsOnline = false;
-        AgvOfflineTokenId = default;
+        AgvOfflineTokenId = null;
     }
 
     /// <summary>

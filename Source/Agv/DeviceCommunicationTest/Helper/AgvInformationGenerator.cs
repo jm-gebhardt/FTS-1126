@@ -33,7 +33,7 @@ public static class AgvInformationGenerator
         string agvSerialNumber = _agvSerialNumbers[i];
         string order = _orders[i];
         string state = _agvStates[i];
-        var correlationId = agvCorrelationId != default ? agvCorrelationId : agvSerialNumber.ToGuid();
+        var correlationId = agvCorrelationId != Guid.Empty ? agvCorrelationId : agvSerialNumber.ToGuid();
         var actionGroupId = Guid.Empty;
         var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], 48, _chargingState[i] ? 20 : -10, 20, false, _sources[i]);
         var agvGraph = new AgvGraph(correlationId, GetNodes(), GetEdges());

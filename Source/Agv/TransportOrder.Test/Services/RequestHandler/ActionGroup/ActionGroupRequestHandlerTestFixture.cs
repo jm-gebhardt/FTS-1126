@@ -38,7 +38,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
 
     public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> AddDefaultGraph(Guid correlationId = default)
     {
-        correlationId = correlationId == default ? Guid.NewGuid() : correlationId;
+        correlationId = correlationId == Guid.Empty ? Guid.NewGuid() : correlationId;
         var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var mapper = GetMapper();
         _efGraph = mapper.Map<EfAgvGraph>(graph);

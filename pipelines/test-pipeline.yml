@@ -58,10 +58,10 @@ stages:
           arguments: '--configuration $(Build.Configuration)'
       - powershell: |
           echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
-          dotnet tool install --global JetBrains.ReSharper.GlobalTools --version 2024.2.7
-          dotnet tool restore
+          dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
+          dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
+          dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2024.3.2
           dotnet tool install --global dotnet-script
-          dotnet tool restore
           dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
           dotnet script  $(ResharperDirectory)/check-suggestions.csx
           # Check logs.txt

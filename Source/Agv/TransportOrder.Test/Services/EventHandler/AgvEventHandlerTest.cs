@@ -208,7 +208,7 @@ public class AgvEventHandlerTest
     {
         const string agvSerialNumber = "AGV001";
         var agvCorrelationId = agvSerialNumber.ToGuid();
-        var map = new Map(new Guid(), "", DateTime.MaxValue, "", 0, 0, 0.5f, 0.5f, 0.5f);
+        var map = new Map(Guid.Empty, "", DateTime.MaxValue, "", 0, 0, 0.5f, 0.5f, 0.5f);
         var fixture = new AgvEventHandlerTestFixture()
             .WithAgvGraph(AgvGraphGenerator.CreateDefaultGraph());
 

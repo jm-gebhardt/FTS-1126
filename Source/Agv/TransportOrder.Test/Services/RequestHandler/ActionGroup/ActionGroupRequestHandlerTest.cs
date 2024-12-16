@@ -53,7 +53,7 @@ public class ActionGroupRequestHandlerTest
     public async Task Consume_GetAgvActionGroupsRequest_EmptyActionGroupRepository_ReturnsEmptyList()
     {
         ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroups, ActionGroupRequestHandler>()
-            .WithActionGroups(Array.Empty<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
+            .WithActionGroups()
             .BuildAsync();
         Response<GotActionGroups> response = await fixture.GetResponseAsync<GotActionGroups>(
             new GetActionGroups(fixture.AllActionGroupStates, DateTime.MinValue, DateTime.MaxValue, null, 100));
@@ -117,7 +117,7 @@ public class ActionGroupRequestHandlerTest
     public async Task GetAgvActionGroupsRequestHandler_EmptyActionGroupRepository_ReturnsEmptyActionGroupsCountByState()
     {
         ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetActionGroupCountsByState, ActionGroupRequestHandler>()
-            .WithActionGroups(Array.Empty<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
+            .WithActionGroups()
             .BuildAsync();
 
         Response<GotActionGroupCountsByState> response = await fixture.GetResponseAsync<GotActionGroupCountsByState>(

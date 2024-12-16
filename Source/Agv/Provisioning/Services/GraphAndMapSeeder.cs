@@ -30,7 +30,7 @@ internal class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
             throw new InvalidOperationException("No maps defined.");
         }
 
-        List<Models.Map> notSetIds = data.Maps.Where(m => m.CorrelationId == default).ToList();
+        List<Models.Map> notSetIds = data.Maps.Where(m => m.CorrelationId == Guid.Empty).ToList();
         if (notSetIds.Any())
         {
             throw new InvalidOperationException($"CorrelationId of map(s): {string.Join(", ", notSetIds.Select(m => m.Name))} is not set.");

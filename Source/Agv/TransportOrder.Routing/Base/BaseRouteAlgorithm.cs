@@ -96,7 +96,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
     /// <inheritdoc cref="IRouteAlgorithm.CalculateRoute(CancellationToken, string[])"/>
     public Route? CalculateRoute(params string[] waypoints)
     {
-        return CalculateRoute(default, waypoints);
+        return CalculateRoute(CancellationToken.None, waypoints);
     }
 
     /// <inheritdoc/>

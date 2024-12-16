@@ -41,7 +41,7 @@ public sealed class TextLogger : ILogger
     /// <returns></returns>
     public IDisposable BeginScope<TState>(TState state) where TState : notnull
     {
-        return default!;
+        return null!;
     }
 
     /// <summary>

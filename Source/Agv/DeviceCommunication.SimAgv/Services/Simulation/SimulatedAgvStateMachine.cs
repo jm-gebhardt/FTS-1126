@@ -59,71 +59,71 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <summary>
     /// AGV is idle
     /// </summary>
-    public State Idle { get; private set; } = default!;
+    public State Idle { get; private set; } = null!;
 
     /// <summary>
     /// AGV is busy and is moving
     /// </summary>
-    public State BusyMoving { get; private set; } = default!;
+    public State BusyMoving { get; private set; } = null!;
     #endregion
 
     #region Events
     /// <summary>
     /// Action has been started
     /// </summary>
-    public Event<StartActionCommand> StartActionCommandEvent { get; private set; } = default!;
+    public Event<StartActionCommand> StartActionCommandEvent { get; private set; } = null!;
 
     /// <summary>
     /// CreateAgv was received
     /// </summary>
-    public Event<CreateAgv> CreateAgvEvent { get; private set; } = default!;
+    public Event<CreateAgv> CreateAgvEvent { get; private set; } = null!;
 
     /// <summary>
     /// RequestAgvGraph was received
     /// </summary>
-    public Event<RequestAgvGraph> RequestAgvGraphEvent { get; private set; } = default!;
+    public Event<RequestAgvGraph> RequestAgvGraphEvent { get; private set; } = null!;
 
     /// <summary>
     /// RequestAgvData was received
     /// </summary>
-    public Event<RequestAgvData> RequestAgvDataEvent { get; private set; } = default!;
+    public Event<RequestAgvData> RequestAgvDataEvent { get; private set; } = null!;
 
     /// <summary>
     /// <see cref="ActionAborted"/> was received.
     /// </summary>
-    public Event<ActionAborted> AgvActionAbortedEvent { get; private set; } = default!;
+    public Event<ActionAborted> AgvActionAbortedEvent { get; private set; } = null!;
 
     /// <summary>
     /// SimulateAgvError was received
     /// </summary>
-    public Event<SimulateAgvError> SimulateAgvErrorEvent { get; private set; } = default!;
+    public Event<SimulateAgvError> SimulateAgvErrorEvent { get; private set; } = null!;
 
     /// <summary>
     /// ResetAgvErrors was received
     /// </summary>
-    public Event<ResetAgvErrors> ResetAgvErrorsEvent { get; private set; } = default!;
+    public Event<ResetAgvErrors> ResetAgvErrorsEvent { get; private set; } = null!;
 
     /// <summary>
     /// Simulate an immediate charge up to given level.
     /// </summary>
-    public Event<SimulateCharging> SimulateChargingEvent { get; private set; } = default!;
+    public Event<SimulateCharging> SimulateChargingEvent { get; private set; } = null!;
     #endregion
 
     #region Schedules
     /// <summary>
     /// Status schedule triggered
     /// </summary>
-    public Schedule<SimulatedAgvSaga, ScheduleStatusUpdate> StatusUpdateSchedule { get; private set; } = default!;
+    public Schedule<SimulatedAgvSaga, ScheduleStatusUpdate> StatusUpdateSchedule { get; private set; } = null!;
 
     /// <summary>
     /// Finish action schedule triggered
     /// </summary>
-    public Schedule<SimulatedAgvSaga, ScheduleFinishAction> FinishActionSchedule { get; private set; } = default!;
+    public Schedule<SimulatedAgvSaga, ScheduleFinishAction> FinishActionSchedule { get; private set; } = null!;
 
     /// <summary>
     /// Trigger for scheduled signalling of position.
     /// </summary>
-    public Schedule<SimulatedAgvSaga, SchedulePositionUpdate> SignalPositionSchedule { get; private set; } = default!;
+    public Schedule<SimulatedAgvSaga, SchedulePositionUpdate> SignalPositionSchedule { get; private set; } = null!;
     #endregion
 
     /// <summary>

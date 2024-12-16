@@ -117,7 +117,7 @@ public class ActionGroup
     /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/>.</param>
     /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system.</param>
     /// <param name="hasPriority">If true, then this <see cref="ActionGroup"/> has priority over others.</param>
-    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = default, Guid? assignedAgv = null, bool isManual = false, bool hasPriority=false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority=false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;

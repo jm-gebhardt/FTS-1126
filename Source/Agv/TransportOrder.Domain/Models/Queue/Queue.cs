@@ -146,7 +146,7 @@ public class Queue
         ResolveDuplications();
         if (AgvFillQuantity==0 )
         { 
-            targetNode = default;
+            targetNode = null;
             return false;
         }
         if (AllAgvsEntered && !IsEnqueued(agvCorrelationId))

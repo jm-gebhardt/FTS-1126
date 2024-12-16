@@ -50,6 +50,6 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
 
     public void VerifyGridAdded()
     {
-        _addGridClient.Verify(x => x.GetResponse<Success>(It.IsAny<AddGrid>(), default, default), Times.Once);
+        _addGridClient.Verify(x => x.GetResponse<Success>(It.IsAny<AddGrid>(), CancellationToken.None, default), Times.Once);
     }
 }

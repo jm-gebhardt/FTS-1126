@@ -69,7 +69,7 @@ public class SemaphoreProvider : ISemaphoreProvider
 
     private static CancellationToken GetCancellationToken(CancellationToken cancellationToken)
     {
-        return cancellationToken != default ? cancellationToken : new CancellationTokenSource(TimeSpan.FromMinutes(1)).Token;
+        return cancellationToken != CancellationToken.None ? cancellationToken : new CancellationTokenSource(TimeSpan.FromMinutes(1)).Token;
     }
 
     /// <inheritdoc />
@@ -125,7 +125,7 @@ public class SemaphoreProvider<T> : ISemaphoreProvider<T> where T : class
 
     private static CancellationToken GetCancellationToken(CancellationToken cancellationToken)
     {
-        return cancellationToken != default ? cancellationToken : new CancellationTokenSource(TimeSpan.FromMinutes(1)).Token;
+        return cancellationToken != CancellationToken.None ? cancellationToken : new CancellationTokenSource(TimeSpan.FromMinutes(1)).Token;
     }
 
     /// <inheritdoc />

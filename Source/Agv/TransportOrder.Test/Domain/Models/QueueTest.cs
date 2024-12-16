@@ -113,7 +113,7 @@ public class QueueTest
         var queue = QueueGenerator.GenerateEmptyQueue(size: 0);
 
         queue.TryEnqueue(Guid.NewGuid(), out string? targetNode).ShouldBeFalse();
-        targetNode.ShouldBe(default);
+        targetNode.ShouldBe(null);
     }
 
     [DataRow(NodeLockState.Occupied, NodeLockState.Reserved, NodeLockState.Free)]

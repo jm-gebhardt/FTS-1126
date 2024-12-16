@@ -330,7 +330,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostCommunicator();
 
-        var command = new PassCargoTriggerPoint(Guid.NewGuid(), default(Guid));
+        var command = new PassCargoTriggerPoint(Guid.NewGuid(), Guid.Empty);
        
         await fixture.TestHarness.Bus.Publish(command);
         
@@ -347,7 +347,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
-        var command = new PassCargoTriggerPoint(Guid.NewGuid(), default(Guid));
+        var command = new PassCargoTriggerPoint(Guid.NewGuid(), Guid.Empty);
 
         await fixture.TestHarness.Bus.Publish(command);
 

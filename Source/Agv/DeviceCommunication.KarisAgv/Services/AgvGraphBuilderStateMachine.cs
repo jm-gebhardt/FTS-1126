@@ -25,31 +25,31 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
     /// Initial request for AGV graph has been received.
     /// </summary>
     [UsedImplicitly]
-    public State RequestAgvGraphReceived { get; private set; } = default!;
+    public State RequestAgvGraphReceived { get; private set; } = null!;
 
     /// <summary>
     /// Station list has been received.
     /// </summary>
     [UsedImplicitly]
-    public State StationListReceived { get; private set; } = default!;
+    public State StationListReceived { get; private set; } = null!;
 
     /// <summary>
     /// Event fired on <see cref="RequestAgvGraph"/> message.
     /// </summary>
     [UsedImplicitly]
-    public Event<RequestAgvGraph> RequestAgvGraphEvent { get; private set; } = default!;
+    public Event<RequestAgvGraph> RequestAgvGraphEvent { get; private set; } = null!;
 
     /// <summary>
     /// Event fired on <see cref="StationListReceived"/> message.
     /// </summary>
     [UsedImplicitly]
-    public Event<InternalStationListReceived> StationListEvent { get; private set; } = default!;
+    public Event<InternalStationListReceived> StationListEvent { get; private set; } = null!;
 
     /// <summary>
     /// Event fired on <see cref="InternalGraphReceived"/> message.
     /// </summary>
     [UsedImplicitly]
-    public Event<InternalGraphReceived> GraphEvent { get; private set; } = default!;
+    public Event<InternalGraphReceived> GraphEvent { get; private set; } = null!;
 
     /// <summary>
     /// Handle requesting AGV graph by master control.

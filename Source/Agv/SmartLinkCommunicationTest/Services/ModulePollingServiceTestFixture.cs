@@ -34,7 +34,7 @@ public class ModulePollingServiceTestFixture : FixtureBase
             ResponseStatus = ResponseStatus.Completed,
             IsSuccessStatusCode = true
         };
-        _restClient.Setup(client => client.ExecuteAsync(It.IsAny<RestRequest>(), default))
+        _restClient.Setup(client => client.ExecuteAsync(It.IsAny<RestRequest>(), CancellationToken.None))
             .ReturnsAsync(mockResponse);
         return this;
     }

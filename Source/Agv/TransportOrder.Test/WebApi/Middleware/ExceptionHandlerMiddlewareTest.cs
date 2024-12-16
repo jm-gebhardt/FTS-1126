@@ -33,42 +33,42 @@ public class ExceptionHandlerMiddlewareTest
     public static IEnumerable<object[]> GetExceptionTestData()
     {
         // BadRequest
-        yield return [() => new NotInCorrectStateException(default!), HttpStatusCode.BadRequest];
+        yield return [() => new NotInCorrectStateException(null!), HttpStatusCode.BadRequest];
         yield return [() => new ActionGroupStateInvalidException(Mock.Of<ActionGroup>()), HttpStatusCode.BadRequest];
-        yield return [() => new InvalidNodeTypeException(default!, default!, default!), HttpStatusCode.BadRequest];
+        yield return [() => new InvalidNodeTypeException(null!, null!, null!), HttpStatusCode.BadRequest];
         yield return [() => new ActionGroupInvalidException(Array.Empty<string>()), HttpStatusCode.BadRequest];
-        yield return [() => new NodeNotFoundException(default!), HttpStatusCode.BadRequest];
-        yield return [() => new BadRequestException(default!), HttpStatusCode.BadRequest];
+        yield return [() => new NodeNotFoundException(null!), HttpStatusCode.BadRequest];
+        yield return [() => new BadRequestException(null!), HttpStatusCode.BadRequest];
         yield return [() => new InvalidPolygonLengthException(), HttpStatusCode.BadRequest];
         yield return [() => new AgvGraphsNotDefinedException(new List<Guid>()), HttpStatusCode.BadRequest];
         yield return [() => new AgvsDataBatchQueryException(new List<Guid>()), HttpStatusCode.BadRequest];
         yield return [() => new AgvsNotFoundException(new List<Guid>()), HttpStatusCode.BadRequest];
-        yield return [() => new ActionNotAllowedInModeException(default, default!), HttpStatusCode.BadRequest];
-        yield return [() => new PositionIsInRestrictedAreaException(default, default!), HttpStatusCode.BadRequest];
+        yield return [() => new ActionNotAllowedInModeException(Guid.Empty, null!), HttpStatusCode.BadRequest];
+        yield return [() => new PositionIsInRestrictedAreaException(0, 0), HttpStatusCode.BadRequest];
 
         // Conflict
         yield return [() => new ChargeStationNotAvailableException(null!), HttpStatusCode.Conflict];
         yield return [() => new ParkNodeNotAvailableException(""), HttpStatusCode.Conflict];
         yield return [() => new NoChargeStationAvailableException(), HttpStatusCode.Conflict];
-        yield return [() => new NodeNotAvailableException(default!), HttpStatusCode.Conflict];
-        yield return [() => new NoNodesAvailableException(default!), HttpStatusCode.Conflict];
+        yield return [() => new NodeNotAvailableException(null!), HttpStatusCode.Conflict];
+        yield return [() => new NoNodesAvailableException(null!), HttpStatusCode.Conflict];
 
         // InternalServerError
-        yield return [() => new ResetAgvErrorFailedException(default!, default!), HttpStatusCode.InternalServerError];
+        yield return [() => new ResetAgvErrorFailedException(null!, null!), HttpStatusCode.InternalServerError];
         yield return [() => new Exception(), HttpStatusCode.InternalServerError];
 
         // NotFound
         yield return [() => new ActionGroupNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
-        yield return [() => new ActionNotFoundException(default!, default!, default!), HttpStatusCode.NotFound];
-        yield return [() => new AgvDataNotFoundException(default), HttpStatusCode.NotFound];
+        yield return [() => new ActionNotFoundException(null!, null!, null!), HttpStatusCode.NotFound];
+        yield return [() => new AgvDataNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
         yield return [() => new AgvGraphNotDefinedException(Guid.Empty), HttpStatusCode.NotFound];
-        yield return [() => new AgvNotFoundException(default), HttpStatusCode.NotFound];
+        yield return [() => new AgvNotFoundException(null), HttpStatusCode.NotFound];
         yield return [() => new AgvStatusNotFoundException(Mock.Of<TransportOrder.Domain.Models.Agv.Agv>()), HttpStatusCode.NotFound];
-        yield return [() => new AgvNotFoundException(default), HttpStatusCode.NotFound];
-        yield return [() => new AgvStatusReceivedNotFoundException(default), HttpStatusCode.NotFound];
-        yield return [() => new MapNotFoundException(default), HttpStatusCode.NotFound];
-        yield return [() => new OrderNotFoundException(default), HttpStatusCode.NotFound];
-        yield return [() => new PropertyNotFoundException(default!), HttpStatusCode.NotFound];
+        yield return [() => new AgvNotFoundException(null), HttpStatusCode.NotFound];
+        yield return [() => new AgvStatusReceivedNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
+        yield return [() => new MapNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
+        yield return [() => new OrderNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
+        yield return [() => new PropertyNotFoundException(null!), HttpStatusCode.NotFound];
         yield return [() => new RouteNotFoundException("", ""), HttpStatusCode.NotFound];
     }
 }

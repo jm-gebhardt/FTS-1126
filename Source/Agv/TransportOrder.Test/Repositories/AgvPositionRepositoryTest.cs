@@ -74,7 +74,7 @@ public class AgvPositionRepositoryTest
 
         await fixture.AgvPositionRepository.UpdatePositionAsync(agvPositionStatus);
 
-        fixture.BusMock.Verify(b => b.Publish(It.IsAny<AgvPositionStatus>(), default), Times.Never);
+        fixture.BusMock.Verify(b => b.Publish(It.IsAny<AgvPositionStatus>(), CancellationToken.None), Times.Never);
     }
 
     [TestMethod]

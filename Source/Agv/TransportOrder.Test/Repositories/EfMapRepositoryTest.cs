@@ -108,7 +108,7 @@ public class EfMapRepositoryTest
         var fixture = new EfMapRepositoryTestFixture();
         var map = fixture.GetNewMap();
 
-        bool result = await fixture.Repository.AddOrUpdateAsync(map, new CancellationToken());
+        bool result = await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
         result.ShouldBeTrue();
 
         byte[]? mapImage = fixture.Repository.GetMapImage(map.CorrelationId);
@@ -123,7 +123,7 @@ public class EfMapRepositoryTest
 
         var map = fixture.GetNewMap();
 
-        bool result = await fixture.Repository.AddOrUpdateAsync(map, new CancellationToken());
+        bool result = await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
         result.ShouldBeTrue();
 
         byte[]? mapImage = fixture.Repository.GetMapImage(map.CorrelationId);
@@ -142,7 +142,7 @@ public class EfMapRepositoryTest
             DateTime.UtcNow
         );
 
-        result = await fixture.Repository.AddOrUpdateAsync(mapUpdate, new CancellationToken());
+        result = await fixture.Repository.AddOrUpdateAsync(mapUpdate, CancellationToken.None);
         result.ShouldBeTrue();
         mapImage = fixture.Repository.GetMapImage(mapUpdate.CorrelationId);
         mapImage.ShouldNotBeNull();

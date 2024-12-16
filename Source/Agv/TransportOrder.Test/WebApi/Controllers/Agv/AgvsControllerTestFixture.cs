@@ -138,7 +138,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             .Callback((AgvData agvData) => { data[agvData.CorrelationId] = agvData; });
 
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
-        QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), default, default))
+        QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), CancellationToken.None, default))
             .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
 
         AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));

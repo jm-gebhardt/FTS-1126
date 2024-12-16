@@ -24,7 +24,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// Current state of this state machine instance.
     /// </summary>
     [UsedImplicitly]
-    public State CurrentState { get; set; } = default!;
+    public State CurrentState { get; set; } = null!;
 
     /// <summary>
     /// Request ID of a pending MQTT request.

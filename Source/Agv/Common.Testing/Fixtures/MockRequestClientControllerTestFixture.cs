@@ -37,7 +37,7 @@ public abstract class MockRequestClientControllerTestFixture<TController> : Fixt
         AddRequestClientMock(requestClientMock);
 
         requestClientMock.Setup(x => x.GetResponse<TResponse>(
-                    It.IsAny<TRequest>(), default, default)
+                    It.IsAny<TRequest>(), CancellationToken.None, default)
                 .Result.Message)
             .Returns(response);
 

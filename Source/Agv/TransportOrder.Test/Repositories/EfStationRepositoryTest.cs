@@ -136,7 +136,7 @@ public class EfStationRepositoryTest
         foreach (var stationNode in graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
-            station.MapName.ShouldBe(default);
+            station.MapName.ShouldBe(null);
             station.Length.ShouldBe(Padding);
             station.Width.ShouldBe(Padding);
             station.AdditionalTypes.ShouldBeEmpty();
@@ -181,7 +181,7 @@ public class EfStationRepositoryTest
         foreach (var stationNode in graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint))
         {
             var station = stations.Single(s => s.Name == stationNode.Id);
-            station.MapName.ShouldBe(default);
+            station.MapName.ShouldBe(null);
             station.Length.ShouldBe(Padding);
             station.Width.ShouldBe(Padding);
             station.AdditionalTypes.ShouldBeEmpty();

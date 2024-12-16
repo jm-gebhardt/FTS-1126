@@ -15,7 +15,7 @@ public class RestrictedAreaTest
 
         var restrictedArea = new RestrictedArea(polygon);
 
-        restrictedArea.Id.ShouldNotBe(default);
+        restrictedArea.Id.ShouldNotBe(Guid.Empty);
         restrictedArea.Area.Count.ShouldBe(polygon.Count);
 
         foreach (var point in restrictedArea.Area.Select((location, index) => new { location, index }))
