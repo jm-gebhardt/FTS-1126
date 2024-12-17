@@ -83,19 +83,24 @@ public class GeneratedMapGenerator : MapGeneratorBase
         paint1.Style = SKPaintStyle.Stroke;
         canvas.DrawRect(paint1.StrokeWidth, paint1.StrokeWidth, ImageWidth - 2 * paint1.StrokeWidth, imageHeightPx - 2 * paint1.StrokeWidth, paint1);
 
-        var bounds = new SKRect();
-        using var paint2 = new SKPaint();
-        paint2.Color = SKColors.LightGray;
-        paint2.TextSize = 36; // Just an initial value for getting a base to calculate the final font size value.
-        paint2.IsAntialias = true;
-        paint2.TextAlign = SKTextAlign.Right;
-        paint2.MeasureText(Signature, ref bounds);
-        if (bounds.Height > 0)
+        var paint2 = new SKPaint
         {
-            float ratio = wallThicknessPx * 1.5f / bounds.Height;
-            paint2.TextSize = ratio * paint2.TextSize;
+            Color = SKColors.LightGray,
+            IsAntialias = true
+        };
+
+        var font = new SKFont(SKTypeface.Default, 36);
+
+        font.GetFontMetrics(out var fontMetrics);
+        float textHeight = fontMetrics.Descent - fontMetrics.Ascent;
+
+        if (textHeight > 0)
+        {
+            float ratio = wallThicknessPx * 1.5f / textHeight;
+            font.Size = ratio * font.Size;
         }
-        canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int)(2.0 * wallThicknessPx + 0.5), paint2);
+
+        canvas.DrawText(Signature, ImageWidth - 2 * wallThicknessPx, imageHeightPx - (int)(2.0 * wallThicknessPx + 0.5), SKTextAlign.Right, font, paint2);
 
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
