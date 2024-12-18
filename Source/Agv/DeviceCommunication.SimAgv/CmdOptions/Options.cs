@@ -137,6 +137,7 @@ public sealed class Options
     [Option("spawnAt", HelpText = "List of node ids where AGVs should spawn.", Required = false, Min = 1, Separator = ',')]
     public IEnumerable<string>? SpawnAt { get; init; }
 
+    // ReSharper disable once GrammarMistakeInComment
     /// <summary>
     /// Number of grid rows [3..[
     /// </summary>

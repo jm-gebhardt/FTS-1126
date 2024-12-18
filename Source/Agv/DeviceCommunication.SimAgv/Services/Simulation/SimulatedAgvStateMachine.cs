@@ -45,7 +45,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <summary>
     /// Internal message to schedule finishing the action
     /// </summary>
-    /// <param name="CorrelationId">The correlation Id of the action.</param>
+    /// <param name="CorrelationId">The correlation Id of the current action.</param>
     public record ScheduleFinishAction(Guid CorrelationId) : CorrelatedBy<Guid>;
 
     /// <summary>
@@ -72,6 +72,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// Action has been started
     /// </summary>
     public Event<StartActionCommand> StartActionCommandEvent { get; private set; } = null!;
+
+    /// <summary>
+    /// Action has been updated
+    /// </summary>
+    public Event<UpdateActionCommand> UpdateActionCommandEvent { get; private set; } = null!;
 
     /// <summary>
     /// CreateAgv was received
@@ -171,8 +176,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         Initially(SetInitialCreateAgvHandler());
 
         During(Idle, SetStartActionHandler());
+        During(Idle, SetUpdateActionHandler());
         During(BusyMoving, Idle, SetFinishActionHandler());
         During(BusyMoving, ActionAbortedHandler());
+        During(BusyMoving, SetUpdateActionHandler());
 
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(SetRequestAgvGraphHandler());
@@ -250,7 +257,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler()
     {
         return When(StartActionCommandEvent)
-            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Saga.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
             .Then(Validate)
             .Then(c =>
             {
@@ -279,6 +286,37 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 GetPositionScheduleInterval);
     }
 
+    private EventActivityBinder<SimulatedAgvSaga, UpdateActionCommand> SetUpdateActionHandler()
+    {
+        return When(UpdateActionCommandEvent)
+            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
+            .Then(Validate)
+            .Then(c =>
+            {
+                SetCurrentAction(c);
+                if (c.Message.Action.IsMoveToCoordinate)
+                {
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} updated action {ActionType} ({ActionCorrelationId}) to ({Position}) for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                        c.Saga.SerialNumber, c.Saga.CorrelationId,
+                        c.Message.Action.ActionType, c.Message.Action.CorrelationId, c.Message.Action.Target.Position, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                }
+                else
+                {
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} updated action {ActionType} ({ActionCorrelationId}) to {TargetNodeId} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                        c.Saga.SerialNumber, c.Saga.CorrelationId,
+                        c.Message.Action.ActionType, c.Message.Action.CorrelationId, c.Message.Action.Target.NodeId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                }
+            })
+            .Publish(c => new ActionUpdated(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
+            .ThenAsync(PublishStatusAsync)
+            .Schedule(FinishActionSchedule,
+                c => new ScheduleFinishAction(c.Saga.CorrelationId),
+                c => c.Saga.ActionDuration!.Value)
+            .Schedule(SignalPositionSchedule,
+                c => new SchedulePositionUpdate(c.Saga.CorrelationId),
+                GetPositionScheduleInterval);
+    }
+
     private EventActivityBinder<SimulatedAgvSaga, ActionAborted> ActionAbortedHandler()
     {
         return When(AgvActionAbortedEvent)
@@ -289,6 +327,19 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     }
 
     private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, StartActionCommand> c)
+    {
+        c.Saga.LastActionAborted = false;
+        c.Saga.Action = c.Message.Action;
+        c.Saga.ActionStartDate = DateTime.UtcNow;
+        if (c.Message.Action.IsMoveToCoordinate)
+        {
+            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, 0);
+            return;
+        }
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, 0);
+    }
+
+    private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
@@ -524,39 +575,54 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         }
     }
 
+    private static void Validate(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> context)
+    {
+        if (context.Message.Action == null)
+        {
+            throw new ArgumentException("Action data missing.");
+        }
+        if (!context.Message.Action.Nodes.Any() && !context.Message.Action.IsMoveToCoordinate)
+        {
+            throw new ArgumentException("Nodes missing.");
+        }
+    }
+
     private async Task FinishActionAsync(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
     {
-        var action = context.Saga.Action;
+       if (context.Saga.ActionStartDate == null)
+       {
+           _logger.LogWarning("Action already finished");
+           return;
+       }
+       var action = context.Saga.Action;
+       if (action == null)
+       {
+           _logger.LogError("Could not finish action, AgvAction object missing");
+       }
+       else
+       {
+           var agvCorrelationId = context.Saga.CorrelationId;
+           _logger.LogInformation("SerialNumber {AgvId} ({CorrelationId}). Finished {ActionType} action with action CorrelationId {ActionCorrelationId} for action group id: {OrderId}",
+               context.Saga.SerialNumber, context.Saga.CorrelationId, context.Saga.Action!.ActionType, context.Saga.Action.CorrelationId, context.Saga.Action.ParentId);
+           var cargos = new List<Cargo>();
+           if (action.ActionType == ActionType.Pick)
+           {
+               // we just picked up a cargo
+               var cargo = new Cargo(Guid.NewGuid(), agvCorrelationId, "Cargo 1", "default", new Point3D(0, 0, 0, 0), new Cuboid(100f, 200f, 50f), "top", 21);
+               cargos.Add(cargo);
+           }
+           if (action.ActionType is ActionType.Pick or ActionType.Drop)
+           {
+               await WaitForCargoHandlingAsync(context);
+               await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
+           }
 
-        if (action == null)
-        {
-            _logger.LogError("Could not finish action, AgvAction object missing");
-        }
-        else
-        {
-            var agvCorrelationId = context.Saga.CorrelationId;
-            _logger.LogInformation("AGV {AgvId} / {CorrelationId} finished action {ActionType} for {OrderId}",
-                context.Saga.SerialNumber, agvCorrelationId, action.ActionType, action.ParentId);
+           await context.Publish(new ActionCompleted(action.CorrelationId));
+       }
 
-            var cargos = new List<Cargo>();
-            if (action.ActionType == ActionType.Pick)
-            {
-                // we just picked up a cargo
-                var cargo = new Cargo(Guid.NewGuid(), agvCorrelationId, "Cargo 1", "default", new Point3D(0, 0, 0, 0), new Cuboid(100f, 200f, 50f), "top", 21);
-                cargos.Add(cargo);
-            }
-            if (action.ActionType is ActionType.Pick or ActionType.Drop)
-            {
-                await WaitForCargoHandlingAsync(context);
-                await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
-            }
-
-            await context.Publish(new ActionCompleted(action.CorrelationId));
-        }
-
-        // update position last time before the ActionStart time is gone
-        context.Saga.UpdatePosition();
-        context.Saga.ResetAction();
+       // update position last time before the ActionStart time is gone
+       context.Saga.UpdatePosition();
+       context.Saga.ResetAction();
     }
 
     private async Task WaitForCargoHandlingAsync(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)

@@ -7,6 +7,7 @@ using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
@@ -21,7 +22,10 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
         AddServices(services =>
         {
             services.AddSingleton(_ => _options);
-            services.AddLogging();
+            services.AddLogging(builder =>
+            {
+                builder.AddConsole();
+            });
             services.AddTransient<IGraphGenerator, GridGraphGenerator>(_ => new GridGraphGenerator(_options, new GeneratedMapGenerator()));
         });
 

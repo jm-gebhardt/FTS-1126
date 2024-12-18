@@ -13,7 +13,7 @@ public class Bezier
     private IReadOnlyCollection<Vector2> ControlPolygon { get; }
 
     /// <summary>
-    /// The degree of the bezier curve.
+    /// The degree of the Bezier curve.
     /// </summary>
     private int Degree => ControlPolygon.Count;
 

@@ -175,6 +175,154 @@ public class SimulatedAgvStateMachineTest
     }
 
     [TestMethod]
+    public async Task When_UpdateActionCommand_ActionUpdated_IsPublished_And_ActionCompleted_Is_Published()
+    {
+        var graph = AgvGraphGenerator.CreateDefaultGraph();
+
+        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
+        var moveAction = actionGroup.Actions.Skip(1).FirstOrDefault();
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(moveAction!.Target.NodeId!);
+        moveAction.Nodes = route.nodes;
+        moveAction.Edges = route.edges;
+
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(
+            currentState: nameof(SimulatedAgvStateMachine.Idle),
+            currentAction:
+            moveAction,
+            agvGraph:
+            graph);
+        var correlationId = agvSaga.CorrelationId;
+        var fixture = new SimulatedAgvStateMachineTestFixture(inactivityTimeout: TimeSpan.FromSeconds(6))
+            .WithAgv(agvSaga)
+            .Build();
+
+        // Move action will be updated to Drop action. 
+        var moveActionToDropAction = actionGroup.Actions.LastOrDefault();
+        if (moveActionToDropAction != null)
+        {
+            (ICollection<string> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar.Id);
+            var updatedMoveAction = new AgvAction(moveAction.CorrelationId, moveActionToDropAction.ActionType, AgvGraphGenerator.DestinationFar.Id, moveActionToDropAction.ParentId, moveActionToDropAction.InfoToAgv)
+            {
+                // Skip on node to simulate running AGV
+                Nodes = dropRoute.dropNodes.Skip(1).ToArray(),
+                Edges = dropRoute.dropEdges.Skip(1).ToArray()
+            };
+
+            // Start move action 
+            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStarted>(
+                new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
+
+            //wait until saga is updated
+            await fixture.WaitUntil(agvSaga, s => s.AgvStatus.Busy, s => s.AgvStatus.Busy.ShouldBeTrue());
+
+            // Update move action to drop action with new target
+            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdated>(
+                new UpdateActionCommand(correlationId, agvSaga.SerialNumber, updatedMoveAction));
+            actionUpdated.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
+
+            // Position sent (Node travel time is twice as long as position sent interval, so this is surely sent in the meanwhile)
+            (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
+
+            // action finished
+            (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
+
+            //wait until saga is updated
+            await fixture.WaitUntil(agvSaga, s =>
+                {
+                    bool ok = !s.AgvStatus.Busy;
+                    ok &= s.LastNodeId == updatedMoveAction.Target.NodeId;
+                    return ok;
+                },
+                s =>
+                {
+                    Console.WriteLine(s.AgvStatus);
+                    s.AgvStatus.Busy.ShouldBeFalse();
+                    s.LastNodeId.ShouldBe(updatedMoveAction.Target.NodeId);
+                });
+
+            await fixture.ShouldHavePublishedAsync<ActionCompleted>();
+            var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompleted>();
+            actionCompleted.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
+
+            // Last position message received should be the position of the last node
+            var destinationNode = graph.Nodes.First(n => n.Id == updatedMoveAction.Target.NodeId);
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.X - destinationNode.X) < 0.01)).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.Y - destinationNode.Y) < 0.01)).ShouldBeTrue();
+            (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.Z - destinationNode.Z) < 0.01)).ShouldBeTrue();
+        }
+    }
+
+    [TestMethod]
+    public async Task When_UpdateActionCommand_ActionAlreadyFinished_IsPublished_And_ActionCompleted_Is_Published()
+    {
+        var graph = AgvGraphGenerator.CreateDefaultGraph();
+
+        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
+        var moveAction = actionGroup.Actions.Skip(1).FirstOrDefault();
+        (string[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(moveAction!.Target.NodeId!);
+        moveAction.Nodes = route.nodes;
+        moveAction.Edges = route.edges;
+
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(
+            currentState: nameof(SimulatedAgvStateMachine.Idle),
+            currentAction:
+            moveAction,
+            agvGraph:
+            graph);
+        var correlationId = agvSaga.CorrelationId;
+        var fixture = new SimulatedAgvStateMachineTestFixture(inactivityTimeout: TimeSpan.FromSeconds(6))
+            .WithAgv(agvSaga)
+            .Build();
+
+        // Move action will be updated to Drop action. 
+        var moveActionToDropAction = actionGroup.Actions.LastOrDefault();
+        if (moveActionToDropAction != null)
+        {
+            (ICollection<string> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar.Id);
+            var updatedMoveAction = new AgvAction(moveAction.CorrelationId, moveActionToDropAction.ActionType, AgvGraphGenerator.DestinationFar.Id, moveActionToDropAction.ParentId, moveActionToDropAction.InfoToAgv)
+            {
+                // Skip on node to simulate running AGV
+                Nodes = dropRoute.dropNodes.Skip(1).ToArray(),
+                Edges = dropRoute.dropEdges.Skip(1).ToArray()
+            };
+
+            // Start move action 
+            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStarted>(
+                new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
+
+            //wait until saga is updated (move completed)
+            await fixture.WaitUntil(agvSaga, s =>
+                {
+                    bool ok = !s.AgvStatus.Busy;
+                    ok &= s.LastNodeId == moveAction.Target.NodeId;
+                    return ok;
+                },
+                s =>
+                {
+                    s.AgvStatus.Busy.ShouldBeFalse();
+                    s.LastNodeId.ShouldBe(moveAction.Target.NodeId);
+                });
+
+            // Update move action to drop action with new target
+            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdated>(
+                new UpdateActionCommand(correlationId, agvSaga.SerialNumber, updatedMoveAction));
+            actionUpdated.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
+
+            // Position sent (Node travel time is twice as long as position sent interval, so this is surely sent in the meanwhile)
+            (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
+
+            // action finished
+            (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<UpdateActionCommand>()).ShouldBeTrue();
+        }
+    }
+
+    [TestMethod]
     public async Task When_PickActionFinished_PublishedAgvLoadStatusReceivedWithOneCargo()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
