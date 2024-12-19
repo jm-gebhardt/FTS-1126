@@ -22,6 +22,21 @@ public class PrismatCommunicationHostOrderRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetNextPickOnShortLoop_ValidData_ReturnsNotQueuedHostOrder()
+    {
+        var fixture = new PrismatCommunicationHostOrderRepositoryTestFixture();
+
+        var earlierOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        earlierOrder.IsQueued = true;
+        var laterOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        fixture.Repository.AddRange(earlierOrder, laterOrder, dropOrder);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetNextPickOnShortLoop()).ShouldBe(laterOrder);
+    }
+
+    [TestMethod]
     public async Task GetNextPickOnShortLoop_NoOrderPickingAt1020_ReturnsNull()
     {
         var fixture = new PrismatCommunicationHostOrderRepositoryTestFixture();

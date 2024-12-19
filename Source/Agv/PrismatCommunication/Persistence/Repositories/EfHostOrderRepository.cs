@@ -85,6 +85,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     {
         return await _context.Set<HostOrder>().Where(
                 h =>  h.AssignedAgv == null
+                      && !h.IsQueued
                       && h.CanceledDate == null
                       && h.StartedDate == null
                       && h.Actions.Any(a => a.Node == configuration.PrismatAklPickTarget && a.ActionType == ActionType.Pick))
