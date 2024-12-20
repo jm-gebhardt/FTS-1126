@@ -28,6 +28,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
@@ -85,6 +86,7 @@ public class AgvCommandHandler :
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IMetricCollectionService _metricCollectionService;
     private readonly IStationRepository _stationRepository;
+    private readonly IRouteService _routeService;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
@@ -98,6 +100,7 @@ public class AgvCommandHandler :
         IMapper mapper,
         ProductionOptions productionOptions,
         IStationRepository stationRepository,
+        IRouteService routeService,
         ILogger<AgvCommandHandler> logger
     )
     {
@@ -113,6 +116,7 @@ public class AgvCommandHandler :
         _productionOptions = productionOptions;
         _chargingPointManager = chargingPointManager;
         _stationRepository = stationRepository;
+        _routeService = routeService;
     }
 
     /// <summary>
@@ -348,6 +352,9 @@ public class AgvCommandHandler :
         var oldStatus = agv.AgvStatus;
         bool wasOnline = agv.IsOnline;
 
+        bool? wasDisturbed = oldStatus?.Disturbed;
+        bool? wasAutomatic = oldStatus?.Automatic;
+      
         if (oldStatus != null && agv.GraphExists)
         {
             await ResetLastNodeId(oldStatus, agvStatus);
@@ -386,10 +393,13 @@ public class AgvCommandHandler :
             await PublishDataRequestAsync(context, agv);
         }
 
-        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        if(batteryChargeChanged || lastNodeIdChanged || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
         {
-            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
-            return;
+            if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+            {
+                _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
+                return;
+            }
         }
         await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, agvSettings);
 
@@ -987,16 +997,46 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<TryReactivateParkingAgvs> context)
     {
+        string? nextActionTarget = context.Message.NextActionTargetNode;
         ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
+        ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+
+        if (await TryReactivateClosestAgv(context, agvsAtQueueHeads, readyAgvs, nextActionTarget))
+        {
+            return;
+        }
         foreach (var agv in agvsAtQueueHeads)
         {
             await context.Publish(new AgvBecameIdle(agv));
         }
-        ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
         foreach (var agv in readyAgvs)
         {
             await context.Publish(new AgvBecameIdle(agv.CorrelationId));
         }
+    }
+
+    private async Task<bool> TryReactivateClosestAgv(ConsumeContext<TryReactivateParkingAgvs> context, ICollection<Guid> queueingAgvs, ICollection<Agv> readyAgvs, string? targetNode)
+    {
+        if (targetNode == null || (queueingAgvs.Count == 0 && readyAgvs.Count == 0))
+        {
+            return false;
+        }
+        List<Agv> agvs = readyAgvs.ToList();
+        if (queueingAgvs.Count > 0)
+        {
+            List<Agv> agvsAtQueueHeads = (await _agvDb.Agvs.SelectExistingAgvsAsync(queueingAgvs.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList())).ToList();
+            agvs.AddRange(agvsAtQueueHeads);
+        }
+        agvs = agvs.DistinctBy(a => a.CorrelationId).OrderBy(a => a.CorrelationId).ToList();
+        List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
+        
+        Guid? closestAgv = await _routeService.GetAgvClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNode);
+        if (closestAgv != null)
+        {
+            _logger.LogInformation("Reactivate agv {AgvCorrelationId}", closestAgv);
+            await context.Publish(new AgvBecameIdle(closestAgv.Value));
+        }
+        return closestAgv != null;
     }
 
     private async Task<Agv?> TryGetAgv(Guid agvCorrelationId)

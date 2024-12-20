@@ -186,6 +186,7 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvBatteryChargeChanged>();
         fixture.VerifyBatteryMetricsCollected(Times.Once());
+        fixture.VerifyAgvUpdated(Times.Once());
     }
 
     [TestMethod]
@@ -202,6 +203,7 @@ public class AgvCommandHandlerTest
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvLastNodeIdChanged>();
+        fixture.VerifyAgvUpdated(Times.Once());
     }
 
     [TestMethod]
@@ -233,6 +235,7 @@ public class AgvCommandHandlerTest
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
+        fixture.VerifyAgvUpdated(Times.Once());
     }
 
     [TestMethod]
@@ -952,7 +955,8 @@ public class AgvCommandHandlerTest
     public async Task Consume_TryReactivateParkingAgvs_NoOccupiedParkers_DoesNotPublishAgvBecameIdle()
     {
         var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([]);
+            .AddAgvs([])
+            .WithClosestAgv(null);
 
         await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
 
@@ -961,11 +965,47 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_TryReactivateParkingAgvs_OccupiedParkers_PublishesAgvBecameIdle()
+    public async Task Consume_TryReactivateParkingAgvs_OccupiedParkers_NoTargetGiven_PublishesAgvBecameIdle()
     {
         var fixture = new AgvCommandHandlerTestFixture()
             .WithAgvsAtQueueHead([])
-            .AddAgvs([AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow)]);
+            .AddAgvs([AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow)])
+            .WithClosestAgv(null);
+     
+        await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
+
+        await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryReactivateParkingAgvs_OccupiedParkers_TargetGiven_PublishesAgvBecameIdle()
+    {
+        var closeAgv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        var dataCloseAgv = AgvDataGenerator.GenerateAgvData(correlationId: closeAgv.CorrelationId);
+        var farAgv = AgvGenerator.GenerateIdleAgv(index: 1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        var dataFarAgv = AgvDataGenerator.GenerateAgvData(correlationId: farAgv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithAgvsAtQueueHead([])
+            .AddAgvs([closeAgv, farAgv])
+            .AddAgvsData([dataCloseAgv, dataFarAgv])
+            .WithClosestAgv(closeAgv.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs("node close to closeAgv"));
+
+        await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        List<AgvBecameIdle> agvBecameIdleMessages = fixture.TestHarness.Published.Select<AgvBecameIdle>().Select(m => m.Context.Message).ToList();
+        agvBecameIdleMessages.Single().CorrelationId.ShouldBe(closeAgv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task Consume_TryReactivateParkingAgvs_AgvsAtQueueHeads_PublishesAgvBecameIdle()
+    {
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithAgvsAtQueueHead([Guid.NewGuid()])
+            .AddAgvs([])
+            .WithClosestAgv(null); 
 
         await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
 
@@ -974,16 +1014,24 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_TryReactivateParkingAgvs_AgvsAtQueueHeads_PublishesAgvBecameIdle()
+    public async Task Consume_TryReactivateParkingAgvs_AgvsAtQueueHeads_TargetGiven_PublishesAgvBecameIdle()
     {
+        var closeAgv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        var dataCloseAgv = AgvDataGenerator.GenerateAgvData(correlationId: closeAgv.CorrelationId);
+        var farAgv = AgvGenerator.GenerateIdleAgv(index: 1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        var dataFarAgv = AgvDataGenerator.GenerateAgvData(correlationId: farAgv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
-            .WithAgvsAtQueueHead([Guid.NewGuid()])
-            .AddAgvs([]);
+            .WithAgvsAtQueueHead([closeAgv.CorrelationId, farAgv.CorrelationId])
+            .AddAgvs([closeAgv, farAgv])
+            .AddAgvsData([dataCloseAgv, dataFarAgv])
+            .WithClosestAgv(closeAgv.CorrelationId);
 
-        await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
+        await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs("node close to closeAgv"));
 
         await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        List<AgvBecameIdle> agvBecameIdleMessages = fixture.TestHarness.Published.Select<AgvBecameIdle>().Select(m => m.Context.Message).ToList();
+        agvBecameIdleMessages.Single().CorrelationId.ShouldBe(closeAgv.CorrelationId);
     }
 
     [DataRow(ModeType.Normal, ModeType.Maintenance)]

@@ -79,6 +79,11 @@ public static class MockAgvDbExtensions
         repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
         repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
     }
+    
+    public static void AddAgvsData(this Mock<IAgvDb> repoMock, ICollection<AgvData> agvsData)
+    {
+        repoMock.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvsData);
+    }
 
     public static void AddAgvData(this Mock<IAgvDb> repoMock, Func<Guid, AgvData?> agvData)
     {

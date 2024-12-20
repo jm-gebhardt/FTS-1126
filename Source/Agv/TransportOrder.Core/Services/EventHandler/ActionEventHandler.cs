@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -119,12 +120,18 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
-        (_, _, Guid? agvCorrelationId) = context.Message;
+        (var actionGroup, _, Guid? agvCorrelationId) = context.Message;
         if (agvCorrelationId != null)
         {
             await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));
             return;
         }
-        await context.Publish(new TryReactivateParkingAgvs());
+
+        string? targetNode = null;
+        if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Pick))
+        {
+            targetNode = actionGroup.Actions.OrderBy(a => a.Sequence).First().Target.NodeId;
+        }
+        await context.Publish(new TryReactivateParkingAgvs(targetNode));
     }
 }

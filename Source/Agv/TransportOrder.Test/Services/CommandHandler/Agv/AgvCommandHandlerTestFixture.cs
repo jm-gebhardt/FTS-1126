@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
@@ -8,13 +9,13 @@ using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using JetBrains.Annotations;
@@ -25,6 +26,8 @@ using Moq;
 using Moq.Language;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
+using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Agv;
 
@@ -43,6 +46,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
+    private readonly Mock<IRouteService> _routeService = new();
     
     private static IEnumerable<Profile> Profiles => [new AgvStatusProfile(), new AgvProfile(), new CargoProfile()];
 
@@ -71,8 +75,15 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
+        collection.AddTransient(_ => _routeService.Object);
         _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
+        AgvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
         return this;
+    }
+
+    public void VerifyAgvUpdated(Times times)
+    {
+        AgvDb.Verify(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), times);
     }
 
     public AgvCommandHandlerTestFixture WithAgvsAtQueueHead(ICollection<Guid> agvs)
@@ -91,6 +102,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithIsOnAQueueNode(bool isOnAQueueNode)
     {
         _queueManager.Setup(x => x.IsOnAQueueNode(It.IsAny<Guid>())).ReturnsAsync(isOnAQueueNode);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithClosestAgv(Guid? closestAgv)
+    {
+        _routeService.SetupSequence(x => x.GetAgvClosestToTarget(It.IsAny<ICollection<(TransportOrder.Domain.Models.Agv.Agv agv, AgvData? agvData)>>(), It.IsAny<string>()))
+            .ReturnsAsync(closestAgv);
         return this;
     }
 
@@ -113,6 +131,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
             .Verifiable();
         AgvDb.Setup(r => r.Agvs.AddAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
 
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture AddAgvsData(ICollection<AgvData> agvsData)
+    {
+        AgvDb.AddAgvsData(agvsData);
         return this;
     }
 

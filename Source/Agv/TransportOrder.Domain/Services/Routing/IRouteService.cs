@@ -92,4 +92,12 @@ public interface IRouteService
     /// <exception cref="RouteNotFoundException" />
     [PublicAPI]
     Task<GraphNode> GetNodeWithLowestCostsAsync(Models.Agv.Agv agv, IList<GraphNode> availableNodes, AgvData? agvData, string? startNodeId = null);
+
+    /// <summary>
+    /// Returns the correlation id of the agv closest to the given target node, that can reach the node.
+    /// </summary>
+    /// <param name="agvs">Candidate agvs.</param>
+    /// <param name="targetNodeId">Target node id.</param>
+    /// <returns>Correlation id of the agv closest to the node.</returns>
+    Task<Guid?> GetAgvClosestToTarget(ICollection<(Models.Agv.Agv agv, AgvData? agvData)> agvs, string targetNodeId);
 }

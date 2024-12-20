@@ -26,4 +26,15 @@ public class RouteServiceTestFixture
 
         return this;
     }
+
+    public RouteServiceTestFixture WithAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs, ICollection<AgvGraph> agvGraphs)
+    {
+        foreach (var (agv, agvGraph) in agvs.Zip(agvGraphs))
+        {
+            _agvGraphRepository.Setup(x => x.ExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
+            _agvGraphRepository.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId)).ReturnsAsync(agvGraph);
+        }
+
+        return this;
+    }
 }

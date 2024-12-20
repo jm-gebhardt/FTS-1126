@@ -18,6 +18,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
@@ -66,6 +67,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
 
     private readonly Mock<IQueueManager> _queueManager = new();
+
+    private readonly Mock<IRouteService> _routeService  = new();
 
     public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
@@ -320,6 +323,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _queueManager.Object);
             sc.AddTransient(_ => _productionOptions);
+            sc.AddTransient(_ => _routeService.Object);
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
