@@ -57,7 +57,7 @@ public class StationCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<UnlockStation> context)
     {
-        var id = context.Message.CorrelationId;
+        (var id, string? user) = context.Message;
 
         var station = await stationRepository.GetStation(id);
 
@@ -75,7 +75,9 @@ public class StationCommandHandler(
         station.Unlock();
         await stationRepository.Update(station);
 
-        logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked", "Station was unlocked");
+        logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked",
+            $"User {user} unlocked station",
+            new Dictionary<string, object?> { { LogLabels.User, user } });
     }
 
     /// <summary>

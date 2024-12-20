@@ -82,7 +82,13 @@ public class StationController : Controller
     [Route("/station/{id:Guid}/unlock")]
     public async Task<ActionResult<bool>> UnlockStation([Required]Guid id)
     {
-        Response<LockedUnlockedStation> response = await _unlockStationClient.GetResponse<LockedUnlockedStation>(new TryUnlockStation(id));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+
+        Response<LockedUnlockedStation> response = await _unlockStationClient.GetResponse<LockedUnlockedStation>(new TryUnlockStation(id, email));
         bool result = response.Message.Result;
         return Ok(result);
     }

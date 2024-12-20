@@ -6,4 +6,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 /// Provides a command to unlock a station.
 /// </summary>
 /// <param name="CorrelationId">The station to unlock.</param>
-public record UnlockStation(Guid CorrelationId): CorrelatedBy<Guid>;
+/// <param name="User">The user that requested the unlocking.</param>
+public record UnlockStation(Guid CorrelationId, string User): CorrelatedBy<Guid>;

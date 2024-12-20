@@ -40,7 +40,7 @@ public class StationCommandHandlerTest
             .WithLockableAndUnlockableNode(nodeId)
             .WithNodeState(new NodeLock(nodeId, NodeLockState.Free, true, null, DateTime.UtcNow));
 
-        await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid()));
+        await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid(), "User"));
 
         await fixture.ShouldHaveConsumedAsync<UnlockStation>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
@@ -56,7 +56,7 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithStation(nodeId);
 
-        await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid()));
+        await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid(), "User"));
 
         await fixture.ShouldHaveConsumedAsync<UnlockStation>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();

@@ -74,7 +74,7 @@ public class StationsRequestHandlerTest
             .WithStation(station)
             .Build();
 
-        Response<LockedUnlockedStation> response = await fixture.GetResponseAsync<LockedUnlockedStation>(new TryUnlockStation(station.Id));
+        Response<LockedUnlockedStation> response = await fixture.GetResponseAsync<LockedUnlockedStation>(new TryUnlockStation(station.Id, "User"));
         response.Message.Result.ShouldBeTrue();
         await fixture.ShouldHavePublishedAsync<UnlockStation>();
     }
@@ -87,7 +87,7 @@ public class StationsRequestHandlerTest
             .WithStation(station)
             .Build();
 
-        Response<LockedUnlockedStation> response = await fixture.GetResponseAsync<LockedUnlockedStation>(new TryUnlockStation(station.Id));
+        Response<LockedUnlockedStation> response = await fixture.GetResponseAsync<LockedUnlockedStation>(new TryUnlockStation(station.Id, "User"));
         response.Message.Result.ShouldBeFalse();
         await fixture.ShouldNotHavePublishedAsync<UnlockStation>();
     }

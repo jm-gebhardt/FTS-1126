@@ -118,11 +118,12 @@ public class StationsRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<TryUnlockStation> context)
     {
-        var id = context.Message.CorrelationId;
+        (var id, string? user) = context.Message;
+
         var station = await stationRepository.GetStation(id);
         if (station.IsLocked)
         {
-            await bus.Publish(new UnlockStation(id));
+            await bus.Publish(new UnlockStation(id, user));
             await context.RespondAsync(new LockedUnlockedStation(true));
             return;
         }
