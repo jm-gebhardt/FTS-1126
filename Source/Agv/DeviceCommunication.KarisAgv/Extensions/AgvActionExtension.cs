@@ -105,14 +105,14 @@ public static class AgvActionExtension
         {
             throw new InvalidOperationException($"Can't handle action target {action.Target} for deriving source");
         }
-        bool agvShouldRotate = action.InfoToAgv?.NeedsRotation() ?? false;
+        bool dockFront = action.InfoToAgv?.GetDockFront() ?? false;
         double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
         if (action.ActionType == ActionType.Pick)
         {
             return new StationInfo
             {
                 Id = action.Target.NodeId!,
-                Rotate = agvShouldRotate,
+                DockFront = dockFront,
                 LiftHeight = liftHeight
             };
         }
@@ -130,7 +130,7 @@ public static class AgvActionExtension
         {
             throw new InvalidOperationException($"Can't handle action target {action.Target} for deriving destination");
         }
-        bool agvShouldRotate = action.InfoToAgv?.NeedsRotation() ?? false;
+        bool dockFront = action.InfoToAgv?.GetDockFront()?? false;
         double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
         string targetNodeId = action.Target.NodeId!;
         if (action.ActionType == ActionType.Pick)
@@ -140,9 +140,9 @@ public static class AgvActionExtension
 
         var destinationToSend = action.ActionType switch
         {
-            ActionType.Drop => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight },
-            ActionType.Move => new StationInfo { Id = targetNodeId, Rotate = agvShouldRotate },
-            ActionType.Charge => new StationInfo { Id = targetNodeId },
+            ActionType.Drop => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
+            ActionType.Move => new StationInfo { Id = targetNodeId, DockFront = dockFront },
+            ActionType.Charge => new StationInfo { Id = targetNodeId, DockFront = true },
             _ => throw new InvalidOperationException($"Can't handle {action.ActionType} yet")
         };
         return destinationToSend;

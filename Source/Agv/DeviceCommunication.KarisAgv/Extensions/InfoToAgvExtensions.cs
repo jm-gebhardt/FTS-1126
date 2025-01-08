@@ -62,4 +62,21 @@ public static class InfoToAgvExtensions
 
         return liftHeight;
     }
+
+    /// <summary>
+    /// Returns dock front (bool) from the InfoToAgv dictionary.
+    /// </summary>
+    public static bool GetDockFront(this Dictionary<InfoToAgvKey, string> infoToAgv)
+    {
+        bool dockFront = true;
+        infoToAgv.TryGetValue(InfoToAgvKey.DockFront, out string? dockFrontValue);
+        if (!string.IsNullOrEmpty(dockFrontValue))
+        {
+            if (bool.TryParse(dockFrontValue, out bool parsedDockFront))
+            {
+                dockFront = parsedDockFront;
+            }
+        }
+        return dockFront;
+    }
 }

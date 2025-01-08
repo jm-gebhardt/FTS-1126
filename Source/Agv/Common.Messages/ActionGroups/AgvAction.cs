@@ -135,6 +135,11 @@ public enum InfoToAgvKey
     CargoRotation,
 
     /// <summary>
+    /// Information about the station docking direction.
+    /// </summary>
+    DockFront,
+
+    /// <summary>
     /// The lift height in [m] at the station for action.
     /// </summary>
     LiftHeight

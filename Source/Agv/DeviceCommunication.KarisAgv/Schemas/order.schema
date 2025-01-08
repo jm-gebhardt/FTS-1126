@@ -52,9 +52,9 @@
                                 "Source31"
                             ]
                         },
-                        "rotate": {
+                        "dockFront": {
                             "type": "boolean",
-                            "description": "Flag, if agv should rotate before accessing the station (to handle cargo which must be picked from back).",
+                            "description": "Flag, if agv should dock with the front side at the station.",
                             "examples": [
                                 true,
                                 false

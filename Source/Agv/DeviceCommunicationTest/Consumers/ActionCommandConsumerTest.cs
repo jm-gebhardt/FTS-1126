@@ -77,7 +77,7 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             // For pick action Karis expects destination as source ...
             mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeFalse();
             mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
             // ... and empty destination.
             mqttMessage.Stations?.ToStation.ShouldBeNull();
@@ -157,7 +157,7 @@ public class ActionCommandConsumerTest
 
             mqttMessage.Stations?.FromStation.ShouldBeNull();
             mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeFalse();
             mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Move);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
@@ -221,7 +221,7 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             mqttMessage.Stations?.FromStation.ShouldBeNull();
             mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
             mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Charge);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
@@ -247,7 +247,6 @@ public class ActionCommandConsumerTest
             var actionCorrelationId = Guid.NewGuid();
             const string agvSerialNumber = "agv0";
             const string orderId = "1234";
-            string needsRotation = Math.PI.ToString(CultureInfo.InvariantCulture);
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Drop5";
 
@@ -255,7 +254,7 @@ public class ActionCommandConsumerTest
             {
                 Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
                 Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
-                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, needsRotation } }
+                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
             };
             var correlationId = Guid.NewGuid();
             var message = new StartActionCommand(correlationId, agvSerialNumber, action);
@@ -281,7 +280,7 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             // For pick action Karis expects destination as source ...
             mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.Rotate.ShouldBeTrue();
+            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
             mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
             // ... and empty destination.
             mqttMessage.Stations?.ToStation.ShouldBeNull();
@@ -350,7 +349,7 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             // For drop action Karis expects destination ToStation values ...
             mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
             mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
             // ... and empty fromStation.
             mqttMessage.Stations?.FromStation.ShouldBeNull();
@@ -520,7 +519,7 @@ public class ActionCommandConsumerTest
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
             // For drop action Karis expects destination ToStation values ...
             mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
             mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
             // ... and empty fromStation.
             mqttMessage.Stations?.FromStation.ShouldBeNull();
@@ -551,13 +550,12 @@ public class ActionCommandConsumerTest
             const string agvSerialNumber = "agv0";
             const string orderId = "1234";
             var orderCorrelationId = orderId.ToGuid();
-            string needsRotation = Math.PI.ToString(CultureInfo.InvariantCulture);
             const string toStationId = "Pick1";
             var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
             {
                 Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
                 Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
-                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, needsRotation } }
+                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
             };
             var correlationId = Guid.NewGuid();
             var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
@@ -578,7 +576,7 @@ public class ActionCommandConsumerTest
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
             // For pick action Karis expects destination as source ...
             mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.Rotate.ShouldBeTrue();
+            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
             mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
             // ... and empty destination.
             mqttMessage.Stations?.ToStation.ShouldBeNull();
@@ -631,7 +629,7 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             mqttMessage.Stations?.FromStation.ShouldBeNull();
             mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
             mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Charge);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
@@ -674,7 +672,7 @@ public class ActionCommandConsumerTest
 
             mqttMessage.Stations?.FromStation.ShouldBeNull();
             mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.Rotate.ShouldBeFalse();
+            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeFalse();
             mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Move);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);

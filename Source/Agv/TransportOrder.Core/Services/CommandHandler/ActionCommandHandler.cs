@@ -507,11 +507,13 @@ public class ActionCommandHandler :
                 {
                     new(Guid.NewGuid(), ActionType.Move, chargeStationId, groupCorrelationId)
                     {
-                        Sequence = 0
+                        Sequence = 0,
+                        InfoToAgv = new Dictionary<InfoToAgvKey, string>{{ InfoToAgvKey.DockFront , true.ToString()} }
                     },
                     new(Guid.NewGuid(), ActionType.Charge, chargeStationId, groupCorrelationId)
                     {
-                        Sequence = 1
+                        Sequence = 1,
+                        InfoToAgv = new Dictionary<InfoToAgvKey, string>{{ InfoToAgvKey.DockFront , true.ToString()} }
                     }
                 },
                 assignedAgv: agv.CorrelationId,

@@ -33,7 +33,7 @@ public class AgvActionExtensionTest
         station.ShouldNotBeNull();
         station.Id.ShouldBe(toStationId);
         station.LiftHeight.ShouldBe(liftHeight);
-        station.Rotate.ShouldBeFalse();
+        station.DockFront.ShouldBeTrue();
     }
 
     [TestMethod]
@@ -56,7 +56,7 @@ public class AgvActionExtensionTest
 
         station.ShouldNotBeNull();
         station.Id.ShouldBe(toStationId);
-        station.Rotate.ShouldBeFalse();
+        station.DockFront.ShouldBeTrue();
         station.LiftHeight.ShouldBeNull();
     }
 
@@ -64,17 +64,16 @@ public class AgvActionExtensionTest
     public void GetDestinationStation_MoveToNode_ReturnsStationInfo()
     {
         const string toStationId = "Node-1";
-        string needsRotation = Math.PI.ToString(CultureInfo.InvariantCulture);
         var action = new AgvAction(Guid.NewGuid(), ActionType.Move, toStationId, Guid.NewGuid())
         {
-            InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, needsRotation } }
+            InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
         };
 
         var station = action.GetDestinationStation();
 
         station.ShouldNotBeNull();
         station.Id.ShouldBe(toStationId);
-        station.Rotate.ShouldBeTrue();
+        station.DockFront.ShouldBeTrue();
         station.LiftHeight.ShouldBeNull();
     }
 
@@ -155,7 +154,7 @@ public class AgvActionExtensionTest
         mqttOrder.OrderType.ShouldBe(OrderType.Drop);
         mqttOrder.RecordType.ShouldBe(recordType);
         mqttOrder.Stations?.ToStation?.Id.ShouldBe(toStationId);
-        mqttOrder.Stations?.ToStation?.Rotate.ShouldBeFalse();
+        mqttOrder.Stations?.ToStation?.DockFront.ShouldBeTrue();
         mqttOrder.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
         mqttOrder.Stations?.FromStation.ShouldBeNull();
         mqttOrder.OrderId.ShouldBe(orderId);
@@ -216,7 +215,7 @@ public class AgvActionExtensionTest
         mqttOrder.OrderType.ShouldBe(OrderType.Drop);
         mqttOrder.RecordType.ShouldBe(recordType);
         mqttOrder.Stations?.ToStation?.Id.ShouldBe(toStationId);
-        mqttOrder.Stations?.ToStation?.Rotate.ShouldBeFalse();
+        mqttOrder.Stations?.ToStation?.DockFront.ShouldBeTrue();
         mqttOrder.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
         mqttOrder.Stations?.FromStation.ShouldBeNull();
         mqttOrder.OrderId.ShouldBe(orderId);

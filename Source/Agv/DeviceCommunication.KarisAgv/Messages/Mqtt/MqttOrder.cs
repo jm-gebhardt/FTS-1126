@@ -127,9 +127,9 @@ public record StationInfo
     public string? Id { get; init; }
 
     /// <summary>
-    /// Flag if agv should rotate before accessing the station.
+    /// Flag if agv should dock with the front side at the station.
     /// </summary>
-    public bool Rotate { get; init; }
+    public bool DockFront { get; init; }
 
     /// <summary>
     /// The height where to pick (fromStation) or to drop (toStation) in [m].

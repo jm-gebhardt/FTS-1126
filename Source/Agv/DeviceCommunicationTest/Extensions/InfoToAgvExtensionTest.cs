@@ -55,4 +55,23 @@ public class InfoToAgvMessageExtension
 
         liftHeightDouble.ShouldBe(doubleValue);
     }
+
+    [TestMethod]
+    public void GetDockFront_NoDockFrontKey_ReturnsFalse()
+    {
+        var infoToAgv = new Dictionary<InfoToAgvKey, string>();
+
+        infoToAgv.GetDockFront().ShouldBeTrue();
+    }
+
+    [DataTestMethod]
+    [DataRow("true", true)]
+    [DataRow("false", false)]
+    [DataRow("any other string", true)]
+    public void GetDockFront_DockFrontKeySet_ReturnsDockFrontValue(string dockFront, bool expectedValue)
+    {
+        var infoToAgv = new Dictionary<InfoToAgvKey, string> { {InfoToAgvKey.DockFront, dockFront} };
+
+        infoToAgv.GetDockFront().ShouldBe(expectedValue);
+    }
 }
