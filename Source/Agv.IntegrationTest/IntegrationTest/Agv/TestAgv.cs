@@ -20,11 +20,6 @@ public class TestAgv
         Started,
 
         /// <summary>
-        /// Pick for transport order completed
-        /// </summary>
-        Picked,
-
-        /// <summary>
         /// Transport order completed
         /// </summary>
         Completed,
@@ -132,10 +127,6 @@ public class TestAgv
 
             // Pick
             response["orderEventType"] = OrderEventType.Started.ToString();
-            await _mqttClient.Publish(MqttClient.Topic.OrderEvent, response.ToString());
-            await Task.Delay(1000);
-
-            response["orderEventType"] = OrderEventType.Picked.ToString();
             await _mqttClient.Publish(MqttClient.Topic.OrderEvent, response.ToString());
             await Task.Delay(1000);
 
