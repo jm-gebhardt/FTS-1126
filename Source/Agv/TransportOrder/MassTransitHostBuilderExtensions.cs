@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.WebApi;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Quartz;
 
 // ReSharper disable once CheckNamespace
 namespace Gebhardt.Acc.TransportOrder;
@@ -20,11 +19,8 @@ public static class MassTransitHostBuilderExtensions
     /// </summary>
     /// <param name="hostBuilder"><see cref="IHostBuilder"/></param>
     /// <param name="initialLogger"><see cref="ILogger"/></param>
-    /// <param name="quartzSchedulerName">Quartz scheduler name</param>
-    /// <param name="quartzSchedulerId">Quartz scheduler id</param>
-    /// <param name="quartzQueueName">Quartz queue name</param>
     /// <returns><see cref="IHostBuilder"/></returns>
-    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger, string quartzSchedulerName, string quartzSchedulerId, string quartzQueueName)
+    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
@@ -36,22 +32,10 @@ public static class MassTransitHostBuilderExtensions
                         .AddWebApiConsumer();
 
                     x.AddMediator(c => c.AddMediator());
-                    x.AddPublishMessageScheduler();
-                    x.AddQuartzConsumers(options => options.QueueName = quartzQueueName);
                 }, rabbitMqConfiguration: (ctx, cfg) =>
                 {
-                    cfg.UsePublishMessageScheduler();
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
                     cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
-                });
-
-                services.AddQuartz(q =>
-                {
-                    q.SchedulerName = quartzSchedulerName;
-                    q.SchedulerId = quartzSchedulerId;
-
-                    // convert time zones using converter that can handle Windows/Linux differences
-                    q.UseTimeZoneConverter();
                 });
             }
             catch (InvalidOperationException e)

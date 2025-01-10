@@ -27,6 +27,7 @@ public class AgvStateChangedConsumerTest
     {
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false, NodeGenerator.GenerateParkingNode().Id);
         var agv = new Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber, agvStatus);
+        agv.SetOnline();
         agv = AgvGenerator.SetAgvState(currentState, agv, false);
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());

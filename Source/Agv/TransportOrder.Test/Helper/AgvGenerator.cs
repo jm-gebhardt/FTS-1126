@@ -71,6 +71,7 @@ public static class AgvGenerator
             HasError = hasError,
             Mode = mode ?? new AgvMode(ModeType.Normal, correlationId)
         };
+        agv.SetOnline();
         return SetAgvState(agvState, agv);
     }
 

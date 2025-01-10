@@ -166,11 +166,6 @@ public class Agv : IAgv
     public bool IsReady => IsReadyStatic.Compile().Invoke(this);
 
     /// <summary>
-    /// Token used by the send status update schedule
-    /// </summary>
-    public Guid? AgvOfflineTokenId { get; set; }
-
-    /// <summary>
     /// Gets the time of the last state transition.
     /// </summary>
     public DateTime TimeOfStateTransition { get; set; }
@@ -526,22 +521,16 @@ public class Agv : IAgv
     /// <summary>
     /// Go offline.
     /// </summary>
-    public void GoOffline(Guid offlineToken)
+    public void GoOffline()
     {
-        if (AgvOfflineTokenId == null || AgvOfflineTokenId!.Value != offlineToken)
-        {
-            return;
-        }
         IsOnline = false;
-        AgvOfflineTokenId = null;
     }
 
     /// <summary>
     /// Sets agv online.
     /// </summary>
-    public void SetOnline(Guid offlineToken)
+    public void SetOnline()
     {
-        AgvOfflineTokenId = offlineToken;
         IsOnline = true;
     }
 
@@ -552,7 +541,7 @@ public class Agv : IAgv
     {
         get
         {
-            return agv => agv.AgvStatus != null && agv.AgvStatus!.LastNodeId != null && !agv.HasError;
+            return agv => agv.AgvStatus != null && agv.AgvStatus!.LastNodeId != null && !agv.HasError && agv.IsOnline;
         }
     }
 }

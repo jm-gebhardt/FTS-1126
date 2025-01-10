@@ -120,6 +120,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
             var agvData = AgvDataGenerator.GenerateAgvData(ipV4Address: ip);
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
+            agv.SetOnline();
             agv = AgvGenerator.SetAgvState(state, agv, false);
 
             agvs.Add(agv);

@@ -157,19 +157,15 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateAgvStatus_ValidData_ScheduledOfflineMessageSavedOfflineToken()
+    public async Task Consume_UpdateAgvStatus_AgvWasOffline_SetOnline()
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        ScheduledMessage<AgvWentOffline> previousOfflineMessage = await fixture.ScheduleMessage(TimeSpan.FromMinutes(1), new AgvWentOffline(agv.CorrelationId, DateTime.UtcNow));
-        agv.SetOnline(previousOfflineMessage.TokenId);
+        agv.GoOffline();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
-        SendContext<AgvWentOffline> newOfflineMessage = fixture.TestHarness.Sent.Select<AgvWentOffline>(m => m.Context.Message != previousOfflineMessage.Payload).Select(m => m.Context).Single();
         agv.IsOnline.ShouldBeTrue();
-        agv.AgvOfflineTokenId.ShouldBe(newOfflineMessage.ScheduledMessageId);
-        newOfflineMessage.Message.CorrelationId.ShouldBe(agv.CorrelationId);
     }
 
     [TestMethod]
@@ -228,6 +224,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithGraphExists(true);
         var agv = AgvGenerator.GenerateChargingAgv();
+        agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -244,6 +241,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
+        agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -330,15 +328,13 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        ScheduledMessage<AgvWentOffline> offlineMessage = await fixture.ScheduleMessage(TimeSpan.FromMinutes(1), new AgvWentOffline(agv.CorrelationId, DateTime.UtcNow));
-        agv.SetOnline(offlineMessage.TokenId);
+        agv.SetOnline();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
-        await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId, agv.AgvOfflineTokenId!.Value));
+        await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
 
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         agv.IsOnline.ShouldBeFalse();
-        agv.AgvOfflineTokenId.ShouldBeNull();
     }
 
     [TestMethod]
@@ -346,13 +342,13 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
+        agv.GoOffline();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
-        await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId, Guid.NewGuid()));
+        await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
 
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeFalse();
         agv.IsOnline.ShouldBeFalse();
-        agv.AgvOfflineTokenId.ShouldBeNull();
     }
 
     [TestMethod]
@@ -617,7 +613,7 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetOnline(Guid.NewGuid());
+        agv.SetOnline();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         var currentAgStatus = agv.AgvStatus!;

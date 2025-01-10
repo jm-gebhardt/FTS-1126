@@ -6,5 +6,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 /// Provides a command to set an agv offline.
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
-///  <param name="OfflineTokenId">The offline token id.</param>
-public record GoOffline(Guid CorrelationId, Guid OfflineTokenId) : CorrelatedBy<Guid>;
+public record GoOffline(Guid CorrelationId) : CorrelatedBy<Guid>;

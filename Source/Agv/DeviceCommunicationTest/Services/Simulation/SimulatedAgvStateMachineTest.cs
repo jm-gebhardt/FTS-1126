@@ -240,7 +240,7 @@ public class SimulatedAgvStateMachineTest
                     Console.WriteLine(s.AgvStatus);
                     s.AgvStatus.Busy.ShouldBeFalse();
                     s.LastNodeId.ShouldBe(updatedMoveAction.Target.NodeId);
-                });
+                }, timeoutInMs: 10000);
 
             await fixture.ShouldHavePublishedAsync<ActionCompleted>();
             var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompleted>();

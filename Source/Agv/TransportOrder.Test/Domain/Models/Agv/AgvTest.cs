@@ -12,32 +12,26 @@ public class AgvTest
     public void GoOffline_ValidData_ResetsIsOnlineAndOfflineToken()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetOnline(Guid.NewGuid());
-
-        agv.GoOffline(agv.AgvOfflineTokenId!.Value);
+        agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        agv.AgvOfflineTokenId.ShouldBeNull();
     }
 
     [TestMethod]
     public void GoOffline_WrongToken_TokenAndIsOnlineUnchanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetOnline(Guid.NewGuid());
+        agv.SetOnline();
 
-        agv.GoOffline(Guid.NewGuid());
-        agv.IsOnline.ShouldBeTrue();
-        agv.AgvOfflineTokenId.ShouldNotBeNull();
+        agv.GoOffline();
+        agv.IsOnline.ShouldBeFalse();
     }
 
     [TestMethod]
     public void SetOnline_ValidData_SetsIsOnlineAndOfflineToken()
     {
-        var offlineToken = Guid.NewGuid();
         var agv = AgvGenerator.GenerateIdleAgv();
-        agv.SetOnline(offlineToken);
+        agv.SetOnline();
         agv.IsOnline.ShouldBeTrue();
-        agv.AgvOfflineTokenId.ShouldBe(offlineToken);
     }
 
     [TestMethod]

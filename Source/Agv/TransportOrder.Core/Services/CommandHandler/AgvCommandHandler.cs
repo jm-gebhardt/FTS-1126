@@ -65,7 +65,6 @@ public class AgvCommandHandler :
     IConsumer<HandleActionCompletion>,
     IConsumer<PrepareAgvForStartingAction>,
     IConsumer<UpdateCargo>,
-    IConsumer<ResetOfflineWatchdog>,
     IConsumer<PrepareParkingOfAgv>,
     IConsumer<PrepareChargingOfAgv>,
     IConsumer<UpdateAgvSettingsGroupReference>,
@@ -360,7 +359,10 @@ public class AgvCommandHandler :
             await ResetLastNodeId(oldStatus, agvStatus);
         }
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
-        await ResetOfflineWatchDog(context, agv, agvSettings);
+        if (!wasOnline)
+        {
+            agv.SetOnline();
+        }
         bool wasReady = agv.IsReady;
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
         bool isReady = agv.IsReady;
@@ -404,20 +406,6 @@ public class AgvCommandHandler :
         await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, agvSettings);
 
         await TryAutoAccept(context, agv, context.CancellationToken);
-    }
-
-    private async Task ResetOfflineWatchDog(ConsumeContext context, Agv agv, AgvSettingsReadModel agvSettings)
-    {
-        if (agv.AgvOfflineTokenId != null)
-        {
-            var scheduler = context.GetPayload<MessageSchedulerContext>();
-            await scheduler.CancelScheduledPublish<AgvWentOffline>(agv.AgvOfflineTokenId.Value);
-        }
-
-        int delay = agv.CurrentAgvState == AgvState.Busy ? agvSettings.AgvOfflineTimeoutMsWhileBusy : agvSettings.AgvOfflineTimeoutMsWhileIdle;
-        var creationTimeStamp = DateTime.UtcNow;
-        ScheduledMessage<AgvWentOffline> delayedMessage = await context.SchedulePublish(creationTimeStamp.AddMilliseconds(delay), new AgvWentOffline(agv.CorrelationId, creationTimeStamp));
-        agv.SetOnline(delayedMessage.TokenId);
     }
 
     private async Task PublishAgvStatusUpdateEvents(IPublishEndpoint context,
@@ -523,11 +511,11 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GoOffline> context)
     {
-        var (correlationId, offlineTokenId) = context.Message;
+       var correlationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         bool wasOnline = agv.IsOnline;
-        agv.GoOffline(offlineTokenId);
+        agv.GoOffline();
         if (wasOnline && !agv.IsOnline)
         {
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
@@ -904,17 +892,6 @@ public class AgvCommandHandler :
                 $"AGV {agv.SerialNumber} cargo has changed to {cargoState} ",
                 new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber }, { LogLabels.CargoState, cargoState } });
         }
-    }
-
-    /// <summary>
-    /// Handles the <see cref="ResetOfflineWatchdog"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<ResetOfflineWatchdog> context)
-    {
-        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
-        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
-        await ResetOfflineWatchDog(context, agv, agvSettings);
-        await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
     private async Task TryDequeueAgv(IPublishEndpoint context, Guid agvCorrelationId)

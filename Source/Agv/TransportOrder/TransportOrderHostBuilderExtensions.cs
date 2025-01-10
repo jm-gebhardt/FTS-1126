@@ -100,7 +100,6 @@ public static class TransportOrderHostBuilderExtensions
 
     private static void RegisterAgvServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHostedService<OfflineWatchdogInitializer>();
         // Actions
         string selectionMode = OrderSelectionMode.GetModeFromConfiguration(configuration);
         Console.WriteLine($"Using order selection mode {selectionMode}");

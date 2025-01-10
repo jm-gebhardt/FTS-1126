@@ -36,6 +36,7 @@ try
                         busRegistrationConfiguration: configurator =>
                         {
                             //add consumers here
+                            configurator.AddMqttConsumer<MqttLastWillConsumer>();
                             configurator.AddMqttConsumer<MqttStateConsumer>();
                             configurator.AddMqttConsumer<AgvDataConsumer>();
                             configurator.AddMqttConsumer<MqttGraphConsumer>();

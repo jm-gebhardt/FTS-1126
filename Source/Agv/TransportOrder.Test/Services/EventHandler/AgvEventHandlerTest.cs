@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
@@ -230,17 +229,16 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ScheduledAgvWentOffline_ValidData_PublishesGoOffline()
+    public async Task Consume_AgvLastWillReceived_ValidData_PublishesGoOffline()
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
-        ScheduledMessage<AgvWentOffline> offlineMessage = await fixture.ScheduleMessage(TimeSpan.FromMilliseconds(0), new AgvWentOffline(agv.CorrelationId, DateTime.UtcNow));
-        agv.SetOnline(offlineMessage.TokenId);
+        agv.SetOnline();
         fixture.AddAgv(agv);
-        await fixture.ShouldHaveConsumedAsync<AgvWentOffline>();
+        await fixture.PublishMessageAsync(new AgvLastWillReceived(agv.CorrelationId));
         await fixture.ShouldHavePublishedAsync<GoOffline>();
         var goOfflineCommand = fixture.TestHarness.Published.Select<GoOffline>().First().Context.Message;
-        goOfflineCommand.OfflineTokenId.ShouldBe(offlineMessage.TokenId);
+        goOfflineCommand.CorrelationId.ShouldBe(agv.CorrelationId);
     }
 
     [TestMethod]

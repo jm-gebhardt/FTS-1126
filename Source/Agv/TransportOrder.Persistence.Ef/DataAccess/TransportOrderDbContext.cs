@@ -1,5 +1,3 @@
-using AppAny.Quartz.EntityFrameworkCore.Migrations;
-using AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.RestrictedArea;
@@ -56,8 +54,6 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RestrictedAreaEntityConfiguration());
         modelBuilder.ApplyConfiguration(new StationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new QueueEntityConfiguration());
-        // Adds Quartz.NET SqlServer schema to EntityFrameworkCore
-        modelBuilder.AddQuartz(builder => builder.UseSqlServer(schema: "dbo"));
     }
 
     /// <summary>

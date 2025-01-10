@@ -32,7 +32,7 @@ public class AgvEventHandler :
     IConsumer<AgvErrorStatusReceived>,
     IConsumer<AgvStatusReceived>,
     IConsumer<AgvGraphChanged>,
-    IConsumer<AgvWentOffline>,
+    IConsumer<AgvLastWillReceived>,
     IConsumer<AgvPreparedForStartingAction>,
     IConsumer<AgvLoadStatusReceived>,
     IConsumer<ParkingNodeSelectedForAgv>,
@@ -244,11 +244,12 @@ public class AgvEventHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="AgvWentOffline"/> event.
+    /// Handles the <see cref="AgvLastWillReceived"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<AgvWentOffline> context)
+    public async Task Consume(ConsumeContext<AgvLastWillReceived> context)
     {
-        await context.Publish(new GoOffline(context.Message.CorrelationId, context.GetSchedulingTokenId()!.Value));
+        _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} sent last will", context.Message.CorrelationId);
+        await context.Publish(new GoOffline(context.Message.CorrelationId));
     }
 
     /// <summary>

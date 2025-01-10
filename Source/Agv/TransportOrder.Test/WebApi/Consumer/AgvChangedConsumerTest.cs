@@ -30,11 +30,11 @@ public class AgvChangedConsumerTest
         var agv = AgvGenerator.GenerateRawAgv(AgvSerialNumber.ToGuid(), AgvSerialNumber);
         agv.TransitionToDiscovered(true);
         agv.TransitionToIdle();
-        agv.SetOnline(Guid.NewGuid());
+        agv.SetOnline();
 
         if (!alive)
         {
-            agv.GoOffline((Guid)agv.AgvOfflineTokenId!);
+            agv.GoOffline();
         }
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());

@@ -506,7 +506,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     {
         _logger.LogTrace("Status event from AGV {AgvId} / {CorrelationId}",
             context.Saga.SerialNumber, context.Saga.CorrelationId);
-
+        bool wasOnline = context.Saga.IsOnline;
         context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds, BatteryChargeRate, BatteryDischargeRate); // Update status before each send
 
         if (context.Saga.IsOnline) // Only send status if AGV is still alive
@@ -516,6 +516,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 context.Saga.SerialNumber,
                 context.Saga.AgvStatus
             ), context.CancellationToken);
+        }
+
+        if (wasOnline && !context.Saga.IsOnline)
+        {
+            await context.Publish(new AgvLastWillReceived(context.Saga.CorrelationId));
         }
     }
 

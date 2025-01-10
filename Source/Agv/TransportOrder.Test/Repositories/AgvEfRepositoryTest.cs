@@ -33,7 +33,7 @@ public class AgvEfRepositoryTest
         readyAgv.CorrelationId.ShouldBe(agv.CorrelationId);
         readyAgv.CurrentAgvState.ShouldBe(agv.CurrentAgvState);
         readyAgv.SerialNumber.ShouldBe(agv.SerialNumber);
-        readyAgv.IsOnline.ShouldBeFalse();
+        readyAgv.IsOnline.ShouldBeTrue();
     }
 
     [TestMethod]

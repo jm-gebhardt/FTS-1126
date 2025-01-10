@@ -62,6 +62,7 @@ public abstract class MassTransitTestFixture : FixtureBase
         return this;
     }
 
+    [PublicAPI]
     public async Task<ScheduledMessage<T>> ScheduleMessage<T>(TimeSpan delay, T message) where T : class
     {
         await using var scope = Provider.CreateAsyncScope();
