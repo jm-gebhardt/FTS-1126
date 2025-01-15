@@ -948,6 +948,23 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_SetNormalMode_AgvIsLocked_PublishesAgvModeChanged()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+        var command = new SetNormalMode(agv.CorrelationId, null);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
+        await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        agv.Mode.Type.ShouldBe(ModeType.Normal);
+        agv.IsLocked.ShouldBeFalse();
+        agv.Mode.InitiatingUser.ShouldBeNull();
+    }
+
+    [TestMethod]
     public async Task Consume_TryReactivateParkingAgvs_NoOccupiedParkers_DoesNotPublishAgvBecameIdle()
     {
         var fixture = new AgvCommandHandlerTestFixture()

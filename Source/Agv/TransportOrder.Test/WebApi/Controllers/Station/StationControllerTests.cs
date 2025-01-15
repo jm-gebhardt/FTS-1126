@@ -60,6 +60,7 @@ public class StationControllerTests
         station.Lock("user", "reason", "description", LockedOrderHandlingType.AllowFinish);
         StationControllerTestFixture<TryUnlockStation, StationsRequestHandler> fixture = new StationControllerTestFixture<TryUnlockStation, StationsRequestHandler>()
             .WithStation(station)
+            .WithActionGroups(new List<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
             .WithUser(null, "user")
             .Build();
 

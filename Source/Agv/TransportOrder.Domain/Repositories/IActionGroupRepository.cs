@@ -271,7 +271,13 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="stationName">The name of the station.</param>
     Task<IReadOnlyCollection<ActionGroup>> GetCurrentActionGroupsForStation(string stationName);
-    
+
+    /// <summary>
+    /// Get paused pick/drop action groups for startion.
+    /// </summary>
+    /// <param name="stationName">The name of the station.</param>
+    Task<IReadOnlyCollection<ActionGroup>> GetPausedActionGroupsForStation(string stationName);
+
     /// <summary>
     /// Gets list of action groups that are assigned to an AGV in created, paused, or started state.
     /// </summary>

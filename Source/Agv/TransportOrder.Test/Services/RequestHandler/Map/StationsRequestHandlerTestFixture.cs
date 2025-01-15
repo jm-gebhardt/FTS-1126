@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -31,6 +32,7 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
     public StationsRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroups(List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsForStation(It.IsAny<string>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetPausedActionGroupsForStation(It.IsAny<string>())).ReturnsAsync(actionGroups.Where(g => g.State == ActionGroupState.Paused).ToList());
         return this;
     }
 

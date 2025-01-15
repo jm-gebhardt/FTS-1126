@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Station;
 
@@ -87,6 +88,13 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     public StationControllerTestFixture<TRequest, TRequestHandler> WithMap(TransportOrder.Domain.Models.Map.Map map)
     {
         _mapRepository.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ReturnsAsync(map);
+        return this;
+    }
+
+    public StationControllerTestFixture<TRequest, TRequestHandler> WithActionGroups(List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups)
+    {
+        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsForStation(It.IsAny<string>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetPausedActionGroupsForStation(It.IsAny<string>())).ReturnsAsync(actionGroups.Where(g => g.State == ActionGroupState.Paused).ToList());
         return this;
     }
 }

@@ -69,8 +69,10 @@ public class StationsRequestHandlerTest
     public async Task Consume_TryUnlockStation_ValidData_PublishesUnlockStation_RespondsLockedUnlockedStation()
     {
         var station = new Station("name", AgvGraph.NodeType.Park, []);
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(destination: station.Name, pickActionState: ActionState.Paused);
         station.Lock("user", "reason", "description", LockedOrderHandlingType.Abort);
         StationsRequestHandlerTestFixture<TryUnlockStation, StationsRequestHandler> fixture = new StationsRequestHandlerTestFixture<TryUnlockStation, StationsRequestHandler>()
+            .WithActionGroups([pickDropActionGroup])
             .WithStation(station)
             .Build();
 

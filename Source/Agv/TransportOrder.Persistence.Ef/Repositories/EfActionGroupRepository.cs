@@ -606,4 +606,14 @@ public class EfActionGroupRepository : IActionGroupRepository
              a.Actions.Any(action => action.ActionType == ActionType.Charge) || (a.Actions.Count == 1 && a.Actions.First().ActionType == ActionType.Move)) // park and charge actions
             ).ToListAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyCollection<ActionGroup>> GetPausedActionGroupsForStation(string stationName)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<ActionGroup>().AsNoTracking().Where(a =>
+                a.Actions.Any(action => action.Target.NodeId == stationName) &&
+                a.State == ActionGroupState.Paused
+        ).ToListAsync();
+    }
 }

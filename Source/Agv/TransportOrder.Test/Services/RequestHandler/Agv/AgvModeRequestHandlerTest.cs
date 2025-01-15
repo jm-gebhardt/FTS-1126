@@ -59,13 +59,13 @@ public class AgvModeRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_SetNormalMode_LockedAgv_PublishesUnlockAgvRespondsSuccess()
+    public async Task Consume_SetNormalMode_LockedAgv_PublishesSetNormalModeRespondsSuccess()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
         await fixture.GetResponseAsync<Success>(new SetNormalMode(agv.CorrelationId, "user"));
-        await fixture.ShouldHavePublishedAsync<UnlockAgv>();
+        await fixture.ShouldHavePublishedAsync<SetNormalMode>();
     }
 }

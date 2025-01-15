@@ -977,4 +977,24 @@ public class ActionGroupRepositoryTest
             chargeGroup.CorrelationId, parkGroup.CorrelationId, startedParkGroup.CorrelationId // charge and park action groups that reserved the station or are already started
         ], ignoreOrder: true);
     }
+
+    [TestMethod]
+    public async Task GetPausedActionGroupsForStation_ValidData_ReturnsPausedActionGroupsThatReservedTheStation()
+    {
+        const string station = "a station";
+        var startedGroupPickTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Started);
+        var pausedGroupDropTarget = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, dropActionState: ActionState.Paused);
+        var createdGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: station);
+        var pausedGroupOther = AgvActionGenerator.GeneratePickDropActionGroup(source: "to somewhere else", pickActionState: ActionState.Paused);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([startedGroupPickTarget, pausedGroupDropTarget, createdGroup, pausedGroupOther])
+            .BuildAsync();
+
+        IReadOnlyCollection<ActionGroup> groupsForStation = await fixture.ActionGroupRepository.GetPausedActionGroupsForStation(station);
+        groupsForStation.Select(g => g.CorrelationId).ToList().ShouldBe(
+        [
+            pausedGroupDropTarget.CorrelationId
+        ], ignoreOrder: true);
+    }
 }

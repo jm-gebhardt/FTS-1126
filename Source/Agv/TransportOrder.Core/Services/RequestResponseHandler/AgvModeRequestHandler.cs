@@ -56,29 +56,16 @@ public class AgvModeRequestHandler:
     {
         (var agvCorrelationId, string? initiatingUser) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        if (agv.IsLocked)
-        {
-            _logger.LogDebug("Triggering unlock of agv {AgvCorrelationId}", agvCorrelationId );
-            await _bus.Publish(new UnlockAgv(agv.CorrelationId));
-            await context.RespondAsync(new Success());
-            return;
-        }
-
-        IReadOnlyList<ActionGroup> pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems:100);
-        if (pausedActionGroups.Count == 0)
-        {
-            _logger.LogDebug("Triggering set normal mode for agv {AgvCorrelationId}", agvCorrelationId );
-            await _bus.Publish(new SetNormalMode(agv.CorrelationId, initiatingUser));
-            await context.RespondAsync(new Success());
-            return;
-        }
+        IReadOnlyList<ActionGroup> pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 100);
 
         foreach (var actionGroup in pausedActionGroups)
         {
-            _logger.LogDebug("Triggering resuming of action group {ActionGroupCorrelationId} for agv {AgvCorrelationId}", actionGroup.CorrelationId, agvCorrelationId );
+            _logger.LogDebug("Triggering resuming of action group {ActionGroupCorrelationId} for agv {AgvCorrelationId}", actionGroup.CorrelationId, agvCorrelationId);
             await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, initiatingUser));
-            await context.RespondAsync(new Success());
         }
+        _logger.LogDebug("Triggering set normal mode for agv {AgvCorrelationId}", agvCorrelationId);
+        await _bus.Publish(new SetNormalMode(agv.CorrelationId, initiatingUser));
+        await context.RespondAsync(new Success());
     }
 
     /// <summary>

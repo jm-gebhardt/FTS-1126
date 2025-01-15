@@ -123,10 +123,22 @@ public class StationsRequestHandler(
         var station = await stationRepository.GetStation(id);
         if (station.IsLocked)
         {
+            await HandleOrdersWithPausedAction(station.Name, user);
+
             await bus.Publish(new UnlockStation(id, user));
             await context.RespondAsync(new LockedUnlockedStation(true));
             return;
         }
         await context.RespondAsync(new LockedUnlockedStation(false));
+    }
+
+    private async Task HandleOrdersWithPausedAction(string stationName, string userEmail)
+    {
+        IReadOnlyCollection<ActionGroup> actionGroups = await actionGroupRepository.GetPausedActionGroupsForStation(stationName);
+
+        foreach (var actionGroup in actionGroups)
+        {
+            await bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, userEmail));
+        }
     }
 }

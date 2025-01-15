@@ -593,6 +593,8 @@ public class AgvCommandHandler :
         (var agvCorrelationId, string? initiatingUser) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        bool agvWasLocked = agv.IsLocked;
+
         agv.SetNormalMode(initiatingUser);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
@@ -606,6 +608,14 @@ public class AgvCommandHandler :
                 { LogLabels.Reason, agv.Mode.LockReason.ToString() ?? agv.Mode.MaintenanceReason.ToString() },
                 { LogLabels.ReasonDescription, agv.Mode.ReasonDescription }
             });
+
+        if (agvWasLocked)
+        {
+            _logger.LogAgvInformation(LogCodes.AgvUnlocked, agv.CorrelationId, "AGV Unlocked",
+                $"AGV {agv.SerialNumber} is unlocked",
+                new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
+            await context.Publish(new AgvLockedChanged(agv.CorrelationId, false));
+        }
 
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
         await context.Publish(new AgvBecameIdle(agv.CorrelationId));
