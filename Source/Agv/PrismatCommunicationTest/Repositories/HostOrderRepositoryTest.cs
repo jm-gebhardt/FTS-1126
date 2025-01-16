@@ -198,6 +198,6 @@ public class HostOrderRepositoryTest
         fixture.Repository.AddRange(pickAt1020, longLoopOrder, longLoopPick);
         await fixture.Repository.SaveAsync();
 
-        (await fixture.Repository.GetNextNotQueuedHostOrderPickingAt(null)).ShouldBeEquivalentTo(longLoopPick);
+        (await fixture.Repository.GetNextNotQueuedHostOrderPickingAt(null, false)).ShouldBeEquivalentTo(longLoopPick);
     }
 }

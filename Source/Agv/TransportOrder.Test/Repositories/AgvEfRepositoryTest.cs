@@ -61,7 +61,7 @@ public class AgvEfRepositoryTest
 
         var agv1 = AgvGenerator.GenerateIdleAgv();
         var agv2 = AgvGenerator.GenerateChargingAgv(1);
-
+        
         await fixture.Add(agv1);
         await fixture.Add(agv2);
 
@@ -156,6 +156,7 @@ public class AgvEfRepositoryTest
     {
         var fixture = new EfAgvRepositoryTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        agv.SetOnline();
         await fixture.Add(agv);
         ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.Single().CorrelationId.ShouldBe(agv.CorrelationId);

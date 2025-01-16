@@ -1,8 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using JetBrains.Annotations;
 using MassTransit;
@@ -13,13 +11,11 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 /// Provides handlers for action group related events.
 /// </summary>
 [UsedImplicitly]
-public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
+public class ActionGroupEventHandler :
     IConsumer<ActionGroupCompleted>,
     IConsumer<ActionGroupStarted>,
-    IConsumer<SetTargetForAction>,
-    IConsumer<AgvPassedCargoTriggerPoint>,
-    IConsumer<DroppingAgvPassedShortLoopTriggerPoint>,
-    IConsumer<PickActionCompleted>
+    IConsumer<PickActionCompleted>,
+    IConsumer<DroppingAgvPassedDoppelspielTriggerPoint>
 {
     /// <summary>
     /// Handles the <see cref="ActionGroupCompleted"/> event.
@@ -46,27 +42,6 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     }
 
     /// <summary>
-    /// Handles the <see cref="SetTargetForAction"/> message.
-    /// </summary>
-    public async Task Consume(ConsumeContext<SetTargetForAction> context)
-    {
-        (_, var actionGroupId, Guid? assignedAgv, string targetNodeId, bool shouldNotPickNext) = context.Message;
-        await context.Publish(new PassDecisionPoint(actionGroupId, assignedAgv, targetNodeId, shouldNotPickNext));
-    }
-
-    /// <summary>
-    /// Handles the <see cref="AgvPassedCargoTriggerPoint"/> message.
-    /// </summary>
-    public async Task Consume(ConsumeContext<AgvPassedCargoTriggerPoint> context)
-    {
-        (var agv, Guid? actionGroupId, bool _) = context.Message;
-        if(actionGroupId !=null)
-        {
-            await context.Publish(new PassCargoTriggerPoint(agv, actionGroupId.Value));
-        }
-    }
-
-    /// <summary>
     /// Handles the <see cref="PickActionCompleted"/> message.
     /// </summary>
     public async Task Consume(ConsumeContext<PickActionCompleted> context)
@@ -76,20 +51,11 @@ public class ActionGroupEventHandler(KaeserGraphConfiguration configuration) :
     }
 
     /// <summary>
-    /// Handles the <see cref="DroppingAgvPassedShortLoopTriggerPoint"/> message.
+    /// Handles the <see cref="DroppingAgvPassedDoppelspielTriggerPoint"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<DroppingAgvPassedShortLoopTriggerPoint> context)
+    public async Task Consume(ConsumeContext<DroppingAgvPassedDoppelspielTriggerPoint> context)
     {
-        (var agvData, var actionGroup, bool shouldNotPickNext) = context.Message;
-        if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick))
-        {
-            return;
-        }
-        var action = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
-        if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
-        {
-            return;
-        }
-        await context.Publish(new PassShortLoopTriggerPoint(agvData.CorrelationId, actionGroup.CorrelationId, shouldNotPickNext));
+        (_, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext) = context.Message;
+        await context.Publish(new PassTriggerPoint(agvCorrelationId, droppingHostOrderCorrelationId, nextPickHostOrderCorrelationId, shouldPickNext));
     }
 }

@@ -99,6 +99,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
+    // ReSharper disable once MethodOverloadWithOptionalParameter
     public async Task<HostOrder?> GetNextNotQueuedHostOrderPickingAt(string? pickTarget, bool unknownDrop = false)
     {
         return await _context.Set<HostOrder>().Where(
@@ -113,5 +114,31 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
                  )
         ).OrderBy(o => o.CreatedDate)
             .FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<HostOrder?> GetNextNotQueuedHostOrderPickingAt(string pickTarget)
+    {
+        return await _context.Set<HostOrder>().Where(
+                h => h.CanceledDate == null
+                     && h.StartedDate == null
+                     && h.AssignedAgv == null
+                     && !h.IsQueued
+                     && h.Actions.Any(a => a.ActionType == ActionType.Pick && pickTarget == a.Node
+                     )
+            ).OrderBy(o => o.CreatedDate)
+            .FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<bool> HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(string dropTarget)
+    {
+        return await _context.Set<HostOrder>().Where(
+                h => !h.PassedTriggerPoint
+                     && h.CanceledDate == null
+                     && h.StartedDate != null
+                     && h.IsQueued
+                     && h.Actions.Any(a => a.ActionType == ActionType.Drop && a.Node == dropTarget))
+            .AnyAsync();
     }
 }

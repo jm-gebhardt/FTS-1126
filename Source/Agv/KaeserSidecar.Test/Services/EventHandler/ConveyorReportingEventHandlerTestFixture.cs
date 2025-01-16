@@ -12,18 +12,18 @@ using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 
-public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerTestFixture<ShortLoopTriggerPointEventHandler>
+public class ConveyorReportingEventHandlerTestFixture : MassTransitConsumerTestFixture<ConveyorReportingEventHandler>
 {
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
     private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
     public readonly IOrderRepository OrderRepository = new OrderRepository();
 
-    /// <inheritdoc cref="MassTransitConsumerTestFixture{ShortLoopTriggerPointEventHandler}"/>>
-    protected override MassTransitConsumerTestFixture<ShortLoopTriggerPointEventHandler> AddServices(IServiceCollection collection)
+    /// <inheritdoc cref="MassTransitConsumerTestFixture{ConveyorReportingEventHandler}"/>>
+    protected override MassTransitConsumerTestFixture<ConveyorReportingEventHandler> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
-        collection.AddTransient(_ => new Mock<ILogger<ShortLoopTriggerPointEventHandler>>().Object);
+        collection.AddTransient(_ => new Mock<ILogger<ConveyorReportingEventHandler>>().Object);
         collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
         collection.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
         collection.AddSingleton(_ => _communicator.Object);
@@ -33,27 +33,28 @@ public class ShortLoopTriggerPointEventHandlerTestFixture : MassTransitConsumerT
         return this;
     }
 
-    /// <inheritdoc cref="ShortLoopTriggerPointEventHandlerTestFixture"/>>
-    public ShortLoopTriggerPointEventHandlerTestFixture()
+    /// <inheritdoc cref="ConveyorReportingEventHandlerTestFixture"/>>
+    public ConveyorReportingEventHandlerTestFixture()
     {
         _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>())).Verifiable();
 
         Build();
     }
 
-    public ShortLoopTriggerPointEventHandlerTestFixture WithPickHostOrder(HostOrder? order)
+    public ConveyorReportingEventHandlerTestFixture WithHostOrders(HostOrder order, HostOrder? nextPickOrder=null)
     {
-        _hostOrderRepository.Setup(x => x.GetNextPickOrderForShortLoopDualOperation()).ReturnsAsync(order);
+        if (nextPickOrder == null)
+        {
+            _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
+            return this;
+        }
+        _hostOrderRepository.SetupSequence(x => x.GetByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(order)
+            .ReturnsAsync(nextPickOrder);
         return this;
     }
 
-    public ShortLoopTriggerPointEventHandlerTestFixture WithHostOrder(HostOrder order)
-    {
-        _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
-        return this;
-    }
-
-    public ShortLoopTriggerPointEventHandlerTestFixture WithAgvHasLowBatteryLevel(bool hasLowBatteryLevel)
+    public ConveyorReportingEventHandlerTestFixture WithAgvHasLowBatteryLevel(bool hasLowBatteryLevel)
     {
         _agvSettingsService.Setup(x => x.CheckAgvHasLowBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);
         return this;

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Triggers;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -12,9 +13,11 @@ public class CargoTriggerPointEventHandlerTest
     public async Task Consume_AgvPassedCargoTriggerPoint_PickAt9060_ReportsToConveyor()
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails( OrderGenerator.GenerateUnknownDropTargetOrder());
+        var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Pick);
         const bool hasCargo = false;
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(hostOrder);
+            .WithHostOrder(hostOrder)
+            .WithActionGroup(actionGroup);
 
         var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(hostOrder.AssignedAgv.GetValueOrDefault(), hostOrder.CorrelationId, hasCargo);
 
@@ -28,9 +31,11 @@ public class CargoTriggerPointEventHandlerTest
     public async Task Consume_AgvPassedCargoTriggerPoint_DropAt9070_ReportsToConveyor()
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Drop);
         const bool hasCargo = true;
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(hostOrder);
+            .WithHostOrder(hostOrder)
+            .WithActionGroup(actionGroup);
 
         var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(hostOrder.AssignedAgv.GetValueOrDefault(), hostOrder.CorrelationId, hasCargo);
 
@@ -44,9 +49,10 @@ public class CargoTriggerPointEventHandlerTest
     public async Task Consume_AgvPassedCargoTriggerPoint_NotOrderTargeting9060Or9070_DoesNotReportToConveyor()
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
-
+        var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Pick);
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(hostOrder);
+            .WithHostOrder(hostOrder)
+            .WithActionGroup(actionGroup);
 
         var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(hostOrder.AssignedAgv.GetValueOrDefault(), hostOrder.CorrelationId, false);
 

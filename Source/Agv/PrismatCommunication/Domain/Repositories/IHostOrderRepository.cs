@@ -58,5 +58,18 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// </summary>
     /// <param name="pickTarget">The pick target to check.</param>
     /// <param name="unknownDrop">If the drop is known</param>
+    // ReSharper disable once MethodOverloadWithOptionalParameter
     Task<HostOrder?> GetNextNotQueuedHostOrderPickingAt(string? pickTarget, bool unknownDrop = false);
+
+    /// <summary>
+    /// Get the next host order picking at one of the pick targets that has not been queued.
+    /// </summary>
+    /// <param name="pickTarget">The pick target to check.</param>
+    Task<HostOrder?> GetNextNotQueuedHostOrderPickingAt(string pickTarget);
+
+    /// <summary>
+    ///Check if there are host orders that are heading towards the Doppelspiel trigger point with the given drop target.
+    /// </summary>
+    /// <param name="dropTarget">The pick target to check.</param>
+    Task<bool> HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(string dropTarget);
 }

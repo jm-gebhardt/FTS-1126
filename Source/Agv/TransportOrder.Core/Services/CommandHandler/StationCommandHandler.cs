@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -50,6 +51,7 @@ public class StationCommandHandler(
         logger.LogStationInformation(LogCodes.StationLocked, id, "Station Locked",
             $"User {user} locked station because {reason}",
             new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
+        await context.Publish(new StationLocked(station.Name));
     }
 
     /// <summary>
@@ -78,6 +80,7 @@ public class StationCommandHandler(
         logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked",
             $"User {user} unlocked station",
             new Dictionary<string, object?> { { LogLabels.User, user } });
+        await context.Publish(new StationUnlocked(station.Name));
     }
 
     /// <summary>

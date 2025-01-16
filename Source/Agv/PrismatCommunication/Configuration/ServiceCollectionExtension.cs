@@ -119,7 +119,7 @@ public static class ServiceCollectionExtension
         {
             _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPoint1TriggerName, "");
             _config.Value.UpdateTriggerPointNodeId(_config.Value.CheckCargoTriggerName, "");
-            _config.Value.UpdateTriggerPointNodeId(_config.Value.ShortLoopTriggerName, "");
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.DoppelspielTriggerName, "");
         }
         serviceCollection.TryAddSingleton(_config.Value);
         return serviceCollection;

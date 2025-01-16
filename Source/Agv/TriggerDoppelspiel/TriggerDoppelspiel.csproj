@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <AssemblyName>Gebhardt.Acc.TriggerShortLoop</AssemblyName>
+        <AssemblyName>Gebhardt.Acc.TriggerDoppelspiel</AssemblyName>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-      <PackageReference Include="System.Runtime.Caching" />
+        <PackageReference Include="System.Runtime.Caching" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />

@@ -1,13 +1,10 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
-using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
@@ -63,46 +60,7 @@ public class ActionGroupEventHandlerTest
         (await fixture.TestHarness.Published.Any<HandleHostOrderStart>(f =>
             f.Context.Message == new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroupStarted.MessageCreatedDate))).ShouldBeTrue();
     }
-
-    [TestMethod]
-    public async Task SetTargetForAction_ValidData_PublishesPassDecisionPoint()
-    {
-        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-
-        var setTargetForAction = new SetTargetForAction(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "a target node", false);
-
-        var passDecisionPoint = await fixture.PublishAndGetFirstMessageAsync<SetTargetForAction, PassDecisionPoint>(setTargetForAction);
-
-        passDecisionPoint.AssignedAgv.ShouldBe(setTargetForAction.AssignedAgv);
-        passDecisionPoint.TargetNodeId.ShouldBe(setTargetForAction.TargetNodeId);
-        passDecisionPoint.CorrelationId.ShouldBe(setTargetForAction.ActionGroupId);
-    }
-
-    [TestMethod]
-    public async Task AgvPassedCargoTriggerPoint_ValidData_PublishesPassCargoTriggerPoint()
-    {
-        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-
-        var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(Guid.NewGuid(), Guid.NewGuid(), true);
-
-        var passCargoTriggerPoint = await fixture.PublishAndGetFirstMessageAsync<AgvPassedCargoTriggerPoint, PassCargoTriggerPoint>(agvPassedCargoTriggerPoint);
-
-        passCargoTriggerPoint.CorrelationId.ShouldBe(agvPassedCargoTriggerPoint.ActionGroupCorrelationId.GetValueOrDefault());
-        passCargoTriggerPoint.AgvCorrelationId.ShouldBe(agvPassedCargoTriggerPoint.CorrelationId);
-    }
-
-    [TestMethod]
-    public async Task AgvPassedCargoTriggerPoint_NoActionGroup_DoesNotPublishPassCargoTriggerPoint()
-    {
-        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-
-        var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(Guid.NewGuid(), null, true);
-
-        await fixture.TestHarness.Bus.Publish(agvPassedCargoTriggerPoint);
-        await fixture.ShouldHaveConsumedAsync<AgvPassedCargoTriggerPoint>();
-        await fixture.ShouldNotHavePublishedAsync<PassCargoTriggerPoint>();
-    }
-
+    
     [TestMethod]
     public async Task PickActionCompleted_ValidData_PublishesFinishPick()
     {
@@ -117,47 +75,15 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
-    public async Task DroppingAgvPassedShortLoopTriggerPoint_ValidData_PublishesPassShortLoopTriggerPoint()
+    public async Task DroppingAgvPassedDoppelspielTriggerPoint_ValidData_PublishesPassTriggerPoint()
     {
-        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
-        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
-        var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, orderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
-       
-        var agvPassedShortLoopTriggerPoint = new DroppingAgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()), actionGroup, false);
+        var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action", Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true);
 
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
 
-        await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
+        await fixture.TestHarness.Bus.Publish(agvPassedDoppelspielTriggerPoint);
 
-        await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
-        await fixture.ShouldHavePublishedAsync<PassShortLoopTriggerPoint>();
-    }
-
-    [TestMethod]
-    public async Task DroppingAgvPassedShortLoopTriggerPoint_NoActionGroup_DoesNotPublishPassShortLoopTriggerPoint()
-    {
-        var agvPassedShortLoopTriggerPoint = new DroppingAgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()), null, false);
-
-        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-        
-        await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
-
-        await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
-        await fixture.ShouldNotHavePublishedAsync<PassShortLoopTriggerPoint>();
-    }
-
-    [TestMethod]
-    public async Task DroppingAgvPassedShortLoopTriggerPoint_NotPickDropActionGroup_DoesNotPublishPassShortLoopTriggerPoint()
-    {
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        var agvPassedShortLoopTriggerPoint = new DroppingAgvPassedShortLoopTriggerPoint(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()), actionGroup,false);
-
-        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-
-        await fixture.TestHarness.Bus.Publish(agvPassedShortLoopTriggerPoint);
-
-        await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedShortLoopTriggerPoint>();
-        await fixture.ShouldNotHavePublishedAsync<PassShortLoopTriggerPoint>();
+        await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
+        await fixture.ShouldHavePublishedAsync<PassTriggerPoint>();
     }
 }

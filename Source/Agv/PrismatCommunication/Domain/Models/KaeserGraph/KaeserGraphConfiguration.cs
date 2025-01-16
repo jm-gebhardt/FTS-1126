@@ -33,6 +33,11 @@ public class KaeserGraphConfiguration
     public string PrismatAklPickTarget { get; private set; } = "1020";
 
     /// <summary>
+    /// The AKL drop target sent by prismat .
+    /// </summary>
+    public string PrismatAklDropTarget { get; private set; } = "1050";
+
+    /// <summary>
     /// Provides a mapping between source and target definitions and
     /// station node names in the Kaeser graph.
     /// e.g. 
@@ -51,10 +56,9 @@ public class KaeserGraphConfiguration
     public string CheckCargoTriggerName { get; private set; } = "DP2";
 
     /// <summary>
-    /// The name of the trigger where agvs on short loop announce their cargo state
-    /// to conveyor management.
+    /// The name of the trigger where Doppelspiel is initiated.
     /// </summary>
-    public string ShortLoopTriggerName { get; private set; } = "DP3";
+    public string DoppelspielTriggerName { get; private set; } = "DP3";
 
     /// <summary>
     /// The name of the node which is used as the move target in the long loop.
@@ -84,6 +88,38 @@ public class KaeserGraphConfiguration
         };
 
     /// <summary>
+    /// Pick targets by drop targets for Doppelspiel (bijective)
+    /// </summary>
+    public Dictionary<string, string> DoppelspielPickTargets { get; private set; } =
+        new()
+        {
+            {"1050", "1020"},
+            {"1060", "1040"},
+            {"2110", "2130"},
+            {"2210", "2230"},
+            {"2310", "2330"},
+            {"2410", "2430"},
+            {"9070", "9060"}
+        };
+
+    /// <summary>
+    /// Get the drop target corresponding to the given pick target.
+    /// </summary>
+    /// <param name="pickTarget"></param>
+    /// <returns></returns>
+    public string GetDoppelspielDropTargetForPick(string pickTarget)
+    {
+        foreach ((string drop, string pick) in DoppelspielPickTargets)
+        {
+            if (pick == pickTarget)
+            {
+                return drop;
+            }
+        }
+        return string.Empty;
+    }
+
+    /// <summary>
     /// Provides a mapping of trigger points to nodes.
     /// </summary>
     public IConcurrentDictionaryProvider<string, string> TriggerPointMapping { get; }
@@ -100,7 +136,7 @@ public class KaeserGraphConfiguration
 
         TriggerPointMapping.Add(CheckCargoTriggerName, "");
         TriggerPointMapping.Add(DecisionPoint1TriggerName, "");
-        TriggerPointMapping.Add(ShortLoopTriggerName, "");
+        TriggerPointMapping.Add(DoppelspielTriggerName, "");
 
         StationMapping = new Dictionary<string, string>()
         {
@@ -170,7 +206,7 @@ public class KaeserGraphConfiguration
 
         DecisionPoint1TriggerName = yamlData.DecisionPoint1TriggerName;
         CheckCargoTriggerName = yamlData.CheckCargoTriggerName;
-        ShortLoopTriggerName = yamlData.ShortLoopTriggerName;
+        DoppelspielTriggerName = yamlData.DoppelspielTriggerName;
         LongLoopMoveTargetNode = yamlData.LongLoopMoveTargetNode;
         if (!string.IsNullOrEmpty(yamlData.LongLoopMoveTargetNode))
         {
@@ -186,6 +222,11 @@ public class KaeserGraphConfiguration
         {
             UpdateLiftHeights(yamlData.TargetLiftHeight);
         }
+
+        if (!yamlData.DoppelspielPickTargets.IsNullOrEmpty())
+        {
+            UpdateDoppelspielPickTargets(yamlData.DoppelspielPickTargets);
+        }
     }
 
     /// <summary>
@@ -197,6 +238,61 @@ public class KaeserGraphConfiguration
         foreach ((string station, double liftHeight) in updatedLiftHeights)
         {
             TargetLiftHeight[station] = liftHeight;
+        }
+    }
+
+    /// <summary>
+    /// Select the next short loop target.
+    /// </summary>
+    /// <returns>The short loop target</returns>
+    public string SelectNextShortLoopTarget()
+    {
+        string[] possibleTargets = ConveyorStationMapping.OrderByDescending(c => c.Value).Select(c => c.Key).ToArray();
+        int currentIndex = Array.IndexOf(possibleTargets, StationMapping[PrismatAklPickTarget]);
+        string newTarget;
+        if (currentIndex == -1 || currentIndex == possibleTargets.Length - 1)
+        {
+            newTarget = possibleTargets[0];
+        }
+        else
+        {
+            newTarget = possibleTargets[currentIndex + 1];
+        }
+        StationMapping[PrismatAklPickTarget] = newTarget;
+        StationMapping[PrismatAklDropTarget] = newTarget;
+        return newTarget;
+    }
+
+    /// <summary>
+    /// Reset target for short loop to original value.
+    /// </summary>
+    /// <returns></returns>
+    public string ResetShortLoopTarget()
+    {
+        string originalTarget = GetOriginalShortLoopTarget();
+        StationMapping[PrismatAklPickTarget] = originalTarget;
+        StationMapping[PrismatAklDropTarget] = originalTarget;
+        return originalTarget;
+    }
+
+    /// <summary>
+    /// Get the original short loop target;
+    /// </summary>
+    /// <returns></returns>
+    public string GetOriginalShortLoopTarget()
+    {
+        return ConveyorStationMapping.OrderByDescending(c => c.Value).Select(c => c.Key).First();
+    }
+
+    /// <summary>
+    /// Update DoppelSpiel pick targets
+    /// </summary>
+    /// <param name="updatedPickTargets"></param>
+    public void UpdateDoppelspielPickTargets(Dictionary<string, string> updatedPickTargets)
+    {
+        foreach ((string dropTarget, string pickTarget) in updatedPickTargets)
+        {
+            DoppelspielPickTargets[dropTarget] = pickTarget;
         }
     }
 
@@ -216,5 +312,14 @@ public class KaeserGraphConfiguration
     public void SetQueueIsOccupied(bool isOccupied)
     {
         QueueIsOccupied = isOccupied;
+    }
+
+    /// <summary>
+    /// If true, skip Doppelspiel
+    /// </summary>
+    /// <param name="target">Target station.</param>
+    public bool SkipDoppelspiel(string target)
+    {
+        return target == "9070" && QueueIsOccupied;
     }
 }

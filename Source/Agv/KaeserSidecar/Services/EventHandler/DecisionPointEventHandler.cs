@@ -4,8 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
-using Gebhardt.Acc.KaeserSidecar.Domain.Services;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using JetBrains.Annotations;
@@ -21,10 +19,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 public class DecisionPointEventHandler(
     ILogger<DecisionPointEventHandler> logger,
     IStationRepository stationRepository,
-    IPrismatCommunicationHostOrderRepository hostOrderRepository,
-    IConveyorCommunicator conveyorCommunicator,
     KaeserGraphConfiguration configuration,
-    IAgvSettingsService agvSettingsService,
     ITransportOrderDb transportOrderDb) : 
     IConsumer<AgvPassedDecisionPoint1>
 {
@@ -41,42 +36,42 @@ public class DecisionPointEventHandler(
             logger.LogWarning("Skip target selection: Agv {AgvCorrelationId} passed decision point without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
             return;
         }
-        bool hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(actionGroup.AssignedAgv.GetValueOrDefault());
         string? targetNode = await SelectTarget(consideredStations);
         if (targetNode == null)
         {
             logger.LogError("Could not select target for action group {ActionGroupId}", actionGroup.CorrelationId);
             return;
         }
-        await ReportTarget(context, agvStatus, targetNode, actionGroup, hasLowBatteryLevel);
+        var action = actionGroup.Actions.FirstOrDefault(a => a.Target.NodeId == string.Empty);
+        await SetTarget(context, targetNode, agvStatus, actionGroup, action!.CorrelationId);
     }
 
     private async Task<string?> SelectTarget(int consideredStations)
     {
-        ICollection<StationOccupancy> occupancies = stationRepository.GetStationOccupancy();
-        ICollection<Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
-       
-        //Try to take the station that is not occupied, is not locked,  and was not chosen last (to compensate for the delay between setting target and starting action)
-        ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
-        foreach (var occupancy in availableStations)
+        string? selectedTarget = null;
+        while (selectedTarget == null)
         {
-            if (occupancy.Count != 0 || (_lastChosenStation == occupancy.Station && availableStations.Count > 1))
-            {
-                continue;
-            }
-            return occupancy.Station;
-        }
+            ICollection<StationOccupancy> occupancies = stationRepository.GetStationOccupancy();
+            ICollection<Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
 
-        // or the one of WE01&WE02 that is least occupied and was not chosen last and is not locked
-        availableStations = GetAvailableStations(Math.Min(consideredStations, 2), occupancies, stations);
-        foreach (var occupancy in availableStations.OrderBy(o => o.Count))
-        {
-            if (_lastChosenStation != occupancy.Station || availableStations.Count <= 1)
+            //Try to take the station that is not occupied, is not locked,  and was not chosen last (to compensate for the delay between setting target and starting action)
+            ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
+            foreach (var occupancy in availableStations)
             {
-                return occupancy.Station;
+                if (occupancy.Count != 0 || (_lastChosenStation == occupancy.Station && availableStations.Count > 1))
+                {
+                    continue;
+                }
+                selectedTarget = occupancy.Station;
+                break;
+            }
+            if (selectedTarget == null)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10));
             }
         }
-        return null;
+        
+        return selectedTarget;
     }
 
     private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies, ICollection<Station> stations)
@@ -97,55 +92,10 @@ public class DecisionPointEventHandler(
         return orderedOccupancies;
     }
 
-    private async Task SetTarget(IPublishEndpoint context, string target, AgvStatus agvStatus, ActionGroup actionGroup, Guid action, bool shouldNotPickNext)
+    private async Task SetTarget(IPublishEndpoint context, string target, AgvStatus agvStatus, ActionGroup actionGroup, Guid action)
     {
         _lastChosenStation = target;
         logger.LogInformation("Selecting target {Target} for agv {Agv} running action group {ActionGroup}", target, agvStatus.CorrelationId, actionGroup.CorrelationId);
-        await context.Publish(new SetTargetForAction(action, actionGroup.CorrelationId, agvStatus.CorrelationId, target, shouldNotPickNext));
-    }
-
-    private async Task ReportTarget(IPublishEndpoint context, AgvStatus agvStatus, string targetNode, ActionGroup actionGroup, bool hasLowBatteryLevel)
-    {
-        if (!configuration.ConveyorStationMapping.TryGetValue(targetNode, out string? targetStation))
-        {
-            logger.LogError("No mapping of target node {Node} to station naming in conveyor communication configured ", targetNode);
-            return;
-        }
-        var action = actionGroup.Actions.FirstOrDefault(a => a.Target.NodeId == string.Empty);
-        bool isDropping = action is { ActionType: ActionType.Drop };
-        (string? pickTarget, string? dropTarget) = await GetStations(actionGroup, isDropping, hasLowBatteryLevel);
-        conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, dropTarget);
-        bool shouldNotPickNext = hasLowBatteryLevel || pickTarget == null;
-        await SetTarget(context, targetNode, agvStatus, actionGroup, action!.CorrelationId, shouldNotPickNext);
-    }
-
-    private async Task<(string? pickTarget, string? dropTarget)> GetStations(ActionGroup actionGroup, bool isDropping, bool hasLowBatteryLevel)
-    {
-        string? pickTarget = null;
-        string? dropTarget = null;
-        HostOrder? pendingPickOrder;
-        var currentOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
-        if (isDropping && hasLowBatteryLevel)
-        {
-            dropTarget = currentOrder.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
-            logger.LogInformation("Reporting long loop order {Order} for dropping at WE03 at {Time}", actionGroup.OrderId, DateTime.UtcNow);
-            return (pickTarget, dropTarget);
-        }
-        if (isDropping)
-        {
-            dropTarget = currentOrder.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
-            pendingPickOrder = await hostOrderRepository.GetNextIncompleteOrderWithUnknownPickTarget();
-            if (pendingPickOrder != null)
-            {
-                pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-                logger.LogInformation("Reporting long loop order {Order} for picking at target {Target} after dropping order {DropOrder} at {Time}", pendingPickOrder.OrderId, pickTarget, actionGroup.OrderId, DateTime.UtcNow);
-            }
-            return (pickTarget, dropTarget);
-        }
-
-        pendingPickOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
-        pickTarget = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-        logger.LogInformation("Reporting long loop order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickTarget, DateTime.UtcNow);
-        return (pickTarget, dropTarget);
+        await context.Publish(new SetTargetForAction(action, actionGroup.CorrelationId, agvStatus.CorrelationId, target));
     }
 }

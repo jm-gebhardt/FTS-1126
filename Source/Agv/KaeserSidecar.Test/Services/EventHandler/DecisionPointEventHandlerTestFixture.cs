@@ -8,6 +8,7 @@ using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -92,6 +93,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         return this;
     }
 
+    [PublicAPI]
     public void VerifyReportingToConveyors(string station="none", string? dropStation = null, string? pickStation=null, Times? times=null)
     {
         times ??= Times.Once();

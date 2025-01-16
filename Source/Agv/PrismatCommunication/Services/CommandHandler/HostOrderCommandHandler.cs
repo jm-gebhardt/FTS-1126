@@ -7,7 +7,6 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
-using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -23,12 +22,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     IConsumer<CancelHostOrder>,
     IConsumer<HandleHostOrderStart>,
     IConsumer<FinishHostOrder>,
-    IConsumer<PassDecisionPoint>,
-    IConsumer<QueuePickDropActionGroupForAgv>,
-    IConsumer<PassCargoTriggerPoint>,
-    IConsumer<PassShortLoopTriggerPoint>,
-    IConsumer<QueueActionGroupWithUnknownDropTargetForAgv>,
-    IConsumer<FinishPick>
+    IConsumer<FinishPick>,
+    IConsumer<PassTriggerPoint>
 
 {
     /// <summary>
@@ -52,21 +47,25 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         await hostOrderRepository.SaveAsync();
         logger.LogInformation("Host order for order {OrderId} created", orderDetails.OrderId);
 
+        string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node);
+       
+        // Check if there are agvs that are to be selected to handle this order directly after dropping
+        if (await hostOrderRepository.HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(doppelSpielDropTarget) && !configuration.SkipDoppelspiel(doppelSpielDropTarget) )
+        {
+            return;
+        }
+
+        // Call for any idle agv to handle this order
         await QueueHostOrder(context, hostOrder, orderDetails.CreationDate);
     }
 
-    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate)
+    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null)
     {
         // Short circuit
         var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
         if (actionGroup != null)
         {
-            bool picksAt1020 = hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node == configuration.PrismatAklPickTarget;
-            // Check if there are agvs that are to be selected to handle this order directly after dropping
-            if (await hostOrderRepository.HasDropOrdersHeadingTowardsShortLoopTriggerPoint() && picksAt1020)
-            {
-                return;
-            }
+            actionGroup.AssignedAgv = assignedAgv;
             await context.Publish(new QueueActionGroup(actionGroup, false));
             hostOrder.IsQueued = true;
             await hostOrderRepository.SaveAsync();
@@ -76,13 +75,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         // Long circuit
         if (hostOrder.HasUnknownPickTarget(configuration))
         {
-            // Check if there are agvs that are to be selected to handle this order directly after dropping
-            if (await hostOrderRepository.HasDropOrdersHeadingTowardsDecisionPoint())
-            {
-                return;
-            }  
-            // Call for any idle agv to handle this order
             actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
+            actionGroup.AssignedAgv = assignedAgv;
             await context.Publish(new QueueActionGroup(actionGroup, false));
             hostOrder.IsQueued = true;
             await hostOrderRepository.SaveAsync();
@@ -91,14 +85,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         if (hostOrder.HasUnknownDropTarget(configuration))
         {
-            // Check if there are agvs that are to be selected to handle this order directly after dropping
-            // and if the queue is empty
-            if (await hostOrderRepository.HasDropOrdersHeadingTowardsCargoTriggerPoint() && !configuration.QueueIsOccupied)
-            {
-                return;
-            }
-            // Call for any idle agv to handle this order
             actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
+            actionGroup.AssignedAgv = assignedAgv;
             await context.Publish(new QueueActionGroup(actionGroup, false));
             hostOrder.IsQueued = true;
             await hostOrderRepository.SaveAsync();
@@ -130,7 +118,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         if (hostOrder.HasUnknownDropTarget(configuration))
         {
-            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null);
+            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, false);
         }
 
         if (hostOrder.HasUnknownPickTarget(configuration))
@@ -205,72 +193,6 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     }
 
     /// <summary>
-    /// Handles the <see cref="PassDecisionPoint"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<PassDecisionPoint> context)
-    {
-        (var correlationId, Guid? assignedAgv, string targetNodeId, bool shouldNotPickNext) = context.Message;
-        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-       
-        if (hostOrder.HasUnknownDropTarget(configuration))
-        {   // only trigger dual operation, if it is a drop order
-            hostOrder.PassTriggerPoint();
-            await hostOrderRepository.UpdateAsync(hostOrder);
-            await context.Publish(new DecisionPointPassed(assignedAgv!.Value, targetNodeId, shouldNotPickNext));
-        }
-    }
-
-    /// <summary>
-    /// Handles the <see cref="QueuePickDropActionGroupForAgv"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<QueuePickDropActionGroupForAgv> context)
-    {
-        (var correlationId, var assignedAgv, string pickNodeId, bool shouldNotPickNext) = context.Message;
-        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        var actionGroup = hostOrder.CreatePickDropActionGroupForAgv(pickNodeId, shouldNotPickNext? null: assignedAgv, configuration);
-        await hostOrderRepository.UpdateAsync(hostOrder);
-        await context.Publish(new QueueActionGroup(actionGroup, false));
-        hostOrder.IsQueued = true;
-        await hostOrderRepository.SaveAsync();
-    }
-
-    /// <summary>
-    /// Handles the <see cref="PassCargoTriggerPoint"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<PassCargoTriggerPoint> context)
-    {
-        var (assignedAgv, correlationId) = context.Message;
-        try
-        {
-            var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-            if (hostOrder.HasUnknownPickTarget(configuration))
-            {
-                hostOrder.PassTriggerPoint();
-                await hostOrderRepository.UpdateAsync(hostOrder);
-                await context.Publish(new CargoTriggerPointPassed(assignedAgv));
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            // not id of host order
-        }
-    }
-
-    /// <summary>
-    /// Handles the <see cref="QueueActionGroupWithUnknownDropTargetForAgv"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<QueueActionGroupWithUnknownDropTargetForAgv> context)
-    {
-        var (correlationId, assignedAgv) = context.Message;
-        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        var actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration, assignedAgv);
-        await hostOrderRepository.UpdateAsync(hostOrder);
-        await context.Publish(new QueueActionGroup(actionGroup, false));
-        hostOrder.IsQueued = true;
-        await hostOrderRepository.SaveAsync();
-    }
-
-    /// <summary>
     /// Handles the <see cref="FinishPick"/> command.
     /// </summary>
     public async Task Consume(ConsumeContext<FinishPick> context)
@@ -287,18 +209,20 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     }
 
     /// <summary>
-    /// Handles the <see cref="PassShortLoopTriggerPoint"/> command.
+    /// Handles the <see cref="PassTriggerPoint"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<PassShortLoopTriggerPoint> context)
+    public async Task Consume(ConsumeContext<PassTriggerPoint> context)
     {
-        (var assignedAgv, var correlationId, bool shouldNotPickNext) = context.Message;
-        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        bool dropsAt1050 = hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node != configuration.PrismatAklPickTarget;
-        if (dropsAt1050)
+        (var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext) = context.Message;
+        var droppingHostOrder = await hostOrderRepository.GetByIdAsync(droppingHostOrderCorrelationId);
+        droppingHostOrder.PassTriggerPoint();
+        await hostOrderRepository.UpdateAsync(droppingHostOrder);
+        await hostOrderRepository.SaveAsync();
+       
+        if (shouldPickNext)
         {
-            hostOrder.PassTriggerPoint();
-            await hostOrderRepository.UpdateAsync(hostOrder);
-            await context.Publish(new ShortLoopTriggerPointPassed(assignedAgv, shouldNotPickNext));
+            var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
+            await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId);
         }
     }
 }

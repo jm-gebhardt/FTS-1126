@@ -47,39 +47,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsDecisionPoint(bool hasHostOrders)
+    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(bool hasHostOrders)
     {
-        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsDecisionPoint()).ReturnsAsync(hasHostOrders);
-        return this;
-    }
-
-    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsCargoTriggerPoint(bool hasHostOrders)
-    {
-        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsCargoTriggerPoint()).ReturnsAsync(hasHostOrders);
-        return this;
-    }
-
-    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsShortLoopTriggerPoint(bool hasHostOrders)
-    {
-        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsShortLoopTriggerPoint()).ReturnsAsync(hasHostOrders);
-        return this;
-    }
-
-    public HostOrderConsumerTestFixture<TConsumer> WithNextIncompleteOrderWithUnknownDropTarget(HostOrder? hostOrder)
-    {
-        HostOrderRepositoryMock.Setup(x => x.GetNextIncompleteOrderWithUnknownDropTarget()).ReturnsAsync(hostOrder);
-        return this;
-    }
-
-    public HostOrderConsumerTestFixture<TConsumer> WithNextIncompleteOrderWithUnknownPickTarget(HostOrder? hostOrder)
-    {
-        HostOrderRepositoryMock.Setup(x => x.GetNextIncompleteOrderWithUnknownPickTarget()).ReturnsAsync(hostOrder);
-        return this;
-    }
-
-    public HostOrderConsumerTestFixture<TConsumer> WithNextPickOrderForShortLoopDualOperation(HostOrder? hostOrder)
-    {
-        HostOrderRepositoryMock.Setup(x => x.GetNextPickOrderForShortLoopDualOperation()).ReturnsAsync(hostOrder);
+        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(It.IsAny<string>())).ReturnsAsync(hasHostOrders);
         return this;
     }
 

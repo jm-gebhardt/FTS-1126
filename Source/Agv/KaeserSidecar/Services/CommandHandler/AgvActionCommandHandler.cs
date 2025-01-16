@@ -33,6 +33,7 @@ public class AgvActionCommandHandler(
         var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Nodes.FirstOrDefault()??""));
         if (action == null)
         {
+            logger.LogWarning("Action {ActionCorrelationId} has no first node that is in the conveyor station mapping", actionCorrelationId);
             return;
         }
         string? station = action.Nodes.FirstOrDefault();
@@ -41,10 +42,9 @@ public class AgvActionCommandHandler(
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-            if (action.Nodes.Length == 1 && station == action.Target.NodeId && order.Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node))) 
+            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
             {
-                configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation);
-                await context.Publish(new AgvStartedShortLoopPick(targetStation!, order.CorrelationId, pickTarget));
+                await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
             }
         }
         logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station);
@@ -68,10 +68,10 @@ public class AgvActionCommandHandler(
         if (action.ActionType == ActionType.Pick)
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
-            if (order.Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node)))
+            string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
+            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
             {
-                string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-                await context.Publish(new AgvFinishedShortLoopPick(order.CorrelationId, pickTarget));
+                await context.Publish(new AgvFinishedPick(order.CorrelationId, pickTarget));
             }
         }
 

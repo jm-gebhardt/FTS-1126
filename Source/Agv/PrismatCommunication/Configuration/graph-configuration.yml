@@ -1,6 +1,6 @@
 DecisionPoint1TriggerName: DP1
 CheckCargoTriggerName: DP2
-ShortLoopTriggerName: DP3
+DoppelspielTriggerName: DP3
 LongLoopMoveTargetNode: "map/NODE-9"
 StationMapping:
   "1020": "WE1"
@@ -16,9 +16,9 @@ StationMapping:
   "9060": "APL1"
   "9070": "APL1"
 ConveyorStationMapping:
-  "WE1": "WE01"
+  "WE1": "WE03"
   "WE2": "WE02"
-  "WE3": "WE03"
+  "WE3": "WE01"
 TargetLiftHeight:
   "2110": 1.0
   "2130": 1.5

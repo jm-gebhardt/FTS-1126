@@ -5,6 +5,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -15,6 +16,7 @@ public class CargoTriggerPointEventHandlerTestFixture : MassTransitConsumerTestF
 {
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
+    private readonly Mock<ITransportOrderActionGroupRepository> _actionGroupRepository = new();
 
     /// <inheritdoc cref="MassTransitConsumerTestFixture{CargoTriggerPointEventHandler}"/>>
     protected override MassTransitConsumerTestFixture<CargoTriggerPointEventHandler> AddServices(IServiceCollection collection)
@@ -25,6 +27,7 @@ public class CargoTriggerPointEventHandlerTestFixture : MassTransitConsumerTestF
         collection.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
         collection.AddSingleton(_ => _communicator.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
+        collection.AddTransient(_ => _actionGroupRepository.Object);
         return this;
     }
 
@@ -42,6 +45,12 @@ public class CargoTriggerPointEventHandlerTestFixture : MassTransitConsumerTestF
         {
             _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
         }
+        return this;
+    }
+
+    public CargoTriggerPointEventHandlerTestFixture WithActionGroup(ActionGroup actionGroup)
+    {
+        _actionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         return this;
     }
 

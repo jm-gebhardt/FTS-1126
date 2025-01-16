@@ -30,6 +30,7 @@
       <ProjectReference Include="..\KaeserSidecar.Persistence.Ef\KaeserSidecar.Persistence.Ef.csproj" />
       <ProjectReference Include="..\KaeserSidecar\KaeserSidecar.csproj" />
       <ProjectReference Include="..\PrismatCommunicationTest\PrismatCommunicationTest.csproj" />
+      <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
       <ProjectReference Include="..\TransportOrder.Test\TransportOrder.Test.csproj" />
     </ItemGroup>
 </Project>

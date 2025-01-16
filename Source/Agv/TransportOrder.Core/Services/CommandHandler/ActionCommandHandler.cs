@@ -877,7 +877,7 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SetTargetForAction> context)
     {
-        (var actionId, var actionGroupId, Guid? assignedAgv, string targetNodeId, _) = context.Message;
+        (var actionId, var actionGroupId, Guid? assignedAgv, string targetNodeId) = context.Message;
 
         var cancellationToken = context.CancellationToken;
 

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Triggers;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
@@ -13,7 +14,12 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 /// Handles agvs passing the cargo trigger point
 /// </summary>
 [UsedImplicitly]
-public class CargoTriggerPointEventHandler(ILogger<CargoTriggerPointEventHandler> logger, IPrismatCommunicationHostOrderRepository hostOrderRepository, IConveyorCommunicator conveyorCommunicator, KaeserGraphConfiguration configuration) : 
+public class CargoTriggerPointEventHandler(
+    ILogger<CargoTriggerPointEventHandler> logger, 
+    IPrismatCommunicationHostOrderRepository hostOrderRepository, 
+    IConveyorCommunicator conveyorCommunicator, 
+    ITransportOrderActionGroupRepository actionGroupRepository,
+    KaeserGraphConfiguration configuration) : 
     IConsumer<AgvPassedCargoTriggerPoint>
 {
     /// <summary>
@@ -21,9 +27,9 @@ public class CargoTriggerPointEventHandler(ILogger<CargoTriggerPointEventHandler
     /// </summary>
     public async Task Consume(ConsumeContext<AgvPassedCargoTriggerPoint> context)
     {
-        (var agv, Guid? actionGroup, bool hasCargo) = context.Message;
+        (var agv, Guid? actionGroupCorrelationId, bool hasCargo) = context.Message;
         
-        if (actionGroup == null)
+        if (actionGroupCorrelationId == null)
         {
             logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not handling pick-drop action group ", agv);
             return;
@@ -32,21 +38,33 @@ public class CargoTriggerPointEventHandler(ILogger<CargoTriggerPointEventHandler
         HostOrder hostOrder;
         try
         {
-            hostOrder = await hostOrderRepository.GetByIdAsync(actionGroup.Value);
+            hostOrder = await hostOrderRepository.GetByIdAsync(actionGroupCorrelationId.Value);
         }
         catch (InvalidOperationException)
         {
             logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not handling pick-drop action group ", agv);
             return;
         }
-
-        bool isPicking = hostOrder.Actions.All(a => configuration.PrismatIncompleteDropTargets.Contains(a.Node));
-        bool isDropping = hostOrder.Actions.All(a => configuration.PrismatIncompletePickTargets.Contains(a.Node));
-        if (!isDropping && !isPicking)
+        var actionGroup = await actionGroupRepository.GetActionGroupAsync(actionGroupCorrelationId.Value);
+        var action = actionGroup!.Actions.FirstOrDefault(a => a.State == ActionState.Started);
+        if (action == null)
         {
-            logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not handling pick-drop action group heading towards 9060/9070", agv);
+            logger.LogWarning("Agv without started action passed Cargo trigger point. Current action group is: ({ActionGroup})", actionGroup.CorrelationId);
             return;
         }
+        bool isDropping = action is { ActionType: ActionType.Drop };
+        
+        switch (isDropping)
+        {
+            case true when !hostOrder.Actions.All(a => configuration.PrismatIncompletePickTargets.Contains(a.Node)):
+                logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not heading towards 9060/9070", agv);
+                return;
+
+            case false when !hostOrder.Actions.All(a => configuration.PrismatIncompleteDropTargets.Contains(a.Node)):
+                logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not heading towards 9060/9070", agv);
+                return;
+        }
+
         if (isDropping != hasCargo)
         {
             logger.LogWarning("Inconsistent information on APL cargo state for Agv {Agv}: message content {MessageContent} / host order {HostOrder}", agv, hasCargo, isDropping);

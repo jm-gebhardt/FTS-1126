@@ -30,12 +30,12 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
     }
 
     [TestMethod]
-    public async Task Consume_ActionStarted_ShortLoopPickAgvAlreadyAtStation_PublishesAgvStartedShortLoopPick()
+    public async Task Consume_ActionStarted_ShortLoopPickAgvAlreadyAtStation_PublishesAgvStartedPick()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -54,12 +54,12 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldHavePublishedAsync<AgvStartedShortLoopPick>();
+        await fixture.ShouldHavePublishedAsync<AgvStartedPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
     }
 
     [TestMethod]
-    public async Task Consume_ActionStarted_ShortLoopDropAgvAlreadyAtStation_DoesNotPublishPublishAgvStartedShortLoopPick()
+    public async Task Consume_ActionStarted_ShortLoopDropAgvAlreadyAtStation_DoesNotPublishPublishAgvStartedPick()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -75,11 +75,11 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionStarted_AlreadyAtConveyorStation_NoShortLoopAction_DoesNotPublishPublishAgvStartedShortLoopPick()
+    public async Task Consume_ActionStarted_AlreadyAtConveyorStation_NoShortLoopAction_PublishesAgvStartedPick()
     {
         var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -95,7 +95,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+        await fixture.ShouldHavePublishedAsync<AgvStartedPick>();
     }
 
     [TestMethod]
@@ -113,7 +113,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(1);
     }
 
@@ -132,7 +132,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(1);
     }
 
@@ -151,7 +151,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvStartedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
@@ -168,7 +168,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvFinishedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
@@ -190,7 +190,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
-        await fixture.ShouldHavePublishedAsync<AgvFinishedShortLoopPick>();
+        await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
@@ -207,7 +207,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvFinishedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
         fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
     }
 
@@ -224,7 +224,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvFinishedShortLoopPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
         fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
     }
 }

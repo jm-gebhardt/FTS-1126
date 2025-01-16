@@ -249,6 +249,7 @@ public class HostOrder
     /// <param name="agv">Optional correlation id of the agv.</param>
     /// <param name="configuration">The graph configuration</param>
     /// <returns>ActionGroup with pick and drop actions, assigned to the given agv.</returns>
+    [PublicAPI]
     public ActionGroup CreatePickDropActionGroupForAgv(string pickNode, Guid? agv, KaeserGraphConfiguration configuration)
     {
         AssignedAgv = agv;
