@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
@@ -21,10 +21,10 @@ public class RoutingPlausibilityChecker : IRoutingPlausibilityChecker
     /// Otherwise False</returns>
     public bool IsPlausible(GraphNode start, GraphNode end)
     {
-        if (!NodeTypeHelper.IsActionNodeType(start.Type) && !NodeTypeHelper.IsActionNodeType(end.Type))
+        if (!(start.IsPickStation() || start.IsDropStation())&& !(end.IsPickStation() || end.IsDropStation()))
         {
             return true;
         }
-        return NodeTypeHelper.IsSourceNodeType(start.Type) && NodeTypeHelper.IsDestinationNodeType(end.Type);
+        return start.IsPickStation() && end.IsDropStation();
     }
 }

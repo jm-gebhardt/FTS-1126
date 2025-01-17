@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -82,9 +83,9 @@ public class ChargingPointManagerTestFixture
         }
         else
         {
-            nodes = nodes.Where(n => n.Type != AgvGraph.NodeType.Charge).ToArray();
-            edges = edges.Where(edge => nodes.FirstOrDefault(node => node.Id == edge.FromNodeId)?.Type != AgvGraph.NodeType.Charge
-                                        || nodes.FirstOrDefault(node => node.Id == edge.ToNodeId)?.Type != AgvGraph.NodeType.Charge).ToArray();
+            nodes = nodes.Where(n => !n.IsCharger()).ToArray();
+            edges = edges.Where(edge => !(nodes.FirstOrDefault(node => node.Id == edge.FromNodeId)?.IsCharger() ?? false)
+                                        || !(nodes.FirstOrDefault(node => node.Id == edge.ToNodeId)?.IsCharger() ?? false)).ToArray();
 
             AgvGraph = new AgvGraph(correlationId, nodes, edges);
         }

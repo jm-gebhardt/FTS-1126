@@ -1,6 +1,8 @@
 ﻿using System.Numerics;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 
-namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
+namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
 
 /// <summary>
 /// Provides extension methods for <see cref="ExportedControlPoint"/>
@@ -25,5 +27,15 @@ public static class ExportedControlPointExtension
     public static Vector2 AsVector2(this ExportedControlPoint point)
     {
         return new Vector2((float)point.X, (float)point.Y);
+    }
+
+    /// <summary>
+    /// Convert to <see cref="EdgeCoefficient"/>
+    /// </summary>
+    /// <param name="point"></param>
+    /// <returns></returns>
+    public static EdgeCoefficient ToEdgeCoefficient(this ExportedControlPoint point)
+    {
+        return new EdgeCoefficient(point.X, -point.Y);
     }
 }

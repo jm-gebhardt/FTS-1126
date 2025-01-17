@@ -38,6 +38,8 @@ public class DirectEdgeTest
     private GraphNode Target { get; } = NodeGenerator.GenerateNode(nodeId: "Prk2", x: 5, y: 3);
     
     private GraphEdge Edge { get; } = GraphEdge.CreateDirect("Way2", "Prk2", 2);
+    
+    private GraphEdge ZeroLengthEdge { get; } = GraphEdge.CreateDirect("Way2", "Way2", 0);
 
     private AgvTravelSimulator WoodShopSimulator { get; set; } = null!;
 
@@ -171,6 +173,19 @@ public class DirectEdgeTest
         directEdge.EstimateTravelTime(agvData, 0, entryTime);
         directEdge.ExitVelocity.ShouldBe(0);
         directEdge.Length.ShouldBe(directEdge.MaxVelocitySection + directEdge.AccelerationSection + directEdge.DecelerationSection, tolerance: 0.01);
+    }
+
+    [TestMethod]
+    public void EstimateTravelTime_ZeroLength_SectionsAndVelocitiesSet()
+    {
+        var agvData = AgvDataGenerator.GenerateAgvData();
+        var directEdge = new DirectEdge(ZeroLengthEdge, Way2, Way2);
+        directEdge.SetAngles(0, null, null);
+        var entryTime = DateTime.UtcNow;
+        directEdge.EstimateTravelTime(agvData, 0, entryTime);
+        directEdge.ExitVelocity.ShouldBe(0);
+        directEdge.Length.ShouldBe(0);
+        directEdge.EstimatedExitTime.ShouldBe(directEdge.EntryTime);
     }
 
     [TestMethod]

@@ -1,5 +1,7 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
+using static Gebhardt.Acc.Common.Domain.Models.Graphs.AgvGraph;
 
 namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
@@ -25,7 +27,8 @@ public class GraphNode : IEquatable<GraphNode>
     /// <summary>
     /// The type of the node
     /// </summary>
-    public AgvGraph.NodeType Type { get; init; }
+    [JsonConverter(typeof(JsonNodeTypeConverter))]
+    public object Type { get; init; } = NodeType.WayPoint;
 
     /// <summary>
     /// The X coordinate of the node
@@ -45,7 +48,7 @@ public class GraphNode : IEquatable<GraphNode>
     /// <summary>
     /// The Theta coordinate of the node
     /// </summary>
-    public float Theta { get; set; }
+    public float Theta { get; init; }
 
     /// <summary>
     /// Simple string representation.
@@ -72,7 +75,17 @@ public class GraphNode : IEquatable<GraphNode>
     }
 
     /// <inheritdoc cref="GraphNode"/>>
-    public GraphNode(string id, float x, float y, float z, AgvGraph.NodeType nodeType)
+    public GraphNode(string id, float x, float y, float z, NodeType nodeType)
+    {
+        Id = id;
+        Y = y;
+        X = x;
+        Z = z;
+        Type = nodeType;
+    }
+
+    /// <inheritdoc cref="GraphNode"/>>
+    public GraphNode(string id, float x, float y, float z, ICollection<NodeType> nodeType)
     {
         Id = id;
         Y = y;
@@ -96,7 +109,7 @@ public class GraphNode : IEquatable<GraphNode>
         {
             return false;
         }
-        if (Type != other.Type)
+        if (!Type.Equals(other.Type))
         {
             return false;
         }
@@ -141,6 +154,58 @@ public class GraphNode : IEquatable<GraphNode>
     public override int GetHashCode()
     {
         // ReSharper disable once NonReadonlyMemberInGetHashCode
-        return HashCode.Combine(Id, (int)Type, X, Y, Z, Theta);
+        return HashCode.Combine(Id, Type, X, Y, Z, Theta);
     }
 }
+
+/// <summary>
+/// Json converter for <see cref="NodeType"/>
+/// </summary>
+public class JsonNodeTypeConverter : JsonConverter<object>
+{
+    /// <inheritdoc cref="JsonConverter"/>>
+    public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            if (Enum.TryParse<NodeType>(reader.GetString(), true, out var nodeType))
+            {
+                return nodeType;
+            }
+            throw new JsonException($"Unable to parse '{reader.GetString()}' as NodeType");
+        }
+        
+        if (reader.TokenType == JsonTokenType.StartArray)
+        {
+            var nodeTypes = new List<NodeType>();
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+            {
+                if (reader.TokenType == JsonTokenType.String && Enum.TryParse<NodeType>(reader.GetString(), true, out var function))
+                {
+                    nodeTypes.Add(function);
+                }
+            }
+            return nodeTypes;
+        }
+        throw new JsonException($"Unexpected token {reader.TokenType}");
+    }
+
+    /// <inheritdoc cref="JsonConverter"/>>
+    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    {
+        switch (value)
+        {
+            case NodeType nodeType:
+                JsonSerializer.Serialize(writer, nodeType.ToString(), options);
+                break;
+
+            case List<NodeType> nodeTypeList:
+                JsonSerializer.Serialize(writer, nodeTypeList, options);
+                break;
+
+            default:
+                throw new JsonException($"Unexpected value type {value.GetType()}");
+        }
+    }
+}
+

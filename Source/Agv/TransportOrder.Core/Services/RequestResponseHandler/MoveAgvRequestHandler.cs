@@ -91,7 +91,7 @@ public class MoveAgvRequestHandler(
 
         if (!node.IsCharger())
         {
-            throw new InvalidNodeTypeException(node.Id, node.Type.ToString(), nameof(AgvGraph.NodeType.Charge));
+            throw new InvalidNodeTypeException(node.Id, node.Type.ToString() ?? "", nameof(AgvGraph.NodeType.Charge));
         }
 
         await ReserveNodeForAgv(node, agvCorrelationId);

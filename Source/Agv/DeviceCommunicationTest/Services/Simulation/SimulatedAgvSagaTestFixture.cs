@@ -81,7 +81,7 @@ public class SimulatedAgvSagaTestFixture
             startNodeId: _startNodeId,
             targetNodeId: _targetNodeId,
             numberOfNodes: NumberOfNodes,
-            availableNodes: (_nodes ?? _graph.Nodes.Where(n => n.Type == AgvGraph.NodeType.WayPoint)).ToList());
+            availableNodes: (_nodes ?? _graph.Nodes.Where(n => (AgvGraph.NodeType)n.Type == AgvGraph.NodeType.WayPoint)).ToList());
 
         Saga = SimulatedAgvSagaGenerator.Generate(
             agvGraph: _graph,

@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Node;
@@ -36,5 +37,5 @@ public class MaintenanceService : BaseNodePicker, IMaintenanceService
     }
 
     /// <inheritdoc />
-    protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Park;
+    protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.IsParker();
 }

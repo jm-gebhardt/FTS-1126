@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -31,7 +32,7 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     protected override string Description => "Park";
 
     /// <inheritdoc />
-    protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Park;
+    protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.IsParker();
 
     /// <inheritdoc />
     public Task<GraphNode> ReserveParkAsync(Models.Agv.Agv agv)

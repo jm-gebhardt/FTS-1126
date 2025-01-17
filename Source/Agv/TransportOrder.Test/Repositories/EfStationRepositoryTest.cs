@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -27,13 +28,13 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint).Select(n => mapper.Map<EfNode>(n)).ToList();
+        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
-        foreach (var stationNode in graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint))
+        foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
             station.MapName.ShouldBe(expectedMapName);
@@ -60,13 +61,13 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint).Select(n => mapper.Map<EfNode>(n)).Skip(1).ToList();
+        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).Skip(1).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
-        foreach (var stationNode in graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint))
+        foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
             station.MapName.ShouldBeNull();
@@ -94,14 +95,14 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint).Select(n => mapper.Map<EfNode>(n)).ToList();
+        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
         ICollection<Station> stations = await fixture.Repository.GetStations();
-        foreach (var stationNode in graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint))
+        foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = stations.Single(s => s.Name == stationNode.Id);
             station.MapName.ShouldBe(expectedMapName);
@@ -123,17 +124,17 @@ public class EfStationRepositoryTest
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
-        var nodeLock = new NodeLock(graph.Nodes.First(n => n.Type != AgvGraph.NodeType.WayPoint).Id, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()).Id, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
         await fixture.AddAsync(nodeLock);
 
-        string destination = graph.Nodes.First(n => n.Type != AgvGraph.NodeType.WayPoint).Id;
+        string destination = graph.Nodes.First(n => n.IsStation()).Id;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
         actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.NodeId == destination).CorrelationId, [], []);
         await fixture.AddAsync(actionGroup);
 
         await fixture.Repository.AddStations(graph);
 
-        foreach (var stationNode in graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint))
+        foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
             station.MapName.ShouldBe(null);
@@ -167,10 +168,10 @@ public class EfStationRepositoryTest
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
-        var nodeLock = new NodeLock(graph.Nodes.First(n => n.Type != AgvGraph.NodeType.WayPoint).Id, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()).Id, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
         await fixture.AddAsync(nodeLock);
 
-        string destination = graph.Nodes.First(n => n.Type != AgvGraph.NodeType.WayPoint).Id;
+        string destination = graph.Nodes.First(n => n.IsStation()).Id;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
         actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.NodeId == destination).CorrelationId, [], []);
         await fixture.AddAsync(actionGroup);
@@ -178,7 +179,7 @@ public class EfStationRepositoryTest
         await fixture.Repository.AddStations(graph);
         
         ICollection<Station> stations = await fixture.Repository.GetStations();
-        foreach (var stationNode in graph.Nodes.Where(n => n.Type != AgvGraph.NodeType.WayPoint))
+        foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = stations.Single(s => s.Name == stationNode.Id);
             station.MapName.ShouldBe(null);

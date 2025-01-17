@@ -87,8 +87,8 @@ public class GridGeneratorTest
         graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge).ShouldBe(1);
         graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park).ShouldBe(1);
 
-        graph.Nodes.First(n => n.Type == serviceNodeTypes.First()).Theta.ShouldBe(West);
-        graph.Nodes.First(n => n.Type == serviceNodeTypes.Last()).Theta.ShouldBe(East);
+        graph.Nodes.First(n => (AgvGraph.NodeType)n.Type == serviceNodeTypes.First()).Theta.ShouldBe(West);
+        graph.Nodes.First(n => (AgvGraph.NodeType)n.Type == serviceNodeTypes.Last()).Theta.ShouldBe(East);
     }
 
     /// <summary>

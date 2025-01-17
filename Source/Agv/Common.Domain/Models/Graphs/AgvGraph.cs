@@ -131,7 +131,11 @@ public record AgvGraph : CorrelatedBy<Guid>, IGraph
 
         /// <summary>Waiting point</summary>
         [UsedImplicitly]
-        Park
+        Park,
+
+        /// <summary>Maintenance station</summary>
+        [UsedImplicitly]
+        Maintenance
     }
 
     /// <summary>

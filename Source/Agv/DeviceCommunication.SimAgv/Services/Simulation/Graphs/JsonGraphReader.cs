@@ -24,6 +24,7 @@ public class JsonGraphReader(KarisExportConfiguration configuration) : IGraphRea
         {
             throw new Exception($"Graph could not be deserialized from '{path}'");
         }
+
         return exportedGraph;
     }
 }

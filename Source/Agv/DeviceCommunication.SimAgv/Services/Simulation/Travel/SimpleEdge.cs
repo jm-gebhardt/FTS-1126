@@ -52,6 +52,7 @@ public class SimpleEdge : BaseEdge
     {
         InitialVelocity = initialVelocity;
         EntryTime = entryTime;
+        
         StopForTurnIntoEdge = EntryAngle >= agvData.TurnOnSpotThreshold && agvData.TurnOnSpotThreshold != 0;
         double time = 0;
         if (StopForTurnIntoEdge)
@@ -59,7 +60,11 @@ public class SimpleEdge : BaseEdge
             time += EntryAngle / agvData.MaxVelocityTurnOnSpot;
         }
         InitialTurnFinishTime = EntryTime.AddSeconds(time);
-
+        if (Math.Abs(Length) <= double.Epsilon)
+        {
+            EstimatedExitTime = EntryTime.AddSeconds(time);
+            return;
+        }
         double maxVelocity = Math.Min(GetAgvMaxVelocity(agvData), MaxVelocity);
 
         bool stopForTurnOutOfEdge = ExitAngle >= agvData.TurnOnSpotThreshold && agvData.TurnOnSpotThreshold != 0;

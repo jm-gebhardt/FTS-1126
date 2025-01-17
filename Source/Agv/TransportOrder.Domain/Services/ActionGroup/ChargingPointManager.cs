@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -38,7 +39,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     }
 
     /// <inheritdoc />
-    protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.Type == AgvGraph.NodeType.Charge;
+    protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.IsCharger();
 
     /// <inheritdoc />
     public async Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv, string? startNodeId = null)

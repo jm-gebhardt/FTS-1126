@@ -54,6 +54,7 @@ public static class Mathematics
     /// - The angle is measured counterclockwise from the positive X-axis.
     /// - The result is adjusted by adding π/2 (90 degrees) to the calculated angle.
     /// </remarks>
+    [PublicAPI]
     public static double OrientationToXAxis(Vector2 start, Vector2 end)
     {
         if (end == Vector2.Zero && start != Vector2.Zero)

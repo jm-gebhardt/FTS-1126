@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -288,7 +289,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         var agvData = new KarisType1(correlationId, "ip address");
-        var node = agvGraph.Nodes.First(n => n.Type == AgvGraph.NodeType.Charge);
+        var node = agvGraph.Nodes.First(n => n.IsCharger());
         var position = new AgvPosition(true, node.X, node.Y, node.Z, node.Theta);
         var fakeTimeProvider = new FakeTimeProvider(DateTime.UtcNow);
         var simulator = new AgvTravelSimulator(agvGraph, agvData, position, fakeTimeProvider);

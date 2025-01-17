@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -98,7 +99,7 @@ public class ChargingPointManagerTest
             .WithGraphRepository(false)
             .WithNodeLocker(true, true, true);
 
-        var notChargerNode = fixture.AgvGraph.Nodes.FirstOrDefault(node => node.Type != AgvGraph.NodeType.Charge);
+        var notChargerNode = fixture.AgvGraph.Nodes.FirstOrDefault(node => !node.IsCharger());
         notChargerNode.ShouldNotBeNull();
         notChargerNode.Type.ShouldNotBe(AgvGraph.NodeType.Charge);
 

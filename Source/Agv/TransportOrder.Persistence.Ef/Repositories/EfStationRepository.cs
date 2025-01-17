@@ -28,7 +28,7 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
             (double maxWidth, double maxLength) stationSize = await GetLargestAgvDimensionAsync(context);
 
             List<GraphNode> nodeStations = agvGraph.Nodes
-                .Where(efNode => efNode.Type != AgvGraph.NodeType.WayPoint)
+                .Where(efNode => (AgvGraph.NodeType)efNode.Type != AgvGraph.NodeType.WayPoint)
                 .ToList();
 
             List<Station> existingStations = await context.Set<Station>()
@@ -54,7 +54,7 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
 
             IEnumerable<Station> newStations = newNodes.ToList().Select(n =>
             {
-                var station = new Station(n.Id, n.Type, []);
+                var station = new Station(n.Id, (AgvGraph.NodeType)n.Type, []);
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
                 station.SetMap(map?.MapId);
                 return station;
