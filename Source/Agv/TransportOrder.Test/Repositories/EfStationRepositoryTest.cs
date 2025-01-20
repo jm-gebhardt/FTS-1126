@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 public class EfStationRepositoryTest
 {
     private const double Padding = 0.2;
-    
+
     [TestMethod]
     public async Task AddStations_GetStation_AgvDataAndMapsExist_AddsAndGetsStationsWithSizeAndMap()
     {
@@ -43,6 +43,38 @@ public class EfStationRepositoryTest
             station.NodeLock.ShouldBeNull();
             station.AdditionalTypes.ShouldBeEmpty();
             station.PrimaryType.ShouldBe(stationNode.Type);
+            station.Agvs.ShouldBeEmpty();
+            station.LockReason.ShouldBeNull();
+            station.LockedBy.ShouldBeNull();
+        }
+    }
+
+    [TestMethod]
+    public async Task AddStations_GetStation_StationWithAdditionalType_AddsAndGetsStations()
+    {
+        var fixture = new EfStationRepositoryTestFixture();
+        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        double expectedMaxWidth = specifications.Max(s => s.Width) + Padding;
+        double expectedMaxLength = specifications.Max(s => s.Length) + Padding;
+        await fixture.AddRangeAsync(specifications);
+        var agvId = Guid.NewGuid();
+        var graph = AgvGraphGenerator.CreateGraphWithAdditionalStationType(agvId);
+        var mapper = MappingHelper.GetMapper(new GraphProfile());
+        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).ToList();
+        const string expectedMapName = "map";
+        await fixture.AddMap(expectedMapName, [agvId], nodes);
+
+        await fixture.Repository.AddStations(graph);
+
+        foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
+        {
+            var station = await fixture.Repository.GetStation(stationNode.Id);
+            station.MapName.ShouldBe(expectedMapName);
+            station.Length.ShouldBe(expectedMaxLength);
+            station.Width.ShouldBe(expectedMaxWidth);
+            station.NodeLock.ShouldBeNull();
+            station.PrimaryType.ShouldBe(stationNode.GetPrimaryType());
+            station.AdditionalTypes.ShouldBe(stationNode.GetAdditionalTypes());
             station.Agvs.ShouldBeEmpty();
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();

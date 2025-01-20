@@ -64,9 +64,9 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         return this;
     }
 
-    public void VerifyNodeWasReserved(GraphNode targetNode, Guid agvId)
+    public void VerifyNodeWasReserved(AgvGraph.NodeType nodeType, GraphNode targetNode, Guid agvId)
     {
-        switch (targetNode.Type)
+        switch (nodeType)
         {
             case AgvGraph.NodeType.Charge:
                 ChargingPointManager.Verify(x => x.ReserveChargerAsync(It.Is<GraphNode>(n => n == targetNode), It.Is<Guid>(a => a == agvId)), Times.Once());

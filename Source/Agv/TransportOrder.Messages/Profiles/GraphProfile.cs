@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 using Graph = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Graph;
@@ -30,8 +31,8 @@ public class GraphProfile : Profile
             .ReverseMap()
             ;
 
-        CreateMap<GraphNode, MessageContent.GraphNode>();
-
+        CreateMap<GraphNode, MessageContent.GraphNode>()
+            .ForMember(n => n.Type, opt => opt.MapFrom(gn => gn.GetPrimaryType()));
         CreateMap<IGraph, Graph>()
             .ForMember(n => n.CorrelationId, opt => opt.Ignore())
             .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<GraphGraphEdgeResolver>())

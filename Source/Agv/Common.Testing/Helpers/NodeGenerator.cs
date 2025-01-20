@@ -26,6 +26,11 @@ public static class NodeGenerator
         return new GraphNode(nodeId) { Type = AgvGraph.NodeType.Park, X = -21f, Y = -21f, Z = 0f };
     }
 
+    public static GraphNode GenerateNodeWithMultipleTypes(ICollection<AgvGraph.NodeType> nodeTypes, string nodeId = "PRK1")
+    {
+        return new GraphNode(nodeId) { Type = nodeTypes, X = -21f, Y = -21f, Z = 0f };
+    }
+
     [UsedImplicitly]
     public static GraphNode GenerateMaintenanceNode(string nodeId = "MNT1")
     {

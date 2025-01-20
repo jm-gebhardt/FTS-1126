@@ -3949,7 +3949,7 @@
             "typeId": ""
         },
         {
-          "function": "Charge",
+          "function": ["Charge", "Park"],
             "identifier": "charger5",
             "position": {
                 "theta": 0.0027548139678568173,

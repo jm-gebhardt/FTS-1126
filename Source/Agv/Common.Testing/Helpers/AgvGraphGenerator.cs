@@ -12,9 +12,9 @@ public static class AgvGraphGenerator
     // 0 ---- 1 ---- 2 ---- 3 ---- 4 ---- 5 ---- //
     // |                                         //
     // 1                   Src2          Src3    //
-    // |                    |                    //
-    // 2            Src1    |                    //
-    // |             |      |                    //
+    // |                    |    Dbl1            //
+    // 2            Src1    |   /                //
+    // |             |      |  /                 //
     // 3     Prk1---Way1---Way2----------Prk2    //
     // |             |      |                    //
     // 4     Crg1---Way3---Way4----------Crg2    //
@@ -39,6 +39,7 @@ public static class AgvGraphGenerator
     private const string Way2 = "WAY2"; // Waypoint 2
     public const string Way3 = "WAY3"; // Waypoint 3
     private const string Way4 = "WAY4"; // Waypoint 4
+    private const string Dbl1 = "DBL1"; // Station with double type: charge & park
 
     /// <summary>
     /// Returns default nodes
@@ -88,6 +89,15 @@ public static class AgvGraphGenerator
     public static GraphNode Waypoint3 { get; } = Nodes[12];
 
     public static GraphNode Waypoint4 { get; } = Nodes[13];
+
+    public static GraphNode Double1 { get; } = new(Dbl1) { Type = new List<AgvGraph.NodeType>{AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park}, X = 4f, Y = 1.5f, Z = 0f };
+
+    public static GraphEdge[] EdgesToDbl1 { get; } =
+    {
+        // Way2 <-> Dbl1
+        GraphEdge.CreateDirect(Dbl1, Way2),
+        GraphEdge.CreateDirect(Way2, Dbl1)
+    };
 
     /// <summary>
     /// Returns default edges
@@ -149,6 +159,13 @@ public static class AgvGraphGenerator
     public static AgvGraph CreateDefaultGraph(Guid? correlationId = null, ICollection<GraphNode>? nodes = null)
     {
         return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, Edges);
+    }
+
+    public static AgvGraph CreateGraphWithAdditionalStationType(Guid? correlationId = null)
+    {
+        GraphNode[] nodes = [..Nodes, Double1];
+        GraphEdge[] edges = [.. Edges, ..EdgesToDbl1];
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes, edges);
     }
 
     public static AgvGraph CreateDefaultGraph(GraphNode[] nodes)

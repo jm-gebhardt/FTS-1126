@@ -20,7 +20,7 @@ public class StationEntityConfiguration : IEntityTypeConfiguration<Station>
         builder.Property(e => e.Width);
         builder.Property(e => e.Length);
         builder.Property(e => e.PrimaryType);
-        builder.Ignore(e => e.AdditionalTypes);
+        builder.Property(e => e.AdditionalTypes).HasJsonConversion();
         builder.Ignore(e => e.NodeLock);
         builder.Ignore(e => e.Agvs);
         builder.Ignore(e => e.IsLocked);

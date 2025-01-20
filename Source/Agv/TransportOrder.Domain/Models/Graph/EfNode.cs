@@ -19,7 +19,8 @@ public class EfNode
     /// <summary>
     /// The type of the node
     /// </summary>
-    public AgvGraph.NodeType Type { get; init; }
+    [JsonConverter(typeof(JsonNodeTypeConverter))]
+    public object Type { get; init; } = null!;
 
     /// <summary>
     /// The X coordinate of the node

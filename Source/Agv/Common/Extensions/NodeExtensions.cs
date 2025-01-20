@@ -104,6 +104,23 @@ public static class NodeExtensions
     }
 
     /// <summary>
+    /// Get the types of the node that need reservation.
+    /// </summary>
+    /// <param name="node">The node.</param>
+    public static ICollection<AgvGraph.NodeType> GetReservableNodeTypes(this GraphNode node)
+    {
+        if (node.Type is AgvGraph.NodeType type)
+        {
+            return node.NeedsReservation()? [type]:[];
+        }
+
+        return ((ICollection<AgvGraph.NodeType>)node.Type).Intersect(new List<AgvGraph.NodeType>()
+        {
+            AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park
+        }).ToList();
+    }
+
+    /// <summary>
     /// True if a nodes is a charge node.
     /// </summary>
     /// <param name="node">The node.</param>
@@ -127,5 +144,31 @@ public static class NodeExtensions
             return type == AgvGraph.NodeType.Park;
         }
         return ((ICollection<AgvGraph.NodeType>)node.Type).Any(n => n == AgvGraph.NodeType.Park);
+    }
+
+    /// <summary>
+    /// Get the primary type of the node.
+    /// </summary>
+    /// <returns></returns>
+    public static AgvGraph.NodeType GetPrimaryType(this GraphNode node)
+    {
+        if (node.Type is AgvGraph.NodeType type)
+        {
+            return type;
+        }
+        return ((ICollection<AgvGraph.NodeType>)node.Type).First();
+    }
+
+    /// <summary>
+    /// Get the additional types of the node.
+    /// </summary>
+    /// <returns></returns>
+    public static ICollection<AgvGraph.NodeType> GetAdditionalTypes(this GraphNode node)
+    {
+        if (node.Type is AgvGraph.NodeType)
+        {
+            return [];
+        }
+        return ((ICollection<AgvGraph.NodeType>)node.Type).Skip(1).ToList();
     }
 }

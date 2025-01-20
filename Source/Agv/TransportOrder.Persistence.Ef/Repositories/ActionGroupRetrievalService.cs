@@ -97,7 +97,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                         a.Target.NodeId!,
                         graphNodesById.Count == 0 || !graphNodesById.TryGetValue(a.Target.NodeId!, out _) ?
                             AgvGraph.NodeType.WayPoint : // WayPoint is the default value for not available targetNodeIds
-                            graphNodesById[a.Target.NodeId!].Type,
+                            graphNodesById[a.Target.NodeId!].Type.GetTypeForActionType(a.ActionType),
                         a.Nodes,
                         a.Edges,
                         a.CreatedDate,
@@ -186,7 +186,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         {
             agvActionReadModels1 = actionGroup.Actions.Join(graphNodes, a => a.Target.NodeId!, n => n.Id, (a, n) =>
                     new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State, a.ActionType,
-                        a.Target.NodeId ?? string.Empty, n.Type, a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration))
+                        a.Target.NodeId ?? string.Empty, n.Type.GetTypeForActionType(a.ActionType), a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration))
                 .Distinct().ToList();
 
             if (!unknownTargetNodeIds.Any())
@@ -338,9 +338,17 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
         IQueryable<EfNode> graphNodes = context.Set<EfNode>();
 
-        return await actionGroups
+        List<ActionGroup> actionGroupsResult = await actionGroups
             .Where(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started)
-            .AnyAsync(g => g.Actions.Join(graphNodes, a => a.Target.NodeId,
-                n => n.Id, (a, n) => n.Type).Any(b => b == nodeType));
+            .Include(g => g.Actions)
+            .ThenInclude(a => a.Target)
+            .ToListAsync();
+
+        return actionGroupsResult.Any(g => g.Actions.Join(
+            graphNodes.AsEnumerable(),
+            a => a.Target.NodeId,
+            n => n.Id,
+            (_, n) => n
+        ).Any(n => n.Type.IsOfType(nodeType)));
     }
 }

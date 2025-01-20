@@ -60,7 +60,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgv_ValidData_Responds_AgvMoveSuccessful()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var targetNode = NodeGenerator.GenerateNode(nodeId:"target");
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "target");
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
@@ -74,7 +74,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgv_TargetNodeNeedsReservation_Responds_AgvMoveSuccessfulReservesNode()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"target", nodeType:AgvGraph.NodeType.Park);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "target", nodeType: AgvGraph.NodeType.Park);
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
@@ -82,7 +82,23 @@ public class MoveAgvRequestHandlerTest
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
-        fixture.VerifyNodeWasReserved(targetNode, agv.CorrelationId);
+        fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Park, targetNode, agv.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_MoveAgv_TargetNodeNeedsReservationAndHasAdditionalType_Responds_AgvMoveSuccessfulReservesNode()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var targetNode = NodeGenerator.GenerateNodeWithMultipleTypes([AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge], nodeId: "target");
+        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+            .AddAgvs([agv])
+            .WithNode(targetNode)
+            .BuildAsync();
+
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Park, targetNode, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -90,7 +106,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgv_TargetNodeNeedsReservation_ButServiceThrows()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"target", nodeType:AgvGraph.NodeType.Park);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "target", nodeType: AgvGraph.NodeType.Park);
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
@@ -98,15 +114,15 @@ public class MoveAgvRequestHandlerTest
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
-        fixture.VerifyNodeWasReserved(targetNode, agv.CorrelationId);
+        fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Park, targetNode, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
     [TestMethod]
-    public async Task Consume_ChargeAgv_ParkReservationThrows_ThrowsException()
+    public async Task Consume_MoveAgv_ParkReservationThrows_ThrowsException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var charger =  NodeGenerator.GenerateNode(nodeId:"park", nodeType:AgvGraph.NodeType.Park);
+        var charger = NodeGenerator.GenerateNode(nodeId: "park", nodeType: AgvGraph.NodeType.Park);
         MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
@@ -158,7 +174,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_ChargeAgv_ChargeReservationThrows_ThrowsException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var charger =  NodeGenerator.GenerateNode(nodeId:"charger", nodeType:AgvGraph.NodeType.Charge);
+        var charger = NodeGenerator.GenerateNode(nodeId: "charger", nodeType: AgvGraph.NodeType.Charge);
         MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
@@ -178,7 +194,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_ChargeAgv_GivenNodeIsNotCharger_ThrowsInvalidNodeTypeException(AgvGraph.NodeType type)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var node =  NodeGenerator.GenerateNode(nodeId:"charger", nodeType:type);
+        var node = NodeGenerator.GenerateNode(nodeId: "charger", nodeType: type);
         MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(node)
@@ -192,8 +208,8 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_ChargeAgv_ValidData_Responds_AgvMoveSuccessfulReservesNode()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        
-        var charger = NodeGenerator.GenerateNode(nodeId:"target", nodeType:AgvGraph.NodeType.Charge);
+
+        var charger = NodeGenerator.GenerateNode(nodeId: "target", nodeType: AgvGraph.NodeType.Charge);
         MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
@@ -201,7 +217,7 @@ public class MoveAgvRequestHandlerTest
 
         await fixture.GetResponseAsync<AgvMoveSuccessful>(new ChargeAgv(agv.CorrelationId, charger.Id));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
-        fixture.VerifyNodeWasReserved(charger, agv.CorrelationId);
+        fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Charge, charger, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 

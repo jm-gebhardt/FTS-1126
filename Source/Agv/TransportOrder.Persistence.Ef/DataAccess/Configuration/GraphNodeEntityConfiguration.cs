@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,11 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<EfNode>
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).HasMaxLength(DbStringLimits.NodeId);
+        var jsonOptions = new JsonSerializerOptions();
+        jsonOptions.Converters.Add(new JsonNodeTypeConverter());
+        builder.Property(e => e.Type).HasConversion(
+            v => JsonSerializer.Serialize(v, jsonOptions),
+            v => JsonSerializer.Deserialize<object>(v, jsonOptions)!);
 
         builder.ConfigureAllProperties(except: new[] { nameof(EfNode.Maps), nameof(EfNode.AgvGraphs) });
     }

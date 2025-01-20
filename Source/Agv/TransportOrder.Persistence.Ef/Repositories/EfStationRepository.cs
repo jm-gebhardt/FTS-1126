@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -28,7 +29,7 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
             (double maxWidth, double maxLength) stationSize = await GetLargestAgvDimensionAsync(context);
 
             List<GraphNode> nodeStations = agvGraph.Nodes
-                .Where(efNode => (AgvGraph.NodeType)efNode.Type != AgvGraph.NodeType.WayPoint)
+                .Where(efNode => efNode.IsStation())
                 .ToList();
 
             List<Station> existingStations = await context.Set<Station>()
@@ -54,7 +55,7 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
 
             IEnumerable<Station> newStations = newNodes.ToList().Select(n =>
             {
-                var station = new Station(n.Id, (AgvGraph.NodeType)n.Type, []);
+                var station = new Station(n.Id, n.GetPrimaryType(), n.GetAdditionalTypes());
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
                 station.SetMap(map?.MapId);
                 return station;

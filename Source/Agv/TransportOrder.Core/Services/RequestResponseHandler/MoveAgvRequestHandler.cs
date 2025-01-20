@@ -27,7 +27,7 @@ public class MoveAgvRequestHandler(
     INodeStateRepository nodeStateRepository,
     IParkPointService parkPointService,
     IChargingPointManager chargingPointManager,
-    IRestrictedAreaRepository restrictedAreaRepository, 
+    IRestrictedAreaRepository restrictedAreaRepository,
     IStationRepository stationRepository
 ) :
     IConsumer<MoveAgv>,
@@ -52,11 +52,11 @@ public class MoveAgvRequestHandler(
 
         if (targetNode.NeedsReservation())
         {
-            await ReserveNodeForAgv(targetNode, agvCorrelationId);
+            await ReserveNodeForAgv(targetNode.GetReservableNodeTypes().First(), targetNode, agvCorrelationId);
         }
-        
-        var rotationInfo = new Dictionary<InfoToAgvKey, string> { {InfoToAgvKey.CargoRotation, theta.ToString(CultureInfo.InvariantCulture)} };
-        
+
+        var rotationInfo = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, theta.ToString(CultureInfo.InvariantCulture) } };
+
         var actionGroupId = Guid.NewGuid();
         await QueueNewActionGroup(context,
             [
@@ -94,7 +94,7 @@ public class MoveAgvRequestHandler(
             throw new InvalidNodeTypeException(node.Id, node.Type.ToString() ?? "", nameof(AgvGraph.NodeType.Charge));
         }
 
-        await ReserveNodeForAgv(node, agvCorrelationId);
+        await ReserveNodeForAgv(AgvGraph.NodeType.Charge, node, agvCorrelationId);
 
         var actionGroupId = Guid.NewGuid();
         await QueueNewActionGroup(context,
@@ -139,7 +139,7 @@ public class MoveAgvRequestHandler(
             [
                 new AgvAction(Guid.NewGuid(),
                     ActionType.Move,
-                    new ActionTarget(x,y, theta),
+                    new ActionTarget(x, y, theta),
                     actionGroupId)
             ],
             $"Manual {ActionType.Move} to ({x}, {y}) with orientation {theta}",
@@ -149,9 +149,9 @@ public class MoveAgvRequestHandler(
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
 
-    private async Task ReserveNodeForAgv(GraphNode targetNode, Guid agvCorrelationId)
+    private async Task ReserveNodeForAgv(AgvGraph.NodeType type, GraphNode targetNode, Guid agvCorrelationId)
     {
-        switch (targetNode.Type)
+        switch (type)
         {
             case AgvGraph.NodeType.Charge:
                 await chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId);

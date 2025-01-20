@@ -200,7 +200,8 @@ public class JsonNodeTypeConverter : JsonConverter<object>
                 break;
 
             case List<NodeType> nodeTypeList:
-                JsonSerializer.Serialize(writer, nodeTypeList, options);
+                List<string> nodeTypes = nodeTypeList.Select(n => n.ToString()).ToList();
+                JsonSerializer.Serialize(writer, nodeTypes, options);
                 break;
 
             default:
