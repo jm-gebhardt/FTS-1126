@@ -5,6 +5,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
+using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -60,6 +61,7 @@ public class RestrictedAreaController : Controller
     /// <response code="200">Ok</response>
     /// <response code="400">Invalid polygon with less than three points provided.</response>
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.RestrictedAreasFullAccess)]
     [Route("/restrictedArea")]
     public async Task<ActionResult<RestrictedAreaDto>> AddRestrictedArea([FromBody] [Required] ICollection<PolygonPointDto> area)
     {
@@ -75,6 +77,7 @@ public class RestrictedAreaController : Controller
     /// <response code="200">Ok</response>
     /// <response code="404">Restricted area with given id not found.</response>
     [HttpDelete]
+    [Authorize(Policy = AuthorizationPolicies.RestrictedAreasFullAccess)]
     [Route("/restrictedArea/{id:guid}")]
     public async Task<ActionResult> DeleteRestrictedArea([FromRoute] Guid id)
     {
@@ -91,6 +94,7 @@ public class RestrictedAreaController : Controller
     /// <response code="404">Restricted area with given id not found.</response>
     /// <response code="400">Invalid polygon with less than three points provided.</response>
     [HttpPatch]
+    [Authorize(Policy = AuthorizationPolicies.RestrictedAreasFullAccess)]
     [Route("/restrictedArea/{id:guid}")]
     public async Task<ActionResult> UpdateRestrictedArea([FromRoute] Guid id, [FromBody][Required] ICollection<PolygonPointDto> area)
     {

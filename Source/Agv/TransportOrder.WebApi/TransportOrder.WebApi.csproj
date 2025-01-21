@@ -7,12 +7,12 @@
     <ItemGroup>
         <PackageReference Include="AutoMapper" />
         <PackageReference Include="MassTransit.Prometheus" />
-        <PackageReference Include="MassTransit.EntityFrameworkCore"  />
+        <PackageReference Include="MassTransit.EntityFrameworkCore" />
         <PackageReference Include="MassTransit" />
         <PackageReference Include="JetBrains.Annotations" />
-        <PackageReference Include="MassTransit.RabbitMQ"  />
-        <PackageReference Include="Swashbuckle.AspNetCore"  />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect"  />
+        <PackageReference Include="MassTransit.RabbitMQ" />
+        <PackageReference Include="Swashbuckle.AspNetCore" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="System.Runtime.Caching" />
         <PackageReference Include="System.Text.Json" />

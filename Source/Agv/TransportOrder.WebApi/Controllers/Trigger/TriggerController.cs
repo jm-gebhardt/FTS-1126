@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
+using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,6 +69,7 @@ public class TriggerController: Controller
     /// <response code="404">Trigger with given id not found.</response>
     /// <response code="400">More than one location set.</response>
     [HttpPatch]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
     [Route("/trigger/{id:guid}/location")]
     public async Task<ActionResult<TriggerLocationDto>> AssignTriggerToLocation([FromRoute] Guid id, [FromBody] LocationDto location)
     {
@@ -85,6 +87,7 @@ public class TriggerController: Controller
     /// <response code="200">Ok</response>
     /// <response code="404">Trigger or location with given id not found.</response>
     [HttpDelete]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
     [Route("/trigger/{id:guid}/location/{locationId:guid}")]
     public async Task<ActionResult> RemoveTriggerLocation([FromRoute] Guid id, [FromRoute] Guid locationId)
     {
@@ -102,6 +105,7 @@ public class TriggerController: Controller
     /// <response code="404">Trigger with given id not found or location not found.</response>
     /// <response code="400">Parameter unknown or value does not pass validation.</response>
     [HttpPatch]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
     [Route("/trigger/{id:guid}/location/{locationId:guid}/parameter/{name}")]
     public async Task<ActionResult> UpdateLocationConfigurationParameter([FromRoute] Guid id, [FromRoute] Guid locationId, [FromRoute] string name, [FromQuery] [Required] string value)
     {
@@ -118,6 +122,7 @@ public class TriggerController: Controller
     /// <response code="404">Trigger with given id not found or location not found.</response>
     /// <response code="400">Parameter unknown or value does not pass validation.</response>
     [HttpPatch]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
     [Route("/trigger/{id:guid}/location/{locationId:guid}/parameter/{name}/reset")]
     public async Task<ActionResult> ResetLocationConfigurationParameter([FromRoute] Guid id, [FromRoute] Guid locationId, [FromRoute] string name)
     {
@@ -134,6 +139,7 @@ public class TriggerController: Controller
     /// <response code="404">Trigger with given id not found.</response>
     /// <response code="400">Parameter unknown or value does not pass validation.</response>
     [HttpPatch]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
     [Route("/trigger/{id:guid}/parameter/{name}")]
     public async Task<ActionResult> UpdateDefaultConfigurationParameter([FromRoute] Guid id, [FromRoute] string name, [FromQuery] string value)
     {

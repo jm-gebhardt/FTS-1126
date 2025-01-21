@@ -18,6 +18,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
+using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -104,6 +105,8 @@ public static class WebHostBuilderExtensions
                 };
             });
 
+            services.AddAuthorization(AuthorizationPolicies.Configure);
+
             services.ConfigureEventLogSettings(executingAssembly);
 
             services.AddSwaggerGen(options =>
@@ -135,7 +138,7 @@ public static class WebHostBuilderExtensions
                     In = ParameterLocation.Header,
                     Description = "Please enter a valid token",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
+                    Type = SecuritySchemeType.ApiKey,
                     BearerFormat = "JWT", 
                     Scheme = JwtBearerDefaults.AuthenticationScheme
                 };
