@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -117,6 +118,42 @@ public class StationListParserTest
         graph.Nodes.Count.ShouldBe(3);
         //              4 = 2 * 2 bidirectional edges
         graph.Edges.Count.ShouldBe(4);
+
+        var stationNode = graph.Nodes.Single(n => n.IsStation());
+        stationNode.IsPickStation().ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void Parse_WithMultipleStationTypes_GraphValid()
+    {
+        var nodes = new MqttNode[]
+        {
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f }
+        };
+        var edges = new MqttEdge[]
+        {
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
+        };
+        var stations = new Station[]
+        {
+            new(new List<Function>{ Function.Charge, Function.Park}, "P01", new Position(0f, 0f, 0f), "")
+        };
+        var parser = new StationListParser(
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+        var graph = parser.Graph;
+
+        graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
+        parser.SerialNumber.ShouldBe(AgvSerialNumber1);
+        //              3 = 2 nodes + 1 station
+        graph.Nodes.Count.ShouldBe(3);
+        //              4 = 2 * 2 bidirectional edges
+        graph.Edges.Count.ShouldBe(4);
+
+        var stationNode = graph.Nodes.Single(n => n.IsStation());
+        stationNode.IsCharger().ShouldBeTrue();
+        stationNode.IsParker().ShouldBeTrue();
     }
 
     /// <summary>

@@ -116,7 +116,7 @@ public class StationListParser
                     // Add node and bidirectional edges.
                     var graphNode = new GraphNode(station.Identifier)
                     {
-                        Type = ParseNodeType(station.Function),
+                        Type = GetNodeType(station.Function),
                         X = station.Position.X,
                         Y = station.Position.Y,
                         Z = 0f,
@@ -178,30 +178,35 @@ public class StationListParser
     /// <summary>
     /// Converts station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/>
     /// </summary>
-    /// <param name="function"></param>
+    /// <param name="function">The function(s) of the station.</param>
     /// <returns>The Mqtt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
-    private AgvGraph.NodeType ParseNodeType(Function function)
+    private static object GetNodeType(object function)
     {
-        switch (function)
+        bool isFunction = function is Function;
+        if (isFunction)
         {
-            case Function.Both:
-                return AgvGraph.NodeType.PickDrop;
-
-            case Function.Charge:
-                return AgvGraph.NodeType.Charge;
-
-            case Function.Drop:
-                return AgvGraph.NodeType.Drop;
-
-            case Function.Park:
-                return AgvGraph.NodeType.Park;
-
-            case Function.Pick:
-                return AgvGraph.NodeType.Pick;
-
-            default:
-                return AgvGraph.NodeType.PickDrop;
+            return ParseNodeType((Function)function);
         }
+        return ((List<Function>)function).Select(ParseNodeType).ToList();
+    }
+
+    /// <summary>
+    /// Converts station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/>
+    /// </summary>
+    /// <param name="function">The function of the station.</param>
+    /// <returns>The Mqtt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
+    private static AgvGraph.NodeType ParseNodeType(Function function)
+    {
+        return function switch
+        {
+            Function.Both => AgvGraph.NodeType.PickDrop,
+            Function.Charge => AgvGraph.NodeType.Charge,
+            Function.Drop => AgvGraph.NodeType.Drop,
+            Function.Park => AgvGraph.NodeType.Park,
+            Function.Pick => AgvGraph.NodeType.Pick,
+            Function.Maintenance => AgvGraph.NodeType.Maintenance,
+            _ => AgvGraph.NodeType.PickDrop
+        };
     }
 
     /// <summary>

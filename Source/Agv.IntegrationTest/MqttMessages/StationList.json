@@ -24,7 +24,7 @@
             "typeId": "T2"
         },
         {
-            "function": "Charge",
+            "function": ["Charge", "Park"],
             "identifier": "CRG_01",
             "position": {
                 "theta": 180.0,

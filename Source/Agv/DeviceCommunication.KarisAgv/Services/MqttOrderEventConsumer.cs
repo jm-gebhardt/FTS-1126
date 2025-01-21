@@ -58,6 +58,10 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
                 await context.Publish(new ActionFailed(actionId));
                 break;
 
+            case OrderEventType.Updated:
+                await context.Publish(new ActionUpdated(actionId, agvCorrelationId));
+                break;
+
             default:
                 throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
         }

@@ -32,14 +32,15 @@
           "type": "object",
           "properties": {
             "function": {
-              "type": "string",
-              "description": "The function of the station: PICK/DROP/BOTH/CHARGE/PARK.",
+              "type": "array",
+              "description": "The function of the station: PICK/DROP/BOTH/CHARGE/PARK/MAINTENANCE. Multiple station types have to be sent as array, single can be sent as array or string.",
               "enum": [
                 "PICK",
                 "DROP",
                 "BOTH",
                 "CHARGE",
-                "PARK"
+                "PARK",
+                "MAINTENANCE"
               ]
             },
             "identifier": {

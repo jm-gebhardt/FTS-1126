@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
@@ -55,41 +57,50 @@ public record MqttStationList
 /// AGV station
 /// </summary>
 [PublicAPI]
-public record Station
+public class Station
 {
     /// <summary>
     /// The function of the station e.g. Pick/drop
     /// </summary>
-    public Function Function { get; }
+    [JsonConverter(typeof(JsonFunctionConverter))]
+    public object Function { get; set; } = null!;
 
     /// <summary>
     /// The unique identifier of the station
     /// </summary>
-    public string Identifier { get; }
+    public string Identifier { get; set; } = string.Empty;
 
     /// <summary>
     /// The position and rotation of the station based on to the maps/graphs coordinate system
     /// </summary>
-    public Position Position { get; }
+    public Position Position { get; set; } = null!;
 
     /// <summary>
     /// Type identification
     /// </summary>
-    public string TypeId { get; }
+    public string TypeId { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Build message.
-    /// </summary>
-    /// <param name="function"></param>
-    /// <param name="identifier"></param>
-    /// <param name="position"></param>
-    /// <param name="typeId"></param>
+    /// <inheritdoc cref="Station"/>>
     public Station(Function function, string identifier, Position position, string typeId)
     {
         Function = function;
         Identifier = identifier;
         Position = position;
         TypeId = typeId;
+    }
+
+    /// <inheritdoc cref="Station"/>>
+    public Station(ICollection<Function> function, string identifier, Position position, string typeId)
+    {
+        Function = function;
+        Identifier = identifier;
+        Position = position;
+        TypeId = typeId;
+    }
+
+    /// <inheritdoc cref="Station"/>>
+    public Station()
+    {
     }
 }
 
@@ -161,5 +172,63 @@ public enum Function
     /// Pick only station
     /// </summary>
     [PublicAPI]
-    Pick
+    Pick,
+
+    /// <summary>
+    /// Maintenance station
+    /// </summary>
+    [PublicAPI]
+    Maintenance
+}
+
+/// <summary>
+/// Json converter for <see cref="Function"/>.
+/// </summary>
+public class JsonFunctionConverter : JsonConverter<object>
+{
+    /// <inheritdoc cref="JsonConverter"/>>
+    public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            if (Enum.TryParse<Function>(reader.GetString(), true, out var function))
+            {
+                return function;
+            }
+            throw new JsonException($"Unable to parse '{reader.GetString()}' as Function");
+        }
+
+        if (reader.TokenType == JsonTokenType.StartArray)
+        {
+            var functions = new List<Function>();
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+            {
+                if (reader.TokenType == JsonTokenType.String && Enum.TryParse<Function>(reader.GetString(), true, out var function))
+                {
+                    functions.Add(function);
+                }
+            }
+            return functions;
+        }
+        throw new JsonException($"Unexpected token {reader.TokenType}");
+    }
+
+    /// <inheritdoc cref="JsonConverter"/>>
+    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    {
+        switch (value)
+        {
+            case Function function:
+                JsonSerializer.Serialize(writer, function.ToString(), options);
+                break;
+
+            case List<Function> functionList:
+                List<string> functions = functionList.Select(f => f.ToString()).ToList();
+                JsonSerializer.Serialize(writer, functions, options);
+                break;
+
+            default:
+                throw new JsonException($"Unexpected value type {value.GetType()}");
+        }
+    }
 }
