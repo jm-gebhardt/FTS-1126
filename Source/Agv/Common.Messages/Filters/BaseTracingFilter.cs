@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.Common.Messages.Filters;
@@ -6,6 +7,7 @@ namespace Gebhardt.Acc.Common.Messages.Filters;
 /// <summary>
 /// Provides a base class for tracing consume/publish filters
 /// </summary>
+[PublicAPI]
 public abstract class BaseTracingFilter
 {
     private readonly ILogger _logger;

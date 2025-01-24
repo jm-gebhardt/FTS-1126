@@ -23,14 +23,14 @@ public class AgvTracingConsumeFilters : BaseTracingFilter,
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<RequestAgvGraph> context, IPipe<ConsumeContext<RequestAgvGraph>> next)
     {
-        LogInformation(context);
+        LogDebug(context);
         await next.Send(context);
     }
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<AgvErrorStatusReceived> context, IPipe<ConsumeContext<AgvErrorStatusReceived>> next)
     {
-        LogInformation(context);
+        LogDebug(context);
         await next.Send(context);
     }
 

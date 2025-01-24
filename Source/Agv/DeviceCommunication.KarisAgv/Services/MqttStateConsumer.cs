@@ -33,7 +33,7 @@ public class MqttStateConsumer : IConsumer<MqttState>
     public async Task Consume(ConsumeContext<MqttState> context)
     {
         _stateParser.Parse(context.Message);
-        _logger.LogInformation("Received {MessageType} from {AgvId}", nameof(MqttState), _stateParser.SerialNumber);
+        _logger.LogDebug("Received {MessageType} from {AgvId}", nameof(MqttState), _stateParser.SerialNumber);
 
         await SendAgvStatusAsync(context);
         await SendAgvPositionAsync(context);
