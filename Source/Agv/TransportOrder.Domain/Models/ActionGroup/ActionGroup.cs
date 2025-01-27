@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using JetBrains.Annotations;
@@ -325,6 +326,37 @@ public class ActionGroup
         Actions.Single(a => a.CorrelationId == actionId).Nodes = nodes;
         Actions.Single(a => a.CorrelationId == actionId).Edges = edges;
         UpdateActionState(actionId, ActionState.Started);
+    }
+
+    /// <summary>
+    /// Set the dock front information for an action.
+    /// </summary>
+    /// <param name="actionId">The id of the action for which dockfront is to be set.</param>
+    /// <param name="dockFrontPreviousActionGroup">The value of dockfront of the last action of the previous action group.</param>
+    public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup)
+    {
+        var action = Actions.Single(a => a.CorrelationId == actionId);
+        bool needsRotation = GetNeedsRotation();
+
+        bool isChargeActionGroup = Actions.Any(a => a.ActionType == ActionType.Charge);
+        if (isChargeActionGroup)
+        {
+            action.SetDockFront(needsRotation, null);
+            return;
+        }
+        if (action.IsFirstAction)
+        {
+            action.SetDockFront(needsRotation, dockFrontPreviousActionGroup);
+            return;
+        }
+        var previousAction = Actions.Single(a => a.Sequence == action.Sequence - 1);
+        action.SetDockFront(needsRotation, previousAction.InfoToAgv!.GetDockFront());
+    }
+
+    private bool GetNeedsRotation()
+    {
+        var pickAction = Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick);
+        return pickAction?.InfoToAgv != null && pickAction.InfoToAgv.NeedsRotation();
     }
 
     /// <summary>

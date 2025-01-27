@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
+namespace Gebhardt.Acc.Common.Extensions;
 
 /// <summary>
 /// Provides extension methods for InfoToAgvKey dictionary in <see cref="AgvAction"/>.

@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -285,7 +286,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { actionGroupInCreatedState, actionGroupInPausedState })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems:2);
+        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 2);
 
         actionGroupsResult.Single().ShouldBeEquivalentTo(actionGroupInPausedState);
     }
@@ -841,7 +842,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetNextManualActionGroupForAgvAsync_NoAllowedActionTypesOneManualActionGroup_ReturnsManualActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:Guid.NewGuid());
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.IsManual = true;
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -927,8 +928,8 @@ public class ActionGroupRepositoryTest
     {
         var now = DateTime.UtcNow;
         var agvCorrelationId = Guid.NewGuid();
-        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, pickActionState:ActionState.Completed, dropActionState: ActionState.Completed, completedDate:now.AddMinutes(-3));
-        var moveToCoordinateActionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup(assignedAgv: agvCorrelationId, moveActionState:ActionState.Completed, completedDate:now.AddMinutes(5));
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, completedDate: now.AddMinutes(-3));
+        var moveToCoordinateActionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup(assignedAgv: agvCorrelationId, moveActionState: ActionState.Completed, completedDate: now.AddMinutes(5));
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([pickDropActionGroup, moveToCoordinateActionGroup])
@@ -961,8 +962,8 @@ public class ActionGroupRepositoryTest
         var createdGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: station);
         var startedGroupOtherTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: "to somewhere else", pickActionState: ActionState.Started);
         var chargeGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeId: station);
-        var parkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId:station);
-        var startedParkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId:station);
+        var parkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
+        var startedParkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
         startedParkGroup.StartAction(startedParkGroup.Actions.First().CorrelationId, [], []);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -996,5 +997,82 @@ public class ActionGroupRepositoryTest
         [
             pausedGroupDropTarget.CorrelationId
         ], ignoreOrder: true);
+    }
+
+    [TestMethod]
+    public async Task GetDockFrontOfLastCompletedAction_ValidData_ReturnsDockFront()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, completedDate: DateTime.UtcNow.AddMinutes(-10), assignedAgv: Guid.NewGuid());
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, null);
+        bool dockFront = dropAction.InfoToAgv!.GetDockFront();
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([actionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value)).ShouldBe(dockFront);
+    }
+
+    [TestMethod]
+    public async Task GetDockFrontOfLastCompletedAction_MultipleCompletedActionGroups_ReturnsDockFront()
+    {
+        var assignedAgv = Guid.NewGuid();
+        var earlierActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: assignedAgv);
+        var earlierPickAction = earlierActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var earlierDropAction = earlierActionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        earlierActionGroup.SetDockFrontOfAction(earlierPickAction.CorrelationId, null);
+        earlierActionGroup.SetDockFrontOfAction(earlierDropAction.CorrelationId, null);
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: assignedAgv);
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, earlierDropAction.InfoToAgv!.GetDockFront());
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, earlierDropAction.InfoToAgv!.GetDockFront());
+        bool dockFront = dropAction.InfoToAgv!.GetDockFront();
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([earlierActionGroup, actionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(assignedAgv)).ShouldBe(dockFront);
+    }
+
+    [TestMethod]
+    public async Task GetDockFrontOfLastCompletedAction_NoCompletedActionGroup_ReturnsNull()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Started, assignedAgv: Guid.NewGuid());
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, null);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([actionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value)).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetDockFrontOfLastCompletedAction_NoLastActionGroup_ReturnsNull()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Started, assignedAgv: Guid.NewGuid());
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, null);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([actionGroup])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(Guid.NewGuid())).ShouldBeNull();
     }
 }

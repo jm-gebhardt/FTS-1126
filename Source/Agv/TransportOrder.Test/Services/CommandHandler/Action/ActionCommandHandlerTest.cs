@@ -1,6 +1,7 @@
 using FluentValidation.Results;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -33,16 +34,19 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        const bool dockFront = true;
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithLastActionDockFront(dockFront);
 
         var startAction = new StartActionOfActionGroup(actionGroup.Actions.First(), agv.CorrelationId);
+       
+        var startActionCommand = await fixture.PublishAndGetFirstMessageAsync<StartActionOfActionGroup, StartActionCommand>(startAction);
 
-        await fixture.TestHarness.Bus.Publish(startAction);
-        await fixture.ShouldHaveConsumedAsync<StartActionOfActionGroup>();
-        await fixture.ShouldHavePublishedAsync<StartActionCommand>();
+        startActionCommand.Action.InfoToAgv.ShouldNotBeNull();
+        startActionCommand.Action.InfoToAgv.GetDockFront().ShouldBeTrue();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
     }
 
@@ -54,7 +58,8 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithLastActionDockFront(false);
         var pickAction = actionGroup.Actions.First();
         var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
 

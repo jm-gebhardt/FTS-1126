@@ -111,8 +111,15 @@ public class ActionCommandHandler :
         bool agvActionCanBeStarted = await _actionService.CheckAgvActionCanBeStarted(context, action, assignedAgv, actionGroup);
         if (agvActionCanBeStarted)
         {
+            bool? previousActionGroupDockFront = null;
+            if (action.IsFirstAction)
+            {
+                previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId);
+            }
+            actionGroup.SetDockFrontOfAction(action.CorrelationId, previousActionGroupDockFront);
             actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
             await _actionService.TryUpdateActionGroup(actionGroup);
+            action = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
             var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
             await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
             await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);

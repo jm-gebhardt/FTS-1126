@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 

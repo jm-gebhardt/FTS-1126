@@ -160,6 +160,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public ActionGroupTestFixtureBase<T> WithLastActionDockFront(bool dockFront)
+    {
+        ActionGroupRepository.Setup(x => x.GetDockFrontOfLastCompletedAction(It.IsAny<Guid>())).ReturnsAsync(dockFront);
+        return this;
+    }
+
     public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes, Guid[] edges)
     {
         _agvDb.AddAgvData((AgvData?)null);

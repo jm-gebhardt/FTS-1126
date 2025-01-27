@@ -37,7 +37,6 @@ public static class AgvActionGenerator
             Sequence = sequence
         };
 
-    [UsedImplicitly]
     public static AgvAction GenerateParkAction(string? targetNodeId = null, Guid? parentId = null, int sequence = 0, ActionState actionState = ActionState.Created)
     {
         var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.ParkClose.Id, parentId ?? Guid.NewGuid())
@@ -76,7 +75,8 @@ public static class AgvActionGenerator
         DateTime? completedDate = null,
         DateTime? startedDate = null,
         TimeSpan? duration = null,
-        bool hasPriority = false
+        bool hasPriority = false,
+        Dictionary<InfoToAgvKey, string>? infoToAgv=null
     )
     {
         const string orderId = "orderId";
@@ -86,7 +86,8 @@ public static class AgvActionGenerator
         var dropActionGuid = Guid.NewGuid();
         var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId)
         {
-            Sequence = partial == 3 ? 1 : 0
+            Sequence = partial == 3 ? 1 : 0,
+            InfoToAgv = infoToAgv
         };
         pickAction.UpdateActionState(pickActionState);
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
@@ -136,7 +137,8 @@ public static class AgvActionGenerator
         DateTime? completedDate = null,
         DateTime? startedDate = null,
         TimeSpan? duration = null,
-        bool hasPriority = false
+        bool hasPriority = false,
+        Dictionary<InfoToAgvKey, string>? infoToAgv = null
     )
     {
         const string orderId = "orderId";
@@ -154,7 +156,8 @@ public static class AgvActionGenerator
 
         var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, string.Empty, groupId)
         {
-            Sequence = 1
+            Sequence = 1,
+            InfoToAgv = infoToAgv
         };
         pickAction.UpdateActionState(pickActionState);
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
@@ -198,7 +201,8 @@ public static class AgvActionGenerator
         DateTime? completedDate = null,
         DateTime? startedDate = null,
         TimeSpan? duration = null,
-        bool hasPriority = false
+        bool hasPriority = false,
+        Dictionary<InfoToAgvKey, string>? infoToAgv = null
     )
     {
         const string orderId = "orderId";
@@ -210,7 +214,8 @@ public static class AgvActionGenerator
 
         var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId)
         {
-            Sequence = 0
+            Sequence = 0,
+            InfoToAgv = infoToAgv
         };
         pickAction.UpdateActionState(pickActionState);
 

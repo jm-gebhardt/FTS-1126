@@ -209,6 +209,39 @@ public class AgvAction : IParentedBy<Guid>
     }
 
     /// <summary>
+    /// Set dock front of an action.
+    /// </summary>
+    /// <param name="needsRotation">True, if the pallet needs rotation.</param>
+    /// <param name="previousDockFront">Value of dockfront of the previous action.</param>
+    public void SetDockFront(bool needsRotation, bool? previousDockFront)
+    {
+        switch (ActionType)
+        {
+            case ActionType.Pick:
+            case ActionType.Move:
+                SetDockFrontValue(previousDockFront?? true);
+                return;
+
+            case ActionType.Drop:
+            {
+                bool value = needsRotation ? previousDockFront!.Value : !previousDockFront!.Value;
+                SetDockFrontValue(value);
+                return;
+            }
+
+            case ActionType.Charge:
+                SetDockFrontValue(true);
+                return;
+        }
+    }
+
+    private void SetDockFrontValue(bool dockFront)
+    {
+        InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
+        InfoToAgv[InfoToAgvKey.DockFront] = dockFront.ToString();
+    }
+
+    /// <summary>
     /// Simple string representation for logging.
     /// </summary>
     public override string ToString()

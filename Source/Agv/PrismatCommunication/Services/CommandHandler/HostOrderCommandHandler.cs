@@ -157,13 +157,13 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             }
             if (liftHeightPick.HasValue)
             {
-                pickInfoToAgv.Add(InfoToAgvKey.LiftHeight, liftHeightPick.ToString()!);
+                pickInfoToAgv.Add(InfoToAgvKey.LiftHeight, liftHeightPick.Value.ToString(CultureInfo.InvariantCulture));
             }
         }
 
         if (liftHeightDrop.HasValue)
         {
-            dropInfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeightDrop.ToString()! } };
+            dropInfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeightDrop.Value.ToString(CultureInfo.InvariantCulture) } };
         }
 
         return (pickInfoToAgv, dropInfoToAgv);
