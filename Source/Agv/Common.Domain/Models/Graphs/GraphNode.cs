@@ -166,28 +166,42 @@ public class JsonNodeTypeConverter : JsonConverter<object>
     /// <inheritdoc cref="JsonConverter"/>>
     public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.String)
+        switch (reader.TokenType)
         {
-            if (Enum.TryParse<NodeType>(reader.GetString(), true, out var nodeType))
-            {
+            case JsonTokenType.String when Enum.TryParse<NodeType>(reader.GetString(), true, out var nodeType):
                 return nodeType;
-            }
-            throw new JsonException($"Unable to parse '{reader.GetString()}' as NodeType");
-        }
-        
-        if (reader.TokenType == JsonTokenType.StartArray)
-        {
-            var nodeTypes = new List<NodeType>();
-            while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+
+            case JsonTokenType.String:
+                throw new JsonException($"Unable to parse '{reader.GetString()}' as NodeType");
+
+            case JsonTokenType.Number when reader.TryGetInt32(out int intValue):
             {
-                if (reader.TokenType == JsonTokenType.String && Enum.TryParse<NodeType>(reader.GetString(), true, out var function))
+                if (Enum.IsDefined(typeof(NodeType), intValue))
                 {
-                    nodeTypes.Add(function);
+                    return (NodeType)intValue;
                 }
+                throw new JsonException($"Invalid numeric value {intValue} for NodeType");
             }
-            return nodeTypes;
+
+            case JsonTokenType.Number:
+                throw new JsonException("Unable to parse number as NodeType");
+
+            case JsonTokenType.StartArray:
+            {
+                var nodeTypes = new List<NodeType>();
+                while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+                {
+                    if (reader.TokenType == JsonTokenType.String && Enum.TryParse<NodeType>(reader.GetString(), true, out var function))
+                    {
+                        nodeTypes.Add(function);
+                    }
+                }
+                return nodeTypes;
+            }
+
+            default:
+                throw new JsonException($"Unexpected token {reader.TokenType}");
         }
-        throw new JsonException($"Unexpected token {reader.TokenType}");
     }
 
     /// <inheritdoc cref="JsonConverter"/>>
@@ -195,6 +209,10 @@ public class JsonNodeTypeConverter : JsonConverter<object>
     {
         switch (value)
         {
+            case string nodeType:
+                JsonSerializer.Serialize(writer, nodeType, options);
+                break;
+
             case NodeType nodeType:
                 JsonSerializer.Serialize(writer, nodeType.ToString(), options);
                 break;

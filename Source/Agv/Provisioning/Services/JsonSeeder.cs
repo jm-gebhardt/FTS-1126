@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Gebhardt.Acc.Provisioning.Services;
 
@@ -32,8 +32,11 @@ internal abstract class JsonSeeder<TJson> : ISeeder
     private async Task<TJson> ReadJsonAsync(string path)
     {
         string json = await File.ReadAllTextAsync(path);
-        var content = JsonConvert.DeserializeObject<TJson>(json);
-
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var content = JsonSerializer.Deserialize<TJson>(json, options);
         if (content == null)
         {
             _logger.LogError("Failed to deserialize json file {Path}", path);

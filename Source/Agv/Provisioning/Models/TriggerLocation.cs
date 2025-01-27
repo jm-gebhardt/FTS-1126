@@ -28,7 +28,7 @@ internal class TriggerLocation
         get;
         [UsedImplicitly]
         init;
-    }
+    } = null!;
 
     /// <summary>
     /// The version of the trigger.
@@ -38,7 +38,7 @@ internal class TriggerLocation
         get;
         [UsedImplicitly]
         init;
-    }
+    } = null!;
 
     /// <summary>
     /// The node id / Name.
@@ -58,19 +58,19 @@ internal class TriggerLocation
         get;
         [UsedImplicitly]
         init;
-    }
+    } 
 
     /// <summary>
     /// The polygon, if set.
     /// </summary>
     [UsedImplicitly]
-    public ICollection<PolygonPoint>? Polygon { get; init; }
+    public ICollection<PolygonPoint>? Polygon { get; init; } = [];
 
     /// <summary>
     /// The configuration parameters at the location, if set.
     /// </summary>
     [UsedImplicitly]
-    public ICollection<ConfigurationParameter>? ConfigurationParameters { get; init; }
+    public ICollection<ConfigurationParameter>? ConfigurationParameters { get; init; } = [];
 
     /// <summary>
     /// The correlation id of the map.
@@ -80,6 +80,12 @@ internal class TriggerLocation
         get;
         [UsedImplicitly]
         init;
+    }
+
+    /// <inheritdoc cref="TriggerLocation"/>
+    public TriggerLocation()
+    {
+        TriggerId = $"{TriggerUrn}:{TriggerVersion}".ToGuid();
     }
 
     /// <inheritdoc cref="TriggerLocation"/>
