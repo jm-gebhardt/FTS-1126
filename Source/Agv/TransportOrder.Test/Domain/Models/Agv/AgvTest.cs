@@ -363,4 +363,15 @@ public class AgvTest
 
         agv.ShouldStartManualAction.ShouldBe(expectedValue);
     }
+
+    [TestMethod]
+    public void TryTransitionToBusy_ValidData_CurrentStateUpdated()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var transitionTime = agv.TimeOfStateTransition;
+
+        agv.TryTransitionToBusy(true).ShouldBeTrue();
+        agv.TimeOfStateTransition.ShouldNotBe(transitionTime);
+        agv.CurrentAgvState.ShouldBe(AgvState.Busy);
+    }
 }

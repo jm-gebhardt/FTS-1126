@@ -14,4 +14,7 @@ public record AgvStateDto : DatedMessage
 
     /// <summary>Current State</summary>
     public AgvStateType CurrentState { get; init; }
+
+    /// <summary>Time of state transition</summary>
+    public DateTime TimeOfStateTransition { get; init; }
 }
