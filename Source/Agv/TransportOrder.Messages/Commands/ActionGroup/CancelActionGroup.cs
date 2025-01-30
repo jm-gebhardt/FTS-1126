@@ -1,5 +1,5 @@
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using MassTransit;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 

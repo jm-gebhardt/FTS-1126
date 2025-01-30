@@ -7,12 +7,12 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1499,7 +1499,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
 
-        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId, PauseReason.MaintenanceMode));
 
         actionGroup.State.ShouldNotBe(ActionGroupState.Paused);
         actionGroup.Actions[0].State.ShouldNotBe(ActionState.Paused);
@@ -1516,7 +1516,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
 
-        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId, PauseReason.MaintenanceMode));
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
         actionGroup.State.ShouldBe(ActionGroupState.Paused);
         actionGroup.Actions[0].State.ShouldBe(ActionState.Paused);
@@ -1534,7 +1534,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
 
-        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId, PauseReason.MaintenanceMode));
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         actionGroup.State.ShouldBe(ActionGroupState.Paused);
         actionGroup.Actions[1].State.ShouldBe(ActionState.Paused);
@@ -1557,7 +1557,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
 
-        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new PauseActionGroup(actionGroup.CorrelationId, PauseReason.MaintenanceMode));
         (await fixture.TestHarness.Published.Any<SwitchMode>()).ShouldBe(shouldPublish);
     }
 

@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 

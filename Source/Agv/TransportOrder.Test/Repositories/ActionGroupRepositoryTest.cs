@@ -957,24 +957,33 @@ public class ActionGroupRepositoryTest
     public async Task GetCurrentActionGroupsForStation_ValidData_ReturnsActionGroupsHeadingTowardsStationsAndActionGroupsThatReservedTheStation()
     {
         const string station = "a station";
+        const string otherStation = "other station";
+        
         var startedGroupPickTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Started);
         var startedGroupDropTarget = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, dropActionState: ActionState.Started);
+        var pausedGroupPausedPickTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Paused, destination: otherStation, dropActionState: ActionState.Created);
+        var pausedGroupPausedDropTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: otherStation, pickActionState: ActionState.Completed, destination: station, dropActionState: ActionState.Paused);
+        var pausedGroupPausedOtherPickTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: otherStation, pickActionState: ActionState.Paused, destination: station, dropActionState: ActionState.Created);
+        var pausedGroupPausedOtherDropTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Completed, destination: otherStation, dropActionState: ActionState.Paused);
         var createdGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: station);
-        var startedGroupOtherTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: "to somewhere else", pickActionState: ActionState.Started);
+        var startedGroupOtherTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: otherStation, pickActionState: ActionState.Started);
         var chargeGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeId: station);
         var parkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
         var startedParkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
         startedParkGroup.StartAction(startedParkGroup.Actions.First().CorrelationId, [], []);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
-            .WithActionGroups([startedGroupPickTarget, startedGroupDropTarget, createdGroup, startedGroupOtherTarget, chargeGroup, parkGroup, startedParkGroup])
+            .WithActionGroups([startedGroupPickTarget, startedGroupDropTarget, createdGroup, startedGroupOtherTarget, 
+                               pausedGroupPausedPickTarget, pausedGroupPausedDropTarget, pausedGroupPausedOtherPickTarget, pausedGroupPausedOtherDropTarget,
+                               chargeGroup, parkGroup, startedParkGroup])
             .BuildAsync();
 
         IReadOnlyCollection<ActionGroup> groupsForStation = await fixture.ActionGroupRepository.GetCurrentActionGroupsForStation(station);
 
         groupsForStation.Select(g => g.CorrelationId).ToList().ShouldBe(
         [
-            startedGroupDropTarget.CorrelationId, startedGroupPickTarget.CorrelationId, // started pick-drop action groups where station is either source or destination
+            startedGroupPickTarget.CorrelationId, startedGroupDropTarget.CorrelationId, // started pick-drop action groups where station is either source or destination
+            pausedGroupPausedDropTarget.CorrelationId, pausedGroupPausedPickTarget.CorrelationId, pausedGroupPausedOtherPickTarget.CorrelationId, // paused pick-drop action groups where station is not completed
             chargeGroup.CorrelationId, parkGroup.CorrelationId, startedParkGroup.CorrelationId // charge and park action groups that reserved the station or are already started
         ], ignoreOrder: true);
     }

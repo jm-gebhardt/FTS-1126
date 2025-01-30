@@ -128,6 +128,17 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionGroupResumed_ValidData_SetNormalMode()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+
+        await fixture.TestHarness.Bus.Publish(new ActionGroupResumed(Guid.NewGuid(), Guid.NewGuid(), "user"));
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupResumed>();
+        await fixture.ShouldHavePublishedAsync<SetNormalMode>();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionGroupCreated_AssignedAgv_PublishesAgvBecameIdle()
     {
         var fixture = new ActionEventHandlerTestFixture();

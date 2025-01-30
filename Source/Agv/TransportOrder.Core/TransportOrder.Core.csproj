@@ -6,9 +6,9 @@
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
         <PackageReference Include="AutoMapper" />
-        <PackageReference Include="Azure.Identity"  />
+        <PackageReference Include="Azure.Identity" />
         <PackageReference Include="MassTransit.Prometheus" />
-        <PackageReference Include="MassTransit"/>
+        <PackageReference Include="MassTransit" />
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />

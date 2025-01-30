@@ -2,10 +2,10 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -145,7 +145,7 @@ public class StationsRequestHandlerTest
         await fixture.ShouldHavePublishedAsync<LockStation>();
         await fixture.ShouldNotHavePublishedAsync<CancelActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<AbortActionGroup>();
-        (await fixture.TestHarness.Published.Any<PauseActionGroup>(m => m.Context.Message == new PauseActionGroup(pickDropActionGroup.CorrelationId))).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<PauseActionGroup>(m => m.Context.Message == new PauseActionGroup(pickDropActionGroup.CorrelationId, PauseReason.LockedStation))).ShouldBeTrue();
     }
 
     [TestMethod]

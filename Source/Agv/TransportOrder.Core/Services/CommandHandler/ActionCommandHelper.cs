@@ -3,16 +3,17 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Agv = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Agv;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -219,7 +220,9 @@ public class ActionCommandHelper
         if (actionGroup is { IsMovingCargo: true, IsManual: true } && !assignedAgv.CanStartManualPickDropAction)
         {
             _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start pick/drop actions in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
-            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));
+            var pauseReason = assignedAgv.Mode.GetPauseReason();
+ 
+            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId, pauseReason));
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
@@ -227,7 +230,10 @@ public class ActionCommandHelper
         if (!actionGroup.IsManual && !assignedAgv.CanStartAutomaticAction)
         {
             _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start automatic action in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
-            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));
+
+            var pauseReason = assignedAgv.Mode.GetPauseReason();
+
+            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId, pauseReason));
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }

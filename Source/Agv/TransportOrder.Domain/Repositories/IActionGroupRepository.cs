@@ -274,13 +274,13 @@ public interface IActionGroupRepository
     Task<IReadOnlyList<ActionGroup>> GetCreatedAndStartedActionGroupsForAgvAsync(Guid agvCorrelationId);
 
     /// <summary>
-    /// Get started pick/drop and assigned parking/charging action groups for startion.
+    /// Get started or paused pick/drop and assigned parking/charging action groups for station.
     /// </summary>
     /// <param name="stationName">The name of the station.</param>
     Task<IReadOnlyCollection<ActionGroup>> GetCurrentActionGroupsForStation(string stationName);
 
     /// <summary>
-    /// Get paused pick/drop action groups for startion.
+    /// Get paused pick/drop action groups for station.
     /// </summary>
     /// <param name="stationName">The name of the station.</param>
     Task<IReadOnlyCollection<ActionGroup>> GetPausedActionGroupsForStation(string stationName);

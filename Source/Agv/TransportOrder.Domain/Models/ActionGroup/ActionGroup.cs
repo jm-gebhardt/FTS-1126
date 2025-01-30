@@ -2,7 +2,9 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using JetBrains.Annotations;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
@@ -56,7 +58,7 @@ public class ActionGroup
     /// <summary>
     /// The first action that is not started
     /// </summary>
-    public AgvAction? FirstNotCompletedAction => Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Created);
+    public AgvAction? FirstNotCompletedAction => Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Created or ActionState.Paused);
 
     /// <summary>
     /// True, if the action group is moving cargo.
@@ -225,7 +227,7 @@ public class ActionGroup
     /// <param name="actionId">The id of the action.</param>
     public void CompleteAction(Guid actionId)
     {
-        if (State == ActionGroupState.Paused && Actions[-1].CorrelationId != actionId)
+        if (State == ActionGroupState.Paused && Actions[^1].CorrelationId != actionId)
         {
             var actionToPause = Actions[Actions.ToList().FindIndex(a => a.CorrelationId == actionId) + 1];
             UpdateActionState(actionToPause.CorrelationId, ActionState.Paused);
@@ -238,28 +240,63 @@ public class ActionGroup
     /// Pauses the currently started action of the action group.
     /// Alternatively pauses the first action that is in created if none is started.
     /// </summary>
-    public void PauseActionGroup()
+    /// <param name="reason">Pause reason.</param>
+    public void PauseActionGroup(Reason? reason)
     {
         var action = FirstNotCompletedAction;
         if (action == null)
         {
             return;
         }
+
+        if (reason != null)
+        {
+            // For each station that is locked, add a reason.
+            // If agv mode is changed (locked, maintenance, user) add reason only once.
+            // Paused action will be resumed when all reasons are reset in ResumeActionGroup.
+            var otherPauseReason = Reasons.SingleOrDefault(r => r.Template != Constants.Reasons.LockedStation);
+            switch (reason.IsPauseReasonLockedStation())
+            {
+                case true:
+                case false when otherPauseReason == null:
+                    Reasons.Add(reason);
+                    break;
+            }
+        }
+
         UpdateActionState(action.CorrelationId, ActionState.Paused);
     }
 
     /// <summary>
     /// Resumes the paused action of this action group.
     /// </summary>
-    public void ResumeActionGroup()
+    /// <param name="removeStationReason">True: Remove lock station reason.</param>
+    public void ResumeActionGroup(bool removeStationReason)
     {
         var action = Actions.FirstOrDefault(a => a.State == ActionState.Paused);
         if (action == null)
         {
             return;
         }
-        UpdateActionState(action.CorrelationId, ActionState.Created);
-        HasPriority = true;
+
+        var lockStationReason = Reasons.FirstOrDefault(r => r.Template == Constants.Reasons.LockedStation);
+        var otherPauseReason = Reasons.SingleOrDefault(r => r.Template != Constants.Reasons.LockedStation);
+        switch (removeStationReason)
+        {
+            case true when lockStationReason != null:
+                Reasons.Remove(lockStationReason);
+                break;
+
+            case false when otherPauseReason != null:
+                Reasons.Remove(otherPauseReason);
+                break;
+        }
+
+        if (Reasons.IsNullOrEmpty())
+        {
+            UpdateActionState(action.CorrelationId, ActionState.Created);
+            HasPriority = true;
+        }
     }
 
     /// <summary>

@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Extensions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -277,6 +278,127 @@ public class ActionGroupTests
         var action = actionGroup.Actions.First(a => !a.IsIncomplete);
 
         Should.Throw<SetActionTargetFailedException>(() => actionGroup.SetTargetForAction(action.CorrelationId, "target"));
+    }
+
+    [TestMethod]
+    public void PauseActionGroup_MaintenanceReason_StartedActionPaused()
+    {
+        var agvGuid = Guid.NewGuid();
+        var createdDate = DateTime.UtcNow;
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            assignedAgv: agvGuid,
+            createdDate: createdDate);
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+
+        actionGroup.AssignedAgv.ShouldBe(agvGuid);
+        actionGroup.StartedDate.ShouldNotBeNull();
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.CreatedDate.ShouldBe(createdDate);
+        actionGroup.State.ShouldBe(ActionGroupState.Paused);
+        var pausedAction = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Paused);
+        pausedAction.ShouldNotBeNull();
+        actionGroup.Reasons.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public void PauseActionGroup_LockStationReason_StartedActionPaused()
+    {
+        var agvGuid = Guid.NewGuid();
+        var createdDate = DateTime.UtcNow;
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            assignedAgv: agvGuid,
+            createdDate: createdDate);
+        actionGroup.PauseActionGroup(PauseReason.LockedStation.ToReason());
+
+        actionGroup.AssignedAgv.ShouldBe(agvGuid);
+        actionGroup.StartedDate.ShouldNotBeNull();
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.CreatedDate.ShouldBe(createdDate);
+        actionGroup.State.ShouldBe(ActionGroupState.Paused);
+        var pausedAction = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Paused);
+        pausedAction.ShouldNotBeNull();
+        actionGroup.Reasons.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public void PauseActionGroup_LockStationAndMaintenanceReason_StartedActionPaused_TwoReasons()
+    {
+        var agvGuid = Guid.NewGuid();
+        var createdDate = DateTime.UtcNow;
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            assignedAgv: agvGuid,
+            createdDate: createdDate);
+        actionGroup.PauseActionGroup(PauseReason.LockedStation.ToReason());
+
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+
+        actionGroup.AssignedAgv.ShouldBe(agvGuid);
+        actionGroup.StartedDate.ShouldNotBeNull();
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.CreatedDate.ShouldBe(createdDate);
+        actionGroup.State.ShouldBe(ActionGroupState.Paused);
+        var pausedAction = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Paused);
+        pausedAction.ShouldNotBeNull();
+        actionGroup.Reasons.Count.ShouldBe(2);
+    }
+
+    [TestMethod]
+    public void PauseActionGroup_UserReasonAndMaintenanceReason_StartedActionPaused_OneReason()
+    {
+        var agvGuid = Guid.NewGuid();
+        var createdDate = DateTime.UtcNow;
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            assignedAgv: agvGuid,
+            createdDate: createdDate);
+        actionGroup.PauseActionGroup(PauseReason.UserMode.ToReason());
+
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+
+        actionGroup.AssignedAgv.ShouldBe(agvGuid);
+        actionGroup.StartedDate.ShouldNotBeNull();
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.CreatedDate.ShouldBe(createdDate);
+        actionGroup.State.ShouldBe(ActionGroupState.Paused);
+        var pausedAction = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Paused);
+        pausedAction.ShouldNotBeNull();
+        actionGroup.Reasons.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public void PauseActionGroup_AgvLockReasonAndMaintenanceReason_StartedActionPaused_OneReason()
+    {
+        var agvGuid = Guid.NewGuid();
+        var createdDate = DateTime.UtcNow;
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            assignedAgv: agvGuid,
+            createdDate: createdDate);
+        actionGroup.PauseActionGroup(PauseReason.LockMode.ToReason());
+
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+
+        actionGroup.AssignedAgv.ShouldBe(agvGuid);
+        actionGroup.StartedDate.ShouldNotBeNull();
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.CreatedDate.ShouldBe(createdDate);
+        actionGroup.State.ShouldBe(ActionGroupState.Paused);
+        var pausedAction = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Paused);
+        pausedAction.ShouldNotBeNull();
+        actionGroup.Reasons.Count.ShouldBe(1);
     }
 
     [DataRow(null, true, false)] // no previous action group, pick: true, drop: false

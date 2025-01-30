@@ -3,6 +3,8 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -10,7 +12,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -294,7 +295,7 @@ public class AgvEventHandler :
         {
             return;
         }
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        ICollection<ActionGroup> actionGroups = await _actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
         foreach (var actionGroup in actionGroups)
         {
             if (actionGroup.State == ActionGroupState.Created)
@@ -315,8 +316,9 @@ public class AgvEventHandler :
 
             if (agvMode.CurrentActionGroupPolicy == CurrentActionGroupPolicy.Pause)
             {
-                _logger.LogDebug("Pausing action group {CorrelationId}", actionGroup.CorrelationId);
-                await context.Publish(new PauseActionGroup(actionGroup.CorrelationId));
+                var pauseReason = agvMode.GetPauseReason();
+                _logger.LogDebug("Pausing action group {CorrelationId} with reason {PauseReason}", actionGroup.CorrelationId, pauseReason);
+                await context.Publish(new PauseActionGroup(actionGroup.CorrelationId, pauseReason));
             }
         }
 

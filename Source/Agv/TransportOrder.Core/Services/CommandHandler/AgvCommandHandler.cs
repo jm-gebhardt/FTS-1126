@@ -12,7 +12,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
@@ -26,6 +25,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
@@ -593,6 +593,11 @@ public class AgvCommandHandler :
         (var agvCorrelationId, string? initiatingUser) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        if (agv.Mode.Type == ModeType.Normal)
+        {
+            return;
+        }
+
         bool agvWasLocked = agv.IsLocked;
 
         agv.SetNormalMode(initiatingUser);

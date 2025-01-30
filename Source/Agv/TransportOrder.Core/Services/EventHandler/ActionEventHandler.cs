@@ -25,6 +25,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     IConsumer<ActionCanceled>,
     IConsumer<ActionDurationEstimated>,
     IConsumer<AutomaticActionWithdrawn>,
+    IConsumer<ActionGroupResumed>,
     IConsumer<ActionGroupCreated>
 {
     /// <summary>
@@ -104,6 +105,14 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
         await context.Publish(new FreeNode(context.Message.TargetNodeId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionGroupResumed"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionGroupResumed> context)
+    {
+        await context.Publish(new SetNormalMode(context.Message.AgvCorrelationId, context.Message.InitiatingUser));
     }
 
     /// <summary>

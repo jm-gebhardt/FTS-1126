@@ -410,7 +410,11 @@ public class AgvController : Controller
     /// <response code="404">Not Found: Agv with the given correlationId does not exist</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/userMode")]
-    public async Task<ActionResult> SetUserMode(Guid correlationId, [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.LeaveAssigned, [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause, [FromQuery] bool cancelManualActions = false)
+    public async Task<ActionResult> SetUserMode(
+        Guid correlationId,
+        [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.LeaveAssigned,
+        [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause,
+        [FromQuery] bool cancelManualActions = false)
     {
         await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, User.GetEmail(), assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
         return Ok();
@@ -515,7 +519,11 @@ public class AgvController : Controller
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/moveToCoordinate")]
-    public async Task<ActionResult<Guid>> MoveAgvToCoordinate(Guid correlationId, [FromQuery] [Required] float x, [FromQuery][Required] float y, [FromQuery][Required] float theta )
+    public async Task<ActionResult<Guid>> MoveAgvToCoordinate(
+        Guid correlationId,
+        [FromQuery][Required] float x,
+        [FromQuery][Required] float y,
+        [FromQuery][Required] float theta )
     {
         Response<AgvMoveSuccessful> response = await _moveAgvToCoordinateClient.GetResponse<AgvMoveSuccessful>(new MoveAgvToCoordinate(correlationId, x, y, theta, ActionGroupCreator.TransportOrderWebApi));
 
@@ -534,7 +542,9 @@ public class AgvController : Controller
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/chargeAtCharger")]
-    public async Task<ActionResult<Guid>> ChargeAgvAtCharger(Guid correlationId, string chargerId)
+    public async Task<ActionResult<Guid>> ChargeAgvAtCharger(
+        Guid correlationId,
+        string chargerId)
     {
         Response<AgvMoveSuccessful> response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId));
 

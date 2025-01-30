@@ -38,4 +38,18 @@ public class ActionGroupHubTest
 
         fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
     }
+
+    [TestMethod]
+    public async Task SendActionGroupChangedAsync_SendsActionGroupChangedWithReason_To_ActionGroupChanged()
+    {
+        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Paused, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), false, false, new List<Reason>() {new ("Maintenance")});
+        var expectedDto = Mock.Of<ActionGroupDto>();
+
+        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<TransportOrder.Messages.MessageContent.Agv>())).Returns(expectedDto);
+
+        await fixture.Publisher.SendActionGroupChangedAsync(data);
+
+        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
+    }
 }

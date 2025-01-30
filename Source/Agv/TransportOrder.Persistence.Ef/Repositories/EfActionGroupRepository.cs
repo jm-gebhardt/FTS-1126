@@ -304,7 +304,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         bool hasUnfinishedDropActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
-                actionGroup.State == ActionGroupState.Started &&
+                (actionGroup.State == ActionGroupState.Started || actionGroup.State == ActionGroupState.Paused) &&
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop)
             )
             .AsNoTracking()
@@ -615,8 +615,10 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>().AsNoTracking().Where(a =>
-            a.Actions.Any(action => action.Target.NodeId == stationName) &&
+            a.Actions.Any(action => action.Target.NodeId == stationName && 
+                                    (action.State == ActionState.Created || action.State == ActionState.Started || action.State == ActionState.Paused)) &&
             (a.State == ActionGroupState.Started || // currently running orders to this station
+             a.State == ActionGroupState.Paused ||  // or paused orders with not completed action to this station
              a.Actions.Any(action => action.ActionType == ActionType.Charge) || (a.Actions.Count == 1 && a.Actions.First().ActionType == ActionType.Move)) // park and charge actions
             ).ToListAsync();
     }

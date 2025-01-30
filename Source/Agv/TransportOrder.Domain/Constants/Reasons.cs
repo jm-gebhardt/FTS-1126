@@ -25,6 +25,9 @@ public static class Reasons
     public const string ActionsMustBeSet = "Actions must be set";
     public const string ManualActionMustHaveExactlyOneAction = "Manual action must have exactly one action";
     public const string LockedStation = "A target station is locked";
+    public const string AgvInUserMode = "AGV in user mode";
+    public const string AgvInLockMode = "AGV in lock mode";
+    public const string AgvInMaintenanceMode = "AGV in maintenance mode";
 
     public const string ManualActionMustHaveAgvAssigned = "Manual action must have an Agv assigned";
 
@@ -38,5 +41,6 @@ public static class Reasons
 
     public const string ActionGroupCanceledByWebApi = "ActionGroup was canceled manually";
     public const string ActionGroupCanceledByExternal = "ActionGroup was canceled by an external system";
+
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

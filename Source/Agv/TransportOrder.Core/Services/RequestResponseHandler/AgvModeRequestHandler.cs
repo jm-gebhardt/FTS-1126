@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using MassTransit;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -58,13 +60,24 @@ public class AgvModeRequestHandler:
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         IReadOnlyList<ActionGroup> pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 100);
 
+        if (pausedActionGroups.Count == 0)
+        {
+            _logger.LogDebug("Triggering set normal mode for agv {AgvCorrelationId}", agvCorrelationId);
+            await _bus.Publish(new SetNormalMode(agv.CorrelationId, initiatingUser));
+            await context.RespondAsync(new Success());
+            return;
+        }
+
         foreach (var actionGroup in pausedActionGroups)
         {
             _logger.LogDebug("Triggering resuming of action group {ActionGroupCorrelationId} for agv {AgvCorrelationId}", actionGroup.CorrelationId, agvCorrelationId);
+            if (actionGroup.Reasons.Any(r => r.Template == Reasons.LockedStation))
+            {
+                // We do not allow to set AGV back to normal mode when one target station is locked
+                throw new SetAgvToNormalModeFailedException(agvCorrelationId);
+            }
             await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, initiatingUser));
         }
-        _logger.LogDebug("Triggering set normal mode for agv {AgvCorrelationId}", agvCorrelationId);
-        await _bus.Publish(new SetNormalMode(agv.CorrelationId, initiatingUser));
         await context.RespondAsync(new Success());
     }
 

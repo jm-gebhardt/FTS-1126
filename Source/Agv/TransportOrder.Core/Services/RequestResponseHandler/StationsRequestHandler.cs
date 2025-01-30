@@ -1,9 +1,9 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using JetBrains.Annotations;
@@ -87,8 +87,8 @@ public class StationsRequestHandler(
 
     private async Task HandleStartedOrders(IReadOnlyCollection<ActionGroup> actionGroups, LockedOrderHandlingType policy)
     {
-        IEnumerable<ActionGroup> startedOrders = actionGroups.Where(a => a.State == ActionGroupState.Started);
- 
+        IEnumerable<ActionGroup>  startedOrders = actionGroups.Where(a => a.State is ActionGroupState.Started or ActionGroupState.Paused);
+
         Func<Guid, Task>? handleOrder = GetHandlingForPolicy(policy);
         if (handleOrder == null)
         {
@@ -104,11 +104,11 @@ public class StationsRequestHandler(
     {
         if (policy == LockedOrderHandlingType.Abort)
         {
-            return async (correlationId) => await bus.Publish(new AbortActionGroup(correlationId, AbortReason.LockedStation));
+            return async correlationId => await bus.Publish(new AbortActionGroup(correlationId, AbortReason.LockedStation));
         }
         if (policy == LockedOrderHandlingType.OnHold)
         {
-            return async (correlationId) => await bus.Publish(new PauseActionGroup(correlationId));
+            return async correlationId => await bus.Publish(new PauseActionGroup(correlationId, PauseReason.LockedStation));
         }
         return null;
     }
@@ -138,7 +138,7 @@ public class StationsRequestHandler(
 
         foreach (var actionGroup in actionGroups)
         {
-            await bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, userEmail));
+            await bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, userEmail, FromStationUnlock: true));
         }
     }
 }

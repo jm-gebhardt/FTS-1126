@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 
-namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
 /// <summary>
 /// Provides a reason why an action group was aborted.

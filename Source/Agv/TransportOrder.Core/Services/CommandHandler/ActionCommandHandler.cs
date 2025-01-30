@@ -11,6 +11,8 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -21,10 +23,10 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using MessageAgvAction = Gebhardt.Acc.Common.Messages.ActionGroups.AgvAction;
@@ -632,7 +634,9 @@ public class ActionCommandHandler :
 
         if (!agv.CanStartAutomaticAction && !actionGroup.IsManual && actionGroup.State != ActionGroupState.Paused)
         {
-            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId), cancellationToken);
+            var pauseReason = agv.Mode.GetPauseReason();
+            _logger.LogInformation("CompleteActionOfActionGroup: ActionGroupId: {ActionGroupId} with reason: {Reason}", actionGroup.CorrelationId, pauseReason);
+            await context.Publish(new PauseActionGroup(actionGroup.CorrelationId, pauseReason), cancellationToken);
         }
 
         if (action.ActionType == ActionType.Pick)
@@ -679,7 +683,7 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AbortActionGroup> context)
     {
-        var correlationId = context.Message.CorrelationId;
+        var (correlationId , abortReason)= context.Message;
 
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
 
@@ -697,7 +701,7 @@ public class ActionCommandHandler :
             return;
         }
         var agv = await _agvDb.Agvs.GetAgvAsync((Guid)actionGroup.AssignedAgv!);
-        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, context.Message.AbortReason.ToReason());
+        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason());
 
         await context.Publish(new ActionAborted(agv.CorrelationId, _mapper.Map<MessageAgvAction>(action)));
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
@@ -727,7 +731,7 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CancelActionGroup> context)
     {
-        var actionGroupId = context.Message.CorrelationId;
+        var (actionGroupId, cancelReason) = context.Message;
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionGroupId);
 
         if (actionGroup == null)
@@ -761,7 +765,7 @@ public class ActionCommandHandler :
                 return;
         }
 
-        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction ?? actionGroup.Actions.First(), null, ActionState.Canceled, context.Message.CancelReason.ToReason());
+        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction ?? actionGroup.Actions.First(), null, ActionState.Canceled, cancelReason.ToReason());
         await context.PublishAndRespond(new ActionGroupCanceled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
         _logger.LogOrderWarning(LogCodes.OrderCanceled, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Canceled",
@@ -819,10 +823,13 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<PauseActionGroup> context)
     {
-        var actionGroupId = context.Message.CorrelationId;
+        var (actionGroupId, pauseReason) = context.Message;
+
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
 
-        if (actionGroup.State != ActionGroupState.Started)
+        _logger.LogInformation("Action group {ActionGroupId} has state {ActionGroupState} and reason {Reason} for pause.", actionGroupId, actionGroup.State, string.Join(", ", actionGroup.Reasons.Select(r => r.Template)));
+
+        if (actionGroup.State is not (ActionGroupState.Started or ActionGroupState.Paused))
         {
             _logger.LogWarning("Can not pause action group {ActionGroupId} because it is in state {ActionGroupState}.", actionGroupId, actionGroup.State);
             return;
@@ -830,26 +837,34 @@ public class ActionCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv.GetValueOrDefault());
         var activeAction = actionGroup.FirstNotCompletedAction;
         ActionState? actionState = activeAction?.State;
+        actionGroup.PauseActionGroup(pauseReason.ToReason());
 
-        actionGroup.PauseActionGroup();
         await _actionService.TryUpdateActionGroup(actionGroup);
 
-        if (actionState == ActionState.Started && activeAction != null)
+        _logger.LogInformation("PauseActionGroup: Action state is {ActionState} and active action is {Action}", actionState, activeAction);
+        if (actionState == ActionState.Started)
         {
-            await context.Publish(new ActionAborted(activeAction.CorrelationId, _mapper.Map<MessageAgvAction>(activeAction)));
-        }
+            if (activeAction != null)
+            {
+                var actionMessage = _mapper.Map<MessageAgvAction>(activeAction);
+                await context.Publish(new ActionAborted(agv.CorrelationId, actionMessage));
+            }
 
-        if (agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.Pause })
-        {
-            await context.Publish(new SwitchMode(agv.CorrelationId));
-        }
+            if (agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.Pause })
+            {
+                await context.Publish(new SwitchMode(agv.CorrelationId));
+            }
 
-        var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
-        await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
+            if (activeAction != null)
+            {
+                var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
+                await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
+            }
+        }
 
         _logger.LogOrderInformation(LogCodes.OrderPaused, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId,
             "Order Paused", $"Order {actionGroup.OrderId} has been paused",
-            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.Reason, pauseReason } });
     }
 
     /// <summary>
@@ -857,7 +872,8 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ResumeActionGroup> context)
     {
-        var actionGroupId = context.Message.CorrelationId;
+        (var actionGroupId, string? _, bool removeStationReason) = context.Message;
+
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
 
         if (actionGroup.State != ActionGroupState.Paused)
@@ -866,17 +882,21 @@ public class ActionCommandHandler :
             return;
         }
 
-        actionGroup.ResumeActionGroup();
+        actionGroup.ResumeActionGroup(removeStationReason);
+
         await _actionService.TryUpdateActionGroup(actionGroup);
 
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
 
-        _logger.LogOrderInformation(LogCodes.OrderResumed, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId,
-            "Order Resumed", $"Order {actionGroup.OrderId} has been resumed",
-            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
+        if (actionGroup.State != ActionGroupState.Paused)
+        {
+            _logger.LogOrderInformation(LogCodes.OrderResumed, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroupId,
+                "Order Resumed", $"Order {actionGroup.OrderId} has been resumed",
+                new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
-        await context.Publish(new ActionGroupResumed(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, context.Message.InitiatingUser));
+            await context.Publish(new ActionGroupResumed(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, context.Message.InitiatingUser));
+        }
     }
 
     /// <summary>

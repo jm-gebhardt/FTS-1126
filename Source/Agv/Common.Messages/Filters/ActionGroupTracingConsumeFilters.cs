@@ -17,7 +17,8 @@ public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<UpdateActionCommand>>,
     IFilter<ConsumeContext<ActionGroupCompleted>>,
     IFilter<ConsumeContext<ActionGroupStarted>>,
-    IFilter<ConsumeContext<ActionGroupFailed>>
+    IFilter<ConsumeContext<ActionGroupFailed>>,
+    IFilter<ConsumeContext<ActionAborted>>
 {
     /// <inheritdoc cref="ActionGroupTracingConsumeFilters"/>>
     public ActionGroupTracingConsumeFilters(ILogger<ActionGroupTracingConsumeFilters> logger) : base(logger)
@@ -61,6 +62,13 @@ public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<ActionGroupFailed> context, IPipe<ConsumeContext<ActionGroupFailed>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<ActionAborted> context, IPipe<ConsumeContext<ActionAborted>> next)
     {
         LogDebug(context);
         await next.Send(context);
