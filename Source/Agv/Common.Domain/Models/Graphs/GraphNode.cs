@@ -109,10 +109,26 @@ public class GraphNode : IEquatable<GraphNode>
         {
             return false;
         }
-        if (!Type.Equals(other.Type))
+        if (Type is NodeType type)
         {
-            return false;
+            if (type != (NodeType)other.Type)
+            {
+                return false;
+            }
         }
+        else
+        {
+            var types = (ICollection<NodeType>)Type;
+            var otherTypes = (ICollection<NodeType>)other.Type;
+            foreach (var (thisType, otherType) in types.Zip(otherTypes))
+            {
+                if (thisType != otherType)
+                {
+                    return false;
+                }
+            }
+        }
+
         if (!X.Equals(other.X))
         {
             return false;

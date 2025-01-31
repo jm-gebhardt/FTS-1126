@@ -202,6 +202,11 @@ public class Agv : IAgv
     /// <remarks>Interval indicated in seconds</remarks>
     private TimeSpan DailyRequestUpdateInterval { get; } = TimeSpan.FromHours(24);
 
+    /// <summary>
+    /// Time that has to pass before resending a graph request telegram in case graph is not given
+    /// </summary>
+    private TimeSpan GraphRequestUpdateInterval { get; } = TimeSpan.FromSeconds(10);
+
     /// <inheritdoc cref="Agv"/>
     public Agv(Guid correlationId,
         Guid settingsGroup,
@@ -489,7 +494,7 @@ public class Agv : IAgv
             secondsSinceLastRequest = DateTime.UtcNow - (AgvGraphRequestedLastTime ?? DateTime.MinValue);
         }
 
-        bool shouldBeRequested = !GraphExists || secondsSinceLastRequest > DailyRequestUpdateInterval;
+        bool shouldBeRequested = (!GraphExists && secondsSinceLastRequest > GraphRequestUpdateInterval) || (GraphExists && secondsSinceLastRequest > DailyRequestUpdateInterval);
         if (shouldBeRequested)
         {
             AgvGraphRequestedLastTime = DateTime.UtcNow;

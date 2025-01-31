@@ -203,6 +203,18 @@ public class GraphTest
     }
 
     [TestMethod]
+    public void Merge_WithEqualNodesWithMultipleTypes_MergesGraph()
+    {
+        var fixture = new GraphTestFixture()
+            .WithGraphNodes(NodeGenerator.GenerateNodeWithMultipleTypes([AgvGraph.NodeType.PickDrop]))
+            .WithAgvGraphNodes(NodeGenerator.GenerateNodeWithMultipleTypes([AgvGraph.NodeType.PickDrop]))
+            .Build();
+
+        fixture.Graph.Merge(fixture.AgvGraph).ShouldBeFalse();
+        fixture.Graph.Nodes.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
     public void Merge_WithEdgesAndNodes_MergesGraph()
     {
         var fixture = new GraphTestFixture()

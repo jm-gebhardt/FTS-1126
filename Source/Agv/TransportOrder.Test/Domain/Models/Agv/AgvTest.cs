@@ -156,6 +156,42 @@ public class AgvTest
     }
 
     [TestMethod]
+    public void ShouldRequestGraph_GraphRequestedBeforeIntervalNoGraph_ShouldRequestGraph()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        agv.GraphExists = false;
+        agv.AgvGraphRequestedLastTime = DateTime.UtcNow.AddSeconds(-10);
+        agv.AgvStatus = new AgvStatus();
+
+        agv.ShouldRequestGraph().ShouldBeTrue();
+        agv.AgvGraphRequestedLastTime.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public void ShouldRequestGraph_GraphRequestedInIntervalNoGraph_ShouldNotRequestGraph()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        agv.GraphExists = false;
+        agv.AgvGraphRequestedLastTime = DateTime.UtcNow.AddSeconds(-9);
+        agv.AgvStatus = new AgvStatus();
+
+        agv.ShouldRequestGraph().ShouldBeFalse();
+        agv.AgvGraphRequestedLastTime.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public void ShouldRequestGraph_GraphRequestedBeforeIntervalWithGraph_ShouldRequestGraph()
+    {
+        var agv = AgvGenerator.GenerateRawAgv();
+        agv.GraphExists = true;
+        agv.AgvGraphRequestedLastTime = DateTime.UtcNow.AddDays(-1);
+        agv.AgvStatus = new AgvStatus();
+
+        agv.ShouldRequestGraph().ShouldBeTrue();
+        agv.AgvGraphRequestedLastTime.ShouldNotBeNull();
+    }
+
+    [TestMethod]
     public void PrepareLockedMode_ReasonInitiatingUserAndPoliciesGiven_ModeSwitchPreparedWithGivenProperties()
     {
         var agv = AgvGenerator.GenerateRawAgv();
