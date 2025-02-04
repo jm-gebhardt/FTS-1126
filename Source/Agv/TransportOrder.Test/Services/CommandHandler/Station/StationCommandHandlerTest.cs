@@ -13,7 +13,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Station;
 public class StationCommandHandlerTest
 {
     [TestMethod]
-    public async Task Consume_LockStation_ValidData_NodeStateChangedCalled()
+    public async Task Consume_LockStation_ValidData_NodeStateUpdated()
     {
         const string nodeId = "PD-0";
 
@@ -25,13 +25,13 @@ public class StationCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new LockStation(nodeId.ToGuid(), "User", "Reason", "Description", LockedOrderHandlingType.AllowFinish));
 
         await fixture.ShouldHaveConsumedAsync<LockStation>();
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         fixture.VerifyStationUpdated(Times.Once());
         fixture.NodeStateRepository.Verify(r => r.LockNodeAsync(nodeId), Times.Once);
+        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
     [TestMethod]
-    public async Task Consume_UnlockStation_ValidData_NodeStateChangedCalled()
+    public async Task Consume_UnlockStation_ValidData_NodeStateUpdated()
     {
         const string nodeId = "PD-0";
 
@@ -43,9 +43,9 @@ public class StationCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid(), "User"));
 
         await fixture.ShouldHaveConsumedAsync<UnlockStation>();
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         fixture.VerifyStationUpdated(Times.Once());
         fixture.NodeStateRepository.Verify(r => r.UnlockNodeAsync(nodeId), Times.Once);
+        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
     [TestMethod]
@@ -59,6 +59,8 @@ public class StationCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid(), "User"));
 
         await fixture.ShouldHaveConsumedAsync<UnlockStation>();
+        fixture.VerifyStationUpdated(Times.Never());
+        fixture.NodeStateRepository.Verify(r => r.UnlockNodeAsync(nodeId), Times.Once);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
     }
 

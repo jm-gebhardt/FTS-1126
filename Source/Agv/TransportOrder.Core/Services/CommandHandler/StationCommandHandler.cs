@@ -35,15 +35,19 @@ public class StationCommandHandler(
 
         bool lockResult = await nodeStateRepository.LockNodeAsync(station.Name);
 
-        if (lockResult)
+        if (!lockResult)
         {
-            var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
-
-            if (nodeState != null)
-            {
-                await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
-            }
+            logger.LogError("Lock of station {StationName} failed ", station.Name);
+            return;
         }
+
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
+
+        if (nodeState != null)
+        {
+            await context.Publish(new NodeStateChanged(nodeState, null, station.LockedBy, station.LockReason, station.LockDescription));
+        }
+
         station.Lock(user, reason, lockDescription, lockOrderHandling);
 
         await stationRepository.Update(station);
@@ -65,15 +69,19 @@ public class StationCommandHandler(
 
         bool unlockResult = await nodeStateRepository.UnlockNodeAsync(station.Name);
 
-        if (unlockResult)
+        if (!unlockResult)
         {
-            var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
-
-            if (nodeState != null)
-            {
-                await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
-            }
+            logger.LogError("Unlock of station {StationName} failed ", station.Name);
+            return;
         }
+
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
+
+        if (nodeState != null)
+        {
+            await context.Publish(new NodeStateChanged(nodeState, null, station.LockedBy, station.LockReason, station.LockDescription));
+        }
+
         station.Unlock();
         await stationRepository.Update(station);
 
