@@ -65,6 +65,7 @@ public class TransportOrderDbContext : DbContext
     /// <param name="optionsBuilder"></param>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+        optionsBuilder.LogTo(Console.WriteLine, LogLevel.Trace);
         optionsBuilder.ConfigureWarnings(c =>
         {
             // Logs from Microsoft.EntityFrameworkCore.Database.Command

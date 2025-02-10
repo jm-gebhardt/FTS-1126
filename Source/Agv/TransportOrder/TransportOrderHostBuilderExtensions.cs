@@ -83,7 +83,11 @@ public static class TransportOrderHostBuilderExtensions
         {
             string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
 
-            builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); }).LogTo(Console.WriteLine, LogLevel.Information);
+            builder.UseSqlServer(connectionString, m =>
+            {
+                m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName);
+                m.UseCompatibilityLevel(120); // avoid using OPENJSON in translated sql. In EF9 : use m.TranslateParameterizedCollectionsToConstants() instead
+            }).LogTo(Console.WriteLine, LogLevel.Information);
         });
     }
 
