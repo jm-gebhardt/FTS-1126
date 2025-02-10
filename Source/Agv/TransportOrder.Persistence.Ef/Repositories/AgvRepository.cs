@@ -117,6 +117,22 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
+    public async Task<ICollection<Agv>> SelectAgvsWithAboveCriticalBatteryLevel(ICollection<Guid> agvCorrelationIds)
+    {
+        if (!agvCorrelationIds.Any())
+        {
+            return [];
+        }
+        List<Agv> agvs = await Agvs
+            .Where(a =>  agvCorrelationIds.Contains(a.CorrelationId))
+            .Where(a => !a.IsLocked &&
+                   !a.IsQueueing &&
+                   a.IsOnline &&
+                   a.Mode.Type == ModeType.Normal).ToListAsync();
+        return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].BatteryLevelCritical).ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<bool> UpdateAgvAsync(Agv agv)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();

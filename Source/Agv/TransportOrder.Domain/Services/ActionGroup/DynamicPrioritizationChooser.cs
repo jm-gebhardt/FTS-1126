@@ -11,8 +11,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 /// </summary>
 public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
 {
-    private readonly IRouteService _routeService;
-
     /// <inheritdoc cref="ShortestRouteChooser"/>>
     public DynamicPrioritizationChooser(
         IRouteService routeService,
@@ -20,9 +18,8 @@ public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         ILogger<DynamicPrioritizationChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository,  logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, routeService,  logger)
     {
-        _routeService = routeService;
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
@@ -34,7 +31,7 @@ public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
+            double? firstActionCost = await RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
             if (firstActionCost == null)
             {
                 continue;

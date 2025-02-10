@@ -235,6 +235,15 @@ public class EfActionGroupRepository : IActionGroupRepository
         return actionGroup ?? throw new ActionGroupNotFoundException(correlationId);
     }
 
+    /// <inheritdoc />
+    public async Task<ICollection<ActionGroup>> GetRunningIdleActionGroups()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return (await context.Set<ActionGroup>()
+            .Where(a => a.State == ActionGroupState.Started && !a.IsManual && !a.HasPriority).ToListAsync())
+            .Where(a => !a.IsMovingCargo).ToList();
+    }
+
     /// <inheritdoc cref="IActionGroupRepository"/>
     public async Task<AgvAction?> GetActionByIdAsync(Guid correlationId)
     {

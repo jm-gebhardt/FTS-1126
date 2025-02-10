@@ -11,8 +11,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 /// </summary>
 public class AlternatingModeChooser : BaseChooseAgvActionGroupService
 {
-    private readonly IRouteService _routeService;
-
     /// <summary>
     /// Selection mode is fastest route.
     /// </summary>
@@ -25,9 +23,8 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         ILogger<AlternatingModeChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, routeService, logger)
     {
-        _routeService = routeService;
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
@@ -52,7 +49,7 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
+            double? firstActionCost = await RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) >= minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {
@@ -76,7 +73,7 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
+            double? firstActionCost = await RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null  || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {

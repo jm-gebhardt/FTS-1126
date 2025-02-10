@@ -40,17 +40,16 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
     // ReSharper disable once UnusedMethodReturnValue.Global
     public ActionGroupEstimationTestFixture AddRouteOnCosts(double onCosts)
     {
-        string[] targetNodes = ActionGroup.Actions.Select(a => a.Target.NodeId!).ToArray();
-        RouteService.Setup(r => r.GetRouteAsync(Agv, targetNodes.ToArray(), null, It.IsAny<AgvData>()))
-            .ReturnsAsync(new Route(onCosts, null!, null!));
+        RouteService.Setup(r => r.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string[]>(), null, It.IsAny<AgvData>()))
+            .ReturnsAsync(new Route(onCosts, [], []));
 
         return this;
     }
 
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public ActionGroupEstimationTestFixture AddDurationEstimateDeviation(double deviation = 0)
+    public ActionGroupEstimationTestFixture AddNonRouteCosts(double cost = 0)
     {
-        ActionGroupDurationEstimationService.Setup(x => x.GetAverageDurationEstimateDeviationAsync(It.IsAny<Guid>(), It.IsAny<string[]>())).ReturnsAsync(deviation);
+        ActionGroupDurationEstimationService.Setup(x => x.AddNonRouteCosts(It.IsAny<bool>(), It.IsAny<ActionGroup>(), It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(cost);
         return this;
     }
 

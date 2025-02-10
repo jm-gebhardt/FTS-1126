@@ -11,8 +11,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 /// </summary>
 public class OldestActionGroupChooser: BaseChooseAgvActionGroupService
 {
-    private readonly IRouteService _routeService;
-
     /// <inheritdoc cref="OldestActionGroupChooser"/>>
     public OldestActionGroupChooser(
         IRouteService routeService,
@@ -20,9 +18,8 @@ public class OldestActionGroupChooser: BaseChooseAgvActionGroupService
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         ILogger<OldestActionGroupChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, routeService, logger)
     {
-        _routeService = routeService;
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
@@ -35,7 +32,7 @@ public class OldestActionGroupChooser: BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
+            double? firstActionCost = await RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null)
             {

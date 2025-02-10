@@ -124,6 +124,12 @@ public interface IActionGroupRepository
     Task<ActionGroup> GetRequiredActionGroupByActionIdAsync(Guid correlationId);
 
     /// <summary>
+    /// Get all parking or charging action groups.
+    /// </summary>
+    /// <returns>Action groups that are going to parkers or chargers.</returns>
+    Task<ICollection<ActionGroup>> GetRunningIdleActionGroups();
+   
+    /// <summary>
     /// Get the AgvAction.
     /// </summary>
     /// <param name="correlationId">The action correlation id.</param>

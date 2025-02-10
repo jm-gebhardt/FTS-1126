@@ -120,18 +120,19 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
-        (var actionGroup, _, Guid? agvCorrelationId) = context.Message;
+        (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
         if (agvCorrelationId != null)
         {
             await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));
             return;
         }
 
-        string? targetNode = null;
         if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Pick))
         {
-            targetNode = actionGroup.Actions.OrderBy(a => a.Sequence).First().Target.NodeId;
+            await context.Publish(new TryUpdateIdleAction(actionGroupCorrelationId));
+            return;
         }
-        await context.Publish(new TryReactivateParkingAgvs(targetNode));
+
+        await context.Publish(new TryReactivateParkingAgvs());
     }
 }

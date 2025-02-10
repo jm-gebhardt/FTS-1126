@@ -11,8 +11,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 /// </summary>
 public class FastestRouteOfXOldestActionGroupsChooser : BaseChooseAgvActionGroupService
 {
-    private readonly IRouteService _routeService;
-
     private readonly int _numberOfOrders;
 
     /// <inheritdoc cref="ShortestRouteChooser"/>>
@@ -22,9 +20,8 @@ public class FastestRouteOfXOldestActionGroupsChooser : BaseChooseAgvActionGroup
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         ILogger<FastestRouteOfXOldestActionGroupsChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, routeService, logger)
     {
-        _routeService = routeService;
         _numberOfOrders = 2;
     }
 
@@ -40,7 +37,7 @@ public class FastestRouteOfXOldestActionGroupsChooser : BaseChooseAgvActionGroup
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
+            double? firstActionCost = await RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) >= minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {

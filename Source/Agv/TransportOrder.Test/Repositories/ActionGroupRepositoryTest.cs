@@ -1084,4 +1084,32 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(Guid.NewGuid())).ShouldBeNull();
     }
+
+    [TestMethod]
+    public async Task GetRunningIdleActionGroups_ValidData_ReturnsRunningParkingAndChargingActionGroups()
+    {
+        var runningParkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started);
+        var completedParkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Completed);
+        var createdParkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Created);
+
+        var runningChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started);
+        var completedChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge:ActionState.Completed);
+        var createdChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Created, actionStateCharge:ActionState.Created);
+
+        var runningManualChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started);
+        runningManualChargeActionGroup.IsManual = true;
+        var runningPriorityChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started);
+        runningPriorityChargeActionGroup.HasPriority = true;
+
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                runningParkingActionGroup, completedParkingActionGroup, createdParkingActionGroup,
+                runningChargeActionGroup, completedChargeActionGroup, createdChargeActionGroup,
+                runningManualChargeActionGroup, runningPriorityChargeActionGroup, pickDropActionGroup
+            ]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ShouldBeEquivalentTo(new List<ActionGroup>{runningParkingActionGroup, runningChargeActionGroup});
+    }
 }

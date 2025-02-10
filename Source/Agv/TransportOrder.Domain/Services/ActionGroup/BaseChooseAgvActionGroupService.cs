@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -17,12 +18,18 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly ILogger<IChooseAgvActionGroupService> _logger;
     private readonly IQueueRepository _queueRepository;
+    
+    /// <summary>
+    /// The route service
+    /// </summary>
+    protected readonly IRouteService RouteService;
 
     /// <inheritdoc cref="IChooseAgvActionGroupService"/>>
     protected BaseChooseAgvActionGroupService(
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
+        IRouteService routeService,
         ILogger<IChooseAgvActionGroupService> logger
     )
     {
@@ -30,6 +37,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         _actionGroupRepository = actionGroupRepository;
         _nodeStateRepository = nodeStateRepository;
         _queueRepository = queueRepository;
+        RouteService = routeService;
     }
 
     /// <summary>
@@ -124,7 +132,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     /// <summary>
     /// Get the node ids of nodes to avoid.
     /// </summary>
-    private async Task<ICollection<string>> GetNodesToAvoid(string? lastNodeId)
+    private async Task<ICollection<string>> GetNodesToAvoid(string? lastNodeId=null)
     {
         // Avoid nodes of occupied queues
         ICollection<string> queueNodes = await _queueRepository.GetBlockedQueueNodes();

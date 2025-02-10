@@ -243,13 +243,13 @@ public class RouteService : IRouteService
     }
 
     ///<inheritdoc />
-    public async Task<Guid?> GetAgvClosestToTarget(ICollection<(Agv agv, AgvData? agvData)> agvs, string targetNodeId)
+    public async Task<(Guid? agv, Route? route)> GetAgvRouteClosestToTarget(ICollection<(Agv agv, AgvData? agvData)> agvs, string targetNodeId)
     {
         List<(Guid CorrelationId, Route? Route)> routesWithIds = await Task.WhenAll(agvs.Select(async a =>
-                {
-                    var route = await GetRouteIfExistingAsync(a.agv, targetNodeId, agvData: a.agvData, startNodeId: a.agv.AgvStatus?.LastNodeId);
-                    return (a.agv.CorrelationId, route);
-                }))
+            {
+                var route = await GetRouteIfExistingAsync(a.agv, targetNodeId, agvData: a.agvData, startNodeId: a.agv.AgvStatus?.LastNodeId);
+                return (a.agv.CorrelationId, route);
+            }))
             .ContinueWith(x => x.Result
                 .Where(result => result.route != null)
                 .Select(result => (result.CorrelationId, result.route))
@@ -257,8 +257,8 @@ public class RouteService : IRouteService
 
         if (!routesWithIds.Any())
         {
-            return null;
+            return (null, null);
         }
-        return routesWithIds.Where(r => r.Route!=null).MinBy(r => r.Route?.Costs).CorrelationId;
+        return routesWithIds.Where(r => r.Route != null).MinBy(r => r.Route?.Costs);
     }
 }

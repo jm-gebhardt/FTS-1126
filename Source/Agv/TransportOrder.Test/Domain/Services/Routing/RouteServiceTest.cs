@@ -127,7 +127,7 @@ public class RouteServiceTest
     }
 
     [TestMethod]
-    public async Task GetAgvClosestToTarget_ValidData_ReturnsAgvCorrelationId()
+    public async Task GetAgvRouteClosestToTarget_ValidData_ReturnsAgvCorrelationId()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
         var closeAgv = AgvGenerator.GenerateIdleAgv(lastNodeId: AgvGraphGenerator.Waypoint1.Id);
@@ -137,11 +137,11 @@ public class RouteServiceTest
         var fixture = new RouteServiceTestFixture()
             .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph]);
 
-        (await fixture.RouteService.GetAgvClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.Src1)).ShouldBe(closeAgv.CorrelationId);
+        (await fixture.RouteService.GetAgvRouteClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.Src1)).agv.ShouldBe(closeAgv.CorrelationId);
     }
 
     [TestMethod]
-    public async Task GetAgvClosestToTarget_TargetNotReachable_ReturnsNull()
+    public async Task GetAgvRouteClosestToTarget_TargetNotReachable_ReturnsNull()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
         var closeAgv = AgvGenerator.GenerateIdleAgv(lastNodeId: AgvGraphGenerator.Waypoint1.Id);
@@ -151,7 +151,7 @@ public class RouteServiceTest
         var fixture = new RouteServiceTestFixture()
             .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph]);
 
-        (await fixture.RouteService.GetAgvClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.DestinationUnreachable.Id)).ShouldBeNull();
+        (await fixture.RouteService.GetAgvRouteClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.DestinationUnreachable.Id)).ShouldBe((null, null));
     }
 
     [TestMethod]

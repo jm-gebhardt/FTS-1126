@@ -61,7 +61,7 @@ public class AgvEfRepositoryTest
 
         var agv1 = AgvGenerator.GenerateIdleAgv();
         var agv2 = AgvGenerator.GenerateChargingAgv(1);
-        
+
         await fixture.Add(agv1);
         await fixture.Add(agv2);
 
@@ -191,5 +191,73 @@ public class AgvEfRepositoryTest
 
         ICollection<Agv> agvs = await fixture.Repository.GetChargingAgvsWithMinBatteryLevelAsync();
         agvs.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task SelectAgvsWithAboveCriticalBatteryLevel_NoAgvsToSelectFrom_ReturnsEmptyList()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        await fixture.Add(agv);
+
+        (await fixture.Repository.SelectAgvsWithAboveCriticalBatteryLevel([])).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task SelectAgvsWithAboveCriticalBatteryLevel_ValidData_ReturnsAgvs()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var agvAboveCritical = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        var queueingAgv = AgvGenerator.GenerateIdleAgv(index:2,batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        queueingAgv.IsQueueing = true;
+        var offlineAgv = AgvGenerator.GenerateIdleAgv(index:3, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        offlineAgv.GoOffline();
+        var agvBelowCritical = AgvGenerator.GenerateIdleAgv(index:4, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical-1);
+        var lockedAgv = AgvGenerator.GenerateIdleAgv(index:5,batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.Locked));
+        var userModeAgv = AgvGenerator.GenerateIdleAgv(index:6, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.UserMode));
+        var maintenanceModeAgv = AgvGenerator.GenerateIdleAgv(index:7,batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.Maintenance));
+
+        await fixture.Add(agvBelowCritical);
+        await fixture.Add(agvAboveCritical);
+        await fixture.Add(queueingAgv);
+        await fixture.Add(offlineAgv);
+        await fixture.Add(lockedAgv);
+        await fixture.Add(userModeAgv);
+        await fixture.Add(maintenanceModeAgv);
+
+        (await fixture.Repository.SelectAgvsWithAboveCriticalBatteryLevel([
+            agvBelowCritical.CorrelationId, agvAboveCritical.CorrelationId, queueingAgv.CorrelationId,
+            offlineAgv.CorrelationId, lockedAgv.CorrelationId, userModeAgv.CorrelationId,
+            maintenanceModeAgv.CorrelationId
+        ])).Select(a => a.CorrelationId).ToList().ShouldBeEquivalentTo(new List<Guid>{agvAboveCritical.CorrelationId});
+    }
+
+    [TestMethod]
+    public async Task SelectAgvsWithAboveCriticalBatteryLevel_AgvNotAmongSelection_ReturnsEmpty()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var agvAboveCritical = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        var queueingAgv = AgvGenerator.GenerateIdleAgv(index: 2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        queueingAgv.IsQueueing = true;
+        var offlineAgv = AgvGenerator.GenerateIdleAgv(index: 3, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        offlineAgv.GoOffline();
+        var agvBelowCritical = AgvGenerator.GenerateIdleAgv(index: 4, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical-1);
+        var lockedAgv = AgvGenerator.GenerateIdleAgv(index: 5, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.Locked));
+        var userModeAgv = AgvGenerator.GenerateIdleAgv(index: 6, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.UserMode));
+        var maintenanceModeAgv = AgvGenerator.GenerateIdleAgv(index: 7, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.Maintenance));
+
+        await fixture.Add(agvBelowCritical);
+        await fixture.Add(agvAboveCritical);
+        await fixture.Add(queueingAgv);
+        await fixture.Add(offlineAgv);
+        await fixture.Add(lockedAgv);
+        await fixture.Add(userModeAgv);
+        await fixture.Add(maintenanceModeAgv);
+
+        (await fixture.Repository.SelectAgvsWithAboveCriticalBatteryLevel([
+            agvBelowCritical.CorrelationId, queueingAgv.CorrelationId,
+            offlineAgv.CorrelationId, lockedAgv.CorrelationId, userModeAgv.CorrelationId,
+            maintenanceModeAgv.CorrelationId
+        ])).ShouldBeEmpty();
     }
 }

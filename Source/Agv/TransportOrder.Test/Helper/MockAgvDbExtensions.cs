@@ -40,6 +40,7 @@ public static class MockAgvDbExtensions
         repoMock.Setup(r => r.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
         repoMock.Setup(r => r.AgvSettings.GetSettingsGroupForAgv(It.IsAny<Agv?>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
         repoMock.Setup(r => r.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ReturnsAsync(agvs);
+        repoMock.Setup(r => r.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
     }
 
     private static void AddNonExistingAgvs(this Mock<IAgvDb> repoMock, params Guid[] agvCorrelationIds)
@@ -80,11 +81,6 @@ public static class MockAgvDbExtensions
         repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
     }
     
-    public static void AddAgvsData(this Mock<IAgvDb> repoMock, ICollection<AgvData> agvsData)
-    {
-        repoMock.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvsData);
-    }
-
     public static void AddAgvData(this Mock<IAgvDb> repoMock, Func<Guid, AgvData?> agvData)
     {
         repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);

@@ -69,6 +69,13 @@ public interface IAgvRepository
     Task<ICollection<Models.Agv.Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds);
 
     /// <summary>
+    /// Selects all agvs that have above critical battery level.
+    /// </summary>
+    /// <param name="agvCorrelationIds">The agvs to select from.</param>
+    /// <returns></returns>
+    Task<ICollection<Models.Agv.Agv>> SelectAgvsWithAboveCriticalBatteryLevel(ICollection<Guid> agvCorrelationIds);
+   
+    /// <summary>
     /// Update an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>

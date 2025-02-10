@@ -17,6 +17,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Routing.Models;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
+    private readonly Mock<IQueueManager> _queueManager = new();
 
     protected Mock<IRouteService> RouteService { get; } = new();
 
@@ -61,6 +63,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
+        collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient<ActionCommandHelper>();
         _metricCollectorServiceMock.Setup(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<string?>())).Verifiable();
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
@@ -90,7 +93,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
             Times.Once);
     }
 
-   protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null)
+    protected ActionGroupTestFixtureBase(TimeSpan? inactivityTimeout = null)
     {
         _agvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(SettingsReadModel);
 
@@ -103,16 +106,51 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
+    public ActionGroupTestFixtureBase<T> WithAgvsAtQueueHead(ICollection<Guid> agvs)
+    {
+        _queueManager.Setup(x => x.GetAgvsAtQueueHeads()).ReturnsAsync(agvs);
+        foreach (var agv in agvs)
+        {
+            _agvDb.AddAgvData(AgvDataGenerator.GenerateAgvData(correlationId: agv));
+        }
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithClosestAgv(Guid? closestAgv, Route? route)
+    {
+        RouteService.SetupSequence(x => x.GetAgvRouteClosestToTarget(It.IsAny<ICollection<(TransportOrder.Domain.Models.Agv.Agv agv, AgvData? agvData)>>(), It.IsAny<string>()))
+            .ReturnsAsync((closestAgv, route));
+        ActionGroupDurationEstimationService.Setup(x => x.AddNonRouteCosts(It.IsAny<bool>(), It.IsAny<ActionGroup>(), It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(42);
+        return this;
+    }
+
     public ActionGroupTestFixtureBase<T> AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.AddAgvData(AgvDataGenerator.GenerateAgvData(correlationId:agv.CorrelationId));
+        _agvDb.AddAgvData(AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId));
         _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> AddAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)
+    {
+        _queueManager.Setup(x => x.GetAgvsAtQueueHeads()).ReturnsAsync(agvs.Select(a => a.CorrelationId).ToList());
+        foreach (var agv in agvs)
+        {
+            _agvDb.AddAgvData(AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId));
+        }
+        _agvDb.AddAgvs(agvs.ToList());
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithAddActionGroupIsSuccessful(bool isSuccessful = true)
     {
         ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).ReturnsAsync(isSuccessful);
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithRunningIdleActionGroups(ICollection<ActionGroup> actionGroups)
+    {
+        ActionGroupRepository.Setup(x => x.GetRunningIdleActionGroups()).ReturnsAsync(actionGroups);
         return this;
     }
 

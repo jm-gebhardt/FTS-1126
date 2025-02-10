@@ -1,8 +1,11 @@
 ﻿using System.Numerics;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
@@ -24,7 +27,13 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
         _graphRepository = graphRepository;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    ///  Gets the average deviation between the actual and estimated
+    /// duration [s] of an action group for the given target nodes.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="targetNodes">The target nodes.</param>
+    /// <returns>The deviation in seconds.</returns>
     public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, string[] targetNodes)
     {
         string key = GetKey(agvCorrelationId, targetNodes);
@@ -71,5 +80,25 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
     public static string GetKey(Guid agvCorrelationId, string[] targetNodes)
     {
         return $"{agvCorrelationId}-{string.Join("-", targetNodes.OrderDescending())}";
+    }
+
+    /// <inheritdoc/>
+    public async Task<double> AddNonRouteCosts(bool lastActionWasMoveToCoordinate, Models.ActionGroup.ActionGroup actionGroup, AgvAction action, Agv assignedAgv)
+    {
+        double duration = 0;
+        if (!lastActionWasMoveToCoordinate && !action.IsMoveToCoordinate && actionGroup.IsMovingCargo)
+        {
+            // average of unaccounted for costs (e.g. cargo loading and unloading) for pick/drop actions
+            duration += await GetAverageDurationEstimateDeviationAsync(actionGroup.AssignedAgv!.Value, actionGroup.GetTargets());
+        }
+    
+        // costs for charging itself, just assume 1% / s, we don't have the charging rate here
+        double chargeCostsPerCharge = 100 - assignedAgv.AgvStatus!.BatteryCharge;
+
+        duration += actionGroup.Actions.Count(a => a.ActionType == ActionType.Charge) * chargeCostsPerCharge;
+
+        // costs for action switching / state transitions of the Agv from one action to the next action
+        duration += actionGroup.Actions.Count * ActionCosts.SwitchingActions;
+        return duration;
     }
 }

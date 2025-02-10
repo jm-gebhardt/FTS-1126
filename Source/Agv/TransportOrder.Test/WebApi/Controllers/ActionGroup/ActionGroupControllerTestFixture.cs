@@ -44,6 +44,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly List<ActionGroupReadModel> _actionGroupReadModels = new();
     private readonly List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
     private readonly Mock<IActionGroupDurationEstimationService> _actionGroupDurationEstimationService = new();
+    private readonly Mock<IQueueManager> _queueManager = new();
 
     public ActionGroupControllerTestFixture()
     {
@@ -64,6 +65,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
             sc.AddTransient<ActionCommandHelper>();
+            sc.AddTransient(_ => _queueManager.Object);
         });
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());

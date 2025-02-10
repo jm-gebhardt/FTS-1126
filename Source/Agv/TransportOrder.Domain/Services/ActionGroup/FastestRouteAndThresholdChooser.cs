@@ -11,7 +11,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 /// </summary>
 public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
 {
-    private readonly IRouteService _routeService;
     private readonly int _orderWaitingTimeThreshold;
 
     /// <inheritdoc cref="ShortestRouteChooser"/>>
@@ -21,9 +20,8 @@ public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         ILogger<FastestRouteAndThresholdChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, routeService, logger)
     {
-        _routeService = routeService;
         _orderWaitingTimeThreshold = 2;
     }
 
@@ -35,7 +33,7 @@ public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
 
         foreach (var priorityGroup in priorityGroups)
         {
-            double? cost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, priorityGroup, agvData, nodesToAvoid, cancellationToken);
+            double? cost = await RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, priorityGroup, agvData, nodesToAvoid, cancellationToken);
             if (cost != null)
             {
                 return priorityGroup;
@@ -51,7 +49,7 @@ public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
             {
                 continue;
             }
-            double? firstActionCost = await _routeService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
+            double? firstActionCost = await RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, agvData, nodesToAvoid, cancellationToken);
 
             if (firstActionCost == null || firstActionCost.GetValueOrDefault(float.MaxValue) >= minCosts || actionGroup.FirstNotStartedAction!.IsIncomplete)
             {

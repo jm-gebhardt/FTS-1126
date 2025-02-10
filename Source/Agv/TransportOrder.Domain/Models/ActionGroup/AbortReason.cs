@@ -26,7 +26,12 @@ public enum AbortReason : byte
     /// <summary>
     /// Triggered during station lock.
     /// </summary>
-    LockedStation = 3
+    LockedStation = 3,
+
+    /// <summary>
+    /// The Agv was reactivated from parking.
+    /// </summary>
+    ReactivatedFromParking = 4
 }
 
 /// <summary>
@@ -43,6 +48,7 @@ public static class AbortReasonExtensions
         string? template = abortReason switch
         {
             AbortReason.ReactivatedFromCharging => Reasons.ActionGroupAbortedToReactivateFromCharging,
+            AbortReason.ReactivatedFromParking => Reasons.ActionGroupAbortedToReactivateFromParking,
             AbortReason.WebApi => Reasons.ActionGroupAbortedByWebApi,
             AbortReason.External => Reasons.ActionGroupAbortedByExternal,
             AbortReason.LockedStation => Reasons.LockedStation,

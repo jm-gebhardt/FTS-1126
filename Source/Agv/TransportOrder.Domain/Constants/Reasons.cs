@@ -35,6 +35,7 @@ public static class Reasons
 
     public const string PickDropSequenceMustBeValid = "Pick/Drop sequence must be valid";
 
+    public const string ActionGroupAbortedToReactivateFromParking = "ActionGroup aborted to reactivate Agv from parking";
     public const string ActionGroupAbortedToReactivateFromCharging = "ActionGroup aborted to reactivate Agv from charging";
     public const string ActionGroupAbortedByWebApi = "ActionGroup was aborted manually";
     public const string ActionGroupAbortedByExternal = "ActionGroup was aborted by an external system";

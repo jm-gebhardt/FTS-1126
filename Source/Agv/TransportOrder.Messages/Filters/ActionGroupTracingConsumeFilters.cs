@@ -24,7 +24,9 @@ public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<NodesSelectedForAction>>,
     IFilter<ConsumeContext<ActionCompleted>>,
     IFilter<ConsumeContext<NonChargingActionCompleted>>,
-    IFilter<ConsumeContext<EstimateActionGroupDuration>>
+    IFilter<ConsumeContext<EstimateActionGroupDuration>>,
+    IFilter<ConsumeContext<TryUpdateIdleAction>>,
+    IFilter<ConsumeContext<SaveActionGroupAbortion>>
 {
     /// <inheritdoc cref="ActionGroupTracingConsumeFilters"/>>
     public ActionGroupTracingConsumeFilters(ILogger<ActionGroupTracingConsumeFilters> logger) : base(logger)
@@ -96,6 +98,20 @@ public class ActionGroupTracingConsumeFilters : BaseTracingFilter,
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<NonChargingActionCompleted> context, IPipe<ConsumeContext<NonChargingActionCompleted>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<TryUpdateIdleAction> context, IPipe<ConsumeContext<TryUpdateIdleAction>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<SaveActionGroupAbortion> context, IPipe<ConsumeContext<SaveActionGroupAbortion>> next)
     {
         LogDebug(context);
         await next.Send(context);

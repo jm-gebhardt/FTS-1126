@@ -51,6 +51,23 @@ public static class AgvActionGenerator
         return parkAction;
     }
 
+    public static ActionGroup GenerateParkActionGroup(string? targetNodeId = null,  ActionState actionState = ActionState.Created, Guid ? assignedAgv = null)
+    {
+        var groupId = Guid.NewGuid();
+        var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.ParkClose.Id, groupId)
+        {
+            Sequence = 0
+        };
+        if (targetNodeId != null)
+        {
+            parkAction.Nodes = [targetNodeId];
+        }
+        parkAction.UpdateActionState(actionState);
+        var actionGroup = new ActionGroup(groupId, string.Empty, [parkAction], ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
+        actionGroup.UpdateActionGroupState();
+        return actionGroup;
+    }
+
     public static ActionGroup GeneratePickDropActionGroupWithActionDuration(string? source = null, string? destination = null, double actionDuration = 0)
     {
         var actionGroup = GeneratePickDropActionGroup(source: source, destination: destination);

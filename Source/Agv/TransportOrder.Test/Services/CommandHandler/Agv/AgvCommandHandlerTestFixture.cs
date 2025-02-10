@@ -17,6 +17,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Routing.Models;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using JetBrains.Annotations;
 using MassTransit;
@@ -107,8 +108,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithClosestAgv(Guid? closestAgv)
     {
-        _routeService.SetupSequence(x => x.GetAgvClosestToTarget(It.IsAny<ICollection<(TransportOrder.Domain.Models.Agv.Agv agv, AgvData? agvData)>>(), It.IsAny<string>()))
-            .ReturnsAsync(closestAgv);
+        _routeService.SetupSequence(x => x.GetAgvRouteClosestToTarget(It.IsAny<ICollection<(TransportOrder.Domain.Models.Agv.Agv agv, AgvData? agvData)>>(), It.IsAny<string>()))
+            .ReturnsAsync((closestAgv, new Route(42, [], [])));
         return this;
     }
 
@@ -133,13 +134,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
         return this;
     }
-
-    public AgvCommandHandlerTestFixture AddAgvsData(ICollection<AgvData> agvsData)
-    {
-        AgvDb.AddAgvsData(agvsData);
-        return this;
-    }
-
+    
     [PublicAPI]
     public AgvCommandHandlerTestFixture SetupAgv(bool hasPendingActions = false, bool exists = true)
     {

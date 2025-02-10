@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FluentValidation;
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -29,7 +28,9 @@ using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using AgvData = Gebhardt.Acc.Common.Domain.Models.AgvData;
 using MessageAgvAction = Gebhardt.Acc.Common.Messages.ActionGroups.AgvAction;
+using Route = Gebhardt.Acc.TransportOrder.Routing.Models.Route;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
@@ -53,7 +54,9 @@ public class ActionCommandHandler :
     IConsumer<EstimateActionGroupDuration>,
     IConsumer<PauseActionGroup>,
     IConsumer<ResumeActionGroup>,
-    IConsumer<CancelOrAbortActionGroup>
+    IConsumer<CancelOrAbortActionGroup>,
+    IConsumer<SaveActionGroupAbortion>,
+    IConsumer<TryUpdateIdleAction>
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
@@ -68,6 +71,7 @@ public class ActionCommandHandler :
     private readonly IActionGroupDurationEstimationService _durationEstimationService;
     private readonly IMetricCollectionService _metricCollectionService;
     private readonly ActionCommandHelper _actionService;
+    private readonly IQueueManager _queueManager;
 
     /// <inheritdoc cref="ActionCommandHandler"/>
     public ActionCommandHandler(
@@ -78,6 +82,7 @@ public class ActionCommandHandler :
         IActionGroupRetrievalService actionGroupRetrievalService,
         ISemaphoreProvider<IAgvsSemaphore> actionManagerSemaphoreProvider,
         IActionGroupDurationEstimationService durationEstimationService,
+        IQueueManager queueManager,
         IAgvDb agvDb,
         IMetricCollectionService metricCollectionService,
         IMapper mapper,
@@ -96,6 +101,7 @@ public class ActionCommandHandler :
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _durationEstimationService = durationEstimationService;
         _metricCollectionService = metricCollectionService;
+        _queueManager = queueManager;
         _mapper = mapper;
         _bus = bus;
     }
@@ -190,25 +196,14 @@ public class ActionCommandHandler :
         {
             var route = await _routeService.GetRouteAsync(assignedAgv, actionGroup.GetTargets(), null, agvData);
             duration = route.Costs;
-
-            // average of unaccounted for costs (e.g. cargo loading and unloading) for pick/drop actions
-            if (actionGroup.IsMovingCargo)
-            {
-                duration += await _durationEstimationService.GetAverageDurationEstimateDeviationAsync(actionGroup.AssignedAgv!.Value, actionGroup.GetTargets());
-            }
         }
 
         if (lastActionWasMoveToCoordinate || action.IsMoveToCoordinate)
         {
             duration += await _durationEstimationService.GetDurationEstimate(agvData!.MaxVelocityStraight, actionGroup.Actions.First(), assignedAgv.CorrelationId);
         }
-        // costs for charging itself, just assume 1% / s, we don't have the charging rate here
-        double chargeCostsPerCharge = 100 - assignedAgv.AgvStatus!.BatteryCharge;
 
-        duration += actionGroup.Actions.Count(a => a.ActionType == ActionType.Charge) * chargeCostsPerCharge;
-
-        // costs for action switching / state transitions of the Agv from one action to the next action
-        duration += actionGroup.Actions.Count * ActionCosts.SwitchingActions;
+        duration += await _durationEstimationService.AddNonRouteCosts(lastActionWasMoveToCoordinate, actionGroup, action, assignedAgv);
 
         actionGroup.EstimatedDuration = TimeSpan.FromSeconds(duration);
 
@@ -943,5 +938,129 @@ public class ActionCommandHandler :
             return;
         }
         await context.Publish(new AbortActionGroup(actionGroupId, AbortReason.External));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SaveActionGroupAbortion"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SaveActionGroupAbortion> context)
+    {
+        var (actionGroupId, abortedActionId, reason) = context.Message;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
+
+        var abortReason = reason.ToReason();
+        actionGroup.AbortAction(abortedActionId, abortReason!=null ? [abortReason] : []);
+
+        await _actionGroupRepository.UpdateAsync(actionGroup);
+
+        await context.Publish(new AutomaticActionWithdrawn(actionGroup.Actions.OrderBy(a => a.Sequence).First().Target.NodeId!));
+        await context.Publish(new ActionGroupChanged(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId));
+
+        _logger.LogOrderWarning(LogCodes.OrderAborted, actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Order Aborted",
+            $"Order {actionGroup.OrderId} was aborted due to {reason}",
+            new Dictionary<string, object?>
+            {
+                { LogLabels.OrderId, actionGroup.OrderId },
+                { LogLabels.Reason, reason },
+                { LogLabels.ReasonDescription, reason}
+            });
+        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryUpdateIdleAction"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryUpdateIdleAction> context)
+    {
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
+        string targetNode = actionGroup.Actions.Single(a => a.IsFirstAction).Target.NodeId!;
+        
+        // Get and select agv
+        ICollection<Domain.Models.ActionGroup.ActionGroup> idleActionGroups = await _actionGroupRepository.GetRunningIdleActionGroups();
+        List<Guid> idleAgvCorrelationIds = idleActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
+        ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
+        ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        List<Agv> agvs = readyAgvs.ToList();
+        
+        if (idleActionGroups.Count != 0)
+        {
+            ICollection<Agv> idleAgvs = await _agvDb.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(idleAgvCorrelationIds);
+            agvs.AddRange(idleAgvs);
+        }
+        if (agvsAtQueueHeads.Count > 0)
+        {
+            List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList())).ToList();
+            agvs.AddRange(queueingAgvs);
+        }
+        agvs = agvs.DistinctBy(a => a.CorrelationId).OrderBy(a => a.CorrelationId).ToList();
+        List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
+
+       (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNode);
+        if (closestAgvRoute.agv == null)
+        {
+            _logger.LogInformation("Reactivate all parking agvs and agvs at queue heads");
+            foreach (var agv in agvsAtQueueHeads)
+            {
+                await context.Publish(new AgvBecameIdle(agv));
+            }
+            foreach (var agv in readyAgvs)
+            {
+                await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+            }
+            return;
+        }
+        if (!idleAgvCorrelationIds.Contains(closestAgvRoute.agv.Value))
+        {
+            _logger.LogInformation("Reactivate agv {AgvCorrelationId}", closestAgvRoute.agv);
+            await context.Publish(new AgvBecameIdle(closestAgvRoute.agv.Value));
+            return;
+        }
+
+        _logger.LogInformation("Reactivate agv {AgvCorrelationId} that is running idle action", closestAgvRoute.agv);
+        // Prepare action group
+        var actionToStart = actionGroup.FirstNotStartedAction!;
+        actionGroup.AssignedAgv = closestAgvRoute.agv;
+        actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges);
+        
+        // Get route costs
+        var assignedAgv = agvs.Single(a => a.CorrelationId == actionGroup.AssignedAgv!.Value);
+        double duration = closestAgvRoute.route.Costs;
+        duration += await _durationEstimationService.AddNonRouteCosts(false, actionGroup, actionToStart, assignedAgv);
+        actionGroup.EstimatedDuration = TimeSpan.FromSeconds(duration);
+
+        await _actionService.TryUpdateActionGroup(actionGroup);
+        
+        // Publish messages
+        await context.Publish(new UpdateActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber,_mapper.Map<MessageAgvAction>(actionToStart)));
+        
+        await context.Publish(new ActionGroupStarted(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, DateTime.UtcNow));
+        
+        var abortedActionGroup = idleActionGroups.Single(a => a.AssignedAgv == assignedAgv.CorrelationId);
+        await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedActionGroup.Actions.Single(a => a.State == ActionState.Started).CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
+        
+        // Log for ui
+        _logger.LogOrderInformation(
+            LogCodes.OrderStarted,
+            actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId,
+            "Order Started",
+            $"Order {actionGroup.OrderId} has been started",
+            new Dictionary<string, object?>
+            {
+                { LogLabels.OrderId, actionGroup.OrderId }
+            });
+        _logger.LogOrderInformation(
+            LogCodes.OrderActionStarted,
+            actionGroup.AssignedAgv.GetValueOrDefault(),
+            actionGroup.CorrelationId,
+            "Order Updated",
+            $"{actionToStart.ActionType} of order {actionGroup.OrderId} has been started",
+            new Dictionary<string, object?>
+            {
+                { LogLabels.OrderId, actionGroup.OrderId },
+                { LogLabels.ActionType, actionToStart.ActionType }
+            });
+        await _actionService.LogStationUpdate(assignedAgv, actionToStart, actionGroup);
     }
 }
