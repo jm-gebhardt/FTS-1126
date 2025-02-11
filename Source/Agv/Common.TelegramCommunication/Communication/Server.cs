@@ -51,14 +51,19 @@ public class Server : SocketBase
     private void CreateSocket()
     {
         _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        _serverSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+        if (OperatingSystem.IsWindows())
+        {
+            _serverSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+        }
         _serverSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
         var ipAddress = IPAddress.Parse(Configuration.IpAddress);
         var ipEndPoint = new IPEndPoint(ipAddress, Configuration.Port);
+        Logger.LogInformation("Binding socket to {Endpoint}", ipEndPoint);
         _serverSocket.Bind(ipEndPoint);
 
         //Allow only one client
+        Logger.LogInformation("Start listening");
         _serverSocket.Listen(1);
     }
 
@@ -67,7 +72,10 @@ public class Server : SocketBase
         Logger.LogInformation("Waiting for client to connect");
         Socket = _serverSocket!.Accept();
         Logger.LogInformation("Client connected");
-        Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+        if (OperatingSystem.IsWindows())
+        {
+            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+        }
     }
 
     private void DisconnectServer()

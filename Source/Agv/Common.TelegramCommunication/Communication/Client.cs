@@ -24,7 +24,10 @@ public class Client : SocketBase
         {
             Disconnect();
             Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+            if (OperatingSystem.IsWindows())
+            {
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+            }
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             
             Logger.LogInformation("Connecting to {Server}:{Port}",Configuration.IpAddress, Configuration.Port);
