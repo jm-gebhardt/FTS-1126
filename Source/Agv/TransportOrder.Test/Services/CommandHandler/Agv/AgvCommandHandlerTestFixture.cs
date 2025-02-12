@@ -25,6 +25,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Language;
+using System.Linq.Expressions;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -48,7 +51,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRouteService> _routeService = new();
-    
+
     private static IEnumerable<Profile> Profiles => [new AgvStatusProfile(), new AgvProfile(), new CargoProfile()];
 
     protected override IEnumerable<Profile> GetProfiles() => Profiles;
@@ -247,6 +250,18 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
             .ReturnsAsync(actionGroups);
         _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
 
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithAgvsGraph(bool withParkingNodes = true)
+    {
+        var graph = AgvGraphGenerator.CreateDefaultGraph();
+        IEnumerable<GraphNode> nodes = withParkingNodes ? graph.Nodes : graph.Nodes.Where(n => !n.IsParker());
+        ParkerState.UpdateHasParkers(withParkingNodes);
+
+        // Expression "node => node.IsParker()"
+        AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>()))
+            .ReturnsAsync(nodes.Where(n => n.IsParker()));
         return this;
     }
 
