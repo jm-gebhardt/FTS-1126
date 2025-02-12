@@ -583,4 +583,71 @@ public class ActionGroupTests
         parkAction.InfoToAgv.ShouldNotBeNull();
         parkAction.InfoToAgv.GetDockFront().ShouldBe(park);
     }
+
+    [TestMethod]
+    public void SetTargetForActionWithUpdate_ValidData_ActionUpdated()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(ActionState.Completed, ActionState.Started);
+        var action = actionGroup.Actions[2];
+
+        var result = actionGroup.SetTargetForActionWithUpdate(action.CorrelationId, "target");
+        result.ActionType.ShouldBe(ActionType.Drop);
+        result.Target.NodeId.ShouldBe("target");
+
+        actionGroup.Actions[2].ShouldSkip.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void SetTargetForActionWithUpdate_InvalidAction_ThrowsActionNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(ActionState.Completed, ActionState.Started);
+
+        Should.Throw<ActionNotFoundException>(() => actionGroup.SetTargetForActionWithUpdate(Guid.Empty, "target"));
+    }
+
+    [TestMethod]
+    public void GetNextNotSkippedAction_NoSkippedAction_NextAction()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        var result = actionGroup.GetNextNotSkippedAction(actionGroup.Actions[0].CorrelationId);
+        result.ShouldBe(actionGroup.Actions[1]);
+    }
+
+    [TestMethod]
+    public void GetNextNotSkippedAction_NoNextAction_Null()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        var result = actionGroup.GetNextNotSkippedAction(actionGroup.Actions[1].CorrelationId);
+        result.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void GetNextNotSkippedAction_IncorrectActionId_ThrowsAgvNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        Should.Throw<ActionNotFoundException>(() => actionGroup.GetNextNotSkippedAction(Guid.Empty));
+    }
+
+    [TestMethod]
+    public void GetNextNotSkippedAction_MultipleSkippedActions_NextAction()
+    {
+        var agId = "actionGroup".ToGuid();
+        List<TransportOrder.Domain.Models.ActionGroup.AgvAction> actions =
+        [
+            AgvActionGenerator.GenerateAction(agId, "node"),
+            AgvActionGenerator.GenerateAction(agId, "node", ActionType.Move, 1),
+            AgvActionGenerator.GenerateAction(agId, "node", ActionType.Move, 2),
+            AgvActionGenerator.GenerateAction(agId, "node", ActionType.Move, 3)
+        ];
+
+        actions[1].Skip();
+        actions[2].Skip();
+        var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
+
+        var result = actionGroup.GetNextNotSkippedAction(actions[0].CorrelationId);
+        result.ShouldBe(actions[3]);
+    }
 }

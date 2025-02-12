@@ -98,4 +98,22 @@ public class AgvActionTest
 
         Should.Throw<SetActionTargetFailedException>(() => action.SetTarget("new target"));
     }
+
+    [TestMethod]
+    public void SetTarget_ActionIsNotIncompleteWithoutValidation_DoesNotThrow()
+    {
+        var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), "target");
+
+        Should.NotThrow(() => action.SetTarget("new target", false));
+    }
+
+    [TestMethod]
+    public void SkipAction_ValidData_ActionSkipped()
+    {
+        var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), "target");
+
+        action.Skip();
+
+        action.ShouldSkip.ShouldBeTrue();
+    }
 } 

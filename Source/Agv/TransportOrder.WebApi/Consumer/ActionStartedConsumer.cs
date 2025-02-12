@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 /// Consumes <see cref="ActionStarted"/> and sends message via <see cref="IAgvPublisher"/>
 /// </summary>
 [PublicAPI]
-public class ActionStartedConsumer : IConsumer<ActionStarted>
+public class ActionStartedConsumer : IConsumer<ActionStarted>, IConsumer<ActionUpdated>
 {
     private readonly ILogger<ActionStartedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -37,6 +37,19 @@ public class ActionStartedConsumer : IConsumer<ActionStarted>
     /// </summary>
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<ActionStarted> context)
+    {
+        var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.AgvCorrelationId);
+        if (agvRoute != null)
+        {
+            await _agvPublisher.SendAgvRouteChangedAsync(agvRoute);
+        }
+    }
+
+    /// <summary>
+    /// Send message to all clients
+    /// </summary>
+    /// <param name="context"></param>
+    public async Task Consume(ConsumeContext<ActionUpdated> context)
     {
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(context.Message.AgvCorrelationId);
         if (agvRoute != null)

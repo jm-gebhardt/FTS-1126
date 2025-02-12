@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
+using Gebhardt.Acc.TransportOrder.Routing.Models;
 using JetBrains.Annotations;
 using Microsoft.IdentityModel.Tokens;
 
@@ -163,8 +164,8 @@ public class ActionGroup
 
         State = Actions switch
         {
-            _ when Actions.All(a => a.State == ActionState.Completed) => ActionGroupState.Completed,
-            _ when Actions.All(a => a.State == ActionState.Created) => ActionGroupState.Created,
+            _ when Actions.All(a => a.State == ActionState.Completed || a.ShouldSkip) => ActionGroupState.Completed,
+            _ when Actions.All(a => a.State == ActionState.Created || a.ShouldSkip) => ActionGroupState.Created,
             _ when Actions.Any(a => a.State == ActionState.Failed) => ActionGroupState.Failed,
             _ when Actions.Any(a => a.State == ActionState.Canceled) => ActionGroupState.Canceled,
             _ when Actions.Any(a => a.State == ActionState.Aborted) => ActionGroupState.Aborted,
@@ -493,5 +494,61 @@ public class ActionGroup
             startDate = action.CompletedDate!.Value.AddSeconds(idleTimeBetweenActions);
         }
         CompletedDate = Actions[^1].CompletedDate;
+    }
+    
+    /// <summary>
+    /// Skips the provided action and updates the previous one with its type and the new target.
+    /// </summary>
+    /// <param name="actionId">The action id to skip.</param>
+    /// <param name="targetNodeId">The id of the new target node.</param>
+    /// <param name="route">The route if any.</param>
+    public AgvAction SetTargetForActionWithUpdate(Guid actionId, string targetNodeId, Route? route = null)
+    {
+        if (Actions.All(a => a.CorrelationId != actionId))
+        {
+            throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionId);
+        }
+
+        var toSkip = Actions.First(a => a.CorrelationId == actionId);
+        var toUpdate = Actions.OrderBy(a => a.Sequence).Last(a => a.Sequence < toSkip.Sequence);
+        toUpdate.ChangeActiontype(toSkip.ActionType);
+        toUpdate.SetTarget(targetNodeId, false);
+        if (route != null)
+        {
+            toUpdate.Nodes = route.Nodes;
+            toUpdate.Edges = route.Edges;
+        }
+        toSkip.Skip();
+        return toUpdate;
+    }
+
+    /// <summary>
+    /// Gets the previous action if it exists.
+    /// </summary>
+    /// <param name="actionId">Action to find the previous for.</param>
+    public AgvAction? GetPreviousAction(Guid actionId)
+    {
+        if (Actions.All(a => a.CorrelationId != actionId))
+        {
+            throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionId);
+        }
+        int sequence = Actions.First(a => a.CorrelationId == actionId).Sequence;
+
+        return Actions.OrderBy(a => a.Sequence).LastOrDefault(a => a.Sequence < sequence);
+    }
+
+    /// <summary>
+    /// Gets the first action that is not skipped after the provided action.
+    /// </summary>
+    /// <param name="actionId">Tha action to start at</param>
+    public AgvAction? GetNextNotSkippedAction(Guid actionId)
+    {
+        if (Actions.All(a => a.CorrelationId != actionId))
+        {
+            throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionId);
+        }
+        var action = Actions.First(a => a.CorrelationId == actionId);
+
+        return Actions.OrderBy(a => a.Sequence).FirstOrDefault(a => a.Sequence > action.Sequence && !a.ShouldSkip);
     }
 }

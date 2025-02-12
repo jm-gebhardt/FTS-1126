@@ -1,7 +1,7 @@
 DecisionPoint1TriggerName: DP1
 CheckCargoTriggerName: DP2
 DoppelspielTriggerName: DP3
-LongLoopMoveTargetNode: "map/NODE-9"
+LongLoopMoveTargetNode: "map/NODE-10"
 StationMapping:
   "1020": "WE1"
   "1050": "WE1"

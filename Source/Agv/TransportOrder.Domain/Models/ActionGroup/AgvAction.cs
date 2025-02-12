@@ -31,7 +31,7 @@ public class AgvAction : IParentedBy<Guid>
     /// <summary>
     /// The type of the action, e.g. Pick or Drop
     /// </summary>
-    public ActionType ActionType { get; init; }
+    public ActionType ActionType { get; private set; }
 
     /// <summary>
     /// The target of the action.
@@ -88,6 +88,11 @@ public class AgvAction : IParentedBy<Guid>
     /// The duration of the action.
     /// </summary>
     public TimeSpan? Duration => CompletedDate - StartedDate - PausedDuration;
+
+    /// <summary>
+    /// Whether this <see cref="AgvAction"/> should be skipped.
+    /// </summary>
+    public bool ShouldSkip { get; private set; }
 
     /// <summary>
     /// Action is the first action of a group.
@@ -171,10 +176,11 @@ public class AgvAction : IParentedBy<Guid>
     /// Sets a target for the action.
     /// </summary>
     /// <param name="targetNodeId">The target node id.</param>
+    /// <param name="shouldValidate">If the action should validate that it has no target yet.</param>
     /// <exception cref="SetActionTargetFailedException">Thrown, if a target was already set previously.</exception>
-    public void SetTarget(string targetNodeId)
+    public void SetTarget(string targetNodeId, bool shouldValidate = true)
     {
-        if (Target.NodeId != string.Empty)
+        if (shouldValidate && Target.NodeId != string.Empty)
         {
             throw new SetActionTargetFailedException(targetNodeId);
         }
@@ -206,6 +212,23 @@ public class AgvAction : IParentedBy<Guid>
                 PausedDate = now;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Set this <see cref="AgvAction"/> to be skipped.
+    /// </summary>
+    public void Skip()
+    {
+        ShouldSkip = true;
+    }
+
+    /// <summary>
+    /// Change the type of the action.
+    /// </summary>
+    /// <param name="newType">The new type of the action.</param>
+    public void ChangeActiontype(ActionType newType)
+    {
+        ActionType = newType;
     }
 
     /// <summary>

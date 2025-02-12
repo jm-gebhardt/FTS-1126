@@ -1494,6 +1494,54 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_SetTargetForAction_AssignedAgvWithUpdate_PublishesUpdateActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Completed,
+            moveActionState: ActionState.Started);
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup).AddAgv(agv);
+
+        var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
+
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+
+        await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+
+        incompleteAction.IsIncomplete.ShouldBeFalse();
+        actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
+        actionGroup.Actions[1].Target.NodeId.ShouldBe("target");
+        actionGroup.Actions[1].ActionType.ShouldBe(ActionType.Drop);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetTargetForAction_AssignedAgvAllStationsLocked_PublishesAgvBecameIdle_NoUpdate()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Completed,
+            moveActionState: ActionState.Started);
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup).WithLockedStations().AddAgv(agv);
+
+        var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
+
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateActionCommand>();
+
+        incompleteAction.IsIncomplete.ShouldBeFalse();
+        actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
+    }
+
+    [TestMethod]
     public async Task Consume_PauseActionGroup_UnstartedActionGroup_DoesNotPauseActionGroup()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();

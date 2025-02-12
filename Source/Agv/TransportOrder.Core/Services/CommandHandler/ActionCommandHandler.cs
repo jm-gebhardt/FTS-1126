@@ -236,17 +236,31 @@ public class ActionCommandHandler :
         try
         {
             var action = await _actionGroupRepository.GetSubsequentActionAsync(agv.CorrelationId);
-            _logger.LogDebug("Starting succeeding action {Action} of group {ActionGroupCorrelationId} for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, action.ParentId, agv.CorrelationId);
+
+            var actionGroupId = action.ParentId;
+
+            if (action.ShouldSkip)
+            {
+                action = await _actionService.HandleSkippedActions(context, action, agv.CorrelationId, cancellationToken);
+            }
+
+            if (action == null)
+            {
+                _logger.LogDebug("Not starting new action for {ActionGroupCorrelationId} for agv with CorrelationId: {AgvCorrelationId} because all remaining actions were marked to be skipped.", actionGroupId, agv.CorrelationId);
+                return;
+            }
+
+            _logger.LogDebug("Starting succeeding action {Action} of group {ActionGroupCorrelationId} for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
             if (action.IsIncomplete)
             {
-                _logger.LogWarning("Succeeding action {Action} of group {ActionGroupCorrelationId} is incomplete, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, action.ParentId, agv.CorrelationId);
+                _logger.LogWarning("Succeeding action {Action} of group {ActionGroupCorrelationId} is incomplete, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
                 await context.Publish(new StartingActionForAgvFailed(agvCorrelationId), cancellationToken);
                 return;
             }
 
             if (action.State == ActionState.Paused)
             {
-                _logger.LogWarning("Succeeding action {Action} of group {ActionGroupCorrelationId} is paused, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, action.ParentId, agv.CorrelationId);
+                _logger.LogWarning("Succeeding action {Action} of group {ActionGroupCorrelationId} is paused, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
                 return;
             }
 
@@ -905,22 +919,46 @@ public class ActionCommandHandler :
 
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
 
-        var action = actionGroup.Actions.First(a => a.CorrelationId == actionId);
+        var nextAction = actionGroup.Actions.First(a => a.CorrelationId == actionId);
+
+        var currentAction = actionGroup.GetPreviousAction(actionId);
+
+        bool stationIsLocked = await _actionService.StationIsLockedIfExists(targetNodeId);
+        bool shouldUpdate = !stationIsLocked && currentAction is { State: ActionState.Started } && assignedAgv != null;
+
+        Agv? agv = null;
+
+        if (shouldUpdate)
+        {
+            agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
+            var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
+            var route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
+            currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNodeId, route);
+        }
 
         actionGroup.SetTargetForAction(actionId, targetNodeId);
         await _actionGroupRepository.UpdateAsync(actionGroup);
 
         if (assignedAgv != null)
         {
-            await context.Publish(new AgvBecameIdle(assignedAgv.Value), cancellationToken);
+            if (shouldUpdate)
+            {
+                var mappedAction = _mapper.Map<MessageAgvAction>(currentAction);
+                
+                await context.Publish(new UpdateActionCommand((Guid)assignedAgv, agv!.SerialNumber, mappedAction), cancellationToken);
+            }
+            else
+            {
+                await context.Publish(new AgvBecameIdle(assignedAgv.Value), cancellationToken);
+            }
         }
         _logger.LogOrderInformation(LogCodes.OrderIncomplete, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Action Target Set",
-            $"Target {targetNodeId} set for action {action.ActionType.ToString()} of order {actionGroup.OrderId}",
+            $"Target {targetNodeId} set for action {nextAction.ActionType} of order {actionGroup.OrderId}",
             new Dictionary<string, object?>
             {
                 { LogLabels.NodeId, targetNodeId },
-                { LogLabels.ActionType, action.ActionType.ToString() },
+                { LogLabels.ActionType, nextAction.ActionType.ToString() },
                 { LogLabels.OrderId, actionGroup.OrderId }
             });
     }

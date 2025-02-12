@@ -210,6 +210,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         RouteService.WithRoute(0f, nodes, edges);
         return this;
     }
+    
+    public ActionGroupTestFixtureBase<T> WithLockedStations()
+    {
+        _stationRepository.Setup(a => a.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station("", AgvGraph.NodeType.Charge, []) { LockedBy = "lock" });
+        return this;
+    }
 
     public void SetupValidationResult(ValidationResult validationResult)
     {

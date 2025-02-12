@@ -305,4 +305,41 @@ public class ActionCommandHelper
         }
         return actionGroup.FirstNotStartedAction;
     }
+
+    /// <summary>
+    /// Checks if a station is locked if it exists.
+    /// </summary>
+    /// <param name="name">The name of the station.</param>
+    public async Task<bool> StationIsLockedIfExists(string name)
+    {
+        try
+        {
+            return (await _stationRepository.GetStation(name)).IsLocked;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Handles skipped actions.
+    /// </summary>
+    /// <param name="context">Publish endpoint.</param>
+    /// <param name="action">The action to be skipped.</param>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task<AgvAction?> HandleSkippedActions(IPublishEndpoint context, AgvAction action, Guid agvCorrelationId, CancellationToken cancellationToken)
+    {
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
+
+        var notSkippedAction = actionGroup.GetNextNotSkippedAction(action.CorrelationId);
+
+        if (notSkippedAction == null)
+        {
+            await context.Publish(new AgvBecameIdle(agvCorrelationId), cancellationToken);
+        }
+
+        return notSkippedAction;
+    }
 }
