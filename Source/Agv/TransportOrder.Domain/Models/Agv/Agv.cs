@@ -293,6 +293,25 @@ public class Agv : IAgv
     }
 
     /// <summary>
+    /// Check to see if parts of the battery status other than charge level changed.
+    /// </summary>
+    /// <returns></returns>
+    private bool CheckBatteryStatusChange(AgvStatus newStatus)
+    {
+        if (AgvStatus == null)
+        {
+            return true;
+        }
+
+        return newStatus.Charging != AgvStatus.Charging
+               || Math.Abs(newStatus.BatteryCurrent - AgvStatus.BatteryCurrent) > Mathematics.FloatComparator
+               || Math.Abs(newStatus.BatteryTemperature - AgvStatus.BatteryTemperature) > Mathematics.FloatComparator
+               || Math.Abs(newStatus.BatteryVoltage - AgvStatus.BatteryVoltage) > Mathematics.FloatComparator
+               || newStatus.EstimatedFullyChargedTime?.Ticks != AgvStatus.EstimatedFullyChargedTime?.Ticks
+               || newStatus.LastBatteryReplacement?.Ticks != AgvStatus.LastBatteryReplacement?.Ticks;
+    }
+
+    /// <summary>
     /// Check to see if the difference in battery charge is bigger than <see cref="BatteryChargeChangedThreshold"/>.
     /// </summary>
     /// <returns></returns>
@@ -325,7 +344,7 @@ public class Agv : IAgv
     /// Update the agv status.
     /// </summary>
     /// <param name="newStatus"></param>
-    public (bool batteryChargeChanged, bool lastNodeIdChanged) UpdateAgvStatus(AgvStatus newStatus)
+    public (bool batteryStatusChanged, bool lastNodeIdChanged) UpdateAgvStatus(AgvStatus newStatus)
     {
         bool batteryChargeChanged = CheckBatteryChargeChange(newStatus.BatteryCharge);
         if (!batteryChargeChanged && AgvStatus != null)
@@ -347,9 +366,10 @@ public class Agv : IAgv
             );
         }
 
+        bool batteryStatusChanged = batteryChargeChanged || CheckBatteryStatusChange(newStatus);
         bool lastNodeIdChanged = CheckLastNodeIdChanged(newStatus.LastNodeId);
         AgvStatus = newStatus;
-        return (batteryChargeChanged, lastNodeIdChanged);
+        return (batteryStatusChanged, lastNodeIdChanged);
     }
 
     /// <summary>
