@@ -1501,7 +1501,7 @@ public class ActionCommandHandlerTest
             assignedAgv: agv.CorrelationId,
             pickActionState: ActionState.Completed,
             moveActionState: ActionState.Started);
-
+        actionGroup.Actions[0].InfoToAgv = new Dictionary<InfoToAgvKey, string>();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup).AddAgv(agv);
 

@@ -934,6 +934,7 @@ public class ActionCommandHandler :
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
             var route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
             currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNodeId, route);
+            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, null);
         }
 
         actionGroup.SetTargetForAction(actionId, targetNodeId);
