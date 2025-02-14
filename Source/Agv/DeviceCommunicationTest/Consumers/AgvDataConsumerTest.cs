@@ -6,6 +6,9 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using Gebhardt.Acc.DeviceCommunication.Common.Configuration;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
@@ -23,7 +26,7 @@ public class AgvDataConsumerTest
     [TestMethod]
     public async Task ReceiveDataMessage_WithInvalidContent_NoMessageSend()
     {
-        var fixture = new AgvDataConsumerMqttFixture();
+        var fixture = new AgvDataConsumerMqttFixture().Build();
 
         var message = new MqttAgvData("4711", "", "", null, null, 0.0, 0.0, null, null, null,
             0.0, null, null, null, Array.Empty<Sensor>());
@@ -31,6 +34,7 @@ public class AgvDataConsumerTest
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
         await fixture.ShouldNotHavePublishedAsync<AgvDataReceived>();
+        await fixture.ShouldNotHavePublishedAsync<AgvInstantActionDefinitionReceived>();
     }
 
     /// <summary>
@@ -39,7 +43,7 @@ public class AgvDataConsumerTest
     [TestMethod]
     public async Task ReceiveDataMessage_WithValidInput_ExpectMessage()
     {
-        var fixture = new AgvDataConsumerMqttFixture();
+        var fixture = new AgvDataConsumerMqttFixture().Build();
         var sensors = new Sensor[]
         {
             new() { SensorIdentifier = "Back01" },
@@ -73,12 +77,69 @@ public class AgvDataConsumerTest
         publishedData.Data.TurnOnSpotThreshold.ShouldBe(1.5);
         publishedData.Data.SoftwareVersion.ShouldBe("v3.1");
     }
+
+    [TestMethod]
+    public async Task ReceiveDataMessage_WithInstantActionDefinition_PublishesAgvInstantActionDefinitionReceived()
+    {
+        const string model = "KARIS";
+        const string type = "BF1";
+        const string action = "ActionType";
+        var fixture = new AgvDataConsumerMqttFixture()
+            .AddInstantActionDefinition(model, type, action).Build();
+        var message = new MqttAgvData(AgvSerialNumber, model, type, "127.0.0.1", "v3.1", 1.8, 120.0, 0.6, 0.8, 0.7,
+            0.9, 2.5, 1.5, 1000, []);
+        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.ShouldHavePublishedAsync<MqttAgvData>();
+
+        var consumedMessage = fixture.ConsumerHarness.Consumed.Select<MqttAgvData>().First().Context.Message;
+        consumedMessage.SerialNumber.ShouldBe(AgvSerialNumber);
+        await fixture.ShouldHavePublishedAsync<AgvDataReceived>();
+        await fixture.ShouldHavePublishedAsync<AgvInstantActionDefinitionReceived>();
+
+        var publishedData = fixture.TestHarness.Published.Select<AgvInstantActionDefinitionReceived>().First().Context.Message;
+        publishedData.AgvCorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
+        publishedData.InstantActionDefinition.ActionType.ShouldBe(action);
+    }
 }
 
 public class AgvDataConsumerMqttFixture : MqttConsumerTestFixture<AgvDataConsumer>
 {
+    private static StringReader _instantActionsDefinitions = null!;
+    private readonly StringBuilder _configBuilder = new();
+
     public AgvDataConsumerMqttFixture()
     {
-        Build();
+        _configBuilder.AppendLine("InstantActions:");
+    }
+
+    private class ConfigReader : IConfigurationReader
+    {
+        public TextReader Read()
+        {
+            return _instantActionsDefinitions;
+        }
+    }
+
+    public AgvDataConsumerMqttFixture AddInstantActionDefinition(string model, string type, string action)
+    {
+        _configBuilder.AppendLine($"  - ActionType: {action}");
+        _configBuilder.AppendLine("    Description: A description.");
+        _configBuilder.AppendLine("    ResultDescription: A result description");
+        _configBuilder.AppendLine("    AgvTypes:");
+        _configBuilder.AppendLine($"      - Type: {type}");
+        _configBuilder.AppendLine($"        Model: {model}");
+        _configBuilder.AppendLine("        ExcludedAgvSerialNumbers: null");
+        _configBuilder.AppendLine("    AgvSerialNumbers: null");
+        _configBuilder.AppendLine();
+        return this;
+    }
+
+    public new AgvDataConsumerMqttFixture Build()
+    {
+        string config = _configBuilder.ToString();
+        _instantActionsDefinitions = new StringReader(config);
+        AddServices(sc => sc.AddSingleton<IConfigurationReader, ConfigReader>());
+        base.Build();
+        return this;
     }
 }

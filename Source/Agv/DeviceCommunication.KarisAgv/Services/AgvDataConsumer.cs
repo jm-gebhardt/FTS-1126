@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.DeviceCommunication.Common.Configuration;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using JetBrains.Annotations;
@@ -18,14 +19,15 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 public class AgvDataConsumer : IConsumer<MqttAgvData>
 {
     private readonly ILogger<AgvDataConsumer> _logger;
+    private readonly IConfigurationReader _reader;
 
     /// <summary>
     /// Create consumer with message handler delegate.
     /// </summary>
-    /// <param name="logger">Mandatory logger facility.</param>
-    public AgvDataConsumer(ILogger<AgvDataConsumer> logger)
+    public AgvDataConsumer(ILogger<AgvDataConsumer> logger, IConfigurationReader reader)
     {
         _logger = logger;
+        _reader = reader;
     }
 
     /// <summary>
@@ -35,7 +37,7 @@ public class AgvDataConsumer : IConsumer<MqttAgvData>
     public async Task Consume(ConsumeContext<MqttAgvData> context)
     {
         var parser = new AgvDataParser(context.Message);
-        _logger.LogInformation("Incoming AgvData: {AgvData} / {CorrelationId}", context.Message.SerialNumber, context.Message.RequestId);
+        _logger.LogInformation("Incoming AgvData: {AgvSerialNumber} / {CorrelationId}", context.Message.SerialNumber, context.Message.RequestId);
 
         try
         {
@@ -44,11 +46,23 @@ public class AgvDataConsumer : IConsumer<MqttAgvData>
                     parser.SerialNumber,
                     parser.AgvData)
                 , context.CancellationToken);
+            await GetInstantActionDefinitions(context, parser);
         }
         catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, "Message {MessageType} has invalid content: {AgvData} / {CorrelationId}", nameof(MqttAgvData), context.Message, context.CorrelationId);
             throw;
+        }
+    }
+
+    private async Task GetInstantActionDefinitions(ConsumeContext<MqttAgvData> context, AgvDataParser parser)
+    {
+        var instantActionConfiguration = new InstantActionsConfiguration();
+        instantActionConfiguration.Load(_reader);
+        foreach (var instantActionDefinition in instantActionConfiguration.GetDefinitionsForAgv(parser.AgvData, parser.SerialNumber))
+        {
+            _logger.LogInformation("New instant action definition received: {AgvSerialNumber} / {ActionType}", parser.SerialNumber, instantActionDefinition.ActionType);
+            await context.Publish(new AgvInstantActionDefinitionReceived(parser.SerialNumber.ToGuid(), instantActionDefinition));
         }
     }
 }

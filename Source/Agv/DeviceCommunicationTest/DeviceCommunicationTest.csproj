@@ -32,4 +32,7 @@
         <ProjectReference Include="..\DeviceCommunication.Common\DeviceCommunication.Common.csproj" />
         <ProjectReference Include="..\DeviceCommunication.SimAgv\DeviceCommunication.SimAgv.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Configuration\" />
+    </ItemGroup>
 </Project>

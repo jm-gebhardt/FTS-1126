@@ -1,0 +1,30 @@
+InstantActions:
+  - ActionType: initPosition
+    Description: Resets (overrides) the position of the AGV with the given parameters.
+    ResultDescription: Position of agv overridden. No return value
+    Parameters:
+      - Key: x
+        ValueType: Float
+        Description: x-axis position
+        IsOptional: false
+      - Key: y
+        ValueType: Float
+        Description: y-axis position
+        IsOptional: false
+      - Key: theta
+        ValueType: Float
+        Description: orientation of the agv
+        IsOptional: false
+      - Key: lastNodeId
+        ValueType: String
+        Description: node id of the last visited node
+        IsOptional: false
+      - Key: mapId
+        ValueType: String
+        Description: map id
+        IsOptional: false
+    AgvTypes:
+      - Type: KARIS
+        Model: Type-1
+        ExcludedAgvSerialNumbers: 
+    AgvSerialNumbers: 

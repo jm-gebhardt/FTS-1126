@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.Common.Time;
+using Gebhardt.Acc.DeviceCommunication.Common.Configuration;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.CmdOptions;
@@ -32,6 +33,7 @@ try
                 .ConfigureServices((context, services) =>
                 {
                     services.AddScoped(_ => productionOptions);
+                    services.AddSingleton<IConfigurationReader, InstantActionsConfigurationFileReader>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
                         {

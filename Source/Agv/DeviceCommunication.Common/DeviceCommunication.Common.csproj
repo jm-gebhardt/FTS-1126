@@ -10,10 +10,17 @@
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="SkiaSharp" />
         <PackageReference Include="System.Text.Json" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies"  Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+        <PackageReference Include="YamlDotNet" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Common\Common.csproj" />
+    </ItemGroup>
+ 
+    <ItemGroup>
+        <None Update="Configuration\InstantActionConfiguration.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 </Project>
