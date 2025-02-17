@@ -45,7 +45,7 @@ public class TordProcessor(IBus bus, ILogger<TordProcessor> logger, [FromKeyedSe
         logger.LogInformation("Processing tord {Tord}", tord);
 
         CurrentTelegram = tord;
-        bus.Publish(new CreateHostOrder(tord.Hu, new OrderDetails(tord.OId.ToGuid(), tord.OId, tord.Src, tord.Dest, tord.Hu, HostOrderCreator.Wms, tord.Time, tord.HuRot)));
+        bus.Publish(new CreateHostOrder(tord.Hu, new OrderDetails(tord.Hu.ToGuid(), tord.OId, tord.Src, tord.Dest, tord.Hu, HostOrderCreator.Wms, tord.Time, tord.HuRot)));
         ShouldReceive = false;
     }
 

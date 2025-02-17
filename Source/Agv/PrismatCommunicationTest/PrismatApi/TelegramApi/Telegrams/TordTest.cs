@@ -14,9 +14,10 @@ public class TordTest
         var tord = new Tord();
         tord.Load(TestTelegram.Tord).ShouldBeTrue();
         tord.Func.ShouldBe("Tord");
-        tord.Dest.ShouldBe("2410");
-        tord.Src.ShouldBe("1040");
-        tord.OId.ShouldBe("1234567890");
+        tord.Dest.ShouldBe("2110");
+        tord.Src.ShouldBe("1020");
+        tord.OId.ShouldBe("0000000000");
+        tord.Hu.ShouldBe("5010000010");
         tord.OfO.ShouldBe(3);
         tord.SortId.ShouldBe(1);
     }

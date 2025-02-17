@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -26,7 +27,7 @@ public class HostOrder
     /// <summary>
     /// The handling unit as given by the host.
     /// </summary>
-    public string Hu { get; private set; }
+    public string Hu { get; init; }
 
     /// <summary>
     /// The actions of the order.
@@ -88,9 +89,9 @@ public class HostOrder
     [ExcludeFromCodeCoverage]
     private HostOrder()
     {
-        CorrelationId = Guid.NewGuid();
-        OrderId = string.Empty;
         Hu = string.Empty;
+        CorrelationId = Hu.ToGuid();
+        OrderId = string.Empty;
     }
 
     /// <summary>
@@ -178,7 +179,7 @@ public class HostOrder
         if (canCreatePickDropActionGroup)
         {
             return new ActionGroup(CorrelationId,
-                OrderId,
+                Hu,
                 Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv)
                     { Sequence = a.SequenceNumber }).ToList(),
                 ActionGroupCreator.Wms,
@@ -197,7 +198,7 @@ public class HostOrder
     {
         return new ActionGroup(
                 CorrelationId, 
-                OrderId,
+                Hu,
                 [
                     new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId),
                     Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 1} ).First(),
@@ -220,7 +221,7 @@ public class HostOrder
             AssignedAgv = assignedAgv;
             return new ActionGroup(
                 CorrelationId,
-                OrderId,
+                Hu,
                 [
                     Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                     new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId){Sequence = 1},
@@ -231,7 +232,7 @@ public class HostOrder
         }
         return new ActionGroup(
             CorrelationId,
-            OrderId,
+            Hu,
             [
                 Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                 new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId){Sequence = 1},
@@ -254,7 +255,7 @@ public class HostOrder
     {
         AssignedAgv = agv;
         return new ActionGroup(CorrelationId,
-            OrderId,
+            Hu,
             [
                 Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType,  pickNode, CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                 Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv){Sequence = 1} ).First()

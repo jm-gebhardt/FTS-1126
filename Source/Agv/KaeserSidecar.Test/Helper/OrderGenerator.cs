@@ -18,7 +18,7 @@ public static class OrderGenerator
     {
         List<AgvAction> actions = order.Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType,a.Node, order.CorrelationId)).ToList();
         
-        var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(order.CorrelationId, order.OrderId, actions, ActionGroupCreator.Wms, assignedAgv: order.AssignedAgv);
+        var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(order.CorrelationId, order.Hu, actions, ActionGroupCreator.Wms, assignedAgv: order.AssignedAgv);
         if (startedActionType != null)
         {
             var action = actions.Single(a => a.ActionType == startedActionType);

@@ -45,7 +45,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         hostOrderRepository.Add(hostOrder);
         await hostOrderRepository.SaveAsync();
-        logger.LogInformation("Host order for order {OrderId} created", orderDetails.OrderId);
+        logger.LogInformation("Host order for order {Hu} created", hu);
 
         string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node);
        

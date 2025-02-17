@@ -46,7 +46,7 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
 
             var orderDetails = new OrderDetails(correlationId, orderId, _source, destination, leNo, HostOrderCreator.Simulation, leRotation);
 
-            await bus.Publish(new CreateHostOrder("handlingUnit", orderDetails), token);
+            await bus.Publish(new CreateHostOrder(orderDetails.OrderId, orderDetails), token);
             logger.LogInformation("Creating new host order, {orderId}", orderId);
         }
         else
