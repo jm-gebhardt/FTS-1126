@@ -600,6 +600,7 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         if (agv.Mode.Type == ModeType.Normal)
         {
+            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
             return;
         }
 

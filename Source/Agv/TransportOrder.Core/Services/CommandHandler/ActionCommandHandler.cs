@@ -984,8 +984,8 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SaveActionGroupAbortion> context)
     {
-        var (actionGroupId, abortedActionId, reason) = context.Message;
-        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
+        var (_, abortedActionId, reason) = context.Message;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(abortedActionId);
 
         var abortReason = reason.ToReason();
         actionGroup.AbortAction(abortedActionId, abortReason!=null ? [abortReason] : []);

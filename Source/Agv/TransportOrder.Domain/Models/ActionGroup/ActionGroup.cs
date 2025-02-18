@@ -54,12 +54,12 @@ public class ActionGroup
     /// <summary>
     /// The first action to be executed.
     /// </summary>
-    public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a.State == ActionState.Created);
+    public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a is { State: ActionState.Created, ShouldSkip: false });
 
     /// <summary>
     /// The first action that is not started
     /// </summary>
-    public AgvAction? FirstNotCompletedAction => Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Created or ActionState.Paused);
+    public AgvAction? FirstNotCompletedAction => Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Created or ActionState.Paused && !a.ShouldSkip);
 
     /// <summary>
     /// True, if the action group is moving cargo.
