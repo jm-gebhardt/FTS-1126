@@ -74,7 +74,7 @@ public class InstantActionsConfiguration
 /// Configuration of an instant action.
 /// </summary>
 [PublicAPI]
-public record AgvInstantActionConfiguration : AgvInstantAction
+public class AgvInstantActionConfiguration : AgvInstantAction
 {
     /// <summary>
     /// The agv types capable of this instant action.

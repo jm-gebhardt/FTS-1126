@@ -167,6 +167,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<ICargoRepository, CargoRepository>();
         services.AddTransient<IFactoryTimeRepository, FactoryTimeRepository>();
         services.AddTransient<IAgvDb, AgvDb>();
+        services.AddTransient<IAgvInstantActionDefinitionRepository, EfAgvInstantActionDefinitionRepository>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

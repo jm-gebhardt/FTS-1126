@@ -1,4 +1,7 @@
-﻿using JetBrains.Annotations;
+using Gebhardt.Acc.Common.Messages.Converter;
+using JetBrains.Annotations;
+using MassTransit;
+using System.Text.Json.Serialization;
 
 namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 
@@ -6,8 +9,13 @@ namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 /// Provides a command to start and instant action.
 /// </summary>
 [PublicAPI]
-public record StartInstantAction
+public record StartInstantAction: CorrelatedBy<Guid>
 {
+    /// <summary>
+    /// The correlation id of the message.
+    /// </summary>
+    public Guid CorrelationId { get; set; } = Guid.Empty;
+    
     /// <summary>
     /// The agv serial number.
     /// </summary>
@@ -26,7 +34,8 @@ public record StartInstantAction
     /// <summary>
     /// Parameter values of the instant action. If not defined, the action has no parameters.
     /// </summary>
-    public Dictionary<string, string>? Parameters { get; set; } = [];
+    [JsonConverter(typeof(InstantActionParameterJsonConverter))]
+    public Dictionary<string, object>? Parameters { get; set; } = [];
 }
 
 /// <summary>

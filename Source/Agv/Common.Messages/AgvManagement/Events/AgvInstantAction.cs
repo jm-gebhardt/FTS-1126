@@ -7,7 +7,7 @@ namespace Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 /// Definition for an agv instant action.
 /// </summary>
 [PublicAPI]
-public record AgvInstantAction
+public class AgvInstantAction
 {
     /// <summary>
     /// Description of the action.

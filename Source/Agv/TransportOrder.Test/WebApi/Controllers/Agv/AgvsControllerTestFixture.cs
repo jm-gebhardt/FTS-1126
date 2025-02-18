@@ -16,6 +16,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
@@ -195,6 +196,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsRequestClient = GetRequestClient<UpdateDefaultAgvSettings>();
         IRequestClient<UpdateAgvsSettings> updateAgvsSettingsRequestClient = GetRequestClient<UpdateAgvsSettings>();
         IRequestClient<ResetAgvsSettingToDefault> resetAgvsSettingsRequestClient = GetRequestClient<ResetAgvsSettingToDefault>();
+        IRequestClient<GetAgvsInstantActionsDefinitions> instantActionsClient = GetRequestClient<GetAgvsInstantActionsDefinitions>();
 
         var controller = new AgvsController(Mapper,
             _getAgvsRequestClient,
@@ -210,7 +212,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             _getAgvsHasCargoRequestClient,
             updateDefaultSettingsRequestClient,
             updateAgvsSettingsRequestClient,
-            resetAgvsSettingsRequestClient
+            resetAgvsSettingsRequestClient,
+            instantActionsClient
         )
         {
             ControllerContext = new ControllerContext(

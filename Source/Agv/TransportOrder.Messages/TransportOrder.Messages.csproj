@@ -7,7 +7,7 @@
         <PackageReference Include="AutoMapper" />
         <PackageReference Include="MassTransit.Prometheus" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" />
-        <PackageReference Include="MassTransit"  />
+        <PackageReference Include="MassTransit" />
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="System.Text.Json" />

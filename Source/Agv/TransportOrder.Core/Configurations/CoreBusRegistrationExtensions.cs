@@ -18,6 +18,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
@@ -99,6 +100,13 @@ public static class CoreBusRegistrationExtensions
                     r.Handle<AgvGraphNotDefinedException>();
                 }
             )));
+
+        busRegistrationConfigurator.AddConsumer<InstantActionsCommandHandler>(c =>
+            {
+                var partitioner = c.CreatePartitioner(PartitionCount);
+                partitioner.PartitionMessageById<AgvInstantActionDefinitionReceived, InstantActionsCommandHandler>(c);
+            }
+        );
 
         busRegistrationConfigurator.AddRequestClient<AcceptAgvCommand>();
         busRegistrationConfigurator.AddRequestClient<LockAgv>();
@@ -320,6 +328,11 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddConsumer<SendAgvToChargerRequestHandler>();
         configurator.AddRequestClient<SendAgvToCharger>();
+
+        configurator.AddConsumer<InstantActionsRequestHandler>();
+        configurator.AddRequestClient<GetAgvInstantActionDefinitions>();
+        configurator.AddRequestClient<GetAgvsInstantActionsDefinitions>();
+        configurator.AddRequestClient<StartInstantAction>();
     }
 
     private static void RegisterMediatorRoutingRequestHandlers(IMediatorRegistrationConfigurator configurator)

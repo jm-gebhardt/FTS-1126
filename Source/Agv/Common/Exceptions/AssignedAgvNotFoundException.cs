@@ -19,4 +19,14 @@ public class AssignedAgvNotFoundException : Exception
                $"AgvSerialNumber: {agvSerialNumber}")
     {
     }
+
+    /// <summary>
+    /// Assigned Agv was not found.
+    /// </summary>
+    /// <param name="agvSerialNumber">The serial number of the agv.</param>
+    /// <param name="correlationId">The correlation id of the instant action.</param>
+    public AssignedAgvNotFoundException(string agvSerialNumber, Guid correlationId)
+        : base($"No assigned Agv  {agvSerialNumber} for instant action  {correlationId} ")
+    {
+    }
 }

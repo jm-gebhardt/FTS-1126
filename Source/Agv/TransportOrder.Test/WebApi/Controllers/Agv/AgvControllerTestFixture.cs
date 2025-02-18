@@ -23,6 +23,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -238,8 +239,10 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<SetUserMode> setUserModeClient = GetRequestClient<SetUserMode>();
         IRequestClient<SetMaintenanceMode> setMaintenanceModeClient = GetRequestClient<SetMaintenanceMode>();
         IRequestClient<SetNormalMode> setNormalModeClient = GetRequestClient<SetNormalMode>();
+        IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient = GetRequestClient<GetAgvInstantActionDefinitions>();
+        IRequestClient<StartInstantAction> startInstantActionsClient = GetRequestClient<StartInstantAction>();
 
-    var controller = new AgvController(Mapper,
+        var controller = new AgvController(Mapper,
             getAgvRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,
@@ -266,7 +269,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             resetAgvSettingsClient,
             setUserModeClient, 
             setMaintenanceModeClient, 
-            setNormalModeClient
+            setNormalModeClient,
+            getInstantActionsClient,
+            startInstantActionsClient
         )
         {
             ControllerContext = new ControllerContext(

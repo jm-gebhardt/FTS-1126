@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using MassTransit;
@@ -35,6 +37,7 @@ public class AgvsController : Controller
     private readonly IRequestClient<UpdateDefaultAgvSettings> _updateDefaultSettingsClient;
     private readonly IRequestClient<UpdateAgvsSettings> _updateAgvsSettingsClient;
     private readonly IRequestClient<ResetAgvsSettingToDefault> _resetSettingsToDefaultClient;
+    private readonly IRequestClient<GetAgvsInstantActionsDefinitions> _instantActionsClient;
 
     private readonly IMapper _mapper;
 
@@ -55,7 +58,8 @@ public class AgvsController : Controller
         IRequestClient<GetAgvsHasCargo> getAgvsHasCargoClient,
         IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsClient,
         IRequestClient<UpdateAgvsSettings> updateAgvsSettingsClient,
-        IRequestClient<ResetAgvsSettingToDefault> resetSettingsToDefaultClient
+        IRequestClient<ResetAgvsSettingToDefault> resetSettingsToDefaultClient,
+        IRequestClient<GetAgvsInstantActionsDefinitions> instantActionsClient
     )
     {
         _getAgvsClient = getAgvsClient;
@@ -73,6 +77,7 @@ public class AgvsController : Controller
         _updateDefaultSettingsClient = updateDefaultSettingsClient;
         _updateAgvsSettingsClient = updateAgvsSettingsClient;
         _resetSettingsToDefaultClient = resetSettingsToDefaultClient;
+        _instantActionsClient = instantActionsClient;
     }
 
     /// <summary>
@@ -316,5 +321,23 @@ public class AgvsController : Controller
     {
         await _resetSettingsToDefaultClient.GetResponse<Success>(new ResetAgvsSettingToDefault(correlationIds, propertyName));
         return Ok();
+    }
+
+    /// <summary>
+    /// Get instant action definitions for given agvs.
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <response code="200">Ok</response>
+    [HttpPost]
+    [Route("/agvs/instantActions")]
+    public async Task<ActionResult<Dictionary<Guid, List<AgvInstantActionDefinitionDto>>>> GetInstantActionDefinitions([FromQuery] ICollection<Guid> correlationIds)
+    {
+        Response<GotAgvsInstantActionDefinitions> response = await _instantActionsClient.GetResponse<GotAgvsInstantActionDefinitions>(new GetAgvsInstantActionsDefinitions(correlationIds));
+        var instantActions = new Dictionary<Guid, List<AgvInstantActionDefinitionDto>>();
+        foreach ((var agv, List<InstantActionDefinition> instantActionDefinitions) in response.Message.InstantActionDefinitions)
+        {
+            instantActions.Add(agv, _mapper.Map<List<AgvInstantActionDefinitionDto>>(instantActionDefinitions));
+        }
+        return Ok(instantActions);
     }
 }

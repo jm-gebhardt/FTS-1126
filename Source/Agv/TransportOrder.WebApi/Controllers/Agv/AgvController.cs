@@ -11,6 +11,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
@@ -61,6 +62,8 @@ public class AgvController : Controller
     private readonly IRequestClient<SetUserMode> _setUserModeClient;
     private readonly IRequestClient<SetMaintenanceMode> _setMaintenanceModeClient;
     private readonly IRequestClient<SetNormalMode> _setNormalModeClient;
+    private readonly IRequestClient<GetAgvInstantActionDefinitions> _getInstantActionsClient;
+    private readonly IRequestClient<StartInstantAction> _startInstantActionsClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -94,7 +97,9 @@ public class AgvController : Controller
         IRequestClient<ResetAgvSettingToDefault> resetSettingToDefaultClient,
         IRequestClient<SetUserMode> setUserModeClient,
         IRequestClient<SetMaintenanceMode> setMaintenanceModeClient,
-        IRequestClient<SetNormalMode> setNormalModeClient
+        IRequestClient<SetNormalMode> setNormalModeClient,
+        IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient,
+        IRequestClient<StartInstantAction> startInstantActionsClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -125,6 +130,8 @@ public class AgvController : Controller
         _setUserModeClient = setUserModeClient;
         _setMaintenanceModeClient = setMaintenanceModeClient;
         _setNormalModeClient = setNormalModeClient;
+        _getInstantActionsClient = getInstantActionsClient;
+        _startInstantActionsClient = startInstantActionsClient;
     }
 
     /// <summary>
@@ -377,24 +384,24 @@ public class AgvController : Controller
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/lock")]
     public async Task<ActionResult> LockAgv(
-        Guid correlationId, 
-        [FromQuery] LockReason lockReason, 
+        Guid correlationId,
+        [FromQuery] LockReason lockReason,
         [FromQuery] string reasonDescription,
-        [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, 
-        [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.FinishAction, 
+        [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset,
+        [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.FinishAction,
         [FromQuery] bool cancelManualActions = false)
     {
         var lockAgvCommand = new LockAgv(
-            correlationId, 
-            lockReason, 
-            reasonDescription, 
-            User.GetEmail(), 
+            correlationId,
+            lockReason,
+            reasonDescription,
+            User.GetEmail(),
             assignedActionGroupsPolicy,
             currentActionGroupPolicy,
             cancelManualActions);
-        
-        Response <LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(lockAgvCommand);
-        
+
+        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(lockAgvCommand);
+
         if (response.Message is AgvNotFoundResult)
         {
             return NotFound();
@@ -429,11 +436,11 @@ public class AgvController : Controller
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/maintenanceMode")]
     public async Task<ActionResult> SetMaintenanceMode(
-        Guid correlationId, 
+        Guid correlationId,
         [FromQuery] MaintenanceReason maintenanceReason,
         [FromQuery] string reasonDescription,
-        [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset, 
-        [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause, 
+        [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset,
+        [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause,
         [FromQuery] bool cancelManualActions = false)
     {
         var setMaintenanceModeCommand = new SetMaintenanceMode(
@@ -523,7 +530,7 @@ public class AgvController : Controller
         Guid correlationId,
         [FromQuery][Required] float x,
         [FromQuery][Required] float y,
-        [FromQuery][Required] float theta )
+        [FromQuery][Required] float theta)
     {
         Response<AgvMoveSuccessful> response = await _moveAgvToCoordinateClient.GetResponse<AgvMoveSuccessful>(new MoveAgvToCoordinate(correlationId, x, y, theta, ActionGroupCreator.TransportOrderWebApi));
 
@@ -610,6 +617,40 @@ public class AgvController : Controller
     public async Task<ActionResult> SendAgvToCharger(Guid correlationId)
     {
         await _sendAgvToChargerClient.GetResponse<Success>(new SendAgvToCharger(correlationId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Get instant action definitions for an agv.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="204">No Content</response>
+    /// <response code="404">AGV with given correlationId not found.</response>
+    /// <returns>The instant actions of agv.</returns>
+    [HttpGet]
+    [Route("/agv/{correlationId:guid}/instantActions")]
+    public async Task<ActionResult<ICollection<AgvInstantActionDefinitionDto>>> GetInstantActionDefinitions(Guid correlationId)
+    {
+        Response<GotAgvInstantActionDefinitions> response = await _getInstantActionsClient.GetResponse<GotAgvInstantActionDefinitions>(new GetAgvInstantActionDefinitions(correlationId));
+        var instantActions = _mapper.Map<ICollection<AgvInstantActionDefinitionDto>>(response.Message.AgvInstantActionDefinitions);
+        return Ok(instantActions);
+    }
+
+    /// <summary>
+    /// Start an instant action for an agv.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="204">No Content</response>
+    /// <response code="404">AGV with given correlationId not found or instant action of this type not found or given parameter not found.</response>
+    /// <returns>The id of the instant action.</returns>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/instantActions")]
+    public async Task<ActionResult<string>> StartInstantAction(Guid correlationId, [FromBody] AgvInstantActionDto action)
+    {
+        await _startInstantActionsClient.GetResponse<Success>(new StartInstantAction(correlationId,
+            action.ActionType,
+            action.Parameters?.ToDictionary(k => k.Key, v => v.Value),
+            action.BlockingType));
         return Ok();
     }
 }

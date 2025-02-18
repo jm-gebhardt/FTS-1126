@@ -1,0 +1,82 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "instantActions",
+    "description": "JSON Schema for publishing instantActions that the AGV is to execute as soon as they arrive.",
+    "required": [
+        "serialNumber",
+        "actions"
+    ],
+    "subtopic": "/instantActions",
+    "type": "object",
+    "properties": {
+        "serialNumber": {
+            "type": "string",
+            "description": "Serial number of the AGV."
+        },
+        "actions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "Describes an action that the AGV can perform.",
+                "required": [
+                    "actionId",
+                    "actionType"
+                ],
+                "properties": {
+                    "actionType": {
+                        "type": "string",
+                        "description": "Name of action as described in the first column of \"Actions and Parameters\". Identifies the function of the action."
+                    },
+                    "actionId": {
+                        "type": "string",
+                        "description": "Unique ID to identify the action and map them to the actionState in the state. Suggestion: Use UUIDs."
+                    },
+                    "actionParameters": {
+                        "type": "array",
+                        "description": "Array of actionParameter-objects for the indicated action e. g. deviceId, loadId, external Triggers.",
+                        "items": {
+                            "title": "actionParameter",
+                            "type": "object",
+                            "required": [
+                                "key",
+                                "value"
+                            ],
+                            "properties": {
+                                "key": {
+                                    "type": "string",
+                                    "description": "The key of the action parameter.",
+                                    "examples": [
+                                        "duration",
+                                        "direction",
+                                        "signal"
+                                    ]
+                                },
+                                "value": {
+                                    "type": [
+                                        "array",
+                                        "boolean",
+                                        "number",
+                                        "string",
+                                        "object"
+                                    ],
+                                    "description": "The value of the action parameter",
+                                    "examples": [
+                                        103.2,
+                                        "left",
+                                        true,
+                                        [
+                                            "arrays",
+                                            "are",
+                                            "also",
+                                            "valid"
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
