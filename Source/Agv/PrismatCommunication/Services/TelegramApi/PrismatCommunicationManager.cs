@@ -31,7 +31,7 @@ public class PrismatCommunicationManager : BackgroundService
     /// <inheritdoc cref="PrismatCommunicationManager"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Connect();
+        await Connect();
         Start();
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -41,10 +41,9 @@ public class PrismatCommunicationManager : BackgroundService
         Stop();
     }
 
-    private void Connect()
+    private async Task Connect()
     {
-        _fromPrismatServer.Initialize();
-        _toPrismatServer.Initialize();
+        await Task.WhenAll(_fromPrismatServer.InitializeAsync(), _toPrismatServer.InitializeAsync());
         _receiver.RestartRequest += OnRestartRequest!;
         _sender.RestartRequest += OnRestartRequest!;
     }

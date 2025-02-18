@@ -12,6 +12,8 @@ public class Server : SocketBase
 {
     private TelegramCommunicationConfiguration Configuration { get; }
 
+    private const int TcpResendInterval = 1000;
+
     private Socket? _serverSocket;
 
     /// <inheritdoc cref="Client"/>>
@@ -19,18 +21,43 @@ public class Server : SocketBase
     {
         Configuration = configuration;
     }
-    
+
     /// <inheritdoc cref="SocketBase"/>>
     public override bool Initialize()
     {
-        try{
+        try
+        {
             if (_serverSocket == null)
             {
                 CreateSocket();
             }
 
             WaitForClient();
-            SetTcpKeepAlive(Configuration.UseTcpKeepAlive, Configuration.TcpKeepAliveInterval, 1000, Configuration.TcpKeepAliveRetries);
+            SetTcpKeepAlive(Configuration.UseTcpKeepAlive, Configuration.TcpKeepAliveInterval, TcpResendInterval, Configuration.TcpKeepAliveRetries);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Could not connect, got : {ErrorMessage}", ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Initialize
+    /// </summary>
+    public async Task<bool> InitializeAsync()
+    {
+        try
+        {
+            if (_serverSocket == null)
+            {
+                CreateSocket();
+            }
+
+            await WaitForClientAsync();
+            SetTcpKeepAlive(Configuration.UseTcpKeepAlive, Configuration.TcpKeepAliveInterval, TcpResendInterval, Configuration.TcpKeepAliveRetries);
 
             return true;
         }
@@ -71,6 +98,17 @@ public class Server : SocketBase
     {
         Logger.LogInformation("Waiting for client to connect");
         Socket = _serverSocket!.Accept();
+        Logger.LogInformation("Client connected");
+        if (OperatingSystem.IsWindows())
+        {
+            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+        }
+    }
+
+    private async Task WaitForClientAsync()
+    {
+        Logger.LogInformation("Waiting for client to connect");
+        Socket = await _serverSocket!.AcceptAsync();
         Logger.LogInformation("Client connected");
         if (OperatingSystem.IsWindows())
         {
