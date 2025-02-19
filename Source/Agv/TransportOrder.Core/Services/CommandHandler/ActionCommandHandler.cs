@@ -418,7 +418,7 @@ public class ActionCommandHandler :
 
         var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
             groupCorrelationId,
-            $"Internal queueing order for {agv.SerialNumber}",
+            "Queuing",
             actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, queueNode, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder,
