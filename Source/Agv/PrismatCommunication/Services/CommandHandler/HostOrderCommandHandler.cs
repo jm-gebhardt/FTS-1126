@@ -189,7 +189,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
         hostOrder.Finish(timestamp);
         await hostOrderRepository.UpdateAsync(hostOrder);
-        await hostCommunicator.ReportOrderCompletion(hostOrder.Hu, hostOrder.OrderId, hostOrder.Actions.Last().Node);
+        await hostCommunicator.ReportOrderCompletion(hostOrder.Hu, hostOrder.OrderId, hostOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
     }
 
     /// <summary>

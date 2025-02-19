@@ -216,7 +216,7 @@ public class HostOrderCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
-        fixture.VerifyReportOrderCompletion();
+        fixture.VerifyReportOrderCompletion(hostOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
     }
 
     [TestMethod]
@@ -232,7 +232,7 @@ public class HostOrderCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, now));
         await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
-        fixture.VerifyReportOrderCompletion(Times.Never());
+        fixture.VerifyReportOrderCompletion(times: Times.Never());
     }
 
     [TestMethod]

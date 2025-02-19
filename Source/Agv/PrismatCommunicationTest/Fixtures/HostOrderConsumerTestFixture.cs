@@ -58,9 +58,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         HostOrderRepositoryMock.Verify(x => x.Add(It.IsAny<HostOrder>()), times);
     }
 
-    public void VerifyReportOrderCompletion(Times times = default)
+    public void VerifyReportOrderCompletion(string? destination=null,Times times = default)
     {
-        _hostCommunicatorMock.Verify(x => x.ReportOrderCompletion(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), times);
+        _hostCommunicatorMock.Verify(x => x.ReportOrderCompletion(It.IsAny<string>(), It.IsAny<string>(), destination ?? It.IsAny<string>()), times);
     }
 
     public void VerifyPickCompletion(Times times = default)
