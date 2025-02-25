@@ -115,6 +115,7 @@ public static class AgvActionGenerator
     }
 
     public static ActionGroup GeneratePickDropActionGroup(
+        Guid? groupId = null,
         ActionGroupState actionGroupState = ActionGroupState.Created,
         ActionState actionState = ActionState.Created,
         string? source = null,
@@ -122,22 +123,21 @@ public static class AgvActionGenerator
         Guid? assignedAgv = null)
     {
         const string orderId = "orderId-pick-drop";
-        var groupId = Guid.NewGuid();
-
+        groupId ??= Guid.NewGuid();
         var pickActionGuid = Guid.NewGuid();
         var dropActionGuid = Guid.NewGuid();
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
         {
             Sequence = 0,
             State = actionState
         };
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
         {
             Sequence = 1,
             State = actionState
         };
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { pickAction, dropAction }, ActionGroupCreator.Wms)
+        var actionGroup = new ActionGroup(groupId.Value, orderId, new List<AgvAction> { pickAction, dropAction }, ActionGroupCreator.Wms)
         {
             State = actionGroupState,
             AssignedAgv = assignedAgv
@@ -147,37 +147,39 @@ public static class AgvActionGenerator
     }
 
     [UsedImplicitly]
-    public static ActionGroup GenerateIncompleteActionGroupWithoutPickTarget(ActionGroupState actionGroupState = ActionGroupState.Created,
+    public static ActionGroup GenerateIncompleteActionGroupWithoutPickTarget(
+        Guid? groupId = null,
+        ActionGroupState actionGroupState = ActionGroupState.Created,
         ActionState actionState = ActionState.Created,
         string? moveDestination = null,
         string? destination = null,
         Guid? assignedAgv = null)
     {
         const string orderId = "orderId-pick-drop";
-        var groupId = Guid.NewGuid();
+        groupId ??= Guid.NewGuid();
 
         var pickActionGuid = Guid.NewGuid();
         var dropActionGuid = Guid.NewGuid();
         var moveActionGuid = Guid.NewGuid();
 
-        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId)
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId.Value)
         {
             Sequence = 0,
             State = actionState
         };
 
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick,string.Empty, groupId)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick,string.Empty, groupId.Value)
         {
             Sequence = 1,
             State = actionState
         };
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
         {
             Sequence = 2,
             State = actionState
         };
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction, pickAction, dropAction }, ActionGroupCreator.Wms)
+        var actionGroup = new ActionGroup(groupId.Value, orderId, new List<AgvAction> { moveAction, pickAction, dropAction }, ActionGroupCreator.Wms)
         {
             State = actionGroupState,
             AssignedAgv = assignedAgv
@@ -187,38 +189,40 @@ public static class AgvActionGenerator
     }
 
     [UsedImplicitly]
-    public static ActionGroup GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState actionGroupState = ActionGroupState.Created,
+    public static ActionGroup GenerateIncompleteActionGroupWithoutDropTarget(
+        Guid? groupId = null,
+        ActionGroupState actionGroupState = ActionGroupState.Created,
         ActionState actionState = ActionState.Created,
         string? source = null,
         string? moveDestination = null,
         Guid? assignedAgv = null)
     {
         const string orderId = "orderId-pick-drop";
-        var groupId = Guid.NewGuid();
+        groupId ??= Guid.NewGuid();
 
         var pickActionGuid = Guid.NewGuid();
         var dropActionGuid = Guid.NewGuid();
         var moveActionGuid = Guid.NewGuid();
 
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
         {
             Sequence = 0,
             State = actionState
         };
 
-        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId)
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId.Value)
         {
             Sequence = 1,
             State = actionState
         };
 
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, string.Empty, groupId)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, string.Empty, groupId.Value)
         {
             Sequence = 2,
             State = actionState
         };
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { pickAction, moveAction, dropAction }, ActionGroupCreator.Wms)
+        var actionGroup = new ActionGroup(groupId.Value, orderId, new List<AgvAction> { pickAction, moveAction, dropAction }, ActionGroupCreator.Wms)
         {
             State = actionGroupState,
             AssignedAgv = assignedAgv

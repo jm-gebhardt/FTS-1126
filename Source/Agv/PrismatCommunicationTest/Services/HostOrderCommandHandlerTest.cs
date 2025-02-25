@@ -21,15 +21,38 @@ public class HostOrderCommandHandlerTest
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
 
         const string orderId = "Order#01";
         var correlationId = orderId.ToGuid();
         var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-        await fixture.TestHarness.Bus.Publish( new CreateHostOrder("Hu", orderDetails));
+        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", orderDetails));
 
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
+        fixture.VerifyHostOrderAdded();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateHostOrder_RepeatedOrderForSameHuNoRelatedOrder_CreatesOrderPublishesCancelOrAbortActionGroup()
+    {
+        const string hu = "hu";
+        var now = DateTime.UtcNow;
+        var createdDate = now.AddMinutes(-2);
+
+        var unfinishedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(hu), createdDate.AddMinutes(-2));
+        var orderDetails = OrderGenerator.GenerateUnknownDropTargetOrder(hu);
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(unfinishedOrder)
+            .WithHostCommunicator();
+
+        await fixture.TestHarness.Bus.Publish(new CreateHostOrder(hu, orderDetails));
+
+        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
         fixture.VerifyHostOrderAdded();
     }
 
@@ -38,6 +61,7 @@ public class HostOrderCommandHandlerTest
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false);
@@ -61,6 +85,7 @@ public class HostOrderCommandHandlerTest
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(false)
             .WithHostCommunicator();
 
@@ -107,6 +132,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(false)
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownPickTargetOrder();
@@ -134,6 +160,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(true)
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownPickTargetOrder();
@@ -150,6 +177,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(false)
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownDropTargetOrder();
@@ -177,6 +205,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(true)
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
         fixture.Configuration.SetQueueIsOccupied(false);
 
@@ -194,6 +223,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(true)
             .WithHostOrderRepository(null)
+            .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
         fixture.Configuration.SetQueueIsOccupied(true);
 
@@ -208,7 +238,7 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_FinishHostOrder_ValidData_ReportOrderCompletion()
     {
-        var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId", "Hu", DateTime.UtcNow);
+        var hostOrder = new HostOrder("OrderId", "Hu", DateTime.UtcNow);
         hostOrder.AddAction("node", ActionType.Move);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
@@ -223,7 +253,7 @@ public class HostOrderCommandHandlerTest
     public async Task Consume_FinishHostOrder_InformationOutdated_NoReportOrderCompletion()
     {
         var now = DateTime.UtcNow;
-        var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId","Hu", DateTime.UtcNow);
+        var hostOrder = new HostOrder("OrderId","Hu", DateTime.UtcNow);
         hostOrder.Finish(now.AddDays(1));
 
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -75,23 +74,38 @@ public class HostOrder
     public Guid? AssignedAgv { get; private set; }
 
     /// <summary>
+    /// The order id as used internally
+    /// </summary>
+    public string TransportOrderId => GetTransportOrderId(Hu);
+
+    /// <summary>
     /// Initializes a new <see cref="HostOrder"/> instance.
     /// </summary>
-    public HostOrder(Guid correlationId, string orderId, string hu, DateTime createdDate)
+    public HostOrder(string orderId, string hu, DateTime createdDate)
     {
-        CorrelationId = correlationId;
         OrderId = orderId;
         Hu = hu;
         CreatedDate = createdDate;
+        CorrelationId = Guid.NewGuid();
     }
 
     [UsedImplicitly]
     [ExcludeFromCodeCoverage]
     private HostOrder()
     {
+        CreatedDate = DateTime.UtcNow;
         Hu = string.Empty;
-        CorrelationId = Hu.ToGuid();
         OrderId = string.Empty;
+        CorrelationId = Guid.NewGuid();
+    }
+
+    /// <summary>
+    /// Get the id of a transport order corresponding to the host order.
+    /// </summary>
+    /// <param name="hu">The handling unit.</param>
+    public static string  GetTransportOrderId(string hu)
+    {
+        return $"HU({hu})";
     }
 
     /// <summary>
@@ -179,7 +193,7 @@ public class HostOrder
         if (canCreatePickDropActionGroup)
         {
             return new ActionGroup(CorrelationId,
-                Hu,
+                TransportOrderId,
                 Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv)
                     { Sequence = a.SequenceNumber }).ToList(),
                 ActionGroupCreator.Wms,
@@ -198,7 +212,7 @@ public class HostOrder
     {
         return new ActionGroup(
                 CorrelationId, 
-                Hu,
+                TransportOrderId,
                 [
                     new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId),
                     Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 1} ).First(),
@@ -221,7 +235,7 @@ public class HostOrder
             AssignedAgv = assignedAgv;
             return new ActionGroup(
                 CorrelationId,
-                Hu,
+                TransportOrderId,
                 [
                     Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                     new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId){Sequence = 1},
@@ -232,7 +246,7 @@ public class HostOrder
         }
         return new ActionGroup(
             CorrelationId,
-            Hu,
+            TransportOrderId,
             [
                 Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                 new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId){Sequence = 1},
@@ -255,7 +269,7 @@ public class HostOrder
     {
         AssignedAgv = agv;
         return new ActionGroup(CorrelationId,
-            Hu,
+            TransportOrderId,
             [
                 Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType,  pickNode, CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
                 Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv){Sequence = 1} ).First()

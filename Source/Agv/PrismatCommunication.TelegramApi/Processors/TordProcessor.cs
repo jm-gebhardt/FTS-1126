@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
@@ -45,7 +44,7 @@ public class TordProcessor(IBus bus, ILogger<TordProcessor> logger, [FromKeyedSe
         logger.LogInformation("Processing tord {Tord}", tord);
 
         CurrentTelegram = tord;
-        bus.Publish(new CreateHostOrder(tord.Hu, new OrderDetails(tord.Hu.ToGuid(), tord.OId, tord.Src, tord.Dest, tord.Hu, HostOrderCreator.Wms, tord.Time, tord.HuRot)));
+        bus.Publish(new CreateHostOrder(tord.Hu, new OrderDetails(Guid.NewGuid(), tord.OId, tord.Src, tord.Dest, tord.Hu, HostOrderCreator.Wms, tord.Time, tord.HuRot)));
         ShouldReceive = false;
     }
 

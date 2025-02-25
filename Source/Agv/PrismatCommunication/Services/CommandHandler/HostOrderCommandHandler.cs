@@ -33,8 +33,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     {
         var orderDetails = context.Message.OrderDetails;
         string hu = context.Message.Hu;
-       
-        var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, hu, orderDetails.CreationDate);
+
+        var hostOrder = new HostOrder(orderDetails.OrderId, hu, orderDetails.CreationDate);
 
         (Dictionary<InfoToAgvKey, string>? pickInfoToAgv, Dictionary<InfoToAgvKey, string>? dropInfoToAgv) = GeneratePickAndDropInformation(context.Message, configuration);
         logger.LogDebug("pickInfoToAgv: {PickInfoToAgv}", pickInfoToAgv == null ? "empty" : string.Join(", ", pickInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
@@ -42,6 +42,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         hostOrder.AddAction(orderDetails.Source, ActionType.Pick, pickInfoToAgv);
         hostOrder.AddAction(orderDetails.Destination, ActionType.Drop, dropInfoToAgv);
+        await CancelUnfinishedOrdersOfHu(context, hu, orderDetails.CreationDate);
 
         hostOrderRepository.Add(hostOrder);
         await hostOrderRepository.SaveAsync();
@@ -57,6 +58,50 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         // Call for any idle agv to handle this order
         await QueueHostOrder(context, hostOrder, orderDetails.CreationDate);
+    }
+
+    private async Task CancelUnfinishedOrdersOfHu(IPublishEndpoint context, string hu, DateTime creationDate)
+    {
+        ICollection<HostOrder> hostOrders = await hostOrderRepository.GetLatestUnfinishedOrdersByHu(hu, creationDate);
+        if (hostOrders.Count == 0)
+        {
+            logger.LogError("Could not cancel HostOrder with HandlingUnit {Hu}; None exist.", hu);
+            return;
+        }
+        foreach (var hostOrder in hostOrders)
+        {
+            hostOrder.Cancel(DateTime.UtcNow);
+
+            await context.Publish(new CancelOrAbortActionGroup(hostOrder.CorrelationId));
+
+            await HandleRelatedDoppelspielOrders(context, hostOrder);
+        }
+        await hostOrderRepository.SaveAsync();
+    }
+
+    private async Task HandleRelatedDoppelspielOrders(IPublishEndpoint context, HostOrder hostOrder)
+    {
+        // Handle related Doppelspiel orders
+        HostOrder? reverseHostOrder = null;
+        if (hostOrder.Actions.Any(a => a.ActionType == ActionType.Pick && configuration.PrismatKnownTargets.Contains(a.Node)))
+        {
+            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(configuration.PrismatAklPickTarget);
+        }
+
+        if (hostOrder.HasUnknownDropTarget(configuration))
+        {
+            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, false);
+        }
+
+        if (hostOrder.HasUnknownPickTarget(configuration))
+        {
+            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, true);
+        }
+
+        if (reverseHostOrder != null)
+        {
+            await QueueHostOrder(context, reverseHostOrder, reverseHostOrder.CreatedDate);
+        }
     }
 
     private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null)
@@ -99,7 +144,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     public async Task Consume(ConsumeContext<CancelHostOrder> context)
     {
         string hu = context.Message.Hu;
-        var hostOrder = await hostOrderRepository.GetByHu(hu);
+        var hostOrder = await hostOrderRepository.GetLatestUnfinishedOrderByHu(hu);
         if (hostOrder == null)
         {
             logger.LogError("Could not cancel HostOrder with HandlingUnit {Hu}; None exist.", hu);
@@ -110,26 +155,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         await context.Publish(new CancelOrAbortActionGroup(hostOrder.CorrelationId));
 
-        HostOrder? reverseHostOrder = null;
-        if (hostOrder.Actions.Any(a => a.ActionType == ActionType.Pick && configuration.PrismatKnownTargets.Contains(a.Node)))
-        {
-            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(configuration.PrismatAklPickTarget);
-        }
-
-        if (hostOrder.HasUnknownDropTarget(configuration))
-        {
-            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, false);
-        }
-
-        if (hostOrder.HasUnknownPickTarget(configuration))
-        {
-            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, true);
-        }
-
-        if (reverseHostOrder != null)
-        {
-            await QueueHostOrder(context, reverseHostOrder, reverseHostOrder.CreatedDate);
-        }
+        await HandleRelatedDoppelspielOrders(context, hostOrder);
     }
 
     /// <summary>

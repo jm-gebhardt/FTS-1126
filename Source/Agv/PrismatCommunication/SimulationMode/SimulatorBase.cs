@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using MassTransit;
@@ -40,11 +41,12 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
             _source = sources[_random.Next(sources.Count)];
             string destination = destinations[_random.Next(destinations.Count)];
             string orderId = NextOrderId();
-            var correlationId = orderId.ToGuid();
-            const string leNo = "9999";
+            var createdDate = DateTime.UtcNow;
+            var correlationId = Guid.NewGuid();
+            string leNo = HostOrder.GetTransportOrderId(orderId);
             double leRotation = Mathematics.ConvertToRadians((rotationValues[_random.Next(rotationValues.Count)] - 1) * 90.0);
 
-            var orderDetails = new OrderDetails(correlationId, orderId, _source, destination, leNo, HostOrderCreator.Simulation, leRotation);
+            var orderDetails = new OrderDetails(correlationId, orderId, _source, destination, leNo, HostOrderCreator.Simulation, createdDate, leRotation);
 
             await bus.Publish(new CreateHostOrder(orderDetails.OrderId, orderDetails), token);
             logger.LogInformation("Creating new host order, {orderId}", orderId);
@@ -57,7 +59,7 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
 
     private string NextOrderId()
     {
-        return $"SIM_{DateTime.Now:yyyy-MM-ddTHH:mm}_{_source}_{_orderIdCounter++:D8}";
+        return $"{_source}{_orderIdCounter++:D8}";
     }
 
     /// <summary>

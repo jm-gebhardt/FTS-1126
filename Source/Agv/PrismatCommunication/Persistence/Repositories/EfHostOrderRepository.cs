@@ -93,9 +93,15 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
-    public async Task<HostOrder?> GetByHu(string hu)
+    public async Task<ICollection<HostOrder>> GetLatestUnfinishedOrdersByHu(string hu, DateTime creationDate)
     {
-        return await _context.Set<HostOrder>().FirstOrDefaultAsync(o => o.Hu == hu);
+        return await _context.Set<HostOrder>().Where(o => o.FinishedDate == null && o.CanceledDate == null && o.Hu == hu && o.CreatedDate < creationDate).ToListAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<HostOrder?> GetLatestUnfinishedOrderByHu(string hu)
+    {
+        return await _context.Set<HostOrder>().Where(o => o.FinishedDate == null && o.CanceledDate == null && o.Hu == hu).OrderByDescending(o => o.CreatedDate).FirstOrDefaultAsync();
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>

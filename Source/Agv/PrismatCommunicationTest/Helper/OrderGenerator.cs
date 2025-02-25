@@ -41,7 +41,7 @@ public static class OrderGenerator
                 "OrderId",
                 "1020",
                 KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
-                "leNo",
+                Guid.NewGuid().ToString(),
                 HostOrderCreator.Wms,
                 huRotation);
         }
@@ -49,7 +49,7 @@ public static class OrderGenerator
             "OrderId",
             KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
             "1050",
-            "leNo",
+            Guid.NewGuid().ToString(),
             HostOrderCreator.Wms, huRotation);
     }
 
@@ -59,25 +59,29 @@ public static class OrderGenerator
             "OrderId",
             KaeserConfiguration.PrismatIncompletePickTargets.First(),
             KaeserConfiguration.PrismatIncompletePickTargets.Last(),
-            "leNo",
+            Guid.NewGuid().ToString(),
             HostOrderCreator.Wms);
     }
 
-    public static OrderDetails GenerateUnknownDropTargetOrder()
+    public static OrderDetails GenerateUnknownDropTargetOrder(string? hu=null)
     {
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
             KaeserConfiguration.PrismatIncompleteDropTargets.First(),
             KaeserConfiguration.PrismatIncompleteDropTargets.Last(),
-            "leNo",
+            hu??Guid.NewGuid().ToString(),
             HostOrderCreator.Wms);
     }
 
-    public static HostOrder GenerateHostOrderFromOrderDetails(OrderDetails orderDetails)
+    public static HostOrder GenerateHostOrderFromOrderDetails(OrderDetails orderDetails, DateTime? createdDate=null, DateTime? finishDate = null)
     {
-        var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, "handlingUnit", DateTime.UtcNow);
+        var hostOrder = new HostOrder(orderDetails.OrderId, orderDetails.LeNo, createdDate??DateTime.UtcNow);
         hostOrder.AddAction(orderDetails.Source, ActionType.Pick);
         hostOrder.AddAction(orderDetails.Destination, ActionType.Drop);
+        if (finishDate != null)
+        {
+            hostOrder.Finish(finishDate.Value);
+        }
 
         return hostOrder;
     }

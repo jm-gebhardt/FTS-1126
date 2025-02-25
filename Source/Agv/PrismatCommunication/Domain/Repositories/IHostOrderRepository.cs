@@ -47,11 +47,19 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     Task<HostOrder?> GetNextPickOrderForShortLoopDualOperation();
 
     /// <summary>
-    /// Get a host order by handling unit.
+    /// Get the latest unfinished host orders by handling unit, created prior to given date.
+    /// </summary>
+    /// <param name="hu">The handling unit.</param>
+    /// <param name="creationDate">The creation date.</param>
+    /// <returns></returns>
+    Task<ICollection<HostOrder>> GetLatestUnfinishedOrdersByHu(string hu, DateTime creationDate);
+
+    /// <summary>
+    /// Get the latest unfinished host order by handling unit.
     /// </summary>
     /// <param name="hu">The handling unit.</param>
     /// <returns></returns>
-    Task<HostOrder?> GetByHu(string hu);
+    Task<HostOrder?> GetLatestUnfinishedOrderByHu(string hu);
 
     /// <summary>
     /// Get the next host order picking at one of the pick targets that has not been queued.

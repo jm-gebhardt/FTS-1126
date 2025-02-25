@@ -8,7 +8,7 @@ public static class OrderGenerator
 {
     public static HostOrder GenerateOrderFromActionGroup(ActionGroup actionGroup)
     {
-        var hostOrder = new HostOrder(actionGroup.CorrelationId, actionGroup.OrderId, "hu", actionGroup.CreatedDate);
+        var hostOrder = new HostOrder( actionGroup.OrderId, "hu", actionGroup.CreatedDate){CorrelationId = actionGroup.CorrelationId};
         hostOrder.AddAction("KaeserStation", ActionType.Pick);
         hostOrder.AddAction("KaeserStation", ActionType.Drop);
         return hostOrder;

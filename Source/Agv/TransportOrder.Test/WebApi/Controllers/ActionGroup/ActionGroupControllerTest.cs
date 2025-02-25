@@ -71,7 +71,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task CancelActionGroup_ActionGroupStarted_ReturnsBadRequest()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
@@ -88,7 +88,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task CancelActionGroup_ActionGroupCompleted_ReturnsBadRequest()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Completed);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Completed);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
@@ -105,7 +105,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task CancelActionGroup_ActionGroupFailed_ReturnsBadRequest()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Failed);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Failed);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
@@ -122,7 +122,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task CancelActionGroup_ActionGroupCanceled_ReturnsBadRequest()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Canceled);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Canceled);
 
         ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
@@ -139,7 +139,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task AbortActionGroup_ValidData_ReturnsOk()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started);
         ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .Build();
@@ -177,7 +177,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task ResetActionGroup_ValidData_ReturnsOk()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started);
         ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .Build();

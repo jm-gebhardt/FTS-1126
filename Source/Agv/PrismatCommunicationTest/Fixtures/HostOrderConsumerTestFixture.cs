@@ -47,6 +47,13 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
+    public HostOrderConsumerTestFixture<TConsumer> WithHostOrderWithSameHu(HostOrder? hostOrder)
+    {
+        HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrderByHu(It.IsAny<string>())).ReturnsAsync(hostOrder);
+        HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrdersByHu(It.IsAny<string>(), It.IsAny<DateTime>())).ReturnsAsync(hostOrder== null ? [] : [hostOrder]);
+        return this;
+    }
+
     public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(bool hasHostOrders)
     {
         HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(It.IsAny<string>())).ReturnsAsync(hasHostOrders);

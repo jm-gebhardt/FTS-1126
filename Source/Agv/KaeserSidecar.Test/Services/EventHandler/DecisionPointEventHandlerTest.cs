@@ -19,7 +19,7 @@ public class DecisionPointEventHandlerTest
     public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupiedOrLocked_NextPickAvailable_AgvHasEnoughBattery_SelectsStation1()
     {
         const string targetStation = "1";
-        var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
+        var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState:ActionGroupState.Started, actionState:ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(dropActionGroup);
         var pickActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
         var nextPickOrder = OrderGenerator.GenerateOrderFromActionGroup(pickActionGroup);
@@ -49,7 +49,7 @@ public class DecisionPointEventHandlerTest
     public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupiedOrLocked_NoNextPickAvailable_AgvHasNotEnoughBattery_SelectsStation1()
     {
         const string targetStation = "1";
-        var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
+        var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(dropActionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
             .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
@@ -77,7 +77,7 @@ public class DecisionPointEventHandlerTest
     public async Task Consume_AgvPassedDecisionPoint1_AllStationsNotOccupiedButStation1IsLocked_NextPickAvailable_SelectsStation2()
     {
         const string targetStation = "2";
-        var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
+        var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(dropActionGroup);
         var pickActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
         var nextPickOrder = OrderGenerator.GenerateOrderFromActionGroup(pickActionGroup);
@@ -111,7 +111,7 @@ public class DecisionPointEventHandlerTest
     public async Task Consume_AgvPassedDecisionPoint1_Station1NotOccupiedOrLocked_NoNextPickAvailable_SelectsStation1(bool hasLowBatteryLevel)
     {
         const string targetStation = "1";
-        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
+        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
             .WithOccupancies([new StationOccupancy(targetStation, 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
@@ -139,7 +139,7 @@ public class DecisionPointEventHandlerTest
     public async Task Consume_AgvPassedDecisionPoint1_Station2NotOccupiedOrLocked_PublishesSetTargetForActionWithStation2()
     {
         const string targetStation = "2";
-        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
+        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
             .WithOccupancies([new StationOccupancy("1", 1), new StationOccupancy(targetStation, 0), new StationOccupancy("3", 0)])
@@ -167,7 +167,7 @@ public class DecisionPointEventHandlerTest
     public async Task Consume_AgvPassedDecisionPoint1_OnlyStation3NotOccupied_PublishesSetTargetForActionWithStation3()
     {
         const string targetStation = "3";
-        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(ActionGroupState.Started, ActionState.Started);
+        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
             .WithOccupancies([new StationOccupancy("1", 1), new StationOccupancy("2", 1), new StationOccupancy(targetStation, 0)])
@@ -206,7 +206,7 @@ public class DecisionPointEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvPassedDecisionPoint1_NotIncompleteActionGroup_DoesNotSelectTargetAndDoesNotSendTelegram()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionGroupState.Started, ActionState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var hostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
             .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])

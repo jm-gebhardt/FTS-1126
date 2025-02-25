@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
@@ -28,7 +27,12 @@ public class TordProcessorTest
         (await fixture.TestHarness.Published.Any<CreateHostOrder>()).ShouldBeTrue();
         var createHostOrder = await fixture.GetFirstPublishedMessageAsync<CreateHostOrder>();
         createHostOrder.Hu.ShouldBe(tord.Hu);
-        createHostOrder.OrderDetails.ShouldBeEquivalentTo(new OrderDetails(tord.Hu.ToGuid(), tord.OId, tord.Src, tord.Dest, tord.Hu, HostOrderCreator.Wms, tord.Time, tord.HuRot));
+        createHostOrder.OrderDetails.OrderId.ShouldBe(tord.OId);
+        createHostOrder.OrderDetails.Source.ShouldBe(tord.Src);
+        createHostOrder.OrderDetails.Destination.ShouldBe(tord.Dest);
+        createHostOrder.OrderDetails.LeNo.ShouldBe(tord.Hu);
+        createHostOrder.OrderDetails.CreationDate.ShouldBe(tord.Time);
+        createHostOrder.OrderDetails.Creator.ShouldBe(HostOrderCreator.Wms);
         fixture.Processor.ShouldReceiveTelegram().ShouldBeFalse();
     }
 

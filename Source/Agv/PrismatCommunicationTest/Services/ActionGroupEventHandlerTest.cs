@@ -18,8 +18,9 @@ public class ActionGroupEventHandlerTest
     public async Task Consume_ActionGroupCompleted_ValidData_FinishHostOrder()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var hostOrder = new HostOrder( "OrderId", "hu", DateTime.UtcNow);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
-        var hostOrder = new HostOrder(actionGroup.CorrelationId, "OrderId", "hu", DateTime.UtcNow);
+
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder);
 
