@@ -18,17 +18,17 @@ try
         .ConfigureServices((context, services) =>
         {
             services.AddHostedService<CommunicationManager>();
+            var toFtsConfig = new TelegramCommunicationConfiguration();
+            toFtsConfig.LoadFromConfig(context.Configuration.GetRequiredSection(ServiceKeyProvider.ToFts));
+            var fromFtsConfig = new TelegramCommunicationConfiguration();
+            fromFtsConfig.LoadFromConfig(context.Configuration.GetRequiredSection(ServiceKeyProvider.FromFts));
             services.AddKeyedSingleton<Client>(ServiceKeyProvider.ToFts, (serviceProvider, _) =>
             {
-                var toFtsConfig = new TelegramCommunicationConfiguration();
-                toFtsConfig.LoadFromConfig(context.Configuration.GetRequiredSection(ServiceKeyProvider.ToFts));
                 var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
                 return new Client(logger, toFtsConfig);
             });
             services.AddKeyedSingleton<Client>(ServiceKeyProvider.FromFts, (serviceProvider, _) =>
             {
-                var fromFtsConfig = new TelegramCommunicationConfiguration();
-                fromFtsConfig.LoadFromConfig(context.Configuration.GetRequiredSection(ServiceKeyProvider.FromFts));
                 var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
                 return new Client(logger, fromFtsConfig);
             });
@@ -36,13 +36,13 @@ try
                 (serviceProvider, _) =>
             {
                 var logger = serviceProvider.GetRequiredService<ILogger<PrismatTelegramProcessor>>();
-                return new PrismatTelegramProcessor(logger, false);
+                return new PrismatTelegramProcessor(logger, false, toFtsConfig);
             });
             services.AddKeyedSingleton<PrismatTelegramProcessor>(ServiceKeyProvider.FromFts,
                 (serviceProvider, _) =>
                 {
                     var logger = serviceProvider.GetRequiredService<ILogger<PrismatTelegramProcessor>>();
-                    return new PrismatTelegramProcessor(logger, true);
+                    return new PrismatTelegramProcessor(logger, true, fromFtsConfig);
                 });
 
             services.AddSingleton(serviceProvider =>

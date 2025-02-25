@@ -9,12 +9,20 @@ namespace Gebhardt.Acc.Common.TelegramCommunication.Communication;
 /// </summary>
 public class Client : SocketBase
 {
+    private const int TcpResendInterval = 1000;
+    
     private TelegramCommunicationConfiguration Configuration { get; }
 
     /// <inheritdoc cref="Client"/>>
     public Client(ILogger<SocketBase> logger, TelegramCommunicationConfiguration configuration) : base(logger)
     {
         Configuration = configuration;
+    }
+
+    /// <inheritdoc cref="Client"/>>
+    public override bool IsConnected()
+    {
+        return Socket is { Connected: true };
     }
 
     /// <inheritdoc cref="SocketBase"/>>
@@ -29,11 +37,11 @@ public class Client : SocketBase
                 Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
             }
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            
-            Logger.LogInformation("Connecting to {Server}:{Port}",Configuration.IpAddress, Configuration.Port);
+
+            Logger.LogInformation("Connecting to {Server}:{Port}", Configuration.IpAddress, Configuration.Port);
             Socket.Connect(Configuration.IpAddress, Configuration.Port);
-            SetTcpKeepAlive(Configuration.UseTcpKeepAlive,Configuration.TcpKeepAliveInterval, 1000, Configuration.TcpKeepAliveRetries);
-            
+            SetTcpKeepAlive(Configuration.UseTcpKeepAlive, Configuration.TcpKeepAliveInterval, TcpResendInterval, Configuration.TcpKeepAliveRetries);
+
             Logger.LogInformation("Connected to {Server}:{Port}", Configuration.IpAddress, Configuration.Port);
             return true;
         }
@@ -47,5 +55,12 @@ public class Client : SocketBase
             Logger.LogError("Could not connect, got : {ErrorMessage} {Trace}", ex.Message, ex.StackTrace);
             return false;
         }
+    }
+
+    /// <inheritdoc cref="SocketBase"/>>
+    public override async Task<bool> InitializeAsync()
+    {
+        await Task.Delay(0);
+        return Initialize();
     }
 }

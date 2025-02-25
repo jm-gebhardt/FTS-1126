@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 /// <summary>
 /// Provides a processor for telegrams sent to the conveyor
 /// </summary>
-public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration) : TelegramProcessorBase<ConveyorTelegram>
+public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
 {
     private bool ReceiveAcknowledgement { get; set; }
 
@@ -45,7 +45,7 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     /// <summary>
     /// Maximum time to wait for acknowledgements [ms]
     /// </summary>
-    public int MaxAcknowledgementWaitTime => configuration.TelegramWaitingTime;
+    public int MaxAcknowledgementWaitTime => _configuration.TelegramWaitingTime;
 
     /// <summary>
     /// Maximum number of retries for sending telegrams
@@ -58,6 +58,20 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     public int RemainingAttempts { get; private set; }
 
     private int _acknowledgementWaitTime;
+    private readonly ILogger<ToConveyorTelegramProcessor> _logger;
+    private readonly ITimeProvider _timeProvider;
+    private readonly TelegramCommunicationConfiguration _configuration;
+
+    /// <summary>
+    /// Provides a processor for telegrams sent to the conveyor
+    /// </summary>
+    public ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration)
+    {
+        _logger = logger;
+        _timeProvider = timeProvider;
+        _configuration = configuration;
+        TriggerRestart = false;
+    }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override bool EnqueueTelegram(ConveyorTelegram telegram)
@@ -71,11 +85,11 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     {
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts > 0)
         {
-            logger.LogInformation("Resending telegram {Telegram}", CurrentTelegram.ToString());
+            _logger.LogInformation("Resending telegram {Telegram}", CurrentTelegram.ToString());
             telegram = CurrentTelegram!.ToString()!;
-            LastTelegramSend = timeProvider.Now();
+            LastTelegramSend = _timeProvider.Now();
             RemainingAttempts -= 1;
-            AwaitAcknowledgementStart = timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.Now();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             ReceiveAcknowledgement = true;
             return true;
@@ -95,12 +109,12 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
         {
             nextTelegram.Seq = SequenceCounter.Current;
             telegram = nextTelegram.ToString()!;
-            logger.LogInformation("ToConveyorProcessor: Sending next telegram {Next}", telegram);
+            _logger.LogInformation("ToConveyorProcessor: Sending next telegram {Next}", telegram);
             ReceiveAcknowledgement = true;
             CurrentTelegram = nextTelegram;
-            LastTelegramSend = timeProvider.Now();
+            LastTelegramSend = _timeProvider.Now();
             RemainingAttempts = MaxRetryAttempts;
-            AwaitAcknowledgementStart = timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.Now();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             return true;
         }
@@ -113,14 +127,14 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override bool ShouldReceiveTelegram()
     {
-        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int)(timeProvider.Now() - AwaitAcknowledgementStart).TotalMilliseconds;
+        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int)(_timeProvider.Now() - AwaitAcknowledgementStart).TotalMilliseconds;
         return ReceiveAcknowledgement && _acknowledgementWaitTime > 0;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override void ProcessReceivedTelegram(string telegram)
     {
-        logger.LogInformation("Receiving telegram {Telegram}", telegram);
+        _logger.LogInformation("Receiving telegram {Telegram}", telegram);
         var acknowledgement = new ConveyorTelegram();
         acknowledgement.Load(telegram);
         if (acknowledgement.Seq == CurrentTelegram!.Seq && ReceiveAcknowledgement)
@@ -141,7 +155,7 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override int GetWaitingTime()
     {
-        return configuration.TelegramWaitingTime;
+        return _configuration.TelegramWaitingTime;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
@@ -153,7 +167,7 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override void RestartConnection()
     {
-        TriggerRestart = false;
+        TriggerRestart = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
@@ -161,7 +175,7 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     {
         if (!SendQueue.IsEmpty)
         {
-            logger.LogWarning("Cancel requested, but there are {Count} messages pending send", SendQueue.Count);
+            _logger.LogWarning("Cancel requested, but there are {Count} messages pending send", SendQueue.Count);
         }
     }
 
@@ -169,6 +183,12 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     public override void ResetCounter()
     {
         SequenceCounter = new SeqCounter(1, 999, 3);
+    }
+
+    /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
+    public override bool GetUseLifeTelegrams()
+    {
+        return _configuration.UseLifeTelegrams;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
@@ -183,7 +203,7 @@ public class ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> lo
     /// </summary>
     public void TrySendLifeTelegram()
     {
-        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
+        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
         {
             SendQueue.Enqueue(new Life(DateTime.UtcNow));
         }

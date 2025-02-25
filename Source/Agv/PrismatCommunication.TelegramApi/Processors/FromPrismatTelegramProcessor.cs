@@ -9,8 +9,21 @@ namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 /// <summary>
 /// Provides a processor for telegrams coming from prismat
 /// </summary>
-public class FromPrismatTelegramProcessor(TelegramProcessorFactory processorFactory, ILogger<FromPrismatTelegramProcessor> logger, [FromKeyedServices(ServiceKeyProvider.FromPrismat)] TelegramCommunicationConfiguration configuration) : InboundTelegramProcessorBase<PrismatTelegram>(configuration)
+public class FromPrismatTelegramProcessor : InboundTelegramProcessorBase<PrismatTelegram>
 {
+    private readonly TelegramProcessorFactory _processorFactory;
+    private readonly ILogger<FromPrismatTelegramProcessor> _logger;
+
+    /// <summary>
+    /// Provides a processor for telegrams coming from prismat
+    /// </summary>
+    public FromPrismatTelegramProcessor(TelegramProcessorFactory processorFactory, ILogger<FromPrismatTelegramProcessor> logger, [FromKeyedServices(ServiceKeyProvider.FromPrismat)] TelegramCommunicationConfiguration configuration) : base(configuration)
+    {
+        _processorFactory = processorFactory;
+        _logger = logger;
+        TriggerRestart = false;
+    }
+
     private bool SendAcknowledgement { get; set; }
 
     /// <summary>
@@ -30,7 +43,7 @@ public class FromPrismatTelegramProcessor(TelegramProcessorFactory processorFact
         {
             if (CurrentProcessor!.GetNextTelegramToSend(out string? currentTelegram))
             {
-                logger.LogInformation("Sending next telegram {Next}", currentTelegram);
+                _logger.LogInformation("Sending next telegram {Next}", currentTelegram);
 
                 telegram = currentTelegram!;
                 SendAcknowledgement = false;
@@ -68,7 +81,7 @@ public class FromPrismatTelegramProcessor(TelegramProcessorFactory processorFact
 
     private void SkipTelegram()
     {
-        logger.LogInformation("Resent already processed telegram, skipping");
+        _logger.LogInformation("Resent already processed telegram, skipping");
         SendAcknowledgement = true;
         SequenceCounter.Reset(CurrentTelegram!.Seq);
     }
@@ -76,15 +89,15 @@ public class FromPrismatTelegramProcessor(TelegramProcessorFactory processorFact
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override void ProcessReceivedTelegram(string telegram)
     {
-        logger.LogInformation("Received telegram {Telegram}", telegram);
+        _logger.LogInformation("Received telegram {Telegram}", telegram);
 
         var prismatTelegram = new PrismatTelegram();
         if (!prismatTelegram.Load(telegram))
         {
-            logger.LogInformation("Failed to load telegram {Telegram}", telegram);
+            _logger.LogInformation("Failed to load telegram {Telegram}", telegram);
             return;
         }
-        logger.LogInformation("Converted to telegram {Telegram}", prismatTelegram);
+        _logger.LogInformation("Converted to telegram {Telegram}", prismatTelegram);
         if (prismatTelegram.Seq == 0)
         {
             HandleResetTelegram(prismatTelegram);
@@ -97,17 +110,17 @@ public class FromPrismatTelegramProcessor(TelegramProcessorFactory processorFact
             return;
         }
 
-        CurrentProcessor = processorFactory.GetReceiveProcessor(prismatTelegram);
+        CurrentProcessor = _processorFactory.GetReceiveProcessor(prismatTelegram);
         if (CurrentProcessor != null)
         {
-            logger.LogInformation("Sending it to processor");
+            _logger.LogInformation("Sending it to processor");
 
             CurrentProcessor.ProcessReceivedTelegram(telegram);
             SendAcknowledgement = true;
             CurrentTelegram = prismatTelegram;
             return;
         }
-        logger.LogError("Could not process telegram");
+        _logger.LogError("Could not process telegram");
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
@@ -117,5 +130,6 @@ public class FromPrismatTelegramProcessor(TelegramProcessorFactory processorFact
         CurrentTelegram = null;
         CurrentProcessor = null;
         SendAcknowledgement = false;
+        TriggerRestart = true;
     }
 }

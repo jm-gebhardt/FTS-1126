@@ -17,6 +17,16 @@ public abstract class SocketBase
     protected Socket? Socket;
 
     /// <summary>
+    /// The telegram send on receive timeout.
+    /// </summary>
+    public static string TimeoutTelegram => "timeout";
+
+    /// <summary>
+    /// True, if the socket is connected.
+    /// </summary>
+    public abstract bool IsConnected();
+
+    /// <summary>
     /// The logger.
     /// </summary>
     protected readonly ILogger<SocketBase> Logger;
@@ -31,6 +41,11 @@ public abstract class SocketBase
     /// Initialize
     /// </summary>
     public abstract bool Initialize();
+
+    /// <summary>
+    /// Initialize async
+    /// </summary>
+    public abstract Task<bool> InitializeAsync();
 
     /// <summary>
     /// Disconnect
@@ -88,7 +103,7 @@ public abstract class SocketBase
         {
             if (socketException.ErrorCode == SocketTimeOut)
             {
-                telegram = string.Empty;
+                telegram = TimeoutTelegram;
                 return false;
             }
             Logger.LogError("Could not receive telegram, got : {ErrorCode} / {ErrorMessage}", socketException.ErrorCode, socketException.Message);
@@ -139,6 +154,10 @@ public abstract class SocketBase
 
         try
         {
+            if (Socket == null)
+            {
+                Initialize();
+            }
             Socket!.ReceiveTimeout = receiveTimeout;
             while (true)
             {
@@ -154,7 +173,7 @@ public abstract class SocketBase
         {
             if (socketException.ErrorCode == SocketTimeOut)
             {
-                telegram = string.Empty;
+                telegram = TimeoutTelegram;
                 return false;
             }
 

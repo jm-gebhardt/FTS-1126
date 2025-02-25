@@ -15,11 +15,17 @@ public class Server : SocketBase
     private const int TcpResendInterval = 1000;
 
     private Socket? _serverSocket;
-
+    
     /// <inheritdoc cref="Client"/>>
     public Server(ILogger<SocketBase> logger, TelegramCommunicationConfiguration configuration) : base(logger)
     {
         Configuration = configuration;
+    }
+
+    /// <inheritdoc cref="Client"/>>
+    public override bool IsConnected()
+    {
+        return _serverSocket is { Connected: true };
     }
 
     /// <inheritdoc cref="SocketBase"/>>
@@ -47,7 +53,7 @@ public class Server : SocketBase
     /// <summary>
     /// Initialize
     /// </summary>
-    public async Task<bool> InitializeAsync()
+    public override async Task<bool> InitializeAsync()
     {
         try
         {
@@ -74,7 +80,7 @@ public class Server : SocketBase
         base.Disconnect();
         DisconnectServer();
     }
-    
+
     private void CreateSocket()
     {
         _serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

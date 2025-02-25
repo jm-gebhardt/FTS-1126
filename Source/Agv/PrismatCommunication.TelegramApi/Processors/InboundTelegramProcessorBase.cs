@@ -95,6 +95,12 @@ public class InboundTelegramProcessorBase<TTelegramType>([FromKeyedServices(Serv
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{TTelegramType}"/>>
+    public override bool GetUseLifeTelegrams()
+    {
+        return configuration.UseLifeTelegrams;
+    }
+
+    /// <inheritdoc cref="TelegramProcessorBase{TTelegramType}"/>>
     public override bool HasSendDemand()
     {
         // not applicable for inbound telegrams

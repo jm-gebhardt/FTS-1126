@@ -63,11 +63,27 @@ public class Receiver<TTelegramType> : SocketCommunicator<TTelegramType>
             {
                 // Receive telegram
                 Logger.LogDebug("Receiving telegram");
-           
+
                 if (Socket.TryReceive(out string telegram, TelegramProcessor.GetTelegramLength(), TelegramProcessor.GetWaitingTime(), TelegramProcessor.GetEncoding()))
                 {
                     Logger.LogDebug("Received telegram {Telegram}", telegram);
                     TelegramProcessor.ProcessReceivedTelegram(telegram);
+                }
+                else
+                {
+                    //If life telegrams are used, the connection needs to be restarted always
+                    //If no life telegrams are used timeout can not be used
+                    if (TelegramProcessor.GetUseLifeTelegrams() || telegram != SocketBase.TimeoutTelegram)
+                    {
+                        if (telegram == SocketBase.TimeoutTelegram)
+                        {
+                            Logger.LogError("No life telegram received");
+                        }
+                        Logger.LogDebug("Trigger restart");
+                        RestartMe = true;
+                        SetRun = false;
+                        SendRestartRequest("Failed to receive telegram");
+                    }
                 }
             }
 
@@ -81,12 +97,20 @@ public class Receiver<TTelegramType> : SocketCommunicator<TTelegramType>
                     if (!Socket.TrySend(acknowledgement, TelegramProcessor.GetEncoding()))
                     {
                         Logger.LogError("Failed sending acknowledgement {Acknowledgement}", acknowledgement);
+                        SetRun = false;
+                        RestartMe = true;
+                        SendRestartRequest("Failed to send acknowledgement");
                     }
                     else
                     {
                         Logger.LogDebug("Acknowledgement {Acknowledgement} sent", acknowledgement);
                     }
                 }
+            }
+
+            if (TelegramProcessor.ShouldRestart())
+            {
+                SetRun = false;
             }
             return true;
         }

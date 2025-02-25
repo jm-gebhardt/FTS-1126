@@ -60,4 +60,9 @@ public class TelegramCommunicationConfiguration
     /// Waiting time for telegrams [ms]
     /// </summary>
     public int TelegramWaitingTime { get; set; }
+
+    /// <summary>
+    /// Use life telegrams
+    /// </summary>
+    public bool UseLifeTelegrams { get; set; }
 }

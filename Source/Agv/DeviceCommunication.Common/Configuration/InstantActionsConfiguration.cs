@@ -105,7 +105,7 @@ public record AgvType
     public string Model { get; set; } = string.Empty;
 
     /// <summary>
-    /// Serial numbers of agvs that are of this type and model, but shall be
+    /// Serial numbers of agvs that are of this type and model, but 
     /// do not offer the instant action.
     /// </summary>
     public List<string>? ExcludedAgvSerialNumbers { get; set; } = [];

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Microsoft.Extensions.Logging;
@@ -8,8 +9,24 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApiServer.Services;
 /// <summary>
 /// Provides a processor for incoming conveyor telegrams.
 /// </summary>
-public class ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger): TelegramProcessorBase<ConveyorTelegram>
+public class ConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
 {
+    private readonly ILogger<ConveyorTelegramProcessor> _logger;
+
+    private bool TriggerRestart { get; set; }
+
+    private readonly TelegramCommunicationConfiguration _configuration;
+
+    /// <summary>
+    /// Provides a processor for incoming conveyor telegrams.
+    /// </summary>
+    public ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger, TelegramCommunicationConfiguration configuration)
+    {
+        _logger = logger;
+        TriggerRestart = false;
+        _configuration = configuration;
+    }
+
     private ConveyorTelegram? CurrentTelegram { get; set; }
 
     private bool SendAcknowledgement { get; set; }
@@ -27,7 +44,7 @@ public class ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger
         if (CurrentTelegram != null && SendAcknowledgement)
         {
             telegram = CurrentTelegram!.CreateAcknowledgement();
-            logger.LogInformation("Sending acknowledgement {Telegram}", telegram);
+            _logger.LogInformation("Sending acknowledgement {Telegram}", telegram);
             SendAcknowledgement = false;
             return true;
         }
@@ -47,7 +64,7 @@ public class ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger
     {
         var conveyorTelegram = new ConveyorTelegram();
         conveyorTelegram.Load(telegram);
-        logger.LogInformation("Processing telegram {Telegram}", telegram);
+        _logger.LogInformation("Processing telegram {Telegram}", telegram);
 
         CurrentTelegram = conveyorTelegram;
         SendAcknowledgement = true;
@@ -63,13 +80,13 @@ public class ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override int GetWaitingTime()
     {
-        return 180000;
+        return _configuration.TelegramWaitingTime;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override bool ShouldRestart()
     {
-        return false;
+        return TriggerRestart;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
@@ -81,13 +98,19 @@ public class ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override void Cancel()
     {
-        // do nothing
+        TriggerRestart = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override void ResetCounter()
     {
         // not applicable for inbound telegrams
+    }
+
+    /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
+    public override bool GetUseLifeTelegrams()
+    {
+        return _configuration.UseLifeTelegrams;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>

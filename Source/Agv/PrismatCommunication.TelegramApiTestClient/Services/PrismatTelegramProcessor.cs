@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
+using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using JetBrains.Annotations;
@@ -14,13 +15,25 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
 {
     private readonly ILogger<PrismatTelegramProcessor> _logger;
     private readonly bool _isSender;
+    private readonly TelegramCommunicationConfiguration _configuration;
+
+    private int RemainingAttempts { get; set; }
+
+    /// <summary>
+    /// Maximum number of retries for sending telegrams
+    /// </summary>
+    private int MaxRetryAttempts => 3;
+
+    private bool TriggerRestart { get; set; }
 
     /// <inheritdoc cref="PrismatTelegramProcessor"/>
-    public PrismatTelegramProcessor(ILogger<PrismatTelegramProcessor> logger, bool startWithReceiving)
+    public PrismatTelegramProcessor(ILogger<PrismatTelegramProcessor> logger, bool startWithReceiving, TelegramCommunicationConfiguration configuration)
     {
         _logger = logger;
         ReceiveAcknowledgement = startWithReceiving;
         _isSender = !startWithReceiving;
+        TriggerRestart = false;
+        _configuration = configuration;
     }
 
     private SeqCounter SequenceCounter { get; set; } = new(1, 999, 3);
@@ -44,12 +57,24 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override bool GetNextTelegramToSend(out string telegram)
     {
-        if (SendQueue.IsEmpty && !ReceiveAcknowledgement && CurrentTelegram != null)
+        if (SendQueue.IsEmpty && !ReceiveAcknowledgement && CurrentTelegram != null && RemainingAttempts > 0)
         {
             telegram = CurrentTelegram!.CreateAcknowledgement();
             _logger.LogInformation("Sending next acknowledgement {Next}", telegram);
             ReceiveAcknowledgement = true;
+            RemainingAttempts -= 1;
             return true;
+        }
+
+        if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts <= 0)
+        {
+            TriggerRestart = true;
+            ReceiveAcknowledgement = false;
+        }
+
+        if (!HasSendDemand())
+        {
+            TrySendLifeTelegram();
         }
 
         if (SendQueue.TryDequeue(out var nextTelegram))
@@ -63,11 +88,23 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
             CurrentTelegram = nextTelegram;
             LastTelegramSend = DateTime.Now;
             SequenceCounter.Increase();
+            RemainingAttempts = MaxRetryAttempts;
             return true;
         }
 
         telegram = string.Empty;
         return false;
+    }
+
+    /// <summary>
+    /// Send life telegram
+    /// </summary>
+    private void TrySendLifeTelegram()
+    {
+        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
+        {
+            SendQueue.Enqueue(new Life(DateTime.UtcNow));
+        }
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
@@ -103,19 +140,19 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override int GetWaitingTime()
     {
-        return 180000;
+        return _configuration.TelegramWaitingTime;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override bool ShouldRestart()
     {
-        return false;
+        return TriggerRestart;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override void RestartConnection()
     {
-        throw new NotImplementedException();
+        TriggerRestart = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
@@ -128,6 +165,12 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     public override void ResetCounter()
     {
         SequenceCounter = new SeqCounter(1, 999, 3);
+    }
+
+    /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
+    public override bool GetUseLifeTelegrams()
+    {
+        return _configuration.UseLifeTelegrams;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>

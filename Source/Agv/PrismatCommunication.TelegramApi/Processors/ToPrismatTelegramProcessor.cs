@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 /// <summary>
 /// Provides a processor for telegrams sent to prismat
 /// </summary>
-public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logger, ITimeProvider timeProvider, [FromKeyedServices(ServiceKeyProvider.ToPrismat)] TelegramCommunicationConfiguration configuration) : TelegramProcessorBase<PrismatTelegram>
+public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
 {
     private bool ReceiveAcknowledgement { get; set; }
 
@@ -46,7 +46,7 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     /// <summary>
     /// Maximum time to wait for acknowledgements [ms]
     /// </summary>
-    public int MaxAcknowledgementWaitTime => configuration.TelegramWaitingTime;
+    public int MaxAcknowledgementWaitTime => _configuration.TelegramWaitingTime;
 
     /// <summary>
     /// Maximum number of retries for sending telegrams
@@ -59,6 +59,20 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     public int RemainingAttempts { get; private set; }
 
     private int _acknowledgementWaitTime;
+    private readonly ILogger<ToPrismatTelegramProcessor> _logger;
+    private readonly ITimeProvider _timeProvider;
+    private readonly TelegramCommunicationConfiguration _configuration;
+
+    /// <summary>
+    /// Provides a processor for telegrams sent to prismat
+    /// </summary>
+    public ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logger, ITimeProvider timeProvider, [FromKeyedServices(ServiceKeyProvider.ToPrismat)] TelegramCommunicationConfiguration configuration)
+    {
+        _logger = logger;
+        _timeProvider = timeProvider;
+        _configuration = configuration;
+        TriggerRestart = false;
+    }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override bool EnqueueTelegram(PrismatTelegram telegram)
@@ -72,11 +86,11 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     {
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts > 0)
         {
-            logger.LogInformation("Resending telegram {Telegram}", CurrentTelegram.ToString());
+            _logger.LogInformation("Resending telegram {Telegram}", CurrentTelegram.ToString());
             telegram = CurrentTelegram!.ToString()!;
-            LastTelegramSend = timeProvider.Now();
+            LastTelegramSend = _timeProvider.Now();
             RemainingAttempts -= 1;
-            AwaitAcknowledgementStart = timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.Now();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             ReceiveAcknowledgement = true;
             return true;
@@ -96,12 +110,12 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
         {
             nextTelegram.Seq = SequenceCounter.Current;
             telegram = nextTelegram.ToString()!;
-            logger.LogInformation("ToPrismatProcessor: Sending next telegram {Next}", telegram);
+            _logger.LogInformation("ToPrismatProcessor: Sending next telegram {Next}", telegram);
             ReceiveAcknowledgement = true;
             CurrentTelegram = nextTelegram;
-            LastTelegramSend = timeProvider.Now();
+            LastTelegramSend = _timeProvider.Now();
             RemainingAttempts = MaxRetryAttempts;
-            AwaitAcknowledgementStart = timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.Now();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             return true;
         }
@@ -114,14 +128,14 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override bool ShouldReceiveTelegram()
     {
-        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int)(timeProvider.Now() - AwaitAcknowledgementStart).TotalMilliseconds;
+        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int)(_timeProvider.Now() - AwaitAcknowledgementStart).TotalMilliseconds;
         return ReceiveAcknowledgement && _acknowledgementWaitTime > 0;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override void ProcessReceivedTelegram(string telegram)
     {
-        logger.LogInformation("Receiving telegram {Telegram}", telegram);
+        _logger.LogInformation("Receiving telegram {Telegram}", telegram);
         var acknowledgement = new PrismatTelegram();
         acknowledgement.Load(telegram);
         if (acknowledgement.Seq == CurrentTelegram!.Seq && ReceiveAcknowledgement)
@@ -141,7 +155,7 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override int GetWaitingTime()
     {
-        return configuration.TelegramWaitingTime;
+        return _configuration.TelegramWaitingTime;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
@@ -153,7 +167,7 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override void RestartConnection()
     {
-        TriggerRestart = false;
+        TriggerRestart = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
@@ -161,7 +175,7 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     {
         if (!SendQueue.IsEmpty)
         {
-            logger.LogWarning("Cancel requested, but there are {Count} messages pending send", SendQueue.Count);
+            _logger.LogWarning("Cancel requested, but there are {Count} messages pending send", SendQueue.Count);
         }
     }
 
@@ -169,6 +183,12 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     public override void ResetCounter()
     {
         SequenceCounter = new SeqCounter(1, 999, 3);
+    }
+
+    /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
+    public override bool GetUseLifeTelegrams()
+    {
+        return _configuration.UseLifeTelegrams;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
@@ -183,7 +203,7 @@ public class ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logg
     /// </summary>
     public void TrySendLifeTelegram()
     {
-        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
+        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
         {
             SendQueue.Enqueue(new Life(DateTime.UtcNow));
         }

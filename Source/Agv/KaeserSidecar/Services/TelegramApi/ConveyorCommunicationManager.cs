@@ -31,7 +31,7 @@ public class ConveyorCommunicationManager(ILogger<ConveyorCommunicationManager> 
         while (!initialized)
         {
             logger.LogInformation("Trying to connect to conveyor telegram server");
-            initialized =  client.Initialize();
+            initialized =  await client.InitializeAsync();
             await Task.Delay(ConnectionDelayMs, stoppingToken);
         }
        

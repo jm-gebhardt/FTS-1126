@@ -7,7 +7,7 @@ namespace Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 /// </summary>
 /// <typeparam name="TTelegramType"></typeparam>
 public abstract class TelegramProcessorBase<TTelegramType> : ITelegramProcessor
-where TTelegramType :  TelegramBase
+where TTelegramType : TelegramBase
 {
     /// <summary>
     /// Enqueue a telegram for sending
@@ -78,4 +78,9 @@ where TTelegramType :  TelegramBase
     /// Reset <see cref="TelegramBase.Seq"/> counter
     /// </summary>
     public abstract void ResetCounter();
+
+    /// <summary>
+    /// True, if life telegrams are used on the connection.
+    /// </summary>
+    public abstract bool GetUseLifeTelegrams();
 }

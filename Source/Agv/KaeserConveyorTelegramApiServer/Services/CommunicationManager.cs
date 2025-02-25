@@ -13,14 +13,14 @@ public class CommunicationManager(ILogger<CommunicationManager> logger, Receiver
     /// <inheritdoc cref="CommunicationManager"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-       Connect();
-       Start();
-       while (!stoppingToken.IsCancellationRequested)
-       {
-           await Task.Delay(1000, stoppingToken);
-       }
+        Connect();
+        Start();
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(1000, stoppingToken);
+        }
 
-       Stop();  
+        Stop();
     }
 
     private void Connect()
@@ -50,14 +50,22 @@ public class CommunicationManager(ILogger<CommunicationManager> logger, Receiver
     /// <param name="eventArgs">The arguments of the event</param>
     private void OnRestartRequest(object sender, EventArgs eventArgs)
     {
+        _ = HandleRestartRequestAsync(sender, eventArgs);
+    }
+
+    private async Task HandleRestartRequestAsync(object sender, EventArgs _)
+    {
         if (sender is not SocketCommunicator<ConveyorTelegram> communicator)
         {
             return;
         }
+
         logger.LogInformation("Restart requested from {Name}", communicator.Name);
+
         if (communicator.RestartMe)
         {
-            communicator.Restart();
+            logger.LogInformation("Restarting {Name}", communicator.Name);
+            await communicator.RestartAsync(); 
         }
     }
 }

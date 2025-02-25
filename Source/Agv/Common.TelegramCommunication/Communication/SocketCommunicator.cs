@@ -18,6 +18,10 @@ public abstract class SocketCommunicator<TTelegramType>
 
     private readonly object _restartMeLock = new();
 
+    private CancellationTokenSource? _cts;
+
+    private const int ThreadWaitingTime = 10000;
+
     /// <summary>
     /// Thread in which the communication is executed.
     /// </summary>
@@ -143,8 +147,9 @@ public abstract class SocketCommunicator<TTelegramType>
     {
         try
         {
-            SetRun = true;
-            _thread = new Thread(Communicate);
+             SetRun = true;
+            _cts =  new CancellationTokenSource();
+            _thread = new Thread( _ => Communicate(_cts.Token));
             _thread.Start();
             return true;
         }
@@ -160,7 +165,7 @@ public abstract class SocketCommunicator<TTelegramType>
     /// </summary>
     public virtual void BeginStop()
     {
-        Logger.LogDebug("Thread {Name} should stop", Name);
+        Logger.LogInformation("Thread {Name} should stop", Name);
         SetRun = false;
     }
 
@@ -173,11 +178,11 @@ public abstract class SocketCommunicator<TTelegramType>
         {
             if (_thread != null! && _thread.IsAlive)
             {
-                if (!_thread.Join(60000))
+                _cts!.Cancel();
+                Logger.LogDebug("Stopping by cancellation of token {CancellationRequested}, waiting {WaitingTime}ms for thread to finish", _cts.Token.IsCancellationRequested, ThreadWaitingTime);
+                if (!_thread.Join(ThreadWaitingTime))
                 {
                     Logger.LogWarning("Thread {Name} did not stop, aborting", Name);
-                    var cancellationToken = new CancellationToken(canceled:true);
-                    cancellationToken.ThrowIfCancellationRequested();
                     _thread = null!;
                 }
             }
@@ -186,6 +191,11 @@ public abstract class SocketCommunicator<TTelegramType>
         catch (Exception ex)
         {
             Logger.LogError("Could not finish stopping, got : {ErrorMessage}", ex.Message);
+        }
+        finally
+        {
+            _cts?.Dispose();
+            _cts = null;
         }
     }
 
@@ -198,6 +208,37 @@ public abstract class SocketCommunicator<TTelegramType>
         RestartMe = false;
         BeginStop();
         FinishStop();
+        bool connected = Socket.IsConnected();
+        while (!connected)
+        {
+            Task.Delay(ThreadWaitingTime);
+            Logger.LogDebug("Trying to connect to socket");
+            connected = Socket.Initialize();
+        }
+        Start();
+    }
+
+    /// <summary>
+    /// Restart the communicator
+    /// </summary>
+    public async Task RestartAsync()
+    {
+        RestartMe = false;
+        BeginStop();
+        FinishStop();
+        bool connected = Socket.IsConnected();
+        while (!connected)
+        {
+            await Task.Delay(ThreadWaitingTime);
+            Logger.LogDebug("Trying to connect to socket");
+            connected = await Socket.InitializeAsync();
+        }
+        Start();
+    }
+
+    private void RestartWorker()
+    {
+        SetRun = true;
         Start();
     }
 
@@ -206,16 +247,15 @@ public abstract class SocketCommunicator<TTelegramType>
     /// </summary>
     protected abstract bool ExchangeMessages();
 
-    private void Communicate()
+    private void Communicate(CancellationToken cancellationToken)
     {
         Thread.CurrentThread.Name ??= Name;
 
         Logger.LogDebug("Started thread for {Name}", Name);
-        while (_run)
+        while (_run && !cancellationToken.IsCancellationRequested)
         {
             try
             {
-                Logger.LogDebug("Call exchange messages");
                 if (ExchangeMessages())
                 {
                     Logger.LogDebug("Exchange was successful");
@@ -228,8 +268,15 @@ public abstract class SocketCommunicator<TTelegramType>
                     Logger.LogError("Could not communicate, got : {ErrorMessage}", ex.Message);
                     SetRun = false;
                     RestartMe = true;
+                    SendRestartRequest("Failed to communicate");
                 }
             }
+        }
+        Logger.LogDebug("Stopped communicating in thread for {Name}", Name);
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            Logger.LogDebug("Restarting worker");
+            RestartWorker();
         }
     }
 }

@@ -71,14 +71,22 @@ public class PrismatCommunicationManager : BackgroundService
     /// <param name="eventArgs">The arguments of the event</param>
     private void OnRestartRequest(object sender, EventArgs eventArgs)
     {
+        _ = HandleRestartRequestAsync(sender, eventArgs);
+    }
+
+    private async Task HandleRestartRequestAsync(object sender, EventArgs _)
+    {
         if (sender is not SocketCommunicator<PrismatTelegram> communicator)
         {
             return;
         }
+
         _logger.LogInformation("Restart requested from {Name}", communicator.Name);
+
         if (communicator.RestartMe)
         {
-            communicator.Restart();
+            _logger.LogInformation("Restarting {Name}", communicator.Name);
+            await communicator.RestartAsync(); 
         }
     }
 }
