@@ -367,11 +367,7 @@ public class RestApi
         
         try
         {
-            var discoveryDoc = await httpClient.GetDiscoveryDocumentAsync($"{serverUrl}/{discoveryUrl}");
-            if (discoveryDoc.IsError)
-                throw new ApplicationException(discoveryDoc.Error);
-            
-            var tokenEndpoint = discoveryDoc.TokenEndpoint;
+            var tokenEndpoint = "http://localhost/security/realms/agv/protocol/openid-connect/token";
             var tokenStr = await httpClient.RequestPasswordTokenAsync(
                 new PasswordTokenRequest()
                 {
