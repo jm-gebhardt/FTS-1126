@@ -970,7 +970,7 @@ public class ActionCommandHandler :
     public async Task Consume(ConsumeContext<CancelOrAbortActionGroup> context)
     {
         var actionGroupId = context.Message.CorrelationId;
-        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionGroupId);
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
         if (actionGroup.AssignedAgv == null)
         {
             await context.Publish(new CancelActionGroup(actionGroupId, CancelReason.External));

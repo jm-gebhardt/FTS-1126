@@ -17,8 +17,6 @@ public static class Reasons
     public const string ActionSequenceMustNotHaveGaps = "Action sequence must not have gaps";
     public const string ActionsWithinTheGroupMustBeOrderedBySequence = "Actions within the group must be ordered by sequence";
 
-    public const string ThereMustBeAtLeastOneAgvThatKnowsTheCompleteRouteOfAllActionsWithinTheGivenActionGroup = "There must be at least one Agv that knows the complete route of all actions within the given ActionGroup";
-
     public const string PickStationNodeDoesNotExist = "Source station with node \"{0}\" does not exist";
     public const string DropStationNodeDoesNotExist = "Target station with node \"{0}\" does not exist";
     public const string TargetNodeDoesNotExist = "Node \"{0}\" does not exist";

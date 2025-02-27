@@ -20,14 +20,16 @@
         <PackageReference Include="moq" />
         <PackageReference Include="System.Text.Json" />
         <PackageReference Include="MSTest.TestAdapter" />
-        <PackageReference Include="MSTest.TestFramework"  />
+        <PackageReference Include="MSTest.TestFramework" />
+        <PackageReference Include="FluentValidation" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
         <PackageReference Include="coverlet.collector">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Shouldly"  />
+        <PackageReference Include="Shouldly" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-        <PackageReference Include="Newtonsoft.Json"  />
+        <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Helper\" />

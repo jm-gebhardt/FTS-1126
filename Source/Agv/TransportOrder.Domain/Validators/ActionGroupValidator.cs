@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
@@ -55,7 +56,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
             .Must(ActionSequenceIdsMustBeUnique).WithReason(Reasons.ActionSequenceIdsMustBeUnique)
             .Must(ActionSequenceIdsMustNotHaveAGap).WithReason(Reasons.ActionSequenceMustNotHaveGaps)
             .Must(ActionSequenceOrderedAscending).WithReason(Reasons.ActionsWithinTheGroupMustBeOrderedBySequence)
-            .MustAsync(async (actionGroup, cancellationToken) => await CanHandleRouteAsync(actionGroup, cancellationToken)).WithReason(Reasons.ThereMustBeAtLeastOneAgvThatKnowsTheCompleteRouteOfAllActionsWithinTheGivenActionGroup)
+            .MustAsync(async (actionGroup, cancellationToken) => await CanHandleRouteAsync(actionGroup, cancellationToken)).WithReason(HostOrderFailureReasons.ThereMustBeAtLeastOneAgvThatKnowsTheCompleteRouteOfAllActionsWithinTheGivenActionGroup)
             .DependentRules(() =>
             {
                 When(_ => !_hasRoute, () =>

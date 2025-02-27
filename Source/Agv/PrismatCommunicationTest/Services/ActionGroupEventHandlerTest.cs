@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
@@ -86,5 +87,31 @@ public class ActionGroupEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
         await fixture.ShouldHavePublishedAsync<PassTriggerPoint>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupInvalid_RouteValidationError_PublishesCancelInvalidHostOrder()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var orderEvent = new ActionGroupInvalid(actionGroup.CorrelationId, actionGroup, [HostOrderFailureReasons.ThereMustBeAtLeastOneAgvThatKnowsTheCompleteRouteOfAllActionsWithinTheGivenActionGroup]);
+
+        await fixture.TestHarness.Bus.Publish(orderEvent);
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupInvalid>();
+        await fixture.ShouldHavePublishedAsync<CancelInvalidHostOrder>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupInvalid_NotRouteValidationError_PublishesCancelInvalidHostOrder()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var orderEvent = new ActionGroupInvalid(actionGroup.CorrelationId, actionGroup, ["other validation error"]);
+
+        await fixture.TestHarness.Bus.Publish(orderEvent);
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupInvalid>();
+        await fixture.ShouldNotHavePublishedAsync<CancelInvalidHostOrder>();
     }
 }

@@ -17,9 +17,10 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 /// Provides handlers for host order related commands.
 /// </summary>
 [UsedImplicitly]
-public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IHostOrderRepository hostOrderRepository, IHostCommunicator hostCommunicator, KaeserGraphConfiguration configuration) :
+public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IHostOrderRepository hostOrderRepository, IHostCommunicator hostCommunicator, KaeserGraphConfiguration configuration, IHostOrderValidationService validationService) :
     IConsumer<CreateHostOrder>,
     IConsumer<CancelHostOrder>,
+    IConsumer<CancelInvalidHostOrder>,
     IConsumer<HandleHostOrderStart>,
     IConsumer<FinishHostOrder>,
     IConsumer<FinishPick>,
@@ -42,10 +43,20 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         hostOrder.AddAction(orderDetails.Source, ActionType.Pick, pickInfoToAgv);
         hostOrder.AddAction(orderDetails.Destination, ActionType.Drop, dropInfoToAgv);
-        await CancelUnfinishedOrdersOfHu(context, hu, orderDetails.CreationDate);
 
+        (int ErrorCode, string ErrorInfo)? validationError = await validationService.ValidateAsync(hostOrder);
+        if (validationError != null)
+        {
+            hostCommunicator.ReportOrderError(hostOrder.Hu, orderDetails.Source, orderDetails.Destination, validationError.Value.ErrorCode, validationError.Value.ErrorInfo, DateTime.UtcNow);
+            hostOrder.Cancel(DateTime.UtcNow);
+        }
         hostOrderRepository.Add(hostOrder);
         await hostOrderRepository.SaveAsync();
+        if (hostOrder.CanceledDate != null)
+        {
+            return;
+        }
+        await CancelUnfinishedOrdersOfHu(context, hu, orderDetails.CreationDate);
         logger.LogInformation("Host order for order {Hu} created", hu);
 
         string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node);
@@ -65,7 +76,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         ICollection<HostOrder> hostOrders = await hostOrderRepository.GetLatestUnfinishedOrdersByHu(hu, creationDate);
         if (hostOrders.Count == 0)
         {
-            logger.LogError("Could not cancel HostOrder with HandlingUnit {Hu}; None exist.", hu);
+            logger.LogError("No unfinished host orders for HU {hu}", hu);
             return;
         }
         foreach (var hostOrder in hostOrders)
@@ -143,6 +154,9 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     /// </summary>
     public async Task Consume(ConsumeContext<CancelHostOrder> context)
     {
+        // Wait 10s to ensure host order is saved in db
+        // in case cancellation is requested right after creation
+        await Task.Delay(10);
         string hu = context.Message.Hu;
         var hostOrder = await hostOrderRepository.GetLatestUnfinishedOrderByHu(hu);
         if (hostOrder == null)
@@ -154,6 +168,25 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         await hostOrderRepository.SaveAsync();
 
         await context.Publish(new CancelOrAbortActionGroup(hostOrder.CorrelationId));
+
+        await HandleRelatedDoppelspielOrders(context, hostOrder);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CancelInvalidHostOrder"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CancelInvalidHostOrder> context)
+    {
+        var hostOrder = await hostOrderRepository.GetByIdAsync(context.Message.CorrelationId);
+        hostOrder.Cancel(DateTime.UtcNow);
+        await hostOrderRepository.SaveAsync();
+
+        hostCommunicator.ReportOrderError(hostOrder.Hu,
+            hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node,
+            hostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node,
+            KaeserGraphConfiguration.ErrorCodeNoRoute,
+            configuration.OrderValidationErrors[KaeserGraphConfiguration.ErrorCodeNoRoute],
+            DateTime.UtcNow);
 
         await HandleRelatedDoppelspielOrders(context, hostOrder);
     }

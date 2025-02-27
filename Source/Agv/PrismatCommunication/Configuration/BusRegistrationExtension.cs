@@ -21,10 +21,14 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<HostOrderCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(16);
-            partitioner.PartitionMessageById<CreateHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<FinishHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<CancelInvalidHostOrder, HostOrderCommandHandler>(c);
             c.Message<PassTriggerPoint>(x => x.UsePartitioner(partitioner, p => p.Message.DroppingHostOrderCorrelationId));
+
+            var huPartitioner = c.CreatePartitioner(16);
+            c.Message<CreateHostOrder>(x => x.UsePartitioner(huPartitioner, p => p.Message.Hu));
+            c.Message<CancelHostOrder>(x => x.UsePartitioner(huPartitioner, p => p.Message.Hu));
         });
         cfg.AddConsumer<ActionGroupEventHandler>();
         cfg.AddConsumer<TriggerEventHandler>();

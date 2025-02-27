@@ -71,6 +71,25 @@ public class KaeserGraphConfiguration
     /// </summary>
     public Dictionary<string, string> ConveyorStationMapping { get; private set; }
 
+#pragma warning disable CS1591
+    public const int ErrorCodeSourceUnknown = 1000;
+    public const int ErrorCodeTargetUnknown = 2000;
+    public const int ErrorCodeNoRoute = 3000;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+    private int[] KnownValidationErrors => [ErrorCodeSourceUnknown, ErrorCodeTargetUnknown, ErrorCodeNoRoute];
+
+    /// <summary>
+    /// Errors for host order validation sent back to Prismat
+    /// </summary>
+    public Dictionary<int, string> OrderValidationErrors { get; private set; } =
+        new()
+        {
+            {ErrorCodeSourceUnknown, "Quell-Station nicht bekannt"},
+            {ErrorCodeTargetUnknown, "Ziel-Station nicht bekannt"},
+            {ErrorCodeNoRoute, "Route von Quelle zu Ziel nicht bekannt"}
+        };
+
     /// <summary>
     /// Provides a mapping of pick and drop lift height at stations 5-8.
     /// </summary>
@@ -227,6 +246,35 @@ public class KaeserGraphConfiguration
         {
             UpdateDoppelspielPickTargets(yamlData.DoppelspielPickTargets);
         }
+
+        if (!yamlData.OrderValidationErrors.IsNullOrEmpty())
+        {
+            UpdateOrderValidationErrors(yamlData.OrderValidationErrors);
+        }
+    }
+
+    /// <summary>
+    /// Update order validation errors.
+    /// </summary>
+    /// <param name="updatedValidationErrors"></param>
+    public void UpdateOrderValidationErrors(Dictionary<int, string> updatedValidationErrors)
+    {
+        foreach ((int errorCode, string errorInformation) in updatedValidationErrors)
+        {
+            if (IsKnownErrorCode(errorCode))
+            {
+                OrderValidationErrors[errorCode] = errorInformation;
+            }
+        }
+    }
+
+    private bool IsKnownErrorCode(int errorCode)
+    {
+        if (!KnownValidationErrors.Contains(errorCode))
+        {
+            throw new Exception($"Unknown order validation error code {errorCode}, must be on of {string.Join(',', KnownValidationErrors.Select(e => e.ToString()))}");
+        }
+        return true;
     }
 
     /// <summary>

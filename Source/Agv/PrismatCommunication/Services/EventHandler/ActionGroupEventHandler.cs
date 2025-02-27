@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
@@ -14,6 +15,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 public class ActionGroupEventHandler :
     IConsumer<ActionGroupCompleted>,
     IConsumer<ActionGroupStarted>,
+    IConsumer<ActionGroupInvalid>,
     IConsumer<PickActionCompleted>,
     IConsumer<DroppingAgvPassedDoppelspielTriggerPoint>
 {
@@ -57,5 +59,18 @@ public class ActionGroupEventHandler :
     {
         (_, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext) = context.Message;
         await context.Publish(new PassTriggerPoint(agvCorrelationId, droppingHostOrderCorrelationId, nextPickHostOrderCorrelationId, shouldPickNext));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionGroupInvalid"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionGroupInvalid> context)
+    {
+        (var correlationId, _, ICollection<string> validationErrors) = context.Message;
+
+        if (validationErrors.Contains(HostOrderFailureReasons.ThereMustBeAtLeastOneAgvThatKnowsTheCompleteRouteOfAllActionsWithinTheGivenActionGroup))
+        {
+            await context.Publish(new CancelInvalidHostOrder(correlationId));
+        }
     }
 }

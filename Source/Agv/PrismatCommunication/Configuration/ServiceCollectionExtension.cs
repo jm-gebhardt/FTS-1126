@@ -1,14 +1,19 @@
+using FluentValidation;
 using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
+using Gebhardt.Acc.PrismatCommunication.Domain.Validators;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Action = Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder.Action;
 
 namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 
@@ -38,7 +43,6 @@ public static class ServiceCollectionExtension
         serviceCollection.AddHostedService<PrismatCommunicationManager>();
         serviceCollection.AddCommunication(configuration);
         serviceCollection.AddTelegramProcessors();
-
         return serviceCollection;
     }
 
@@ -87,6 +91,19 @@ public static class ServiceCollectionExtension
         });
 
         return serviceCollection;
+    }
+
+    /// <summary>
+    /// Register host order validators.
+    /// </summary>
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    // ReSharper disable once UnusedMethodReturnValue.Local
+    public static IServiceCollection RegisterValidators(this IServiceCollection services)
+    {
+        services.AddTransient<IHostOrderValidationService, HostOrderValidationService>();
+        services.AddTransient<IValidator<HostOrder>, HostOrderValidator>();
+        services.AddTransient<IValidator<Action>, HostOrderActionValidator>();
+        return services;
     }
 
     /// <summary>

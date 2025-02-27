@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
@@ -22,6 +23,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
+            .WithValidationError(null)
             .WithHostCommunicator();
 
         const string orderId = "Order#01";
@@ -32,6 +34,29 @@ public class HostOrderCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
         fixture.VerifyHostOrderAdded();
+        fixture.VerifyReportOrderError("LeNo123", "SRC1", "DST1", KaeserGraphConfiguration.ErrorCodeTargetUnknown, Times.Never());
+        fixture.VerifyReportOrderError("LeNo123", "SRC1", "DST1", KaeserGraphConfiguration.ErrorCodeSourceUnknown, Times.Never());
+    }
+
+    [DataRow(KaeserGraphConfiguration.ErrorCodeTargetUnknown)]
+    [DataRow(KaeserGraphConfiguration.ErrorCodeSourceUnknown)]
+    [DataTestMethod]
+    public async Task Consume_CreateHostOrder_ValidationError_CreatesOrder(int errorCode)
+    {
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(null)
+            .WithValidationError((errorCode, "corresponding error info"))
+            .WithHostCommunicator();
+
+        const string orderId = "Order#01";
+        var correlationId = orderId.ToGuid();
+        var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
+
+        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", orderDetails));
+
+        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
+        fixture.VerifyHostOrderAdded();
+        fixture.VerifyReportOrderError("Hu", "SRC1", "DST1", errorCode, Times.Once());
     }
 
     [TestMethod]
@@ -62,6 +87,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
+            .WithValidationError(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false);
@@ -87,6 +113,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(false)
+            .WithValidationError(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
@@ -116,6 +143,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(true)
+            .WithValidationError(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
@@ -133,6 +161,7 @@ public class HostOrderCommandHandlerTest
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(false)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
+            .WithValidationError(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownPickTargetOrder();
@@ -161,6 +190,7 @@ public class HostOrderCommandHandlerTest
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(true)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
+            .WithValidationError(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownPickTargetOrder();
@@ -178,6 +208,7 @@ public class HostOrderCommandHandlerTest
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(false)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
+            .WithValidationError(null)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownDropTargetOrder();
@@ -206,6 +237,7 @@ public class HostOrderCommandHandlerTest
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(true)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
+            .WithValidationError(null)
             .WithHostCommunicator();
         fixture.Configuration.SetQueueIsOccupied(false);
 
@@ -224,6 +256,7 @@ public class HostOrderCommandHandlerTest
             .WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(true)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
+            .WithValidationError(null)
             .WithHostCommunicator();
         fixture.Configuration.SetQueueIsOccupied(true);
 
@@ -313,5 +346,21 @@ public class HostOrderCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<FinishPick>();
         fixture.VerifyPickCompletion(Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_CancelInvalidHostOrder_ValidData_ReportOrderError()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var command = new CancelInvalidHostOrder(order.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CancelInvalidHostOrder>();
+        fixture.VerifyReportOrderError(order.Hu, order.Actions.First(a => a.ActionType == ActionType.Pick).Node, order.Actions.First(a => a.ActionType == ActionType.Drop).Node, KaeserGraphConfiguration.ErrorCodeNoRoute, Times.Once());
     }
 }

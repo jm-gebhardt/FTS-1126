@@ -16,11 +16,13 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     private readonly Mock<IHostCommunicator> _hostCommunicatorMock = new();
     public readonly Mock<IHostOrderRepository> HostOrderRepositoryMock = new();
     public readonly KaeserGraphConfiguration Configuration = OrderGenerator.KaeserConfiguration;
+    private readonly Mock<IHostOrderValidationService> _validationService = new();
 
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
         collection.AddTransient(_ => HostOrderRepositoryMock.Object);
+        collection.AddTransient(_ => _validationService.Object);
         collection.AddTransient(_ => _hostCommunicatorMock.Object);
         collection.AddSingleton(_ => Configuration);
         return this;
@@ -53,6 +55,12 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrdersByHu(It.IsAny<string>(), It.IsAny<DateTime>())).ReturnsAsync(hostOrder== null ? [] : [hostOrder]);
         return this;
     }
+    
+    public HostOrderConsumerTestFixture<TConsumer> WithValidationError((int ErrorCode, string ErrorInfo)? error)
+    {
+        _validationService.Setup(x => x.ValidateAsync(It.IsAny<HostOrder>())).ReturnsAsync(error);
+        return this;
+    }
 
     public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(bool hasHostOrders)
     {
@@ -73,6 +81,11 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     public void VerifyPickCompletion(Times times = default)
     {
         _hostCommunicatorMock.Verify(x => x.ReportPickCompletion(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>()), times);
+    }
+
+    public void VerifyReportOrderError(string hu, string source, string destination, int errorCode, Times times = default)
+    {
+        _hostCommunicatorMock.Verify(x => x.ReportOrderError(hu, source, destination, errorCode, It.IsAny<string>(), It.IsAny<DateTime>()), times);
     }
 
     public void Dispose()

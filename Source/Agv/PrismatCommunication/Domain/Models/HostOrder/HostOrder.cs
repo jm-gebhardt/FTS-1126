@@ -180,7 +180,7 @@ public class HostOrder
     {
         PassedTriggerPoint = true;
     }
-
+    
     /// <summary>
     /// Try to create an action group with a pick and a drop action from the host order.
     /// </summary>

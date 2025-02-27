@@ -24,4 +24,15 @@ public interface IHostCommunicator
     /// <param name="position">The position of the pick</param>
     /// <param name="time">The time when the pick was completed.</param>
     void ReportPickCompletion(string hu, string position, DateTime time);
+
+    /// <summary>
+    /// Report error of transport order to the host.
+    /// </summary>
+    /// <param name="hu">The handing unit</param>
+    /// <param name="source">The source of the transport order.</param>
+    /// <param name="destination">The destination of the transport order.</param>
+    /// <param name="errorCode">The error code.</param>
+    /// <param name="errorInfo">The error information.</param>
+    /// <param name="time">The time the error was reported.</param>
+    void ReportOrderError(string hu, string source, string destination, int errorCode, string errorInfo, DateTime time);
 }

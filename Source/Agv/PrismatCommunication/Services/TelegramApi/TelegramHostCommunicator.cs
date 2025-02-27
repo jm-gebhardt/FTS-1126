@@ -24,4 +24,11 @@ public class TelegramHostCommunicator(ILogger<TelegramHostCommunicator> logger, 
         logger.LogInformation("Reporting pick completion to prismat");
         telegramProcessor.EnqueueTelegram(new Pick(hu, position, time));
     }
+
+    /// <inheritdoc cref="IHostCommunicator"/>>
+    public void ReportOrderError(string hu, string source, string destination, int errorCode, string errorInfo, DateTime time)
+    {
+        logger.LogInformation("Reporting transport order error to prismat");
+        telegramProcessor.EnqueueTelegram(new TordError(hu, source, destination, errorInfo, errorCode, time));
+    }
 }
