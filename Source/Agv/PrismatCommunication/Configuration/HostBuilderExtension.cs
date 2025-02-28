@@ -75,6 +75,7 @@ public static class HostBuilderExtension
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
             services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
+            services.AddTransient<ISystemStatusRepository, EfSystemStatusRepository>();
             services.TryAddKaeserGraphConfiguration(simulateOptions != null);
             services.RegisterValidators();
 

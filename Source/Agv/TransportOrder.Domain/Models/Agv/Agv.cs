@@ -94,9 +94,9 @@ public class Agv : IAgv
     public bool HasPendingModeSwitch => Mode.PendingType != null && Mode.PendingType != ModeType.Normal;
 
     /// <summary>
-    /// True, if the agv can start a new action of the group.
+    /// True, if the agv can not start a new action of the group.
     /// </summary>
-    public bool CanStartNewAction => !HasPendingModeSwitch && Mode.CurrentActionGroupPolicy == CurrentActionGroupPolicy.FinishActionGroup;
+    public bool CanNotStartNewAction => HasPendingModeSwitch && Mode.CurrentActionGroupPolicy != CurrentActionGroupPolicy.FinishActionGroup;
 
     /// <summary>
     /// Gets the previous state of the agv.

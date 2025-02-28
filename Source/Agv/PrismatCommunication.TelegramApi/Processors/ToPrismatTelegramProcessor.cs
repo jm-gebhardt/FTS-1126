@@ -86,7 +86,7 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     {
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts > 0)
         {
-            _logger.LogInformation("Resending telegram {Telegram}", CurrentTelegram.ToString());
+            _logger.LogInformation("Resending telegram {Telegram}, remaining attempts {RemainingAttempts}", CurrentTelegram.ToString(), RemainingAttempts);
             telegram = CurrentTelegram!.ToString()!;
             LastTelegramSend = _timeProvider.Now();
             RemainingAttempts -= 1;

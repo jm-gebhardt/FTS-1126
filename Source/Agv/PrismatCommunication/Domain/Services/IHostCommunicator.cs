@@ -35,4 +35,13 @@ public interface IHostCommunicator
     /// <param name="errorInfo">The error information.</param>
     /// <param name="time">The time the error was reported.</param>
     void ReportOrderError(string hu, string source, string destination, int errorCode, string errorInfo, DateTime time);
+    
+    /// <summary>
+    /// Report system status.
+    /// </summary>
+    /// <param name="isReady">True, if the system is ready.</param>
+    /// <param name="errorCode">The error code.</param>
+    /// <param name="errorInfo">The error information.</param>
+    /// <param name="time">The time when the system status is reported.</param>
+    void ReportSystemStatus(bool isReady, int errorCode, string errorInfo, DateTime time);
 }

@@ -227,7 +227,7 @@ public class ActionCommandHandler :
             return;
         }
 
-        if (agv.HasPendingModeSwitch && agv.Mode.CurrentActionGroupPolicy != CurrentActionGroupPolicy.FinishActionGroup)
+        if (agv.CanNotStartNewAction)
         {
             _logger.LogWarning("Can not start next action in group: Agv is pending mode switch with current action group policy {Policy}", agv.Mode.CurrentActionGroupPolicy);
             return;

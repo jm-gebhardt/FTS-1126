@@ -26,4 +26,10 @@ public class SimulationHostCommunicator(ILogger<SimulationHostCommunicator> logg
     {
         logger.LogInformation("Reporting transport order error to host: HU {Hu}, Src {Src}, Dest {Dest}, Err {ErrorCode}, Info {Info}", hu, source, destination, errorCode, errorInfo);
     }
+
+    /// <inheritdoc cref="IHostCommunicator"/>>
+    public void ReportSystemStatus(bool isReady, int errorCode, string errorInfo, DateTime time)
+    {
+        logger.LogInformation("Reporting system status to host:  isReady: {IsReady}, code: {ErrorCode}, info: {ErrorInformation}", isReady, errorCode, errorInfo);
+    }
 }

@@ -31,4 +31,11 @@ public class TelegramHostCommunicator(ILogger<TelegramHostCommunicator> logger, 
         logger.LogInformation("Reporting transport order error to prismat");
         telegramProcessor.EnqueueTelegram(new TordError(hu, source, destination, errorInfo, errorCode, time));
     }
+    
+    /// <inheritdoc cref="IHostCommunicator"/>>
+    public void ReportSystemStatus(bool isReady, int errorCode, string errorInfo, DateTime time)
+    {
+        logger.LogInformation("Reporting system status to prismat");
+        telegramProcessor.EnqueueTelegram(new Status(isReady? SystemState.AUTO: SystemState.AUS, time, errorCode, errorInfo));
+    }
 }

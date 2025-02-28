@@ -4,7 +4,7 @@ using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
-using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;

@@ -14,6 +14,13 @@ public class TelegramProvider(ILogger<TelegramProvider> logger, PrismatTelegramP
     {
         await Task.Delay(10, stoppingToken);
 
+        const string posStateRequest = "/Seq:001/Send:EWM...../Rec:FTS01.../Time:2021:11:02:08:12:09:122/Func:PosStateReq........./Pos:FTS001/$$:";
+        logger.LogInformation("Providing test PosStateReq {Telegram}", posStateRequest);
+        var telegram = new PosStateReq();
+        telegram.Load(posStateRequest);
+        telegramProcessor.EnqueueTelegram(telegram);
+
+        await Task.Delay(5, stoppingToken);
         const string testSourceErrorTelegram = "/Seq:002/Send:EWM...../Rec:FTS01.../Time:2023:11:02:08:12:09:122/Func:Tord................/HU:5010000010........../Src:9920....../Dest:2110....../HuRot:1/OID:0000000000../SortID:00/OfO:01/$$:";
         logger.LogInformation("Providing test tord with source error {Telegram}", testSourceErrorTelegram);
         var tordWithSourceError = new Tord();
@@ -27,9 +34,8 @@ public class TelegramProvider(ILogger<TelegramProvider> logger, PrismatTelegramP
         var tordWithDestError = new Tord();
         tordWithDestError.Load(testDestErrorTelegram);
         telegramProcessor.EnqueueTelegram(tordWithDestError);
-       
-        await Task.Delay(5, stoppingToken);
 
+        await Task.Delay(10, stoppingToken);
         const string testTelegram = "/Seq:001/Send:EWM...../Rec:FTS01.../Time:2021:11:02:08:12:09:122/Func:Tord................/HU:5010000010........../Src:1020....../Dest:2110....../HuRot:1/OID:0000000000../SortID:00/OfO:01/$$:";
         logger.LogInformation("Providing test tord {Telegram}", testTelegram);
         var tord = new Tord();

@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 using JetBrains.Annotations;
@@ -30,6 +32,15 @@ public static class BusRegistrationExtension
             c.Message<CreateHostOrder>(x => x.UsePartitioner(huPartitioner, p => p.Message.Hu));
             c.Message<CancelHostOrder>(x => x.UsePartitioner(huPartitioner, p => p.Message.Hu));
         });
+
+        cfg.AddConsumer<SystemStatusCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(16);
+            c.Message<GetSystemStatus>(x => x.UsePartitioner(partitioner, _ => SystemStatus.GetId()));
+            c.Message<SetReady>(x => x.UsePartitioner(partitioner, _ => SystemStatus.GetId()));
+            c.Message<SetNotReady>(x => x.UsePartitioner(partitioner, _ => SystemStatus.GetId()));
+        });
+        cfg.AddConsumer<AgvEventHandler>();
         cfg.AddConsumer<ActionGroupEventHandler>();
         cfg.AddConsumer<TriggerEventHandler>();
         cfg.AddConsumer<QueueEventHandler>();

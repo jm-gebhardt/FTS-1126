@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+﻿namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 
 /// <summary>
 /// Provides a command to handle passing the Doppelspiel trigger point

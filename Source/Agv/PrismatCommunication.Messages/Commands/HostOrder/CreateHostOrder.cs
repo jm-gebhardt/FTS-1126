@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using MassTransit;
 
-namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 
 /// <summary>
 /// Internal message to signal new host order within PrismatCommunication

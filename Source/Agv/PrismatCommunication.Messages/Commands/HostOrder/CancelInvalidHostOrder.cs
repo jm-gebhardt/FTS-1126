@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 
 /// <summary>
 /// Internal Message to signal canceling of a host order that was validated externally and reported to be invalid.

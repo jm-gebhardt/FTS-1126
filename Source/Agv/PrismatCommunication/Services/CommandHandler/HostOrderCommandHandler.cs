@@ -6,7 +6,7 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
-using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;

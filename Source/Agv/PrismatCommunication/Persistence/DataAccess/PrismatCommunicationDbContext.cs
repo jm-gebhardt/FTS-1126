@@ -29,6 +29,7 @@ public class PrismatCommunicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new HostOrderEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SystemStatusEntityConfiguration());
     }
 
     /// <summary>

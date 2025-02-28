@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -159,13 +160,16 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_AgvWasOffline_SetOnline()
     {
-        var fixture = new AgvCommandHandlerTestFixture();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithHasOnlineAgvs()
+            .WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
         agv.IsOnline.ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvWentOnline>();
     }
 
     [TestMethod]
@@ -329,12 +333,13 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.SetOnline();
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv }).WithHasOnlineAgvs(false);
 
         await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
 
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         agv.IsOnline.ShouldBeFalse();
+        await fixture.ShouldHavePublishedAsync<AllAgvsOffline>();
     }
 
     [TestMethod]

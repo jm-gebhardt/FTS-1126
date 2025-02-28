@@ -158,7 +158,6 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override void Cancel()
     {
-        CurrentTelegram = null;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>

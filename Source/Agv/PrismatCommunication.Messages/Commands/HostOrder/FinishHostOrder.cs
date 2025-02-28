@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 
-namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 
 /// <summary>
 /// Provides a command to report successful handling of an order.

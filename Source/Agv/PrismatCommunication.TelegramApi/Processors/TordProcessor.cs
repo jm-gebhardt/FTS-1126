@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
-using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;

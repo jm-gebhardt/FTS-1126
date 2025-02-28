@@ -55,6 +55,12 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
+    public async Task<bool> HasOnlineAgvs()
+    {
+        return await Agvs.AnyAsync(a => a.GraphExists && a.IsOnline);
+    }
+
+    /// <inheritdoc />
     public async Task<ICollection<Agv>> GetIdleAgvsAsync()
     {
         return await Agvs.Where(x => x.CurrentAgvState == AgvState.Idle).ToListAsync();

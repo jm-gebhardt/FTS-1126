@@ -202,6 +202,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
+    public AgvCommandHandlerTestFixture WithHasOnlineAgvs(bool hasOnlineAgvs=true)
+    {
+        AgvDb.Setup(r => r.Agvs.HasOnlineAgvs()).ReturnsAsync(hasOnlineAgvs);
+        return this;
+    }
+
     public AgvCommandHandlerTestFixture AddParkingPointManager(GraphNode parkGraphNode)
     {
         _parkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(parkGraphNode);

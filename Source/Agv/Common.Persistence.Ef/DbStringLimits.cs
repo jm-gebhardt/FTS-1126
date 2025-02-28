@@ -11,7 +11,8 @@ public static class DbStringLimits
     public const int NodeId = 450;
     public const int Description = 400; // descriptive fields (names, types, reasons, specifications..)
     public const int User = 200;
-    public const int State = 50; 
+    public const int State = 50;
+    public const int ErrorInformation = 50;
     public const int ActionType = 50;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

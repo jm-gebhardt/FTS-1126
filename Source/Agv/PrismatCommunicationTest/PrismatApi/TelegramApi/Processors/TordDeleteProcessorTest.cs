@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Testing.TelegramCommunication;
-using Gebhardt.Acc.PrismatCommunication.Messages.Commands;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;

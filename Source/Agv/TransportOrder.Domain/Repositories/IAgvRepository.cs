@@ -74,7 +74,7 @@ public interface IAgvRepository
     /// <param name="agvCorrelationIds">The agvs to select from.</param>
     /// <returns></returns>
     Task<ICollection<Models.Agv.Agv>> SelectAgvsWithAboveCriticalBatteryLevel(ICollection<Guid> agvCorrelationIds);
-   
+
     /// <summary>
     /// Update an agv.
     /// </summary>
@@ -111,4 +111,9 @@ public interface IAgvRepository
     /// <param name="agvCorrelationIds">A list of AgvCorrelationIds</param>
     /// <returns></returns>
     Task<IReadOnlyDictionary<Guid, string?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds);
+
+    /// <summary>
+    /// True, if there are online agvs.
+    /// </summary>
+    Task<bool> HasOnlineAgvs();
 }

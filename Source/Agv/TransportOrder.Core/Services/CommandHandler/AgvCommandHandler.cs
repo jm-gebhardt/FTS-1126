@@ -20,6 +20,7 @@ using Microsoft.Extensions.Logging;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using System.Collections.ObjectModel;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
@@ -407,6 +408,14 @@ public class AgvCommandHandler :
                 _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
                 return;
             }
+
+            if(agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
+            {
+                if (await _agvDb.Agvs.HasOnlineAgvs())
+                {
+                    await context.Publish(new AgvWentOnline());
+                }
+            }
         }
         await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, agvSettings);
 
@@ -509,6 +518,10 @@ public class AgvCommandHandler :
         _logger.LogAgvInformation(LogCodes.AgvGraphReceived, correlationId, "AGV Graph Received",
             $"AGV {agv.SerialNumber} graph has been received", new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
         await _agvDb.Agvs.UpdateAgvAsync(agv);
+        if (await _agvDb.Agvs.HasOnlineAgvs())
+        {
+            await context.Publish(new AgvWentOnline());
+        }
     }
 
     /// <summary>
@@ -533,6 +546,12 @@ public class AgvCommandHandler :
             _logger.LogAgvInformation(LogCodes.AgvOffline, agv.CorrelationId, "AGV Offline",
                 $"AGV {agv.SerialNumber} is offline",
                 new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
+        }
+
+        if (!await _agvDb.Agvs.HasOnlineAgvs())
+        {
+            _logger.LogWarning("All agvs went offline");
+            await context.Publish(new AllAgvsOffline());
         }
     }
 
