@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
+using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -10,7 +11,7 @@ public class TelegramConveyorCommunicatorTest
     [TestMethod]
     public void ReportAplCargoState_ValidData_AgvAplCargoStateEnqueued()
     {
-        var fixture = new TelegramConveyorCommunicatorTestFixture().Build();
+        var fixture = new TelegramConveyorCommunicatorTestFixture().Build(ServiceKeyProvider.AgvCargoState);
 
         const bool cargo = true;
 

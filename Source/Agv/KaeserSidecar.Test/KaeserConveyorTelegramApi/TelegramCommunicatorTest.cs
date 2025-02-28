@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
+using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -10,7 +11,7 @@ public class TelegramCommunicatorTest
     [TestMethod]
     public void ReportPalletPickDropStation_ValidData_AgvWeStationEnqueued()
     {
-        var fixture = new TelegramConveyorCommunicatorTestFixture().Build();
+        var fixture = new TelegramConveyorCommunicatorTestFixture().Build(ServiceKeyProvider.AplWeStation);
 
         const string targetStation = "WE01";
         const string pickStation = "1040";

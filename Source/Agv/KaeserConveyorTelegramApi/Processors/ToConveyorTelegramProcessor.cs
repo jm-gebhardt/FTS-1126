@@ -85,7 +85,7 @@ public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegra
     {
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts > 0)
         {
-            _logger.LogInformation("Resending telegram {Telegram}", CurrentTelegram.ToString());
+            _logger.LogInformation("Resending telegram {Telegram}, remaining attempts {RemainingAttempts}", CurrentTelegram.ToString(), RemainingAttempts);
             telegram = CurrentTelegram!.ToString()!;
             LastTelegramSend = _timeProvider.Now();
             RemainingAttempts -= 1;
@@ -97,6 +97,7 @@ public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegra
 
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts <= 0)
         {
+            _logger.LogInformation("No more remaining attempts for resending telegram {Telegram}, trigger restart", CurrentTelegram.ToString());
             TriggerRestart = true;
         }
 

@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
+using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -8,9 +10,9 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApiServer.Services;
 /// <summary>
 /// Provides a communication manager
 /// </summary>
-public class CommunicationManager(ILogger<CommunicationManager> logger, Receiver<ConveyorTelegram> receiver, Server server) : BackgroundService
+public class AplWeStationCommunicationManager(ILogger<AplWeStationCommunicationManager> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] Receiver<ConveyorTelegram> receiver, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] Server server) : BackgroundService
 {
-    /// <inheritdoc cref="CommunicationManager"/>>
+    /// <inheritdoc cref="AplWeStationCommunicationManager"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         Connect();
@@ -31,13 +33,13 @@ public class CommunicationManager(ILogger<CommunicationManager> logger, Receiver
 
     private void Start()
     {
-        logger.LogInformation("Starting sender for conveyor communication");
+        logger.LogInformation("Starting sender for conveyor communication with {Server} server", ServiceKeyProvider.AplWeStation);
         receiver.Start();
     }
 
     private void Stop()
     {
-        logger.LogInformation("Stopping sender for conveyor communication");
+        logger.LogInformation("Stopping sender for conveyor communication with {Server} server", ServiceKeyProvider.AplWeStation);
         receiver.BeginStop();
         receiver.FinishStop();
         server.Disconnect();

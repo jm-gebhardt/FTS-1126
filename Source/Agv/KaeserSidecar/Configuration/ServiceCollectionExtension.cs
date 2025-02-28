@@ -1,7 +1,9 @@
 ﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
+using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
+using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Gebhardt.Acc.KaeserSidecar.Services.TelegramApi;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,8 +16,6 @@ namespace Gebhardt.Acc.KaeserSidecar.Configuration;
 /// </summary>
 public static class ServiceCollectionExtension
 {
-    private const string ConfigurationSection = "CONVEYOR";
-
     /// <summary>
     /// Adds services required for the conveyor api.
     /// </summary>
@@ -25,19 +25,67 @@ public static class ServiceCollectionExtension
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static IServiceCollection AddConveyorApi(this IServiceCollection serviceCollection, IConfiguration configuration)
     {
-        var config = new TelegramCommunicationConfiguration();
-        config.LoadFromConfig(configuration.GetRequiredSection(ConfigurationSection));
-        serviceCollection.AddSingleton(config);
-        serviceCollection.AddSingleton<ToConveyorTelegramProcessor>();
-        serviceCollection.AddSingleton<Client>();
-        serviceCollection.AddSingleton<Sender<ConveyorTelegram>>(serviceProvider =>
+        // Configuration
+        var aplWeStationConfig = new TelegramCommunicationConfiguration();
+        aplWeStationConfig.LoadFromConfig(configuration.GetRequiredSection(ServiceKeyProvider.AplWeStation));
+        serviceCollection.AddKeyedSingleton(ServiceKeyProvider.AplWeStation, (_, _) => aplWeStationConfig);
+
+        var agvCargoStateConfig = new TelegramCommunicationConfiguration();
+        agvCargoStateConfig.LoadFromConfig(configuration.GetRequiredSection(ServiceKeyProvider.AgvCargoState));
+        serviceCollection.AddKeyedSingleton(ServiceKeyProvider.AgvCargoState, (_, _) => agvCargoStateConfig);
+
+        // Clients
+        serviceCollection.AddKeyedSingleton<Client>(ServiceKeyProvider.AplWeStation, (serviceProvider, _) =>
         {
-            var processor = serviceProvider.GetRequiredService<ToConveyorTelegramProcessor>();
-            var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<ConveyorTelegram>>>();
-            var socket = serviceProvider.GetRequiredService<Client>();
-            return new Sender<ConveyorTelegram>(socket, "conveyorSenders", processor, logger);
+            var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+            return new Client(logger, aplWeStationConfig);
         });
-        serviceCollection.AddHostedService<ConveyorCommunicationManager>();
+
+        serviceCollection.AddKeyedSingleton<Client>(ServiceKeyProvider.AgvCargoState, (serviceProvider, _) =>
+        {
+            var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+            return new Client(logger, agvCargoStateConfig);
+        });
+
+        // Telegram processors
+        serviceCollection.AddKeyedSingleton<ToConveyorTelegramProcessor>(ServiceKeyProvider.AplWeStation,
+            (serviceProvider, _) =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<ToConveyorTelegramProcessor>>();
+                var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+                return new ToConveyorTelegramProcessor(logger, timeProvider, aplWeStationConfig);
+            });
+
+        serviceCollection.AddKeyedSingleton<ToConveyorTelegramProcessor>(ServiceKeyProvider.AgvCargoState,
+            (serviceProvider, _) =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<ToConveyorTelegramProcessor>>();
+                var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+                return new ToConveyorTelegramProcessor(logger, timeProvider, agvCargoStateConfig);
+            });
+
+        // Sender
+        serviceCollection.AddKeyedSingleton<Sender<ConveyorTelegram>>(ServiceKeyProvider.AplWeStation,
+            (serviceProvider,_ ) =>
+        {
+            var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<ConveyorTelegram>>>();
+            var socket = serviceProvider.GetKeyedService<Client>(ServiceKeyProvider.AplWeStation);
+            var processor = serviceProvider.GetKeyedService<ToConveyorTelegramProcessor>(ServiceKeyProvider.AplWeStation);
+            return new Sender<ConveyorTelegram>(socket!, ServiceKeyProvider.AplWeStation, processor!, logger);
+        });
+
+        serviceCollection.AddKeyedSingleton<Sender<ConveyorTelegram>>(ServiceKeyProvider.AgvCargoState,
+            (serviceProvider, _) =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<ConveyorTelegram>>>();
+                var socket = serviceProvider.GetKeyedService<Client>(ServiceKeyProvider.AgvCargoState);
+                var processor = serviceProvider.GetKeyedService<ToConveyorTelegramProcessor>(ServiceKeyProvider.AgvCargoState);
+                return new Sender<ConveyorTelegram>(socket!, ServiceKeyProvider.AgvCargoState, processor!, logger);
+            });
+
+        // Communication managers
+        serviceCollection.AddHostedService<AplWeStationCommunicationManager>();
+        serviceCollection.AddHostedService<AgvCargoStateCommunicationManager>();
         return serviceCollection;
     }
 }

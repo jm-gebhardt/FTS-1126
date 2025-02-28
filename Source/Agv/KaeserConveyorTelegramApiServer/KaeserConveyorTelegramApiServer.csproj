@@ -13,6 +13,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
       <ProjectReference Include="..\KaeserConveyorTelegramApi\KaeserConveyorTelegramApi.csproj" />
+      <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
     </ItemGroup>
 
 </Project>

@@ -312,7 +312,7 @@ public class RestApi
 
             WriteSuccess($"Action group {actionGroup} for '{orderId}' fetched!");
             return actionGroup;
-        }, longJob ? 240000:120000);
+        }, longJob ? 300000:120000);
     }
 
     /// <summary>

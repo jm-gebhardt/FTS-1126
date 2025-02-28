@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
+using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -8,11 +10,11 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.TelegramApi;
 /// <summary>
 /// Provides a communication manager
 /// </summary>
-public class ConveyorCommunicationManager(ILogger<ConveyorCommunicationManager> logger, Sender<ConveyorTelegram> sender, Client client) : BackgroundService
+public class AplWeStationCommunicationManager(ILogger<AplWeStationCommunicationManager> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)]  Sender<ConveyorTelegram> sender, [FromKeyedServices(ServiceKeyProvider.AplWeStation)]  Client client) : BackgroundService
 {
     private const int ConnectionDelayMs = 10000;
 
-    /// <inheritdoc cref="ConveyorCommunicationManager"/>>
+    /// <inheritdoc cref="AplWeStationCommunicationManager"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Connect(stoppingToken);
@@ -30,7 +32,7 @@ public class ConveyorCommunicationManager(ILogger<ConveyorCommunicationManager> 
         bool initialized = false;
         while (!initialized)
         {
-            logger.LogInformation("Trying to connect to conveyor telegram server");
+            logger.LogInformation("Trying to connect to {Server} telegram server", ServiceKeyProvider.AplWeStation);
             initialized =  await client.InitializeAsync();
             await Task.Delay(ConnectionDelayMs, stoppingToken);
         }
@@ -40,13 +42,13 @@ public class ConveyorCommunicationManager(ILogger<ConveyorCommunicationManager> 
 
     private void Start()
     {
-        logger.LogInformation("Starting sender for conveyor communication");
+        logger.LogInformation("Starting sender for conveyor communication for {Server}", ServiceKeyProvider.AplWeStation);
         sender.Start();
     }
 
     private void Stop()
     {
-        logger.LogInformation("Stopping sender for conveyor communication");
+        logger.LogInformation("Stopping sender for conveyor communication for {Server}", ServiceKeyProvider.AplWeStation);
         sender.BeginStop();
         sender.FinishStop();
         client.Disconnect();
