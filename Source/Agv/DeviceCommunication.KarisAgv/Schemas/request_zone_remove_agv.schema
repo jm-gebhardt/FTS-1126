@@ -1,0 +1,39 @@
+﻿{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "request_zone_remove_agv",
+    "description": "Requests to remove an agv from a zone.",
+    "subtopic": "/requestZoneRemoveAgv",
+    "type": "object",
+    "properties": {
+        "serialNumber": {
+            "description": "Serial number of the agv to process the request.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
+        "agvToRemove": {
+            "description": "Serial number of the agv to to be removed.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
+        "zoneId": {
+            "type": "string",
+            "description": "The unique ID of the zone."
+        },
+        "requestId": {
+            "type": "string",
+            "description": "A unique ID for that request."
+        }
+    },
+    "required": [
+        "serialNumber",
+        "zoneId",
+        "agvToRemove",
+        "requestId"
+    ]
+}

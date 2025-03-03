@@ -163,6 +163,11 @@ public record MqttState
     /// Optional: If the AGV does not use zones, this field can be omitted.
     /// </summary>
     public string? ZoneSetId { get; set; }
+    
+    /// <summary>
+    /// The zones that the agv is in if any.
+    /// </summary>
+    public List<string>? ZoneIds { get; set; }
 
     /// <summary>
     /// Initializes a new instance of <see cref="MqttState"/>.

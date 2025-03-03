@@ -581,6 +581,15 @@
                     "description": "Protective field violation. True: field is violated. False: field is not violated."
                 }
             }
+        },
+        "zoneIds": {
+            "type": "array",
+            "description": "The unique IDs of the zones that this agv is in. Not required.",
+            "items": [
+                {
+                    "type": "number"
+                }
+            ]
         }
     }
 }

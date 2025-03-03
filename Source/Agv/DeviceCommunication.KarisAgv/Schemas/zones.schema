@@ -1,0 +1,89 @@
+﻿{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "zones",
+    "description": "Information about zones of the agvs.",
+    "subtopic": "/zones",
+    "type": "object",
+    "properties": {
+        "serialNumber": {
+            "description": "Serial number of the agv.",
+            "type": "string",
+            "examples": [
+                "1234-5678",
+                "AGV2034"
+            ]
+        },
+        "requestId": {
+            "type": "string",
+            "description": "The unique ID replied from the request."
+        },
+        "zones": {
+            "type": "array",
+            "description": "The list of zones for the agvs.",
+            "items": [
+                {
+                    "type": "object",
+                    "description": "The zone representation.",
+                    "properties": {
+                        "zoneId": {
+                            "type": "string",
+                            "description": "The unique ID of the zone."
+                        },
+                        "polygon": {
+                            "type": "array",
+                            "items": [
+                                {
+                                    "type": "object",
+                                    "description": "The polygon point.",
+                                    "properties": {
+
+                                        "x": {
+                                            "type": "number",
+                                            "description": "The x coordinate of the polygon point."
+                                        },
+                                        "y": {
+                                            "type": "number",
+                                            "description": "The y coordinate of the polygon point."
+                                        },
+                                        "z": {
+                                            "type": "number",
+                                            "description": "The z coordinate of the polygon point. Not required."
+                                        }
+                                    },
+                                    "required": [
+                                        "y",
+                                        "x"
+                                    ]
+                                }
+                            ]
+                        },
+                        "capacity": {
+                            "type": "number",
+                            "description": "The zone capacity."
+                        },
+                        "occupancy": {
+                            "type": "array",
+                            "description": "The agvs occupying the zone.",
+                            "items": [
+                                {
+                                    "type": "string",
+                                    "description": "The occupying agvs' serial numbers."
+                                }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "zoneId",
+                        "capacity",
+                        "occupancy"
+                    ]
+                }
+            ]
+        }
+    },
+    "required": [
+        "serialNumber",
+        "requestId",
+        "zones"
+    ]
+}
