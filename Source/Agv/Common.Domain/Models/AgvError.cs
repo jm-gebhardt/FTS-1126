@@ -52,6 +52,7 @@ public record AgvError : CorrelatedBy<Guid>
     /// <summary>
     ///  List of error references.
     /// </summary>
+    // ReSharper disable once TypeWithSuspiciousEqualityIsUsedInRecord.Global
     public List<ErrorReference>? ErrorReferences { get; init; }
 
     /// <summary>

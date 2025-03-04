@@ -42,6 +42,7 @@ public class AgvErrorRepositoryTest
 
         agvErrorsInRepository.ShouldNotBeNull();
         VerifyAgvErrorsInRepository(agvErrorsInRepository, agvErrorStatus);
+        VerifyAgvErrorsInRepository(fixture.GetCachedErrors(agvCorrelationId), agvErrorStatus);
     }
 
     [TestMethod]
@@ -110,6 +111,7 @@ public class AgvErrorRepositoryTest
 
         actualAgvErrors.ShouldNotBeEmpty();
         VerifyAgvErrorsInRepository(actualAgvErrors, agvErrorStatus);
+        VerifyAgvErrorsInRepository(fixture.GetCachedErrors(agvCorrelationId), agvErrorStatus);
     }
 
     [TestMethod]
@@ -121,6 +123,7 @@ public class AgvErrorRepositoryTest
         IReadOnlyList<AgvError> actualAgvErrors = await fixture.AgvErrorRepository.GetErrorsAsync(agvCorrelationId, DateTime.MinValue, DateTime.MaxValue);
 
         actualAgvErrors.ShouldBeEmpty();
+        fixture.GetCachedErrors(agvCorrelationId).ShouldBeEmpty();
     }
 
     [TestMethod]
@@ -137,5 +140,6 @@ public class AgvErrorRepositoryTest
 
         actualAgvErrors.ShouldNotBeEmpty();
         VerifyAgvErrorsInRepository((IList<AgvError>?) actualAgvErrors, agvErrorStatus);
+        VerifyAgvErrorsInRepository(fixture.GetCachedErrors(agvCorrelationId), agvErrorStatus);
     }
 }

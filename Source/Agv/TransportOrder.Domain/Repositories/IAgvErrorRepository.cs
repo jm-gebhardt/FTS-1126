@@ -15,21 +15,21 @@ public interface IAgvErrorRepository
     /// <param name="errors"></param>
     /// <param name="agvCorrelationId"></param>
     /// <returns>(True if the errors have changed, list of new errors, list of resolved errors).</returns>
-    public Task<(bool changed, List<AgvError> newErrors, List<AgvError>  resolvedErrors)> AddOrUpdateAgvErrorStatus(List<AgvError>? errors, Guid agvCorrelationId);
-    
+     Task<(bool changed, List<AgvError> newErrors, List<AgvError> resolvedErrors)> AddOrUpdateAgvErrorStatus(List<AgvError>? errors, Guid agvCorrelationId);
+
     /// <summary>
     /// Gets all active errors for given Agv excluding the resolved errors
     /// </summary>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId);
+     Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Gets all active errors for given Agvs excluding the resolved errors
     /// </summary>
     /// <param name="agvCorrelationIds"></param>
     /// <returns></returns>
-    public Task<IList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds);
+    Task<IList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Gets all previous errors for given Agv including resolved errors
@@ -38,7 +38,7 @@ public interface IAgvErrorRepository
     /// <param name="dateFrom">Only consider errors newer than this parameter (if set)</param>
     /// <param name="dateTo">Only consider errors older than this parameter (if set)</param>
     /// <returns></returns>
-    public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo);
+   Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo);
 
     /// <summary>
     /// Gets all previous errors for given Agvs including resolved errors
@@ -48,5 +48,10 @@ public interface IAgvErrorRepository
     /// <param name="dateTo">Only consider errors older than this parameter (if set)</param>
     /// <returns></returns>
     [PublicAPI]
-    public Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo);
+   Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo);
+
+    /// <summary>
+    /// Load db agv error information into the cache.
+    /// </summary>
+    Task LoadInMemoryCache();
 }

@@ -8,12 +8,11 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 /// Provides a service to initialize the in memory caches.
 /// </summary>
 [UsedImplicitly]
-public class InMemoryCacheInitializer(ITriggerRepository triggerRepository, ICargoRepository cargoRepository) : BackgroundService
+public class InMemoryCacheInitializer(ITriggerRepository triggerRepository, ICargoRepository cargoRepository, IAgvErrorRepository errorRepository) : BackgroundService
 {
     /// <inheritdoc cref="BackgroundService"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await triggerRepository.LoadTriggerToLocationDictionary();
-        await cargoRepository.LoadInMemoryCache();
+        await Task.WhenAll(triggerRepository.LoadTriggerToLocationDictionary(), cargoRepository.LoadInMemoryCache(), errorRepository.LoadInMemoryCache());
     }
 }

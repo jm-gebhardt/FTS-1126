@@ -159,6 +159,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<INodeStateRepository, EfNodeStateRepository>();
 
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
+        services.AddSingleton<IConcurrentDictionaryProvider<Guid, Lazy<List<AgvError>>>, AgvErrorDictionaryProvider>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, Location>, TriggerLocationDictionaryProvider>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, List<Domain.Models.Agv.Cargo>>, AgvCargoDictionaryProvider>();
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
