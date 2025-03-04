@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
-using Gebhardt.Acc.DeviceCommunicationTest.Services;
+using Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;

@@ -3,10 +3,10 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -17,9 +17,10 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 /// Provides handlers for action-related commands.
 /// </summary>
 [UsedImplicitly]
-public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRepository agvRepository, IGraphRepository graphRepository) :
+public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRepository agvRepository, IGraphRepository graphRepository, IActionRepository actionRepository) :
     IConsumer<StartActionCommand>,
-    IConsumer<UpdateActionCommand>
+    IConsumer<UpdateActionCommand>,
+    IConsumer<AbortAndStartActionCommand>
 
 {
     /// <summary>
@@ -72,6 +73,42 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         await context.PublishMqtt(order, context.CancellationToken);
 
         FeedAgvRepository(assignedAgv, action);
+
+        if (action.IsMoveToCoordinate)
+        {
+            logger.LogInformation("Sent update of transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} to coordinates: {Coordinates}",
+                action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.Position!);
+            return;
+        }
+        logger.LogInformation("Sent update transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
+            action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AbortAndStartActionCommand"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AbortAndStartActionCommand> context)
+    {
+        var action = context.Message.Action;
+        string agvSerialNumber = context.Message.SerialNumber;
+        var assignedAgv = context.Message.CorrelationId;
+        Guid? abortedActionCorrelationId = context.Message.AbortedActionCorrelationId;
+        string orderId = abortedActionCorrelationId == null? action.CorrelationId.ToString(): abortedActionCorrelationId.Value.ToString();
+
+        if (string.IsNullOrEmpty(agvSerialNumber))
+        {
+            throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
+        }
+
+        var order = GetOrder(action, agvSerialNumber, abortedActionCorrelationId == null ? OrderRecordType.Order : OrderRecordType.OrderUpdate, orderId);
+
+        await context.PublishMqtt(order, context.CancellationToken);
+
+        FeedAgvRepository(assignedAgv, action);
+        if (abortedActionCorrelationId != null)
+        {
+            await actionRepository.AddVehicleAndInternalOrderIdMapping(abortedActionCorrelationId.Value, action.CorrelationId);
+        }
 
         if (action.IsMoveToCoordinate)
         {

@@ -79,6 +79,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     public Event<UpdateActionCommand> UpdateActionCommandEvent { get; private set; } = null!;
 
     /// <summary>
+    /// Abort and start action.
+    /// </summary>
+    public Event<AbortAndStartActionCommand> AbortAndStartActionCommandEvent { get; private set; } = null!;
+
+    /// <summary>
     /// CreateAgv was received
     /// </summary>
     public Event<CreateAgv> CreateAgvEvent { get; private set; } = null!;
@@ -180,6 +185,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         During(BusyMoving, Idle, SetFinishActionHandler());
         During(BusyMoving, Idle, ActionAbortedHandler());
         During(BusyMoving, SetUpdateActionHandler());
+        During(BusyMoving, SetAbortAndStartActionHandler());
 
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(SetRequestAgvGraphHandler());
@@ -317,6 +323,37 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 GetPositionScheduleInterval);
     }
 
+    private EventActivityBinder<SimulatedAgvSaga, AbortAndStartActionCommand> SetAbortAndStartActionHandler()
+    {
+        return When(AbortAndStartActionCommandEvent)
+            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
+            .Then(Validate)
+            .Then(c =>
+            {
+                SetCurrentAction(c);
+                if (c.Message.Action.IsMoveToCoordinate)
+                {
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} updated action {ActionType} ({ActionCorrelationId}) to ({Position}) for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                        c.Saga.SerialNumber, c.Saga.CorrelationId,
+                        c.Message.Action.ActionType, c.Message.Action.CorrelationId, c.Message.Action.Target.Position, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                }
+                else
+                {
+                    _logger.LogInformation("AGV {AgvId} / {CorrelationId} updated action {ActionType} ({ActionCorrelationId}) to {TargetNodeId} for {ParentId}. Action will be finished at {ActionFinishDate:HH:mm:ss.fff}",
+                        c.Saga.SerialNumber, c.Saga.CorrelationId,
+                        c.Message.Action.ActionType, c.Message.Action.CorrelationId, c.Message.Action.Target.NodeId, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
+                }
+            })
+            .Publish(c => new ActionUpdated(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
+            .ThenAsync(PublishStatusAsync)
+            .Schedule(FinishActionSchedule,
+                c => new ScheduleFinishAction(c.Saga.CorrelationId),
+                c => c.Saga.ActionDuration!.Value)
+            .Schedule(SignalPositionSchedule,
+                c => new SchedulePositionUpdate(c.Saga.CorrelationId),
+                GetPositionScheduleInterval);
+    }
+
     private EventActivityBinder<SimulatedAgvSaga, ActionAborted> ActionAbortedHandler()
     {
         return When(AgvActionAbortedEvent)
@@ -340,6 +377,19 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     }
 
     private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> c)
+    {
+        c.Saga.LastActionAborted = false;
+        c.Saga.Action = c.Message.Action;
+        c.Saga.ActionStartDate = DateTime.UtcNow;
+        if (c.Message.Action.IsMoveToCoordinate)
+        {
+            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, 0);
+            return;
+        }
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, 0);
+    }
+
+    private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, AbortAndStartActionCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
@@ -581,6 +631,18 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     }
 
     private static void Validate(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> context)
+    {
+        if (context.Message.Action == null)
+        {
+            throw new ArgumentException("Action data missing.");
+        }
+        if (!context.Message.Action.Nodes.Any() && !context.Message.Action.IsMoveToCoordinate)
+        {
+            throw new ArgumentException("Nodes missing.");
+        }
+    }
+
+    private static void Validate(BehaviorContext<SimulatedAgvSaga, AbortAndStartActionCommand> context)
     {
         if (context.Message.Action == null)
         {

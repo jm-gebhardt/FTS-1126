@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 
-namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
+namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 
 /// <summary>
 /// Repository for GraphNodes and GraphEdges and their matching MqttNodes and MqttEdges.

@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.Acc.DeviceCommunicationTest.Services;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 
 [TestClass]
 public class GraphRepositoryTest

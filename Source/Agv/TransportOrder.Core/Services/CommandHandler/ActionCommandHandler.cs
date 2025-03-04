@@ -1049,6 +1049,7 @@ public class ActionCommandHandler :
             }
             return;
         }
+
         if (!idleAgvCorrelationIds.Contains(closestAgvRoute.agv.Value))
         {
             _logger.LogInformation("Reactivate agv {AgvCorrelationId}", closestAgvRoute.agv);
@@ -1071,7 +1072,12 @@ public class ActionCommandHandler :
         await _actionService.TryUpdateActionGroup(actionGroup);
         
         // Publish messages
-        await context.Publish(new UpdateActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber,_mapper.Map<MessageAgvAction>(actionToStart)));
+        await context.Publish(new AbortAndStartActionCommand(assignedAgv.CorrelationId,
+                assignedAgv.SerialNumber,
+                _mapper.Map<MessageAgvAction>(actionToStart),
+            idleActionGroups.SingleOrDefault(a => a.AssignedAgv == assignedAgv.CorrelationId)
+                ?.Actions.SingleOrDefault(a => a.State == ActionState.Started)
+                ?.CorrelationId));
         
         await context.Publish(new ActionGroupStarted(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, DateTime.UtcNow));
         

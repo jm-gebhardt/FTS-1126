@@ -1,14 +1,15 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 
-namespace Gebhardt.Acc.DeviceCommunicationTest.Services;
+namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 
 // ReSharper disable ConvertConstructorToMemberInitializers
 public class GraphRepositoryTestFixture
 {
-    public IGraphRepository GraphRepository { get; } = new GraphRepository();
+    public IGraphRepository GraphRepository { get; } = new InMemoryGraphRepository();
  
     private static readonly MqttNode[] _mqttNodes =
     [

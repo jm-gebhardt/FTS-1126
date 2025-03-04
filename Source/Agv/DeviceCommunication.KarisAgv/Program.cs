@@ -8,13 +8,17 @@ using Gebhardt.Acc.DeviceCommunication.Common.Configuration;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.CmdOptions;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.States;
 using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -34,6 +38,12 @@ try
                 {
                     services.AddScoped(_ => productionOptions);
                     services.AddSingleton<IConfigurationReader, InstantActionsConfigurationFileReader>();
+                    services.AddDbContext<DeviceCommunicationDbContext>(builder =>
+                    {
+                        string? connectionString = context.Configuration.GetConnectionString(DeviceCommunicationDbContext.ConfigSectionName);
+                        builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(DeviceCommunicationDbContext.MigrationTableName); });
+                    });
+                    services.AddTransient<IActionRepository, EfActionRepository>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
                         {
@@ -83,13 +93,18 @@ try
         hostBuilder.ConfigureServices((_, services) =>
         {
             services.AddSingleton<IAgvRepository, AgvRepository>();
-            services.AddSingleton<IGraphRepository, GraphRepository>();
+            services.AddSingleton<IGraphRepository, InMemoryGraphRepository>();
             services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });
 
         var host = hostBuilder.Build();
+        using (var scope = host.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<DeviceCommunicationDbContext>();
+            await dbContext.Database.MigrateAsync();
+        }
         host.Run();
         return 0;
     }

@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -24,7 +24,7 @@ public class GraphParserTest
     [TestMethod]
     public void Parse_WithoutSerialNumber_GraphInvalid()
     {
-        var parser = new GraphParser(new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMissing);
@@ -36,7 +36,7 @@ public class GraphParserTest
     [TestMethod]
     public void Parse_WithEmptyNodes_GraphInvalid()
     {
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty), new InMemoryGraphRepository());
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
         var graph = parser.Graph;
@@ -53,7 +53,7 @@ public class GraphParserTest
         {
             new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, Array.Empty<MqttEdge>(), string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, Array.Empty<MqttEdge>(), string.Empty), new InMemoryGraphRepository());
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
         var graph = parser.Graph;
@@ -75,7 +75,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1 }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
 
         parser.SerialNumber.ShouldBe(AgvSerialNumber1);
@@ -101,7 +101,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1 }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()), new InMemoryGraphRepository());
         var graph = parser.Graph;
 
         parser.SerialNumber.ShouldBe(AgvSerialNumber1);
@@ -115,7 +115,7 @@ public class GraphParserTest
     [TestMethod]
     public void Parse_InvalidGraph_ExceptionWhenGettingVelocityInformation()
     {
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty), new InMemoryGraphRepository());
 
         Should.Throw<InvalidOperationException>(() => parser.ConsiderVelocity);
         Should.Throw<InvalidOperationException>(() => parser.AverageVelocity);
@@ -139,7 +139,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 0 }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
 
         Should.Throw<InvalidOperationException>(() => parser.AverageVelocity);
 
@@ -163,7 +163,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1 }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
 
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
@@ -188,7 +188,7 @@ public class GraphParserTest
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
         };
 
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
 
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
@@ -210,7 +210,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
     }
 
@@ -226,7 +226,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new() } }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -247,7 +247,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier3", ControlPoints = new List<MqttControlPoint> { new() } }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
     }
 
@@ -263,7 +263,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier3", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -288,7 +288,7 @@ public class GraphParserTest
                 ControlPoints = new List<MqttControlPoint> { new() { X = 1, Y = 1 }, new() { X = 2, Y = 2 } }
             }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -312,7 +312,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier5", ControlPoints = new List<MqttControlPoint> { new() } }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
     }
 
@@ -328,7 +328,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier5", ControlPoints = new List<MqttControlPoint> { new(), new(), new(), new() } }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -353,7 +353,7 @@ public class GraphParserTest
                 ControlPoints = new List<MqttControlPoint> { new() { X = 1, Y = 1 }, new() { X = 2, Y = 2 }, new() { X = 3, Y = 3 }, new() { X = 4, Y = 4 } }
             }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -377,7 +377,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Polypath" }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         Should.Throw<MqttGraphParsingException>(() => parser.Graph.Edges);
     }
 
@@ -393,7 +393,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Polypath", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -418,7 +418,7 @@ public class GraphParserTest
                 ControlPoints = new List<MqttControlPoint> { new() { X = 1, Y = 1 }, new() { X = 2, Y = 2 } }
             }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -442,7 +442,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Slanted", ExitAngle = 1.5f, ExitDistance = 2 }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -463,7 +463,7 @@ public class GraphParserTest
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "unknown" }
         };
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
 
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
@@ -495,7 +495,7 @@ public class GraphParserTest
             new() { EdgeId = "4", StartId = "4", EndId = "1", Bidirectional = false, MaxVelocity = 10 }
         };
 
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
 
         var graph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber2);
@@ -523,7 +523,7 @@ public class GraphParserTest
             new() { EdgeId = "1", StartId = "1", EndId = "1", Bidirectional = false, MaxVelocity = 10 }
         };
 
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
         var graph = parser.Graph;
@@ -543,7 +543,7 @@ public class GraphParserTest
         };
         MqttEdge[] edges = Array.Empty<MqttEdge>();
 
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
         var graph = parser.Graph;
@@ -565,7 +565,7 @@ public class GraphParserTest
             new() { EdgeId = "1", StartId = "1", EndId = "1", Bidirectional = false, MaxVelocity = 10 }
         };
 
-        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new GraphRepository());
+        var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty), new InMemoryGraphRepository());
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
 
         var graph = parser.Graph;

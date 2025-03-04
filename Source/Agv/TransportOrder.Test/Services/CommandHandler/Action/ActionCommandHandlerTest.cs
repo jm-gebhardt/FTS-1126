@@ -1661,13 +1661,14 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<TryUpdateIdleAction>();
-        await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldHavePublishedAsync<AbortAndStartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
-        var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
-        updateActionCommand.Action.Nodes.ShouldBeEquivalentTo(route.Nodes.ToList());
-        updateActionCommand.Action.Edges.ShouldBeEquivalentTo(route.Edges.ToList());
-        updateActionCommand.Action.CorrelationId.ShouldBe(pickDropActionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId);
-        updateActionCommand.CorrelationId.ShouldBe(closestAgv.CorrelationId);
+        var abortAndStartActionCommand = fixture.TestHarness.Published.Select<AbortAndStartActionCommand>().First().Context.Message;
+        abortAndStartActionCommand.AbortedActionCorrelationId.ShouldBe(parkingActionGroup.Actions.First(a => a.State == ActionState.Started).CorrelationId);
+        abortAndStartActionCommand.Action.Nodes.ShouldBeEquivalentTo(route.Nodes.ToList());
+        abortAndStartActionCommand.Action.Edges.ShouldBeEquivalentTo(route.Edges.ToList());
+        abortAndStartActionCommand.Action.CorrelationId.ShouldBe(pickDropActionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId);
+        abortAndStartActionCommand.CorrelationId.ShouldBe(closestAgv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<ActionGroupStarted>();
         await fixture.ShouldHavePublishedAsync<SaveActionGroupAbortion>();
         var saveActionGroupAbortionCommand = fixture.TestHarness.Published.Select<SaveActionGroupAbortion>().First().Context.Message;
@@ -1697,7 +1698,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<TryUpdateIdleAction>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
-        await fixture.ShouldNotHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<AbortAndStartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
         await fixture.ShouldNotHavePublishedAsync<SaveActionGroupAbortion>();
     }
@@ -1722,7 +1723,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<TryUpdateIdleAction>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
-        await fixture.ShouldNotHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<AbortAndStartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
         await fixture.ShouldNotHavePublishedAsync<SaveActionGroupAbortion>();
     }
@@ -1766,7 +1767,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<TryUpdateIdleAction>();
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
-        await fixture.ShouldNotHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<AbortAndStartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
         await fixture.ShouldNotHavePublishedAsync<SaveActionGroupAbortion>();
     }

@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
@@ -15,14 +16,16 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
 {
     private readonly ILogger<MqttOrderEventConsumer> _logger;
+    private readonly IActionRepository _actionRepository;
 
     /// <summary>
     /// Consumer for MqttOrderEvent messages
     /// </summary>
     [PublicAPI]
-    public MqttOrderEventConsumer(ILogger<MqttOrderEventConsumer> logger)
+    public MqttOrderEventConsumer(ILogger<MqttOrderEventConsumer> logger, IActionRepository actionRepository)
     {
         _logger = logger;
+        _actionRepository = actionRepository;
     }
 
     /// <summary>
@@ -34,6 +37,14 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
         _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
 
         var actionId = message.OrderId.ToGuid();
+        
+        // Only applicable if the internal order id and the one sent to the vehicle differ.
+        Guid? internalOrderId = await _actionRepository.GetInternalOrderId(actionId);
+        if (internalOrderId != null)
+        {
+            actionId = internalOrderId.Value;
+        }
+
         var agvCorrelationId = (message.SerialNumber ?? throw new SerialNumberNotSetException(nameof(MqttOrderEvent))).ToGuid();
 
         switch (message.OrderEventType)
@@ -44,10 +55,12 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
 
             case OrderEventType.Completed:
                 await context.Publish(new ActionCompleted(actionId));
+                await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             case OrderEventType.Canceled:
                 await context.Publish(new ActionCanceled(actionId));
+                await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             case OrderEventType.CancelFailed:
@@ -56,14 +69,24 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
 
             case OrderEventType.Failed:
                 await context.Publish(new ActionFailed(actionId));
+                await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             case OrderEventType.Updated:
                 await context.Publish(new ActionUpdated(actionId, agvCorrelationId));
+                await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             default:
                 throw new ArgumentOutOfRangeException($"Undefined OrderEventType {message.OrderEventType} for {message.OrderId}");
+        }
+    }
+
+    private async Task TryRemoveMapping(Guid? internalOrderId, Guid vehicleOrderId)
+    {
+        if (internalOrderId != null)
+        {
+            await _actionRepository.RemoveVehicleAndInternalOrderIdMapping(vehicleOrderId);
         }
     }
 }

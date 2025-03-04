@@ -13,6 +13,7 @@ using MassTransit.Serialization;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
@@ -691,5 +692,124 @@ public class ActionCommandConsumerTest
 
         IPublishedMessage<Fault<UpdateActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<UpdateActionCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e => e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
+    }
+
+    [TestMethod]
+    public async Task Consume_AbortAndStartActionCommand_NoAbortedAction_MqttMessageSentWithRecordTypeOrder()
+    {
+        var fixture = new ActionCommandConsumerTestFixture();
+
+        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        {
+            var actionCorrelationId = Guid.NewGuid();
+            const string agvSerialNumber = "agv0";
+            const string orderId = "1234";
+            var orderCorrelationId = orderId.ToGuid();
+            const string toStationId = "Pick1";
+            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
+            {
+                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
+                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
+                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
+            };
+            var correlationId = Guid.NewGuid();
+            var message = new AbortAndStartActionCommand(correlationId, agvSerialNumber, action, null);
+
+            await fixture.TestHarness.Bus.Publish(message);
+            await fixture.ShouldHaveConsumedAsync<AbortAndStartActionCommand>();
+
+            fixture.VerifyOrderMappingAdded(Times.Never());
+
+            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
+            // Check routing key and content type
+            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
+            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
+            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
+
+            // Check content
+            var mqttMessage = publishedMessage.Context.Message;
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
+            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
+            // For pick action Karis expects destination as source ...
+            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
+            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
+            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            // ... and empty destination.
+            mqttMessage.Stations?.ToStation.ShouldBeNull();
+
+            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
+
+            // Check nodes and edges, should not contain drop station and edge to drop station
+            mqttMessage.Route?.Edges.Count.ShouldBe(2);
+            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
+            List<object>? routeNodes = mqttMessage.Route?.Nodes;
+            if (routeNodes != null)
+            {
+                routeNodes.Select(node => ((MqttNode)node).NodeId)
+                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task Consume_AbortAndStartActionCommand_AbortedAction_MqttMessageSentWithRecordTypeOrderUpdate()
+    {
+        var fixture = new ActionCommandConsumerTestFixture();
+
+        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        {
+            var actionCorrelationId = Guid.NewGuid();
+            var abortedActionCorrelationId = Guid.NewGuid();
+            const string agvSerialNumber = "agv0";
+            const string orderId = "1234";
+            var orderCorrelationId = orderId.ToGuid();
+            const string toStationId = "Pick1";
+            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
+            {
+                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
+                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
+                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
+            };
+            var correlationId = Guid.NewGuid();
+            var message = new AbortAndStartActionCommand(correlationId, agvSerialNumber, action, abortedActionCorrelationId);
+
+            await fixture.TestHarness.Bus.Publish(message);
+            await fixture.ShouldHaveConsumedAsync<AbortAndStartActionCommand>();
+
+            fixture.VerifyOrderMappingAdded(Times.Once());
+
+            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
+            // Check routing key and content type
+            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
+            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
+            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
+
+            // Check content
+            var mqttMessage = publishedMessage.Context.Message;
+            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
+            mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+            // For pick action Karis expects destination as source ...
+            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
+            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
+            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            // ... and empty destination.
+            mqttMessage.Stations?.ToStation.ShouldBeNull();
+
+            mqttMessage.OrderId.ShouldBe(abortedActionCorrelationId.ToString());
+
+            // Check nodes and edges, should not contain drop station and edge to drop station
+            mqttMessage.Route?.Edges.Count.ShouldBe(2);
+            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
+            List<object>? routeNodes = mqttMessage.Route?.Nodes;
+            if (routeNodes != null)
+            {
+                routeNodes.Select(node => ((MqttNode)node).NodeId)
+                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
+            }
+        }
     }
 }

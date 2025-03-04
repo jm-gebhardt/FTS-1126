@@ -1,12 +1,13 @@
-﻿using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 
-namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Repositories;
+namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 
 /// <summary>
-/// 
+/// Provides a repository for graph related queries.
 /// </summary>
-public class GraphRepository : IGraphRepository
+public class InMemoryGraphRepository : IGraphRepository
 {
     private readonly ConcurrentDictionary<string, MqttNode> _nodeDictionary = new();
     private readonly ConcurrentDictionary<Guid, MqttEdge> _edgeDictionary = new();
