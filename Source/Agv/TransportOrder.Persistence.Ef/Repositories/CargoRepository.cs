@@ -15,9 +15,9 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
     /// <inheritdoc />
     public async Task<bool> HasAgvCargoAsync(Guid correlationId)
     {
-        if (agvCargos.ConcurrentDict.ContainsKey(correlationId))
+        if (agvCargos.ConcurrentDict.TryGetValue(correlationId, out List<Cargo>? inMemoryCargo))
         {
-            return true;
+            return inMemoryCargo.Count > 0;
         }
 
         bool isLoaded = await (await dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
@@ -127,7 +127,7 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
         {
             return false;
         }
-       
+
         DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
 
         await dbSet.AddRangeAsync(cargosToAdd);
@@ -154,12 +154,12 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
     private (ICollection<Cargo> cargosToAdd, ICollection<Cargo> cargosToUpdate, ICollection<Cargo> cargosToRemove) UpdateInMemoryCargo(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos)
     {
         agvCargos.ConcurrentDict.TryGetValue(agvCorrelationId, out List<Cargo>? inMemoryCargos);
-       
+
         List<Cargo> previousCargos = inMemoryCargos ?? [];
         List<Cargo> cargosToAdd = cargos.Where(c => previousCargos.All(p => p.CorrelationId != c.CorrelationId)).ToList();
         List<Cargo> cargosToUpdate = cargos.Where(c => previousCargos.Any(p => p.CorrelationId == c.CorrelationId)).ToList();
         List<Cargo> cargosToRemove = previousCargos.Where(p => cargos.All(c => c.CorrelationId != p.CorrelationId)).ToList();
-        
+
         agvCargos.ConcurrentDict[agvCorrelationId] = [.. cargosToAdd, ..cargosToUpdate];
         return (cargosToAdd, cargosToUpdate, cargosToRemove);
     }
