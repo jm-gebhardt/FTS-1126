@@ -42,4 +42,9 @@ public interface ICargoRepository
     /// <param name="cargos">The current cargo of the Agv.</param>
     /// <returns>True if the data has changed.</returns>
     Task<bool> SetCargoAsync(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos);
+
+    /// <summary>
+    /// Load db cargo information to the cache.
+    /// </summary>
+    Task LoadInMemoryCache();
 }

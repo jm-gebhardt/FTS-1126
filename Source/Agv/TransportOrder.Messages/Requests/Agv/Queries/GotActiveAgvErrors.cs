@@ -12,6 +12,7 @@ public record GotActiveAgvErrors(List<AgvError> AgvErrors);
 /// <summary>
 /// Represents an agv error
 /// </summary>
+[PublicAPI]
 public record AgvError
 {
     /// <summary>
