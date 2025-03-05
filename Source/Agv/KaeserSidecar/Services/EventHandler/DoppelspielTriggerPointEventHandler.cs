@@ -35,8 +35,12 @@ public class DoppelspielTriggerPointEventHandler(
         var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started && a.Target.NodeId == targetStationName);
         if (action == null)
         {
-            logger.LogDebug("Agv without started action to station with Doppelspiel passed Doppelspiel trigger point. Current action group is: ({ActionGroup})", actionGroup.CorrelationId);
-            return ;
+            logger.LogDebug("Agv without started action to station {TargetStation} with Doppelspiel passed Doppelspiel trigger point. Current action group is: ({ActionGroup})", targetStationName, actionGroup.CorrelationId);
+            foreach (var a in actionGroup.Actions)
+            {
+                logger.LogDebug("Action {ActionType} is in State {State} and heads to {Target}", a.ActionType, a.State, a.Target.NodeId);
+            }
+            return;
         }
         bool isDropping = action is { ActionType: ActionType.Drop };
         var hostOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);

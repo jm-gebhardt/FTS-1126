@@ -43,9 +43,10 @@ public class DoppelspielTrigger(IBus bus) : IFfcTrigger
     /// <inheritdoc cref="IFfcTrigger"/>>
     public async Task Invoke(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
-        if (actionGroup?.Actions.Any(a => a.ActionType == ActionType.Pick)?? false)
+        parameters.TryGetValue(PropertyName, out var targetStationName);
+        if (actionGroup?.Actions.Any(a => a.ActionType == ActionType.Pick) ?? false)
         {
-            await bus.Publish(new AgvPassedDoppelspielTriggerPoint(agvData, agvStatus, actionGroup, cargo, errors, _propertyValue));
+            await bus.Publish(new AgvPassedDoppelspielTriggerPoint(agvData, agvStatus, actionGroup, cargo, errors, targetStationName?.Value ?? _propertyValue));
         }
     }
 }
