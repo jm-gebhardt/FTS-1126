@@ -585,16 +585,29 @@ public class ActionGroupTests
     }
 
     [TestMethod]
-    public void SetTargetForActionWithUpdate_ValidData_ActionUpdated()
+    public void SetTargetForActionWithUpdate_NoDropTarget_ActionUpdated()
     {
-        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(ActionState.Completed, ActionState.Started);
-        var action = actionGroup.Actions[2];
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, moveActionState: ActionState.Started);
+        var dropAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
 
-        var result = actionGroup.SetTargetForActionWithUpdate(action.CorrelationId, "target");
-        result.ActionType.ShouldBe(ActionType.Drop);
-        result.Target.NodeId.ShouldBe("target");
+        var moveAction = actionGroup.SetTargetForActionWithUpdate(dropAction.CorrelationId, "target");
+        moveAction.ActionType.ShouldBe(ActionType.Drop);
+        moveAction.Target.NodeId.ShouldBe("target");
 
-        actionGroup.Actions[2].ShouldSkip.ShouldBeTrue();
+        dropAction.ShouldSkip.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void SetTargetForActionWithUpdate_NoPickTarget_ActionUpdated()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(pickActionState: ActionState.Created, dropActionState: ActionState.Created, moveActionState: ActionState.Started);
+        var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
+
+        var moveAction = actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target");
+        moveAction.ActionType.ShouldBe(ActionType.Pick);
+        moveAction.Target.NodeId.ShouldBe("target");
+
+        pickAction.ShouldSkip.ShouldBeTrue();
     }
 
     [TestMethod]

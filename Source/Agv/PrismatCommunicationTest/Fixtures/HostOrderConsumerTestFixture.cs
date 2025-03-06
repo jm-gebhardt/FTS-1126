@@ -49,6 +49,15 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
+    public HostOrderConsumerTestFixture<TConsumer> WithHostOrders(ICollection<HostOrder> hostOrders)
+    {
+        var queue = new Queue<HostOrder>(hostOrders);
+        HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(() =>  queue.Dequeue());
+        HostOrderRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<HostOrder>())).Verifiable();
+        return this;
+    }
+
     public HostOrderConsumerTestFixture<TConsumer> WithHostOrderWithSameHu(HostOrder? hostOrder)
     {
         HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrderByHu(It.IsAny<string>())).ReturnsAsync(hostOrder);

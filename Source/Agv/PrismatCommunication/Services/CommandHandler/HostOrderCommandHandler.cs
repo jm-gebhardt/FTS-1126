@@ -115,10 +115,21 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         }
     }
 
-    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null)
+    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null, string? pickNode = null)
     {
+        ActionGroup? actionGroup;
+        if (pickNode != null && assignedAgv != null)
+        {
+            // Doppelspiel
+            actionGroup = hostOrder.CreatePickDropActionGroupForAgv(pickNode, assignedAgv, configuration);
+            await context.Publish(new QueueActionGroup(actionGroup, false));
+            hostOrder.IsQueued = true;
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
         // Short circuit
-        var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
+         actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
         if (actionGroup != null)
         {
             actionGroup.AssignedAgv = assignedAgv;
@@ -129,6 +140,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         }
 
         // Long circuit
+        
         if (hostOrder.HasUnknownPickTarget(configuration))
         {
             actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
@@ -272,7 +284,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     /// </summary>
     public async Task Consume(ConsumeContext<PassTriggerPoint> context)
     {
-        (var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext) = context.Message;
+        (var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, string? pickNode) = context.Message;
         var droppingHostOrder = await hostOrderRepository.GetByIdAsync(droppingHostOrderCorrelationId);
         droppingHostOrder.PassTriggerPoint();
         await hostOrderRepository.UpdateAsync(droppingHostOrder);
@@ -281,7 +293,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         if (shouldPickNext)
         {
             var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
-            await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId);
+            await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration)?null:pickNode);
         }
     }
 }

@@ -79,7 +79,7 @@ public class ActionGroupEventHandlerTest
     [TestMethod]
     public async Task DroppingAgvPassedDoppelspielTriggerPoint_ValidData_PublishesPassTriggerPoint()
     {
-        var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action", Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true);
+        var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action", Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true, "pickNode");
 
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
 

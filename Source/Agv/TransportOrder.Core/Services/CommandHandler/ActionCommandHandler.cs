@@ -253,14 +253,14 @@ public class ActionCommandHandler :
             _logger.LogDebug("Starting succeeding action {Action} of group {ActionGroupCorrelationId} for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
             if (action.IsIncomplete)
             {
-                _logger.LogWarning("Succeeding action {Action} of group {ActionGroupCorrelationId} is incomplete, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
+                _logger.LogDebug("Succeeding action {Action} of group {ActionGroupCorrelationId} is incomplete, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
                 await context.Publish(new StartingActionForAgvFailed(agvCorrelationId), cancellationToken);
                 return;
             }
 
             if (action.State == ActionState.Paused)
             {
-                _logger.LogWarning("Succeeding action {Action} of group {ActionGroupCorrelationId} is paused, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
+                _logger.LogDebug("Succeeding action {Action} of group {ActionGroupCorrelationId} is paused, thus not started for agv with CorrelationId: {AgvCorrelationId}.", action.CorrelationId, actionGroupId, agv.CorrelationId);
                 return;
             }
 
@@ -933,8 +933,9 @@ public class ActionCommandHandler :
             agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
             var route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
+            bool? previousDockFront = currentAction!.InfoToAgv?.GetDockFront();
             currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNodeId, route);
-            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, null);
+            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, currentAction.Sequence == 0 ? previousDockFront : null);
         }
 
         actionGroup.SetTargetForAction(actionId, targetNodeId);

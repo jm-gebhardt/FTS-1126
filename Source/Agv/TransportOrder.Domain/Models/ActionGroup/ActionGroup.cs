@@ -45,7 +45,7 @@ public class ActionGroup
     /// The date the action has been completed (UTC).
     /// </summary>
     public DateTime? CompletedDate { get; set; }
-    
+
     /// <summary>
     /// The state of the ActionGroup.
     /// </summary>
@@ -76,7 +76,7 @@ public class ActionGroup
     /// </summary>
 
     public bool IsIncomplete => Actions.Any(a => a.IsIncomplete);
-    
+
     /// <summary>
     /// List of actions (ordered by sequence).
     /// </summary>
@@ -121,7 +121,7 @@ public class ActionGroup
     /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/>.</param>
     /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system.</param>
     /// <param name="hasPriority">If true, then this <see cref="ActionGroup"/> has priority over others.</param>
-    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority=false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
@@ -393,7 +393,7 @@ public class ActionGroup
 
     private bool GetNeedsRotation()
     {
-        var pickAction = Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick);
+        var pickAction = Actions.SingleOrDefault(a => a is { ActionType: ActionType.Pick, ShouldSkip: false });
         return pickAction?.InfoToAgv != null && pickAction.InfoToAgv.NeedsRotation();
     }
 
@@ -471,11 +471,13 @@ public class ActionGroup
     /// <returns>Node ids if the targets.</returns>
     public string[] GetTargets()
     {
-        return !Actions.Any() ? [] : Actions
-            .Where((action, index) => !action.IsIncomplete &&
-                                    (index == 0 || (!Actions[index - 1].IsIncomplete && action.Sequence == Actions[index - 1].Sequence + 1)))
-            .Select(action => action.Target.NodeId!)
-            .ToArray();
+        return !Actions.Any() ?
+            [] :
+            Actions
+                .Where((action, index) => !action.IsIncomplete &&
+                                          (index == 0 || (!Actions[index - 1].IsIncomplete && action.Sequence == Actions[index - 1].Sequence + 1)))
+                .Select(action => action.Target.NodeId!)
+                .ToArray();
     }
 
     /// <summary>
@@ -495,7 +497,7 @@ public class ActionGroup
         }
         CompletedDate = Actions[^1].CompletedDate;
     }
-    
+
     /// <summary>
     /// Skips the provided action and updates the previous one with its type and the new target.
     /// </summary>
@@ -513,6 +515,10 @@ public class ActionGroup
         var toUpdate = Actions.OrderBy(a => a.Sequence).Last(a => a.Sequence < toSkip.Sequence);
         toUpdate.ChangeActiontype(toSkip.ActionType);
         toUpdate.SetTarget(targetNodeId, false);
+        if (toSkip.ActionType == ActionType.Pick)
+        {
+            toUpdate.SetInfoToAgv(toSkip.InfoToAgv);
+        }
         if (route != null)
         {
             toUpdate.Nodes = route.Nodes;

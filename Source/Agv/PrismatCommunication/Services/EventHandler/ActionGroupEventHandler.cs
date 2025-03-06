@@ -57,8 +57,8 @@ public class ActionGroupEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<DroppingAgvPassedDoppelspielTriggerPoint> context)
     {
-        (_, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext) = context.Message;
-        await context.Publish(new PassTriggerPoint(agvCorrelationId, droppingHostOrderCorrelationId, nextPickHostOrderCorrelationId, shouldPickNext));
+        (_, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, string? pickNode) = context.Message;
+        await context.Publish(new PassTriggerPoint(agvCorrelationId, droppingHostOrderCorrelationId, nextPickHostOrderCorrelationId, shouldPickNext, pickNode));
     }
 
     /// <summary>

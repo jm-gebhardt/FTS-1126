@@ -27,7 +27,7 @@ public class ConveyorReportingEventHandlerTest
             .WithAgvHasLowBatteryLevel(hasLowBatteryLevel);
 
         var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!,
-            Guid.NewGuid(), dropHostOrder.CorrelationId, nextPickOrder.CorrelationId, !hasLowBatteryLevel);
+            Guid.NewGuid(), dropHostOrder.CorrelationId, nextPickOrder.CorrelationId, !hasLowBatteryLevel, null);
 
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
@@ -49,7 +49,7 @@ public class ConveyorReportingEventHandlerTest
             .WithAgvHasLowBatteryLevel(false);
 
         var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!,
-            Guid.NewGuid(), dropHostOrder.CorrelationId, null, false);
+            Guid.NewGuid(), dropHostOrder.CorrelationId, null, false, null);
 
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();

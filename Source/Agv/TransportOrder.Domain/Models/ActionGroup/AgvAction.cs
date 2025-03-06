@@ -171,6 +171,15 @@ public class AgvAction : IParentedBy<Guid>
 
         SetDates();
     }
+    
+    /// <summary>
+    /// Sets new info to agv for the action.
+    /// </summary>
+    /// <param name="infoToAgv">The information for the agv.</param>
+    public void SetInfoToAgv(Dictionary<InfoToAgvKey, string>? infoToAgv)
+    {
+           InfoToAgv = infoToAgv;
+    }
 
     /// <summary>
     /// Sets a target for the action.

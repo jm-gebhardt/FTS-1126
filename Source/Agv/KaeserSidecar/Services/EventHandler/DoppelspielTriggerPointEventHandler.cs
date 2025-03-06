@@ -50,8 +50,9 @@ public class DoppelspielTriggerPointEventHandler(
             bool hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(agvStatus.CorrelationId);
             Guid? nextPickOrderId = nextPickOrder?.CorrelationId ?? null;
             bool shouldPickNext = !hasLowBatteryLevel && nextPickOrderId != null;
+            string? pickNode = shouldPickNext ? null : action.Target.NodeId;
             logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next: {ShouldPick}", actionGroup.AssignedAgv!.Value, action.Target.NodeId!, shouldPickNext);
-            await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId, nextPickOrderId, shouldPickNext));
+            await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId, nextPickOrderId, shouldPickNext, pickNode));
             return;
         }
         logger.LogInformation("Picking agv {AgvCorrelationId} passed Doppelspiel trigger point and will pick at {Target} ", actionGroup.AssignedAgv!.Value, action.Target.NodeId!);

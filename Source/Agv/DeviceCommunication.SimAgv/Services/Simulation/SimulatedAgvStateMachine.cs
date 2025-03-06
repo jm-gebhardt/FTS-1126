@@ -185,8 +185,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         During(BusyMoving, Idle, SetFinishActionHandler());
         During(BusyMoving, Idle, ActionAbortedHandler());
         During(BusyMoving, SetUpdateActionHandler());
-        During(BusyMoving, SetAbortAndStartActionHandler());
-
+       
+        DuringAny(SetAbortAndStartActionHandler());
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(SetRequestAgvGraphHandler());
         DuringAny(SetRequestAgvDataHandler());

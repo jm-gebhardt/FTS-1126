@@ -126,7 +126,7 @@ public class AgvEventHandler :
         bool agvModeAllowsStartingNextAction = !agv.HasPendingModeSwitch || agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.FinishActionGroup };
         if (hasUnfinishedActionGroup && agvModeAllowsStartingNextAction)
         {
-            _logger.LogInformation("Starting next action for agv: {AgvCorrelationId}", agv.CorrelationId);
+            _logger.LogDebug("Starting next action for agv: {AgvCorrelationId}", agv.CorrelationId);
             await context.Publish(new TryStartNextActionInActionGroup(agv.CorrelationId));
             return;
         }
