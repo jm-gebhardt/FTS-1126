@@ -946,8 +946,9 @@ public class ActionCommandHandler :
             if (shouldUpdate)
             {
                 var mappedAction = _mapper.Map<MessageAgvAction>(currentAction);
-                
+
                 await context.Publish(new UpdateActionCommand((Guid)assignedAgv, agv!.SerialNumber, mappedAction), cancellationToken);
+                await context.Publish(new ActionGroupChanged(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
             }
             else
             {

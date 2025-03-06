@@ -1447,6 +1447,7 @@ public class ActionCommandHandlerTest
         await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
 
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }
@@ -1468,6 +1469,7 @@ public class ActionCommandHandlerTest
         await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
 
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
@@ -1489,7 +1491,8 @@ public class ActionCommandHandlerTest
         await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
 
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
-
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }
 
@@ -1510,6 +1513,7 @@ public class ActionCommandHandlerTest
         await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
 
         await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
