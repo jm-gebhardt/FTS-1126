@@ -21,6 +21,7 @@ using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvMode = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvMode;
+using ReassignActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.ReassignActionGroup;
 using ResetActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.ResetActionGroup;
 using Route = Gebhardt.Acc.TransportOrder.Routing.Models.Route;
 using SaveActionGroupAbortion = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.SaveActionGroupAbortion;
@@ -1774,5 +1775,53 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<AbortAndStartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
         await fixture.ShouldNotHavePublishedAsync<SaveActionGroupAbortion>();
+    }
+
+    [TestMethod]
+    public async Task ReassignActionGroup_NoAgvAvailable_PublishesActionGroupCreated()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:Guid.NewGuid(), pickActionState: ActionState.Started);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(pickDropActionGroup)
+            .WithClosestAgv(null, null)
+            .AddAgvs([agv]);
+
+        var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+      
+        await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
+        pickDropActionGroup.AssignedAgv.ShouldBeNull();
+        pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
+        pickDropActionGroup.HasPriority.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task ReassignActionGroup_AgvAvailable_Publishes_AgvBecameIdle()
+    {
+        var readyAgv = AgvGenerator.GenerateIdleAgv();
+        var previouslyAssignedAgv = Guid.NewGuid();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:previouslyAssignedAgv, pickActionState: ActionState.Started);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(pickDropActionGroup)
+            .WithClosestAgv(readyAgv.CorrelationId, null)
+            .AddAgvs([readyAgv]);
+
+        var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+
+        pickDropActionGroup.AssignedAgv.ShouldBe(readyAgv.CorrelationId);
+        pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
+        pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.IsManual.ShouldBeTrue();
     }
 }

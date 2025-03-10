@@ -186,6 +186,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<SaveActionGroupAbortion, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResumeActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CancelOrAbortActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<ReassignActionGroup, ActionCommandHandler>(c);
         });
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
     }
@@ -260,6 +261,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<CreatePickDropActionGroup>();
         configurator.AddConsumer<ActionCommandHandler>();
         configurator.AddRequestClient<QueueActionGroup>();
+        configurator.AddRequestClient<TryReassignActionGroup>();
 
         configurator.AddRequestClient<GetActionGroupStatistics>();
         configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();

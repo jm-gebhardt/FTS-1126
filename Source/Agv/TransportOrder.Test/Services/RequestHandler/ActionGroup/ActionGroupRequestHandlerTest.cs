@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -263,5 +264,52 @@ public class ActionGroupRequestHandlerTest
                 .BuildAsync();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
             await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset("Unknown".ToGuid())));
+    }
+
+    [TestMethod]
+    public async Task Consume_TryReassignActionGroup_UnknownActionGroup_ThrowsActionGroupNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Started);
+
+        ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup).BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup("Unknown".ToGuid())));
+    }
+
+    [DataRow(ActionState.Created)]
+    [DataRow(ActionState.Aborted)]
+    [DataRow(ActionState.Failed)]
+    [DataRow(ActionState.Canceled)]
+    [DataRow(ActionState.Completed)]
+    [DataRow(ActionState.Invalid)]
+    [DataTestMethod]
+    public async Task Consume_TryReassignActionGroup_PickActionNotStarted_ThrowsActionGroupStateInvalidException(ActionState pickActionState)
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: pickActionState);
+
+        ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup).BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId)));
+    }
+
+    [DataRow(ActionState.Started)]
+    [DataRow(ActionState.Paused)]
+    [DataTestMethod]
+    public async Task Consume_TryReassignActionGroup_ValidData_PublishesReassignActionGroup(ActionState pickActionState)
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: pickActionState);
+        ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup).BuildAsync();
+
+        await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<ReassignActionGroup>();
     }
 }

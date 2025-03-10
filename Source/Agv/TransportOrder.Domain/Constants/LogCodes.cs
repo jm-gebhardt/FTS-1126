@@ -50,6 +50,7 @@ public static class LogCodes
     public const int OrderResumed = 111;
     public const int OrderWithLockedStation = 112;
     public const int OrderReset = 113;
+    public const int OrderReassigned = 114;
 
     //Station
     public const int StationStateChanged = 400;

@@ -26,6 +26,7 @@ public class ActionGroupController : Controller
     private readonly IRequestClient<CancelActionGroup> _cancelActionGroupRequestClient;
     private readonly IRequestClient<TriggerActionGroupReset> _resetActionGroupRequestClient;
     private readonly IRequestClient<CreatePickDropActionGroup> _createActionGroupClient;
+    private readonly IRequestClient<TryReassignActionGroup> _reassignActionGroupClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -36,7 +37,8 @@ public class ActionGroupController : Controller
         IRequestClient<CancelActionGroup> cancelActionGroupRequestClient,
         IRequestClient<TriggerActionGroupAbortion> abortionRequestClient,
         IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient,
-        IRequestClient<CreatePickDropActionGroup> createActionGroupClient)
+        IRequestClient<CreatePickDropActionGroup> createActionGroupClient,
+        IRequestClient<TryReassignActionGroup> reassignActionGroupClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
@@ -44,6 +46,7 @@ public class ActionGroupController : Controller
         _cancelActionGroupRequestClient = cancelActionGroupRequestClient;
         _resetActionGroupRequestClient = resetActionGroupRequestClient;
         _createActionGroupClient = createActionGroupClient;
+        _reassignActionGroupClient = reassignActionGroupClient;
     }
 
     /// <summary>
@@ -125,5 +128,19 @@ public class ActionGroupController : Controller
     {
         Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, agvCorrelationId, false, ActionGroupCreator.TransportOrderWebApi));
         return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
+    }
+
+    /// <summary>
+    /// Re-assign action group to a different available agv.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group with given correlationId not found.</response>
+    /// <response code="400">The pick action of the action group is not in state started.</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/reassign")]
+    public async Task<ActionResult> ReassignActionGroup(Guid correlationId)
+    {
+        await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId));
+        return Ok();
     }
 }

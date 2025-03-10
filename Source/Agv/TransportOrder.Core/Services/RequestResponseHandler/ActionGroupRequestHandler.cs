@@ -19,7 +19,8 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<GetActionGroups>,
     IConsumer<GetActionGroupCountsByState>,
     IConsumer<TriggerActionGroupAbortion>,
-    IConsumer<TriggerActionGroupReset>
+    IConsumer<TriggerActionGroupReset>,
+    IConsumer<TryReassignActionGroup>
 {
     private readonly IBus _bus;
     private readonly IActionGroupRetrievalService _retrievalService;
@@ -106,5 +107,23 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         IRequestClient<ResetActionGroup>? requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
         await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId));
         await context.RespondAsync(new ActionGroupResetTriggered(actionGroup.CorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryReassignActionGroup"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryReassignActionGroup> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
+
+        if (!actionGroup.Actions.Any(a => a is { ActionType: ActionType.Pick, State: ActionState.Started or ActionState.Paused, ShouldSkip: false }))
+        {
+            throw new ActionGroupStateInvalidException(actionGroup, "No started or paused pick action");
+        }
+
+        await _bus.Publish(new ReassignActionGroup(actionGroup.CorrelationId));
+
+        await context.RespondAsync(new Success());
     }
 }
