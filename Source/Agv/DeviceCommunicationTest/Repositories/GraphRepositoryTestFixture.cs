@@ -1,16 +1,24 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Profiles;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 
 // ReSharper disable ConvertConstructorToMemberInitializers
-public class GraphRepositoryTestFixture
+public class GraphRepositoryTestFixture : DeviceCommunicationDbTestFixture
 {
-    public IGraphRepository GraphRepository { get; } = new InMemoryGraphRepository();
- 
+    public IGraphRepository GraphRepository { get; }
+
+    public GraphRepositoryTestFixture()
+    {
+        var mapper = MappingHelper.GetMapper(new MqttEdgeMappingProfile());
+        GraphRepository = new EfGraphRepository(ContextFactory, mapper, new MqttEdgeMappingCache(), new MqttNodeCache());
+    }
+
     private static readonly MqttNode[] _mqttNodes =
     [
         new() { NodeId = "WP-001", X = -2f, Y = 3f, Z = 0f },
@@ -55,24 +63,22 @@ public class GraphRepositoryTestFixture
         return Guid.Empty;
     }
 
-    public GraphRepositoryTestFixture WithGraphRepository()
+    public async Task FillGraphRepository()
     {
         for (int i = 0; i < _mqttNodes.Length; i++)
         {
-            GraphRepository.Add(_graphNodes[i].Id, _mqttNodes[i]);
+           await GraphRepository.Add(_graphNodes[i].Id, _mqttNodes[i]);
         }
 
         int j = 0;
         for (int i = 0; i < _graphEdges.Length; i++)
         {
-            GraphRepository.Add(_graphEdges[i].Id, _mqttEdges[j]);
+          await  GraphRepository.Add(_graphEdges[i].Id, _mqttEdges[j]);
             if (_mqttEdges[j].Bidirectional)
             {
-                GraphRepository.Add(_graphEdges[++i].Id, _mqttEdges[j]);
+              await   GraphRepository.Add(_graphEdges[++i].Id, _mqttEdges[j]);
             }
             j++;
         }
-
-        return this;
     }
 }

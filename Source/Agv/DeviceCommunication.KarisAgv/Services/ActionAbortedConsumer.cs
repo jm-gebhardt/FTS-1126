@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
@@ -35,21 +35,21 @@ public class ActionAbortedConsumer : IConsumer<ActionAborted>
     {
         var (assignedAgv, action) = context.Message;
 
-        var agvInformation = _agvRepository.GetAgvInformation(assignedAgv);
-        if (agvInformation == null || agvInformation.AgvStatusReceived!.SerialNumber.IsNullOrEmpty())
+        var agvInformation = await _agvRepository.GetAgv(assignedAgv);
+        if (agvInformation.SerialNumber.IsNullOrEmpty())
         {
-            throw new AssignedAgvNotFoundException(assignedAgv, agvInformation!.AgvStatusReceived!.SerialNumber, action);
+            throw new AssignedAgvNotFoundException(assignedAgv, agvInformation.SerialNumber, action);
         }
         string orderId = action.CorrelationId.ToString();
         var orderType = action.ActionType.ToOrderType();
 
-        _logger.LogInformation("Received {MessageType} for {Action} of order {Order} assigned to agv {AgvId}/{AgvCorrelationId}", nameof(ActionAborted), action.CorrelationId, orderId, agvInformation.AgvStatusReceived!.SerialNumber, assignedAgv);
+        _logger.LogInformation("Received {MessageType} for {Action} of order {Order} assigned to agv {AgvId}/{AgvCorrelationId}", nameof(ActionAborted), action.CorrelationId, orderId, agvInformation.SerialNumber, assignedAgv);
 
         // We are using the ActionCorrelationId as "orderId"
         // And we are transferring the Action's Guid
         await context.PublishMqtt(new MqttOrder(orderId)
         {
-            SerialNumber = agvInformation.AgvStatusReceived!.SerialNumber,
+            SerialNumber = agvInformation.SerialNumber,
             OrderType = orderType,
             OrderId = orderId,
             RecordType = OrderRecordType.OrderCancel

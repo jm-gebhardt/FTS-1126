@@ -8,18 +8,17 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Services;
 
 public class ActionEventConsumerMqttFixture : MqttConsumerTestFixture<ActionAbortedConsumer>
 {
-    private readonly AgvRepositoryTestFixture _agvRepositoryTestFixture = new();
+    private readonly EfAgvRepositoryTestFixture _agvRepositoryTestFixture = new();
 
     public ActionEventConsumerMqttFixture()
     {
-        AddServices(s => s.AddTransient(_ => _agvRepositoryTestFixture.AgvRepository));
+        AddServices(s => s.AddTransient(_ => _agvRepositoryTestFixture.Repository));
 
         Build();
     }
 
-    public ActionEventConsumerMqttFixture WithAgvInformation(AgvInformation agvInformation)
+    public async Task AddAgv(AgvInformation agvInfo)
     {
-        _agvRepositoryTestFixture.WithAgvInformation(agvInformation);
-        return this;
+        await _agvRepositoryTestFixture.Repository.AddOrUpdate(agvInfo.AgvStatusReceived!.CorrelationId, agvInfo.AgvStatusReceived.SerialNumber);
     }
 }

@@ -19,8 +19,8 @@ public class ActionEventHandlerTest
     {
         var agvInformation = AgvInformationGenerator.GetAgvInformation();
         var agvCorrelationId = agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId;
-        MqttConsumerTestFixture<ActionAbortedConsumer> fixture = new ActionEventConsumerMqttFixture()
-            .WithAgvInformation(agvInformation);
+        var fixture = new ActionEventConsumerMqttFixture();
+        await fixture.AddAgv(agvInformation);
 
         var actionCorrelationId = Guid.NewGuid();
         const string orderId = "1234";

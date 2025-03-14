@@ -98,6 +98,7 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
 
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts <= 0)
         {
+            _logger.LogInformation("No more remaining attempts for resending telegram {Telegram}, trigger restart", CurrentTelegram.ToString());
             TriggerRestart = true;
         }
 

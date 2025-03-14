@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
-using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
@@ -10,6 +9,7 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using IAgvRepository = Gebhardt.Acc.DeviceCommunication.Common.Repositories.IAgvRepository;
 
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 
@@ -37,7 +37,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
-        var order = GetOrder(action, agvSerialNumber, OrderRecordType.Order, action.CorrelationId.ToString());
+        var order = await GetOrder(action, agvSerialNumber, OrderRecordType.Order, action.CorrelationId.ToString());
 
         await context.PublishMqtt(order, context.CancellationToken);
 
@@ -68,7 +68,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
-        var order = GetOrder(action, agvSerialNumber, OrderRecordType.OrderUpdate, orderId);
+        var order = await GetOrder(action, agvSerialNumber, OrderRecordType.OrderUpdate, orderId);
 
         await context.PublishMqtt(order, context.CancellationToken);
 
@@ -100,7 +100,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
-        var order = GetOrder(action, agvSerialNumber, abortedActionCorrelationId == null ? OrderRecordType.Order : OrderRecordType.OrderUpdate, orderId);
+        var order = await GetOrder(action, agvSerialNumber, abortedActionCorrelationId == null ? OrderRecordType.Order : OrderRecordType.OrderUpdate, orderId);
 
         await context.PublishMqtt(order, context.CancellationToken);
 
@@ -120,26 +120,22 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
     }
 
-    private MqttOrder GetOrder(AgvAction action, string agvSerialNumber, OrderRecordType recordType, string orderId)
+    private async Task<MqttOrder> GetOrder(AgvAction action, string agvSerialNumber, OrderRecordType recordType, string orderId)
     {
-        List<object> routeNodes = GetRouteNodes(action);
-        List<object> routeEdges = GetRouteEdges(action);
+        List<object> routeNodes = await GetRouteNodes(action);
+        List<object> routeEdges = await GetRouteEdges(action);
 
         return action.ConvertToOrder(orderId, recordType, agvSerialNumber, routeNodes, routeEdges);
     }
 
-    private List<object> GetRouteNodes(AgvAction action)
+    private async Task<List<object>> GetRouteNodes(AgvAction action)
     {
-        List<object> routeNodes = [];
-        routeNodes.AddRange(action.Nodes.Select(graphRepository.GetMqttNode).OfType<MqttNode>());
-        return routeNodes;
+        return (await graphRepository.GetMqttNodes([.. action.Nodes])).ToList<object>();
     }
 
-    private List<object> GetRouteEdges(AgvAction action)
+    private async Task<List<object>> GetRouteEdges(AgvAction action)
     {
-        List<object> routeEdges = [];
-        routeEdges.AddRange(action.Edges.Select(graphRepository.GetMqttEdge).OfType<MqttEdge>());
-        return routeEdges;
+        return (await graphRepository.GetMqttEdges([.. action.Edges])).ToList<object>();
     }
 
     private void FeedAgvRepository(Guid correlationId, AgvAction agvAction)

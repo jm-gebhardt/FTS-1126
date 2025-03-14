@@ -8,79 +8,104 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 public class GraphRepositoryTest
 {
     [TestMethod]
-    public void GetMqttNode_NodeExist_ReturnValue()
+    public async Task GetMqttNode_NodeExist_ReturnValue()
     {
         const string graphNodeId = "WP-001";
-        var fixture = new GraphRepositoryTestFixture()
-            .WithGraphRepository();
-        var actualMqttNode = fixture.GraphRepository.GetMqttNode(graphNodeId);
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
+        var actualMqttNode = await fixture.GraphRepository.GetMqttNode(graphNodeId);
 
         actualMqttNode?.NodeId.ShouldBe(graphNodeId);
     }
 
     [TestMethod]
-    public void GetMqttNode_UnknownNode_ReturnValue()
+    public async Task GetMqttNode_UnknownNode_ReturnValue()
     {
         const string graphNodeId = "UN-001";
-        var fixture = new GraphRepositoryTestFixture()
-            .WithGraphRepository();
-        var actualMqttNode = fixture.GraphRepository.GetMqttNode(graphNodeId);
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
+        var actualMqttNode = await fixture.GraphRepository.GetMqttNode(graphNodeId);
 
         actualMqttNode.ShouldBeNull();
     }
 
     [TestMethod]
-    public void AddMqttNode_ValidData_ReturnValue()
+    public async Task AddMqttNode_ValidData_ReturnValue()
     {
         var newMqttNode = new MqttNode { NodeId = "NEW-001", X = -2f, Y = 3f, Z = 0f };
-        var fixture = new GraphRepositoryTestFixture()
-            .WithGraphRepository();
- 
-        fixture.GraphRepository.Add(newMqttNode.NodeId, newMqttNode);
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
 
-        var actualMqttNode = fixture.GraphRepository.GetMqttNode(newMqttNode.NodeId);
+        await fixture.GraphRepository.Add(newMqttNode.NodeId, newMqttNode);
+
+        var actualMqttNode = await fixture.GraphRepository.GetMqttNode(newMqttNode.NodeId);
 
         actualMqttNode?.NodeId.ShouldBe(newMqttNode.NodeId);
     }
 
     [TestMethod]
-    public void GetMqttEdge_EdgeExist_ReturnValue()
+    public async Task GetMqttNodes_ValidData_ReturnNodes()
+    {
+        const string graphNodeId = "WP-001";
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
+        ICollection<MqttNode> actualMqttNodes = await fixture.GraphRepository.GetMqttNodes([graphNodeId]);
+
+        actualMqttNodes.Count.ShouldBe(1);
+        actualMqttNodes.Single().NodeId.ShouldBe(graphNodeId);
+    }
+
+    [TestMethod]
+    public async Task GetMqttEdge_EdgeExist_ReturnValue()
     {
         const string mqttEdgeId = "E-1";
 
-        var fixture = new GraphRepositoryTestFixture()
-            .WithGraphRepository();
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
 
-        var graphEdgeId = fixture.GetGraphEdgeId(0);
-        var actualMqttEdge = fixture.GraphRepository.GetMqttEdge(graphEdgeId);
+        var actualMqttEdge = await fixture.GraphRepository.GetMqttEdge(Guid.NewGuid());
 
         actualMqttEdge?.EdgeId.ShouldBe(mqttEdgeId);
     }
 
     [TestMethod]
-    public void GetMqttEdge_UnknownEdge_ReturnValue()
+    public async Task GetMqttEdge_UnknownEdge_ReturnValue()
     {
-        const string graphEdgeId = "UN-1";
-        var fixture = new GraphRepositoryTestFixture()
-            .WithGraphRepository();
-        var actualMqttEdge = fixture.GraphRepository.GetMqttNode(graphEdgeId);
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
+        var actualMqttEdge = await fixture.GraphRepository.GetMqttEdge(Guid.NewGuid());
 
         actualMqttEdge.ShouldBeNull();
     }
 
     [TestMethod]
-    public void AddMqttEdge_ValidData_ReturnValue()
+    public async Task GetMqttEdges_ValidData_ReturnEdges()
+    {
+        const string mqttEdgeId = "E-1";
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
+
+        var graphEdgeId = fixture.GetGraphEdgeId(0);
+
+        ICollection<MqttEdge> actualMqttEdges = await fixture.GraphRepository.GetMqttEdges([graphEdgeId]);
+
+        actualMqttEdges.Count.ShouldBe(1);
+        actualMqttEdges.Single().EdgeId.ShouldBe(mqttEdgeId);
+    }
+
+    [TestMethod]
+    public async Task AddMqttEdge_ValidData_ReturnValue()
     {
         var newMqttEdge = new MqttEdge { EdgeId = "E-1", StartId = "S-1", EndId = "S-2", Bidirectional = false };
         var newGraphEdgeGuid = Guid.NewGuid();
 
-        var fixture = new GraphRepositoryTestFixture()
-            .WithGraphRepository();
-        
-        fixture.GraphRepository.Add(newGraphEdgeGuid, newMqttEdge);
+        var fixture = new GraphRepositoryTestFixture();
+        await fixture.FillGraphRepository();
 
-        var actualMqttEdge = fixture.GraphRepository.GetMqttEdge(newGraphEdgeGuid);
-        
+        await fixture.GraphRepository.Add(newGraphEdgeGuid, newMqttEdge);
+
+        var actualMqttEdge = await fixture.GraphRepository.GetMqttEdge(newGraphEdgeGuid);
+
         actualMqttEdge?.EdgeId.ShouldBe(newMqttEdge.EdgeId);
     }
-    }
+}

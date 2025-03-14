@@ -69,7 +69,8 @@ public static class HostBuilderExtension
         {
             services.AddConfigurationTypeManager();
             services.AddDbContext<StatisticsDbContext>(o =>
-                o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName)));
+                o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName), 
+                    m => m.MigrationsHistoryTable(StatisticsDbContext.MigrationTableName)));
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();
             services.AddTransient<IMapRepository, EfMapRepository>();
             services.AddTransient<IGridRepository, EfGridRepository>();

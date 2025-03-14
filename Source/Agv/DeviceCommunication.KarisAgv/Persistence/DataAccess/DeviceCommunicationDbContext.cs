@@ -29,6 +29,9 @@ public class DeviceCommunicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new OrderIdMappingEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new MqttNodeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new MqttEdgeMappingEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvEntityConfiguration());
     }
 
     /// <summary>

@@ -13,26 +13,45 @@ public interface IGraphRepository
     /// </summary>
     /// <param name="graphNodeId">The nodeId from GraphNode.</param>
     /// <returns>Null if there is no information yet for the given graphNodeId</returns>
-    public MqttNode? GetMqttNode(string graphNodeId);
+    public Task<MqttNode?> GetMqttNode(string graphNodeId);
+
+    /// <summary>
+    /// Get the mqtt nodes corresponding to the given graph node ids.
+    /// </summary>
+    /// <param name="graphNodeIds">The graph node ids.</param>
+    /// <returns>A collection of mqtt nodes.</returns>
+    public Task<ICollection<MqttNode>> GetMqttNodes(string[] graphNodeIds);
 
     /// <summary>
     /// Retrieve the MqttEdge by GraphEdge id.
     /// </summary>
     /// <param name="graphEdgeId">The nodeId from GraphNode.</param>
     /// <returns>Null if there is no information yet for the given graphEdgeId</returns>
-    public MqttEdge? GetMqttEdge(Guid graphEdgeId);
+    public Task<MqttEdge?> GetMqttEdge(Guid graphEdgeId);
+
+    /// <summary>
+    /// Get the mqtt edges corresponding to the given graph edge ids.
+    /// </summary>
+    /// <param name="graphEdgeIds">The graph node ids.</param>
+    /// <returns>A collection of mqtt edges.</returns>
+    public Task<ICollection<MqttEdge>> GetMqttEdges(Guid[] graphEdgeIds);
 
     /// <summary>
     /// Updates the repository with MqttNode.
     /// </summary>
-    /// <param name="graphNodeId"></param>
-    /// <param name="mqttNode"></param>
-    public void Add(string graphNodeId, MqttNode mqttNode);
+    /// <param name="graphNodeId">The nodeId from GraphNode.</param>
+    /// <param name="mqttNode">The mqtt node.</param>
+    public Task Add(string graphNodeId, MqttNode mqttNode);
 
     /// <summary>
     /// Updates the repository with MqttEdge.
     /// </summary>
-    /// <param name="graphEdgeId"></param>
-    /// <param name="mqttEdge"></param>
-    public void Add(Guid graphEdgeId, MqttEdge mqttEdge);
+    /// <param name="graphEdgeId">The edgeId from GraphNode.</param>
+    /// <param name="mqttEdge">The mqtt edge.</param>
+    public Task Add(Guid graphEdgeId, MqttEdge mqttEdge);
+
+    /// <summary>
+    /// Load cache.
+    /// </summary>
+    public Task LoadCache();
 }

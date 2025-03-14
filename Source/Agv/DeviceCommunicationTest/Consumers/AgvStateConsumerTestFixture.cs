@@ -3,12 +3,13 @@ using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 using Microsoft.Extensions.DependencyInjection;
+using IAgvRepository = Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories.IAgvRepository;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
 public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateConsumer>
 {
-    private readonly IAgvRepository _agvRepository = new AgvRepositoryTestFixture().AgvRepository;
+    private readonly IAgvRepository _agvRepository = new EfAgvRepositoryTestFixture().Repository;
 
     public AgvStateConsumerTestFixture()
     {
@@ -23,7 +24,7 @@ public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateCons
 
     public AgvStateConsumerTestFixture WithAgvInformation(AgvInformation agvInformation)
     {
-        _agvRepository.AddOrUpdate(agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId, agvInformation);
+        _agvRepository.AddOrUpdate(agvInformation.AgvStatusReceived!.AgvStatus.CorrelationId, agvInformation.AgvStatusReceived.SerialNumber);
         return this;
     }
 }

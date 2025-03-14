@@ -81,7 +81,7 @@ public static class HostBuilderExtension
             {
                 string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
 
-                builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName); });
+                builder.UseSqlServer(connectionString);
             });
             services.AddTransient<IAgvSettingsService, AgvSettingsService>();
             services.AddSingleton<IStationRepository, StationRepository>();

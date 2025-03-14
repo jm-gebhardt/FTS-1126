@@ -136,10 +136,19 @@ public class GraphParser
             // No division by zero due to _considerVelocity.
             _overallDuration += (float)length / mqttEdge.MaxVelocity;
         }
-        
-        _graphRepository?.Add(edge.Id, mqttEdge);
+
+        _= StoreEdge(edge.Id, mqttEdge);
 
         return added;
+    }
+
+    private async Task StoreEdge(Guid edgeId, MqttEdge edge)
+    {
+        if (_graphRepository == null)
+        {
+            return;
+        }
+        await _graphRepository.Add(edgeId, edge);
     }
 
     private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeId, string toNodeId)
@@ -256,10 +265,19 @@ public class GraphParser
                 Z = mqttNode.Z ?? 0f
             };
             allAdded &= _nodes.Add(newNode);
-            _graphRepository?.Add(newNode.Id, mqttNode);
+            _ = StoreNode(newNode.Id, mqttNode);
         }
 
         return allAdded;
+    }
+
+    private async Task StoreNode(string nodeId, MqttNode node)
+    {
+        if (_graphRepository == null)
+        {
+            return;
+        }
+        await _graphRepository.Add(nodeId, node);
     }
 
     /// <summary>

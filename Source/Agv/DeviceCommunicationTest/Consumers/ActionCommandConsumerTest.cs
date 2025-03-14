@@ -240,6 +240,7 @@ public class ActionCommandConsumerTest
     public async Task Test_Send_PickAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
     {
         var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.FillGraphRepository();
 
         // Create a publishing observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -310,6 +311,7 @@ public class ActionCommandConsumerTest
     public async Task Test_Send_DropAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
     {
         var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.FillGraphRepository();
 
         // Create a publishing observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -486,6 +488,7 @@ public class ActionCommandConsumerTest
     public async Task Consume_UpdateActionCommand_Drop_MqttMessageSent()
     {
         var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.FillGraphRepository();
 
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
@@ -543,6 +546,7 @@ public class ActionCommandConsumerTest
     public async Task Consume_UpdateActionCommand_Pick_MqttMessageSent()
     {
         var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.FillGraphRepository();
 
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
@@ -698,6 +702,7 @@ public class ActionCommandConsumerTest
     public async Task Consume_AbortAndStartActionCommand_NoAbortedAction_MqttMessageSentWithRecordTypeOrder()
     {
         var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.FillGraphRepository();
 
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
@@ -757,6 +762,7 @@ public class ActionCommandConsumerTest
     public async Task Consume_AbortAndStartActionCommand_AbortedAction_MqttMessageSentWithRecordTypeOrderUpdate()
     {
         var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.FillGraphRepository();
 
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))

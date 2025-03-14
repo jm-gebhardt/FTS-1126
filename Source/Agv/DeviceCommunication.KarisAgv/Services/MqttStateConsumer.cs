@@ -1,6 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using JetBrains.Annotations;
@@ -55,7 +55,7 @@ public class MqttStateConsumer : IConsumer<MqttState>
         );
         await context.Publish(agvStatusReceived, context.CancellationToken);
 
-        FeedAgvRepository(_stateParser.CorrelationId, agvStatusReceived);
+       await FeedAgvRepository(_stateParser.CorrelationId, agvStatusReceived);
     }
 
     private async Task SendAgvPositionAsync(ConsumeContext<MqttState> context)
@@ -75,8 +75,8 @@ public class MqttStateConsumer : IConsumer<MqttState>
         await context.Publish(agvErrorStatusReceived, context.CancellationToken);
     }
 
-    private void FeedAgvRepository(Guid correlationId, AgvStatusReceived agvStatusReceived)
+    private async Task FeedAgvRepository(Guid correlationId, AgvStatusReceived agvStatusReceived)
     {
-        _agvRepository.AddOrUpdateAgvStatus(correlationId, agvStatusReceived);
+        await _agvRepository.AddOrUpdate(correlationId, agvStatusReceived.SerialNumber);
     }
 }

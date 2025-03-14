@@ -8,6 +8,7 @@ using Gebhardt.Acc.DeviceCommunication.Common.Configuration;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.CmdOptions;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
@@ -23,6 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using IAgvRepository = Gebhardt.Acc.DeviceCommunication.Common.Repositories.IAgvRepository;
 
 var initialLogger = InitialLogger.Create<Program>();
 
@@ -38,11 +40,27 @@ try
                 {
                     services.AddScoped(_ => productionOptions);
                     services.AddSingleton<IConfigurationReader, InstantActionsConfigurationFileReader>();
-                    services.AddDbContext<DeviceCommunicationDbContext>(builder =>
+                    services.AddHostedService<InitialCacheProvider>();
+
+                    void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
                     {
                         string? connectionString = context.Configuration.GetConnectionString(DeviceCommunicationDbContext.ConfigSectionName);
-                        builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(DeviceCommunicationDbContext.MigrationTableName); });
-                    });
+                        builder.UseSqlServer(connectionString, m =>
+                        {
+                            m.MigrationsHistoryTable(DeviceCommunicationDbContext.MigrationTableName);
+                            m.UseCompatibilityLevel(120); // EF9 compatibility level
+                        });
+                    }
+
+                    services.AddDbContext<DeviceCommunicationDbContext>(ConfigureDbContextOptions);
+
+                    services.AddDbContextFactory<DeviceCommunicationDbContext>(ConfigureDbContextOptions);
+
+                    services.AddTransient<Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories.IAgvRepository, EfAgvRepository>();
+                    services.AddSingleton<IAgvCacheProvider, AgvCache>();
+                    services.AddSingleton<IMqttEdgeMappingCacheProvider, MqttEdgeMappingCache>();
+                    services.AddSingleton<IMqttNodeCacheProvider, MqttNodeCache>();
+                    
                     services.AddTransient<IActionRepository, EfActionRepository>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
@@ -93,7 +111,7 @@ try
         hostBuilder.ConfigureServices((_, services) =>
         {
             services.AddSingleton<IAgvRepository, AgvRepository>();
-            services.AddSingleton<IGraphRepository, InMemoryGraphRepository>();
+            services.AddSingleton<IGraphRepository, EfGraphRepository>();
             services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
