@@ -68,7 +68,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>());
         await fixture.PublishMessageAsync(new TryReactivateChargingAgv(Guid.NewGuid()));
-        
+
         await fixture.ShouldNotHavePublishedAsync<AbortActionGroup>();
     }
 
@@ -131,7 +131,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(hasError: true);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [], new AgvPosition(true, 1,1,1, 0)));
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [], new AgvPosition(true, 1, 1, 1, 0)));
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 
@@ -173,15 +173,67 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateAgvStatus_BatteryChargeChangedUnderThreshold_DoNotPublishesAgvBatteryChargeChanged()
+    {
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        double newBatteryCharge = agv.AgvStatus!.BatteryCharge - TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold;
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, newBatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.BatteryVoltage, agv.AgvStatus!.BatteryCurrent, agv.AgvStatus!.BatteryTemperature, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId, agv.AgvStatus!.EstimatedFullyChargedTime, agv.AgvStatus!.LastBatteryReplacement);
+
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+        await fixture.ShouldNotHavePublishedAsync<AgvBatteryChargeChanged>();
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateAgvStatus_BatteryChargeChanged_PublishesAgvBatteryChargeChangedUpdatesBatteryChargeGauge()
     {
         var fixture = new AgvCommandHandlerTestFixture()
             .WithGraphExists(true);
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        double newBatteryCharge = agv.AgvStatus!.BatteryCharge - 2.0d * TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold;
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, newBatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
+        double newBatteryCharge = agv.AgvStatus!.BatteryCharge - 0.01d - TransportOrder.Domain.Models.Agv.Agv.BatteryChargeChangedThreshold;
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, newBatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.BatteryVoltage, agv.AgvStatus!.BatteryCurrent, agv.AgvStatus!.BatteryTemperature, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId, agv.AgvStatus!.EstimatedFullyChargedTime, agv.AgvStatus!.LastBatteryReplacement);
+
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+        await fixture.ShouldHavePublishedAsync<AgvBatteryChargeChanged>();
+        fixture.VerifyBatteryMetricsCollected(Times.Once());
+        fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_BatteryStatusChanged_PublishesAgvBatteryChargeChangedUpdatesBatteryChargeGauge()
+    {
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, 50, 20, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
+
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+        await fixture.ShouldHavePublishedAsync<AgvBatteryChargeChanged>();
+        fixture.VerifyBatteryMetricsCollected(Times.Once());
+        fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_EstimatedFullyChargedTime_PublishesAgvBatteryChargeChangedUpdatesBatteryChargeGauge()
+    {
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        double newBatteryCharge = agv.AgvStatus!.BatteryCharge;
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, newBatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.BatteryVoltage, agv.AgvStatus!.BatteryCurrent, agv.AgvStatus!.BatteryTemperature, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId, DateTime.UtcNow, agv.AgvStatus!.LastBatteryReplacement + TimeSpan.FromMinutes(2));
+
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvBatteryChargeChanged>();
@@ -265,7 +317,7 @@ public class AgvCommandHandlerTest
         agv.DataExist = false;
         agv.AgvDataRequestedLastTime = null;
         agv.AgvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus();
-        
+
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
@@ -281,7 +333,7 @@ public class AgvCommandHandlerTest
         agv.GraphExists = false;
         agv.AgvDataRequestedLastTime = null;
         agv.AgvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus();
-        
+
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithGraphExists(true);
@@ -303,7 +355,7 @@ public class AgvCommandHandlerTest
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, 48, -10, 20, false);
         var updateAgvStatus = new UpdateAgvStatus(agvStatus.CorrelationId, "serialNumber", agvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
-        
+
         await fixture.ShouldHavePublishedAsync<AgvDiscovered>();
         await fixture.ShouldHavePublishedAsync<RequestAgvData>();
         await fixture.ShouldNotHavePublishedAsync<RequestAgvGraph>();
@@ -320,7 +372,7 @@ public class AgvCommandHandlerTest
         var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, 48, -10, 20, false);
         var updateAgvStatus = new UpdateAgvStatus(agvStatus.CorrelationId, "serialNumber", agvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
-        
+
         await fixture.ShouldHavePublishedAsync<RequestAgvData>();
         await fixture.ShouldHavePublishedAsync<RequestAgvGraph>();
         fixture.AgvDb.Verify(r =>
@@ -362,10 +414,10 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        
+
         Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(
             new LockAgv(agv.CorrelationId, LockReason.Other, "reason description", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
-        
+
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
     }
@@ -435,7 +487,7 @@ public class AgvCommandHandlerTest
         fixture.AddAgvs([agv]);
 
         await fixture.PublishMessageAsync(new HandleAgvActionStartFailure(agv.CorrelationId));
-        
+
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 
@@ -447,7 +499,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateBusyAgv();
         fixture.AddAgvs([agv]);
         await fixture.PublishMessageAsync(new HandleAgvActionStartFailure(agv.CorrelationId));
-        
+
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
     }
 
@@ -459,7 +511,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithAgvsToMove(null)
             .WithActionGroup(actionGroup);
-        
+
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
@@ -513,7 +565,7 @@ public class AgvCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "a node");
         agv.IsQueueing = false;
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv:agv.CorrelationId);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .WithAgvsToMove(null)
@@ -625,7 +677,7 @@ public class AgvCommandHandlerTest
         var agvStatus = new AgvStatus(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, 48, currentAgStatus.Charging ? 20 : -10, 20, currentAgStatus.Disturbed, currentAgStatus.LastNodeId);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, agvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
-        
+
         await fixture.ShouldNotHavePublishedAsync<AgvBatteryChargeChanged>();
         await fixture.ShouldNotHavePublishedAsync<AgvLastNodeIdChanged>();
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
@@ -646,7 +698,7 @@ public class AgvCommandHandlerTest
 
         var updateCargo = new UpdateCargo(agv.CorrelationId, cargos.ToList().AsReadOnly());
         await fixture.PublishMessageAsync(updateCargo);
-        
+
         await fixture.ShouldHavePublishedAsync<CargoChanged>();
         await fixture.ShouldHavePublishedAsync<HasCargoChanged>();
     }
@@ -665,7 +717,7 @@ public class AgvCommandHandlerTest
 
         var updateCargo = new UpdateCargo(agv.CorrelationId, cargos.ToList().AsReadOnly());
         await fixture.PublishMessageAsync(updateCargo);
-        
+
         await fixture.ShouldNotHavePublishedAsync<CargoChanged>();
         await fixture.ShouldNotHavePublishedAsync<HasCargoChanged>();
     }
@@ -684,7 +736,7 @@ public class AgvCommandHandlerTest
             .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
 
         await fixture.PublishMessageAsync(new PrepareParkingOfAgv(agv.CorrelationId));
-        
+
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldHavePublishedAsync<ParkingNodeSelectedForAgv>();
     }
@@ -704,7 +756,7 @@ public class AgvCommandHandlerTest
 
         var command = new PrepareParkingOfAgv(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        
+
         await fixture.ShouldHaveConsumedAsync<PrepareParkingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
@@ -803,7 +855,7 @@ public class AgvCommandHandlerTest
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        
+
         await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
@@ -823,7 +875,7 @@ public class AgvCommandHandlerTest
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        
+
         await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
@@ -843,7 +895,7 @@ public class AgvCommandHandlerTest
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        
+
         await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
@@ -854,7 +906,7 @@ public class AgvCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         const string chargeNodeName = "Charger-1";
-        var chargingAction = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv:agv.CorrelationId);
+        var chargingAction = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .HasAlreadyReservedNode(false)
@@ -884,7 +936,7 @@ public class AgvCommandHandlerTest
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        
+
         await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
@@ -900,7 +952,7 @@ public class AgvCommandHandlerTest
             .AddAgvs([agv]);
         var command = new UpdateAgvSettingsGroupReference(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
-        
+
         await fixture.ShouldHaveConsumedAsync<UpdateAgvSettingsGroupReference>();
         agv.AgvSettingsGroup.ShouldNotBe(previousGroupId);
     }
@@ -1013,7 +1065,7 @@ public class AgvCommandHandlerTest
             .WithAgvsAtQueueHead([])
             .AddAgvs([AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow)])
             .WithClosestAgv(null);
-     
+
         await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
 
         await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
@@ -1026,7 +1078,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithAgvsAtQueueHead([Guid.NewGuid()])
             .AddAgvs([])
-            .WithClosestAgv(null); 
+            .WithClosestAgv(null);
 
         await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
 
@@ -1043,7 +1095,7 @@ public class AgvCommandHandlerTest
     {
         var mode = new AgvMode(previousType, Guid.NewGuid());
         mode.PrepareSwitch(pendingType);
-        var agv = AgvGenerator.GenerateIdleAgv(mode: mode );
+        var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
 

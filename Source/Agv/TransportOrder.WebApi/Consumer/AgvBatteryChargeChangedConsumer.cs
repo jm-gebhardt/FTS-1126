@@ -37,7 +37,7 @@ public class AgvBatteryChargeChangedConsumer :
     public Task Consume(ConsumeContext<AgvBatteryChargeChanged> context)
     {
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(AgvBatteryChargeChanged), context.Message.CorrelationId);
-
+        _logger.LogDebug("{MessageType} Old/New charge level: {OldBatteryCharge}/{NewBatteryCharge}", nameof(AgvBatteryChargeChanged), context.Message.OldBatteryCharge, context.Message.AgvBatteryStatus.BatteryCharge);
         return _agvPublisher.SendAgvBatteryStatusAsync(context.Message);
     }
 }

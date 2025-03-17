@@ -73,7 +73,7 @@ public class Agv : IAgv
     /// <summary>
     /// The agv can start a manual pick/drop action.
     /// </summary>
-    public bool CanStartManualPickDropAction => new List<ModeType>{ModeType.Maintenance, ModeType.Normal}.Contains(Mode.Type);
+    public bool CanStartManualPickDropAction => new List<ModeType> { ModeType.Maintenance, ModeType.Normal }.Contains(Mode.Type);
 
     /// <summary>
     /// The agv can start a manual operational action (Park, Charge, Move).
@@ -192,9 +192,19 @@ public class Agv : IAgv
     private TimeSpan AgvRequestTimeout { get; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// The threshold for considering a battery change significant.
+    /// The threshold for considering a battery charge change significant.
     /// </summary>
-    public const double BatteryChargeChangedThreshold = 0.01d;
+    public const double BatteryChargeChangedThreshold = 0.1d;
+
+    /// <summary>
+    /// The threshold for considering a battery status change (temperature, voltage, current) significant.
+    /// </summary>
+    public const double BatteryStatusChangedThreshold = 0.1d;
+
+    /// <summary>
+    /// The threshold for considering a battery datetime change (LastBatteryReplacement, EstimatedFullyChargedTime) significant.
+    /// </summary>
+    public const long BatteryStatusTicksThreshold = 60 * TimeSpan.TicksPerSecond;
 
     /// <summary>
     /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are already given
@@ -302,13 +312,17 @@ public class Agv : IAgv
         {
             return true;
         }
+        var newEstimatedFullyChargedTime = newStatus.EstimatedFullyChargedTime ?? DateTime.MinValue;
+        var estimatedFullyChargeTime = AgvStatus.EstimatedFullyChargedTime ?? DateTime.MinValue;
+        var newLastBatteryReplacement = newStatus.LastBatteryReplacement ?? DateTime.MinValue;
+        var lastBatteryReplacement = AgvStatus.LastBatteryReplacement ?? DateTime.MinValue;
 
         return newStatus.Charging != AgvStatus.Charging
-               || Math.Abs(newStatus.BatteryCurrent - AgvStatus.BatteryCurrent) > Mathematics.FloatComparator
-               || Math.Abs(newStatus.BatteryTemperature - AgvStatus.BatteryTemperature) > Mathematics.FloatComparator
-               || Math.Abs(newStatus.BatteryVoltage - AgvStatus.BatteryVoltage) > Mathematics.FloatComparator
-               || newStatus.EstimatedFullyChargedTime?.Ticks != AgvStatus.EstimatedFullyChargedTime?.Ticks
-               || newStatus.LastBatteryReplacement?.Ticks != AgvStatus.LastBatteryReplacement?.Ticks;
+               || Math.Abs(newStatus.BatteryCurrent - AgvStatus.BatteryCurrent) > BatteryStatusChangedThreshold
+               || Math.Abs(newStatus.BatteryTemperature - AgvStatus.BatteryTemperature) > BatteryStatusChangedThreshold
+               || Math.Abs(newStatus.BatteryVoltage - AgvStatus.BatteryVoltage) > BatteryStatusChangedThreshold
+               || Math.Abs(newEstimatedFullyChargedTime.Ticks - estimatedFullyChargeTime.Ticks) > BatteryStatusTicksThreshold
+               || Math.Abs(newLastBatteryReplacement.Ticks - lastBatteryReplacement.Ticks) > BatteryStatusTicksThreshold;
     }
 
     /// <summary>
@@ -438,9 +452,9 @@ public class Agv : IAgv
     public void PrepareLockedMode(
         LockReason? lockReason = null,
         string? reasonDescription = null,
-        string? initiatingUser = null, 
-        CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishAction, 
-        AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, 
+        string? initiatingUser = null,
+        CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.FinishAction,
+        AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset,
         bool cancelManualActions = false)
     {
         Mode.PrepareSwitch(ModeType.Locked, lockReason, null, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions, DateTime.UtcNow);
@@ -462,7 +476,7 @@ public class Agv : IAgv
     /// </summary>
     public void PrepareUserMode(string? initiatingUser = null, CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause, AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.LeaveAssigned, bool cancelManualActions = false)
     {
-        Mode.PrepareSwitch(ModeType.UserMode, initiatingUser: initiatingUser, currentActionPolicy : currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions, modeChangeTime: DateTime.UtcNow);
+        Mode.PrepareSwitch(ModeType.UserMode, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions, modeChangeTime: DateTime.UtcNow);
     }
 
     /// <summary>
@@ -482,12 +496,12 @@ public class Agv : IAgv
     public void PrepareMaintenanceMode(
         MaintenanceReason? maintenanceReason,
         string? reasonDescription,
-        string? initiatingUser = null, 
-        CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause, 
-        AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset, 
+        string? initiatingUser = null,
+        CurrentActionGroupPolicy currentActionPolicy = CurrentActionGroupPolicy.Pause,
+        AssignedActionGroupPolicy assignedActionPolicy = AssignedActionGroupPolicy.Reset,
         bool cancelManualActions = false)
     {
-        Mode.PrepareSwitch(ModeType.Maintenance, maintenanceReason:maintenanceReason, reasonDescription: reasonDescription, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions, modeChangeTime: DateTime.UtcNow);
+        Mode.PrepareSwitch(ModeType.Maintenance, maintenanceReason: maintenanceReason, reasonDescription: reasonDescription, initiatingUser: initiatingUser, currentActionPolicy: currentActionPolicy, assignedActionPolicy: assignedActionPolicy, cancelManualActions: cancelManualActions, modeChangeTime: DateTime.UtcNow);
     }
 
     /// <summary>
