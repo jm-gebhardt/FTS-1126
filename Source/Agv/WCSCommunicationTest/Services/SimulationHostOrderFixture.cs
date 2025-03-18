@@ -15,7 +15,8 @@ public class SimulationHostOrderFixture : PollableServiceTestFixture<SimulationH
             {
                 Interval = 500,
                 Sources = new[] { "S01", "S02", "S03" },
-                Destinations = new[] { "D01", "D02", "D03" }
+                Destinations = new[] { "D01", "D02", "D03" },
+                ModeSequential = true
             });
         });
         Build();

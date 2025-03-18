@@ -23,7 +23,10 @@ public class SimulationHostOrderService : IPollable
     private readonly IBus _bus;
     private readonly string[] _simSources;
     private readonly string[] _simDestinations;
+    private readonly bool _modeSequential;
     private readonly Random _random = new();
+    private long _currentSourceIndex;
+    private long _currentDestinationIndex;
     private uint _orderIdCounter;
 
     /// <summary>
@@ -39,6 +42,7 @@ public class SimulationHostOrderService : IPollable
 
         _simSources = simulationOptions.Sources != null ? simulationOptions.Sources.ToArray() : Array.Empty<string>();
         _simDestinations = simulationOptions.Destinations != null ? simulationOptions.Destinations.ToArray() : Array.Empty<string>();
+        _modeSequential = simulationOptions.ModeSequential;
         PollingInterval = simulationOptions.Interval; // simulation options is specified in milliseconds
     }
 
@@ -56,8 +60,15 @@ public class SimulationHostOrderService : IPollable
     private async Task SimulateHostOrders(CancellationToken cancellationToken)
     {
         string orderId = NextOrderId();
-        string src = _simSources[_random.Next(_simSources.Length)]; // Get random source and destination
-        string dst = _simDestinations[_random.Next(_simDestinations.Length)];
+
+        string src = _modeSequential ? _simSources[_currentSourceIndex] : _simSources[_random.Next(_simSources.Length)];
+        string dst = _modeSequential ? _simDestinations[_currentDestinationIndex] : _simDestinations[_random.Next(_simDestinations.Length)];
+        if (_modeSequential)
+        {
+            _currentSourceIndex = (_currentSourceIndex + 1) % _simSources.Length;
+            _currentDestinationIndex = (_currentDestinationIndex + 1) % _simDestinations.Length;
+        }
+
         const string leNo = "9999";
         var correlationId = orderId.ToGuid();
         var orderDetails = new OrderDetails(correlationId, orderId, src, dst, leNo, HostOrderCreator.Simulation);

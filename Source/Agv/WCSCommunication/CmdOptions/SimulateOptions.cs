@@ -36,4 +36,11 @@ public class SimulateOptions
     [UsedImplicitly]
     [Option("applicationName", HelpText = "Ignore property only used by dotnet tools")]
     public string? ApplicationName { get; init; }
+
+    /// <summary>
+    /// Indicator if order should use source and destination in sequential order instead of random
+    /// </summary>
+    [UsedImplicitly]
+    [Option('m', "modeSequential", HelpText = "Indicator if order should use source and destination in sequential order instead of random.", Default = false)]
+    public bool ModeSequential { get; init; }
 }
