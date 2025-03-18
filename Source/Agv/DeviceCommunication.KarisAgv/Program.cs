@@ -75,6 +75,7 @@ try
                             configurator.AddMqttConsumer<MqttMapConsumer>();
                             configurator.AddSagaStateMachine<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>().InMemoryRepository();
                             configurator.AddConsumer<ActionCommandConsumer>();
+                            configurator.AddConsumer<InstantActionsConsumer>();
                             configurator.AddConsumer<RequestAgvMapConsumer>();
                             configurator.AddConsumer<RequestAgvDataConsumer>();
                             configurator.AddConsumer<ActionAbortedConsumer>();
@@ -90,6 +91,7 @@ try
                             configurator.ConfigureMessageTopology<MqttOrder>();
                             configurator.ConfigureMessageTopology<MqttRequestStationList>();
                             configurator.ConfigureMessageTopology<MqttRequestMap>();
+                            configurator.ConfigureMessageTopology<MqttInstantActions>();
 
                             //for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();

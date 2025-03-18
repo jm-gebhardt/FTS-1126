@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using JetBrains.Annotations;
@@ -30,11 +31,11 @@ IConsumer<StartInstantAction>
             throw new AssignedAgvNotFoundException(agvSerialNumber, correlationId);
         }
 
-        await context.Publish(new MqttInstantActions
+        await context.PublishMqtt(new MqttInstantActions
         {
             SerialNumber = agvSerialNumber,
             Actions = [new MqttInstantAction { ActionId = correlationId.ToString(), ActionType = actionType, Parameters = parameters }]
-        });
+        }, context.CancellationToken);
 
         logger.LogInformation("Sent instant actions: {ActionType} for AGV:{AgvId} ", actionType, agvSerialNumber);
     }
