@@ -33,10 +33,12 @@ public class MqttStationListConsumer : IConsumer<MqttStationList>
         _logger.LogInformation("{MessageType} from {AgvId} received", nameof(MqttStationList), context.Message.SerialNumber);
         var reversedYStationList = context.Message;
 
-        //Special treatment because we are in a different coordinate system than Karis AGV
+        // Special treatment because we are in a different coordinate system than Karis AGV
+        // Karis Station 0 rad is PI/2 rad in our world 
         foreach (var t in reversedYStationList.Stations)
         {
             t.Position.Y *= -1;
+            t.Position.Theta = (float)Mathematics.ConvertToRadians(90.0f) - t.Position.Theta;
         }
 
         await context.Publish(new InternalStationListReceived(

@@ -28,7 +28,8 @@ public class MqttStationListConsumerTest
         var stations = new Station[]
         {
             new(Function.Drop, "D1", new Position(0, 1, 2), "?"),
-            new(Function.Charge, "C1", new Position(3, 4, 5), "?")
+            new(Function.Charge, "C1", new Position((float) (Math.PI / 2), 4, 5), "?"),
+            new(Function.Pick, "P1", new Position((float) (2 * Math.PI - 0.1d), 4, 1), "?")
         };
         var message = new MqttStationList(AgvSerialNumber, DateTimeOffset.UtcNow, stations);
 
@@ -46,9 +47,11 @@ public class MqttStationListConsumerTest
         var published = await fixture.GetFirstPublishedMessageAsync<InternalStationListReceived>();
         published.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
         published.StationList.SerialNumber.ShouldBe(AgvSerialNumber);
-        published.StationList.Stations.Length.ShouldBe(2);
+        published.StationList.Stations.Length.ShouldBe(3);
         published.StationList.Stations.Any(x => x.Identifier == "D1").ShouldBeTrue();
         published.StationList.Stations.Any(x => x.Identifier == "C1").ShouldBeTrue();
+        published.StationList.Stations.Any(x => x.Identifier == "P1").ShouldBeTrue();
+        published.StationList.Stations.All(x => x.Position.Theta >= -2 * Math.PI &&  x.Position.Theta <= 2 * Math.PI).ShouldBeTrue();
     }
 }
 

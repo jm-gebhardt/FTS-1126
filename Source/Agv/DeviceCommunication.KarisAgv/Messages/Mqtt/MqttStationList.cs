@@ -113,7 +113,7 @@ public record Position
     /// Angle of AGV at that station
     /// </summary>
     [UsedImplicitly]
-    public float Theta { get; }
+    public float Theta { get; set; }
 
     /// <summary>
     /// X coordinate
