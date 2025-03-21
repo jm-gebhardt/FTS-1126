@@ -13,6 +13,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
@@ -90,6 +91,14 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<UpdateAgvSettingsGroupReference, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SwitchMode, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<TryReachQueueHead, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<ReceiveAgvZones, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<RemoveAgvFromZones, AgvCommandHandler>(c);
+        });
+
+        busRegistrationConfigurator.AddConsumer<ZoneCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<AddZone, ZoneCommandHandler>(c);
         });
 
         busRegistrationConfigurator.AddConsumer<AgvEventHandler>(c =>
@@ -269,16 +278,18 @@ public static class CoreBusRegistrationExtensions
 
     private static void RegisterMediatorAgvCommandHandlers(IMediatorRegistrationConfigurator configurator)
     {
-        configurator.AddConsumer<RequestAgvDataCommandHandler>();
-        configurator.AddRequestClient<RequestAgvData>();
-
-        configurator.AddConsumer<RequestAgvGraphCommandHandler>();
+        configurator.AddConsumer<EmitAgvRequestsHandler>();
         configurator.AddRequestClient<RequestAgvGraph>();
+        configurator.AddRequestClient<RequestAgvData>();
+        configurator.AddRequestClient<RequestAgvZones>();
 
         configurator.AddConsumer<AgvModeRequestHandler>();
         configurator.AddRequestClient<SetMaintenanceMode>();
         configurator.AddRequestClient<SetUserMode>();
         configurator.AddRequestClient<SetNormalMode>();
+
+        configurator.AddConsumer<AgvZonesRequestHandler>();
+        configurator.AddRequestClient<RemoveAgvFromZones>();
     }
 
     private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)

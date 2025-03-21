@@ -2,6 +2,8 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
@@ -46,6 +48,20 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
 
                     case nameof(AgvStatus.OrderId):
                         o.Property(propertyInfo.PropertyType, propertyInfo.Name).HasMaxLength(DbStringLimits.OrderId);
+                        break;
+
+                    case nameof(AgvStatus.ZoneIds):
+                        o.Property(s => s.ZoneIds)
+                            .HasConversion(
+                                v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                                v => JsonSerializer.Deserialize<ICollection<string>>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                            )
+                            .Metadata.SetValueComparer(
+                                new ValueComparer<ICollection<string>>(
+                                    (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                                    c => new List<string>(c)
+                                ));
                         break;
 
                     default:

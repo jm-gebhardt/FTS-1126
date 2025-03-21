@@ -69,6 +69,54 @@ public class SimulatedAgvStateMachineTest
     }
 
     [TestMethod]
+    public async Task Consume_RequestAgvZones_ValidData_PublishesAgvZonesReceived()
+    {
+        var graph = AgvGraphGenerator.CreateDefaultGraph();
+        var node = graph.Nodes.First();
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(
+            currentNode: node,
+            agvGraph: graph,
+            dataExists: false
+        );
+        var correlationId = agvSaga.CorrelationId;
+        string agvSerialNumber = agvSaga.SerialNumber;
+        var fixture = new SimulatedAgvStateMachineTestFixture()
+            .WithAgv(agvSaga)
+            .Build();
+
+        var message = await fixture.PublishAndGetFirstMessageAsync<RequestAgvZones, AgvZonesReceived>(new RequestAgvZones(correlationId, agvSerialNumber));
+        (await fixture.SagaHarness.Consumed.Any<RequestAgvZones>()).ShouldBeTrue();
+        message.SerialNumber.ShouldBe(agvSerialNumber);
+        message.CorrelationId.ShouldBe(correlationId);
+        message.AgvZones.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestAgvZones_NoGraph_DoesNotPublishAgvZonesReceived()
+    {
+        var graph = AgvGraphGenerator.CreateDefaultGraph();
+        var node = graph.Nodes.First();
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(
+            currentNode: node,
+            agvGraph: graph,
+            graphExists: false
+        );
+        var correlationId = agvSaga.CorrelationId;
+        var fixture = new SimulatedAgvStateMachineTestFixture()
+            .WithAgv(agvSaga)
+            .Build();
+
+        // Publish RequestAgvGraph ...
+        await fixture.TestHarness.Bus.Publish(new RequestAgvZones(correlationId, agvSaga.SerialNumber));
+        // ... wait for being consumed ...
+        (await fixture.SagaHarness.Consumed.Any<RequestAgvZones>()).ShouldBeTrue();
+        // ... but don't expect AgvZonesReceived being published.
+        var token = new CancellationTokenSource();
+        token.CancelAfter(100);
+        await fixture.ShouldNotHavePublishedAsync<AgvZonesReceived>();
+    }
+
+    [TestMethod]
     public async Task When_RequestAgvData_AgvDataIsNull_NoMessageIsPublished()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();

@@ -54,7 +54,8 @@ public static class SimulatedAgvSagaGenerator
         var simulatedAgvSaga = new SimulatedAgvSaga(agv, simulationSpeed, initialSoc, batteryChargeRate, timeProvider ?? new DateTimeNowUtcProvider(), currentNode)
         {
             Action = currentAction,
-            CurrentState = currentState
+            CurrentState = currentState,
+            AgvZones = []
         };
         simulatedAgvSaga.UpdatePosition();
         return simulatedAgvSaga;

@@ -223,6 +223,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<LockAgv> lockAgvRequestClient = GetRequestClient<LockAgv>();
         IRequestClient<RequestAgvData> emitRequestDataRequestClient = GetRequestClient<RequestAgvData>();
         IRequestClient<RequestAgvGraph> emitRequestGraphRequestClient = GetRequestClient<RequestAgvGraph>();
+        IRequestClient<RequestAgvZones> emitRequestZonesRequestClient = GetRequestClient<RequestAgvZones>();
         IRequestClient<GetActiveAgvErrors> getAgvErrorsRequestClient = GetRequestClient<GetActiveAgvErrors>();
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient = GetRequestClient<GetAgvErrors>();
         IRequestClient<MoveAgv> moveAgvRequestClient = GetRequestClient<MoveAgv>();
@@ -241,6 +242,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<SetNormalMode> setNormalModeClient = GetRequestClient<SetNormalMode>();
         IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient = GetRequestClient<GetAgvInstantActionDefinitions>();
         IRequestClient<StartInstantAction> startInstantActionsClient = GetRequestClient<StartInstantAction>();
+        IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient = GetRequestClient<RemoveAgvFromZones>();
 
         var controller = new AgvController(Mapper,
             getAgvRequestClient,
@@ -254,6 +256,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             lockAgvRequestClient,
             emitRequestDataRequestClient,
             emitRequestGraphRequestClient,
+            emitRequestZonesRequestClient,
             getAgvErrorsRequestClient,
             getAgvErrorHistoryRequestClient,
             moveAgvRequestClient,
@@ -271,7 +274,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             setMaintenanceModeClient, 
             setNormalModeClient,
             getInstantActionsClient,
-            startInstantActionsClient
+            startInstantActionsClient,
+            removeAgvFromZonesClient
         )
         {
             ControllerContext = new ControllerContext(

@@ -116,6 +116,12 @@ public class Agv : IAgv
     public DateTime? AgvGraphRequestedLastTime { get; set; }
 
     /// <summary>
+    /// UTC timestamp when the agv zones was requested.
+    /// </summary>
+    /// <remarks>Nullable declaration required to make data model mappable according to EF Core</remarks>
+    public DateTime? AgvZonesRequestedLastTime { get; set; }
+
+    /// <summary>
     /// Returns true when there is a sign of life of the agv in regular time intervals,
     /// returns false when there is no sign of life of the agv for a certain time.
     /// </summary>
@@ -186,10 +192,20 @@ public class Agv : IAgv
     public bool DataExist { get; set; }
 
     /// <summary>
+    /// Returns true if the zones of this agv exist.
+    /// </summary>
+    public bool ZonesExist { get; set; }
+
+    /// <summary>
     /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null.
     /// </summary>
     /// <remarks>Interval indicated in seconds</remarks>
     private TimeSpan AgvRequestTimeout { get; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// The time that has to pass before resending a request for agv zones.
+    /// </summary>
+    private TimeSpan AgvZonesRequestTimeout { get; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
     /// The threshold for considering a battery charge change significant.
@@ -376,7 +392,8 @@ public class Agv : IAgv
                 newStatus.BatteryCurrent,
                 newStatus.BatteryTemperature,
                 newStatus.EstimatedFullyChargedTime,
-                newStatus.LastBatteryReplacement
+                newStatus.LastBatteryReplacement,
+                newStatus.ZoneIds
             );
         }
 
@@ -553,6 +570,27 @@ public class Agv : IAgv
         if (shouldBeRequested)
         {
             AgvDataRequestedLastTime = DateTime.UtcNow;
+        }
+        return shouldBeRequested;
+    }
+
+    /// <summary>
+    /// Checks if it is time to request new agv zones.
+    /// </summary>
+    /// <returns>True, if zones need to be requested.</returns>
+    public bool ShouldRequestZones()
+    {
+        var secondsSinceLastRequest = TimeSpan.MaxValue;
+        if (AgvZonesRequestedLastTime != null)
+        {
+            secondsSinceLastRequest = DateTime.UtcNow - (AgvZonesRequestedLastTime ?? DateTime.MinValue);
+        }
+        var timeout = DataExist ? DailyRequestUpdateInterval : AgvZonesRequestTimeout;
+
+        bool shouldBeRequested = secondsSinceLastRequest > timeout;
+        if (shouldBeRequested)
+        {
+            AgvZonesRequestedLastTime = DateTime.UtcNow;
         }
         return shouldBeRequested;
     }

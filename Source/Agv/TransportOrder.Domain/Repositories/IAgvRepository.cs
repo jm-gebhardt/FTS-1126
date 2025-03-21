@@ -37,6 +37,12 @@ public interface IAgvRepository
     Task<Models.Agv.Agv> GetAgvAsync(Guid correlationId);
 
     /// <summary>
+    /// Get an online AGV.
+    /// </summary>
+    /// <returns>An Agv object.</returns>
+    Task<Models.Agv.Agv?> GetAnyOnlineAgv();
+
+    /// <summary>
     /// Get specific AGV
     /// </summary>
     /// <returns>Agv object or null.</returns>

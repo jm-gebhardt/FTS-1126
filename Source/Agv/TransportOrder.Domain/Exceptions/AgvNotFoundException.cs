@@ -15,4 +15,10 @@ public class AgvNotFoundException : NotFoundException
         : base("Agv", nameof(correlationId), correlationId)
     {
     }
+
+    /// <summary>
+    /// Agv was not found 
+    /// </summary>
+    /// <param name="message">The message to be shown.</param>
+    public AgvNotFoundException(string message): base(message){}
 }

@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Testing.Time;
 using Gebhardt.Acc.Common.Time;
@@ -33,6 +34,14 @@ public class SimulatedAgvSagaTest
 
         saga.AgvData.ShouldNotBe(agvData);
         saga.AgvData.ShouldBe(agvData.SetSimulationSpeed(simulationSpeed));
+    }
+
+    [TestMethod]
+    public void Construct_WithChargerOrParker_ZoneAroundChargerOrParker()
+    {
+        var saga = SimulatedAgvSagaGenerator.Generate(agvGraph: AgvGraphGenerator.Generate([AgvGraphGenerator.Waypoint4, AgvGraphGenerator.ChargingFar], [AgvGraphGenerator.Edges.Single(e => e.FromNodeId ==AgvGraphGenerator.Waypoint4.Id && e.ToNodeId == AgvGraphGenerator.ChargingFar.Id), AgvGraphGenerator.Edges.Single(e => e.ToNodeId ==AgvGraphGenerator.Waypoint4.Id && e.FromNodeId == AgvGraphGenerator.ChargingFar.Id)]), currentNode: AgvGraphGenerator.ChargingFar);
+        saga.AgvZones.ShouldNotBeNull();
+        saga.AgvZones.Single().Polygon.PointIsInPolygon(AgvGraphGenerator.ChargingFar.X, AgvGraphGenerator.ChargingFar.Y).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -87,6 +96,15 @@ public class SimulatedAgvSagaTest
         saga.UpdateStatus(timeDiff, chargeDiff, chargeDiff);
 
         saga.IsOnline.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void UpdateStatus_AgvIsInZone_ZoneIdInStatus()
+    {
+        var saga = SimulatedAgvSagaGenerator.Generate(agvGraph: AgvGraphGenerator.Generate([AgvGraphGenerator.Waypoint4, AgvGraphGenerator.ChargingFar], [AgvGraphGenerator.Edges.Single(e => e.FromNodeId ==AgvGraphGenerator.Waypoint4.Id && e.ToNodeId == AgvGraphGenerator.ChargingFar.Id), AgvGraphGenerator.Edges.Single(e => e.ToNodeId ==AgvGraphGenerator.Waypoint4.Id && e.FromNodeId == AgvGraphGenerator.ChargingFar.Id)]), currentNode: AgvGraphGenerator.ChargingFar);
+        saga.UpdateStatus(60, 1, 1);
+        saga.AgvStatus.ZoneIds.ShouldNotBeNull();
+        saga.AgvStatus.ZoneIds.Single().ShouldBe(saga.AgvZones.Single().ZoneId);
     }
 
     [TestMethod]

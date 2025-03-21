@@ -2,6 +2,7 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Trigger;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Zone;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -55,6 +56,7 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new StationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new QueueEntityConfiguration());
         modelBuilder.ApplyConfiguration(new InstantActionDefinitionEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ZoneEntityConfiguration());
     }
 
     /// <summary>

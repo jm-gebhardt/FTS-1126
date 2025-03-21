@@ -141,7 +141,7 @@ public class PolygonProfileTest
 
         ICollection<PolygonPointDto> polygonPointDtos = new List<PolygonPointDto> { new(1, 2), new(2, 3) };
 
-        var polygonPoints = mapper.Map<ICollection<Gebhardt.Acc.Common.Messages.Triggers.PolygonPoint>>(polygonPointDtos);
+        var polygonPoints = mapper.Map<ICollection<Common.Domain.Models.PolygonPoint>>(polygonPointDtos);
 
         polygonPoints.Count.ShouldBe(polygonPointDtos.Count);
     }

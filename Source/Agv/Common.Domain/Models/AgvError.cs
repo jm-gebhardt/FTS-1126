@@ -122,6 +122,18 @@ public record AgvError : CorrelatedBy<Guid>
                && fieldViolation.ErrorDescription == ErrorDescription 
                && fieldViolation.ErrorTitle == ErrorTitle;
     }
+
+    /// <summary>
+    /// True, if the error is a zone error.
+    /// </summary>
+    public bool IsZoneError()
+    {
+        var zoneError = new ZoneError(CorrelationId, ErrorReceived, "any");
+        return ErrorType == zoneError.ErrorType &&
+               ErrorCategory == zoneError.ErrorCategory &&
+               ErrorFlag == zoneError.ErrorFlag &&
+               ErrorLevel == zoneError.ErrorLevel;
+    }
 }
 
 /// <summary>

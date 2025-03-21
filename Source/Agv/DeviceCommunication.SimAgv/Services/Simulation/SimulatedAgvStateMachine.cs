@@ -99,6 +99,16 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     public Event<RequestAgvData> RequestAgvDataEvent { get; private set; } = null!;
 
     /// <summary>
+    /// RequestAgvZones was received
+    /// </summary>
+    public Event<RequestAgvZones> RequestAgvZonesEvent { get; private set; } = null!;
+
+    /// <summary>
+    /// RemoveAgvFromZone was received
+    /// </summary>
+    public Event<RemoveAgvFromZone> RemoveAgvFromZoneEvent { get; private set; } = null!;
+
+    /// <summary>
     /// <see cref="ActionAborted"/> was received.
     /// </summary>
     public Event<ActionAborted> AgvActionAbortedEvent { get; private set; } = null!;
@@ -190,9 +200,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(SetRequestAgvGraphHandler());
         DuringAny(SetRequestAgvDataHandler());
+        DuringAny(SetRequestAgvZonesHandler());
         DuringAny(SetSignalPositionHandler());
         DuringAny(SimulateAgvErrorHandler());
         DuringAny(ResetAgvErrorsHandler());
+        DuringAny(RemoveAgvFromZoneHandler());
         DuringAny(SimulateChargingHandler());
 
         WhenEnterAny(UpdateTimeOfStateTransition);
@@ -448,6 +460,13 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .ThenAsync(PublishAgvData);
     }
 
+    private EventActivityBinder<SimulatedAgvSaga, RequestAgvZones> SetRequestAgvZonesHandler()
+    {
+        return When(RequestAgvZonesEvent)
+            .Then(c => _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestAgvZones), c.Message.SerialNumber, c.Saga.CorrelationId))
+            .ThenAsync(PublishAgvZones);
+    }
+
     private EventActivityBinder<SimulatedAgvSaga, RequestAgvGraph> SetRequestAgvGraphHandler()
     {
         return When(RequestAgvGraphEvent)
@@ -514,6 +533,13 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         return When(SimulateChargingEvent)
             .Then(c => _logger.LogDebug("{MessageType} / {CorrelationId} received", nameof(SimulateCharging), c.Saga.CorrelationId))
             .Then(c => c.Saga.SetBatteryLevel(c.Message.Level));
+    }
+
+    private EventActivityBinder<SimulatedAgvSaga, RemoveAgvFromZone> RemoveAgvFromZoneHandler()
+    {
+        return When(RemoveAgvFromZoneEvent)
+            .Then(c => _logger.LogDebug("{MessageType} / {CorrelationId} received", nameof(RemoveAgvFromZone), c.Saga.CorrelationId))
+            .Then(c => c.Saga.AgvRemovedFromZones = true);
     }
     #endregion
 
@@ -597,6 +623,16 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 // if node changed, publish status as well to avoid any delays
                 await PublishStatusAsync(context);
             }
+        }
+    }
+
+    private async Task PublishAgvZones(BehaviorContext<SimulatedAgvSaga> context)
+    {
+        var agvSaga = context.Saga;
+        if (agvSaga.AgvGraph != null)
+        {
+            agvSaga.AgvZones = [];
+            await context.Publish(new AgvZonesReceived(agvSaga.CorrelationId, agvSaga.SerialNumber, agvSaga.AgvZones));
         }
     }
 

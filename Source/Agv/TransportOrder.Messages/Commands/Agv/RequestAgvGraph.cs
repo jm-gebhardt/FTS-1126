@@ -3,19 +3,14 @@
 namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
-/// Represents the EmitRequestGraph request which returns AgvData
+/// Represents the EmitRequestGraph request which returns AgvGraph
 /// </summary>
 public record RequestAgvGraph : CorrelatedBy<Guid>
 {
-    /// <summary>
     /// <inheritdoc/>
-    /// </summary>
     public Guid CorrelationId { get; }
 
-    /// <summary>
     /// <inheritdoc cref="RequestAgvGraph"/>
-    /// </summary>
-    /// <param name="correlationId"></param>
     public RequestAgvGraph(Guid correlationId)
     {
         CorrelationId = correlationId;

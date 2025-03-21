@@ -23,7 +23,9 @@ using Microsoft.AspNetCore.Mvc;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using RequestAgvZones = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvZones;
 using ResetAgvErrors = Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
+using StartInstantAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.StartInstantAction;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
 
@@ -46,6 +48,7 @@ public class AgvController : Controller
     private readonly IRequestClient<LockAgv> _lockAgvClient;
     private readonly IRequestClient<RequestAgvData> _emitRequestDataClient;
     private readonly IRequestClient<RequestAgvGraph> _emitRequestGraphClient;
+    private readonly IRequestClient<RequestAgvZones> _emitRequestZonesClient;
     private readonly IRequestClient<GetActiveAgvErrors> _getAgvErrorsRequestClient;
     private readonly IRequestClient<GetAgvErrors> _getAgvErrorHistoryRequestClient;
     private readonly IRequestClient<ChargeAgv> _chargeAgvClient;
@@ -64,6 +67,7 @@ public class AgvController : Controller
     private readonly IRequestClient<SetNormalMode> _setNormalModeClient;
     private readonly IRequestClient<GetAgvInstantActionDefinitions> _getInstantActionsClient;
     private readonly IRequestClient<StartInstantAction> _startInstantActionsClient;
+    private readonly IRequestClient<RemoveAgvFromZones> _removeAgvFromZonesClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -82,6 +86,7 @@ public class AgvController : Controller
         IRequestClient<LockAgv> lockAgvClient,
         IRequestClient<RequestAgvData> emitRequestDataClient,
         IRequestClient<RequestAgvGraph> emitRequestGraphClient,
+        IRequestClient<RequestAgvZones> emitRequestZonesClient,
         IRequestClient<GetActiveAgvErrors> getAgvErrorsRequestClient,
         IRequestClient<GetAgvErrors> getAgvErrorHistoryRequestClient,
         IRequestClient<MoveAgv> moveAgvClient,
@@ -99,7 +104,8 @@ public class AgvController : Controller
         IRequestClient<SetMaintenanceMode> setMaintenanceModeClient,
         IRequestClient<SetNormalMode> setNormalModeClient,
         IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient,
-        IRequestClient<StartInstantAction> startInstantActionsClient
+        IRequestClient<StartInstantAction> startInstantActionsClient,
+        IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -113,6 +119,7 @@ public class AgvController : Controller
         _lockAgvClient = lockAgvClient;
         _emitRequestDataClient = emitRequestDataClient;
         _emitRequestGraphClient = emitRequestGraphClient;
+        _emitRequestZonesClient = emitRequestZonesClient;
         _getAgvErrorsRequestClient = getAgvErrorsRequestClient;
         _getAgvErrorHistoryRequestClient = getAgvErrorHistoryRequestClient;
         _moveAgvClient = moveAgvClient;
@@ -132,6 +139,7 @@ public class AgvController : Controller
         _setNormalModeClient = setNormalModeClient;
         _getInstantActionsClient = getInstantActionsClient;
         _startInstantActionsClient = startInstantActionsClient;
+        _removeAgvFromZonesClient = removeAgvFromZonesClient;
     }
 
     /// <summary>
@@ -240,6 +248,20 @@ public class AgvController : Controller
     public async Task<ActionResult> ResetAgvSettingToDefault([FromRoute] Guid correlationId, [FromQuery] string propertyName)
     {
         await _resetSettingToDefaultClient.GetResponse<Success>(new ResetAgvSettingToDefault(correlationId, propertyName));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Remove an agv from all zones it occupies.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found or no online agv found to remove agv from zone.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/settings/removeFromZones")]
+    public async Task<ActionResult> RemoveAgvFromZones([FromRoute] Guid correlationId)
+    {
+        await _removeAgvFromZonesClient.GetResponse<Success>(new RemoveAgvFromZones(correlationId));
         return Ok();
     }
 
@@ -493,6 +515,19 @@ public class AgvController : Controller
     public async Task<ActionResult> EmitRequestGraph(Guid correlationId)
     {
         await _emitRequestGraphClient.GetResponse<RequestAgvGraphResult>(new RequestAgvGraph(correlationId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Emit RequestAgvZones message.
+    /// </summary>
+    /// <response code="200">Ok: Telegram was successfully emitted</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/emitRequestZones")]
+    public async Task<ActionResult> EmitRequestZones(Guid correlationId)
+    {
+        await _emitRequestZonesClient.GetResponse<Success>(new RequestAgvZones(correlationId));
         return Ok();
     }
 

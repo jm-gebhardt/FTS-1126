@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;

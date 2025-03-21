@@ -62,9 +62,9 @@ public class ExceptionHandlerMiddlewareTest
         yield return [() => new ActionNotFoundException(null!, null!, null!), HttpStatusCode.NotFound];
         yield return [() => new AgvDataNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
         yield return [() => new AgvGraphNotDefinedException(Guid.Empty), HttpStatusCode.NotFound];
-        yield return [() => new AgvNotFoundException(null), HttpStatusCode.NotFound];
+        yield return [() => new AgvNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
         yield return [() => new AgvStatusNotFoundException(Mock.Of<TransportOrder.Domain.Models.Agv.Agv>()), HttpStatusCode.NotFound];
-        yield return [() => new AgvNotFoundException(null), HttpStatusCode.NotFound];
+        yield return [() => new AgvNotFoundException(string.Empty), HttpStatusCode.NotFound];
         yield return [() => new AgvStatusReceivedNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
         yield return [() => new MapNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
         yield return [() => new OrderNotFoundException(Guid.Empty), HttpStatusCode.NotFound];

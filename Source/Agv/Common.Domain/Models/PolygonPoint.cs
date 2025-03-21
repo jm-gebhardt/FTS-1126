@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.Common.Messages.Triggers;
+namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
 /// A polygon point.

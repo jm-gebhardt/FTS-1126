@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
@@ -40,6 +41,12 @@ public class InstantActionDefinitionEntityConfiguration : IEntityTypeConfigurati
                 v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(Guid.Parse)
                     .ToList()
-            );
+            )
+            .Metadata.SetValueComparer(
+                new ValueComparer<ICollection<Guid>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!), 
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())), 
+                    c => c.ToList() 
+                ));
     }
 }

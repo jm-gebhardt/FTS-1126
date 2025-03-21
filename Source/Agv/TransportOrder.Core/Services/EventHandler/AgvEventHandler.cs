@@ -39,7 +39,8 @@ public class AgvEventHandler :
     IConsumer<ParkingNodeSelectedForAgv>,
     IConsumer<QueueNodeSelectedForAgv>,
     IConsumer<ChargingNodeSelectedForAgv>,
-    IConsumer<AgvModeChangePending>
+    IConsumer<AgvModeChangePending>,
+    IConsumer<AgvZonesReceived>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -327,5 +328,13 @@ public class AgvEventHandler :
         {
             await context.Publish(new SwitchMode(agvCorrelationId));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvZonesReceived"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvZonesReceived> context)
+    {
+        await context.Publish(new ReceiveAgvZones(context.Message.CorrelationId, context.Message.SerialNumber, context.Message.AgvZones));
     }
 }

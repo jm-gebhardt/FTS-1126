@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Moq;
 
@@ -33,7 +34,7 @@ public static class MockAgvDbExtensions
         repoMock.Setup(r => r.Agvs.Count).Returns(agvs.Count);
         repoMock.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
         repoMock.Setup(r => r.Agvs.GetAllAgvsWithGraphAsync()).ReturnsAsync(agvs.Where(a => a.GraphExists).ToList());
-        repoMock.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync( agvs);
+        repoMock.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync(agvs);
         repoMock.Setup(r => r.Agvs.GetIdleAgvsAsync()).ReturnsAsync(agvs.Where(a => a.CurrentAgvState == AgvState.Idle).ToList());
         repoMock.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => !cs.Any() || cs.Contains(a.CorrelationId)).ToList());
         AddNonExistingAgvs(repoMock, agvs.Select(a => a.CorrelationId).ToArray());
@@ -42,6 +43,12 @@ public static class MockAgvDbExtensions
         repoMock.Setup(r => r.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ReturnsAsync(agvs);
         repoMock.Setup(r => r.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
         repoMock.Setup(r => r.Agvs.HasOnlineAgvs()).ReturnsAsync(true);
+        repoMock.Setup(x => x.Positions.GetPosition(It.IsAny<Guid>())).Returns((Guid c) =>
+        {
+            var agv = agvs.FirstOrDefault(a => a.CorrelationId == c);
+            return agv == null ? null : new AgvPositionStatus(agv.CorrelationId, agv.SerialNumber, new AgvPosition(true, 1, 1, 0, 0));
+        });
+        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync([]);
     }
 
     private static void AddNonExistingAgvs(this Mock<IAgvDb> repoMock, params Guid[] agvCorrelationIds)
@@ -61,6 +68,16 @@ public static class MockAgvDbExtensions
                 throw new AgvsNotFoundException(notExistingAgvs);
             }
         });
+    }
+
+    public static void AddZones(this Mock<IAgvDb> repoMock, ICollection<Zone> zones)
+    {
+        repoMock.Setup(r => r.Zones.GetZones(It.IsAny<string[]>())).ReturnsAsync(zones);
+    }
+
+    public static void AddPosition(this Mock<IAgvDb> repoMock, AgvPositionStatus position)
+    {
+        repoMock.Setup(x => x.Positions.GetPosition(It.IsAny<Guid>())).Returns(position);
     }
 
     public static void AddAgvGraph(this Mock<IAgvDb> repoMock, AgvGraph? agvGraph = null, bool graphExists = true)
@@ -86,5 +103,10 @@ public static class MockAgvDbExtensions
     {
         repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
         repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+    }
+
+    public static void AddActiveErrors(this Mock<IAgvDb> repoMock, IList<AgvError> errors)
+    {
+        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors);
     }
 }

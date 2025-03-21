@@ -23,6 +23,7 @@ using Shouldly;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using RequestAgvZones = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvZones;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Agv;
 
@@ -305,7 +306,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvData_NotFound()
     {
-        AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler>()
+        AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -317,7 +318,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvData_Ok()
     {
-        AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvData, RequestAgvDataCommandHandler>()
+        AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -332,9 +333,38 @@ public class AgvControllerTest
     }
 
     [TestMethod]
+    public async Task EmitRequestAgvZones_NotFound()
+    {
+        AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var controller = fixture.Controller;
+        var correlationId = Guid.Empty;
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await controller.EmitRequestZones(correlationId));
+    }
+
+    [TestMethod]
+    public async Task EmitRequestAgvZones_Ok()
+    {
+        AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+        var controller = fixture.Controller;
+        var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
+
+        var result = await controller.EmitRequestZones(correlationId) as OkResult;
+        result.ShouldNotBeNull();
+
+        var harness = fixture.MediatorTestHarness;
+        (await harness.Consumed.Any<RequestAgvZones>()).ShouldBeTrue();
+        (await harness.Published.Any<RequestAgvZones>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
     public async Task EmitRequestAgvGraph_NotFound()
     {
-        AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler>()
+        AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -346,7 +376,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvGraph_Ok()
     {
-        AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, RequestAgvGraphCommandHandler>()
+        AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;

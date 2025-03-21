@@ -375,7 +375,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_ValidPolygon_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
     {
         ICollection<PolygonPoint> domainPolygon = [ new(-8.900d, -10.000d, 0), new(-9.5d, -10.000d, 1), new(-8.900d, -11.000d, 2) ];
-        ICollection<Gebhardt.Acc.Common.Messages.Triggers.PolygonPoint> triggerPolygon = [ new(-8.900d, -10.000d), new(-9.5d, -10.000d), new(-8.900d, -11.000d) ];
+        ICollection<Common.Domain.Models.PolygonPoint> triggerPolygon = [ new(-8.900d, -10.000d), new(-9.5d, -10.000d), new(-8.900d, -11.000d) ];
 
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
         var polygonLocation = new Location(domainPolygon, Guid.NewGuid(), trigger.Id, []);

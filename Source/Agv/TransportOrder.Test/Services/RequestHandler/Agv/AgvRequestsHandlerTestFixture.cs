@@ -127,6 +127,12 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         return WithAgvs([agv], actionGroup);
     }
 
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithOnlineAgv(TransportOrder.Domain.Models.Agv.Agv? agv)
+    {
+        _agvDb.Setup(x => x.Agvs.GetAnyOnlineAgv()).ReturnsAsync(agv);
+        return this;
+    }
+
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithActiveAgvErrors(Guid agvCorrelationId, List<AgvError> agvErrors)
     {
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(agvCorrelationId)).ReturnsAsync(agvErrors);

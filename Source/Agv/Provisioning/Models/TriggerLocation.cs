@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using JetBrains.Annotations;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Triggers;
 

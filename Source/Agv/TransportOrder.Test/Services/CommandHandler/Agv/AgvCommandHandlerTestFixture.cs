@@ -27,6 +27,7 @@ using Moq;
 using Moq.Language;
 using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -116,6 +117,18 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
+    public AgvCommandHandlerTestFixture WithZones(ICollection<TransportOrder.Domain.Models.Zone.Zone> zones)
+    {
+        AgvDb.AddZones(zones);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithPostion(AgvPositionStatus position)
+    {
+        AgvDb.AddPosition(position);
+        return this;
+    }
+
     public AgvCommandHandlerTestFixture WithEnqueueingTarget(string? queueNode)
     {
         _queueManager.Setup(x => x.TryEnqueueAgv(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(queueNode); 
@@ -199,6 +212,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithoutAgv()
     {
         AgvDb.AddAgvs();
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithActiveErrors(IList<AgvError> errors) 
+    {
+        AgvDb.AddActiveErrors(errors);
         return this;
     }
 

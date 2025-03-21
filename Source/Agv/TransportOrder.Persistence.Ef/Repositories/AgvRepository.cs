@@ -78,6 +78,12 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
+    public async Task<Agv?> GetAnyOnlineAgv()
+    {
+        return await Agvs.FirstOrDefaultAsync(a => a.GraphExists && a.IsOnline);
+    }
+
+    /// <inheritdoc />
     public async Task<Agv?> TryGetAgvAsync(Guid correlationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

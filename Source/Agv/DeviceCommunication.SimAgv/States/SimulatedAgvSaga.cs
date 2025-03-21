@@ -9,6 +9,7 @@ using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 
@@ -31,6 +32,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// Maximum possible battery charge [%].
     /// </summary>
     public const double MaxCharge = 100;
+
+    /// <summary>
+    /// True if the agv has been removed from all zones.
+    /// </summary>
+    public bool AgvRemovedFromZones { get; set; }
 
     private readonly AgvGraph? _agvGraph;
 
@@ -124,6 +130,40 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             {
                 SetPosition(CurrentNode);
             }
+        }
+    }
+
+    private ICollection<AgvZone> _agvZones;
+
+    /// <summary>
+    /// The agv zones.
+    /// </summary>
+    public ICollection<AgvZone> AgvZones
+    {
+        get => _agvZones;
+        set
+        {
+            _agvZones = value;
+            GetZones();
+        }
+    }
+
+    /// <summary>
+    /// Create zone around a charger or parker.
+    /// </summary>
+    private void GetZones()
+    {
+        if (_agvGraph != null && !_agvGraph.Nodes.IsNullOrEmpty() && _agvZones.IsNullOrEmpty())
+        {
+            var singleAgvNode = _agvGraph.Nodes.FirstOrDefault(n => n.IsCharger() || n.IsParker());
+            if (singleAgvNode == null)
+            {
+                return;
+            }
+            var zonePoints = new List<PolygonPoint> { new(singleAgvNode.X -1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y-1), new(singleAgvNode.X +1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y+1) };
+
+            var agvZone = new AgvZone(singleAgvNode.Id, 1, zonePoints, []);
+            _agvZones = [agvZone];
         }
     }
 
@@ -325,6 +365,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         }
         AgvData = agvData;
         Errors = errors ?? new List<AgvError>();
+        _agvZones = [];
 
         const bool charging = false;
         AgvStatus = new AgvStatus(
@@ -389,6 +430,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             GetEstimatedFullyChargedTime(charging)
         );
         TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData!, Position!, _timeProvider);
+        _agvZones = [];
     }
 
     private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
@@ -507,6 +549,15 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         SetAgvStatus(false);
     }
 
+    private ICollection<string>? GetZoneIds ()
+    {
+        if (Position == null)
+        {
+            return null;
+        }
+        return AgvZones.Where(z => z.Polygon.PointIsInPolygon(Position.X, Position.Y)).Select(z => z.ZoneId).ToList();
+    }
+
     private void SetAgvStatus(bool charging)
     {
         bool busy = new[]
@@ -525,7 +576,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             GetBatteryTemperature(),
             AgvStatus.Disturbed,
             LastNodeId,
-            GetEstimatedFullyChargedTime(charging)
+            GetEstimatedFullyChargedTime(charging),
+            null,
+            AgvRemovedFromZones ? null : GetZoneIds()
         );
     }
 }

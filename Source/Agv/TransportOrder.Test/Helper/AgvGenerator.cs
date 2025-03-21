@@ -12,9 +12,9 @@ public static class AgvGenerator
         return agv;
     }
 
-    public static Agv GenerateIdleAgv(int index = 0, string? lastNodeId = "node", int batteryCharge = 100, bool hasError = false, AgvMode? mode=null)
+    public static Agv GenerateIdleAgv(int index = 0, string? lastNodeId = "node", int batteryCharge = 100, bool hasError = false, AgvMode? mode=null, ICollection<string>? zoneIds = null)
     {
-        var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, batteryCharge: batteryCharge, hasError: hasError, mode: mode);
+        var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, batteryCharge: batteryCharge, hasError: hasError, mode: mode, zoneIds: zoneIds);
         return agv;
     }
 
@@ -60,12 +60,12 @@ public static class AgvGenerator
         int batteryCharge = 100,
         string orderId = "orderId",
         bool hasError = false,
-        AgvMode? mode = null
-    )
+        AgvMode? mode = null,
+        ICollection<string>? zoneIds = null)
     {
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
-        agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId);
+        agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId, zoneIds: zoneIds);
         var agv = new Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus)
         {
             HasError = hasError,

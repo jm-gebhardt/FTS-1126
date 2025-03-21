@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Triggers;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;

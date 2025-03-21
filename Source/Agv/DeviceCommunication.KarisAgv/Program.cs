@@ -70,6 +70,7 @@ try
                             configurator.AddMqttConsumer<MqttStateConsumer>();
                             configurator.AddMqttConsumer<AgvDataConsumer>();
                             configurator.AddMqttConsumer<MqttGraphConsumer>();
+                            configurator.AddMqttConsumer<MqttZonesConsumer>();
                             configurator.AddMqttConsumer<MqttStationListConsumer>();
                             configurator.AddMqttConsumer<MqttOrderEventConsumer>();
                             configurator.AddMqttConsumer<MqttMapConsumer>();
@@ -77,6 +78,7 @@ try
                             configurator.AddConsumer<ActionCommandConsumer>();
                             configurator.AddConsumer<InstantActionsConsumer>();
                             configurator.AddConsumer<RequestAgvMapConsumer>();
+                            configurator.AddConsumer<AgvZonesConsumer>();
                             configurator.AddConsumer<RequestAgvDataConsumer>();
                             configurator.AddConsumer<ActionAbortedConsumer>();
                             configurator.AddConsumer<GraphMerger>();
@@ -89,9 +91,12 @@ try
                             configurator.ConfigureMessageTopology<MqttRequestData>();
                             configurator.ConfigureMessageTopology<MqttRequestGraph>();
                             configurator.ConfigureMessageTopology<MqttOrder>();
+                            configurator.ConfigureMessageTopology<MqttZones>();
                             configurator.ConfigureMessageTopology<MqttRequestStationList>();
                             configurator.ConfigureMessageTopology<MqttRequestMap>();
                             configurator.ConfigureMessageTopology<MqttInstantActions>();
+                            configurator.ConfigureMessageTopology<MqttRequestZones>();
+                            configurator.ConfigureMessageTopology<MqttRequestZoneRemoveAgv>();
 
                             //for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();

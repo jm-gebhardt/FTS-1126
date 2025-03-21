@@ -25,12 +25,20 @@ public class AgvDb : IAgvDb
     public IAgvSettingsProvider AgvSettings { get; }
 
     /// <inheritdoc cref="IAgvDb"/>>
+    public IZoneRepository Zones { get; }
+
+    /// <inheritdoc cref="IAgvDb"/>>
+    public IAgvPositionRepository Positions { get; }
+
+    /// <inheritdoc cref="IAgvDb"/>>
     public AgvDb(IAgvDataRepository data,
         IAgvErrorRepository errors, 
         ICargoRepository cargos,
         IGraphRepository graphs,
         IAgvRepository agvs,
-        IAgvSettingsProvider settings)
+        IAgvSettingsProvider settings,
+        IZoneRepository zones,
+        IAgvPositionRepository positions)
     {
         Data = data;
         Errors = errors;
@@ -38,6 +46,8 @@ public class AgvDb : IAgvDb
         Graphs = graphs;
         Agvs = agvs;
         AgvSettings = settings;
+        Zones = zones;
+        Positions = positions;
     }
 
     /// <inheritdoc cref="IAgvDb"/>>

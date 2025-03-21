@@ -34,8 +34,8 @@ public class GetAgvErrorsRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var agvError = AgvErrorGenerator.GenerateAgvError(agv.CorrelationId);
         AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetActiveAgvErrors, GetAgvErrorsRequestHandler>()
-            .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Domain.Models.AgvError> { agvError })
             .WithAgv(agv)
+            .WithActiveAgvErrors(agv.CorrelationId, new List<Common.Domain.Models.AgvError> { agvError })
             .Build();
 
         Response<GotActiveAgvErrors> response = await fixture.GetResponseAsync<GotActiveAgvErrors>(new GetActiveAgvErrors(agv.CorrelationId));

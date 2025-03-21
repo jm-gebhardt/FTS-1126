@@ -40,7 +40,7 @@ public class AgvDataParser
         {
             if (!SerialNumberValid)
             {
-                throw new SerialNumberNotSetException(nameof(MqttGraph));
+                throw new SerialNumberNotSetException(nameof(MqttAgvData));
             }
             return _data.SerialNumber;
         }
@@ -77,7 +77,7 @@ public class AgvDataParser
     }
 
     /// <summary>
-    /// Create AgvGraph
+    /// The agv data.
     /// </summary>
     public AgvData AgvData =>
         new(
