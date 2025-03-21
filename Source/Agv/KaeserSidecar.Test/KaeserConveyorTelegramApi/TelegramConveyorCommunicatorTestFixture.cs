@@ -1,9 +1,11 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.Common.Testing.Time;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
+using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,6 +19,9 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
 
     public TelegramConveyorCommunicator Communicator { get; private set; } = null!;
 
+    private readonly ObservableConcurrentQueue<ConveyorTelegram> _agvCargoStateQueue = new();
+    private readonly ObservableConcurrentQueue<ConveyorTelegram> _aplWeStationQueue = new();
+
     public TelegramConveyorCommunicatorTestFixture()
     {
         AddServices(s =>
@@ -29,7 +34,7 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
                 {
                     var logger = serviceProvider.GetRequiredService<ILogger<ToConveyorTelegramProcessor>>();
                     var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
-                    return new ToConveyorTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration());
+                    return new ToConveyorTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration(), _aplWeStationQueue);
                 });
 
             s.AddKeyedSingleton<ToConveyorTelegramProcessor>(ServiceKeyProvider.AgvCargoState,
@@ -37,7 +42,7 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
                 {
                     var logger = serviceProvider.GetRequiredService<ILogger<ToConveyorTelegramProcessor>>();
                     var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
-                    return new ToConveyorTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration());
+                    return new ToConveyorTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration(), _agvCargoStateQueue);
                 });
             s.AddSingleton(_ => new FakeTimeProvider());
             s.AddSingleton<ToConveyorTelegramProcessor>();

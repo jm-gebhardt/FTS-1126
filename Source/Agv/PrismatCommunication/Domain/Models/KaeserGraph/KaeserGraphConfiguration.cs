@@ -290,46 +290,21 @@ public class KaeserGraphConfiguration
     }
 
     /// <summary>
-    /// Select the next short loop target.
+    /// Set a new short loop target.
     /// </summary>
-    /// <returns>The short loop target</returns>
-    public string SelectNextShortLoopTarget()
+    /// <param name="target">The new target station.</param>
+    public void SetShortLoopTarget(string target)
     {
-        string[] possibleTargets = ConveyorStationMapping.OrderByDescending(c => c.Value).Select(c => c.Key).ToArray();
-        int currentIndex = Array.IndexOf(possibleTargets, StationMapping[PrismatAklPickTarget]);
-        string newTarget;
-        if (currentIndex == -1 || currentIndex == possibleTargets.Length - 1)
-        {
-            newTarget = possibleTargets[0];
-        }
-        else
-        {
-            newTarget = possibleTargets[currentIndex + 1];
-        }
-        StationMapping[PrismatAklPickTarget] = newTarget;
-        StationMapping[PrismatAklDropTarget] = newTarget;
-        return newTarget;
+        StationMapping[PrismatAklPickTarget] = target;
+        StationMapping[PrismatAklDropTarget] = target;
     }
 
     /// <summary>
-    /// Reset target for short loop to original value.
+    /// Get the short loop target station name.
     /// </summary>
-    /// <returns></returns>
-    public string ResetShortLoopTarget()
+    public string GetShortLoopTarget()
     {
-        string originalTarget = GetOriginalShortLoopTarget();
-        StationMapping[PrismatAklPickTarget] = originalTarget;
-        StationMapping[PrismatAklDropTarget] = originalTarget;
-        return originalTarget;
-    }
-
-    /// <summary>
-    /// Get the original short loop target;
-    /// </summary>
-    /// <returns></returns>
-    public string GetOriginalShortLoopTarget()
-    {
-        return ConveyorStationMapping.OrderByDescending(c => c.Value).Select(c => c.Key).First();
+        return StationMapping[PrismatAklPickTarget];
     }
 
     /// <summary>

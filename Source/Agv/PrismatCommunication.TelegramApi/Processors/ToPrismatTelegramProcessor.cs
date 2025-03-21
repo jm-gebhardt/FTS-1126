@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
+﻿using System.Text;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.Common.Time;
@@ -21,7 +21,7 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <summary>
     ///  The send queue.
     /// </summary>
-    private ConcurrentQueue<PrismatTelegram> SendQueue { get; } = new();
+    private ObservableConcurrentQueue<PrismatTelegram> SendQueue { get; }
 
     /// <summary>
     ///  The send sequence counter.
@@ -66,12 +66,13 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <summary>
     /// Provides a processor for telegrams sent to prismat
     /// </summary>
-    public ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logger, ITimeProvider timeProvider, [FromKeyedServices(ServiceKeyProvider.ToPrismat)] TelegramCommunicationConfiguration configuration)
+    public ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logger, ITimeProvider timeProvider, [FromKeyedServices(ServiceKeyProvider.ToPrismat)] TelegramCommunicationConfiguration configuration, ObservableConcurrentQueue<PrismatTelegram> observableQueue)
     {
         _logger = logger;
         _timeProvider = timeProvider;
         _configuration = configuration;
         TriggerRestart = false;
+        SendQueue = observableQueue;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>

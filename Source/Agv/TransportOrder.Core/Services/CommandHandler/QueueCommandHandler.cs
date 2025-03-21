@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Queue;
+﻿using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
@@ -14,7 +15,8 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// </summary>
 [UsedImplicitly]
 public class QueueCommandHandler(IQueueRepository queueRepository, ILogger<QueueCommandHandler> logger) :
-    IConsumer<AddQueue>
+    IConsumer<AddQueue>,
+    IConsumer<GetQueueFillQuantities>
 {
     /// <summary>
     /// Handles the <see cref="AddQueue"/> command.
@@ -34,5 +36,17 @@ public class QueueCommandHandler(IQueueRepository queueRepository, ILogger<Queue
         await queueRepository.AddQueue(queue);
 
         await context.RespondAsync(new GotQueue(queue));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetQueueFillQuantities"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetQueueFillQuantities> context)
+    {
+        ICollection<Queue> queues = await queueRepository.GetQueues();
+
+        List<QueueFillQuantity> fillQuantities = queues.Select(q => new QueueFillQuantity(q.Name, q.AgvFillQuantity, q.Nodes.Count)).ToList();
+
+        await context.RespondAsync(new GotQueueFillQuantities(fillQuantities));
     }
 }

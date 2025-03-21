@@ -3,8 +3,8 @@ using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 using System.Text;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 
@@ -20,7 +20,7 @@ public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegra
     /// <summary>
     ///  The send queue.
     /// </summary>
-    private ConcurrentQueue<ConveyorTelegram> SendQueue { get; } = new();
+    private ObservableConcurrentQueue<ConveyorTelegram> SendQueue { get; }
 
     /// <summary>
     ///  The send sequence counter.
@@ -65,9 +65,10 @@ public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegra
     /// <summary>
     /// Provides a processor for telegrams sent to the conveyor
     /// </summary>
-    public ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration)
+    public ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration, ObservableConcurrentQueue<ConveyorTelegram> queue)
     {
         _logger = logger;
+        SendQueue = queue;
         _timeProvider = timeProvider;
         _configuration = configuration;
         TriggerRestart = false;

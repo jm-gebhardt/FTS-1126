@@ -76,8 +76,8 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     Task<HostOrder?> GetNextNotQueuedHostOrderPickingAt(string pickTarget);
 
     /// <summary>
-    ///Check if there are host orders that are heading towards the Doppelspiel trigger point with the given drop target.
+    /// Get the next drop order heading towards the Doppelspiel trigger point with the given drop target.
     /// </summary>
     /// <param name="dropTarget">The pick target to check.</param>
-    Task<bool> HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(string dropTarget);
+    Task<Guid?> GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(string dropTarget);
 }

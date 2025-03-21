@@ -20,6 +20,7 @@ public class Pick : PrismatTelegram
     /// <inheritdoc cref="Pick"/>>
     public Pick(string hu, string pos, DateTime time)
     {
+        Seq = 0;
         Send = Fts;
         Rec = Prismat;
         Func = nameof(Pick);

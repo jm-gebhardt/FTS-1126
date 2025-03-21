@@ -30,15 +30,16 @@ public class AgvActionCommandHandler(
         var actionCorrelationId = context.Message.CorrelationId;
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Nodes.FirstOrDefault()??""));
+        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Nodes.FirstOrDefault() ?? ""));
         if (action == null)
         {
             logger.LogWarning("Action {ActionCorrelationId} has no first node that is in the conveyor station mapping", actionCorrelationId);
             return;
         }
         string? station = action.Nodes.FirstOrDefault();
+        bool gotPickAssignedOnStation = action.Nodes.First() == action.Nodes.Last();
 
-        if (action.ActionType == ActionType.Pick)
+        if (action.ActionType == ActionType.Pick && gotPickAssignedOnStation)
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
@@ -48,7 +49,7 @@ public class AgvActionCommandHandler(
             }
         }
         logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station);
-        stationRepository.FreeStation(station!, agvCorrelationId);
+        await stationRepository.FreeStation(station!, agvCorrelationId);
     }
 
     /// <summary>
@@ -77,6 +78,6 @@ public class AgvActionCommandHandler(
 
         string station = action.Target.NodeId!;
         logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
-        stationRepository.OccupyStation(station, agvCorrelationId);
+        await stationRepository.OccupyStation(station, agvCorrelationId);
     }
 }

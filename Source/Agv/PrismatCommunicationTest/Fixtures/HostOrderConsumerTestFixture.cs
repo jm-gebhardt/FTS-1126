@@ -71,9 +71,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithDropOrdersHeadingTowardsDoppelSpielTriggerPoint(bool hasHostOrders)
+    public HostOrderConsumerTestFixture<TConsumer> WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(Guid? correlationId)
     {
-        HostOrderRepositoryMock.Setup(x => x.HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(It.IsAny<string>())).ReturnsAsync(hasHostOrders);
+        HostOrderRepositoryMock.Setup(x => x.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(It.IsAny<string>())).ReturnsAsync(correlationId);
         return this;
     }
 

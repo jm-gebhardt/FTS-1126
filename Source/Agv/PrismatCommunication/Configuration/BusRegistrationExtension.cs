@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
@@ -45,6 +46,9 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<TriggerEventHandler>();
         cfg.AddConsumer<QueueEventHandler>();
         cfg.AddConsumer<StationEventHandler>();
+
+        cfg.AddRequestClient<GetQueueFillQuantities>();
+        cfg.AddRequestClient<GetTriggerMapping>();
         return cfg;
     }
 }

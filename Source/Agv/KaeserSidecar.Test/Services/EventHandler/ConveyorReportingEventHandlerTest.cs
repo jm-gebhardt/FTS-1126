@@ -33,7 +33,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
 
         fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, Times.Once());
-        fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId).ShouldBe(pickStation!=null);
+        (await fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId)).ShouldBe(pickStation!=null);
     }
 
     [TestMethod]
@@ -55,8 +55,8 @@ public class ConveyorReportingEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
         
         fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, Times.Once());
-        fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId).ShouldBeFalse();
-        fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId).ShouldBeFalse();
+        (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId)).ShouldBeFalse();
+        (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId)).ShouldBeFalse();
     }
 
     [TestMethod]
@@ -66,13 +66,13 @@ public class ConveyorReportingEventHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new ConveyorReportingEventHandlerTestFixture()
             .WithHostOrders(order);
-        fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId).ShouldBeFalse();
+        (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeFalse();
 
         await fixture.TestHarness.Bus.Publish(new AgvStartedPick("WE03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedPick>();
 
         fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Once());
-        fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId).ShouldBeTrue();
+        (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -82,8 +82,8 @@ public class ConveyorReportingEventHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new ConveyorReportingEventHandlerTestFixture()
             .WithHostOrders(order);
-        fixture.OrderRepository.StorePickOrderReport("1020", order.CorrelationId);
-        fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId).ShouldBeTrue();
+        await fixture.OrderRepository.StorePickOrderReport("1020", order.CorrelationId);
+        (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeTrue();
 
         await fixture.TestHarness.Bus.Publish(new AgvStartedPick("WE03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedPick>();
@@ -98,11 +98,11 @@ public class ConveyorReportingEventHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new ConveyorReportingEventHandlerTestFixture()
             .WithHostOrders(order);
-        fixture.OrderRepository.StorePickOrderReport("1020", order.CorrelationId);
-        fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId).ShouldBeTrue();
+        await fixture.OrderRepository.StorePickOrderReport("1020", order.CorrelationId);
+        (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeTrue();
 
         await fixture.TestHarness.Bus.Publish(new AgvFinishedPick(order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvFinishedPick>();
-        fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId).ShouldBeFalse();
+        (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeFalse();
     }
 }

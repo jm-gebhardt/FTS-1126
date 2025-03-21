@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
@@ -22,7 +23,8 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
     IConsumer<RemoveTriggerLocation>,
     IConsumer<UpdateDefaultConfigurationParameter>,
     IConsumer<UpdateLocationConfigurationParameter>,
-    IConsumer<ResetLocationConfigurationParameter>
+    IConsumer<ResetLocationConfigurationParameter>,
+    IConsumer<GetTriggerMapping>
 {
     /// <summary>
     /// Handles the <see cref="CreateTrigger"/> command.
@@ -163,5 +165,24 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
             await triggerRepository.Update(trigger);
             logger.LogInformation("Trigger {Name} parameter {ParameterName} at location {LocationId} reset to default value {Value}", trigger.DisplayName, locationId, parameterName, updatedParameter.Value);
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetTriggerMapping"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetTriggerMapping> context)
+    {
+        ICollection<Trigger> triggers = await triggerRepository.GetTriggers();
+
+        List<TriggerLocalization> localizations = triggers
+            .SelectMany(trigger => trigger.Locations, (trigger, location) => new { trigger, location })
+            .Where(tl => tl.location.NodeId != null || tl.location.Polygon.Count > 0)
+            .Select(tl =>
+                tl.location.NodeId != null
+                    ? new TriggerLocalization(tl.trigger.DisplayName, tl.location.NodeId)
+                    : new TriggerLocalization(tl.trigger.DisplayName, tl.location.NodeId, tl.location.Id))
+            .ToList();
+
+        await context.RespondAsync(new GotTriggerMapping(localizations));
     }
 }

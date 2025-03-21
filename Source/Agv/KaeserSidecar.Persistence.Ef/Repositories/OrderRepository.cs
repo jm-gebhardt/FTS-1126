@@ -9,7 +9,7 @@ public class OrderRepository: IOrderRepository
     private readonly ConcurrentDictionary<string, List<Guid>> _stationPickReports = new();
 
     /// <inheritdoc cref="IOrderRepository"/>>
-    public void StorePickOrderReport(string station, Guid orderId)
+    public Task StorePickOrderReport(string station, Guid orderId)
     {
         _stationPickReports.AddOrUpdate(station,
             addValueFactory: (_) => [orderId],
@@ -18,20 +18,23 @@ public class OrderRepository: IOrderRepository
                 oldValue.Add(orderId);
                 return oldValue;
             });
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc cref="IOrderRepository"/>>
-    public void RemovePickOrderReport(string station, Guid orderId)
+    public Task RemovePickOrderReport(string station, Guid orderId)
     {
         if (_stationPickReports.TryGetValue(station, out List<Guid>? orders))
         {
             orders.Remove(orderId);
         }
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc cref="IOrderRepository"/>>
-    public bool HasOrderBeenReported(string station, Guid orderId)
+    public async  Task<bool> HasOrderBeenReported(string station, Guid orderId)
     {
+        await Task.Delay(0);
         bool stationExists = _stationPickReports.ContainsKey(station);
         if (!stationExists)
         {

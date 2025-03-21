@@ -1,8 +1,10 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -24,6 +26,7 @@ public class TelegramHostCommunicatorTestFixture : FixtureBase
             s.AddSingleton(_ => new Mock<ILogger<TelegramHostCommunicator>>().Object);
             s.AddSingleton<ToPrismatTelegramProcessor>();
             s.AddSingleton<TelegramHostCommunicator>();
+            s.AddSingleton(_ => new ObservableConcurrentQueue<PrismatTelegram>());
         });
     }
 

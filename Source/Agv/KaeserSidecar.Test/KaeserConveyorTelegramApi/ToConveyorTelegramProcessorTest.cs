@@ -26,8 +26,7 @@ public class ToConveyorTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoDemandLifeTelegramDue_ReturnsLifeTelegram()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
-            .Build();
+        var fixture = new ToConveyorTelegramProcessorTestFixture();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
 
@@ -35,6 +34,7 @@ public class ToConveyorTelegramProcessorTest
         fixture.Processor.CurrentTelegram.Func.ShouldBe("Life");
 
         nextTelegram.ShouldBe(fixture.Processor.CurrentTelegram.ToString());
+        ToConveyorTelegramProcessorTestFixture.DequeueEventTriggered.ShouldBeTrue();
     }
 
     [TestMethod]

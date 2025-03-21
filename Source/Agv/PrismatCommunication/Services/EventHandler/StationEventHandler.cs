@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -10,35 +11,39 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 /// Handles station related events.
 /// </summary>
 [UsedImplicitly]
-public class StationEventHandler(KaeserGraphConfiguration configuration, ILogger<StationEventHandler> logger) :
+public class StationEventHandler(KaeserGraphConfiguration configuration, IShortLoopWeTargetStationRepository targetStationRepository,  ILogger<StationEventHandler> logger) :
     IConsumer<StationLocked>,
     IConsumer<StationUnlocked>
 {
     /// <summary>
     /// Handles the <see cref="StationLocked"/> event.
     /// </summary>
-    public Task Consume(ConsumeContext<StationLocked> context)
+    public async Task Consume(ConsumeContext<StationLocked> context)
     {
         string lockedStation = context.Message.StationNodeId;
-        if (lockedStation == configuration.StationMapping[configuration.PrismatAklPickTarget])
+        var shortLoopTarget = await targetStationRepository.GetTargetStation();
+        if (lockedStation == shortLoopTarget.Current)
         {
-            string newTarget = configuration.SelectNextShortLoopTarget();
-            logger.LogInformation("Short loop target {StationName} was locked, using {Target} from now on", lockedStation, newTarget);
+            shortLoopTarget.UseNextAvailable(configuration);
+            configuration.SetShortLoopTarget(shortLoopTarget.Current);
+            await targetStationRepository.UpdateAsync(shortLoopTarget);
+            logger.LogInformation("Short loop target {StationName} was locked, using {Target} from now on", lockedStation, shortLoopTarget.Current);
         }
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Handles the <see cref="StationLocked"/> event.
     /// </summary>
-    public Task Consume(ConsumeContext<StationUnlocked> context)
+    public async Task Consume(ConsumeContext<StationUnlocked> context)
     {
+        var shortLoopTarget = await targetStationRepository.GetTargetStation();
         string unlockedStation = context.Message.StationNodeId;
-        if (unlockedStation == configuration.GetOriginalShortLoopTarget())
+        if (unlockedStation == shortLoopTarget.Primary && shortLoopTarget.Current != shortLoopTarget.Primary)
         {
-            string newTarget = configuration.ResetShortLoopTarget();
-            logger.LogInformation("Original short loop target {StationName} was unlocked, using {Target} from now on", unlockedStation, newTarget);
+            shortLoopTarget.Reset();
+            configuration.SetShortLoopTarget(shortLoopTarget.Current);
+            await targetStationRepository.UpdateAsync(shortLoopTarget);
+            logger.LogInformation("Original short loop target {StationName} was unlocked, using {Target} from now on", unlockedStation, shortLoopTarget.Current);
         }
-        return Task.CompletedTask;
     }
 }

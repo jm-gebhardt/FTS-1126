@@ -51,7 +51,7 @@ public class DecisionPointEventHandler(
         string? selectedTarget = null;
         while (selectedTarget == null)
         {
-            ICollection<StationOccupancy> occupancies = stationRepository.GetStationOccupancy();
+            ICollection<StationOccupancy> occupancies = await stationRepository.GetStationOccupancy();
             ICollection<Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
 
             //Try to take the station that is not occupied, is not locked,  and was not chosen last (to compensate for the delay between setting target and starting action)

@@ -26,11 +26,25 @@ public class AgvWeStation: ConveyorTelegram
     /// <inheritdoc cref="AgvWeStation"/>>
     public AgvWeStation(string station, string? drop, string? pick, DateTime time)
     {
+        Seq = 0;
         Station = station;
         Pick = pick ?? "0000";
         Drop = drop ?? "0000";
         Func = nameof(AgvWeStation);
         Time = time;
+        Send = Fts;
+        Rec = Conveyor;
+    }
+
+    /// <inheritdoc cref="AgvWeStation"/>>
+    public AgvWeStation()
+    {
+        Seq = 0;
+        Station = string.Empty;
+        Pick =  "0000";
+        Drop =  "0000";
+        Func = nameof(AgvWeStation);
+        Time = DateTime.UtcNow;
         Send = Fts;
         Rec = Conveyor;
     }

@@ -79,6 +79,11 @@ public class HostOrder
     public string TransportOrderId => GetTransportOrderId(Hu);
 
     /// <summary>
+    /// The host order correlation id that belongs to the Doppelspiel (either pick or drop partner).
+    /// </summary>
+    public Guid? DoppelspielPartner { get; private set; }
+
+    /// <summary>
     /// Initializes a new <see cref="HostOrder"/> instance.
     /// </summary>
     public HostOrder(string orderId, string hu, DateTime createdDate)
@@ -118,6 +123,15 @@ public class HostOrder
     {
         var action = new Action(Guid.NewGuid(), CorrelationId, node, actionType, _actions.Count, infoToAgv);
         _actions.Add(action);
+    }
+
+    /// <summary>
+    /// Set the Doppelspielpartner id.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the Doppelspiel partner.</param>
+    public void SetDoppelspielPartner(Guid? correlationId)
+    {
+        DoppelspielPartner = correlationId;
     }
 
     /// <summary>

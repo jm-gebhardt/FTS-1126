@@ -23,15 +23,15 @@ public class AgvActionCommandHandlerTest
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        await fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
         
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Select(o => o.Count).Sum().ShouldBe(0);
     }
 
     [TestMethod]
@@ -47,15 +47,15 @@ public class AgvActionCommandHandlerTest
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        await fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
         await fixture.ShouldHavePublishedAsync<AgvStartedPick>();
-        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Select(o => o.Count).Sum().ShouldBe(0);
     }
 
     [TestMethod]
@@ -85,7 +85,7 @@ public class AgvActionCommandHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.OrderBy(c => c.Value).Last().Key;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
-        actionGroup.Actions.First().Nodes = [station, "other nodes"];
+        actionGroup.Actions.First().Nodes = [station];
 
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
@@ -106,15 +106,15 @@ public class AgvActionCommandHandlerTest
         actionGroup.Actions.First().Nodes = [station];
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
-        fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        await fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(1);
+        (await fixture.Repository.GetStationOccupancy()).Select(o => o.Count).Sum().ShouldBe(1);
     }
 
     [TestMethod]
@@ -125,15 +125,15 @@ public class AgvActionCommandHandlerTest
         actionGroup.Actions.First().Nodes = [];
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
-        fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        await fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(1);
+        (await fixture.Repository.GetStationOccupancy()).Select(o => o.Count).Sum().ShouldBe(1);
     }
 
     [TestMethod]
@@ -144,15 +144,15 @@ public class AgvActionCommandHandlerTest
         actionGroup.Actions.First().Nodes = [station];
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
-        fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        await fixture.Repository.OccupyStation(station, actionGroup.AssignedAgv!.Value);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
 
         var actionStarted = new ActionStarted("Unknown".ToGuid(), actionGroup.AssignedAgv!.Value);
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
     [TestMethod]
@@ -162,14 +162,14 @@ public class AgvActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), destination: station);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(0);
 
         var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
     [TestMethod]
@@ -184,14 +184,14 @@ public class AgvActionCommandHandlerTest
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(0);
 
         var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(1);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(1);
     }
 
     [TestMethod]
@@ -201,14 +201,14 @@ public class AgvActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), destination: station);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
-        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Select(o => o.Count).Sum().ShouldBe(0);
 
         var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
-        fixture.Repository.GetStationOccupancy().Select(o => o.Count).Sum().ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Select(o => o.Count).Sum().ShouldBe(0);
     }
 
     [TestMethod]
@@ -218,13 +218,13 @@ public class AgvActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), destination: station);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(0);
 
         var actionCompleted = new ActionCompleted("Unknown".ToGuid());
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
-        fixture.Repository.GetStationOccupancy().Single(o => o.Station == station).Count.ShouldBe(0);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == station).Count.ShouldBe(0);
     }
 }

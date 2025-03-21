@@ -1,4 +1,6 @@
 ﻿
+using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using JetBrains.Annotations;
@@ -11,6 +13,8 @@ namespace Gebhardt.Acc.KaeserSidecar.Configuration;
 /// </summary>
 public static class BusRegistrationExtension
 {
+    private const int PartitionCount = 16;
+
     /// <summary>
     /// Add bus consumers.
     /// </summary>
@@ -21,8 +25,24 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<AgvActionCommandHandler>();
         cfg.AddConsumer<DecisionPointEventHandler>(); // Registered as singleton externally
         cfg.AddConsumer<CargoTriggerPointEventHandler, SingleActiveHandlerDefinition<CargoTriggerPointEventHandler>>(c => c.ConcurrentMessageLimit = 1);
-        cfg.AddConsumer<ConveyorReportingEventHandler, SingleActiveHandlerDefinition<ConveyorReportingEventHandler>>(c => c.ConcurrentMessageLimit=1);
-        cfg.AddConsumer<DoppelspielTriggerPointEventHandler, SingleActiveHandlerDefinition<DoppelspielTriggerPointEventHandler>>(c => c.ConcurrentMessageLimit=1);
+        cfg.AddConsumer<ConveyorReportingEventHandler>(c =>
+            {
+                var partitioner = c.CreatePartitioner(PartitionCount);
+                c.Message<DroppingAgvPassedDoppelspielTriggerPoint>(x =>
+                    x.UsePartitioner(partitioner, p => p.Message.NextPickHostOrderCorrelationId.GetValueOrDefault()));
+                c.Message<PickingAgvPassedDoppelspielTriggerPoint>(x =>
+                    x.UsePartitioner(partitioner, p => p.Message.HostOrderCorrelationId));
+                c.Message<AgvStartedPick>(x =>
+                    x.UsePartitioner(partitioner, p => p.Message.OrderId));
+                c.Message<AgvFinishedPick>(x =>
+                    x.UsePartitioner(partitioner, p => p.Message.OrderId));
+            })
+       ;
+        cfg.AddConsumer<DoppelspielTriggerPointEventHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            c.Message<AgvPassedDoppelspielTriggerPoint>(x => x.UsePartitioner(partitioner, p => p.Message.AgvData.CorrelationId));
+        });
         return cfg;
     }
 }

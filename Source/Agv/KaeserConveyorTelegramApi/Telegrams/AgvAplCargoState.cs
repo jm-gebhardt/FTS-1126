@@ -16,9 +16,21 @@ public class AgvAplCargoState : ConveyorTelegram
     /// <inheritdoc cref="AgvAplCargoState"/>>
     public AgvAplCargoState(bool cargo, DateTime time)
     {
+        Seq = 0;
         Cargo = cargo;
         Func = nameof(AgvAplCargoState);
         Time = time;
+        Send = Fts;
+        Rec = Conveyor;
+    }
+
+    /// <inheritdoc cref="AgvAplCargoState"/>>
+    public AgvAplCargoState()
+    {
+        Seq = 0;
+        Cargo = false;
+        Func = nameof(AgvAplCargoState);
+        Time = DateTime.UtcNow;
         Send = Fts;
         Rec = Conveyor;
     }

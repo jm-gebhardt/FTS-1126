@@ -137,14 +137,16 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
-    public async Task<bool> HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(string dropTarget)
+    public async Task<Guid?> GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(string dropTarget)
     {
-        return await _context.Set<HostOrder>().Where(
+        var order = await _context.Set<HostOrder>().Where(
                 h => !h.PassedTriggerPoint
                      && h.CanceledDate == null
                      && h.StartedDate != null
                      && h.IsQueued
+                     && h.DoppelspielPartner == null
                      && h.Actions.Any(a => a.ActionType == ActionType.Drop && a.Node == dropTarget))
-            .AnyAsync();
+            .OrderBy(o => o.StartedDate).FirstOrDefaultAsync();
+        return order?.CorrelationId;
     }
 }

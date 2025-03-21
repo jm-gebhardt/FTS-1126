@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Repositories;
@@ -8,49 +7,49 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Repositories;
 public class OrderRepositoryTest
 {
     [TestMethod]
-    public void StorePickPOrderReport_HasOrderBeenReported_True()
+    public async Task StorePickPOrderReport_HasOrderBeenReported_True()
     {
-        var repository = new OrderRepository();
+        var repository = new OrderRepositoryTestFixture().Repository;
         const string station = "station";
         var order = Guid.NewGuid();
 
-        repository.StorePickOrderReport(station, order);
+        await repository.StorePickOrderReport(station, order);
 
-        repository.HasOrderBeenReported(station, order).ShouldBeTrue();
+       (await repository.HasOrderBeenReported(station, order)).ShouldBeTrue();
     }
 
     [TestMethod]
-    public void RemovePickOrderReport_HasOrderBeenReported_False()
+    public async Task RemovePickOrderReport_HasOrderBeenReported_False()
     {
-        var repository = new OrderRepository();
+        var repository = new OrderRepositoryTestFixture().Repository;
         const string station = "station";
         var order = Guid.NewGuid();
-        repository.StorePickOrderReport(station, order);
-        repository.HasOrderBeenReported(station, order).ShouldBeTrue();
+        await repository.StorePickOrderReport(station, order);
+        (await repository.HasOrderBeenReported(station, order)).ShouldBeTrue();
 
-        repository.RemovePickOrderReport(station, order);
+        await repository.RemovePickOrderReport(station, order);
 
-        repository.HasOrderBeenReported(station, order).ShouldBeFalse();
+        (await repository.HasOrderBeenReported(station, order)).ShouldBeFalse();
     }
 
     [TestMethod]
-    public void HasOrderBeenReported_NoSuchStation_False()
+    public async Task HasOrderBeenReported_NoSuchStation_False()
     {
-        var repository = new OrderRepository();
+        var repository = new OrderRepositoryTestFixture().Repository;
         var order = Guid.NewGuid();
-        repository.StorePickOrderReport("station", order);
+        await repository.StorePickOrderReport("station", order);
 
-        repository.HasOrderBeenReported("different station", order).ShouldBeFalse();
+        (await repository.HasOrderBeenReported("different station", order)).ShouldBeFalse();
     }
 
     [TestMethod]
-    public void HasOrderBeenReported_OrderNotReported_False()
+    public async Task HasOrderBeenReported_OrderNotReported_False()
     {
-        var repository = new OrderRepository();
+        var repository = new OrderRepositoryTestFixture().Repository;
         const string station = "station";
         var order = Guid.NewGuid();
-        repository.StorePickOrderReport(station, order);
+        await repository.StorePickOrderReport(station, order);
 
-        repository.HasOrderBeenReported(station, Guid.NewGuid()).ShouldBeFalse();
+        (await repository.HasOrderBeenReported(station, Guid.NewGuid())).ShouldBeFalse();
     }
 }

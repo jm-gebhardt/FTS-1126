@@ -57,13 +57,21 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             return;
         }
         await CancelUnfinishedOrdersOfHu(context, hu, orderDetails.CreationDate);
-        logger.LogInformation("Host order for order {Hu} created", hu);
 
-        string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node);
-       
         // Check if there are agvs that are to be selected to handle this order directly after dropping
-        if (await hostOrderRepository.HasDropOrdersHeadingTowardsDoppelspielTriggerPoint(doppelSpielDropTarget) && !configuration.SkipDoppelspiel(doppelSpielDropTarget) )
+        string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node);
+        logger.LogInformation("Host order for order {Hu} created: {OrderCorrelationId}, corresponding drop target {Target}", hu, hostOrder.CorrelationId, doppelSpielDropTarget);
+
+        Guid? dropOrderId = await hostOrderRepository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelSpielDropTarget);
+        if (dropOrderId != null && !configuration.SkipDoppelspiel(doppelSpielDropTarget))
         {
+            hostOrder.SetDoppelspielPartner(dropOrderId.Value);
+            await hostOrderRepository.UpdateAsync(hostOrder);
+            var dropOrder = await hostOrderRepository.GetByIdAsync(dropOrderId.Value);
+            dropOrder.SetDoppelspielPartner(hostOrder.CorrelationId);
+            await hostOrderRepository.UpdateAsync(dropOrder);
+            await hostOrderRepository.SaveAsync();
+            logger.LogInformation("Doppelspiel expected for order  {OrderCorrelationId}", hostOrder.CorrelationId);
             return;
         }
 
@@ -76,7 +84,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         ICollection<HostOrder> hostOrders = await hostOrderRepository.GetLatestUnfinishedOrdersByHu(hu, creationDate);
         if (hostOrders.Count == 0)
         {
-            logger.LogError("No unfinished host orders for HU {hu}", hu);
+            logger.LogDebug("No unfinished host orders for HU {hu}", hu);
             return;
         }
         foreach (var hostOrder in hostOrders)
@@ -93,24 +101,18 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     private async Task HandleRelatedDoppelspielOrders(IPublishEndpoint context, HostOrder hostOrder)
     {
         // Handle related Doppelspiel orders
+
         HostOrder? reverseHostOrder = null;
-        if (hostOrder.Actions.Any(a => a.ActionType == ActionType.Pick && configuration.PrismatKnownTargets.Contains(a.Node)))
+        if (hostOrder.DoppelspielPartner != null)
         {
-            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(configuration.PrismatAklPickTarget);
+            reverseHostOrder = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value);
         }
 
-        if (hostOrder.HasUnknownDropTarget(configuration))
+        if (reverseHostOrder is { IsQueued: false })
         {
-            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, false);
-        }
-
-        if (hostOrder.HasUnknownPickTarget(configuration))
-        {
-            reverseHostOrder = await hostOrderRepository.GetNextNotQueuedHostOrderPickingAt(null, true);
-        }
-
-        if (reverseHostOrder != null)
-        {
+            reverseHostOrder.SetDoppelspielPartner(null);
+            await hostOrderRepository.UpdateAsync(reverseHostOrder);
+            await hostOrderRepository.SaveAsync();
             await QueueHostOrder(context, reverseHostOrder, reverseHostOrder.CreatedDate);
         }
     }
@@ -129,7 +131,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         }
 
         // Short circuit
-         actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
+        actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
         if (actionGroup != null)
         {
             actionGroup.AssignedAgv = assignedAgv;
@@ -140,7 +142,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         }
 
         // Long circuit
-        
+
         if (hostOrder.HasUnknownPickTarget(configuration))
         {
             actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
@@ -215,7 +217,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null;
 
         var orderDetails = createHostOrderMessage.OrderDetails;
-        
+
         double? liftHeightPick = configuration.GetLiftHeight(orderDetails.Source);
         double? liftHeightDrop = configuration.GetLiftHeight(orderDetails.Destination);
 
@@ -289,11 +291,18 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         droppingHostOrder.PassTriggerPoint();
         await hostOrderRepository.UpdateAsync(droppingHostOrder);
         await hostOrderRepository.SaveAsync();
-       
+
         if (shouldPickNext)
         {
             var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
-            await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration)?null:pickNode);
+            if (pickingHostOrder.DoppelspielPartner != droppingHostOrder.CorrelationId)
+            {
+                logger.LogError("Mismatch in Doppelspiel partner, expected {ExpectedPartner}, got {ActualPartner}, calling for different agv", pickingHostOrder.DoppelspielPartner, droppingHostOrder.CorrelationId);
+                await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
+                return;
+            }
+            logger.LogInformation("Queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
+            await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
         }
     }
 }

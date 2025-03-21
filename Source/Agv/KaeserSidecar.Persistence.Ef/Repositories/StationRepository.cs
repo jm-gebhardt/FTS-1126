@@ -23,8 +23,9 @@ public class StationRepository : IStationRepository
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public void OccupyStation(string station, Guid agv)
+    public async Task OccupyStation(string station, Guid agv)
     {
+        await Task.Delay(0);
         _stationOccupancies.AddOrUpdate(station,
             addValueFactory: (_) => [agv],
             updateValueFactory: (_, oldValue) =>
@@ -36,8 +37,9 @@ public class StationRepository : IStationRepository
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public void FreeStation(string station, Guid agv)
+    public async Task FreeStation(string station, Guid agv)
     {
+        await Task.Delay(0);
         if (_stationOccupancies.TryGetValue(station, out List<Guid>? agvs))
         {
             agvs.Remove(agv);
@@ -46,8 +48,9 @@ public class StationRepository : IStationRepository
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public ICollection<StationOccupancy> GetStationOccupancy()
+    public async Task<ICollection<StationOccupancy>> GetStationOccupancy()
     {
+        await Task.Delay(0);
         return _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key, kvp.Value.Count)).OrderBy(s => s.Station).ToList();
     }
 }

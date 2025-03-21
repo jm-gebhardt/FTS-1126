@@ -20,6 +20,7 @@ public class Arrival: PrismatTelegram
     /// <inheritdoc cref="Arrival"/>>
     public Arrival(DateTime time, string pos, string hu)
     {
+        Seq = 0;
         Hu = hu;
         Time = time;
         Pos = pos;

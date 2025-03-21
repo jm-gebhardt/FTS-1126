@@ -30,6 +30,7 @@ public class Status : PrismatTelegram
     /// <inheritdoc cref="Status"/>>
     public Status(SystemState state, DateTime time, int errorCode = 0, string info = "")
     {
+        Seq = 0;
         Length = 216;
         Send = Fts;
         Rec = Prismat;
@@ -43,6 +44,7 @@ public class Status : PrismatTelegram
     /// <inheritdoc cref="Status"/>>
     public Status()
     {
+        Seq = 0;
         Length = 216;
         Send = Fts;
         Rec = Prismat;

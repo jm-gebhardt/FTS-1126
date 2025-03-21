@@ -73,8 +73,8 @@ try
                     return new Receiver<ConveyorTelegram>(socket!, ServiceKeyProvider.AplWeStation, processor!, logger);
                 });
 
-            services.AddHostedService<AplWeStationCommunicationManager>();
-            services.AddHostedService<AgvCargoStateCommunicationManager>();
+            services.AddHostedService<AgvWeStationCommunicationManager>();
+            services.AddHostedService<AgvAplCargoStateCommunicationManager>();
         });
     var host = hostBuilder.Build();
     host.Run();

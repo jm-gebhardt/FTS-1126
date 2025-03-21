@@ -41,7 +41,7 @@ public class ConveyorReportingEventHandler(
         {
             var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
             pickTarget = pickingHostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-            orderRepository.StorePickOrderReport(pickTarget, pickingHostOrder.CorrelationId);
+            await orderRepository.StorePickOrderReport(pickTarget, pickingHostOrder.CorrelationId);
             logger.LogInformation("Reporting order {Order} of agv {AgvCorrelationId} for picking at target {DropStation}/{Target} after dropping order {DropOrder}, at {Time}", pickingHostOrder.OrderId, agvCorrelationId, targetStation, pickTarget, droppingHostOrder.OrderId, DateTime.UtcNow);
         }
         else
@@ -64,9 +64,9 @@ public class ConveyorReportingEventHandler(
         }
         var pickingHostOrder = await hostOrderRepository.GetByIdAsync(hostOrderCorrelationId);
         string pickTarget = pickingHostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-        orderRepository.StorePickOrderReport(pickTarget, pickingHostOrder.CorrelationId);
-        logger.LogInformation("Reporting order {Order} of agv {AgvCorrelationId} for picking at target {TargetStation}/{Target} at {Time}", pickingHostOrder.OrderId, agvCorrelationId, targetStation, pickTarget, DateTime.UtcNow);
+        logger.LogInformation("Reporting order {Order}/{OrderCorrelationId} of agv {AgvCorrelationId} for picking at target {TargetStation}/{Target} at {Time}", pickingHostOrder.OrderId, hostOrderCorrelationId, agvCorrelationId, targetStation, pickTarget, DateTime.UtcNow);
         conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, null);
+        await orderRepository.StorePickOrderReport(pickTarget, pickingHostOrder.CorrelationId);
     }
 
     /// <summary>
@@ -75,27 +75,26 @@ public class ConveyorReportingEventHandler(
     public async Task Consume(ConsumeContext<AgvStartedPick> context)
     {
         (string targetStation, var orderId, string pickStation) = context.Message;
-        if (!orderRepository.HasOrderBeenReported(pickStation, orderId))
+        if (!await orderRepository.HasOrderBeenReported(pickStation, orderId))
         {
             conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickStation, null);
             var pendingPickOrder = await hostOrderRepository.GetByIdAsync(orderId);
 
-            logger.LogInformation("Late reporting of order {Order} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pickStation, DateTime.UtcNow);
-            orderRepository.StorePickOrderReport(pickStation, orderId);
+            logger.LogInformation("Late reporting of order {Order}/{OrderCorrelationId} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pendingPickOrder.CorrelationId, pickStation, DateTime.UtcNow);
+            await orderRepository.StorePickOrderReport(pickStation, orderId);
         }
     }
 
     /// <summary>
     /// Handles the <see cref="AgvFinishedPick"/> event.
     /// </summary>
-    public Task Consume(ConsumeContext<AgvFinishedPick> context)
+    public async Task Consume(ConsumeContext<AgvFinishedPick> context)
     {
         (var orderId, string pickStation) = context.Message;
-        if (!orderRepository.HasOrderBeenReported(pickStation, orderId))
+        if (!await orderRepository.HasOrderBeenReported(pickStation, orderId))
         {
-            return Task.CompletedTask;
+            return;
         }
-        orderRepository.RemovePickOrderReport(pickStation, orderId);
-        return Task.CompletedTask;
+        await orderRepository.RemovePickOrderReport(pickStation, orderId);
     }
 }

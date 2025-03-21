@@ -35,6 +35,7 @@ public class TordError : PrismatTelegram
     /// <inheritdoc cref="TordError"/>>
     public TordError(string hu, string source, string destination, string info, int errorCode, DateTime time)
     {
+        Seq = 0;
         Length = 216;
         Send = Fts;
         Rec = Prismat;

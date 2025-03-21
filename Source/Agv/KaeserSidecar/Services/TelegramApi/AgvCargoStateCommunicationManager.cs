@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.TelegramApi;
 /// <summary>
 /// Provides a communication manager
 /// </summary>
+[UsedImplicitly]
 public class AgvCargoStateCommunicationManager(ILogger<AgvCargoStateCommunicationManager> logger, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]  Sender<ConveyorTelegram> sender, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]  Client client) : BackgroundService
 {
     private const int ConnectionDelayMs = 10000;
