@@ -13,7 +13,7 @@ public interface ITriggerRepository
     /// Add trigger.
     /// </summary>
     /// <param name="trigger">The trigger to be added.</param>
-    Task Add(Trigger trigger);
+    Task AddOrUpdate(Trigger trigger);
 
     /// <summary>
     /// Get all triggers.

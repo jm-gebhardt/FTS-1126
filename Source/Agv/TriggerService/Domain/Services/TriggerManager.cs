@@ -29,11 +29,9 @@ public class TriggerManager(ReflectionService reflectionService, ILogger<Trigger
                 break;
             }
             var triggerProperties = triggerInstance.GetProperties();
-            if ( await triggerRepository.TryAdd(triggerProperties.Id, triggerInstance))
-            {
-                triggers.Add(triggerInstance);
-                logger.LogInformation("Trigger configured: {Id} / {Name} / {Description}", triggerProperties.Id, triggerProperties.DisplayName, triggerProperties.Description);
-            }
+            await triggerRepository.AddOrUpdate(triggerProperties.Id, triggerInstance);
+            triggers.Add(triggerInstance);
+            logger.LogInformation("Trigger configured: {Id} / {Name} / {Description}", triggerProperties.Id, triggerProperties.DisplayName, triggerProperties.Description);
         }
         return triggers;
     }

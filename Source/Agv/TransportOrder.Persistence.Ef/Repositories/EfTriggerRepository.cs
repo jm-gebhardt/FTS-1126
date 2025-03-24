@@ -32,12 +32,21 @@ public class EfTriggerRepository : ITriggerRepository
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task Add(Trigger trigger)
+    public async Task AddOrUpdate(Trigger trigger)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
+        if (await context.Set<Trigger>()
+                .Include(t => t.ConfigurationParameters)
+                .Include(t => t.Locations)
+                .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
+                .AsSplitQuery()
+                .AnyAsync(t => t.Id == trigger.Id))
+        {
+            await Update(trigger);
+            return;
+        }
         await context.AddAsync(trigger);
-        await context.SaveChangesAsync();
-        if (trigger.Locations.Count > 0)
+        await context.SaveChangesAsync(); if (trigger.Locations.Count > 0)
         {
             foreach (var location in trigger.Locations)
             {

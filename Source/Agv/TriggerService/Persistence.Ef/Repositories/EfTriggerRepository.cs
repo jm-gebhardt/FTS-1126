@@ -25,6 +25,16 @@ public class EfTriggerRepository(IDbContextFactory<TriggerServiceDbContext> dbCo
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
+    public async Task AddOrUpdate(Guid id, IFfcTrigger ffcTrigger)
+    {
+        if (!await LoadTriggerFromDb(id, ffcTrigger))
+        {
+            await AddOrUpdateInDb(id, ffcTrigger);
+        }
+        _triggers.AddOrUpdate(id, ffcTrigger, (_, _) => ffcTrigger);
+    }
+
+    /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task<IFfcTrigger> GetById(Guid id)
     {
         if (!_triggers.TryGetValue(id, out var trigger))

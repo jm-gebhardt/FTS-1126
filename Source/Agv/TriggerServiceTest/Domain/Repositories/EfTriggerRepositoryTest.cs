@@ -22,6 +22,20 @@ public class EfTriggerRepositoryTest
     }
 
     [TestMethod]
+    public async Task Add_GetById_AddOrUpdate_TriggerAddedAndReturned()
+    {
+        var fixture = new EfTriggerRepositoryTestFixture();
+
+        var trigger = TriggerGenerator.GenerateTrigger();
+
+        await fixture.Repository.AddOrUpdate(trigger.Properties.Id, trigger);
+        trigger.UpdateDefaultConfigurationParameter("name", "Value1");
+        await fixture.Repository.AddOrUpdate(trigger.Properties.Id, trigger);
+
+        (await fixture.Repository.GetById(trigger.Properties.Id)).ShouldBeEquivalentTo(trigger);
+    }
+
+    [TestMethod]
     public async Task GetById_UnknownTrigger_ThrowsTriggerNotFoundException()
     {
         var fixture = new EfTriggerRepositoryTestFixture();

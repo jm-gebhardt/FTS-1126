@@ -16,6 +16,13 @@ public interface ITriggerRepository
     public Task<bool> TryAdd(Guid id, IFfcTrigger ffcTrigger);
 
     /// <summary>
+    /// Add or update a ffcTrigger to the repository.
+    /// </summary>
+    /// <param name="id">The id of the ffcTrigger.</param>
+    /// <param name="ffcTrigger">The ffcTrigger.</param>
+    public Task AddOrUpdate(Guid id, IFfcTrigger ffcTrigger);
+
+    /// <summary>
     /// Get a trigger by its id.
     /// </summary>
     /// <param name="id">The trigger id.</param>

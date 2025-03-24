@@ -36,9 +36,9 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
 
         var trigger = new Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, configurationParameters);
 
-        await triggerRepository.Add(trigger);
+        await triggerRepository.AddOrUpdate(trigger);
 
-        logger.LogInformation("Trigger {Name} created", trigger.DisplayName);
+        logger.LogInformation("Trigger {Name} created or updated.", trigger.DisplayName);
     }
 
     /// <summary>

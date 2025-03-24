@@ -21,7 +21,7 @@ public class TriggerCommandHandlerTestFixture: MassTransitConsumerTestFixture<Tr
             s.AddTransient(_ => _triggerRepository.Object);
             s.AddTransient<IMapper>(_ => MappingHelper.GetMapper(new PolygonPointProfile()));
         });
-        _triggerRepository.Setup(x => x.Add(It.IsAny<TransportOrder.Domain.Models.Trigger.Trigger>()))
+        _triggerRepository.Setup(x => x.AddOrUpdate(It.IsAny<TransportOrder.Domain.Models.Trigger.Trigger>()))
             .Callback((TransportOrder.Domain.Models.Trigger.Trigger t) => UpdatedTrigger = t);
         _triggerRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Trigger.Trigger>()))
             .Callback((TransportOrder.Domain.Models.Trigger.Trigger t) => UpdatedTrigger = t);

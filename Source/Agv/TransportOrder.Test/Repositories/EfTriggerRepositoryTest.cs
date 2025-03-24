@@ -21,7 +21,7 @@ public class EfTriggerRepositoryTest
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         
-        await fixture.Repository.Add(trigger);
+        await fixture.Repository.AddOrUpdate(trigger);
         var addedTrigger = await fixture.Repository.GetById(trigger.Id);
         addedTrigger.ShouldBeEquivalentTo(trigger);
         addedTrigger.Locations.ShouldBeEmpty();
@@ -41,7 +41,7 @@ public class EfTriggerRepositoryTest
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
-        await fixture.Repository.Add(trigger);
+        await fixture.Repository.AddOrUpdate(trigger);
         var addedTrigger = await fixture.Repository.GetById(trigger.Id);
         addedTrigger.ShouldBeEquivalentTo(trigger);
         addedTrigger.Locations.ShouldBeEmpty();
@@ -231,10 +231,10 @@ public class EfTriggerRepositoryTest
         triggers[2].AddLocation(nodeIdToUse, null);
 
         ITriggerRepository repo = fixture.Repository;
-        await repo.Add(triggers[0]);
-        await repo.Add(triggers[1]);
-        await repo.Add(triggers[2]);
-        await repo.Add(triggers[3]);
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
+        await repo.AddOrUpdate(triggers[3]);
 
         ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
         triggerLocations.Count.ShouldBe(2);
@@ -260,10 +260,10 @@ public class EfTriggerRepositoryTest
         triggers[1].AddLocation(otherNodeId, null);
 
         ITriggerRepository repo = fixture.Repository;
-        await repo.Add(triggers[0]);
-        await repo.Add(triggers[1]);
-        await repo.Add(triggers[2]);
-        await repo.Add(triggers[3]);
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
+        await repo.AddOrUpdate(triggers[3]);
 
         ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdNotAvailable);
         triggerLocations.Count.ShouldBe(0);
@@ -289,10 +289,10 @@ public class EfTriggerRepositoryTest
         triggers[3].AddLocation(otherNodeId, null);
 
         ITriggerRepository repo = fixture.Repository;
-        await repo.Add(triggers[0]);
-        await repo.Add(triggers[1]);
-        await repo.Add(triggers[2]);
-        await repo.Add(triggers[3]);
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
+        await repo.AddOrUpdate(triggers[3]);
 
         ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
         triggerLocations.Count.ShouldBe(0);
@@ -319,14 +319,43 @@ public class EfTriggerRepositoryTest
         triggers[2].AddLocation(nodeIdToUse, null);
 
         ITriggerRepository repo = fixture.Repository;
-        await repo.Add(triggers[0]);
-        await repo.Add(triggers[1]);
-        await repo.Add(triggers[2]);
-        await repo.Add(triggers[3]);
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
+        await repo.AddOrUpdate(triggers[3]);
         await repo.LoadTriggerToLocationDictionary();
 
         ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
         triggerLocations.Count.ShouldBe(2);
+    }
+
+    [TestMethod]
+    public async Task UpdateTriggerRepository_WithUpdatedConfigurationParameter_UpdatedTriggersReturned()
+    {
+        const string nodeIdToUse = "WP-0010";
+        const string updatedValue = "new value";
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
+        var triggers = new List<Trigger>()
+        {
+            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
+            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter])
+        };
+        triggers[0].AddLocation(nodeIdToUse, null);
+        triggers[1].AddLocation(nodeIdToUse, null);
+
+        ITriggerRepository repo = fixture.Repository;
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+
+        var updatedTrigger = await repo.GetById(triggers[0].Id);
+        updatedTrigger.ConfigurationParameters.First().Value = updatedValue;
+        await repo.AddOrUpdate(updatedTrigger);
+
+        ICollection<Trigger> updatedTriggers = await repo.GetTriggers();
+        updatedTriggers.Count.ShouldBe(2);
+        updatedTriggers.First(l => l.Id == triggers[0].Id).ConfigurationParameters.First().Value.ShouldBe(updatedValue);
     }
 
     [TestMethod]
@@ -376,9 +405,9 @@ public class EfTriggerRepositoryTest
         triggers[2].AddLocation(polygon, null, []);
 
         ITriggerRepository repo = fixture.Repository;
-        await repo.Add(triggers[0]);
-        await repo.Add(triggers[1]);
-        await repo.Add(triggers[2]);
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
         var agvId = Guid.NewGuid();
         var agvPosition = new AgvPosition(true, 1.5f, 1.5f, 0, 0);
 
@@ -411,9 +440,9 @@ public class EfTriggerRepositoryTest
         triggers[2].AddLocation(polygon, null, []);
 
         ITriggerRepository repo = fixture.Repository;
-        await repo.Add(triggers[0]);
-        await repo.Add(triggers[1]);
-        await repo.Add(triggers[2]);
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
         var agvId = Guid.NewGuid();
         var agvPosition = new AgvPosition(true, 3f, 3f, 0, 0);
 
