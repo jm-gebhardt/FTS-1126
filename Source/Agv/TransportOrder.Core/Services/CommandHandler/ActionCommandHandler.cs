@@ -1086,7 +1086,7 @@ public class ActionCommandHandler :
             await context.Publish(new ActionGroupStarted(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, DateTime.UtcNow));
 
             var abortedActionGroup = idleActionGroups.Single(a => a.AssignedAgv == assignedAgv.CorrelationId);
-            await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedActionGroup.Actions.Single(a => a.State == ActionState.Started).CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
+            await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
 
             // Log for ui
             _logger.LogOrderInformation(

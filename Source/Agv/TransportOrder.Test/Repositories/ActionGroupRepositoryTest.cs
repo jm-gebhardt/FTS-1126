@@ -1112,4 +1112,44 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ShouldBeEquivalentTo(new List<ActionGroup>{runningParkingActionGroup, runningChargeActionGroup});
     }
+
+    [TestMethod]
+    public async Task AgvHasPendingActions_CreatedActionGroupWithoutAssignedAgv_ReturnsTrue()
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([actionGroup]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.AgvHasPendingActions(agv)).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task AgvHasPendingActions_ActionGroupAssignedToDifferentAgv_ReturnsFalse()
+    {
+        var agv = Guid.NewGuid();
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        var startedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Started, dropActionState: ActionState.Created);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([createdActionGroup, startedActionGroup]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.AgvHasPendingActions(agv)).ShouldBeFalse();
+    }
+
+    [DataRow(ActionState.Started, ActionState.Created, true)]
+    [DataRow(ActionState.Completed, ActionState.Started, false)]
+    [DataRow(ActionState.Completed, ActionState.Completed, false)]
+    [DataRow(ActionState.Created, ActionState.Created, true)]
+    [DataTestMethod]
+    public async Task AgvHasPendingActions_ActionGroupWithAssignedAgv_ReturnsExpectedValue(ActionState pickActionState, ActionState dropActionState, bool expected)
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, pickActionState: pickActionState, dropActionState: dropActionState);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([actionGroup]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.AgvHasPendingActions(agv)).ShouldBe(expected);
+    }
 }

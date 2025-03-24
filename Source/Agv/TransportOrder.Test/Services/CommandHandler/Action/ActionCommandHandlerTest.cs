@@ -1679,7 +1679,7 @@ public class ActionCommandHandlerTest
         var saveActionGroupAbortionCommand = fixture.TestHarness.Published.Select<SaveActionGroupAbortion>().First().Context.Message;
         saveActionGroupAbortionCommand.CorrelationId.ShouldBe(parkingActionGroup.CorrelationId);
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromParking);
-        saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First().CorrelationId);
+        saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First( a => a.ActionType == ActionType.Move).CorrelationId);
     }
 
     [TestMethod]
