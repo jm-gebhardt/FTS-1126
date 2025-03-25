@@ -21,13 +21,13 @@ public class EfTriggerRepositoryTest
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
         
-        await fixture.Repository.AddOrUpdate(trigger);
+        await fixture.Repository.AddOrUpdate(trigger, true);
         var addedTrigger = await fixture.Repository.GetById(trigger.Id);
         addedTrigger.ShouldBeEquivalentTo(trigger);
         addedTrigger.Locations.ShouldBeEmpty();
 
         trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
         updatedTrigger.Locations.Count.ShouldBe(1);
@@ -41,13 +41,13 @@ public class EfTriggerRepositoryTest
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
-        await fixture.Repository.AddOrUpdate(trigger);
+        await fixture.Repository.AddOrUpdate(trigger, true);
         var addedTrigger = await fixture.Repository.GetById(trigger.Id);
         addedTrigger.ShouldBeEquivalentTo(trigger);
         addedTrigger.Locations.ShouldBeEmpty();
 
         trigger.AddLocation([new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())] , null, []);
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
         updatedTrigger.Locations.Count.ShouldBe(1);
@@ -64,12 +64,12 @@ public class EfTriggerRepositoryTest
         //Add trigger with location
         await fixture.AddAsync(trigger);
         var location = trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
         
         // Remove location during update
         trigger.RemoveLocation(location.Id);
         trigger.Locations.ShouldBeEmpty();
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
        
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
@@ -89,12 +89,12 @@ public class EfTriggerRepositoryTest
         //Add trigger with location
         await fixture.AddAsync(trigger);
         var location = trigger.AddLocation(nodeIdToUse, null);
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
 
         // Remove location during update
         trigger.RemoveLocation(location.Id);
         trigger.Locations.ShouldBeEmpty();
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
@@ -119,12 +119,12 @@ public class EfTriggerRepositoryTest
         //Add trigger with location
         await fixture.AddAsync(trigger);
         var location = trigger.AddLocation(polygon, null, []);
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
 
         // Remove location during update
         trigger.RemoveLocation(location.Id);
         trigger.Locations.ShouldBeEmpty();
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
@@ -149,13 +149,13 @@ public class EfTriggerRepositoryTest
         //Add trigger with location
         await fixture.AddAsync(trigger);
         trigger.AddLocation(polygon, null, []);
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
 
         var triggerToUpdate = await fixture.Repository.GetById(trigger.Id);
         // Update location 
         triggerToUpdate.Locations.First().Agvs = new List<Guid>(){Guid.NewGuid()};
         triggerToUpdate.Locations.ShouldNotBeEmpty();
-        await fixture.Repository.Update(triggerToUpdate);
+        await fixture.Repository.Update(triggerToUpdate, true);
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(triggerToUpdate);
@@ -180,12 +180,12 @@ public class EfTriggerRepositoryTest
         //Add trigger with location
         await fixture.AddAsync(trigger);
         trigger.AddLocation(polygon, null, [], [Guid.NewGuid()]);
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
 
         var triggerToUpdate = await fixture.Repository.GetById(trigger.Id);
         // Update location 
         triggerToUpdate.Locations.ShouldNotBeEmpty();
-        await fixture.Repository.Update(triggerToUpdate);
+        await fixture.Repository.Update(triggerToUpdate, true);
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(triggerToUpdate);
@@ -203,7 +203,7 @@ public class EfTriggerRepositoryTest
 
         const string updatedValue = "new";
         trigger.UpdateDefaultConfigurationParameter(parameter.Name, updatedValue);
-        await fixture.Repository.Update(trigger);
+        await fixture.Repository.Update(trigger, true);
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
@@ -378,7 +378,7 @@ public class EfTriggerRepositoryTest
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
-         await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.Update(trigger));
+         await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.Update(trigger, true));
     }
 
     [TestMethod]

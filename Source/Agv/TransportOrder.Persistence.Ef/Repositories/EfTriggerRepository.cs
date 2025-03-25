@@ -32,7 +32,7 @@ public class EfTriggerRepository : ITriggerRepository
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task AddOrUpdate(Trigger trigger)
+    public async Task AddOrUpdate(Trigger trigger, bool updateLocations)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         if (await context.Set<Trigger>()
@@ -42,11 +42,12 @@ public class EfTriggerRepository : ITriggerRepository
                 .AsSplitQuery()
                 .AnyAsync(t => t.Id == trigger.Id))
         {
-            await Update(trigger);
+            await Update(trigger, updateLocations);
             return;
         }
         await context.AddAsync(trigger);
-        await context.SaveChangesAsync(); if (trigger.Locations.Count > 0)
+        await context.SaveChangesAsync(); 
+        if (trigger.Locations.Count > 0)
         {
             foreach (var location in trigger.Locations)
             {
@@ -87,7 +88,7 @@ public class EfTriggerRepository : ITriggerRepository
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task Update(Trigger trigger)
+    public async Task Update(Trigger trigger, bool updateLocations)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var triggerToUpdate = await context.Set<Trigger>()
@@ -101,7 +102,7 @@ public class EfTriggerRepository : ITriggerRepository
             throw new TriggerNotFoundException(trigger.Id);
         }
 
-        if (!triggerToUpdate.Locations.Equals(trigger.Locations))
+        if (updateLocations && !triggerToUpdate.Locations.Equals(trigger.Locations))
         {
             if (triggerToUpdate.Locations.Count > trigger.Locations.Count)
             {
@@ -135,9 +136,9 @@ public class EfTriggerRepository : ITriggerRepository
                 _logger.LogInformation("Update(trigger):  Location count {LocCount}.", trigger.Locations.Count);
                 ICollection<Location> locationsToUpdate = triggerToUpdate.Locations;
                 ICollection<Location> newLocations = trigger.Locations;
-                bool updateLocations = !locationsToUpdate.SequenceEqual(newLocations);
+                bool updateLocationSequence = !locationsToUpdate.SequenceEqual(newLocations);
 
-                if (updateLocations)
+                if (updateLocationSequence)
                 {
                     context.Set<Location>().RemoveRange(triggerToUpdate.Locations);
                     await context.Set<Location>().AddRangeAsync(trigger.Locations);

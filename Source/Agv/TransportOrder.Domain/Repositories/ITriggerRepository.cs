@@ -13,7 +13,8 @@ public interface ITriggerRepository
     /// Add trigger.
     /// </summary>
     /// <param name="trigger">The trigger to be added.</param>
-    Task AddOrUpdate(Trigger trigger);
+    /// <param name="updateLocations">Flag if trigger locations should be updated.</param>
+    Task AddOrUpdate(Trigger trigger, bool updateLocations = true);
 
     /// <summary>
     /// Get all triggers.
@@ -33,7 +34,8 @@ public interface ITriggerRepository
     /// Update a trigger.
     /// </summary>
     /// <param name="trigger">The trigger</param>
-    Task Update(Trigger trigger);
+    /// <param name="updateLocations">Flag if locations should be updated.</param>
+    Task Update(Trigger trigger, bool updateLocations);
 
     /// <summary>
     /// Load trigger to location dictionary from repository.

@@ -36,7 +36,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
 
         var trigger = new Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, configurationParameters);
 
-        await triggerRepository.AddOrUpdate(trigger);
+        await triggerRepository.AddOrUpdate(trigger, false);
 
         logger.LogInformation("Trigger {Name} created or updated.", trigger.DisplayName);
     }
@@ -73,7 +73,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
             {
                 location = trigger.AddLocation(polygon, mapId, configurationParameters);
             }
-            await triggerRepository.Update(trigger);
+            await triggerRepository.Update(trigger, true);
         }
         catch (Exception ex)
         {
@@ -107,7 +107,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
 
         var trigger = await triggerRepository.GetById(triggerId);
         trigger.RemoveLocation(locationId);
-        await triggerRepository.Update(trigger);
+        await triggerRepository.Update(trigger, true);
         logger.LogDebug("Trigger {Name} removed from location {LocationId}", trigger.DisplayName, locationId);
     }
 
@@ -124,7 +124,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         var updatedParameter = trigger.UpdateDefaultConfigurationParameter(parameterName, newValue);
         if (updatedParameter != null)
         {
-            await triggerRepository.Update(trigger);
+            await triggerRepository.Update(trigger, true);
             await context.Publish(new DefaultTriggerConfigurationUpdated(triggerId, [updatedParameter]));
             logger.LogInformation("Trigger {Name} default parameter {ParameterName} updated to value {Value}", trigger.DisplayName, parameterName, newValue);
         }
@@ -144,7 +144,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         var updatedParameter = trigger.UpdateConfigurationParameterAtLocation(locationId, parameterName, newValue);
         if (updatedParameter != null)
         {
-            await triggerRepository.Update(trigger);
+            await triggerRepository.Update(trigger, true);
             logger.LogInformation("Trigger {Name} parameter {ParameterName} at location {LocationId} updated to value {Value}", trigger.DisplayName, locationId, parameterName, newValue);
         }
     }
@@ -162,7 +162,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         var updatedParameter = trigger.ResetConfigurationParameterAtLocation(locationId, parameterName);
         if (updatedParameter != null)
         {
-            await triggerRepository.Update(trigger);
+            await triggerRepository.Update(trigger, true);
             logger.LogInformation("Trigger {Name} parameter {ParameterName} at location {LocationId} reset to default value {Value}", trigger.DisplayName, locationId, parameterName, updatedParameter.Value);
         }
     }
