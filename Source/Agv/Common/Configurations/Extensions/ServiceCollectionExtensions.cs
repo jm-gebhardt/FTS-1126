@@ -40,6 +40,7 @@ public static class ServiceCollectionExtensions
 
         services.AddMassTransit(x =>
         {
+            x.DisableUsageTelemetry();
             x.UsingRabbitMq((context, cfg) =>
             {
                 rabbitMqConfiguration?.Invoke(context, cfg);

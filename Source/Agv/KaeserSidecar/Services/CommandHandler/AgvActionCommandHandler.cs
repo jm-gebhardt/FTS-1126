@@ -17,8 +17,7 @@ public class AgvActionCommandHandler(
     ILogger<AgvActionCommandHandler> logger,
     ITransportOrderDb transportOrderDb,
     KaeserGraphConfiguration configuration,
-    IPrismatCommunicationHostOrderRepository hostOrderRepository,
-    IStationRepository stationRepository) :
+    IPrismatCommunicationHostOrderRepository hostOrderRepository) :
     IConsumer<ActionStarted>,
     IConsumer<ActionCompleted>
 {
@@ -48,8 +47,7 @@ public class AgvActionCommandHandler(
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
             }
         }
-        logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station);
-        await stationRepository.FreeStation(station!, agvCorrelationId);
+        await context.Publish(new FreeStation(station!, agvCorrelationId));
     }
 
     /// <summary>
@@ -77,7 +75,6 @@ public class AgvActionCommandHandler(
         }
 
         string station = action.Target.NodeId!;
-        logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
-        await stationRepository.OccupyStation(station, agvCorrelationId);
+        await context.Publish( new OccupyStation(station, agvCorrelationId));
     }
 }

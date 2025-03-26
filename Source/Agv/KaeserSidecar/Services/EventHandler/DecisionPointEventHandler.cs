@@ -20,11 +20,10 @@ public class DecisionPointEventHandler(
     ILogger<DecisionPointEventHandler> logger,
     IStationRepository stationRepository,
     KaeserGraphConfiguration configuration,
-    ITransportOrderDb transportOrderDb) : 
+    ITransportOrderDb transportOrderDb,
+    TargetStation targetStation) : 
     IConsumer<AgvPassedDecisionPoint1>
 {
-    private string _lastChosenStation = string.Empty;
-
     /// <summary>
     /// Handles the <see cref="AgvPassedDecisionPoint1"/> message.
     /// </summary>
@@ -58,7 +57,7 @@ public class DecisionPointEventHandler(
             ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
             foreach (var occupancy in availableStations)
             {
-                if (occupancy.Count != 0 || (_lastChosenStation == occupancy.Station && availableStations.Count > 1))
+                if (occupancy.Count != 0 || (targetStation.Last == occupancy.Station && availableStations.Count > 1))
                 {
                     continue;
                 }
@@ -94,7 +93,7 @@ public class DecisionPointEventHandler(
 
     private async Task SetTarget(IPublishEndpoint context, string target, AgvStatus agvStatus, ActionGroup actionGroup, Guid action)
     {
-        _lastChosenStation = target;
+        targetStation.Last = target;
         logger.LogInformation("Selecting target {Target} for agv {Agv} running action group {ActionGroup}", target, agvStatus.CorrelationId, actionGroup.CorrelationId);
         await context.Publish(new SetTargetForAction(action, actionGroup.CorrelationId, agvStatus.CorrelationId, target));
     }

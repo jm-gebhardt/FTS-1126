@@ -23,7 +23,7 @@ public static class BusRegistrationExtension
     {
         cfg.AddConsumer<KaeserGraphEventHandler>();
         cfg.AddConsumer<AgvActionCommandHandler>();
-        cfg.AddConsumer<DecisionPointEventHandler>(); // Registered as singleton externally
+        cfg.AddConsumer<DecisionPointEventHandler>(); 
         cfg.AddConsumer<CargoTriggerPointEventHandler, SingleActiveHandlerDefinition<CargoTriggerPointEventHandler>>(c => c.ConcurrentMessageLimit = 1);
         cfg.AddConsumer<ConveyorReportingEventHandler>(c =>
             {
@@ -42,6 +42,13 @@ public static class BusRegistrationExtension
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             c.Message<AgvPassedDoppelspielTriggerPoint>(x => x.UsePartitioner(partitioner, p => p.Message.AgvData.CorrelationId));
+        });
+
+        cfg.AddConsumer<StationCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            c.Message<OccupyStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
+            c.Message<FreeStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
         });
         return cfg;
     }

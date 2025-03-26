@@ -1038,6 +1038,17 @@ public class ActionCommandHandler :
                 agvs.AddRange(queueingAgvs);
             }
             agvs = agvs.DistinctBy(a => a.CorrelationId).OrderBy(a => a.CorrelationId).ToList();
+
+            // Do not use agvs that already have priority action groups assigned to it
+            List<Guid> unfilteredAgvs = agvs.Select(a => a.CorrelationId).ToList();
+            ICollection<Guid> agvsWithPriorityActionGroups = await _actionGroupRepository.FilterAgvsWithPriorityActionGroups(unfilteredAgvs);
+            agvs = agvs.Where(a => !agvsWithPriorityActionGroups.Contains(a.CorrelationId)).OrderBy(a => a.CorrelationId).ToList();
+            if (agvs.Count == 0)
+            {
+                _logger.LogInformation("No agv available for reactivating idle action");
+                return;
+            }
+
             List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
 
             (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNode);
@@ -1066,6 +1077,7 @@ public class ActionCommandHandler :
             var actionToStart = actionGroup.FirstNotStartedAction!;
             actionGroup.AssignedAgv = closestAgvRoute.agv;
             actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges);
+            actionGroup.HasPriority = true;
 
             // Get route costs
             var assignedAgv = agvs.Single(a => a.CorrelationId == actionGroup.AssignedAgv!.Value);

@@ -116,6 +116,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public ActionGroupTestFixtureBase<T> WithAgvsWithPriorityActionGroups(ICollection<Guid> agvs)
+    {
+        ActionGroupRepository.Setup(x => x.FilterAgvsWithPriorityActionGroups(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
+        return this;
+    }
+
     public ActionGroupTestFixtureBase<T> WithClosestAgv(Guid? closestAgv, Route? route)
     {
         RouteService.SetupSequence(x => x.GetAgvRouteClosestToTarget(It.IsAny<ICollection<(TransportOrder.Domain.Models.Agv.Agv agv, AgvData? agvData)>>(), It.IsAny<string>()))

@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 using Gebhardt.Acc.KaeserSidecar.CmdOptions;
+using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.DataAccess;
@@ -37,16 +38,12 @@ public static class HostBuilderExtension
         {
             try
             {
-                //Register singleton consumers
-                services.RegisterSingletonConsumers();
                 services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
                 //Configure masstransit
                 services.ConfigureServicesMassTransit(context.Configuration, x =>
                 {
                     x.AddBusConsumers();
                 });
-                //Override the masstransit consumer factory for singleton consumers
-                services.RegisterSingletonConsumerFactories();
             }
             catch (InvalidOperationException e)
             {
@@ -67,7 +64,7 @@ public static class HostBuilderExtension
         hostBuilder.ConfigureServices((context, services) =>
         {
             services.AddConfigurationTypeManager();
-
+            services.AddSingleton<TargetStation>();
             // Add prismat communication db connection
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));

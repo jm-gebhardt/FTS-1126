@@ -1152,4 +1152,47 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.AgvHasPendingActions(agv)).ShouldBe(expected);
     }
+        
+    [DataRow(ActionState.Started)]
+    [DataRow(ActionState.Created)]
+    [DataTestMethod]
+    public async Task FilterAgvsWithPriorityActionGroups_ValidData_ReturnsAgvsWithPriorityActionGroups(ActionState pickActionState)
+    {
+        var agvWithPriorityGroup = Guid.NewGuid();
+        var agvWithNonPriorityGroup = Guid.NewGuid();
+        var agvWithoutActionGroup = Guid.NewGuid();
+
+        var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: pickActionState, assignedAgv: agvWithPriorityGroup);
+        priorityActionGroup.HasPriority = true;
+        var nonPriorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: pickActionState, assignedAgv: agvWithNonPriorityGroup);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                priorityActionGroup, nonPriorityActionGroup
+            ]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.FilterAgvsWithPriorityActionGroups([agvWithPriorityGroup, agvWithoutActionGroup, agvWithNonPriorityGroup])).ShouldBeEquivalentTo(new List<Guid>{agvWithPriorityGroup});
+    }
+
+    [DataRow(ActionState.Aborted)]
+    [DataRow(ActionState.Completed)]
+    [DataRow(ActionState.Canceled)]
+    [DataTestMethod]
+    public async Task FilterAgvsWithPriorityActionGroups_NoPriorityActionGroupsInValidState_ReturnsAgvsWithPriorityActionGroups(ActionState actionState)
+    {
+        var agvWithPriorityGroup = Guid.NewGuid();
+        var agvWithNonPriorityGroup = Guid.NewGuid();
+        var agvWithoutActionGroup = Guid.NewGuid();
+
+        var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: actionState, dropActionState:actionState, assignedAgv: agvWithPriorityGroup);
+        priorityActionGroup.HasPriority = true;
+        var nonPriorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created, assignedAgv: agvWithNonPriorityGroup);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                priorityActionGroup, nonPriorityActionGroup
+            ]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.FilterAgvsWithPriorityActionGroups([agvWithPriorityGroup, agvWithoutActionGroup, agvWithNonPriorityGroup])).ShouldBeEmpty();
+    }
 }

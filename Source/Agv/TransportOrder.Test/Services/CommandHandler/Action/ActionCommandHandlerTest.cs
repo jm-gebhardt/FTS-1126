@@ -1658,6 +1658,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .WithRunningIdleActionGroups([parkingActionGroup])
             .AddActionGroup(pickDropActionGroup)
+            .WithAgvsWithPriorityActionGroups([])
             .WithClosestAgv(closestAgv.CorrelationId, route)
             .AddAgvs([closestAgv]);
 
@@ -1680,6 +1681,32 @@ public class ActionCommandHandlerTest
         saveActionGroupAbortionCommand.CorrelationId.ShouldBe(parkingActionGroup.CorrelationId);
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromParking);
         saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First( a => a.ActionType == ActionType.Move).CorrelationId);
+        pickDropActionGroup.HasPriority.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task TryUpdateIdleAction_AgvRunningParkingActionGroupIsClosest_HasAlreadyPriorityActionGroup_DoesNotPublishUpdateActionCommand()
+    {
+        var closestAgv = AgvGenerator.GenerateBusyAgv();
+        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithRunningIdleActionGroups([parkingActionGroup])
+            .AddActionGroup(pickDropActionGroup)
+            .WithAgvsWithPriorityActionGroups([closestAgv.CorrelationId])
+            .WithClosestAgv(closestAgv.CorrelationId, route)
+            .AddAgvs([closestAgv]);
+
+        var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<TryUpdateIdleAction>();
+        await fixture.ShouldNotHavePublishedAsync<AbortAndStartActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
+        await fixture.ShouldNotHavePublishedAsync<SaveActionGroupAbortion>();
     }
 
     [TestMethod]
@@ -1695,6 +1722,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(pickDropActionGroup)
             .WithAgvsAtQueueHead([agvAtQueueHead.CorrelationId])
             .WithClosestAgv(agvAtQueueHead.CorrelationId, route)
+            .WithAgvsWithPriorityActionGroups([])
             .AddAgvs([parkingAgv, agvAtQueueHead]);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
@@ -1720,6 +1748,7 @@ public class ActionCommandHandlerTest
             .WithRunningIdleActionGroups([parkingActionGroup])
             .AddActionGroup(pickDropActionGroup)
             .WithClosestAgv(readyAgv.CorrelationId, route)
+            .WithAgvsWithPriorityActionGroups([])
             .AddAgvs([parkingAgv, readyAgv]);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
@@ -1744,6 +1773,7 @@ public class ActionCommandHandlerTest
             .WithRunningIdleActionGroups([parkingActionGroup])
             .AddActionGroup(pickDropActionGroup)
             .WithClosestAgv(null, null)
+            .WithAgvsWithPriorityActionGroups([])
             .AddAgvs([parkingAgv, readyAgv]);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
@@ -1764,6 +1794,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(pickDropActionGroup)
             .WithClosestAgv(null, null)
+            .WithAgvsWithPriorityActionGroups([])
             .AddAgvs([]);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);

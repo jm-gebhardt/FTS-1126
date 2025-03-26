@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
-using Gebhardt.Acc.KaeserSidecar.Test.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -14,16 +13,13 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.CommandHandler;
 public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvActionCommandHandler>
 {
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
-    public readonly IStationRepository Repository;
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
-    private readonly StationRepositoryTestFixture _repositoryTestFixture = new();
 
     protected override MassTransitConsumerTestFixture<AgvActionCommandHandler> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
         collection.AddTransient(_ => new Mock<ILogger<AgvActionCommandHandler>>().Object);
         collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
-        collection.AddSingleton<IStationRepository>(_ =>_repositoryTestFixture.Repository);
         collection.AddTransient(_ => _transportOrderDb.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         return this;
@@ -32,7 +28,6 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
     public AgvActionCommandHandlerTestFixture()
     {
         Build();
-        Repository = Provider.GetRequiredService<IStationRepository>();
     }
 
     public AgvActionCommandHandlerTestFixture WithHostOrder(HostOrder order)

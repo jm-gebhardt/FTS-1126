@@ -39,6 +39,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddTransient(_ => _agvSettingsService.Object);
         collection.AddTransient(_ => _transportOrderDb.Object);
+        collection.AddSingleton<TargetStation>();
         return this;
     }
 
