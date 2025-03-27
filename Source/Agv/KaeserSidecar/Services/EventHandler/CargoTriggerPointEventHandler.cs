@@ -56,20 +56,31 @@ public class CargoTriggerPointEventHandler(
         
         switch (isDropping)
         {
-            case true when !hostOrder.Actions.All(a => configuration.PrismatIncompletePickTargets.Contains(a.Node)):
-                logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not heading towards 9060/9070", agv);
-                return;
+            case true:
+                if (!hostOrder.Actions.All(a => configuration.PrismatIncompletePickTargets.Contains(a.Node)))
+                {
+                    logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} with current action group {ActionGroupCorrelationId} is not heading towards 9060/9070", 
+                        actionGroup.CorrelationId, agv);
+                    return;
+                }
+                break;
 
-            case false when !hostOrder.Actions.All(a => configuration.PrismatIncompleteDropTargets.Contains(a.Node)):
-                logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not heading towards 9060/9070", agv);
-                return;
+            case false:
+                if (!hostOrder.Actions.All(a => configuration.PrismatIncompleteDropTargets.Contains(a.Node)))
+                {
+                    logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} with current action group {ActionGroupCorrelationId} is not heading towards 9060/9070", 
+                        actionGroup.CorrelationId, agv);
+                    return;
+                }
+                break;
         }
 
         if (isDropping != hasCargo)
         {
             logger.LogWarning("Inconsistent information on APL cargo state for Agv {Agv}: message content {MessageContent} / host order {HostOrder}", agv, hasCargo, isDropping);
+            return;
         }
-        logger.LogInformation("Reporting cargo state of agv {Agv} running action group {ActionGroupCorrelationId} with cargo {HasCargo}", agv, actionGroup, hasCargo);
+        logger.LogInformation("Reporting cargo state of agv {Agv} running action group {ActionGroupCorrelationId} with cargo {HasCargo}", agv, actionGroup.CorrelationId, hasCargo);
         conveyorCommunicator.ReportAplCargoState(hasCargo);
     }
 }

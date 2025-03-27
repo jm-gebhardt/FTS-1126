@@ -28,6 +28,24 @@ public class CargoTriggerPointEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_AgvPassedCargoTriggerPoint_PickAt1040_DoesNotReportToConveyor()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Pick);
+        const bool hasCargo = false;
+        var fixture = new CargoTriggerPointEventHandlerTestFixture()
+            .WithHostOrder(hostOrder)
+            .WithActionGroup(actionGroup);
+
+        var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(hostOrder.AssignedAgv.GetValueOrDefault(), hostOrder.CorrelationId, hasCargo);
+
+        await fixture.TestHarness.Bus.Publish(agvPassedCargoTriggerPoint);
+        await fixture.ShouldHaveConsumedAsync<AgvPassedCargoTriggerPoint>();
+
+        fixture.VerifyReportingToConveyors(hasCargo, Times.Never());
+    }
+
+    [TestMethod]
     public async Task Consume_AgvPassedCargoTriggerPoint_DropAt9070_ReportsToConveyor()
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
@@ -43,6 +61,24 @@ public class CargoTriggerPointEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<AgvPassedCargoTriggerPoint>();
 
         fixture.VerifyReportingToConveyors(hasCargo, Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvPassedCargoTriggerPoint_DropAt1060_ReportsToConveyor()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Drop);
+        const bool hasCargo = true;
+        var fixture = new CargoTriggerPointEventHandlerTestFixture()
+            .WithHostOrder(hostOrder)
+            .WithActionGroup(actionGroup);
+
+        var agvPassedCargoTriggerPoint = new AgvPassedCargoTriggerPoint(hostOrder.AssignedAgv.GetValueOrDefault(), hostOrder.CorrelationId, hasCargo);
+
+        await fixture.TestHarness.Bus.Publish(agvPassedCargoTriggerPoint);
+        await fixture.ShouldHaveConsumedAsync<AgvPassedCargoTriggerPoint>();
+
+        fixture.VerifyReportingToConveyors(hasCargo, Times.Never());
     }
 
     [TestMethod]
