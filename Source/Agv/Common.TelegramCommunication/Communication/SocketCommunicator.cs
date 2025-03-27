@@ -148,7 +148,7 @@ public abstract class SocketCommunicator<TTelegramType>
         try
         {
              SetRun = true;
-            _cts =  new CancellationTokenSource();
+            _cts =  new CancellationTokenSource();  
             _thread = new Thread( _ => Communicate(_cts.Token));
             _thread.Start();
             return true;
@@ -249,9 +249,18 @@ public abstract class SocketCommunicator<TTelegramType>
 
     private void Communicate(CancellationToken cancellationToken)
     {
-        Thread.CurrentThread.Name ??= Name;
+        try
+        {
+            Thread.CurrentThread.Name ??= Name;
 
-        Logger.LogDebug("Started thread for {Name}", Name);
+            Logger.LogDebug("Started thread for {Name}, cancellation requested {IsCancellationRequested}", Name, cancellationToken.IsCancellationRequested);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Could not communicate, got : {ErrorMessage} - restarting worker", ex.Message);
+            RestartWorker();
+        }
+
         while (_run && !cancellationToken.IsCancellationRequested)
         {
             try
