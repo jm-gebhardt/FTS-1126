@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
@@ -51,9 +52,9 @@ public static class AgvActionExtension
             RecordType = recordType,
             Coordinates = new Coordinates
             {
-                ToTheta = action.Target.Position!.Theta,
+                ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - action.Target.Position!.Theta,  // Convert to KARIS coordination system
                 ToX = action.Target.Position!.X,
-                ToY = action.Target.Position!.Y
+                ToY = action.Target.Position!.Y * -1  // Convert to KARIS coordination system
             }
         };
     }

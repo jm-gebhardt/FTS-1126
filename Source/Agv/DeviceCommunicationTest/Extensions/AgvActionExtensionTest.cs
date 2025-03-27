@@ -113,8 +113,8 @@ public class AgvActionExtensionTest
         mqttOrder.Coordinates.ShouldBe(new Coordinates()
         {
             ToX = target.Position!.X,
-            ToY = target.Position.Y,
-            ToTheta = target.Position.Theta
+            ToY = target.Position.Y * -1,
+            ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
         });
         mqttOrder.Stations.ShouldBeNull();
         mqttOrder.OrderType.ShouldBe(OrderType.Move);
@@ -186,8 +186,8 @@ public class AgvActionExtensionTest
         mqttOrder.Coordinates.ShouldBe(new Coordinates()
         {
             ToX = target.Position!.X,
-            ToY = target.Position.Y,
-            ToTheta = target.Position.Theta
+            ToY = target.Position.Y * -1,
+            ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
         });
         mqttOrder.Stations.ShouldBeNull();
         mqttOrder.OrderType.ShouldBe(OrderType.Move);
