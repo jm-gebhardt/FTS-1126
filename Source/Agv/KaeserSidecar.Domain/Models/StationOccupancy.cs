@@ -15,19 +15,30 @@ public class StationOccupancy
     /// </summary>
     public int Count { get; private set; }
 
+    /// <summary>
+    /// The correlation id of the agv that occupies the station.
+    /// </summary>
+    public Guid? AgvCorrelationId { get; private set; }
+
     /// <inheritdoc cref="StationOccupancy"/>>
-    public StationOccupancy(string station, int count)
+    public StationOccupancy(string station, int count, Guid? agvCorrelationId)
     {
         Station = station;
         Count = count;
+        AgvCorrelationId = agvCorrelationId;
     }
 
     /// <summary>
     /// Add agv to station.
     /// </summary>
-    public void Add()
+    public void Add(Guid agvCorrelationId)
     {
+        if (AgvCorrelationId == agvCorrelationId)
+        {
+            return;
+        }
         Count += 1;
+        AgvCorrelationId = agvCorrelationId;
     }
 
     /// <summary>
@@ -35,6 +46,7 @@ public class StationOccupancy
     /// </summary>
     public void Remove()
     {
+        AgvCorrelationId = null;
         if (Count == 0)
         {
             return;

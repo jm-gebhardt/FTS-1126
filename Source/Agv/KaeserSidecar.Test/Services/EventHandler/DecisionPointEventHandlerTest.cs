@@ -24,7 +24,7 @@ public class DecisionPointEventHandlerTest
         var pickActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
         var nextPickOrder = OrderGenerator.GenerateOrderFromActionGroup(pickActionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
+            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
             .WithCurrentHostOrder(currentHostOrder)
             .WithNextPickOrder(nextPickOrder)
             .WithStations([
@@ -52,7 +52,7 @@ public class DecisionPointEventHandlerTest
         var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(dropActionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
+            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
             .WithStations([
                 new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
                 new Station("3", AgvGraph.NodeType.PickDrop, [])
@@ -84,7 +84,7 @@ public class DecisionPointEventHandlerTest
         var lockedStation = new Station("1", AgvGraph.NodeType.PickDrop, []);
         lockedStation.Lock("user", "reason", "description", LockedOrderHandlingType.Abort);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
+            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
             .WithStations([
                 lockedStation, new Station("2", AgvGraph.NodeType.PickDrop, []),
                 new Station("3", AgvGraph.NodeType.PickDrop, [])
@@ -114,7 +114,7 @@ public class DecisionPointEventHandlerTest
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy(targetStation, 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
+            .WithOccupancies([new StationOccupancy(targetStation, 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
             .WithStations([
                 new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
                 new Station("3", AgvGraph.NodeType.PickDrop, [])
@@ -142,7 +142,7 @@ public class DecisionPointEventHandlerTest
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 1), new StationOccupancy(targetStation, 0), new StationOccupancy("3", 0)])
+            .WithOccupancies([new StationOccupancy("1", 1, Guid.NewGuid()), new StationOccupancy(targetStation, 0, null), new StationOccupancy("3", 0, null)])
             .WithStations([
                 new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
                 new Station("3", AgvGraph.NodeType.PickDrop, [])
@@ -170,7 +170,7 @@ public class DecisionPointEventHandlerTest
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var currentHostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 1), new StationOccupancy("2", 1), new StationOccupancy(targetStation, 0)])
+            .WithOccupancies([new StationOccupancy("1", 1, Guid.NewGuid()), new StationOccupancy("2", 1, Guid.NewGuid()), new StationOccupancy(targetStation, 0, null)])
             .WithStations([
                 new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
                 new Station("3", AgvGraph.NodeType.PickDrop, [])
@@ -209,7 +209,7 @@ public class DecisionPointEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
         var hostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
+            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
             .WithCurrentHostOrder(hostOrder)
             .WithNextPickOrder(null);
         var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()), new AgvStatus(), null, [], [], 3);
@@ -226,7 +226,7 @@ public class DecisionPointEventHandlerTest
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(ActionGroupState.Started, ActionState.Started);
         var hostOrder = OrderGenerator.GenerateOrderFromActionGroup(actionGroup);
         var fixture = new DecisionPointEventHandlerTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0), new StationOccupancy("2", 0), new StationOccupancy("3", 0)])
+            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
             .WithCurrentHostOrder(hostOrder)
             .WithNextPickOrder(null);
         var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()), new AgvStatus(), null, [], [], 3);

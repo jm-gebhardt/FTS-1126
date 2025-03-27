@@ -51,6 +51,6 @@ public class StationRepository : IStationRepository
     public async Task<ICollection<StationOccupancy>> GetStationOccupancy()
     {
         await Task.Delay(0);
-        return _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key, kvp.Value.Count)).OrderBy(s => s.Station).ToList();
+        return _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key, kvp.Value.Count, null)).OrderBy(s => s.Station).ToList();
     }
 }

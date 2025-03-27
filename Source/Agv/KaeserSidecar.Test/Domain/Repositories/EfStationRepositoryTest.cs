@@ -10,27 +10,30 @@ public class EfStationRepositoryTest
     [TestMethod]
     public async Task OccupyStation_FirstTimeOccupied_StationOccupancyStored()
     {
+        var agv = Guid.NewGuid();
         var fixture = new StationRepositoryTestFixture();
 
         const string station = "station";
 
-        await fixture.Repository.OccupyStation(station, Guid.NewGuid());
+        await fixture.Repository.OccupyStation(station, agv);
 
         ICollection<StationOccupancy> stationOccupancies = await fixture.Repository.GetStationOccupancy();
 
         var stationOccupancy = stationOccupancies.Single(s => s.Station == station);
         stationOccupancy.Station.ShouldBe(station);
         stationOccupancy.Count.ShouldBe(1);
+        stationOccupancy.AgvCorrelationId.ShouldBe(agv);
     }
 
     [TestMethod]
     public async Task FreeStation_ValidData_OccupancyUpdated()
     {
+        var agv = Guid.NewGuid();
         var fixture = new StationRepositoryTestFixture();
-        var stationOccupancy = new StationOccupancy("station", 1);
+        var stationOccupancy = new StationOccupancy("station", 1, agv);
         await fixture.Repository.AddAsync(stationOccupancy);
 
-        await fixture.Repository.FreeStation(stationOccupancy.Station, Guid.NewGuid());
+        await fixture.Repository.FreeStation(stationOccupancy.Station, agv);
 
         (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == stationOccupancy.Station).Count.ShouldBe(stationOccupancy.Count - 1);
     }

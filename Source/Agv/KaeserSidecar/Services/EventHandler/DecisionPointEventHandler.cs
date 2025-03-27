@@ -82,7 +82,7 @@ public class DecisionPointEventHandler(
         foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Take(consideredStations))
         {
             var occupancy = unorderedOccupancies.SingleOrDefault(o => o.Station == conveyorStationMapping.Key) ??
-                            new StationOccupancy(conveyorStationMapping.Key, 0);
+                            new StationOccupancy(conveyorStationMapping.Key, 0, null);
             if (!stations.First(s => s.Name == occupancy.Station).IsLocked)
             {
                 orderedOccupancies.Add(occupancy);

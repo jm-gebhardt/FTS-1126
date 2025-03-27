@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.CommandHandler;
 public class AgvActionCommandHandlerTest
 {
     [TestMethod]
-    public async Task Consume_ActionStarted_ValidData_RemoveAgvFromStationOccupancy()
+    public async Task Consume_ActionStarted_ValidData_PublishesFreeStation()
     {
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
@@ -20,6 +20,7 @@ public class AgvActionCommandHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
+            .WithStationName(station)
             .WithActionGroup(actionGroup);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
@@ -41,6 +42,7 @@ public class AgvActionCommandHandlerTest
       
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
+            .WithStationName(station)
             .WithActionGroup(actionGroup);
         
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
@@ -48,7 +50,7 @@ public class AgvActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
         await fixture.ShouldHavePublishedAsync<AgvStartedPick>();
-        await fixture.ShouldHavePublishedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
     }
 
     [TestMethod]
@@ -62,6 +64,7 @@ public class AgvActionCommandHandlerTest
 
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
+            .WithStationName(station)
             .WithActionGroup(actionGroup);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.Last().CorrelationId, actionGroup.AssignedAgv!.Value);
@@ -82,16 +85,18 @@ public class AgvActionCommandHandlerTest
 
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
+            .WithStationName(station)
             .WithActionGroup(actionGroup);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
 
         await fixture.TestHarness.Bus.Publish(actionStarted);
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionStarted_StartNodeNotConveyorStation_AgvNotRemovedFromStationOccupancy()
+    public async Task Consume_ActionStarted_StartNodeNotConveyorStation_DoesNotPublishFreeStation()
     {
         const string station = "not conveyor station";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
@@ -108,7 +113,7 @@ public class AgvActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionStarted_NoNodes_AgvNotRemovedFromStationOccupancy()
+    public async Task Consume_ActionStarted_NoNodes_DoesNotPublishFreeStation()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [];
@@ -124,7 +129,25 @@ public class AgvActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionStarted_UnknownActionCorrelationId_AgvNotRemovedFromStationOccupancy()
+    public async Task Consume_ActionStarted_StartNodeIsWaypoint_DoesNotPublishFreeStation()
+    {
+        const string station = "waypoint";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        actionGroup.Actions.First().Nodes = [station];
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithStationName(null)
+            .WithActionGroup(actionGroup);
+
+        var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
+
+        await fixture.TestHarness.Bus.Publish(actionStarted);
+        await fixture.ShouldHaveConsumedAsync<ActionStarted>();
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionStarted_UnknownActionCorrelationId_DoesNotPublishFreeStation()
     {
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());

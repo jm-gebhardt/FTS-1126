@@ -36,6 +36,17 @@ public class AgvActionCommandHandler(
             return;
         }
         string? station = action.Nodes.FirstOrDefault();
+        if (station == null)
+        {
+            logger.LogWarning("Action {ActionCorrelationId} has no start node", actionCorrelationId);
+            return;
+        }
+        station = await transportOrderDb.Stations.GetStationAtLocationOfNode(station);
+        if (station == null)
+        {
+            logger.LogWarning("Action {ActionCorrelationId} did not start from station, start node is {StartNode}", actionCorrelationId, action.Nodes.FirstOrDefault());
+            return;
+        }
         bool gotPickAssignedOnStation = action.Nodes.First() == action.Nodes.Last();
 
         if (action.ActionType == ActionType.Pick && gotPickAssignedOnStation)
@@ -45,9 +56,10 @@ public class AgvActionCommandHandler(
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
             {
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
+                return;
             }
         }
-        await context.Publish(new FreeStation(station!, agvCorrelationId));
+        await context.Publish(new FreeStation(station, agvCorrelationId));
     }
 
     /// <summary>

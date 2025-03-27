@@ -17,11 +17,11 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
         var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.Station == station).SingleOrDefaultAsync();
         if (stationOccupancy != null)
         {
-            stationOccupancy.Add();
+            stationOccupancy.Add(agv);
             await context.SaveChangesAsync();
             return;
         }
-        stationOccupancy = new StationOccupancy(station, 1);
+        stationOccupancy = new StationOccupancy(station, 1, agv);
         await AddAsync(stationOccupancy);
     }
 
@@ -45,7 +45,7 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
         IEnumerable<string> missingStations = configuration.ConveyorStationMapping.Keys.Except(stations);
         foreach (string station in missingStations)
         {
-           occupancies.Add(new StationOccupancy(station, 0));
+           occupancies.Add(new StationOccupancy(station, 0, null));
         }
         return occupancies;
     }

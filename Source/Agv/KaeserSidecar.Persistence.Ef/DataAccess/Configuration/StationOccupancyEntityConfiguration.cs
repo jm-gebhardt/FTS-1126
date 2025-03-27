@@ -17,5 +17,6 @@ public class StationOccupancyEntityConfiguration : IEntityTypeConfiguration<Stat
         builder.HasKey(e => e.Station);
         builder.Property(e => e.Count);
         builder.Property(e => e.Station).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.AgvCorrelationId);
     }
 }
