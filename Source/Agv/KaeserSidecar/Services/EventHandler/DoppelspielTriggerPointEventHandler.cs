@@ -47,7 +47,7 @@ public class DoppelspielTriggerPointEventHandler(
         {
             var nextPickOrder = hostOrder.DoppelspielPartner != null? await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value) : null;
             bool hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(agvStatus.CorrelationId);
-            Guid? nextPickOrderId = nextPickOrder?.CorrelationId ?? null;
+            Guid? nextPickOrderId = nextPickOrder == null || nextPickOrder.IsQueued ? null : nextPickOrder.CorrelationId;
             bool shouldPickNext = !hasLowBatteryLevel && nextPickOrderId != null;
             string? pickNode = shouldPickNext ? action.Target.NodeId : null;
             logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next: {ShouldPick}", actionGroup.AssignedAgv!.Value, action.Target.NodeId!, shouldPickNext);
