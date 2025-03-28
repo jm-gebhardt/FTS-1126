@@ -1224,8 +1224,8 @@ public class AgvCommandHandler :
         bool wasMaxChargedUp = oldSoc >= agvSettings.MaxChargeUp;
         bool isMaxChargedUp = newSoc >= agvSettings.MaxChargeUp;
 
-        bool wasCritical = oldSoc >= agvSettings.BatteryLevelCritical;
-        bool isCritical = newSoc >= agvSettings.BatteryLevelCritical;
+        bool wasCritical = oldSoc <= agvSettings.BatteryLevelCritical;
+        bool isCritical = newSoc <= agvSettings.BatteryLevelCritical;
 
         bool isLow = newSoc <= agvSettings.BatteryLevelLow;
         bool wasLow = oldSoc <= agvSettings.BatteryLevelLow;
