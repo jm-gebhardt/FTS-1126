@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 /// <summary>
 /// A zone.
 /// </summary>
-public class Zone
+public class Zone : IEquatable<Zone>
 {
     /// <summary>
     /// The polygon that defines the zone boundaries.
@@ -53,5 +53,21 @@ public class Zone
     public bool IsAgvInside(AgvPosition position)
     {
         return Polygon.PointIsInPolygon(position.X, position.Y);
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public bool Equals(Zone? other)
+    {
+        if (ZoneId != other?.ZoneId)
+        {
+            return false;
+        }
+
+        if (Capacity != other.Capacity)
+        {
+            return false;
+        }
+
+        return Polygon.OrderBy(p => p.Index).SequenceEqual(other.Polygon.OrderBy(p => p.Index));
     }
 }

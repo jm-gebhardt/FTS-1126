@@ -12,13 +12,22 @@ public class EfZoneRepository(IDbContextFactory<TransportOrderDbContext> context
     public async Task AddOrUpdateZone(Zone zone)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
-        if (await context.Set<Zone>().Include(z => z.Polygon).AsSplitQuery().AnyAsync(z => z.CorrelationId == zone.CorrelationId))
+        var existingZone = await context.Set<Zone>()
+            .Include(z => z.Polygon)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(z => z.CorrelationId == zone.CorrelationId);
+        if (existingZone == null)
         {
-            context.Set<Zone>().Update(zone);
+            await context.Set<Zone>().AddAsync(zone);
             await context.SaveChangesAsync();
             return;
         }
-        await context.Set<Zone>().AddAsync(zone);
+        if (existingZone.Equals(zone))
+        {
+            return;
+        }
+        context.Set<Zone>().Update(zone);
         await context.SaveChangesAsync();
     }
 
