@@ -31,15 +31,15 @@ public class StatusTest
     public void Load_ValidData_PropertiesUpdated()
     {
         var status = new Status();
-        // "/Seq:001/Send:FTS01.../Rec:EWM...../Time:2021:11:02:08:12:09:122/Func:Status............../Pos:FTS001..../State:AUTO/ERR:0000/Info:................................................../$$:"
+        // "/Seq:001/Send:FTS01.../Rec:EWM...../Time:2021:11:02:08:12:09:122/Func:Status............../Pos:FTS001..../State:AUTO/ERR:5000/Info:AAA.............................................../$$:"
         status.Load(TestTelegram.Status);
 
         status.Func.ShouldBe(nameof(Status));
         status.Rec.ShouldBe("EWM");
         status.Send.ShouldBe("FTS01");
         status.Pos.ShouldBe("FTS001");
-        status.Err.ShouldBe(0);
-        status.Info.ShouldBe("");
+        status.Err.ShouldBe(5000);
+        status.Info.ShouldBe("AAA");
         status.State.ShouldBe(SystemState.AUTO);
     }
 

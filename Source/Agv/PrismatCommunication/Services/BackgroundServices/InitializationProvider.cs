@@ -1,10 +1,7 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+﻿using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
-using Gebhardt.Acc.PrismatCommunication.Domain.Services;
-using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
@@ -21,17 +18,13 @@ public class InitializationProvider(
     IShortLoopWeTargetStationRepository targetStationRepository,
     ILogger<InitializationProvider> logger,
     IRequestClient<GetQueueFillQuantities> queueRequestClient,
-    IRequestClient<GetTriggerMapping> triggerRequestClient,
-    ObservableConcurrentQueue<PrismatTelegram> prismatQueue,
-    TelegramQueuePersistenceService queuePersistenceService
+    IRequestClient<GetTriggerMapping> triggerRequestClient
     ) : BackgroundService
 {
     /// <inheritdoc cref="BackgroundService"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        prismatQueue.ItemDequeued += queuePersistenceService.OnItemDequeued;
-        prismatQueue.ItemEnqueued += queuePersistenceService.OnItemEnqueued;
-        await Task.WhenAll(InitializeShortLoopTargetStation(), queuePersistenceService.ReloadQueue(), InitializeQueue(), InitializeTriggerMapping());
+        await Task.WhenAll(InitializeShortLoopTargetStation(), InitializeQueue(), InitializeTriggerMapping());
     }
 
     private async Task InitializeShortLoopTargetStation()

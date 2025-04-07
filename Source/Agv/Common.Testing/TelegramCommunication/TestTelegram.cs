@@ -21,7 +21,7 @@ public static class TestTelegram
     public const string TordError = "/Seq:001/Send:FTS01.../Rec:EWM...../Time:2021:11:02:08:12:09:122/Func:TordError.........../HU:5010000010........../Err:9010/Src:1020....../Dest:9999....../Info:Ziel-Station nicht bekannt......................../$$:";
     public const string Life = "/Seq:001/Send:EWM...../Rec:FTS01.../Time:2020:12:13:20:12:09:122/Func:Life................/$$:";
 
-    public const string Status = "/Seq:001/Send:FTS01.../Rec:EWM...../Time:2021:11:02:08:12:09:122/Func:Status............../Pos:FTS001..../State:AUTO/ERR:0000/Info:................................................../$$:";
+    public const string Status = "/Seq:001/Send:FTS01.../Rec:EWM...../Time:2021:11:02:08:12:09:122/Func:Status............../Pos:FTS001..../State:AUTO/ERR:5000/Info:AAA.............................................../$$:";
     public const string PosStateReq = "/Seq:001/Send:EWM...../Rec:FTS01.../Time:2021:11:02:08:12:09:122/Func:PosStateReq........./Pos:FTS001/$$:";
     
     [PublicAPI]

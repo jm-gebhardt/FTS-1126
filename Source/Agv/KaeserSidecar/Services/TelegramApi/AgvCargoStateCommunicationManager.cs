@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using JetBrains.Annotations;
@@ -12,7 +14,16 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.TelegramApi;
 /// Provides a communication manager
 /// </summary>
 [UsedImplicitly]
-public class AgvCargoStateCommunicationManager(ILogger<AgvCargoStateCommunicationManager> logger, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]  Sender<ConveyorTelegram> sender, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]  Client client) : BackgroundService
+public class AgvCargoStateCommunicationManager(
+    ILogger<AgvCargoStateCommunicationManager> logger,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    Sender<ConveyorTelegram> sender,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    TelegramQueuePersistenceService agvCargoStatePersistenceService,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    ObservableConcurrentQueue<ConveyorTelegram> agvCargoStateQueue,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    Client client) : BackgroundService
 {
     private const int ConnectionDelayMs = 10000;
 
@@ -21,6 +32,7 @@ public class AgvCargoStateCommunicationManager(ILogger<AgvCargoStateCommunicatio
     {
         await Connect(stoppingToken);
         Start();
+        await agvCargoStatePersistenceService.ReloadQueue();
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
@@ -40,6 +52,8 @@ public class AgvCargoStateCommunicationManager(ILogger<AgvCargoStateCommunicatio
         }
        
         sender.RestartRequest += OnRestartRequest!;
+        agvCargoStateQueue.ItemDequeued += agvCargoStatePersistenceService.OnItemDequeued;
+        agvCargoStateQueue.ItemEnqueued += agvCargoStatePersistenceService.OnItemEnqueued;
     }
 
     private void Start()

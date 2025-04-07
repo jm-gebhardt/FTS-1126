@@ -9,7 +9,6 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
-using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.KaeserSidecar.SimulationMode;
 using Gebhardt.Acc.PrismatCommunication.Configuration;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
@@ -106,7 +105,6 @@ public static class HostBuilderExtension
             }
             else
             {
-                services.AddHostedService<InitializationProvider>();
                 services.AddConveyorApi(context.Configuration);
                 services.AddSingleton<IConveyorCommunicator, TelegramConveyorCommunicator>();
             }

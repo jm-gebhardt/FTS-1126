@@ -101,7 +101,8 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// </summary>
     private void TrySendLifeTelegram()
     {
-        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
+        bool isTimeToSendLifeTelegram = DateTime.Now - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval);
+        if ( isTimeToSendLifeTelegram && !ShouldReceiveTelegram())
         {
             SendQueue.Enqueue(new Life(DateTime.UtcNow));
         }

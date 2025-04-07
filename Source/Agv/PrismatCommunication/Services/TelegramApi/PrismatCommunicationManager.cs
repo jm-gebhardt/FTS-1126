@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,22 +19,33 @@ public class PrismatCommunicationManager : BackgroundService
     private readonly Sender<PrismatTelegram> _sender;
     private readonly Server _fromPrismatServer;
     private readonly Server _toPrismatServer;
+    private readonly TelegramQueuePersistenceService _queuePersistenceService;
+    private readonly ObservableConcurrentQueue<PrismatTelegram> _prismatQueue;
 
     /// <inheritdoc cref="PrismatCommunicationManager"/>>
-    public PrismatCommunicationManager(ILogger<PrismatCommunicationManager> logger, Receiver<PrismatTelegram> receiver, Sender<PrismatTelegram> sender, [FromKeyedServices(ServiceKeyProvider.FromPrismat)] Server fromPrismatServer, [FromKeyedServices(ServiceKeyProvider.ToPrismat)] Server toPrismatServer)
+    public PrismatCommunicationManager(ILogger<PrismatCommunicationManager> logger,
+        Receiver<PrismatTelegram> receiver,
+        Sender<PrismatTelegram> sender,
+        [FromKeyedServices(ServiceKeyProvider.FromPrismat)]
+        Server fromPrismatServer,
+        [FromKeyedServices(ServiceKeyProvider.ToPrismat)]
+        Server toPrismatServer,
+        TelegramQueuePersistenceService queuePersistenceService,
+        ObservableConcurrentQueue<PrismatTelegram> prismatQueue)
     {
         _logger = logger;
         _receiver = receiver;
         _sender = sender;
         _fromPrismatServer = fromPrismatServer;
         _toPrismatServer = toPrismatServer;
+        _queuePersistenceService = queuePersistenceService;
+        _prismatQueue = prismatQueue;
     }
 
     /// <inheritdoc cref="PrismatCommunicationManager"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Connect();
-        Start();
+        await Task.WhenAll(StartAndConnectReceivingChannel(), StartAndConnectSendingChannel());
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
@@ -41,18 +54,23 @@ public class PrismatCommunicationManager : BackgroundService
         Stop();
     }
 
-    private async Task Connect()
+    private async Task StartAndConnectReceivingChannel()
     {
-        await Task.WhenAll(_fromPrismatServer.InitializeAsync(), _toPrismatServer.InitializeAsync());
         _receiver.RestartRequest += OnRestartRequest!;
-        _sender.RestartRequest += OnRestartRequest!;
+        await _fromPrismatServer.InitializeAsync();
+        _logger.LogInformation("Starting receiver for prismat communication");
+        _receiver.Start();
     }
 
-    private void Start()
+    private async Task StartAndConnectSendingChannel()
     {
-        _logger.LogInformation("Starting sender and receiver for prismat communication");
-        _receiver.Start();
+        _sender.RestartRequest += OnRestartRequest!;
+        await _toPrismatServer.InitializeAsync();
+        _logger.LogInformation("Starting sender for prismat communication");
         _sender.Start();
+        _prismatQueue.ItemDequeued += _queuePersistenceService.OnItemDequeued;
+        _prismatQueue.ItemEnqueued += _queuePersistenceService.OnItemEnqueued;
+        await _queuePersistenceService.ReloadQueue();
     }
 
     private void Stop()

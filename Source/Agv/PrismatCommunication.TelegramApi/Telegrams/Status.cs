@@ -68,7 +68,7 @@ public class Status : PrismatTelegram
             }
             State = result;
             Info = fields["Info"].TrimEnd('.');
-            Err = int.Parse(fields["Err"]);
+            Err = int.Parse(fields["ERR"]);
         }
         catch (KeyNotFoundException ex)
         {

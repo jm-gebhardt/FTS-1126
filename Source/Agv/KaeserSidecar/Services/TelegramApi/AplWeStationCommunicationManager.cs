@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using JetBrains.Annotations;
@@ -12,7 +14,16 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.TelegramApi;
 /// Provides a communication manager
 /// </summary>
 [UsedImplicitly]
-public class AplWeStationCommunicationManager(ILogger<AplWeStationCommunicationManager> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)]  Sender<ConveyorTelegram> sender, [FromKeyedServices(ServiceKeyProvider.AplWeStation)]  Client client) : BackgroundService
+public class AplWeStationCommunicationManager(
+    ILogger<AplWeStationCommunicationManager> logger,
+    [FromKeyedServices(ServiceKeyProvider.AplWeStation)]
+    Sender<ConveyorTelegram> sender,
+    [FromKeyedServices(ServiceKeyProvider.AplWeStation)]
+    ObservableConcurrentQueue<ConveyorTelegram> agvWeStationQueue,
+    [FromKeyedServices(ServiceKeyProvider.AplWeStation)]
+    TelegramQueuePersistenceService agvWeStationPersistenceService,
+    [FromKeyedServices(ServiceKeyProvider.AplWeStation)]
+    Client client) : BackgroundService
 {
     private const int ConnectionDelayMs = 10000;
 
@@ -21,6 +32,7 @@ public class AplWeStationCommunicationManager(ILogger<AplWeStationCommunicationM
     {
         await Connect(stoppingToken);
         Start();
+        await agvWeStationPersistenceService.ReloadQueue();
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
@@ -40,6 +52,8 @@ public class AplWeStationCommunicationManager(ILogger<AplWeStationCommunicationM
         }
        
         sender.RestartRequest += OnRestartRequest!;
+        agvWeStationQueue.ItemDequeued += agvWeStationPersistenceService.OnItemDequeued;
+        agvWeStationQueue.ItemEnqueued += agvWeStationPersistenceService.OnItemEnqueued;
     }
 
     private void Start()
