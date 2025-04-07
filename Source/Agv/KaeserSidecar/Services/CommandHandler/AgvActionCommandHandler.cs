@@ -29,22 +29,16 @@ public class AgvActionCommandHandler(
         var actionCorrelationId = context.Message.CorrelationId;
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Nodes.FirstOrDefault() ?? ""));
+        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
         if (action == null)
         {
-            logger.LogWarning("Action {ActionCorrelationId} has no first node that is in the conveyor station mapping", actionCorrelationId);
+            logger.LogWarning("Action {ActionCorrelationId} not found", actionCorrelationId);
             return;
         }
         string? station = action.Nodes.FirstOrDefault();
         if (station == null)
         {
             logger.LogWarning("Action {ActionCorrelationId} has no start node", actionCorrelationId);
-            return;
-        }
-        station = await transportOrderDb.Stations.GetStationAtLocationOfNode(station);
-        if (station == null)
-        {
-            logger.LogWarning("Action {ActionCorrelationId} did not start from station, start node is {StartNode}", actionCorrelationId, action.Nodes.FirstOrDefault());
             return;
         }
         bool gotPickAssignedOnStation = action.Nodes.First() == action.Nodes.Last();

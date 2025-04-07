@@ -37,7 +37,12 @@ public class StationOccupancy
         {
             return;
         }
-        Count += 1;
+        // Only increase occupancy for unoccupied stations,
+        // as for target selection the actual number of vehicles is irrelevant.
+        if (Count < 1)
+        {
+            Count += 1;
+        }
         AgvCorrelationId = agvCorrelationId;
     }
 

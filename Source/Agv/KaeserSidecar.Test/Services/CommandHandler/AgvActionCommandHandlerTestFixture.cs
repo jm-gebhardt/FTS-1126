@@ -36,12 +36,6 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
         return this;
     }
 
-    public AgvActionCommandHandlerTestFixture WithStationName(string? stationName)
-    {
-        _transportOrderDb.Setup(x => x.Stations.GetStationAtLocationOfNode(It.IsAny<string>())).ReturnsAsync(stationName);
-        return this;
-    }
-
     public AgvActionCommandHandlerTestFixture WithActionGroup(ActionGroup? actionGroup)
     {
         _transportOrderDb.Setup(x => x.ActionGroups.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>()))

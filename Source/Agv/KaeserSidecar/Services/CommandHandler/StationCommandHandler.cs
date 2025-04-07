@@ -29,8 +29,14 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     /// </summary>
     public async Task Consume(ConsumeContext<FreeStation> context)
     {
-        (string station, var agvCorrelationId) = context.Message;
-        logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station);
-        await stationRepository.FreeStation(station, agvCorrelationId);
+        var agvCorrelationId = context.Message.AgvCorrelationId;
+        logger.LogInformation("Removing agv {Agv} from station", agvCorrelationId);
+        var occupancy = await stationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
+        if (occupancy == null)
+        {
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy any station", agvCorrelationId);
+            return;
+        }
+        await stationRepository.FreeStation(occupancy.Station, agvCorrelationId);
     }
 }

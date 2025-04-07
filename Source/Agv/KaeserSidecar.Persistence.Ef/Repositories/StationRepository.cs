@@ -53,4 +53,13 @@ public class StationRepository : IStationRepository
         await Task.Delay(0);
         return _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key, kvp.Value.Count, null)).OrderBy(s => s.Station).ToList();
     }
+
+    /// <inheritdoc cref="IStationRepository"/>>
+    public Task<StationOccupancy?> GetOccupancyByAgvCorrelationId(Guid agvCorrelationId)
+    {
+        return Task.FromResult(_stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key,
+                kvp.Value.Count,
+                null))
+            .FirstOrDefault(s => s.AgvCorrelationId == agvCorrelationId));
+    }
 }

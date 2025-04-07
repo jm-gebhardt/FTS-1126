@@ -20,7 +20,6 @@ public class AgvActionCommandHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
-            .WithStationName(station)
             .WithActionGroup(actionGroup);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
@@ -42,7 +41,6 @@ public class AgvActionCommandHandlerTest
       
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
-            .WithStationName(station)
             .WithActionGroup(actionGroup);
         
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
@@ -64,7 +62,6 @@ public class AgvActionCommandHandlerTest
 
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
-            .WithStationName(station)
             .WithActionGroup(actionGroup);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.Last().CorrelationId, actionGroup.AssignedAgv!.Value);
@@ -85,7 +82,6 @@ public class AgvActionCommandHandlerTest
 
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
-            .WithStationName(station)
             .WithActionGroup(actionGroup);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
@@ -118,24 +114,6 @@ public class AgvActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [];
         var fixture = new AgvActionCommandHandlerTestFixture()
-            .WithActionGroup(actionGroup);
-
-        var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);
-
-        await fixture.TestHarness.Bus.Publish(actionStarted);
-        await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
-    }
-
-    [TestMethod]
-    public async Task Consume_ActionStarted_StartNodeIsWaypoint_DoesNotPublishFreeStation()
-    {
-        const string station = "waypoint";
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
-        actionGroup.Actions.First().Nodes = [station];
-        var fixture = new AgvActionCommandHandlerTestFixture()
-            .WithStationName(null)
             .WithActionGroup(actionGroup);
 
         var actionStarted = new ActionStarted(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value);

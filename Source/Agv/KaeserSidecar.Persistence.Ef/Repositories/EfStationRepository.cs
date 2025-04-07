@@ -49,4 +49,11 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
         }
         return occupancies;
     }
+
+    /// <inheritdoc cref="IStationRepository"/>>
+    public async Task<StationOccupancy?> GetOccupancyByAgvCorrelationId(Guid agvCorrelationId)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        return await context.Set<StationOccupancy>().FirstOrDefaultAsync(s => s.AgvCorrelationId == agvCorrelationId);
+    }
 }

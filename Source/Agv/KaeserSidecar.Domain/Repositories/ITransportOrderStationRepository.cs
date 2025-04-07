@@ -13,11 +13,4 @@ public interface ITransportOrderStationRepository : TransportOrder.Domain.Reposi
     /// <param name="stationNames">The names of the stations.</param>
     /// <returns>Collection of stations.</returns>
     Task<ICollection<Station>> GetStationsByNames(string[] stationNames);
-
-    /// <summary>
-    /// Get the station name that is at the location of the given node.
-    /// </summary>
-    /// <param name="nodeId">The node id.</param>
-    /// <returns>The station name,  if the node is co-located with a station</returns>
-    Task<string?> GetStationAtLocationOfNode(string nodeId);
 }
