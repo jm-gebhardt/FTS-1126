@@ -31,6 +31,7 @@ using MassTransit;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using ResendAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.ResendAction;
 using ResetAgvErrors = Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
 using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
@@ -346,6 +347,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetAgvInstantActionDefinitions>();
         configurator.AddRequestClient<GetAgvsInstantActionsDefinitions>();
         configurator.AddRequestClient<StartInstantAction>();
+        configurator.AddConsumer<ResendActionRequestHandler>();
+        configurator.AddRequestClient<ResendAction>();
     }
 
     private static void RegisterMediatorRoutingRequestHandlers(IMediatorRegistrationConfigurator configurator)

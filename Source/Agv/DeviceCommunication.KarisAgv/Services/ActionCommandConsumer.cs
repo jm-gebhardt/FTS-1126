@@ -20,8 +20,8 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRepository agvRepository, IGraphRepository graphRepository, IActionRepository actionRepository) :
     IConsumer<StartActionCommand>,
     IConsumer<UpdateActionCommand>,
-    IConsumer<AbortAndStartActionCommand>
-
+    IConsumer<AbortAndStartActionCommand>,
+    IConsumer<ResendAction>
 {
     /// <summary>
     /// Handles the <see cref="StartActionCommand"/> command.
@@ -118,6 +118,20 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         }
         logger.LogInformation("Sent update transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResendAction"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResendAction> context)
+    {
+        (_, string serialNumber, var action) = context.Message;
+
+        var order = await GetOrder(action, serialNumber, OrderRecordType.Order, action.CorrelationId.ToString());
+        await context.PublishMqtt(order, context.CancellationToken);
+
+        logger.LogInformation("Resent order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}",
+            action.CorrelationId, serialNumber, action.Target.NodeId);
     }
 
     private async Task<MqttOrder> GetOrder(AgvAction action, string agvSerialNumber, OrderRecordType recordType, string orderId)

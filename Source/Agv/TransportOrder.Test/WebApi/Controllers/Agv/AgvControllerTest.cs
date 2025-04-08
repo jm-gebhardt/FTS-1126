@@ -530,4 +530,37 @@ public class AgvControllerTest
         result.ShouldBeAssignableTo<OkResult>();
         (await fixture.TestHarness.Published.Any<SetMaintenanceMode>()).ShouldBeTrue();
     }
+
+    [TestMethod]
+    public async Task ResendAction_ValidData_Ok()
+    {
+        AgvControllerTestFixture<ResendAction, ResendActionRequestHandler> fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        var actionResult = await fixture.Controller.ResendAction(fixture.AgvSerialNumbers[0].ToGuid());
+        var result = actionResult as OkObjectResult;
+        result.ShouldBeAssignableTo<OkObjectResult>();
+    }
+
+    [TestMethod]
+    public async Task ResendAction_NoAgv_RaisesAgvNotFoundException()
+    {
+        AgvControllerTestFixture<ResendAction, ResendActionRequestHandler> fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
+            .Build();
+
+        await Should.ThrowAsync<RequestException>(fixture.Controller.ResendAction(Guid.Empty));
+    }
+
+    [TestMethod]
+    public async Task ResendAction_NoAction_RespondsWithConflict()
+    {
+        AgvControllerTestFixture<ResendAction, ResendActionRequestHandler> fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        var actionResult = await fixture.Controller.ResendAction(fixture.AgvSerialNumbers[2].ToGuid());
+        var result = actionResult as ConflictObjectResult;
+        result.ShouldBeAssignableTo<ConflictObjectResult>();
+    }
 }

@@ -45,6 +45,7 @@ using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using ResendAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.ResendAction;
 using ResetAgvErrors = Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Agv;
@@ -242,6 +243,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<SetNormalMode> setNormalModeClient = GetRequestClient<SetNormalMode>();
         IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient = GetRequestClient<GetAgvInstantActionDefinitions>();
         IRequestClient<StartInstantAction> startInstantActionsClient = GetRequestClient<StartInstantAction>();
+        IRequestClient<ResendAction> resendActionClient = GetRequestClient<ResendAction>();
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient = GetRequestClient<RemoveAgvFromZones>();
 
         var controller = new AgvController(Mapper,
@@ -275,6 +277,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             setNormalModeClient,
             getInstantActionsClient,
             startInstantActionsClient,
+            resendActionClient,
             removeAgvFromZonesClient
         )
         {

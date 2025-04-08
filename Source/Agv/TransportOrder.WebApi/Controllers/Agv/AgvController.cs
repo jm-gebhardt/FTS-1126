@@ -67,6 +67,7 @@ public class AgvController : Controller
     private readonly IRequestClient<SetNormalMode> _setNormalModeClient;
     private readonly IRequestClient<GetAgvInstantActionDefinitions> _getInstantActionsClient;
     private readonly IRequestClient<StartInstantAction> _startInstantActionsClient;
+    private readonly IRequestClient<ResendAction> _resendActionClient;
     private readonly IRequestClient<RemoveAgvFromZones> _removeAgvFromZonesClient;
     private readonly IMapper _mapper;
 
@@ -105,6 +106,7 @@ public class AgvController : Controller
         IRequestClient<SetNormalMode> setNormalModeClient,
         IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient,
         IRequestClient<StartInstantAction> startInstantActionsClient,
+        IRequestClient<ResendAction> resendActionClient,
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient
     )
     {
@@ -139,6 +141,7 @@ public class AgvController : Controller
         _setNormalModeClient = setNormalModeClient;
         _getInstantActionsClient = getInstantActionsClient;
         _startInstantActionsClient = startInstantActionsClient;
+        _resendActionClient = resendActionClient;
         _removeAgvFromZonesClient = removeAgvFromZonesClient;
     }
 
@@ -686,6 +689,24 @@ public class AgvController : Controller
             action.ActionType,
             action.Parameters?.ToDictionary(k => k.Key, v => v.Value),
             action.BlockingType));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Resend an action to the agv.
+    /// </summary>
+    /// <param name="correlationId"></param>
+    /// <returns></returns>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/resendAction")]
+    public async Task<ActionResult> ResendAction(Guid correlationId)
+    {
+        Response<Success, ActionNotFound> result = await _resendActionClient.GetResponse<Success, ActionNotFound>(new ResendAction(correlationId));
+        if (result.Message is ActionNotFound)
+        {
+            return Conflict();
+        }
+
         return Ok();
     }
 }
