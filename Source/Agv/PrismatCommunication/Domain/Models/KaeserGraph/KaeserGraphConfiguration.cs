@@ -15,7 +15,7 @@ public class KaeserGraphConfiguration
     /// <summary>
     /// Prismat targets where nodes are known.
     /// </summary>
-    public string[] PrismatKnownTargets { get; } = ["1020", "1050", "2130", "2110", "2230", "2210", "2330", "2310", "2430", "2410"];
+    public string[] PrismatKnownTargets { get; } = ["1020", "1040", "1050", "1060", "2130", "2110", "2230", "2210", "2330", "2310", "2430", "2410"];
 
     /// <summary>
     /// Prismat targets (pick and drop) of orders for which the pick node is unknown.
@@ -28,14 +28,14 @@ public class KaeserGraphConfiguration
     public string[] PrismatIncompleteDropTargets { get; } = ["9060", "1060"];
 
     /// <summary>
-    /// The AKL pick target sent by prismat that is to be handled with an immediate pick after dropping.
+    /// The AKL pick targets sent by prismat that is to be handled with an immediate pick after dropping.
     /// </summary>
-    public string PrismatAklPickTarget { get; private set; } = "1020";
+    public List<string> PrismatAklPickTargets { get; private set; } = ["1020", "1040"];
 
     /// <summary>
-    /// The AKL drop target sent by prismat .
+    /// The AKL drop targets sent by prismat .
     /// </summary>
-    public string PrismatAklDropTarget { get; private set; } = "1050";
+    public List<string> PrismatAklDropTargets { get; private set; } = ["1050", "1060"];
 
     /// <summary>
     /// Provides a mapping between source and target definitions and
@@ -161,6 +161,8 @@ public class KaeserGraphConfiguration
         {
             { "1020", "3" },
             { "1050", "3" },
+            { "1040", "3" },
+            { "1060", "3" },
             { "9060", "4" },
             { "9070", "4" },
             { "2130", "5" },
@@ -233,10 +235,6 @@ public class KaeserGraphConfiguration
         }
         StationMapping = yamlData.StationMapping;
         ConveyorStationMapping = yamlData.ConveyorStationMapping;
-        if (!string.IsNullOrEmpty(yamlData.PrismatAklPickTarget))
-        {
-            PrismatAklPickTarget = yamlData.PrismatAklPickTarget;
-        }
         if (!yamlData.TargetLiftHeight.IsNullOrEmpty())
         {
             UpdateLiftHeights(yamlData.TargetLiftHeight);
@@ -295,8 +293,14 @@ public class KaeserGraphConfiguration
     /// <param name="target">The new target station.</param>
     public void SetShortLoopTarget(string target)
     {
-        StationMapping[PrismatAklPickTarget] = target;
-        StationMapping[PrismatAklDropTarget] = target;
+        foreach (string pickTarget in PrismatAklPickTargets)
+        {
+            StationMapping[pickTarget] = target;
+        }
+        foreach (string dropTarget in PrismatAklDropTargets)
+        {
+            StationMapping[dropTarget] = target;
+        }
     }
 
     /// <summary>
@@ -304,7 +308,7 @@ public class KaeserGraphConfiguration
     /// </summary>
     public string GetShortLoopTarget()
     {
-        return StationMapping[PrismatAklPickTarget];
+        return StationMapping[PrismatAklPickTargets.First()];
     }
 
     /// <summary>

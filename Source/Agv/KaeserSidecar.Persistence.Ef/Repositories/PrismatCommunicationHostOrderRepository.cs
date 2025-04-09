@@ -29,7 +29,7 @@ public class PrismatCommunicationHostOrderRepository: EfHostOrderRepository, IPr
                      && h.AssignedAgv == null
                      && h.StartedDate == null
                      && !h.IsQueued
-                     && h.Actions.Any(a => a.Node == _configuration.PrismatAklPickTarget && a.ActionType == ActionType.Pick))
+                     && h.Actions.Any(a => _configuration.PrismatAklPickTargets.Contains(a.Node) && a.ActionType == ActionType.Pick))
             .OrderBy(h => h.CreatedDate).FirstOrDefaultAsync();
     }
 }

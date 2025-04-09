@@ -11,6 +11,7 @@ public class InputLoopSimulator(IBus bus, ILogger<SimulatorBase> logger, Simulat
     /// <inheritdoc />
     protected override List<Tuple<List<string>, List<string>>> SourceDestinationPools { get; } = [
         new(["1040"], ["9070"]),
+        new(["1040"], ["2110", "2210", "2310", "2410"]),
         new(["1020"], ["2110", "2210", "2310", "2410"])
     ];
 

@@ -5,6 +5,8 @@ LongLoopMoveTargetNode: "map/NODE-10"
 StationMapping:
   "1020": "WE1"
   "1050": "WE1"
+  "1040": "WE1"
+  "1060": "WE1"
   "2110": "AKL1"
   "2130": "AKL1"
   "2210": "AKL2"

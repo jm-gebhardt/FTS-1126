@@ -50,7 +50,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
                      && h.CanceledDate == null
                      && h.StartedDate != null
                      && h.Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node))
-                     && h.Actions.All(a => a.Node != configuration.PrismatAklPickTarget))
+                     && h.Actions.All(a => !configuration.PrismatAklPickTargets.Contains(a.Node)))
             .AnyAsync();
     }
 
@@ -88,7 +88,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context, Kaeser
                       && !h.IsQueued
                       && h.CanceledDate == null
                       && h.StartedDate == null
-                      && h.Actions.Any(a => a.Node == configuration.PrismatAklPickTarget && a.ActionType == ActionType.Pick))
+                      && h.Actions.Any(a => configuration.PrismatAklPickTargets.Contains(a.Node) && a.ActionType == ActionType.Pick))
             .OrderBy(h => h.CreatedDate).FirstOrDefaultAsync();
     }
 
