@@ -16,19 +16,21 @@ public class TelegramCommunicatorTest
         const string targetStation = "WE01";
         const string pickStation = "1040";
         const string dropStation = "1060";
+        const string hu = "123";
 
         fixture.Processor.HasSendDemand().ShouldBeFalse();
 
-        fixture.Communicator.ReportPalletPickDropStation(targetStation, pickStation, dropStation);
+        fixture.Communicator.ReportPalletPickDropStation(targetStation, pickStation, dropStation, hu);
 
         fixture.Processor.HasSendDemand().ShouldBeTrue();
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
 
-        var agvWeStation = new AgvWeStation("any", "any", "any", DateTime.UtcNow);
+        var agvWeStation = new AgvWeStation("any", "any", "any", "any", DateTime.UtcNow);
         agvWeStation.Load(nextTelegram);
 
         agvWeStation.Drop.ShouldBe(dropStation);
         agvWeStation.Station.ShouldBe(targetStation);
         agvWeStation.Pick.ShouldBe(pickStation);
+        agvWeStation.Hu.ShouldBe(hu);
     }
 }

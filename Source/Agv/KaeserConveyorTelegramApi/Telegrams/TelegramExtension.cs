@@ -17,7 +17,7 @@ public static class TelegramExtension
         {
             case nameof(AgvWeStation):
                 {
-                    var agvWeStationTelegram = new AgvWeStation("station", null, null, DateTime.UtcNow);
+                    var agvWeStationTelegram = new AgvWeStation("station", null, null, null, DateTime.UtcNow);
                     agvWeStationTelegram.Load(telegram.Message);
                     return agvWeStationTelegram;
                 }

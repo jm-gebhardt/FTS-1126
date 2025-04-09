@@ -21,9 +21,9 @@ public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> 
     }
     
     /// <inheritdoc cref="IConveyorCommunicator"/>>
-    public void ReportPalletPickDropStation(string targetStation, string? pickStation, string? dropStation)
+    public void ReportPalletPickDropStation(string targetStation, string? pickStation, string? dropStation, string? hu)
     {
-        var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, DateTime.UtcNow);
+        var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, hu, DateTime.UtcNow);
         aplWeStationTelegramProcessor.EnqueueTelegram(agvWeStation);
         logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvWeStation.ToString(), ServiceKeyProvider.AplWeStation);
     }

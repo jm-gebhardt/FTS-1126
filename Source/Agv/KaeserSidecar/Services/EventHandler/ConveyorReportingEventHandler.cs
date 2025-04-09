@@ -49,7 +49,7 @@ public class ConveyorReportingEventHandler(
             logger.LogInformation("Reporting order {Order} of agv {AgvCorrelationId} for dropping at {DropStation}/{DropTarget} at {Time}", droppingHostOrder.OrderId, targetStation, dropTarget, agvCorrelationId, DateTime.UtcNow);
         }
 
-        conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, dropTarget);
+        conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, dropTarget, droppingHostOrder.Hu);
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public class ConveyorReportingEventHandler(
         var pickingHostOrder = await hostOrderRepository.GetByIdAsync(hostOrderCorrelationId);
         string pickTarget = pickingHostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
         logger.LogInformation("Reporting order {Order}/{OrderCorrelationId} of agv {AgvCorrelationId} for picking at target {TargetStation}/{Target} at {Time}", pickingHostOrder.OrderId, hostOrderCorrelationId, agvCorrelationId, targetStation, pickTarget, DateTime.UtcNow);
-        conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, null);
+        conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, null, null);
         await orderRepository.StorePickOrderReport(pickTarget, pickingHostOrder.CorrelationId);
     }
 
@@ -77,7 +77,7 @@ public class ConveyorReportingEventHandler(
         (string targetStation, var orderId, string pickStation) = context.Message;
         if (!await orderRepository.HasOrderBeenReported(pickStation, orderId))
         {
-            conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickStation, null);
+            conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickStation, null, null);
             var pendingPickOrder = await hostOrderRepository.GetByIdAsync(orderId);
 
             logger.LogInformation("Late reporting of order {Order}/{OrderCorrelationId} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pendingPickOrder.CorrelationId, pickStation, DateTime.UtcNow);

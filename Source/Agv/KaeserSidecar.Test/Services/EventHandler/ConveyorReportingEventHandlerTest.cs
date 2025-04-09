@@ -32,7 +32,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
 
-        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, dropHostOrder.Hu, Times.Once());
         (await fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId)).ShouldBe(pickStation!=null);
     }
 
@@ -54,7 +54,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
         
-        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, dropHostOrder.Hu, Times.Once());
         (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId)).ShouldBeFalse();
         (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId)).ShouldBeFalse();
     }
@@ -71,7 +71,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.TestHarness.Bus.Publish(new AgvStartedPick("WE03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedPick>();
 
-        fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Once());
+        fixture.VerifyReportingToConveyors("WE03", null, "1020", null, Times.Once());
         (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeTrue();
     }
 
@@ -88,7 +88,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.TestHarness.Bus.Publish(new AgvStartedPick("WE03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedPick>();
 
-        fixture.VerifyReportingToConveyors("WE03", null, "1020", Times.Never());
+        fixture.VerifyReportingToConveyors("WE03", null, "1020", null, Times.Never());
     }
 
     [TestMethod]

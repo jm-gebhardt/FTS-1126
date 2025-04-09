@@ -23,13 +23,19 @@ public class AgvWeStation: ConveyorTelegram
     /// </summary>
     public string Drop { get; private set; }
 
+    /// <summary>
+    /// The handing unit.
+    /// </summary>
+    public string Hu { get; private set; } 
+
     /// <inheritdoc cref="AgvWeStation"/>>
-    public AgvWeStation(string station, string? drop, string? pick, DateTime time)
+    public AgvWeStation(string station, string? drop, string? pick, string? hu, DateTime time)
     {
         Seq = 0;
         Station = station;
         Pick = pick ?? "0000";
         Drop = drop ?? "0000";
+        Hu = hu ?? string.Empty;
         Func = nameof(AgvWeStation);
         Time = time;
         Send = Fts;
@@ -41,6 +47,7 @@ public class AgvWeStation: ConveyorTelegram
     {
         Seq = 0;
         Station = string.Empty;
+        Hu = string.Empty;
         Pick =  "0000";
         Drop =  "0000";
         Func = nameof(AgvWeStation);
@@ -65,6 +72,7 @@ public class AgvWeStation: ConveyorTelegram
             Station = fields[nameof(Station)][..4].TrimEnd('.');
             Pick = fields[nameof(Pick)][..4].TrimEnd('.');
             Drop = fields[nameof(Drop)][..4].TrimEnd('.');
+            Hu = fields[nameof(Hu).ToUpper()].TrimEnd('.');
         }
         catch (KeyNotFoundException ex)
         {
@@ -84,6 +92,6 @@ public class AgvWeStation: ConveyorTelegram
     /// </summary>
     public override string ToString()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{nameof(Station)}:{Station.PadRight(4, '.')}/{nameof(Pick)}:{Pick.PadRight(4, '.')}/{nameof(Drop)}:{Drop.PadRight(4, '.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{nameof(Station)}:{Station.PadRight(4, '.')}/{nameof(Pick)}:{Pick.PadRight(4, '.')}/{nameof(Drop)}:{Drop.PadRight(4, '.')}/{nameof(Hu).ToUpper()}:{Hu.PadRight(20, '.')}/{EndSymbol}";
     }
 }

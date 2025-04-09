@@ -46,7 +46,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
     /// <inheritdoc cref="DecisionPointEventHandlerTestFixture"/>>
     public DecisionPointEventHandlerTestFixture()
     {
-        _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>())).Verifiable();
+        _communicator.Setup(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>())).Verifiable();
 
         Build();
         _repository = Provider.GetRequiredService<IStationRepository>();
@@ -95,13 +95,13 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
     }
 
     [PublicAPI]
-    public void VerifyReportingToConveyors(string station="none", string? dropStation = null, string? pickStation=null, Times? times=null)
+    public void VerifyReportingToConveyors(string station="none", string? dropStation = null, string? pickStation=null, string? hu = null, Times? times=null)
     {
         times ??= Times.Once();
         if (times == Times.Never())
         {
-            _communicator.Verify(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()), (Times)times);
+            _communicator.Verify(x => x.ReportPalletPickDropStation(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>()), (Times)times);
         }
-        _communicator.Verify(x => x.ReportPalletPickDropStation(station, pickStation, dropStation), (Times)times);
+        _communicator.Verify(x => x.ReportPalletPickDropStation(station, pickStation, dropStation, hu), (Times)times);
     }
 }
