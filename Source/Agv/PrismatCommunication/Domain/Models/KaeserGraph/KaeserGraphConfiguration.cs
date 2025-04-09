@@ -18,24 +18,24 @@ public class KaeserGraphConfiguration
     public string[] PrismatKnownTargets { get; } = ["1020", "1040", "1050", "1060", "2130", "2110", "2230", "2210", "2330", "2310", "2430", "2410"];
 
     /// <summary>
-    /// Prismat targets (pick and drop) of orders for which the pick node is unknown.
+    /// The source at APL as identified by Prismat.
     /// </summary>
-    public string[] PrismatIncompletePickTargets { get; } = ["1040", "9070"];
+    public string PrismatAplSource = "9060";
 
     /// <summary>
-    /// Prismat targets (pick and drop) of orders for which the drop node is unknown.
+    /// The target at APL as identified by Prismat.
     /// </summary>
-    public string[] PrismatIncompleteDropTargets { get; } = ["9060", "1060"];
+    public string PrismatAplTarget = "9070";
 
     /// <summary>
-    /// The AKL pick targets sent by prismat that is to be handled with an immediate pick after dropping.
+    /// The input lanes sent by prismat that is to be handled with an immediate pick after dropping.
     /// </summary>
-    public List<string> PrismatAklPickTargets { get; private set; } = ["1020", "1040"];
+    public List<string> PrismatInputLanes { get; private set; } = ["1020", "1040"];
 
     /// <summary>
-    /// The AKL drop targets sent by prismat .
+    /// The output lanes sent by prismat .
     /// </summary>
-    public List<string> PrismatAklDropTargets { get; private set; } = ["1050", "1060"];
+    public List<string> PrismatOutputLanes { get; private set; } = ["1050", "1060"];
 
     /// <summary>
     /// Provides a mapping between source and target definitions and
@@ -293,11 +293,11 @@ public class KaeserGraphConfiguration
     /// <param name="target">The new target station.</param>
     public void SetShortLoopTarget(string target)
     {
-        foreach (string pickTarget in PrismatAklPickTargets)
+        foreach (string pickTarget in PrismatInputLanes)
         {
             StationMapping[pickTarget] = target;
         }
-        foreach (string dropTarget in PrismatAklDropTargets)
+        foreach (string dropTarget in PrismatOutputLanes)
         {
             StationMapping[dropTarget] = target;
         }
@@ -308,7 +308,7 @@ public class KaeserGraphConfiguration
     /// </summary>
     public string GetShortLoopTarget()
     {
-        return StationMapping[PrismatAklPickTargets.First()];
+        return StationMapping[PrismatInputLanes.First()];
     }
 
     /// <summary>

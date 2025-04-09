@@ -57,7 +57,7 @@ public class CargoTriggerPointEventHandler(
         switch (isDropping)
         {
             case true:
-                if (!hostOrder.Actions.All(a => configuration.PrismatIncompletePickTargets.Contains(a.Node)))
+                if (!hostOrder.HasUnknownPickTarget(configuration))
                 {
                     logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} with current action group {ActionGroupCorrelationId} is not heading towards 9060/9070", 
                         actionGroup.CorrelationId, agv);
@@ -66,7 +66,7 @@ public class CargoTriggerPointEventHandler(
                 break;
 
             case false:
-                if (!hostOrder.Actions.All(a => configuration.PrismatIncompleteDropTargets.Contains(a.Node)))
+                if (!hostOrder.HasUnknownDropTarget(configuration))
                 {
                     logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} with current action group {ActionGroupCorrelationId} is not heading towards 9060/9070", 
                         actionGroup.CorrelationId, agv);

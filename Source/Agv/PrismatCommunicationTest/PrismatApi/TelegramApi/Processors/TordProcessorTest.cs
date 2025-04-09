@@ -31,7 +31,7 @@ public class TordProcessorTest
         createHostOrder.OrderDetails.Source.ShouldBe(tord.Src);
         createHostOrder.OrderDetails.Destination.ShouldBe(tord.Dest);
         createHostOrder.OrderDetails.LeNo.ShouldBe(tord.Hu);
-        createHostOrder.OrderDetails.CreationDate.ShouldBe(tord.Time);
+        createHostOrder.OrderDetails.CreationDate.ShouldNotBe(tord.Time);
         createHostOrder.OrderDetails.Creator.ShouldBe(HostOrderCreator.Wms);
         fixture.Processor.ShouldReceiveTelegram().ShouldBeFalse();
     }

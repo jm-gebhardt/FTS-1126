@@ -298,7 +298,9 @@ public class HostOrder
     /// <param name="configuration">The Kaeser graph configuration.</param>
     public bool HasUnknownDropTarget(KaeserGraphConfiguration configuration)
     {
-        return Actions.All(a => configuration.PrismatIncompleteDropTargets.Contains(a.Node));
+        bool isAplSource = Actions.Single(a => a.ActionType == ActionType.Pick).Node == configuration.PrismatAplSource;
+        bool isUnknownDrop = configuration.PrismatOutputLanes.Contains(Actions.Single(a => a.ActionType == ActionType.Drop).Node);
+        return isAplSource && isUnknownDrop;
     }
 
     /// <summary>
@@ -307,6 +309,8 @@ public class HostOrder
     /// <param name="configuration">The Kaeser graph configuration.</param>
     public bool HasUnknownPickTarget(KaeserGraphConfiguration configuration)
     {
-        return Actions.All(a => configuration.PrismatIncompletePickTargets.Contains(a.Node));
+        bool isAplTarget = Actions.Single(a => a.ActionType == ActionType.Drop).Node == configuration.PrismatAplTarget;
+        bool isUnknownPick = configuration.PrismatInputLanes.Contains(Actions.Single(a => a.ActionType == ActionType.Pick).Node);
+        return isUnknownPick && isAplTarget;
     }
 }

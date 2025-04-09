@@ -155,8 +155,10 @@ public class HostOrderCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup()
+    [DataRow(0)] //1020
+    [DataRow(1)] //1040
+    [DataTestMethod]
+    public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup(int input)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
@@ -165,7 +167,7 @@ public class HostOrderCommandHandlerTest
             .WithValidationError(null)
             .WithHostCommunicator();
 
-        var order = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var order = OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input);
 
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
@@ -184,8 +186,10 @@ public class HostOrderCommandHandlerTest
         dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
     }
 
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_HostOrderOnlySaved()
+    [DataRow(0)] //1020
+    [DataRow(1)] //1040
+    [DataTestMethod]
+    public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_HostOrderOnlySaved(int input)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(Guid.NewGuid())
@@ -194,7 +198,7 @@ public class HostOrderCommandHandlerTest
             .WithValidationError(null)
             .WithHostCommunicator();
 
-        var order = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var order = OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input);
 
         await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
@@ -202,8 +206,10 @@ public class HostOrderCommandHandlerTest
         fixture.VerifyHostOrderAdded();
     }
 
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup()
+    [DataRow(0)] //1050
+    [DataRow(1)] //1060
+    [DataTestMethod]
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup(int output)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
@@ -212,7 +218,7 @@ public class HostOrderCommandHandlerTest
             .WithValidationError(null)
             .WithHostCommunicator();
 
-        var order = OrderGenerator.GenerateUnknownDropTargetOrder();
+        var order = OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output);
 
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
@@ -231,8 +237,10 @@ public class HostOrderCommandHandlerTest
         dropAction.Target.NodeId.ShouldBeEmpty();
     }
 
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsEmpty_HostOrderOnlySaved()
+    [DataRow(0)] //1050
+    [DataRow(1)] //1060
+    [DataTestMethod]
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsEmpty_HostOrderOnlySaved(int output)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(Guid.NewGuid())
@@ -242,7 +250,7 @@ public class HostOrderCommandHandlerTest
             .WithHostCommunicator();
         fixture.Configuration.SetQueueIsOccupied(false);
 
-        var order = OrderGenerator.GenerateUnknownDropTargetOrder();
+        var order = OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output);
 
         await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
@@ -250,8 +258,10 @@ public class HostOrderCommandHandlerTest
         fixture.VerifyHostOrderAdded();
     }
 
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsNotEmpty_QueueActionGroup()
+    [DataRow(0)] //1050
+    [DataRow(1)] //1060
+    [DataTestMethod]
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsNotEmpty_QueueActionGroup(int output)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(Guid.NewGuid())
@@ -261,7 +271,7 @@ public class HostOrderCommandHandlerTest
             .WithHostCommunicator();
         fixture.Configuration.SetQueueIsOccupied(true);
 
-        var order = OrderGenerator.GenerateUnknownDropTargetOrder();
+        var order = OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output);
 
         await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
@@ -387,12 +397,14 @@ public class HostOrderCommandHandlerTest
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AgvCorrelationId);
     }
 
-    [TestMethod]
-    public async Task Consume_PassTriggerPoint_ShouldPickNext_LongCircuitWE_PublishesQueueActionGroup()
+    [DataRow(0)] //1020
+    [DataRow(1)] //1040
+    [DataTestMethod]
+    public async Task Consume_PassTriggerPoint_ShouldPickNext_LongCircuitWE_PublishesQueueActionGroup(int input)
     {
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
 
-        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input));
         dropOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
         nextPickOrder.SetDoppelspielPartner(dropOrder.CorrelationId);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()

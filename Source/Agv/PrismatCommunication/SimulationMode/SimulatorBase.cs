@@ -28,7 +28,7 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
 
     private string _source = string.Empty;
 
-    private readonly Random _random = new ();
+    private readonly Random _random = new (0);
 
     /// <inheritdoc cref="IPollable.Poll"/>
     public async Task Poll(CancellationToken token)

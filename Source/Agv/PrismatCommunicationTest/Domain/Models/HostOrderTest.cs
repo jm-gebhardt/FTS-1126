@@ -27,20 +27,24 @@ public class HostOrderTest
         dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[shortCircuitOrder.Destination]); 
     }
 
-    [TestMethod]
-    public void TryCreatePickDropActionGroup_LongCircuitOrderWithIncompleteTarget_null()
+    [DataRow(0)] //1020
+    [DataRow(1)] //1040
+    [DataTestMethod]
+    public void TryCreatePickDropActionGroup_LongCircuitOrderWithIncompleteTarget_null(int input)
     {
-        var longCircuitOrder = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var longCircuitOrder = OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(longCircuitOrder);
 
         var actionGroup = hostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, longCircuitOrder.CreationDate);
         actionGroup.ShouldBeNull();
     }
 
-    [TestMethod]
-    public void CreateMovePickDropActionGroup_ValidData_MovePickDropActionGroup()
+    [DataRow(0)] //1020
+    [DataRow(1)] //1040
+    [DataTestMethod]
+    public void CreateMovePickDropActionGroup_ValidData_MovePickDropActionGroup(int input)
     {
-        var longCircuitOrder = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var longCircuitOrder = OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(longCircuitOrder);
         var actionGroup = hostOrder.CreateMovePickDropActionGroup(OrderGenerator.KaeserConfiguration, longCircuitOrder.CreationDate);
 
@@ -58,10 +62,12 @@ public class HostOrderTest
         dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[longCircuitOrder.Destination]);
     }
 
-    [TestMethod]
-    public void CreatePickMoveDropActionGroup_ValidData_PickMoveDropActionGroup()
+    [DataRow(0)] //1050
+    [DataRow(1)] //1060
+    [DataTestMethod]
+    public void CreatePickMoveDropActionGroup_ValidData_PickMoveDropActionGroup(int output)
     {
-        var longCircuitOrder = OrderGenerator.GenerateUnknownDropTargetOrder();
+        var longCircuitOrder = OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(longCircuitOrder);
         var actionGroup = hostOrder.CreatePickMoveDropActionGroup(OrderGenerator.KaeserConfiguration);
 

@@ -15,8 +15,7 @@ public class HostOrderActionValidator : AbstractValidator<Action>
     public HostOrderActionValidator(KaeserGraphConfiguration configuration)
     {
         List<string> knownTargets = configuration.StationMapping.Keys.ToList();
-        knownTargets.AddRange(configuration.PrismatIncompleteDropTargets);
-        knownTargets.AddRange(configuration.PrismatIncompletePickTargets);
+        knownTargets.AddRange([configuration.PrismatAplSource, configuration.PrismatAplTarget]);
         RuleFor(a => a.Node)
             .Must(knownTargets.Contains)
             .WithReason(configuration.OrderValidationErrors[KaeserGraphConfiguration.ErrorCodeSourceUnknown])

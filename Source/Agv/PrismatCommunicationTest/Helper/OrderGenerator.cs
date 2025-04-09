@@ -53,22 +53,22 @@ public static class OrderGenerator
             HostOrderCreator.Wms, huRotation);
     }
 
-    public static OrderDetails GenerateUnknownPickTargetOrder()
+    public static OrderDetails GenerateUnknownPickTargetOrder(int pickTarget = 0)
     {
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatIncompletePickTargets.First(),
-            KaeserConfiguration.PrismatIncompletePickTargets.Last(),
+            KaeserConfiguration.PrismatInputLanes[pickTarget],
+            KaeserConfiguration.PrismatAplTarget,
             Guid.NewGuid().ToString(),
             HostOrderCreator.Wms);
     }
 
-    public static OrderDetails GenerateUnknownDropTargetOrder(string? hu=null)
+    public static OrderDetails GenerateUnknownDropTargetOrder(string? hu=null, int dropTarget = 0)
     {
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatIncompleteDropTargets.First(),
-            KaeserConfiguration.PrismatIncompleteDropTargets.Last(),
+            KaeserConfiguration.PrismatAplSource,
+            KaeserConfiguration.PrismatOutputLanes[dropTarget],
             hu??Guid.NewGuid().ToString(),
             HostOrderCreator.Wms);
     }

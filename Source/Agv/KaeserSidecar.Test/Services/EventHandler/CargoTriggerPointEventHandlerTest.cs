@@ -9,10 +9,12 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 [TestClass]
 public class CargoTriggerPointEventHandlerTest
 {
-    [TestMethod]
-    public async Task Consume_AgvPassedCargoTriggerPoint_PickAt9060_ReportsToConveyor()
+    [DataRow(0)] //1050
+    [DataRow(1)] //1060
+    [DataTestMethod]
+    public async Task Consume_AgvPassedCargoTriggerPoint_PickAt9060_ReportsToConveyor(int output)
     {
-        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails( OrderGenerator.GenerateUnknownDropTargetOrder());
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output));
         var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Pick);
         const bool hasCargo = false;
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
@@ -27,10 +29,12 @@ public class CargoTriggerPointEventHandlerTest
         fixture.VerifyReportingToConveyors(hasCargo, Times.Once());
     }
 
-    [TestMethod]
-    public async Task Consume_AgvPassedCargoTriggerPoint_PickAt1040_DoesNotReportToConveyor()
+    [DataRow(0)] //1020
+    [DataRow(1)] //1040
+    [DataTestMethod]
+    public async Task Consume_AgvPassedCargoTriggerPoint_PickAt1040Or1060_DoesNotReportToConveyor(int input)
     {
-        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input));
         var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Pick);
         const bool hasCargo = false;
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
@@ -45,10 +49,12 @@ public class CargoTriggerPointEventHandlerTest
         fixture.VerifyReportingToConveyors(hasCargo, Times.Never());
     }
 
-    [TestMethod]
-    public async Task Consume_AgvPassedCargoTriggerPoint_DropAt9070_ReportsToConveyor()
+    [DataRow(0)] //1020
+    [DataRow(1)] //1040
+    [DataTestMethod]
+    public async Task Consume_AgvPassedCargoTriggerPoint_DropAt9070_ReportsToConveyor(int input)
     {
-        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input));
         var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Drop);
         const bool hasCargo = true;
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
@@ -63,10 +69,12 @@ public class CargoTriggerPointEventHandlerTest
         fixture.VerifyReportingToConveyors(hasCargo, Times.Once());
     }
 
-    [TestMethod]
-    public async Task Consume_AgvPassedCargoTriggerPoint_DropAt1060_ReportsToConveyor()
+    [DataRow(0)] //1050
+    [DataRow(1)] //1060
+    [DataTestMethod]
+    public async Task Consume_AgvPassedCargoTriggerPoint_DropAt1060Or1050_ReportsToConveyor(int output)
     {
-        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output));
         var actionGroup = Helper.OrderGenerator.GenerateActionGroupFromOrder(hostOrder, ActionType.Drop);
         const bool hasCargo = true;
         var fixture = new CargoTriggerPointEventHandlerTestFixture()

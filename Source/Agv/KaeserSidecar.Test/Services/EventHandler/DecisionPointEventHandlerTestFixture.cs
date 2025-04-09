@@ -72,13 +72,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         _transportOrderDb.Setup(x => x.Stations.GetStationsByNames(It.IsAny<string[]>())).ReturnsAsync(stations);
         return this;
     }
-
-    public DecisionPointEventHandlerTestFixture WithNextPickOrder(HostOrder? order)
-    {
-        _hostOrderRepository.Setup(x => x.GetNextIncompleteOrderWithUnknownPickTarget()).ReturnsAsync(order);
-        return this;
-    }
-
+    
     public DecisionPointEventHandlerTestFixture WithCurrentHostOrder(HostOrder? order)
     {
         if (order != null)
