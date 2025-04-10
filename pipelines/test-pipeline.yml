@@ -13,8 +13,6 @@ variables:
   value: 'CompileAgv.sln'
 - name: 'Build.Configuration'
   value: 'Release'
-- name: NugetVersion
-  value: 6.0
 - name:  System.Debug
   value: false
 
@@ -34,20 +32,17 @@ stages:
     steps:
       - script: git config --system core.longpaths true
       - checkout: self
-      - task: NuGetToolInstaller@1
-        inputs:
-          versionSpec: $(NugetVersion)
       - task: UseDotNet@2
         displayName: 'Install .NET 8 SDK'
         inputs:
           packageType: 'sdk'
           version: '8.0.x'
           performMultiLevelLookup: true
-      - task: NuGetCommand@2
+      - task: DotNetCoreCLI@2
         displayName: 'Restoring based on NuGetBackupFeed.config'
         inputs:
           command: 'restore'
-          restoreSolution: '$(SourceDirectory)/$(Build.Target)'
+          projects: '$(SourceDirectory)/$(Build.Target)'
           feedsToUse: 'config'
           nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
       - task: DotNetCoreCLI@2
@@ -82,20 +77,17 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-      - task: NuGetToolInstaller@1
-        inputs:
-          versionSpec: $(NugetVersion)
       - task: UseDotNet@2
         displayName: 'Install .NET 8 SDK'
         inputs:
           packageType: 'sdk'
           version: '8.0.x'
           performMultiLevelLookup: true
-      - task: NuGetCommand@2
+      - task: DotNetCoreCLI@2
         displayName: 'Restoring based on NuGetBackupFeed.config'
         inputs:
           command: 'restore'
-          restoreSolution: '$(SourceDirectory)/$(Build.Target)'
+          projects: '$(SourceDirectory)/$(Build.Target)'
           feedsToUse: 'config'
           nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
       - task: DotNetCoreCLI@2
@@ -125,9 +117,6 @@ stages:
     steps:
       - download: current
         artifact: coverageReports
-      - task: NuGetToolInstaller@1
-        inputs:
-          versionSpec: $(NugetVersion)
       - task: PublishCodeCoverageResults@2
         displayName: 'Publish code coverage report'
         inputs:

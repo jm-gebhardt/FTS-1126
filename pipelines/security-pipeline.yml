@@ -31,15 +31,11 @@ steps:
       packageType: 'sdk'
       version: '8.0.x'
       performMultiLevelLookup: true
-  - task: NuGetToolInstaller@1
-    inputs:
-      checkLatest: true
-  - task: NuGetAuthenticate@1
-  - task: NuGetCommand@2
+  - task: DotNetCoreCli@2
     displayName: 'Restoring Source/Agv based on NuGet.config'
     inputs:
       command: 'restore'
-      restoreSolution: '$(SourceDirectory)/$(Build.Target)'
+      projects: '$(SourceDirectory)/$(Build.Target)'
       feedsToUse: 'config'
       nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
   - task: Bash@3
@@ -59,11 +55,11 @@ steps:
           exit 1;
         fi
       workingDirectory: 'Source/Agv'
-  - task: NuGetCommand@2
+  - task: DotNetCoreCli@2
     displayName: 'Restoring Source/Agv.IntegrationTest based on NuGet.config'
     inputs:
       command: 'restore'
-      restoreSolution: '$(IntegrationTestSourceDirectory)/$(Build.Target.IntegrationTest)'
+      projects: '$(IntegrationTestSourceDirectory)/$(Build.Target.IntegrationTest)'
       feedsToUse: 'config'
       nugetConfigPath: '$(IntegrationTestSourceDirectory)/NuGet.Config'
   - task: Bash@3
