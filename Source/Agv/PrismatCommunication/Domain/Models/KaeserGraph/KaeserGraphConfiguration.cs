@@ -109,16 +109,16 @@ public class KaeserGraphConfiguration
     /// <summary>
     /// Pick targets by drop targets for Doppelspiel (bijective)
     /// </summary>
-    public Dictionary<string, string> DoppelspielPickTargets { get; private set; } =
+    public Dictionary<string, List<string>> DoppelspielPickTargets { get; private set; } =
         new()
         {
-            {"1050", "1020"},
-            {"1060", "1040"},
-            {"2110", "2130"},
-            {"2210", "2230"},
-            {"2310", "2330"},
-            {"2410", "2430"},
-            {"9070", "9060"}
+            {"1050", ["1040", "1020"]},
+            {"1060", ["1020", "1040"]},
+            {"2110", ["2130"]},
+            {"2210", ["2230"]},
+            {"2310", ["2330"]},
+            {"2410", ["2430"]},
+            {"9070", ["9060"]}
         };
 
     /// <summary>
@@ -128,9 +128,9 @@ public class KaeserGraphConfiguration
     /// <returns></returns>
     public string GetDoppelspielDropTargetForPick(string pickTarget)
     {
-        foreach ((string drop, string pick) in DoppelspielPickTargets)
+        foreach ((string drop, List<string> picks) in DoppelspielPickTargets)
         {
-            if (pick == pickTarget)
+            if (picks.Contains(pickTarget))
             {
                 return drop;
             }
@@ -315,9 +315,9 @@ public class KaeserGraphConfiguration
     /// Update DoppelSpiel pick targets
     /// </summary>
     /// <param name="updatedPickTargets"></param>
-    public void UpdateDoppelspielPickTargets(Dictionary<string, string> updatedPickTargets)
+    public void UpdateDoppelspielPickTargets(Dictionary<string, List<string>> updatedPickTargets)
     {
-        foreach ((string dropTarget, string pickTarget) in updatedPickTargets)
+        foreach ((string dropTarget, List<string> pickTarget) in updatedPickTargets)
         {
             DoppelspielPickTargets[dropTarget] = pickTarget;
         }
