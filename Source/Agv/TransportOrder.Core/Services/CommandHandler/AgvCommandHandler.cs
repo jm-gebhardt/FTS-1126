@@ -29,7 +29,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -585,14 +584,6 @@ public class AgvCommandHandler :
         if (hasZonesInStatus && !hasZoneErrors && !agv.IsOnline)
         {
             _logger.LogInformation("Adding zone errors for agv {AgvCorrelationId}", agv.CorrelationId);
-            ICollection<Zone> zones = await _agvDb.Zones.GetZones(agv.AgvStatus!.ZoneIds!.ToArray());
-            foreach (var zone in zones)
-            {
-                if(position != null && zone.IsAgvInside(position.AgvPosition) && !agv.IsOnline)
-                {
-                    agvErrors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId));
-                }
-            }
             await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
             return;
         }
