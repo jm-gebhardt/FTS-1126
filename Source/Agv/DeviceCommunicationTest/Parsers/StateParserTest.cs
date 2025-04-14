@@ -64,7 +64,22 @@ public class StateParserTest
     }
 
     [TestMethod]
-    public void Parse_LoadIdNotSet_ThrowsArgumentNullException()
+    public void Parse_LoadIdNotSet_LoadIdAdjusted()
+    {
+        var mqttState = MqttStateGenerator.GenerateState("Agv-01", "order-01", loads: [new MqttLoad { LoadId = "unknown" }]);
+        var stateParser = new StateParser(_logger.Object, _mapper);
+
+        stateParser.Parse(mqttState);
+
+        stateParser.SerialNumber.ShouldBe(mqttState.SerialNumber);
+        stateParser.CorrelationId.ShouldBe(mqttState.SerialNumber.ToGuid());
+        stateParser.AgvErrors.ShouldBeNull();
+        stateParser.Cargos.Count.ShouldBe(1);
+        stateParser.Cargos.First().LoadId.ShouldBe($"unknown-0-{mqttState.SerialNumber}");
+    }
+
+    [TestMethod]
+    public void Parse_LoadIdUnknown()
     {
         var mqttState = MqttStateGenerator.GenerateState("Agv-01", "order-01", loads: [new MqttLoad { LoadId = null }]);
         var stateParser = new StateParser(_logger.Object, _mapper);

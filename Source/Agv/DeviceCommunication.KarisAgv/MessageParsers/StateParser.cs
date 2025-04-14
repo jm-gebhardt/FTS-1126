@@ -76,15 +76,37 @@ public class StateParser(ILogger logger, IMapper mapper)
             return;
         }
 
-        if (loads.Any(l => string.IsNullOrEmpty(l.LoadId)))
-        {
-            throw new ArgumentNullException(nameof(MqttLoad.LoadId), "LoadId must be set! This was the assumption at the time of implementation.");
-        }
+        ValidateLoadIds(ref loads, state.SerialNumber);
 
         Cargos = mapper.Map<Collection<Cargo>>(loads);
         foreach (var load in Cargos)
         {
             mapper.Map(CorrelationId, load);
+        }
+    }
+
+    private const string Unknown = "unknown";
+
+    private void ValidateLoadIds(ref List<MqttLoad>? loads, string serialNumber)
+    {
+        if (loads == null)
+        {
+            return;
+        }
+
+        if (loads.Any(l => string.IsNullOrEmpty(l.LoadId)))
+        {
+            throw new ArgumentNullException(nameof(MqttLoad.LoadId), "LoadId must be set! This was the assumption at the time of implementation.");
+        }
+
+        foreach (var (load, index) in loads.Select((load, index) => (load, index)))
+        {
+            if (string.Equals(load.LoadId, Unknown, StringComparison.InvariantCultureIgnoreCase))
+            {
+                string newLoadId = $"{load.LoadId}-{index}-{serialNumber}";
+                logger.LogInformation("Load id unknown, adjusted it to {LoadId}", newLoadId);
+                load.LoadId = newLoadId;
+            }
         }
     }
 
