@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using JetBrains.Annotations;
 using Microsoft.IdentityModel.Tokens;
 using YamlDotNet.Serialization;
@@ -67,6 +68,11 @@ public class KaeserGraphConfiguration
     public string LongLoopMoveTargetNode { get; private set; } = "";
 
     /// <summary>
+    /// tur, if the configuration has been loaded from file.
+    /// </summary>
+    public bool IsLoaded { get; set; }
+
+    /// <summary>
     /// Provides a mapping from station ids to naming in the conveyor management.
     /// </summary>
     public Dictionary<string, string> ConveyorStationMapping { get; private set; }
@@ -85,9 +91,9 @@ public class KaeserGraphConfiguration
     public Dictionary<int, string> OrderValidationErrors { get; private set; } =
         new()
         {
-            {ErrorCodeSourceUnknown, "Quell-Station nicht bekannt"},
-            {ErrorCodeTargetUnknown, "Ziel-Station nicht bekannt"},
-            {ErrorCodeNoRoute, "Route von Quelle zu Ziel nicht bekannt"}
+            { ErrorCodeSourceUnknown, "Quell-Station nicht bekannt" },
+            { ErrorCodeTargetUnknown, "Ziel-Station nicht bekannt" },
+            { ErrorCodeNoRoute, "Route von Quelle zu Ziel nicht bekannt" }
         };
 
     /// <summary>
@@ -122,6 +128,16 @@ public class KaeserGraphConfiguration
         };
 
     /// <summary>
+    /// Station groups.
+    /// </summary>
+    public Dictionary<string, ICollection<Station>> StationGroups { get; private set; } =
+        new()
+        {
+            { "AP01-AP02", [new Station("2130", "2110"), new Station("2230", "2210")] },
+            { "AP03-AP04", [new Station("2330", "2310"), new Station("2430", "2410")] }
+        };
+
+    /// <summary>
     /// Get the drop target corresponding to the given pick target.
     /// </summary>
     /// <param name="pickTarget"></param>
@@ -151,6 +167,7 @@ public class KaeserGraphConfiguration
     /// <inheritdoc cref="KaeserGraphConfiguration"/>>
     public KaeserGraphConfiguration(IConcurrentDictionaryProvider<string, string> triggerPointMapping)
     {
+        IsLoaded = false;
         TriggerPointMapping = triggerPointMapping;
 
         TriggerPointMapping.Add(CheckCargoTriggerName, "");
@@ -188,9 +205,11 @@ public class KaeserGraphConfiguration
     /// </summary>
     public KaeserGraphConfiguration()
     {
+        IsLoaded = false;
         StationMapping = new Dictionary<string, string>();
         ConveyorStationMapping = new Dictionary<string, string>();
         TriggerPointMapping = new InMemoryTriggerPointMapping();
+        StationGroups = new Dictionary<string, ICollection<Station>>();
     }
 
     /// <summary>
@@ -249,6 +268,13 @@ public class KaeserGraphConfiguration
         {
             UpdateOrderValidationErrors(yamlData.OrderValidationErrors);
         }
+
+        if (!yamlData.StationGroups.IsNullOrEmpty())
+        {
+            UpdateStationGroups(yamlData.StationGroups);
+        }
+        LocalizeStations();
+        IsLoaded = true;
     }
 
     /// <summary>
@@ -262,6 +288,59 @@ public class KaeserGraphConfiguration
             if (IsKnownErrorCode(errorCode))
             {
                 OrderValidationErrors[errorCode] = errorInformation;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Update the station groups.
+    /// </summary>
+    /// <param name="updatedStations">The new station groups.</param>
+    /// <returns>A collection of stations to remove.</returns>
+    public void UpdateStationGroups(Dictionary<string, ICollection<Station>> updatedStations)
+    {
+        foreach ((string groupName, ICollection<Station> stations) in updatedStations)
+        {
+            var groupId = groupName.ToGuid();
+            if (StationGroups.TryGetValue(groupName, out ICollection<Station>? existingStations))
+            {
+                foreach (var station in stations)
+                {
+                    var existingStation = existingStations?.FirstOrDefault(s => s.Source == station.Source);
+                    if (existingStation != null)
+                    {
+                        existingStation.AssignToGroup(groupId);
+                        existingStation.Localize(StationMapping[station.Source]);
+                        continue;
+                    }
+
+                    station.AssignToGroup(groupId);
+                    station.Localize(StationMapping[station.Source]);
+                    StationGroups[groupName].Add(station);
+                }
+                continue;
+            }
+            foreach (var station in stations)
+            {
+                station.AssignToGroup(groupId);
+                station.Localize(StationMapping[station.Source]);
+            }
+            StationGroups[groupName] = stations;
+        }
+    }
+
+    private void LocalizeStations()
+    {
+        foreach ((string groupName, ICollection<Station> stations) in StationGroups)
+        {
+            var groupId = groupName.ToGuid();
+            foreach (var station in stations)
+            {
+                station.AssignToGroup(groupId);
+                if (station.Node == null)
+                {
+                    station.Localize(StationMapping[station.Source]);
+                }
             }
         }
     }

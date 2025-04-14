@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.PrismatCommunication</AssemblyName>
         <OutputType>Exe</OutputType>
@@ -36,6 +36,7 @@
         <ProjectReference Include="..\Common.Persistence.Ef\Common.Persistence.Ef.csproj" />
         <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\PrismatCommunication.Domain\PrismatCommunication.Domain.csproj" />
         <ProjectReference Include="..\PrismatCommunication.Messages\PrismatCommunication.Messages.csproj" />
         <ProjectReference Include="..\PrismatCommunication.TelegramApi\PrismatCommunication.TelegramApi.csproj" />
     </ItemGroup>

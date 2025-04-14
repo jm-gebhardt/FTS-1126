@@ -17,6 +17,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     public readonly Mock<IHostOrderRepository> HostOrderRepositoryMock = new();
     public readonly KaeserGraphConfiguration Configuration = OrderGenerator.KaeserConfiguration;
     private readonly Mock<IHostOrderValidationService> _validationService = new();
+    private readonly Mock<IStationRepository> _stationRepository = new();
 
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
@@ -25,6 +26,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         collection.AddTransient(_ => _validationService.Object);
         collection.AddTransient(_ => _hostCommunicatorMock.Object);
         collection.AddSingleton(_ => Configuration);
+        collection.AddTransient(_ => _stationRepository.Object);
         return this;
     }
 
@@ -37,6 +39,20 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     {
         _hostCommunicatorMock.Setup(x => x.ReportOrderCompletion(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Verifiable();
         _hostCommunicatorMock.Setup(x => x.ReportPickCompletion(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>())).Verifiable();
+        return this;
+    }
+
+    public HostOrderConsumerTestFixture<TConsumer> WithStationGroup(bool? isOccupied, bool hasHostOrders, HostOrder? nextHostOrder = null)
+    {
+        var station = new Station();
+        if (isOccupied != null && isOccupied.Value)
+        {
+            station.AddAgv(Guid.NewGuid());
+        }
+        var stationGroup = isOccupied == null ? null : new StationGroup([station]);
+        _stationRepository.Setup(x => x.GetStationGroup(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(stationGroup);
+        HostOrderRepositoryMock.Setup(x => x.HasCurrentHostOrdersForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(hasHostOrders);
+        HostOrderRepositoryMock.Setup(x => x.GetNextHostOrderForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(nextHostOrder);
         return this;
     }
 

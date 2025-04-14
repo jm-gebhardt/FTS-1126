@@ -1,7 +1,10 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
@@ -17,14 +20,30 @@ public class InitializationProvider(
     KaeserGraphConfiguration configuration,
     IShortLoopWeTargetStationRepository targetStationRepository,
     ILogger<InitializationProvider> logger,
+    IRequestClient<AddOrUpdateStationGroup> stationGroupRequestClient,
     IRequestClient<GetQueueFillQuantities> queueRequestClient,
     IRequestClient<GetTriggerMapping> triggerRequestClient
-    ) : BackgroundService
+) : BackgroundService
 {
+    private readonly TimeSpan _configLoadingWaitTime = TimeSpan.FromSeconds(5);
+
     /// <inheritdoc cref="BackgroundService"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.WhenAll(InitializeShortLoopTargetStation(), InitializeQueue(), InitializeTriggerMapping());
+        await Task.WhenAll(InitializeStationGroups(), InitializeShortLoopTargetStation(), InitializeQueue(), InitializeTriggerMapping());
+    }
+
+    private async Task InitializeStationGroups()
+    {
+        while (!configuration.IsLoaded)
+        {
+            await Task.Delay(_configLoadingWaitTime);
+        }
+        logger.LogInformation("Configuration is loaded, got {Count} stationGroups", configuration.StationGroups.Count);
+        foreach (var (stationGroup, stations) in configuration.StationGroups)
+        {
+            await stationGroupRequestClient.GetResponse<Success>(new AddOrUpdateStationGroup(stations, stationGroup.ToGuid()));
+        }
     }
 
     private async Task InitializeShortLoopTargetStation()

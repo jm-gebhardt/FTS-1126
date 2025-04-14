@@ -34,4 +34,17 @@ OrderValidationErrors:
     1000: "Quell-Station nicht bekannt"
     2000: "Ziel-Station nicht bekannt"
     3000: "Route von Quelle zu Ziel nicht bekannt"
+StationGroups:
+  AP01-AP02:
+    - Source: "2130"
+      Target: "2110"
+    - Source: "2230"
+      Target: "2210"
+  AP03-AP04:
+    - Source: "2330"
+      Target: "2310"
+    - Source: "2430"
+      Target: "2410"
+
+
 

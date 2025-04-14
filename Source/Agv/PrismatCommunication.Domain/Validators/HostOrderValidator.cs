@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+using Action = Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder.Action;
 
 namespace Gebhardt.Acc.PrismatCommunication.Domain.Validators;
 
@@ -9,7 +10,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Domain.Validators;
 public class HostOrderValidator: AbstractValidator<HostOrder>
 {
     /// <inheritdoc cref="HostOrderValidator"/>>
-    public HostOrderValidator(IValidator<Models.HostOrder.Action> actionValidator)
+    public HostOrderValidator(IValidator<Action> actionValidator)
     {
         RuleForEach(h => h.Actions)
             .SetValidator(actionValidator);
