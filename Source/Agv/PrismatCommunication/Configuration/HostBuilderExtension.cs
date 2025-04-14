@@ -18,7 +18,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.PrismatCommunication.Messages.Filters;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Services.Filters;
 
 namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 
@@ -43,6 +46,7 @@ public static class HostBuilderExtension
                 }, rabbitMqConfiguration: (ctx, cfg) =>
                 {
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
+                    cfg.UseConsumeFilter<ActionGroupEventConsumeFilter>(ctx);
                 });
             }
             catch (InvalidOperationException e)
@@ -97,7 +101,18 @@ public static class HostBuilderExtension
             services.AddSingleton<ObservableConcurrentQueue<PrismatTelegram>>();
             services.AddSingleton<TelegramQueuePersistenceService>();
             services.AddHostedService<InitializationProvider>();
-           
+            
+            // Filters
+            services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
+            services.AddSingleton<ISignificanceChecker<ActionGroupCompleted>, ActionGroupEventSignificanceChecker<ActionGroupCompleted>>();
+            services.AddSingleton<UnTimedInMemoryFilter<ActionGroupCompleted>>();
+
+            services.AddSingleton<ISignificanceChecker<ActionGroupStarted>, ActionGroupEventSignificanceChecker<ActionGroupStarted>>();
+            services.AddSingleton<UnTimedInMemoryFilter<ActionGroupStarted>>();
+
+            services.AddSingleton<ISignificanceChecker<PickActionCompleted>, ActionGroupEventSignificanceChecker<PickActionCompleted>>();
+            services.AddSingleton<UnTimedInMemoryFilter<PickActionCompleted>>();
+
             services.RegisterValidators();
 
             if (simulateOptions == null)

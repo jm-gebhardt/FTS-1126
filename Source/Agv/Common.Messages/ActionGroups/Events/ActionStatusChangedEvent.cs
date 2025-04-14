@@ -6,13 +6,13 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 /// Signals that an action has been started
 /// </summary>
 [PublicAPI]
-public record ActionStarted(Guid CorrelationId, Guid AgvCorrelationId) : IActionEventParent;
+public record ActionStarted(Guid CorrelationId, Guid AgvCorrelationId) : IActionEventParent, IAgvActionEvent;
 
 /// <summary>
 /// Signals that an action has been updated
 /// </summary>
 [PublicAPI]
-public record ActionUpdated(Guid CorrelationId, Guid AgvCorrelationId) : IActionEventParent;
+public record ActionUpdated(Guid CorrelationId, Guid AgvCorrelationId) : IActionEventParent, IAgvActionEvent;
 
 /// <summary>
 /// Signals that an action has been completed

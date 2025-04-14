@@ -3,6 +3,9 @@ using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Logging;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.Common.Configuration;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
@@ -10,6 +13,7 @@ using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Filters;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
@@ -60,7 +64,24 @@ try
                     services.AddSingleton<IAgvCacheProvider, AgvCache>();
                     services.AddSingleton<IMqttEdgeMappingCacheProvider, MqttEdgeMappingCache>();
                     services.AddSingleton<IMqttNodeCacheProvider, MqttNodeCache>();
+
+                    // Filters
+                    services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
+                    services.AddSingleton<ISignificanceChecker<MqttOrderEvent>, MqttOrderEventSignificanceChecker>();
+                    services.AddSingleton<UnTimedInMemoryFilter<MqttOrderEvent>>();
+                   
+                    services.AddSingleton<ISignificanceChecker<ActionCompleted>, ActionEventSignificanceChecker<ActionCompleted>>();
+                    services.AddSingleton<UnTimedInMemoryFilter<ActionCompleted>>();
+                   
+                    services.AddSingleton<ISignificanceChecker<ActionCanceled>, ActionEventSignificanceChecker<ActionCanceled>>();
+                    services.AddSingleton<UnTimedInMemoryFilter<ActionCanceled>>();
+
+                    services.AddSingleton<ISignificanceChecker<ActionStarted>, AgvActionSignificanceChecker<ActionStarted>>();
+                    services.AddSingleton<UnTimedInMemoryFilter<ActionStarted>>();
                     
+                    services.AddSingleton<ISignificanceChecker<ActionUpdated>, AgvActionSignificanceChecker<ActionUpdated>>();
+                    services.AddSingleton<UnTimedInMemoryFilter<ActionUpdated>>();
+
                     services.AddTransient<IActionRepository, EfActionRepository>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
@@ -97,6 +118,10 @@ try
                             configurator.ConfigureMessageTopology<MqttInstantActions>();
                             configurator.ConfigureMessageTopology<MqttRequestZones>();
                             configurator.ConfigureMessageTopology<MqttRequestZoneRemoveAgv>();
+
+                            // add filters
+                            configurator.UseConsumeFilter<MqttMessageConsumeFilter>(registrationContext);
+                            configurator.UsePublishFilter<ActionEventPublishFilter>(registrationContext);
 
                             //for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
