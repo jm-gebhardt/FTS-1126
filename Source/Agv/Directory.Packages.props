@@ -13,10 +13,10 @@
     <PackageVersion Include="MassTransit.Quartz" Version="8.4.0" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.4.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.14" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.14" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.14" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.14" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.15"/>
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.15" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.15"/>
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.15" />
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.5.1" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
     <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.14.0" />
