@@ -1,6 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
-using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+﻿using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+using Gebhardt.Acc.KaeserSidecar.Messages;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -11,7 +10,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 /// Handles station-related commands.
 /// </summary>
 [UsedImplicitly]
-public class StationCommandHandler(IStationRepository stationRepository, ILogger<StationCommandHandler> logger, KaeserGraphConfiguration configuration) :
+public class StationCommandHandler(IStationRepository stationRepository, ILogger<StationCommandHandler> logger) :
     IConsumer<OccupyStation>,
     IConsumer<FreeStation>
 {
@@ -21,10 +20,6 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     public async Task Consume(ConsumeContext<OccupyStation> context)
     {
         (string station, var agvCorrelationId) = context.Message;
-        if (!configuration.ConveyorStationMapping.Keys.Contains(station))
-        {
-            return;
-        }
         logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
         await stationRepository.OccupyStation(station, agvCorrelationId);
     }

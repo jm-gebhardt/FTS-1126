@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,6 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 public class DoppelspielTriggerPointEventHandler(
     ILogger<DoppelspielTriggerPointEventHandler> logger,
     IPrismatCommunicationHostOrderRepository hostOrderRepository,
-    IPrismatCommunicationStationRepository stationRepository,
     IAgvSettingsService agvSettingsService) :
     IConsumer<AgvPassedDoppelspielTriggerPoint>
 {
@@ -50,7 +48,7 @@ public class DoppelspielTriggerPointEventHandler(
             var nextPickOrder = hostOrder.DoppelspielPartner != null? await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value) : null;
             bool hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(agvStatus.CorrelationId);
             Guid? nextPickOrderId = nextPickOrder == null || nextPickOrder.IsQueued ? null : nextPickOrder.CorrelationId;
-            bool shouldPickNext = !hasLowBatteryLevel && nextPickOrderId != null && await CanBeUsedForDoppelspiel(nextPickOrder);
+            bool shouldPickNext = !hasLowBatteryLevel && nextPickOrderId != null;
             string? pickNode = shouldPickNext ? action.Target.NodeId : null;
             logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next: {ShouldPick}", actionGroup.AssignedAgv!.Value, action.Target.NodeId!, shouldPickNext);
             await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId, nextPickOrderId, shouldPickNext, pickNode));
@@ -58,29 +56,5 @@ public class DoppelspielTriggerPointEventHandler(
         }
         logger.LogInformation("Picking agv {AgvCorrelationId} passed Doppelspiel trigger point and will pick at {Target} ", actionGroup.AssignedAgv!.Value, action.Target.NodeId!);
         await context.Publish(new PickingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId));
-    }
-
-    private async Task<bool> CanBeUsedForDoppelspiel(HostOrder? hostOrder)
-    {
-        if (hostOrder == null)
-        {
-            return false;
-        }
-
-        if (hostOrder.IsQueued)
-        {
-            return false;
-        }
-
-        var stationGroup = await stationRepository.GetStationGroup(hostOrder.Source, hostOrder.Target);
-        if (stationGroup == null)
-        {
-            return true;
-        }
-        if (stationGroup.IsOccupied)
-        {
-            return false;
-        }
-        return !await hostOrderRepository.HasCurrentHostOrdersForStationGroup(stationGroup.Sources, stationGroup.Targets);
     }
 }

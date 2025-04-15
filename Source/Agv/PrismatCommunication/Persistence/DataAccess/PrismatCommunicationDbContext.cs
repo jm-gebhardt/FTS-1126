@@ -32,7 +32,6 @@ public class PrismatCommunicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SystemStatusEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ShortLoopTargetStationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TelegramEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new StationEntityConfiguration());
     }
 
     /// <summary>

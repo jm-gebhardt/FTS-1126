@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -65,7 +64,7 @@ public class AgvActionCommandHandler(
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
-        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
+        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId && configuration.ConveyorStationMapping.Keys.Contains(a.Target.NodeId!));
         if (action == null)
         {
             return;

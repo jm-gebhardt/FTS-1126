@@ -53,7 +53,7 @@ public class ShortLoopWeTargetStation
     /// <param name="graphConfig">The graph configuration.</param>
     public void UseNextAvailable(KaeserGraphConfiguration graphConfig)
     {
-        string[] possibleTargets = graphConfig.ConveyorStationMapping.OrderByDescending<KeyValuePair<string, string>, string>(c => c.Value).Select(c => c.Key).ToArray();
+        string[] possibleTargets = graphConfig.ConveyorStationMapping.OrderByDescending(c => c.Value).Select(c => c.Key).ToArray();
         int currentIndex = Array.IndexOf(possibleTargets, Current);
         if (currentIndex == -1 || currentIndex == possibleTargets.Length - 1)
         {

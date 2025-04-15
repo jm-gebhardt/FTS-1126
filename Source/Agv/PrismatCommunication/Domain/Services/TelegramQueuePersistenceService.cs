@@ -5,7 +5,7 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
+namespace Gebhardt.Acc.PrismatCommunication.Domain.Services;
 
 /// <summary>
 /// Persists the telegram queue.

@@ -24,7 +24,6 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
-            .WithStationGroup(false, false)
             .WithValidationError(null)
             .WithHostCommunicator();
 
@@ -84,13 +83,12 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreateHostOrder_DropOrderFor1050_StationGroupNotOccupied_QueueActionGroup()
+    public async Task Consume_CreateHostOrder_DropOrderFor1050_QueueActionGroup()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
-            .WithStationGroup(false, false)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
@@ -110,52 +108,13 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreateHostOrder_DropOrderFor1050_StationGroupOccupied_DoesNotPublishQueueActionGroup()
-    {
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithHostOrderRepository(null)
-            .WithHostOrderWithSameHu(null)
-            .WithValidationError(null)
-            .WithStationGroup(true, false)
-            .WithHostCommunicator();
-
-        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
-
-        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
-
-        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
-        fixture.VerifyHostOrderAdded();
-        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
-    }
-
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_DropOrderFor1050_StationGroupWillBeOccupied_DoesNotPublishQueueActionGroup()
-    {
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithHostOrderRepository(null)
-            .WithHostOrderWithSameHu(null)
-            .WithValidationError(null)
-            .WithStationGroup(false, true)
-            .WithHostCommunicator();
-
-        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
-
-        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
-
-        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
-        fixture.VerifyHostOrderAdded();
-        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
-    }
-
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_StationGroupNotOccupied_QueueActionGroup()
+    public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_QueueActionGroup()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
             .WithValidationError(null)
-            .WithStationGroup(false, false)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
@@ -177,46 +136,6 @@ public class HostOrderCommandHandlerTest
         pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.CargoRotation, out string? _).ShouldBeTrue();
         pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.LiftHeight, out string? _).ShouldBeFalse();
         dropAction.InfoToAgv?.TryGetValue(InfoToAgvKey.LiftHeight, out string? _).ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_StationGroupOccupied_DoesNotPublishQueueActionGroup()
-    {
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithHostOrderRepository(null)
-            .WithHostOrderWithSameHu(null)
-            .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
-            .WithValidationError(null)
-            .WithStationGroup(true, false)
-            .WithHostCommunicator();
-
-        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
-
-        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
-
-        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
-        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
-        fixture.VerifyHostOrderAdded();
-    }
-
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_StationGroupWillBeOccupied_DoesNotPublishQueueActionGroup()
-    {
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithHostOrderRepository(null)
-            .WithHostOrderWithSameHu(null)
-            .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
-            .WithValidationError(null)
-            .WithStationGroup(false, true)
-            .WithHostCommunicator();
-
-        var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
-
-        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
-
-        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
-        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
-        fixture.VerifyHostOrderAdded();
     }
 
     [TestMethod]
@@ -525,47 +444,5 @@ public class HostOrderCommandHandlerTest
         queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick)
             .Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[pickNode]);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AgvCorrelationId);
-    }
-
-    [TestMethod]
-    public async Task Consume_TryQueueDelayedOrder_StationIsOccupied_DoesNotPublishQueueHostOrder()
-    {
-        var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false));
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(true, false, nextOrder);
-
-        var command = new TryQueueDelayedOrder(fixture.Configuration.DoppelspielPickTargets[nextOrder.Target].First(), nextOrder.Target);
-        await fixture.TestHarness.Bus.Publish(command);
-        await fixture.ShouldHaveConsumedAsync<TryQueueDelayedOrder>();
-        
-        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
-    }
-
-    [TestMethod]
-    public async Task Consume_TryQueueDelayedOrder_NoNextOrderForStationGroup_DoesNotPublishQueueHostOrder()
-    {
-        var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(false, false);
-
-        var command = new TryQueueDelayedOrder(fixture.Configuration.DoppelspielPickTargets[nextOrder.Target].First(), nextOrder.Target);
-        await fixture.TestHarness.Bus.Publish(command);
-        await fixture.ShouldHaveConsumedAsync<TryQueueDelayedOrder>();
-
-        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
-    }
-
-    [TestMethod]
-    public async Task Consume_TryQueueDelayedOrder_ValidData_PublishesQueueHostOrder()
-    {
-        var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(false, false, nextOrder);
-
-        var command = new TryQueueDelayedOrder(fixture.Configuration.DoppelspielPickTargets[nextOrder.Target].First(), nextOrder.Target);
-        await fixture.TestHarness.Bus.Publish(command);
-        await fixture.ShouldHaveConsumedAsync<TryQueueDelayedOrder>();
-
-        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
     }
 }

@@ -6,7 +6,6 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -18,7 +17,6 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
 {
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
-    private readonly Mock<IPrismatCommunicationStationRepository> _stationRepository = new();
     private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
 
     /// <inheritdoc cref="MassTransitConsumerTestFixture{DoppelspielTriggerPointEventHandler}"/>>
@@ -33,7 +31,6 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddTransient(_ => _agvSettingsService.Object);
         collection.AddTransient(_ => _transportOrderDb.Object);
-        collection.AddTransient(_ => _stationRepository.Object);
         collection.AddSingleton<TargetStation>();
         return this;
     }
@@ -42,19 +39,6 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
     public DoppelspielTriggerPointEventHandlerTestFixture()
     {
         Build();
-    }
-
-    public DoppelspielTriggerPointEventHandlerTestFixture WithStationGroup(bool? isOccupied, bool hasHostOrders)
-    {
-        var station = new Station();
-        if (isOccupied != null && isOccupied.Value)
-        {
-            station.AddAgv(Guid.NewGuid());
-        }
-        var stationGroup = isOccupied == null ? null : new StationGroup([station]);
-        _stationRepository.Setup(x => x.GetStationGroup(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(stationGroup);
-        _hostOrderRepository.Setup(x => x.HasCurrentHostOrdersForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(hasHostOrders);
-        return this;
     }
 
     public DoppelspielTriggerPointEventHandlerTestFixture WithHostOrders(HostOrder order, HostOrder? nextPickOrder = null)

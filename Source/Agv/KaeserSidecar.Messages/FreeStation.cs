@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿namespace Gebhardt.Acc.KaeserSidecar.Messages;
 
 /// <summary>
 /// Provides a command to free a station.

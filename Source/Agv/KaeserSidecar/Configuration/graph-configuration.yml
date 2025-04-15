@@ -30,14 +30,3 @@ TargetLiftHeight:
   "2330": 1.5
   "2410": 1.0
   "2430": 1.5
-StationGroups:
-  AP01-AP02:
-    - Source: "2130"
-      Target: "2110"
-    - Source: "2230"
-      Target: "2210"
-  AP03-AP04:
-    - Source: "2330"
-      Target: "2310"
-    - Source: "2430"
-      Target: "2410"

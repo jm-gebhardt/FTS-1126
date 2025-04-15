@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi;
-using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
