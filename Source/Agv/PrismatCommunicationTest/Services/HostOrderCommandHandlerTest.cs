@@ -445,4 +445,29 @@ public class HostOrderCommandHandlerTest
             .Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[pickNode]);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AgvCorrelationId);
     }
+
+    [TestMethod]
+    public async Task Consume_PassTriggerPoint_ShouldNotPickNext_DoppelspielPartner_PublishesQueueActionGroup()
+    {
+        var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        dropOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
+        nextPickOrder.SetDoppelspielPartner(dropOrder.CorrelationId);
+        string pickNode = nextPickOrder.Actions
+            .Single(a => a.ActionType == ActionType.Pick).Node;
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([dropOrder, nextPickOrder]);
+
+        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, false, pickNode);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<PassTriggerPoint>();
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(3);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick)
+            .Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[pickNode]);
+        queueActionGroup.ActionGroup.AssignedAgv.ShouldBeNull();
+    }
 }

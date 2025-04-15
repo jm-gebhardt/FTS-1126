@@ -303,6 +303,17 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             }
             logger.LogInformation("Queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
             await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
+            return;
+        }
+
+        if (droppingHostOrder.DoppelspielPartner != null)
+        {
+            var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
+            if (!pickingHostOrder.IsQueued) // avoid queue loops
+            {
+                logger.LogInformation("Doppelspiel drop got shouldNotPickNext: queueing partner order {HostOrder} calling for different agv", pickingHostOrder.CorrelationId);
+                await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
+            }
         }
     }
 }
