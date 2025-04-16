@@ -218,7 +218,7 @@ public class StationListParserTest
     /// Test parsing with valid data and check result of merging.
     /// </summary>
     [TestMethod]
-    public void Parse_WithValidData_AllOk()
+    public void Parse_WithoutStationNodesInGraph_AllOk()
     {
         /*    0123456789
          *    ----------
@@ -246,6 +246,79 @@ public class StationListParserTest
         var edges = new MqttEdge[]
         {
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 }
+        };
+        var stations = new Station[]
+        {
+            new(Function.Both, "S1", new Position(0f, 2f, -2f), ""),
+            new(Function.Both, "S2", new Position(0f, 7f, 11f), ""),
+            new(Function.Both, "S3", new Position(0f, 6f, -2f), "")
+        };
+        var parser = new StationListParser(
+            new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
+            new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+
+        var agvGraph = parser.Graph;
+        parser.SerialNumber.ShouldBe(AgvSerialNumber1);
+
+        agvGraph.Nodes.Count.ShouldBe(5);
+        agvGraph.Edges.Count.ShouldBe(8);
+
+        // Average velocity for the single edge is 1 (metric[t] = SQRT(9^2+9^2)/1 = 12.72792.
+
+        // Distance S1->1 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
+        float metric = (float)Math.Sqrt(8);
+        agvGraph.Edges.First(x => x.FromNodeId == "S1").Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S1").Length.ShouldBe(metric, 0.00001);
+
+        // Distance S2->2 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
+        metric = (float)Math.Sqrt(8);
+        agvGraph.Edges.First(x => x.FromNodeId == "S2").Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S2").Length.ShouldBe(metric, 0.00001);
+
+        // Distance S3->1 is 2 (metric[t] = SQRT(6^2+2^2)/1 = 6,32456
+        metric = (float)Math.Sqrt(40);
+        agvGraph.Edges.First(x => x.FromNodeId == "S3").Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S3").Length.ShouldBe(metric, 0.00001);
+    }
+
+    /// <summary>
+    /// Test parsing with valid data and check result of merging.
+    /// </summary>
+    [TestMethod]
+    public void Parse_WithStationNodesInGraph_AllOk()
+    {
+        /*    0123456789
+         *    ----------
+         * -2|  S1  S3  |
+         * -1| /   /    |
+         *  0|1---      |
+         *  1| \        |
+         *  2|  \       |
+         *  3|   \      |
+         *  4|    \     |
+         *  5|     \    |
+         *  6|      \   |
+         *  7|       \  |
+         *  8|        \ |
+         *  9|         2|
+         * 10|        / |
+         * 11|       S2 |
+         *    ---------- */
+
+        var nodes = new MqttNode[]
+        {
+            new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
+            new() { NodeId = "2", X = 9f, Y = 9f, Z = 0f },
+            new() { NodeId = "S1", X = 2f, Y = -2f, Z = 0f },
+            new() { NodeId = "S2", X = 7f, Y = 11f, Z = 0f },
+            new() { NodeId = "S3", X = 6f, Y = -2f, Z = 0f }
+        };
+        var edges = new MqttEdge[]
+        {
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = true, MaxVelocity = 1 },
+            new() { EdgeId = "2", StartId = "S1", EndId = "1", Bidirectional = true, MaxVelocity = 1 },
+            new() { EdgeId = "3", StartId = "S2", EndId = "2", Bidirectional = true, MaxVelocity = 1 },
+            new() { EdgeId = "4", StartId = "S3", EndId = "1", Bidirectional = true, MaxVelocity = 1 }
         };
         var stations = new Station[]
         {

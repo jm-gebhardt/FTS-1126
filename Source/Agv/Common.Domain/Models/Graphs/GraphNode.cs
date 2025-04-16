@@ -28,7 +28,13 @@ public class GraphNode : IEquatable<GraphNode>
     /// The type of the node
     /// </summary>
     [JsonConverter(typeof(JsonNodeTypeConverter))]
-    public object Type { get; init; } = NodeType.WayPoint;
+    public object Type
+    {
+        get => _type;
+        init => _type = value; 
+    }
+
+    private object _type = NodeType.WayPoint;
 
     /// <summary>
     /// The X coordinate of the node
@@ -48,7 +54,13 @@ public class GraphNode : IEquatable<GraphNode>
     /// <summary>
     /// The Theta coordinate of the node
     /// </summary>
-    public float Theta { get; init; }
+    public float Theta
+    {
+        get => _theta;
+        init => _theta = value;
+    }
+
+    private float _theta;
 
     /// <summary>
     /// Simple string representation.
@@ -93,6 +105,18 @@ public class GraphNode : IEquatable<GraphNode>
         Z = z;
         Type = nodeType;
     }
+
+    /// <summary>
+    /// Update the node type.
+    /// </summary>
+    /// <param name="type">The new node type.</param>
+    public void UpdateType(object type) => _type = type;
+
+    /// <summary>
+    /// Update the orientation of a node.
+    /// </summary>
+    /// <param name="theta">The new orientation.</param>
+    public void UpdateOrientation(float theta) => _theta = theta;
 
     /// <inheritdoc />
     public bool Equals(GraphNode? other)

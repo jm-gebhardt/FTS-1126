@@ -114,22 +114,33 @@ public class StationListParser
                     }
 
                     // Add node and bidirectional edges.
-                    var graphNode = new GraphNode(station.Identifier)
+                    var graphNode = agvGraph.Nodes.SingleOrDefault(n => n.Id == station.Identifier);
+                    bool added;
+                    if (graphNode == null)
                     {
-                        Type = GetNodeType(station.Function),
-                        X = station.Position.X,
-                        Y = station.Position.Y,
-                        Z = 0f,
-                        Theta = station.Position.Theta
-                    };
-                    bool added = additionalNodes.Add(graphNode);
-                    if (added)
+                        graphNode = new GraphNode(station.Identifier)
+                        {
+                            X = station.Position.X,
+                            Y = station.Position.Y,
+                            Z = 0f
+                        };
+                        graphNode.UpdateOrientation(station.Position.Theta);
+                        graphNode.UpdateType(GetNodeType(station.Function));
+                        added = additionalNodes.Add(graphNode);
+                        if (added)
+                        {
+                            float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
+                            string graphNodeId = graphNode.Id;
+                            string nodeNearbyId = nodeNearby.Id;
+                            additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId)));
+                            additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId)));
+                        }
+                    }
+                    else
                     {
-                        float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
-                        string graphNodeId = graphNode.Id;
-                        string nodeNearbyId = nodeNearby.Id;
-                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId)));
-                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId)));
+                        graphNode.UpdateOrientation(station.Position.Theta);
+                        graphNode.UpdateType(GetNodeType(station.Function));
+                        added = true;
                     }
                     allAdded &= added;
                 }
