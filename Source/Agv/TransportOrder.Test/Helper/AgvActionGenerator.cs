@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 public static class AgvActionGenerator
 {
     public static ActionGroup GenerateChargeActionGroup(string targetNodeId = "charger", Guid? assignedAgv = null,
-        ActionState actionStateMove = ActionState.Created, ActionState actionStateCharge = ActionState.Created)
+        ActionState actionStateMove = ActionState.Created, ActionState actionStateCharge = ActionState.Created, DateTime? createdDate=null)
     {
         var groupId = Guid.NewGuid();
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId, groupId)
@@ -23,7 +23,18 @@ public static class AgvActionGenerator
         chargeAction.UpdateActionState(actionStateCharge);
 
         chargeAction.Nodes = [targetNodeId];
-        var actionGroup = new ActionGroup(groupId, string.Empty, new List<AgvAction> { moveAction, chargeAction }, ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
+        var actionGroup = new ActionGroup(groupId,
+            string.Empty,
+            new List<AgvAction>
+            {
+                moveAction,
+                chargeAction
+            },
+            ActionGroupCreator.TransportOrder)
+        {
+            AssignedAgv = assignedAgv,
+            CreatedDate = createdDate ?? DateTime.UtcNow
+        };
         actionGroup.UpdateActionGroupState();
 
         return actionGroup;
@@ -272,7 +283,7 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
-    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null, TimeSpan? duration = null)
+    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null, TimeSpan? duration = null, DateTime? createdDate = null)
     {
         const string orderId = "move";
         var groupId = Guid.NewGuid();
@@ -282,7 +293,20 @@ public static class AgvActionGenerator
             moveAction.Nodes = [targetNodeId];
         }
 
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, hasPriority: true, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration };
+        var actionGroup = new ActionGroup(groupId,
+            orderId,
+            new List<AgvAction>
+            {
+                moveAction
+            },
+            isManual: isManual,
+            hasPriority: true,
+            creator: ActionGroupCreator.TransportOrderWebApi,
+            assignedAgv: assignedAgv)
+        {
+            EstimatedDuration = duration,
+            CreatedDate = createdDate ?? DateTime.UtcNow
+        };
 
         return actionGroup;
     }

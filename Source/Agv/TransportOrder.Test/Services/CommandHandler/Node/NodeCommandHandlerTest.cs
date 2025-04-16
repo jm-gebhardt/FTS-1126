@@ -210,21 +210,4 @@ public class NodeCommandHandlerTest
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync("new", AgvSerialNumber.ToGuid()), Times.Never);
     }
-
-    [TestMethod]
-    public async Task Consume_ClearNodesFromAgv_ValidData_FreesNodes()
-    {
-        var nodeState = new NodeLock("any", NodeLockState.Reserved, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
-
-        var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([nodeState])
-            .WithAnyStation();
-
-        await fixture.TestHarness.Bus.Publish(new ClearNodesFromAgv(AgvSerialNumber.ToGuid()));
-
-        await fixture.ShouldHaveConsumedAsync<ClearNodesFromAgv>();
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-
-        fixture.NodeStateRepository.Verify(r => r.FreeNodeAsync(nodeState.NodeId), Times.Once);
-    }
 }

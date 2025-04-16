@@ -225,6 +225,12 @@ public static class AgvGraphGenerator
 
         return (nodes.ToArray(), edges.ToArray());
     }
+
+    public static ICollection<GraphNode> GetNodesOfDefaultGraph(ICollection<string> nodeIds)
+    {
+        var graph = CreateDefaultGraph();
+        return graph.Nodes.Where(n => nodeIds.Contains(n.Id)).ToList();
+    }
 }
 
 // ReSharper disable UnusedMember.Global

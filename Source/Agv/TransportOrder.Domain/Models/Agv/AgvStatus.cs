@@ -182,7 +182,7 @@ public record AgvStatus
     /// Update the last node id.
     /// </summary>
     /// <param name="nodeId">The new node id.</param>
-    public void UpdateLastNodeId(string nodeId)
+    public void UpdateLastNodeId(string? nodeId)
     {
         LastNodeId = nodeId;
     }

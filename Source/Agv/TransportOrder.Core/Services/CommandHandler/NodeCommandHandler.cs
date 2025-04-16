@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -52,6 +53,7 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<ClearNodesFromAgv> context)
     {
+        await Task.Delay(Agv.OfflineTolerance);
         ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(context.Message.AgvCorrelationId);
         ICollection<Task<bool>> freeNodeTasks = [];
         ICollection<Task> publishTasks = [];

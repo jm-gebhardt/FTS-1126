@@ -28,6 +28,7 @@ using Moq.Language;
 using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -175,6 +176,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
+    public AgvCommandHandlerTestFixture WithCurrentStartedOrCreatedActionGroups(IReadOnlyList<ActionGroup> actionGroups)
+    {
+        _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
+        return this;
+    }
+
     public AgvCommandHandlerTestFixture WithHasStartedAction(bool hasStartedAction)
     {
         _actionGroupRepository.Setup(x => x.HasStartedActionAsync(It.IsAny<Guid>())).ReturnsAsync(hasStartedAction);
@@ -288,6 +295,25 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>()))
             .ReturnsAsync(nodes.Where(n => n.IsParker()));
         return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithNodesStates(ICollection<NodeLock> nodeLocks, ICollection<GraphNode> nodes, bool nodeReservationFails = false, string? lastNodeId=null)
+    {
+        _nodeStateRepositoryMock.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
+        AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Expression<Func<EfNode, bool>>?>())).ReturnsAsync(nodes);
+        _nodeStateRepositoryMock.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(nodeReservationFails);
+        _nodeStateRepositoryMock.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
+        _nodeStateRepositoryMock.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
+        _nodeStateRepositoryMock.Setup(x => x.ForceReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
+        AgvDb.Setup(x => x.Graphs.TryGetNodeAsync(It.IsAny<string>())).ReturnsAsync(lastNodeId == null ? null : nodes.FirstOrDefault(n => n.Id == lastNodeId));
+        return this;
+    }
+
+    public void VerifyNodeStateChange(Times forceReserve, Times forceOccupy, Times reserve)
+    {
+        _nodeStateRepositoryMock.Verify(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>()), reserve);
+        _nodeStateRepositoryMock.Verify(x => x.ForceOccupyNodeAsync(It.IsAny<string>(), It.IsAny<Guid>()), forceOccupy);
+        _nodeStateRepositoryMock.Verify(x => x.ForceReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>()), forceReserve);
     }
 
     public static IMapper GetMapper()

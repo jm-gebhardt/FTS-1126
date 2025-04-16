@@ -557,4 +557,20 @@ public class ActionGroup
 
         return Actions.OrderBy(a => a.Sequence).FirstOrDefault(a => a.Sequence > action.Sequence && !a.ShouldSkip);
     }
+
+    /// <summary>
+    /// True if the action group is outdated according to the expiration time.
+    /// </summary>
+    /// <param name="expirationTime">Time span of expiration.</param>
+    /// <param name="now">Current time stamp.</param>
+    /// <returns>True if the started or created date are prior to the expiration time.</returns>
+    public bool IsOutdated(TimeSpan expirationTime, DateTime now)
+    {
+        var expirationDate = now.Add(-expirationTime);
+        if (StartedDate < expirationDate)
+        {
+            return true;
+        }
+        return CreatedDate < expirationDate;
+    }
 }

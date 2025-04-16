@@ -663,4 +663,48 @@ public class ActionGroupTests
         var result = actionGroup.GetNextNotSkippedAction(actions[0].CorrelationId);
         result.ShouldBe(actions[3]);
     }
+
+    [TestMethod]
+    public void IsOutdated_ActionGroupStartedPriorToExpirationDate_ReturnsTrue()
+    {
+        var now = DateTime.UtcNow;
+        var expirationTime = TimeSpan.FromMinutes(2);
+        var expirationDate = now.Add(-expirationTime);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState:ActionState.Started, startedDate:expirationDate.AddSeconds(-1));
+
+        actionGroup.IsOutdated(expirationTime, now).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void IsOutdated_ActionGroupStartedAfterExpirationDate_ReturnsFalse()
+    {
+        var now = DateTime.UtcNow;
+        var expirationTime = TimeSpan.FromMinutes(2);
+        var expirationDate = now.Add(-expirationTime);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started, startedDate: expirationDate.AddSeconds(1));
+
+        actionGroup.IsOutdated(expirationTime, now).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void IsOutdated_PendingActionGroupCreatedPriorToExpirationDate_ReturnsTrue()
+    {
+        var now = DateTime.UtcNow;
+        var expirationTime = TimeSpan.FromMinutes(2);
+        var expirationDate = now.Add(-expirationTime);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: expirationDate.AddSeconds(-1));
+
+        actionGroup.IsOutdated(expirationTime, now).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void IsOutdated_PendingActionGroupAfterExpirationDate_ReturnsFalse()
+    {
+        var now = DateTime.UtcNow;
+        var expirationTime = TimeSpan.FromMinutes(2);
+        var expirationDate = now.Add(-expirationTime);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: expirationDate.AddSeconds(1));
+
+        actionGroup.IsOutdated(expirationTime, now).ShouldBeFalse();
+    }
 }

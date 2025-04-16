@@ -20,6 +20,8 @@ using Microsoft.Extensions.Logging;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using System.Collections.ObjectModel;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -33,6 +35,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.IdentityModel.Tokens;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -145,7 +148,7 @@ public class AgvCommandHandler :
         }
 
         // Let's see if there is a created charge action group
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
         var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
         if (actionGroup != null)
         {
@@ -375,6 +378,7 @@ public class AgvCommandHandler :
         if (!wasOnline)
         {
             agv.SetOnline();
+            await PrepareNodes(context, agvStatus, agv);
         }
         bool wasReady = agv.IsReady;
         (bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
@@ -426,7 +430,7 @@ public class AgvCommandHandler :
                 return;
             }
 
-            if(agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
+            if (agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
             {
                 if (await _agvDb.Agvs.HasOnlineAgvs())
                 {
@@ -546,7 +550,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GoOffline> context)
     {
-       var correlationId = context.Message.CorrelationId;
+        var correlationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         bool wasOnline = agv.IsOnline;
@@ -579,7 +583,7 @@ public class AgvCommandHandler :
         var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
         bool hasZoneErrors = agvErrors.Any(e => e.IsZoneError());
         bool hasZonesInStatus = !agv.AgvStatus!.ZoneIds.IsNullOrEmpty();
-       
+
         // Add ZoneError(s) to agv errors if it is not online
         if (hasZonesInStatus && !hasZoneErrors && !agv.IsOnline)
         {
@@ -1294,6 +1298,68 @@ public class AgvCommandHandler :
         if (await _agvDb.Graphs.TryGetNodeAsync(newStatus.LastNodeId) == null)
         {
             newStatus.UpdateLastNodeId(oldStatus.LastNodeId!);
+        }
+    }
+
+    private async Task PrepareNodes(IPublishEndpoint context, AgvStatus agvStatus, Agv agv)
+    {
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agv.CorrelationId);
+        if (actionGroups.Count < 1 && agvStatus.LastNodeId == null)
+        {
+            return;
+        }
+        List<string> lockedNodes = (await _nodeStateRepository.GetNodeLocksForAgv(agv.CorrelationId)).Select(n => n.NodeId).ToList();
+        
+        List<string> currentNodeIds = actionGroups.SelectMany(a => a.Actions).Select(a => a.Target.NodeId).Where(t => t != null).Select(t => t!).ToList();
+        if (agvStatus.LastNodeId != null)
+        {
+            currentNodeIds.Add(agvStatus.LastNodeId);
+        }
+        ICollection<GraphNode> currentNodes = (await _agvDb.Graphs.GetNodesAsync(n => currentNodeIds.Contains(n.Id))).ToList();
+        IEnumerable<string> parkers = currentNodes.Where(t => t.IsParker()).Select(t => t.Id);
+
+        var now = DateTime.UtcNow;
+        foreach (var node in currentNodes.Where(n => n.NeedsReservation() && !lockedNodes.Contains(n.Id)))
+        {
+            var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.Target.NodeId == node.Id));
+            if(actionGroup != null && actionGroup.IsOutdated(Agv.OfflineTolerance, now))
+            {
+                _logger.LogWarning("Action group {ActionGroupCorrelationId} outdated after agv {AgvCorrelationId} went back online", actionGroup.CorrelationId, agv.CorrelationId);
+                await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
+                continue;
+            }
+
+            if (string.Equals(node.Id, agvStatus.LastNodeId))
+            {
+                await _nodeStateRepository.ForceOccupyNodeAsync(node.Id, agv.CorrelationId);
+                await PublishNodeStateChange(context, node.Id);
+                continue;
+            }
+
+            if (!await _nodeStateRepository.ReserveNodeAsync(node.Id, agv.CorrelationId))
+            {
+                if (actionGroup != null)
+                {
+                    _logger.LogWarning("Could not restore reservation of node {NodeId} for Agv {AgvCorrelationId}, aborting action group {ActionGroupCorrelationId}", node.Id, agv.CorrelationId, actionGroup.CorrelationId);
+                    await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
+                    continue;
+                }
+                await PublishNodeStateChange(context, node.Id);
+            }
+        }
+
+        foreach(var moveToQueue in actionGroups.Where(a => !parkers.Contains(a.Actions.First().Target.NodeId) && a is { IsMovingCargo: false, IsChargingOrder: false, IsManual:false }))
+        {
+            if (moveToQueue.IsOutdated(Agv.OfflineTolerance, now))
+            {
+                _logger.LogWarning("Queuing action group {ActionGroupCorrelationId} outdated after agv {AgvCorrelationId} went back online", moveToQueue.CorrelationId, agv.CorrelationId);
+                await context.Publish(new CancelOrAbortActionGroup(moveToQueue.CorrelationId));
+                continue;
+            }
+            string nodeId = moveToQueue.Actions.Single().Target.NodeId!;
+            _logger.LogInformation("Restoring queue node reservation");
+            await _nodeStateRepository.ForceReserveNodeAsync(nodeId, agv.CorrelationId);
+            await PublishNodeStateChange(context, nodeId);
         }
     }
 }
