@@ -27,7 +27,7 @@ public class ActionGroupEventHandler :
         var (actionGroup, correlationId, timestamp) = context.Message;
         if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
         {
-            await context.Publish(new FinishHostOrder(correlationId, timestamp));
+            await context.Publish(new FinishHostOrder(correlationId, timestamp, actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId));
         }
     }
 

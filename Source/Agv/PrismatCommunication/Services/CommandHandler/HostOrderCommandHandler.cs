@@ -120,10 +120,21 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null, string? pickNode = null)
     {
         ActionGroup? actionGroup;
-        if (pickNode != null && assignedAgv != null)
+        if (pickNode != null && !hostOrder.HasUnknownDropTarget(configuration))
         {
-            // Doppelspiel
+            // Doppelspiel short loop or pickNode -> APL1
             actionGroup = hostOrder.CreatePickDropActionGroupForAgv(pickNode, assignedAgv, configuration);
+            await context.Publish(new QueueActionGroup(actionGroup, false));
+            hostOrder.IsQueued = true;
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
+        if (pickNode != null && hostOrder.HasUnknownDropTarget(configuration))
+        {
+            // Doppelspiel APL1->PS01/02/03
+            actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
+            actionGroup.AssignedAgv = assignedAgv;
             await context.Publish(new QueueActionGroup(actionGroup, false));
             hostOrder.IsQueued = true;
             await hostOrderRepository.SaveAsync();
@@ -258,11 +269,21 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     /// </summary>
     public async Task Consume(ConsumeContext<FinishHostOrder> context)
     {
-        var (correlationId, timestamp) = context.Message;
+        (var correlationId, var timestamp, string? targetNode) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
         hostOrder.Finish(timestamp);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await hostCommunicator.ReportOrderCompletion(hostOrder.Hu, hostOrder.OrderId, hostOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
+
+        if (hostOrder.DoppelspielPartner != null)
+        {
+            var doppelSpielPartner = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner!.Value);
+            if (!doppelSpielPartner.IsQueued) // avoid queue loops
+            {
+                logger.LogInformation("Doppelspiel partner not queued during finish: queueing partner order {HostOrder} calling for different agv", doppelSpielPartner.CorrelationId);
+                await QueueHostOrder(context, doppelSpielPartner, DateTime.UtcNow, pickNode:targetNode);
+            }
+        }
     }
 
     /// <summary>
@@ -308,7 +329,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
         if (droppingHostOrder.DoppelspielPartner != null)
         {
-            var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
+            var pickingHostOrder = await hostOrderRepository.GetByIdAsync(droppingHostOrder.DoppelspielPartner.Value);
             if (!pickingHostOrder.IsQueued) // avoid queue loops
             {
                 logger.LogInformation("Doppelspiel drop got shouldNotPickNext: queueing partner order {HostOrder} calling for different agv", pickingHostOrder.CorrelationId);

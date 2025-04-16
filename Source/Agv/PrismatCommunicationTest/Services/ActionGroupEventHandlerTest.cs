@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -31,7 +32,7 @@ public class ActionGroupEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
 
         (await fixture.TestHarness.Published.Any<FinishHostOrder>(f =>
-            f.Context.Message == new FinishHostOrder(actionGroup.CorrelationId, actionGroupCompleted.MessageCreatedDate))).ShouldBeTrue();
+            f.Context.Message == new FinishHostOrder(actionGroup.CorrelationId, actionGroupCompleted.MessageCreatedDate, actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId))).ShouldBeTrue();
     }
 
     [TestMethod]

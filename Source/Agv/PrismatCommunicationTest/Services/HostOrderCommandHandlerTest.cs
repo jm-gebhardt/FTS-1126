@@ -288,9 +288,104 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
-        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow));
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow, null));
         await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
         fixture.VerifyReportOrderCompletion(hostOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
+    }
+
+    [TestMethod]
+    public async Task Consume_FinishHostOrder_DoppelspielPartnerNotQueued_QueueDoppelspielPartner()
+    {
+        var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+        dropOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
+        nextPickOrder.SetDoppelspielPartner(dropOrder.CorrelationId);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([dropOrder, nextPickOrder])
+            .WithHostCommunicator();
+       
+        var command = new FinishHostOrder(dropOrder.CorrelationId, DateTime.UtcNow, "target of drop");
+        await fixture.TestHarness.Bus.Publish(command);
+       
+        await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
+        fixture.VerifyReportOrderCompletion(dropOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
+        queueActionGroup.ActionGroup.CorrelationId.ShouldBe(nextPickOrder.CorrelationId);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick)
+            .Target.NodeId.ShouldBe(command.TargetNode);
+        queueActionGroup.ActionGroup.AssignedAgv.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_FinishHostOrder_DoppelspielPartnerNotQueued_UnknownDropOrder_QueueDoppelspielPartner()
+    {
+        var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        dropOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
+        string dropTarget = OrderGenerator.KaeserConfiguration.StationMapping[dropOrder.Actions.Single(a => a.ActionType==ActionType.Drop).Node];
+        nextPickOrder.SetDoppelspielPartner(dropOrder.CorrelationId);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([dropOrder, nextPickOrder])
+            .WithHostCommunicator();
+
+        var command = new FinishHostOrder(dropOrder.CorrelationId, DateTime.UtcNow, dropTarget);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
+        fixture.VerifyReportOrderCompletion(dropOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(3);
+        queueActionGroup.ActionGroup.CorrelationId.ShouldBe(nextPickOrder.CorrelationId);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick)
+            .Target.NodeId.ShouldBe(dropTarget);
+        queueActionGroup.ActionGroup.AssignedAgv.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_FinishHostOrder_DoppelspielPartnerNotQueued_PickOrder_QueueDoppelspielPartner()
+    {
+        var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        dropOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
+        nextPickOrder.SetDoppelspielPartner(dropOrder.CorrelationId);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([dropOrder, nextPickOrder])
+            .WithHostCommunicator();
+
+        var command = new FinishHostOrder(dropOrder.CorrelationId, DateTime.UtcNow, "dropTarget");
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
+        fixture.VerifyReportOrderCompletion(dropOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
+        queueActionGroup.ActionGroup.CorrelationId.ShouldBe(nextPickOrder.CorrelationId);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick)
+            .Target.NodeId.ShouldBe(command.TargetNode);
+        queueActionGroup.ActionGroup.AssignedAgv.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_FinishHostOrder_DoppelspielPartnerIsQueued_DoesNoQueueDoppelspielPartner()
+    {
+        var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+        dropOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
+        nextPickOrder.SetDoppelspielPartner(dropOrder.CorrelationId);
+        nextPickOrder.IsQueued = true;
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([dropOrder, nextPickOrder])
+            .WithHostCommunicator();
+
+        var command = new FinishHostOrder(dropOrder.CorrelationId, DateTime.UtcNow, "target of drop");
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
+        fixture.VerifyReportOrderCompletion(dropOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
     [TestMethod]
@@ -304,7 +399,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
-        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, now));
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, now, null));
         await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
         fixture.VerifyReportOrderCompletion(times: Times.Never());
     }
