@@ -69,7 +69,10 @@ try
                     services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
                     services.AddSingleton<ISignificanceChecker<MqttOrderEvent>, MqttOrderEventSignificanceChecker>();
                     services.AddSingleton<UnTimedInMemoryFilter<MqttOrderEvent>>();
-                   
+
+                    services.AddSingleton<ISignificanceChecker<MqttState>, MqttStatusSignificanceChecker>();
+                    services.AddSingleton<UnTimedInMemoryFilter<MqttState>>();
+
                     services.AddSingleton<ISignificanceChecker<ActionCompleted>, ActionEventSignificanceChecker<ActionCompleted>>();
                     services.AddSingleton<UnTimedInMemoryFilter<ActionCompleted>>();
                    

@@ -10,8 +10,12 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Filters;
 /// Provides consume filters for mqtt messages sent by the agv.
 /// </summary>
 [UsedImplicitly]
-public class MqttMessageConsumeFilter(ILogger<MqttMessageConsumeFilter> logger, UnTimedInMemoryFilter<MqttOrderEvent> mqttOrderEventFilter):
-    IFilter<ConsumeContext<MqttOrderEvent>>
+public class MqttMessageConsumeFilter(
+    ILogger<MqttMessageConsumeFilter> logger,
+    UnTimedInMemoryFilter<MqttOrderEvent> mqttOrderEventFilter,
+    UnTimedInMemoryFilter<MqttState> mqttStateFilter) :
+    IFilter<ConsumeContext<MqttOrderEvent>>,
+    IFilter<ConsumeContext<MqttState>>
 {
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<MqttOrderEvent> context, IPipe<ConsumeContext<MqttOrderEvent>> next)
@@ -22,6 +26,17 @@ public class MqttMessageConsumeFilter(ILogger<MqttMessageConsumeFilter> logger, 
             return;
         }
         logger.LogInformation("Not consuming duplication of {Message}", nameof(MqttOrderEvent));
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<MqttState> context, IPipe<ConsumeContext<MqttState>> next)
+    {
+        if (await mqttStateFilter.ShouldActAsync(context.Message))
+        {
+            await next.Send(context);
+            return;
+        }
+        logger.LogInformation("Not consuming duplication of {Message}", nameof(MqttState));
     }
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
