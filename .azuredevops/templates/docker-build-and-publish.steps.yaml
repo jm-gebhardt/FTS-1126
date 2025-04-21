@@ -18,13 +18,13 @@ steps:
         displayName: Building ${{ projectName }}
         inputs:
           command: 'build'
+          Dockerfile: $(SourceDirectory)/Dockerfile
           arguments:
             - PROJECT=${{ projectName }}
             - DOTNET_VERSION=${{ parameters.dotnetversion }}
           tags: |
             $(GitVersion.SemVer)
             latest
-        workingDirectory: '$(SourceDirectory)'
 
 
   - ${{ each projectName in parameters.components }}:
