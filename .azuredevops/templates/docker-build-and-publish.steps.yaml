@@ -31,7 +31,7 @@ steps:
         inputs:
           containerRegistry: ${{ parameters.containerRegistryConnectionName }}
           repository: 'gebhardt/fleet-management/${{projectName}}'
-          command: 'buildAndPush'
+          command: 'push'
           tags: |
             $(GitVersion.SemVer)
             latest
