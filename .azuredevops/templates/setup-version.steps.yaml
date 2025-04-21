@@ -5,6 +5,13 @@ parameters:
 
 
 steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET 8 SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '8.0.x'
+      performMultiLevelLookup: true
+
   - task: gitversion/setup@3.0.3
     displayName: Install GitVersion
     inputs:

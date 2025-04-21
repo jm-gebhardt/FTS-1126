@@ -83,7 +83,6 @@ stages:
           - checkout: self
             displayName: Checkout
             fetchDepth: '0'
-          - template: ./templates/restore-and-build.steps.yaml
           - template: ./templates/setup-version.steps.yaml
           - template: ./templates/publish-version-artifact.steps.yaml
           - template: ./templates/docker-build-and-publish.steps.yaml
