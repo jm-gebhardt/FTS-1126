@@ -49,6 +49,7 @@ stages:
           - template: ./templates/code-analysis.steps.yaml
 
   - stage: unitTest
+    dependsOn: []
     jobs:
       - job: unitTest
         displayName: 'Unit tests'
@@ -58,11 +59,19 @@ stages:
           - template: ./templates/restore-and-build.steps.yaml
           - template: ./templates/unit-tests.steps.yaml
 
+  - job: coverageReport
+    dependsOn:
+      - unitTest
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - template: ./templates/build-quality.steps.yaml
+
 
   - stage: buildAndPublish
     dependsOn:
       - codeAnalysis
-      - unitTest
+      - coverageReport
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
       - job: buildAndPublish

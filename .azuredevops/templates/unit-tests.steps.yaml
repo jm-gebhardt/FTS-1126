@@ -12,15 +12,18 @@ steps:
       SourceFolder: '$(Agent.TempDirectory)'
       contents: '**/coverage.cobertura.xml'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
+
   - publish: '$(Build.ArtifactStagingDirectory)'
     displayName: 'Publish coverage report'
     artifact: coverageReports
+
 
   - task: PublishCodeCoverageResults@2
     displayName: 'Publish code coverage report'
     inputs:
       codeCoverageTool: 'Cobertura'
       summaryFileLocation: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml'
+
   - task: BuildQualityChecks@9
     displayName: 'Check build quality'
     inputs:
