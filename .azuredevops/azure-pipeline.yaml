@@ -1,0 +1,77 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - master
+
+variables:
+  - name: 'SourceDirectory'
+    value: 'Source/Agv'
+  - name: 'ResharperDirectory'
+    value: 'Source/Resharper'
+  - name: 'Build.Target'
+    value: 'CompileAgv.sln'
+  - name: 'Build.Configuration'
+    value: 'Release'
+  - name:  System.Debug
+    value: false
+
+
+parameters:
+  - name: 'components'
+    type: object
+    default:
+      - WCSCommunication
+      - PrismatCommunication
+      - SmartLinkCommunication
+      - TransportOrder
+      - DeviceCommunication.SimAgv
+      - DeviceCommunication.KarisAgv
+      - Statistics
+      - Provisioning
+      - TriggerService
+      - KaeserSidecar
+      - TriggerDecisionPoint1
+      - TriggerCargoCheck
+      - TriggerDoppelspiel
+
+stages:
+  - stage: codeAnalysis
+    jobs:
+      - job: codeAnalysis
+        displayName: 'Code analysis'
+        pool:
+          vmImage: windows-latest
+        steps:
+          - script: git config --system core.longpaths true
+          - checkout: self
+          - template: ./templates/restore-and-build.steps.yaml
+          - template: ./templates/code-analysis.steps.yaml
+
+  - stage: unitTest
+    jobs:
+      - job: unitTest
+        displayName: 'Unit tests'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: ./templates/restore-and-build.steps.yaml
+          - template: ./templates/unit-tests.steps.yaml
+
+
+  - stage: buildAndPublish
+    dependsOn:
+      - codeAnalysis
+      - unitTest
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    jobs:
+      - job: buildAndPublish
+        displayName: 'Build and Publish'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: ./templates/restore-and-build.steps.yaml
+          - template: ./templates/setup-version.steps.yaml
+          - template: ./templates/docker-build-and-publish.steps.yaml
+            parameters:
+              components: ${{ parameters.components }}

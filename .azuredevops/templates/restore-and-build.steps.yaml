@@ -1,0 +1,20 @@
+steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET 8 SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '8.0.x'
+      performMultiLevelLookup: true
+  - task: DotNetCoreCLI@2
+    displayName: 'Restoring based on NuGetBackupFeed.config'
+    inputs:
+      command: 'restore'
+      projects: '$(SourceDirectory)/$(Build.Target)'
+      feedsToUse: 'config'
+      nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
+  - task: DotNetCoreCLI@2
+    displayName: 'Build Target ($(Build.Target))'
+    inputs:
+      command: build
+      projects: '$(SourceDirectory)/$(Build.Target)'
+      arguments: '--configuration $(Build.Configuration)'
