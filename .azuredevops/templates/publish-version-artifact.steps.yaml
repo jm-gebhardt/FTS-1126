@@ -7,18 +7,18 @@ steps:
       cat > $(Build.ArtifactStagingDirectory)/VersionFile << EOF
       $(GitVersion.SemVer)
       EOF
-      echo $(cat VersionFile)
+      echo $(cat $(Build.ArtifactStagingDirectory)/VersionFile)
     displayName: Create VersionFile
     condition: succeeded()
 
   - bash: |
       echo "${{ convertToJson(parameters.components) }}" >> $(Build.ArtifactStagingDirectory)/Components
-      echo $(cat Components)
+      echo $(cat $(Build.ArtifactStagingDirectory)/Components)
     displayName: Create Components Artifact
 
   - task: PublishPipelineArtifact@1
     displayName: Publish Artifact VersionFile
     inputs:
-      targetPath: $(Build.ArtifactStagingDirectory)/VersionFile
+      targetPath: $(Build.ArtifactStagingDirectory)
       artifactName: $(Build.Repository.Name)_version
     condition: succeeded()
