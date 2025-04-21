@@ -15,11 +15,11 @@ steps:
 
   - ${{ each projectName in parameters.components }}:
       - task: Docker@2
-        displayName: Building ${{ projectName }}
+        displayName: Building image ${{ projectName }}
         inputs:
           command: 'build'
           Dockerfile: $(SourceDirectory)/Dockerfile
-          arguments: --build-arg PROJECT=${{ projectName }} DOTNET_VERSION=${{ parameters.dotnetversion }}
+          arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
           tags: |
             $(GitVersion.SemVer)
             latest
@@ -27,7 +27,7 @@ steps:
 
   - ${{ each projectName in parameters.components }}:
       - task: Docker@2
-        displayName: Push docker images
+        displayName: Push docker images ${{ projectName }}
         inputs:
           containerRegistry: ${{ parameters.containerRegistryConnectionName }}
           repository: 'gebhardt/fleet-management/${{projectName}}'
