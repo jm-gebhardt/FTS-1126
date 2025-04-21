@@ -19,6 +19,7 @@ steps:
         inputs:
           command: 'build'
           Dockerfile: $(SourceDirectory)/Dockerfile
+          repository: 'gebhardt/fleet-management/${{projectName}}'
           arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
           tags: |
             $(GitVersion.SemVer)
