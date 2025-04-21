@@ -1,0 +1,15 @@
+steps:
+  - bash: |
+      cat > $(Build.ArtifactStagingDirectory)/VersionFile << EOF
+      $(GitVersion.SemVer)
+      EOF
+      echo $(cat VersionFile)
+    displayName: Create VersionFile
+    condition: succeeded()
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Artifact VersionFile
+    inputs:
+      targetPath: $(Build.ArtifactStagingDirectory)/VersionFile
+      artifactName: $(Build.Repository.Name)_version
+    condition: succeeded()

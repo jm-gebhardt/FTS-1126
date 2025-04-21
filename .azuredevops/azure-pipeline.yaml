@@ -72,7 +72,8 @@ stages:
     dependsOn:
       - codeAnalysis
       - unitTest
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'feature/20207_new_release_strategy'))
     jobs:
       - job: buildAndPublish
         displayName: 'Build and Publish'
@@ -81,6 +82,7 @@ stages:
         steps:
           - template: ./templates/restore-and-build.steps.yaml
           - template: ./templates/setup-version.steps.yaml
+          - template: ./templates/publish-version-artifact.steps.yaml
           - template: ./templates/docker-build-and-publish.steps.yaml
             parameters:
               components: ${{ parameters.components }}
