@@ -12,7 +12,7 @@ steps:
     condition: succeeded()
 
   - bash: |
-      echo "${{ parameters.components }}" >> $(Build.ArtifactStagingDirectory)/Components
+      echo "${{ convertToJson(parameters.components) }}" >> $(Build.ArtifactStagingDirectory)/Components
       echo $(cat Components)
     displayName: Create Components Artifact
 
