@@ -75,3 +75,4 @@ stages:
           - template: ./templates/docker-build-and-publish.steps.yaml
             parameters:
               components: ${{ parameters.components }}
+              containerRegistryConnectionName: 'azure-architecture-sandbox-cr'
