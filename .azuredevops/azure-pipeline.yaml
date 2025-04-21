@@ -80,6 +80,9 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
+          - checkout: self
+            displayName: Checkout
+            fetchDepth: '0'
           - template: ./templates/restore-and-build.steps.yaml
           - template: ./templates/setup-version.steps.yaml
           - template: ./templates/publish-version-artifact.steps.yaml
