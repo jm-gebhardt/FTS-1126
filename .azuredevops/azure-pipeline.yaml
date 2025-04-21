@@ -85,6 +85,8 @@ stages:
             fetchDepth: '0'
           - template: ./templates/setup-version.steps.yaml
           - template: ./templates/publish-version-artifact.steps.yaml
+            parameters:
+              components: ${{ parameters.components }}
           - template: ./templates/docker-build-and-publish.steps.yaml
             parameters:
               components: ${{ parameters.components }}

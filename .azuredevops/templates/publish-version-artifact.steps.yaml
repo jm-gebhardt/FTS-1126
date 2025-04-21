@@ -1,3 +1,7 @@
+parameters:
+  - name: 'components'
+    type: object
+
 steps:
   - bash: |
       cat > $(Build.ArtifactStagingDirectory)/VersionFile << EOF
@@ -6,6 +10,11 @@ steps:
       echo $(cat VersionFile)
     displayName: Create VersionFile
     condition: succeeded()
+
+  - bash: |
+      echo "${{ parameters.components }}" >> $(Build.ArtifactStagingDirectory)/Components
+      echo $(cat Components)
+    displayName: Create Components Artifact
 
   - task: PublishPipelineArtifact@1
     displayName: Publish Artifact VersionFile
