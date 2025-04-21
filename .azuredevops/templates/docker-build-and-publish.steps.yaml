@@ -14,7 +14,7 @@ steps:
       containerRegistry: ${{ parameters.containerRegistryConnectionName }}
 
   - ${{ each projectName in parameters.components }}:
-      - docker@2:
+      - task: Docker@2
         displayName: Building ${{ projectName }}
         inputs:
           command: 'build'
