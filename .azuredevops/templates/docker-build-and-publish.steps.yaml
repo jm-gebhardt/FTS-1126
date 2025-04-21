@@ -19,7 +19,7 @@ steps:
         inputs:
           command: 'build'
           Dockerfile: $(SourceDirectory)/Dockerfile
-          arguments: PROJECT=${{ projectName }} DOTNET_VERSION=${{ parameters.dotnetversion }}
+          arguments: --build-arg PROJECT=${{ projectName }} DOTNET_VERSION=${{ parameters.dotnetversion }}
           tags: |
             $(GitVersion.SemVer)
             latest
