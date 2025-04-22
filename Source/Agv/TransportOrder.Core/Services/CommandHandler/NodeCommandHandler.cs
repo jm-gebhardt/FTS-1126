@@ -33,19 +33,28 @@ public class NodeCommandHandler(
     public async Task Consume(ConsumeContext<FreeNode> context)
     {
         string nodeId = context.Message.NodeId;
+        bool reservedOnly = context.Message.ReservedOnly;
         var station = await stationRepository.GetStation(nodeId);
-        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
-        {
-            logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
-        }
-
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
         if (nodeState == null)
         {
             logger.LogWarning("Could not retrieve node state for node {NodeId}", nodeId);
             return;
         }
-        await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+
+        if (reservedOnly && nodeState.NodeState != NodeLockState.Reserved)
+        {
+            logger.LogWarning("Node {NodeId} not reserved, but free is restricted to reserved nodes", nodeId);
+            return;
+        }
+
+        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
+        {
+            logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
+        }
+
+        nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
+        await context.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 
     /// <summary>

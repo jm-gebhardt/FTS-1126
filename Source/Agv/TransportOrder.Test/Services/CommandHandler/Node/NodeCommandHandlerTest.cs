@@ -26,6 +26,38 @@ public class NodeCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
+    [DataRow(NodeLockState.Occupied)]
+    [DataRow(NodeLockState.Free)]
+    [DataTestMethod]
+    public async Task Consume_FreeNodeReservedOnly_NotReserved_FreeNodeNotCalled(NodeLockState state)
+    {
+        const string nodeId = "Charge-0";
+        var fixture = new NodeCommandHandlerTestFixture()
+            .WithNodeState(new NodeLock(nodeId, state, false, null, DateTime.UtcNow))
+            .WithAnyStation();
+
+        await fixture.TestHarness.Bus.Publish(new FreeNode(nodeId, true));
+
+        await fixture.ShouldHaveConsumedAsync<FreeNode>();
+        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Never);
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_FreeNodeReservedOnly_ValidData_FreeNodeCalled()
+    {
+        const string nodeId = "Charge-0";
+        var fixture = new NodeCommandHandlerTestFixture()
+            .WithNodeState(new NodeLock(nodeId, NodeLockState.Reserved, false, null, DateTime.UtcNow))
+            .WithAnyStation();
+
+        await fixture.TestHarness.Bus.Publish(new FreeNode(nodeId, true));
+
+        await fixture.ShouldHaveConsumedAsync<FreeNode>();
+        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Once);
+        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+    }
+
     private const string AgvSerialNumber = "agv1";
 
     [TestMethod]

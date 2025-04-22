@@ -104,7 +104,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// </summary>
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
-        await context.Publish(new FreeNode(context.Message.TargetNodeId));
+        await context.Publish(new FreeNode(context.Message.TargetNodeId, context.Message.ReservedOnly));
     }
 
     /// <summary>
