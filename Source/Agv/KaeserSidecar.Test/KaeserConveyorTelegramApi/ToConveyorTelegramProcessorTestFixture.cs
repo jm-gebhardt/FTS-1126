@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi;
 
-public class ToConveyorTelegramProcessorTestFixture: TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>
+public class ToConveyorTelegramProcessorTestFixture: TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram>
 {
 #pragma warning disable CA2211
     [UsedImplicitly]

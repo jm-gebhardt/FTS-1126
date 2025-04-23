@@ -1,17 +1,19 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
+﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Microsoft.Extensions.Logging;
 using System.Text;
-using Gebhardt.Acc.Common.Domain.Utilities;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 
 /// <summary>
-/// Provides a processor for telegrams sent to the conveyor
+/// Provides a processor for <see cref="AgvAplCargoState"/> telegrams sent to the conveyor
 /// </summary>
-public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
+[PublicAPI]
+public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
 {
     private bool ReceiveAcknowledgement { get; set; }
 
@@ -20,7 +22,7 @@ public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegra
     /// <summary>
     ///  The send queue.
     /// </summary>
-    private ObservableConcurrentQueue<ConveyorTelegram> SendQueue { get; }
+    private ConcurrentQueue<ConveyorTelegram> SendQueue { get; } = new();
 
     /// <summary>
     ///  The send sequence counter.
@@ -58,17 +60,14 @@ public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegra
     public int RemainingAttempts { get; private set; }
 
     private int _acknowledgementWaitTime;
-    private readonly ILogger<ToConveyorTelegramProcessor> _logger;
+    private readonly ILogger<AgvAplCargoStateProcessor> _logger;
     private readonly ITimeProvider _timeProvider;
     private readonly TelegramCommunicationConfiguration _configuration;
 
-    /// <summary>
-    /// Provides a processor for telegrams sent to the conveyor
-    /// </summary>
-    public ToConveyorTelegramProcessor(ILogger<ToConveyorTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration, ObservableConcurrentQueue<ConveyorTelegram> queue)
+    /// <inheritdoc cref="AgvAplCargoStateProcessor"/>>
+    public AgvAplCargoStateProcessor(ILogger<AgvAplCargoStateProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration)
     {
         _logger = logger;
-        SendQueue = queue;
         _timeProvider = timeProvider;
         _configuration = configuration;
         TriggerRestart = false;
@@ -177,7 +176,8 @@ public class ToConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegra
     {
         if (!SendQueue.IsEmpty)
         {
-            _logger.LogWarning("Cancel requested, but there are {Count} messages pending send", SendQueue.Count);
+            _logger.LogWarning("Cancel requested, but there are {Count} messages pending send, deleting them", SendQueue.Count);
+            SendQueue.Clear();
         }
     }
 

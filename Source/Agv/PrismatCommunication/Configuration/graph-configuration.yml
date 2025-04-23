@@ -1,26 +1,24 @@
 DecisionPoint1TriggerName: DP1
 CheckCargoTriggerName: DP2
 DoppelspielTriggerName: DP3
-LongLoopMoveTargetNode: "map/NODE-10"
+LongLoopMoveTargetNode: "map/NODE-9"
 StationMapping:
-  "1020": "WE1"
-  "1050": "WE1"
-  "1040": "WE1"
-  "1060": "WE1"
-  "2110": "AKL1"
-  "2130": "AKL1"
-  "2210": "AKL2"
-  "2230": "AKL2"
-  "2310": "AKL3"
-  "2330": "AKL3"
-  "2410": "AKL4"
-  "2430": "AKL4"
+  "1020": "PS03"
+  "1050": "PS03"
+  "2110": "AP01"
+  "2130": "AP01"
+  "2210": "AP02"
+  "2230": "AP02"
+  "2310": "AP03"
+  "2330": "AP03"
+  "2410": "AP04"
+  "2430": "AP04"
   "9060": "APL1"
   "9070": "APL1"
 ConveyorStationMapping:
-  "WE1": "WE03"
-  "WE2": "WE02"
-  "WE3": "WE01"
+  "PS01": "WE01"
+  "PS02": "WE02"
+  "PS03": "WE03"
 TargetLiftHeight:
   "2110": 1.0
   "2130": 1.5

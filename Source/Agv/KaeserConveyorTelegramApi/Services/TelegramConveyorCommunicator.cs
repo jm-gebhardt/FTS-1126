@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 
 /// <inheritdoc cref="IConveyorCommunicator"/>>
 [PublicAPI]
-public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] ToConveyorTelegramProcessor aplWeStationTelegramProcessor, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] ToConveyorTelegramProcessor agvCargoStateTelegramProcessor) : IConveyorCommunicator
+public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] AgvWeStationTelegramProcessor aplWeStationTelegramProcessor, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] AgvAplCargoStateProcessor agvCargoStateTelegramProcessor) : IConveyorCommunicator
 {
     /// <inheritdoc cref="IConveyorCommunicator"/>>
     public void ReportAplCargoState(bool cargo)

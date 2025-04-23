@@ -15,12 +15,12 @@ public class TelegramConveyorCommunicatorTest
 
         const bool cargo = true;
 
-        fixture.Processor.HasSendDemand().ShouldBeFalse();
+        fixture.AplCargoStateProcessor.HasSendDemand().ShouldBeFalse();
 
         fixture.Communicator.ReportAplCargoState(cargo);
 
-        fixture.Processor.HasSendDemand().ShouldBeTrue();
-        fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
+        fixture.AplCargoStateProcessor.HasSendDemand().ShouldBeTrue();
+        fixture.AplCargoStateProcessor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
 
         var agvAplCargoState = new AgvAplCargoState(false, DateTime.UtcNow);
         agvAplCargoState.Load(nextTelegram);

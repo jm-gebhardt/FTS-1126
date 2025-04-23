@@ -8,12 +8,12 @@ using Life = Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams.Life;
 namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi;
 
 [TestClass]
-public class ToConveyorTelegramProcessorTest
+public class AgvWeStationTelegramProcessorTest
 {
     [TestMethod]
     public void TrySendLifeTelegram_NoTelegramToSend_LifeTelegramQueued()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
+        TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram>(null)
             .Build();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.TrySendLifeTelegram();
@@ -40,7 +40,7 @@ public class ToConveyorTelegramProcessorTest
     [TestMethod]
     public void ProcessReceivedTelegram_FullSendReceiveCycle_AcknowledgementHandled()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
+        TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram>(null)
             .Build();
         var telegram = new Life(DateTime.UtcNow);
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
@@ -56,7 +56,7 @@ public class ToConveyorTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoAcknowledgementReceived_ResendUntilMaxRetryIsReached()
     {
-        TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToConveyorTelegramProcessor, ConveyorTelegram>(null)
+        TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram>(null)
             .Build();
 
         var now = DateTime.UtcNow;
