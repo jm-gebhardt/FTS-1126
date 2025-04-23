@@ -245,6 +245,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<StartInstantAction> startInstantActionsClient = GetRequestClient<StartInstantAction>();
         IRequestClient<ResendAction> resendActionClient = GetRequestClient<ResendAction>();
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient = GetRequestClient<RemoveAgvFromZones>();
+        IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient = GetRequestClient<SolveRessourceBlockingErrors>();
 
         var controller = new AgvController(Mapper,
             getAgvRequestClient,
@@ -278,7 +279,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getInstantActionsClient,
             startInstantActionsClient,
             resendActionClient,
-            removeAgvFromZonesClient
+            removeAgvFromZonesClient,
+            ressourceBlockingClient
         )
         {
             ControllerContext = new ControllerContext(

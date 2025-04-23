@@ -291,6 +291,9 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddConsumer<AgvZonesRequestHandler>();
         configurator.AddRequestClient<RemoveAgvFromZones>();
+
+        configurator.AddConsumer<AgvErrorRequestHandler>();
+        configurator.AddRequestClient<SolveRessourceBlockingErrors>();
     }
 
     private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)

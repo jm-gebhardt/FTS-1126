@@ -29,6 +29,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -47,6 +48,7 @@ using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 using CreateQueueingActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.CreateQueueingActionGroup;
 using RequestAgvZones = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvZones;
 using UpdateErrorStatus = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UpdateErrorStatus;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
@@ -369,7 +371,16 @@ public class AgvCommandHandler :
         bool? wasDisturbed = oldStatus?.Disturbed;
         bool? wasAutomatic = oldStatus?.Automatic;
 
-        bool zoneIdsChanged = !Equals(oldStatus?.ZoneIds, agvStatus.ZoneIds);
+        bool zoneIdsChanged;
+        if ((oldStatus == null || oldStatus.ZoneIds.IsNullOrEmpty()) && agvStatus.ZoneIds.IsNullOrEmpty())
+        {
+            zoneIdsChanged = false;
+        }
+        else
+        {
+            zoneIdsChanged = !Equals(oldStatus?.ZoneIds, agvStatus.ZoneIds);
+        }
+
         if (oldStatus != null && agv.GraphExists)
         {
             await ResetLastNodeId(oldStatus, agvStatus);
@@ -417,9 +428,14 @@ public class AgvCommandHandler :
             await PublishZonesRequestAsync(context, agv);
         }
 
-        if (zoneIdsChanged || agv.IsOnline != wasOnline)
+        if (agv.IsOnline != wasOnline)
         {
-            await UpdateZoneErrors(context, agv);
+            await UpdateOfflineErrors(context, agv);
+        }
+
+        if (zoneIdsChanged && agv.IsOnline == wasOnline)
+        {
+            await UpdateOfflineErrors(context, agv, handleRessourceErrors:false);
         }
 
         if (zoneIdsChanged || batteryChargeChanged || lastNodeIdChanged || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
@@ -557,7 +573,7 @@ public class AgvCommandHandler :
         agv.GoOffline();
         if (wasOnline && !agv.IsOnline)
         {
-            await UpdateZoneErrors(context, agv);
+            await UpdateOfflineErrors(context, agv);
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {
                 _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(GoOffline), agv.CorrelationId);
@@ -577,10 +593,50 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task UpdateZoneErrors(IPublishEndpoint context, Agv agv)
+    private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors=true, bool handleRessourceErrors=true)
     {
-        IList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
+        List<AgvError> agvErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId)).ToList();
         var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
+
+        if (handleZoneErrors)
+        {
+            await UpdateZoneErrors(context, agv, agvErrors, position);
+        }
+
+        if (handleRessourceErrors)
+        {
+            await UpdateRessourceBlockingErrors(context, agv, agvErrors, position);
+        }
+    }
+
+    private async Task UpdateRessourceBlockingErrors(IPublishEndpoint context, Agv agv, List<AgvError> agvErrors, AgvPositionStatus? position)
+    {
+        bool hasRessourceErrors = agvErrors.Any(e => e.IsRessourceError());
+
+        // Remove RessourceBlockingError from agv errors
+        if (agv.IsOnline && hasRessourceErrors)
+        {
+            _logger.LogInformation("Removing ressource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
+            agvErrors.RemoveAll(e => e.IsRessourceError());
+            await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
+            return;
+        }
+
+        // Add RessourceBlockingError(s)
+        ICollection<NodeLock> nodeLocks = await _nodeStateRepository.GetNodeLocksForAgv(agv.CorrelationId);
+        if (!hasRessourceErrors && !agv.IsOnline && nodeLocks.Count > 0)
+        {
+            _logger.LogInformation("Adding ressource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
+            foreach (var nodeLock in nodeLocks)
+            {
+               agvErrors.Add(new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, nodeLock.NodeId));
+            }
+            await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
+        }
+    }
+
+    private async Task UpdateZoneErrors(IPublishEndpoint context, Agv agv, List<AgvError> agvErrors, AgvPositionStatus? position)
+    {
         bool hasZoneErrors = agvErrors.Any(e => e.IsZoneError());
         bool hasZonesInStatus = !agv.AgvStatus!.ZoneIds.IsNullOrEmpty();
 
@@ -588,6 +644,11 @@ public class AgvCommandHandler :
         if (hasZonesInStatus && !hasZoneErrors && !agv.IsOnline)
         {
             _logger.LogInformation("Adding zone errors for agv {AgvCorrelationId}", agv.CorrelationId);
+            ICollection<Zone> zones = await _agvDb.Zones.GetZones(agv.AgvStatus!.ZoneIds!.ToArray());
+            foreach (var zone in zones)
+            {
+               agvErrors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId));
+            }
             await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
             return;
         }
@@ -596,7 +657,7 @@ public class AgvCommandHandler :
         if ((agv.IsOnline || !hasZonesInStatus) && hasZoneErrors)
         {
             _logger.LogInformation("Removing zone errors for agv {AgvCorrelationId}", agv.CorrelationId);
-            agvErrors = agvErrors.Where(e => !e.IsZoneError()).ToList();
+            agvErrors.RemoveAll(e => e.IsZoneError());
             await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
         }
     }
@@ -1097,7 +1158,7 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         agv.AgvStatus!.ResetZones();
-        await UpdateZoneErrors(context, agv);
+        await UpdateOfflineErrors(context, agv, handleRessourceErrors:false);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 

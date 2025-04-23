@@ -134,6 +134,18 @@ public record AgvError : CorrelatedBy<Guid>
                ErrorFlag == zoneError.ErrorFlag &&
                ErrorLevel == zoneError.ErrorLevel;
     }
+
+    /// <summary>
+    /// True, if the error is a ressource blocking error.
+    /// </summary>
+    public bool IsRessourceError()
+    {
+        var ressourceError = new RessourceBlockingError(CorrelationId, ErrorReceived, "any");
+        return ErrorType == ressourceError.ErrorType &&
+               ErrorCategory == ressourceError.ErrorCategory &&
+               ErrorFlag == ressourceError.ErrorFlag &&
+               ErrorLevel == ressourceError.ErrorLevel;
+    }
 }
 
 /// <summary>
