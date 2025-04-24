@@ -27,6 +27,7 @@ public static class BusRegistrationExtension
             partitioner.PartitionMessageById<FinishHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<CancelInvalidHostOrder, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<AbortHostOrder, HostOrderCommandHandler>(c);
             c.Message<PassTriggerPoint>(x => x.UsePartitioner(partitioner, p => p.Message.DroppingHostOrderCorrelationId));
 
             var huPartitioner = c.CreatePartitioner(16);

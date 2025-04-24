@@ -17,6 +17,7 @@ public class ActionGroupEventHandler :
     IConsumer<ActionGroupStarted>,
     IConsumer<ActionGroupInvalid>,
     IConsumer<PickActionCompleted>,
+    IConsumer<ActionAborted>,
     IConsumer<DroppingAgvPassedDoppelspielTriggerPoint>
 {
     /// <summary>
@@ -72,5 +73,15 @@ public class ActionGroupEventHandler :
         {
             await context.Publish(new CancelInvalidHostOrder(correlationId));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionGroupInvalid"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionAborted> context)
+    {
+        var (_, action) = context.Message;
+
+        await context.Publish(new AbortHostOrder(action.ParentId));
     }
 }

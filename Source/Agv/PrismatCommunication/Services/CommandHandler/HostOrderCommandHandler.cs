@@ -24,7 +24,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     IConsumer<HandleHostOrderStart>,
     IConsumer<FinishHostOrder>,
     IConsumer<FinishPick>,
-    IConsumer<PassTriggerPoint>
+    IConsumer<PassTriggerPoint>,
+    IConsumer<AbortHostOrder>
 
 {
     /// <summary>
@@ -370,6 +371,28 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             if (!pickingHostOrder.IsQueued) // avoid queue loops
             {
                 logger.LogInformation("Doppelspiel drop got shouldNotPickNext: queueing partner order {HostOrder} calling for different agv", pickingHostOrder.CorrelationId);
+                await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AbortHostOrder"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AbortHostOrder> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+        hostOrder.Cancel(DateTime.UtcNow);
+        await hostOrderRepository.UpdateAsync(hostOrder);
+        await hostOrderRepository.SaveAsync();
+
+        if (hostOrder.DoppelspielPartner != null)
+        {
+            var pickingHostOrder = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value);
+            if (!pickingHostOrder.IsQueued) // avoid queue loops
+            {
+                logger.LogInformation("Doppelspiel partner got aborted: queueing partner order {HostOrder} calling for different agv", pickingHostOrder.CorrelationId);
                 await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
             }
         }

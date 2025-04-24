@@ -36,6 +36,19 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionAborted_ValidData_AbortHostOrder()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionAborted = new ActionAborted(Guid.NewGuid(), new AgvAction(){ParentId = Guid.NewGuid()});
+
+        await fixture.TestHarness.Bus.Publish(actionAborted);
+        await fixture.ShouldHaveConsumedAsync<ActionAborted>();
+
+        (await fixture.TestHarness.Published.Any<AbortHostOrder>(f =>
+            f.Context.Message == new AbortHostOrder(actionAborted.Action.ParentId))).ShouldBeTrue();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionGroupCompleted_CreatorIsTransportOrderWebApi_NoFinishHostOrder()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();

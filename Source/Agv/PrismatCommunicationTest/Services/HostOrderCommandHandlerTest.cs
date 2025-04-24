@@ -572,4 +572,39 @@ public class HostOrderCommandHandlerTest
             .Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[pickNode]);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBeNull();
     }
+
+    [TestMethod]
+    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartner_PublishesQueueActionGroup()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+
+        var doppelspielPartner = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+        hostOrder.SetDoppelspielPartner(doppelspielPartner.CorrelationId);
+        doppelspielPartner.SetDoppelspielPartner(hostOrder.CorrelationId);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder, doppelspielPartner]);
+
+        var command = new AbortHostOrder(hostOrder.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<AbortHostOrder>();
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        hostOrder.CanceledDate.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_AbortHostOrder_NoDoppelspielpartner_UpdatesOrder()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder]);
+
+        var command = new AbortHostOrder(hostOrder.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<AbortHostOrder>();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        hostOrder.CanceledDate.ShouldNotBeNull();
+    }
 }
