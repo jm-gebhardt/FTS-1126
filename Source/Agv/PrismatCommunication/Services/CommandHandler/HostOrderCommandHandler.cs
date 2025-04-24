@@ -72,6 +72,7 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             await hostOrderRepository.UpdateAsync(dropOrder);
             await hostOrderRepository.SaveAsync();
             logger.LogInformation("Doppelspiel expected for order  {OrderCorrelationId}", hostOrder.CorrelationId);
+            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, dropOrder.AssignedAgv);
             return;
         }
 
@@ -114,6 +115,41 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             await hostOrderRepository.UpdateAsync(reverseHostOrder);
             await hostOrderRepository.SaveAsync();
             await QueueHostOrder(context, reverseHostOrder, reverseHostOrder.CreatedDate);
+        }
+    }
+
+    private async Task CreateHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null)
+    {
+        // Short circuit
+        var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
+        if (actionGroup != null)
+        {
+            actionGroup.AssignedAgv = assignedAgv;
+            await context.Publish(new CreateActionGroup(actionGroup));
+            hostOrder.IsQueued = false;
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
+        // Long circuit
+
+        if (hostOrder.HasUnknownPickTarget(configuration))
+        {
+            actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
+            actionGroup.AssignedAgv = assignedAgv;
+            await context.Publish(new CreateActionGroup(actionGroup));
+            hostOrder.IsQueued = false;
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
+        if (hostOrder.HasUnknownDropTarget(configuration))
+        {
+            actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
+            actionGroup.AssignedAgv = assignedAgv;
+            await context.Publish(new CreateActionGroup(actionGroup));
+            hostOrder.IsQueued = false;
+            await hostOrderRepository.SaveAsync();
         }
     }
 
@@ -274,7 +310,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         hostOrder.Finish(timestamp);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await hostCommunicator.ReportOrderCompletion(hostOrder.Hu, hostOrder.OrderId, hostOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
-
+        logger.LogInformation("Finished host order {HostOrder} with DoppelSpielPartner {Partner}", hostOrder.CorrelationId, hostOrder.DoppelspielPartner);
+     
         if (hostOrder.DoppelspielPartner != null)
         {
             var doppelSpielPartner = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner!.Value);

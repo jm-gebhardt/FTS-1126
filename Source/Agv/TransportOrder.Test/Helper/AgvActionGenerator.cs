@@ -36,6 +36,7 @@ public static class AgvActionGenerator
             CreatedDate = createdDate ?? DateTime.UtcNow
         };
         actionGroup.UpdateActionGroupState();
+        actionGroup.Queue();
 
         return actionGroup;
     }
@@ -138,6 +139,7 @@ public static class AgvActionGenerator
             EstimatedDuration = duration,
             HasPriority = hasPriority
         };
+        actionGroup.Queue();
         actionGroup.UpdateActionGroupState();
         if (createdDate != default)
         {
@@ -307,7 +309,7 @@ public static class AgvActionGenerator
             EstimatedDuration = duration,
             CreatedDate = createdDate ?? DateTime.UtcNow
         };
-
+        actionGroup.Queue();
         return actionGroup;
     }
 

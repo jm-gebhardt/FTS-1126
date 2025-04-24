@@ -103,6 +103,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
             TestHarness.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
         ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
+        ActionGroupRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>())).Verifiable();
         ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
 
@@ -151,6 +152,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public ActionGroupTestFixtureBase<T> WithAddActionGroupIsSuccessful(bool isSuccessful = true)
     {
         ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).ReturnsAsync(isSuccessful);
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithAddOrUpdateActionGroupIsUpdating(bool isUpdating = true)
+    {
+        ActionGroupRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>())).ReturnsAsync(isUpdating);
         return this;
     }
 
@@ -231,6 +238,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public void IsActionGroupSaved(Times howOften)
     {
         ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<ActionGroup>()), howOften);
+        ActionGroupRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>()), howOften);
     }
 
     public async Task<Response<TResult>> GetResponseAsync<TResult, TRequest>(TRequest request)

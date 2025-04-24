@@ -124,6 +124,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             }).Distinct().ToList(),
             g.IsManual,
             g.HasPriority,
+            g.IsQueued,
             g.Reasons
         )).ToList();
 
@@ -169,6 +170,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
                     actionGroup.IsManual,
                     actionGroup.HasPriority,
+                    actionGroup.IsQueued,
                     actionGroup.Reasons
                 );
             });
@@ -252,6 +254,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.HasPriority,
+            actionGroup.IsQueued,
             actionGroup.Reasons
         );
 
@@ -290,6 +293,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.HasPriority,
+            actionGroup.IsQueued,
             actionGroup.Reasons
         );
     }
@@ -326,6 +330,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.HasPriority,
+            actionGroup.IsQueued,
             actionGroup.Reasons
         );
     }

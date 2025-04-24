@@ -40,7 +40,7 @@ public class ActionGroupsControllerTest
                         null,
                         null,
                         TimeSpan.Zero)
-                ], false, false, [])
+                ], false, false, true, [])
         };
         var fixture = new ActionGroupsControllerTestFixture()
             .WithActionGroups(actionGroups)

@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 /// Agv Action
 /// </summary>
 [PublicAPI]
-public class AgvAction : IParentedBy<Guid>
+public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 {
     /// <summary>
     /// Unique CorrelationId of this action
@@ -279,5 +279,122 @@ public class AgvAction : IParentedBy<Guid>
     public override string ToString()
     {
         return $"Nodes: {string.Join(",", Nodes)} TargetNode: {Target.NodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public bool Equals(AgvAction? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        if (!CorrelationId.Equals(other.CorrelationId))
+        {
+            return false;
+        }
+        if (!ParentId.Equals(other.ParentId))
+        {
+            return false;
+        }
+        if (Sequence != other.Sequence)
+        {
+            return false;
+        }
+        if (State != other.State)
+        {
+            return false;
+        }
+        if (ActionType != other.ActionType)
+        {
+            return false;
+        }
+        if (!Target.Equals(other.Target))
+        {
+            return false;
+        }
+        if (!Nodes.Equals(other.Nodes))
+        {
+            return false;
+        }
+        if (!Edges.Equals(other.Edges))
+        {
+            return false;
+        }
+        if (!CreatedDate.Equals(other.CreatedDate))
+        {
+            return false;
+        }
+        if (!Nullable.Equals(StartedDate, other.StartedDate))
+        {
+            return false;
+        }
+        if (!Nullable.Equals(CompletedDate, other.CompletedDate))
+        {
+            return false;
+        }
+        if (!Nullable.Equals(PausedDate, other.PausedDate))
+        {
+            return false;
+        }
+        if (!Equals(InfoToAgv, other.InfoToAgv))
+        {
+            return false;
+        }
+        if (!PausedDuration.Equals(other.PausedDuration))
+        {
+            return false;
+        }
+        if (ShouldSkip != other.ShouldSkip)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+        return Equals((AgvAction)obj);
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override int GetHashCode()
+    {
+        // ReSharper disable NonReadonlyMemberInGetHashCode
+        var hashCode = new HashCode();
+        hashCode.Add(value: CorrelationId);
+        hashCode.Add(ParentId);
+        hashCode.Add(Sequence);
+        hashCode.Add((int)State);
+        hashCode.Add((int)ActionType);
+        hashCode.Add(Target);
+        hashCode.Add(Nodes);
+        hashCode.Add(Edges);
+        hashCode.Add(CreatedDate);
+        hashCode.Add(StartedDate);
+        hashCode.Add(CompletedDate);
+        hashCode.Add(PausedDate);
+        hashCode.Add(InfoToAgv);
+        hashCode.Add(PausedDuration);
+        hashCode.Add(ShouldSkip);
+        return hashCode.ToHashCode();
     }
 }

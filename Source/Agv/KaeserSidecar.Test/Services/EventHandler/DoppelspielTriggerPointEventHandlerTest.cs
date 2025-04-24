@@ -11,15 +11,17 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 [TestClass]
 public class DoppelspielTriggerPointEventHandlerTest
 {
-    [TestMethod]
-    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DroppingDoppelspielPartner_PublishesDroppingAgvPassedDoppelspielTriggerPoint()
+    [DataRow(ActionState.Started)]
+    [DataRow(ActionState.Completed)]
+    [DataTestMethod]
+    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DroppingDoppelspielPartner_PublishesDroppingAgvPassedDoppelspielTriggerPoint(ActionState actionState)
     {
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
         var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = actionState;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         dropHostOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);

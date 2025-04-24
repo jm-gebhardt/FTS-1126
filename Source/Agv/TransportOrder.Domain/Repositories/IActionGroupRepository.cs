@@ -21,6 +21,13 @@ public interface IActionGroupRepository
     Task<bool> AddAsync(ActionGroup actionGroup);
 
     /// <summary>
+    /// Saves the action
+    /// </summary>
+    /// <param name="actionGroup">Agv Action</param>
+    /// <returns>True, if the action group has been updated. False if it has been added.</returns>
+    Task<bool> AddOrUpdateAsync(ActionGroup actionGroup);
+
+    /// <summary>
     /// Get a list of ActionGroup.
     /// </summary>
     /// <param name="states">Can be one actionGroupState filter or contain multiple states which should be included in the return. If null, the filter is inactive</param>

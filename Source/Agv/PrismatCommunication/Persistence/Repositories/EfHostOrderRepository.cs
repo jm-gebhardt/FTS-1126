@@ -37,6 +37,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
         var order = await _context.Set<HostOrder>().Where(
                 h => !h.PassedTriggerPoint
                      && h.CanceledDate == null
+                     && h.FinishedDate == null
                      && h.StartedDate != null
                      && h.IsQueued
                      && h.DoppelspielPartner == null

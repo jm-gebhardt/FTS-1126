@@ -84,6 +84,48 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
+    public async Task AddOrUpdateAsync_WhenSuccessfullyAddedToRepository_CanGetActionGroupById()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var fixture = new ActionGroupRepositoryTestFixture();
+
+        bool updated = await fixture.ActionGroupRepository.AddOrUpdateAsync(actionGroup);
+        updated.ShouldBeFalse();
+        var actionGroupInRepository = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
+
+        actionGroupInRepository.ShouldNotBeNull();
+        actionGroupInRepository.Actions.ShouldNotBeEmpty();
+        VerifyActionGroup(actionGroupInRepository, actionGroup);
+    }
+
+    [TestMethod]
+    public async Task AddOrUpdateAsync_WhenSuccessfullyUpdatedToRepository_CanGetUpdatedActionGroupById()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
+        var fixture = new ActionGroupRepositoryTestFixture();
+
+        bool updated = await fixture.ActionGroupRepository.AddOrUpdateAsync(actionGroup);
+        updated.ShouldBeFalse();
+
+        var updatedActionGroup = new ActionGroup(actionGroup.CorrelationId,
+            actionGroup.OrderId,
+            actionGroup.Actions.Where(a => a.ActionType != ActionType.Move).ToList(),
+            actionGroup.Creator,
+            true,
+            actionGroup.CreatedDate,
+            Guid.NewGuid());
+
+        updated = await fixture.ActionGroupRepository.AddOrUpdateAsync(updatedActionGroup);
+        updated.ShouldBeTrue();
+        var actionGroupInRepository = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
+
+        actionGroupInRepository.ShouldNotBeNull();
+        actionGroupInRepository.Actions.Count.ShouldBe(updatedActionGroup.Actions.Count);
+        actionGroupInRepository.IsQueued.ShouldBe(updatedActionGroup.IsQueued);
+        VerifyActionGroup(actionGroupInRepository, updatedActionGroup);
+    }
+
+    [TestMethod]
     [DataRow(ActionGroupState.Created, 2, 10)]
     [DataRow(ActionGroupState.Created, 0, 10)]
     [DataRow(ActionGroupState.Created, 10, 0)]

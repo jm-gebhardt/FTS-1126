@@ -116,4 +116,12 @@ public class AgvActionTest
 
         action.ShouldSkip.ShouldBeTrue();
     }
+
+    [TestMethod]
+    public void Equals_IdenticalAction_ReturnsTrue()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid());
+        var other = new TransportOrder.Domain.Models.ActionGroup.AgvAction(action.CorrelationId, ActionType.Drop, new ActionTarget(string.Empty), action.ParentId){CreatedDate = action.CreatedDate};
+        action.Equals(other).ShouldBeTrue();
+    }
 } 

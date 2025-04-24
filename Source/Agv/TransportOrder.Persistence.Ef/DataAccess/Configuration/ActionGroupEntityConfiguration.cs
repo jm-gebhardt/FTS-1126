@@ -18,6 +18,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.IsIncomplete);
         builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);
         builder.HasIndex(g => g.AssignedAgv);
+        builder.Property(e => e.IsQueued);
         builder.Property(e => e.AssignedAgv);
         builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
 

@@ -19,6 +19,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="Actions">The action.</param>
 /// <param name="IsManual">The manual creation mode flag.</param>
 /// <param name="HasPriority">The priority flag.</param>
+/// <param name="IsQueued">True, if the action group is queued.</param>
 /// <param name="Reasons">Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled.</param>
 public record ActionGroupReadModel(
     Guid CorrelationId,
@@ -33,4 +34,5 @@ public record ActionGroupReadModel(
     ICollection<AgvActionReadModel> Actions,
     [UsedImplicitly] bool IsManual,
     [UsedImplicitly] bool HasPriority,
+    [UsedImplicitly] bool IsQueued,
     List<Reason> Reasons);

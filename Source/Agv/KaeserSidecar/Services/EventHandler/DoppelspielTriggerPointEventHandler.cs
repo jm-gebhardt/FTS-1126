@@ -30,13 +30,13 @@ public class DoppelspielTriggerPointEventHandler(
             logger.LogWarning("Agv without pick drop action group passed Doppelspiel trigger point ({ActionGroup})", actionGroup?.CorrelationId);
             return;
         }
-        var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started && a.Target.NodeId == targetStationName);
+        var action = actionGroup.Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Completed && a.Target.NodeId == targetStationName);
         if (action == null)
         {
-            logger.LogDebug("Agv without started action to station {TargetStation} with Doppelspiel passed Doppelspiel trigger point. Current action group is: ({ActionGroup})", targetStationName, actionGroup.CorrelationId);
+            logger.LogWarning("Agv without started action to station {TargetStation} with Doppelspiel passed Doppelspiel trigger point. Current action group is: ({ActionGroup})", targetStationName, actionGroup.CorrelationId);
             foreach (var a in actionGroup.Actions)
             {
-                logger.LogDebug("Action {ActionType} is in State {State} and heads to {Target}", a.ActionType, a.State, a.Target.NodeId);
+                logger.LogWarning("Action {ActionType} is in State {State} and heads to {Target}", a.ActionType, a.State, a.Target.NodeId);
             }
             return;
         }
