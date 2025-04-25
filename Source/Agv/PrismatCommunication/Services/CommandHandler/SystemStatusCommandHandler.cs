@@ -15,7 +15,8 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 public class SystemStatusCommandHandler(ISystemStatusRepository repository, ILogger<SystemStatusCommandHandler> logger, IHostCommunicator communicator) :
     IConsumer<GetSystemStatus>,
     IConsumer<SetReady>,
-    IConsumer<SetNotReady>
+    IConsumer<SetNotReady>,
+    IConsumer<UseAklAgvLimit>
 {
     private const string SystemError = "Keine Fahrzeuge vorhanden.";
     private const int SystemErrorCode = 5000;
@@ -83,5 +84,18 @@ public class SystemStatusCommandHandler(ISystemStatusRepository repository, ILog
         repository.Add(systemStatus);
         await repository.SaveAsync();
         return (systemStatus, true);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UseAklAgvLimit"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UseAklAgvLimit> context)
+    {
+        var (status, _) = await GetStatus();
+
+        status.SetUseAklAgvLimit(context.Message.UseLimit);
+        await repository.UpdateAsync(status);
+        await repository.SaveAsync();
+        logger.LogInformation("Using akl agv limit: {Flag} from now on", status.UseAklAgvLimit);
     }
 }

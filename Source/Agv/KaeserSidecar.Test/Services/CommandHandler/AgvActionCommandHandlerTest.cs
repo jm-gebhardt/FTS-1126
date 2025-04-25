@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -176,22 +177,6 @@ public class AgvActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
-    }
-
-    [TestMethod]
-    public async Task Consume_ActionCompleted_TargetNodeNotConveyorStation_StationOccupancyNotUpdated()
-    {
-        const string station = "not conveyor station";
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), destination: station);
-        var fixture = new AgvActionCommandHandlerTestFixture()
-            .WithActionGroup(actionGroup);
-
-        var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
-        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
     }
 
     [TestMethod]

@@ -27,6 +27,11 @@ public class SystemStatus
     /// </summary>
     public string ErrorInfo { get; private set; }
 
+    /// <summary>
+    /// True, if the agv limit at akl stations should be enforced.
+    /// </summary>
+    public bool UseAklAgvLimit { get; private set; } = true;
+
     /// <inheritdoc cref="SystemStatus"/>>
     public SystemStatus(Guid id, bool isReady, int errorCode, string errorInfo)
     {
@@ -72,5 +77,14 @@ public class SystemStatus
         IsReady = false;
         ErrorInfo = errorInfo;
         ErrorCode = errorCode;
+    }
+
+    /// <summary>
+    /// Decides, if the agv limit at akl stations should be used.
+    /// </summary>
+    /// <param name="useLimit">Flag indicating if the limit is used.</param>
+    public void SetUseAklAgvLimit(bool useLimit)
+    {
+        UseAklAgvLimit = useLimit;
     }
 }

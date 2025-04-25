@@ -1,14 +1,13 @@
 ﻿using Gebhardt.Acc.Common.Domain.Exceptions;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 
 namespace Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
 
 /// <summary>
-/// The exception raised when the <see cref="ShortLoopWeTargetStation"/>
+/// The exception raised when the <see cref="Models.KaeserGraph.ShortLoopWeTargetStation"/>
 /// could not be found.
 /// </summary>
 public class ShortLoopWeTargetStationNotFoundException : NotFoundException
 {
     /// <inheritdoc cref="ShortLoopWeTargetStationNotFoundException"/>>
-    public ShortLoopWeTargetStationNotFoundException(): base(nameof(ShortLoopWeTargetStation)){}
+    public ShortLoopWeTargetStationNotFoundException(): base(nameof(Models.KaeserGraph.ShortLoopWeTargetStation)){}
 }

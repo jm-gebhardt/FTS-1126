@@ -17,7 +17,14 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 /// Provides handlers for host order related commands.
 /// </summary>
 [UsedImplicitly]
-public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IHostOrderRepository hostOrderRepository, IHostCommunicator hostCommunicator, KaeserGraphConfiguration configuration, IHostOrderValidationService validationService) :
+public class HostOrderCommandHandler(
+    ILogger<HostOrderCommandHandler> logger,
+    IHostOrderRepository hostOrderRepository,
+    IHostCommunicator hostCommunicator,
+    KaeserGraphConfiguration configuration,
+    IHostOrderValidationService validationService,
+    ISystemStatusRepository systemStatusRepository,
+    IStationRepository stationRepository) :
     IConsumer<CreateHostOrder>,
     IConsumer<CancelHostOrder>,
     IConsumer<CancelInvalidHostOrder>,
@@ -25,7 +32,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     IConsumer<FinishHostOrder>,
     IConsumer<FinishPick>,
     IConsumer<PassTriggerPoint>,
-    IConsumer<AbortHostOrder>
+    IConsumer<AbortHostOrder>,
+    IConsumer<TryQueueDelayedOrder>
 
 {
     /// <summary>
@@ -74,6 +82,12 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             await hostOrderRepository.SaveAsync();
             logger.LogInformation("Doppelspiel expected for order  {OrderCorrelationId}", hostOrder.CorrelationId);
             await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, dropOrder.AssignedAgv);
+            return;
+        }
+
+        if (await ViolatesAklAgvLimitation(hostOrder))
+        {
+            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, hostOrder.AssignedAgv);
             return;
         }
 
@@ -156,6 +170,13 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
 
     private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null, string? pickNode = null)
     {
+        if (await ViolatesAklAgvLimitation(hostOrder))
+        {
+            hostOrder.SetDoppelspielPartner(null);
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
         ActionGroup? actionGroup;
         if (pickNode != null && !hostOrder.HasUnknownDropTarget(configuration))
         {
@@ -209,6 +230,46 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             hostOrder.IsQueued = true;
             await hostOrderRepository.SaveAsync();
         }
+    }
+
+    private async Task<bool> ViolatesAklAgvLimitation(HostOrder hostOrder)
+    {
+        if (!hostOrder.IsShortCircuitOrder(configuration))
+        {
+            // Long loop order
+            return false;
+        }
+
+        if (configuration.PrismatInputLanes.Contains(hostOrder.Source) && hostOrder.DoppelspielPartner != null)
+        {
+            // Already reported Doppelspiel partner
+            return false;
+        }
+
+        var systemStatus = await systemStatusRepository.GetStatus();
+        if (systemStatus is not { UseAklAgvLimit: true })
+        {
+            return false;
+        }
+
+        var stationGroup = await stationRepository.GetStationGroup(hostOrder.Source, hostOrder.Target);
+        if (stationGroup == null)
+        {
+            return false;
+        }
+
+        if (stationGroup.IsOccupied)
+        {
+            logger.LogWarning("Delaying host order {CorrelationId}, station group {StationGroupId} at {FirstSource}/{LastSource} is occupied.", hostOrder.CorrelationId, stationGroup.GroupId, stationGroup.Sources.First(), stationGroup.Sources.Last());
+            return true;
+        }
+
+        if (await hostOrderRepository.HasCurrentHostOrdersForStationGroup(stationGroup.Sources, stationGroup.Targets))
+        {
+            logger.LogWarning("Delaying host order {CorrelationId}, orders are heading towards it.", hostOrder.CorrelationId);
+            return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -396,5 +457,25 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
                 await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
             }
         }
+    }
+    
+    /// <summary>
+    /// Handles the <see cref="TryQueueDelayedOrder"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryQueueDelayedOrder> context)
+    {
+        var stationGroup = await stationRepository.GetStationGroup(context.Message.Source, context.Message.Target);
+        if (stationGroup == null)
+        {
+            return;
+        }
+
+        var hostOrder = await hostOrderRepository.GetNextHostOrderForStationGroup(stationGroup.Sources, stationGroup.Targets);
+        if (hostOrder == null)
+        {
+            return;
+        }
+        hostOrder.SetDoppelspielPartner(null);
+        await QueueHostOrder(context, hostOrder, DateTime.UtcNow);
     }
 }

@@ -7,6 +7,7 @@
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
       <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
+      <ProjectReference Include="..\PrismatCommunication.Domain\PrismatCommunication.Domain.csproj" />
       <ProjectReference Include="..\PrismatCommunication.TelegramApi\PrismatCommunication.TelegramApi.csproj" />
       <ProjectReference Include="..\PrismatCommunication\PrismatCommunication.csproj" />
     </ItemGroup>

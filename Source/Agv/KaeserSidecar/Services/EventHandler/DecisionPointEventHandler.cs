@@ -5,10 +5,10 @@ using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Station = Gebhardt.Acc.TransportOrder.Domain.Models.Station.Station;
 
 namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 

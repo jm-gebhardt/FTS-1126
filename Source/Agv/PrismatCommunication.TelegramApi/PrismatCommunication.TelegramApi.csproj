@@ -24,5 +24,6 @@
         <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\PrismatCommunication.Messages\PrismatCommunication.Messages.csproj" />
+        <ProjectReference Include="..\PrismatCommunication.Domain\PrismatCommunication.Domain.csproj" />
     </ItemGroup>
 </Project>

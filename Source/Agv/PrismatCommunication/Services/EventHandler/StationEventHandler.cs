@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -13,7 +15,8 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 [UsedImplicitly]
 public class StationEventHandler(KaeserGraphConfiguration configuration, IShortLoopWeTargetStationRepository targetStationRepository,  ILogger<StationEventHandler> logger) :
     IConsumer<StationLocked>,
-    IConsumer<StationUnlocked>
+    IConsumer<StationUnlocked>,
+    IConsumer<AgvLeftStation>
 {
     /// <summary>
     /// Handles the <see cref="StationLocked"/> event.
@@ -45,5 +48,13 @@ public class StationEventHandler(KaeserGraphConfiguration configuration, IShortL
             await targetStationRepository.UpdateAsync(shortLoopTarget);
             logger.LogInformation("Original short loop target {StationName} was unlocked, using {Target} from now on", unlockedStation, shortLoopTarget.Current);
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvLeftStation"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvLeftStation> context)
+    {
+        await context.Publish(new TryQueueDelayedOrder(context.Message.Source, context.Message.Target));
     }
 }

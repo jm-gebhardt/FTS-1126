@@ -45,4 +45,32 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
             .OrderBy(o => o.StartedDate).FirstOrDefaultAsync();
         return order?.CorrelationId;
     }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<HostOrder?> GetNextHostOrderForStationGroup(ICollection<string> sources, ICollection<string> targets)
+    {
+        return await _context.Set<HostOrder>().Where(
+                h => !h.IsQueued &&
+                     h.CanceledDate == null &&
+                     h.FinishedDate == null &&
+                     h.StartedDate == null &&
+                     h.FailedDate == null &&
+                     (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node)) ||
+                      h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node))))
+            .OrderBy(h => h.CreatedDate).FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<bool> HasCurrentHostOrdersForStationGroup(ICollection<string> sources, ICollection<string> targets)
+    {
+       return await _context.Set<HostOrder>().Where(
+            h => h.IsQueued &&
+                 h.CanceledDate == null &&
+                 h.FinishedDate == null &&
+                 h.StartedDate != null &&
+                 h.FailedDate == null &&
+                 (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node)) ||
+                  h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node))))
+            .AnyAsync();
+    }
 }

@@ -84,6 +84,16 @@ public class HostOrder
     public Guid? DoppelspielPartner { get; private set; }
 
     /// <summary>
+    /// The source of the host order.
+    /// </summary>
+    public string Source => Actions.First(a => a.ActionType == ActionType.Pick).Node;
+
+    /// <summary>
+    /// The target of the host order.
+    /// </summary>
+    public string Target => Actions.First(a => a.ActionType == ActionType.Drop).Node;
+
+    /// <summary>
     /// Initializes a new <see cref="HostOrder"/> instance.
     /// </summary>
     public HostOrder(string orderId, string hu, DateTime createdDate)
@@ -193,6 +203,15 @@ public class HostOrder
     public void PassTriggerPoint()
     {
         PassedTriggerPoint = true;
+    }
+
+    /// <summary>
+    /// True, if a host order runs on the short circuit.
+    /// </summary>
+    /// <param name="configuration">The Kaeser graph configuration.</param>
+    public bool IsShortCircuitOrder(KaeserGraphConfiguration configuration)
+    {
+        return Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node));
     }
     
     /// <summary>
