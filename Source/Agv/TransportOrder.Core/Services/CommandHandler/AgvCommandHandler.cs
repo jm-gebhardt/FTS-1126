@@ -937,7 +937,7 @@ public class AgvCommandHandler :
         bool stateChanged = agv.ForceIdle();
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(SetAgvForceIdle), agv.CorrelationId);
+            _logger.LogError("{Command}: Could not update agv {AgvCorrelationId}", nameof(SetAgvForceIdle), agv.CorrelationId);
             return;
         }
         _logger.LogWarning("AGV {AgvId} / {AgvCorrelationId} was set to idle by force", agv.SerialNumber, agv.CorrelationId);

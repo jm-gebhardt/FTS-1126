@@ -443,19 +443,26 @@ public class HostOrderCommandHandler(
     public async Task Consume(ConsumeContext<AbortHostOrder> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        hostOrder.Cancel(DateTime.UtcNow);
-        await hostOrderRepository.UpdateAsync(hostOrder);
-        await hostOrderRepository.SaveAsync();
-
-        if (hostOrder.DoppelspielPartner != null)
+        try
         {
-            var pickingHostOrder = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value);
-            if (!pickingHostOrder.IsQueued) // avoid queue loops
+            var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+            hostOrder.Cancel(DateTime.UtcNow);
+            await hostOrderRepository.UpdateAsync(hostOrder);
+            await hostOrderRepository.SaveAsync();
+
+            if (hostOrder.DoppelspielPartner != null)
             {
-                logger.LogInformation("Doppelspiel partner got aborted: queueing partner order {HostOrder} calling for different agv", pickingHostOrder.CorrelationId);
-                await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
+                var pickingHostOrder = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value);
+                if (!pickingHostOrder.IsQueued) // avoid queue loops
+                {
+                    logger.LogInformation("Doppelspiel partner got aborted: queueing partner order {HostOrder} calling for different agv", pickingHostOrder.CorrelationId);
+                    await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
+                }
             }
+        }
+        catch (InvalidOperationException)
+        {
+            // not order known to prismat
         }
     }
     

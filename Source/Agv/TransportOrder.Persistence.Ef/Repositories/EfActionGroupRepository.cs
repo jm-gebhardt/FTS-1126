@@ -55,13 +55,15 @@ public class EfActionGroupRepository : IActionGroupRepository
         var existingActionGroup = await context.Set<ActionGroup>().Where(a => a.CorrelationId == actionGroup.CorrelationId).Include(a => a.Actions).AsNoTracking().SingleAsync();
         List<Guid> existingActions = existingActionGroup.Actions.Select(a => a.CorrelationId).ToList();
         List<Guid> currentActions = actionGroup.Actions.Select(a => a.CorrelationId).ToList();
+        foreach (var action in actionGroup.Actions)
+        {
+            context.Entry(action).State = EntityState.Detached;
+        }
+
+        context.Entry(actionGroup).State = EntityState.Modified;
+        context.Set<ActionGroup>().Update(actionGroup);
         List<AgvAction> actionsToAdd = actionGroup.Actions.Where(a => !existingActions.Contains(a.CorrelationId)).ToList();
         List<AgvAction> actionsToRemove = existingActionGroup.Actions.Where(a => !currentActions.Contains(a.CorrelationId)).ToList();
-        List<AgvAction> actionsToUpdate = actionGroup.Actions.Where(a =>
-            existingActions.Contains(a.CorrelationId) &&
-            !a.Equals(existingActionGroup.Actions.SingleOrDefault(e => e.CorrelationId == a.CorrelationId))).ToList();
-
-        context.Set<ActionGroup>().Update(actionGroup);
         if (actionsToAdd.Count > 0)
         {
             context.AddRange(actionsToAdd);
@@ -70,6 +72,9 @@ public class EfActionGroupRepository : IActionGroupRepository
         {
             context.RemoveRange(actionsToRemove);
         }
+        List<AgvAction> actionsToUpdate = actionGroup.Actions.Where(a =>
+            existingActions.Contains(a.CorrelationId) &&
+            !a.Equals(existingActionGroup.Actions.SingleOrDefault(e => e.CorrelationId == a.CorrelationId))).ToList();
         if (actionsToUpdate.Count > 0)
         {
             context.UpdateRange(actionsToUpdate);
