@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -22,6 +24,7 @@ public class NodeCommandHandler(
     IQueueRepository queueRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository, 
+    IGraphRepository graphRepository,
     ILogger<NodeCommandHandler> logger) :
     IConsumer<FreeNode>,
     IConsumer<UpdateNodeOccupancy>,
@@ -64,12 +67,13 @@ public class NodeCommandHandler(
     {
         await Task.Delay(Agv.OfflineTolerance);
         ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(context.Message.AgvCorrelationId);
+        ICollection<GraphNode> nodes = await graphRepository.GetNodesByIdsAsync(nodeLocksForAgv.Select(n => n.NodeId).ToList());
         ICollection<Task<bool>> freeNodeTasks = [];
         ICollection<Task> publishTasks = [];
-        foreach (var node in nodeLocksForAgv)
+        foreach (var node in nodes.Where(n => !n.IsCharger() && !n.IsParker()))
         {
-            freeNodeTasks.Add(nodeStateRepository.FreeNodeAsync(node.NodeId));
-            publishTasks.Add(PublishNodeStateChange(context, node.NodeId));
+            freeNodeTasks.Add(nodeStateRepository.FreeNodeAsync(node.Id));
+            publishTasks.Add(PublishNodeStateChange(context, node.Id));
         }
         await Task.WhenAll(freeNodeTasks);
         await Task.WhenAll(publishTasks);

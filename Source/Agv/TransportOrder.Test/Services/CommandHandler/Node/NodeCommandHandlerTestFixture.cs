@@ -16,6 +16,7 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
+    private readonly Mock<IGraphRepository> _graphRepository = new();
 
     public NodeCommandHandlerTestFixture()
     {
@@ -29,6 +30,7 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _queueRepository.Object);
+        collection.AddTransient(_ => _graphRepository.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
        
         return this;
