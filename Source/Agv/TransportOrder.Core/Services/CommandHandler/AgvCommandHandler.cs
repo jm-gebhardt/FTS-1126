@@ -280,49 +280,6 @@ public class AgvCommandHandler :
         bool hadError = agv.HasError;
         bool agvHasError = errors.HasAnyError();
 
-        foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Fatal))
-        {
-            if (agvError.ErrorFlag == ErrorFlag.Battery)
-            {
-                _logger.LogBatteryError(LogCodes.BatteryError, agv.CorrelationId, agvError.ErrorCode, "Battery Error",
-                    $"Battery of AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}",
-                    new Dictionary<string, object?>
-                    {
-                        { LogLabels.AgvSerialNumber, agv.SerialNumber },
-                        { LogLabels.ErrorDescription, agvError.ErrorDescription }
-                    });
-                continue;
-            }
-            _logger.LogAgvError(LogCodes.AgvError, agv.CorrelationId, agvError.ErrorCode, "AGV Error",
-                $"AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}",
-                new Dictionary<string, object?>
-                {
-                    { LogLabels.AgvSerialNumber, agv.SerialNumber },
-                    { LogLabels.ErrorDescription, agvError.ErrorDescription }
-                });
-        }
-        foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Warning))
-        {
-            if (agvError.ErrorFlag == ErrorFlag.Battery)
-            {
-                _logger.LogBatteryWarning(LogCodes.BatteryWarning, agv.CorrelationId, agvError.ErrorCode,
-                    "Battery Warning", $"Battery of AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}",
-                    new Dictionary<string, object?>
-                    {
-                        { LogLabels.AgvSerialNumber, agv.SerialNumber },
-                        { LogLabels.ErrorDescription, agvError.ErrorDescription }
-                    });
-                continue;
-            }
-            _logger.LogAgvWarning(LogCodes.AgvWarning, agv.CorrelationId, agvError.ErrorCode, "AGV Warning",
-                $"AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}",
-                new Dictionary<string, object?>
-                {
-                    { LogLabels.AgvSerialNumber, agv.SerialNumber },
-                    { LogLabels.ErrorDescription, agvError.ErrorDescription }
-                });
-        }
-
         if (agvHasError != hadError)
         {
             agv.HasError = agvHasError;
