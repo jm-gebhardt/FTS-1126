@@ -428,7 +428,7 @@ public class ActionGroupTests
     [DataTestMethod]
     public void SetDockFrontOfAction_PickDropActionGroup_RotationNeeded_DockFrontSet(bool? previous, bool pick, bool drop)
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, Math.PI.ToString(CultureInfo.InvariantCulture) } });
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.InfoToAgv!.NeedsRotation().ShouldBeTrue();
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
@@ -476,7 +476,7 @@ public class ActionGroupTests
     [DataTestMethod]
     public void SetDockFrontOfAction_IncompleteDropActionGroup_RotationNeeded_DockFrontSet(bool? previous, bool pick, bool drop)
     {
-        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, Math.PI.ToString(CultureInfo.InvariantCulture) } });
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.InfoToAgv!.NeedsRotation().ShouldBeTrue();
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
@@ -530,7 +530,7 @@ public class ActionGroupTests
     [DataTestMethod]
     public void SetDockFrontOfAction_IncompletePickActionGroup_RotationNeeded_DockFrontSet(bool? previous, bool pick, bool drop)
     {
-        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, Math.PI.ToString(CultureInfo.InvariantCulture) } });
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.InfoToAgv!.NeedsRotation().ShouldBeTrue();
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);

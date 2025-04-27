@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.Common.Extensions;
 /// </summary>
 public static class InfoToAgvExtensions
 {
-    private const double RotationValue = Math.PI;
+    private const double RotationValue = 1d;
 
     /// <summary>
     /// Check if value for CargoRotation in InfoToAgv requests rotation.
@@ -33,9 +33,9 @@ public static class InfoToAgvExtensions
             return true;
         }
 
-        if (Math.Abs(parsedRotationValue) > RotationValue * 2)
+        if (Math.Abs(parsedRotationValue) > RotationValue + Mathematics.DoubleComparator)
         {
-            throw new ArgumentOutOfRangeException(nameof(InfoToAgvKey.CargoRotation), "Value out of range.");
+            throw new ArgumentOutOfRangeException(nameof(InfoToAgvKey.CargoRotation), $"Value {parsedRotationValue} out of range.");
         }
 
         return false;

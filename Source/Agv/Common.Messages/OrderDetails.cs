@@ -84,7 +84,7 @@ public record OrderDetails : CorrelatedBy<Guid>
     /// <param name="creationDate"></param>
     /// <param name="huRot"></param>
     public OrderDetails(Guid correlationId, string orderId, string source, string destination, string leNo, HostOrderCreator creator, DateTime creationDate, int huRot)
-        : this(correlationId, orderId, source, destination, leNo, creator, creationDate, ConvertHuRotToRadians(huRot))
+        : this(correlationId, orderId, source, destination, leNo, creator, creationDate, (double)huRot)
     {
     }
 
