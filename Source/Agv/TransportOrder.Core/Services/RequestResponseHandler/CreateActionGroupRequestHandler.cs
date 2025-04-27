@@ -57,10 +57,16 @@ public class CreateActionGroupRequestHandler :
         (string sourceNode, string targetNode, Guid? agvCorrelationId, bool hasPriority, var creator) = await ValidateMessageContent(context);
 
         var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, agvCorrelationId, hasPriority, creator);
+        actionGroup.Queue();
         await _actionGroupRepository.AddAsync(actionGroup);
+        
         _logger.LogOrderInformation(LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully",
             new Dictionary<string, object?>{{LogLabels.OrderId, actionGroup.OrderId } });
+
+        _logger.LogOrderInformation(LogCodes.OrderQueued, agvCorrelationId.GetValueOrDefault(),
+            actionGroup.CorrelationId, "Order Queued", $"Order {actionGroup.OrderId} was queued successfully",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
         await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agvCorrelationId));
         await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));

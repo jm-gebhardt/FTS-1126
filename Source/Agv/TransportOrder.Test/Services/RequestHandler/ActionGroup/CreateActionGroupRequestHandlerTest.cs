@@ -130,6 +130,7 @@ public class CreateActionGroupRequestHandlerTest
         response.Message.ActionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
         response.Message.ActionGroup.HasPriority.ShouldBeFalse();
         response.Message.ActionGroup.IsManual.ShouldBeTrue();
+        response.Message.ActionGroup.IsQueued.ShouldBeTrue();
         var pickAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).First();
         pickAction.ActionType.ShouldBe(ActionType.Pick);
         pickAction.TargetNodeId.ShouldBe(sourceNode.Id);
@@ -158,6 +159,7 @@ public class CreateActionGroupRequestHandlerTest
         response.Message.ActionGroup.HasPriority.ShouldBeFalse();
         response.Message.ActionGroup.Creator.ShouldBe(ActionGroupCreator.TransportOrderWebApi);
         response.Message.ActionGroup.IsManual.ShouldBeTrue();
+        response.Message.ActionGroup.IsQueued.ShouldBeTrue();
         var pickAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).First();
         pickAction.ActionType.ShouldBe(ActionType.Pick);
         pickAction.TargetNodeId.ShouldBe(sourceNode.Id);
@@ -187,6 +189,7 @@ public class CreateActionGroupRequestHandlerTest
         response.Message.ActionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
         response.Message.ActionGroup.HasPriority.ShouldBeTrue();
         response.Message.ActionGroup.IsManual.ShouldBeTrue();
+        response.Message.ActionGroup.IsQueued.ShouldBeTrue();
         var pickAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).First();
         pickAction.ActionType.ShouldBe(ActionType.Pick);
         pickAction.TargetNodeId.ShouldBe(sourceNode.Id);

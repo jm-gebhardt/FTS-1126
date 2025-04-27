@@ -145,7 +145,7 @@ public class Agv : IAgv
             if (hasChanged)
             {
                 TimeOfLockStateChanged = DateTime.UtcNow;
-                _isLocked =  Mode.Type == ModeType.Locked;
+                _isLocked = Mode.Type == ModeType.Locked;
             }
         }
     }
@@ -623,7 +623,15 @@ public class Agv : IAgv
     {
         get
         {
-            return agv => agv.AgvStatus != null && agv.AgvStatus!.LastNodeId != null && !agv.HasError && agv.IsOnline;
+            return agv =>
+                agv.AgvStatus != null &&
+                agv.AgvStatus.LastNodeId != null &&
+                !(agv.Mode.Type != ModeType.Maintenance &&
+                  agv.Mode.Type != ModeType.UserMode &&
+                  agv.Mode.PendingType != ModeType.Maintenance &&
+                  agv.Mode.PendingType != ModeType.UserMode &&
+                  agv.HasError) &&
+                agv.IsOnline;
         }
     }
 }

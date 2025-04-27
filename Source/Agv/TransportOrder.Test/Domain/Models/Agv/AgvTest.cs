@@ -195,6 +195,48 @@ public class AgvTest
     }
 
     [TestMethod]
+    public void IsReady_WhenHasError_InMaintenanceMode_ShouldBeTrue()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.PrepareMaintenanceMode(MaintenanceReason.BatteryIssues, null, "user");
+        agv.SwitchMode();
+        agv.IsReady.ShouldBeTrue();
+        agv.HasError = true;
+        agv.IsReady.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void IsReady_WhenHasError_IsPendingMaintenanceMode_ShouldBeTrue()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.PrepareMaintenanceMode(MaintenanceReason.BatteryIssues, null, "user");
+        agv.IsReady.ShouldBeTrue();
+        agv.HasError = true;
+        agv.IsReady.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void IsReady_WhenHasError_InUserMode_ShouldBeTrue()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.PrepareUserMode();
+        agv.SwitchMode();
+        agv.IsReady.ShouldBeTrue();
+        agv.HasError = true;
+        agv.IsReady.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void IsReady_WhenHasError_IsPendingUserMode_ShouldBeTrue()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.PrepareUserMode();
+        agv.IsReady.ShouldBeTrue();
+        agv.HasError = true;
+        agv.IsReady.ShouldBeTrue();
+    }
+
+    [TestMethod]
     public void ShouldRequestData_DataNeverRequestedNoData_ShouldRequestData()
     {
         var agv = AgvGenerator.GenerateRawAgv();
