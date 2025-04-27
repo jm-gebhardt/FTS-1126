@@ -17,7 +17,7 @@ public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> 
     {
         var agvAplCargoState = new AgvAplCargoState(cargo, DateTime.UtcNow);
         agvCargoStateTelegramProcessor.EnqueueTelegram(agvAplCargoState);
-        logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvAplCargoState.ToString(), ServiceKeyProvider.AgvCargoState);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvAplCargoState.ToString(), ServiceKeyProvider.AgvCargoState);
     }
     
     /// <inheritdoc cref="IConveyorCommunicator"/>>
@@ -25,6 +25,6 @@ public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> 
     {
         var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, hu, DateTime.UtcNow);
         aplWeStationTelegramProcessor.EnqueueTelegram(agvWeStation);
-        logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvWeStation.ToString(), ServiceKeyProvider.AplWeStation);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvWeStation.ToString(), ServiceKeyProvider.AplWeStation);
     }
 }

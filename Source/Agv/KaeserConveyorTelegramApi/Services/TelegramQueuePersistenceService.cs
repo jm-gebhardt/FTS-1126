@@ -49,7 +49,7 @@ public class TelegramQueuePersistenceService : IAsyncDisposable
             _ = DeleteTelegram();
             return;
         }
-        _logger.LogInformation("Persisting telegram {Telegram}", telegram.ToString());
+        _logger.LogDebug("Persisting telegram {Telegram}", telegram.ToString());
         _ = StoreTelegram(message, telegram);
         _ = DeleteTelegram();
     }
@@ -83,7 +83,7 @@ public class TelegramQueuePersistenceService : IAsyncDisposable
         {
             return;
         }
-        _logger.LogInformation("List telegram {Telegram} for deletion", telegram.ToString());
+        _logger.LogDebug("List telegram {Telegram} for deletion", telegram.ToString());
 
         var storedTelegram = Telegram.Create(message, conveyorTelegram.Func);
         _telegramsToDelete.Enqueue(storedTelegram);
@@ -95,17 +95,17 @@ public class TelegramQueuePersistenceService : IAsyncDisposable
         {
             try
             {
-                _logger.LogInformation("Try deleting telegram {Telegram}", storedTelegram.Id);
+                _logger.LogDebug("Try deleting telegram {Telegram}", storedTelegram.Id);
                 storedTelegram = await _telegramRepository.GetByIdAsync(storedTelegram.Id);
                 await _telegramRepository.RemoveAsync(storedTelegram);
             }
             catch (InvalidOperationException)
             {
-                _logger.LogDebug("Could not remove telegram {Message} ", storedTelegram.Message);
+                _logger.LogWarning("Could not remove telegram {Message} ", storedTelegram.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("Could not remove telegram {Message} ", ex.Message);
+                _logger.LogWarning("Could not remove telegram {Message} ", ex.Message);
             }
         }
     }
