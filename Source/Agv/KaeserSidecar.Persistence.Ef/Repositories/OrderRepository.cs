@@ -9,7 +9,7 @@ public class OrderRepository: IOrderRepository
     private readonly ConcurrentDictionary<string, List<Guid>> _stationPickReports = new();
 
     /// <inheritdoc cref="IOrderRepository"/>>
-    public Task StorePickOrderReport(string station, Guid orderId)
+    public Task StoreOrderReport(string station, Guid orderId)
     {
         _stationPickReports.AddOrUpdate(station,
             addValueFactory: (_) => [orderId],
@@ -22,7 +22,7 @@ public class OrderRepository: IOrderRepository
     }
 
     /// <inheritdoc cref="IOrderRepository"/>>
-    public Task RemovePickOrderReport(string station, Guid orderId)
+    public Task RemoveOrderReport(string station, Guid orderId)
     {
         if (_stationPickReports.TryGetValue(station, out List<Guid>? orders))
         {

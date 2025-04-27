@@ -10,14 +10,14 @@ namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 public class EfOrderRepository(IDbContextFactory<KaeserSidecarDbContext> contextFactory) : EfRepository<OrderReport, KaeserSidecarDbContext, IDbContextFactory<KaeserSidecarDbContext>>(contextFactory), IOrderRepository
 {
     /// <inheritdoc cref="IOrderRepository"/>>
-    public async Task StorePickOrderReport(string station, Guid orderId)
+    public async Task StoreOrderReport(string station, Guid orderId)
     {
         var report = new OrderReport(orderId, station);
         await AddAsync(report);
     }
 
     /// <inheritdoc cref="IOrderRepository"/>>
-    public async Task RemovePickOrderReport(string station, Guid orderId)
+    public async Task RemoveOrderReport(string station, Guid orderId)
     {
         var report = new OrderReport(orderId, station);
         await RemoveAsync(report);

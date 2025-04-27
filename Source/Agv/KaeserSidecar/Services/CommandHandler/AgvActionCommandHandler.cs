@@ -30,6 +30,7 @@ public class AgvActionCommandHandler(
         var actionCorrelationId = context.Message.CorrelationId;
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
+
         var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
         if (action == null)
         {
@@ -65,19 +66,33 @@ public class AgvActionCommandHandler(
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+
         var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
         if (action == null)
         {
             return;
         }
 
-        if (action.ActionType == ActionType.Pick)
+        if (actionGroup.IsMovingCargo)
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
-            string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+
+            if (action.ActionType == ActionType.Pick)
             {
-                await context.Publish(new AgvFinishedPick(order.CorrelationId, pickTarget));
+                string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
+                if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+                {
+                    await context.Publish(new AgvFinishedPick(order.CorrelationId, pickTarget));
+                }
+            }
+
+            if (action.ActionType == ActionType.Drop)
+            {
+                string dropTarget = order.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
+                if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+                {
+                    await context.Publish(new AgvFinishedDrop(order.CorrelationId, dropTarget));
+                }
             }
         }
 

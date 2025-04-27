@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Messages;
@@ -145,16 +146,21 @@ public class AgvActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_ActionCompleted_ValidData_AddAgvToStationOccupancy()
     {
-        string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), destination: station);
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        actionGroup.Actions.First().Nodes = [station];
+
         var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
         var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<AgvFinishedPick>();
+        await fixture.ShouldNotHavePublishedAsync<AgvFinishedDrop>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
     }
 
@@ -176,6 +182,27 @@ public class AgvActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionCompleted_DropOnShortLoop_PublishesAgvFinishedDrop()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Destination];
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), destination: station);
+        actionGroup.Actions.Last().Nodes = [station];
+
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        var actionCompleted = new ActionCompleted(actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(actionCompleted);
+        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<AgvFinishedDrop>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
     }
 
