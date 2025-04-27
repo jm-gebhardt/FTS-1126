@@ -626,11 +626,7 @@ public class Agv : IAgv
             return agv =>
                 agv.AgvStatus != null &&
                 agv.AgvStatus.LastNodeId != null &&
-                !(agv.Mode.Type != ModeType.Maintenance &&
-                  agv.Mode.Type != ModeType.UserMode &&
-                  agv.Mode.PendingType != ModeType.Maintenance &&
-                  agv.Mode.PendingType != ModeType.UserMode &&
-                  agv.HasError) &&
+                !agv.HasError &&
                 agv.IsOnline;
         }
     }
