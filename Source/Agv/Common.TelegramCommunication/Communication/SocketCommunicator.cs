@@ -22,6 +22,8 @@ public abstract class SocketCommunicator<TTelegramType>
 
     private const int ThreadWaitingTime = 10000;
 
+    private readonly TimeSpan _threadSleepingTime = TimeSpan.FromMilliseconds(100);
+
     /// <summary>
     /// Thread in which the communication is executed.
     /// </summary>
@@ -269,6 +271,7 @@ public abstract class SocketCommunicator<TTelegramType>
                 {
                     Logger.LogDebug("Exchange was successful");
                 }
+                Thread.Sleep(_threadSleepingTime);
             }
             catch (Exception ex)
             {
