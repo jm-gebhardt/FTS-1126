@@ -27,6 +27,7 @@ public class ActionGroupController : Controller
     private readonly IRequestClient<TriggerActionGroupReset> _resetActionGroupRequestClient;
     private readonly IRequestClient<CreatePickDropActionGroup> _createActionGroupClient;
     private readonly IRequestClient<TryReassignActionGroup> _reassignActionGroupClient;
+    private readonly IRequestClient<TriggerActionCompletion> _actionCompletionClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -38,7 +39,8 @@ public class ActionGroupController : Controller
         IRequestClient<TriggerActionGroupAbortion> abortionRequestClient,
         IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient,
         IRequestClient<CreatePickDropActionGroup> createActionGroupClient,
-        IRequestClient<TryReassignActionGroup> reassignActionGroupClient)
+        IRequestClient<TryReassignActionGroup> reassignActionGroupClient,
+        IRequestClient<TriggerActionCompletion> actionCompletionClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
@@ -47,6 +49,7 @@ public class ActionGroupController : Controller
         _resetActionGroupRequestClient = resetActionGroupRequestClient;
         _createActionGroupClient = createActionGroupClient;
         _reassignActionGroupClient = reassignActionGroupClient;
+        _actionCompletionClient = actionCompletionClient;
     }
 
     /// <summary>
@@ -141,6 +144,19 @@ public class ActionGroupController : Controller
     public async Task<ActionResult> ReassignActionGroup(Guid correlationId)
     {
         await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Complete an action of an action group.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group with given correlationId or the action was not found.</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId}/complete")]
+    public async Task<ActionResult> CompleteAction(Guid correlationId, Guid actionCorrelationId)
+    {
+        await _actionCompletionClient.GetResponse<Success>(new TriggerActionCompletion(correlationId, actionCorrelationId));
         return Ok();
     }
 }

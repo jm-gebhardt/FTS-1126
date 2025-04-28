@@ -273,6 +273,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<ActionCommandHandler>();
         configurator.AddRequestClient<QueueActionGroup>();
         configurator.AddRequestClient<TryReassignActionGroup>();
+        configurator.AddRequestClient<TriggerActionCompletion>();
 
         configurator.AddRequestClient<GetActionGroupStatistics>();
         configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();
