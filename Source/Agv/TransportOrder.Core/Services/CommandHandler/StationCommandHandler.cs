@@ -77,13 +77,13 @@ public class StationCommandHandler(
 
         var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
 
-        if (nodeState != null)
-        {
-            await context.Publish(new NodeStateChanged(nodeState, null, station.LockedBy, station.LockReason, station.LockDescription));
-        }
-
         station.Unlock();
         await stationRepository.Update(station);
+
+        if (nodeState != null)
+        {
+            await context.Publish(new NodeStateChanged(nodeState, station.Id, user, station.LockReason, station.LockDescription));
+        }
 
         logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked",
             $"User {user} unlocked station",
