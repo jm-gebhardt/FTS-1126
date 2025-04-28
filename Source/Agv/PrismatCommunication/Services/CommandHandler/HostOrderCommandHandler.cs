@@ -348,6 +348,12 @@ public class HostOrderCommandHandler(
             dropInfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeightDrop.Value.ToString(CultureInfo.InvariantCulture) } };
         }
 
+        if (configuration.IsDropAtAkl(orderDetails.Destination))
+        {
+            dropInfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
+            dropInfoToAgv.Add(InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture));
+        }
+
         return (pickInfoToAgv, dropInfoToAgv);
     }
 

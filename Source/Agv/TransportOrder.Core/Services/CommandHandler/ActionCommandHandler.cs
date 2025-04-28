@@ -122,11 +122,12 @@ public class ActionCommandHandler :
         if (agvActionCanBeStarted)
         {
             bool? previousActionGroupDockFront = null;
+            bool wasPreviousActionGroupChargeOrPark = false;
             if (action.IsFirstAction)
             {
-                previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId);
+                (previousActionGroupDockFront, wasPreviousActionGroupChargeOrPark) = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId);
             }
-            actionGroup.SetDockFrontOfAction(action.CorrelationId, previousActionGroupDockFront);
+            actionGroup.SetDockFrontOfAction(action.CorrelationId, wasPreviousActionGroupChargeOrPark? false : previousActionGroupDockFront);
             actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
             await _actionService.TryUpdateActionGroup(actionGroup);
             action = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);

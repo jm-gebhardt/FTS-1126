@@ -422,6 +422,25 @@ public class ActionGroupTests
         dropAction.InfoToAgv.GetDockFront().ShouldBe(drop);
     }
 
+    [DataRow(null, true, false)] // no previous action group, pick: true, drop: false
+    [DataRow(true, true, false)] // true on last action of previous action group, pick: true, drop: false
+    [DataRow(false, false, false)] // false on last action of previous action group, pick: false, drop: false
+    [DataTestMethod]
+    public void SetDockFrontOfAction_PickDropActionGroup_NoRotationNeeded_ForceDropBackWards_DockFrontSet(bool? previous, bool pick, bool drop)
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropInfoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture) } });
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, previous);
+        pickAction.InfoToAgv.ShouldNotBeNull();
+        pickAction.InfoToAgv.GetDockFront().ShouldBe(pick);
+
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, previous);
+        dropAction.InfoToAgv.ShouldNotBeNull();
+        dropAction.InfoToAgv.GetDockFront().ShouldBe(drop);
+    }
+
     [DataRow(null, true, true)] // no previous action group, pick: true, drop: true
     [DataRow(true, true, true)] // true on last action of previous action group, pick: true, drop: true
     [DataRow(false, false, false)] // false on last action of previous action group, pick: false, drop: false
@@ -433,6 +452,37 @@ public class ActionGroupTests
         pickAction.InfoToAgv!.NeedsRotation().ShouldBeTrue();
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.InfoToAgv.ShouldBeNull();
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, previous);
+        pickAction.InfoToAgv.ShouldNotBeNull();
+        pickAction.InfoToAgv.GetDockFront().ShouldBe(pick);
+
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, previous);
+        dropAction.InfoToAgv.ShouldNotBeNull();
+        dropAction.InfoToAgv.GetDockFront().ShouldBe(drop);
+    }
+
+    [DataRow(null, true, false)] // no previous action group, pick: true, drop: true
+    [DataRow(true, true, false)] // true on last action of previous action group, pick: true, drop: true
+    [DataRow(false, false, false)] // false on last action of previous action group, pick: false, drop: false
+    [DataTestMethod]
+    public void SetDockFrontOfAction_PickDropActionGroup_RotationNeeded_ForceDropBackWards_DockFrontSet(bool? previous, bool pick, bool drop)
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(infoToAgv: new Dictionary<InfoToAgvKey, string>
+        {
+            {
+                InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture)
+            }
+        },
+        dropInfoToAgv: new Dictionary<InfoToAgvKey, string>
+        {
+            {
+                InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture)
+            }
+        });
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        pickAction.InfoToAgv!.NeedsRotation().ShouldBeTrue();
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
         actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, previous);
         pickAction.InfoToAgv.ShouldNotBeNull();
@@ -572,7 +622,7 @@ public class ActionGroupTests
 
     [DataRow(null, true)]
     [DataRow(true, true)]
-    [DataRow(false, false)]
+    [DataRow(false, true)]
     [DataTestMethod]
     public void SetDockFrontOfAction_ParkActionGroup_DockFrontSet(bool? previous, bool park)
     {

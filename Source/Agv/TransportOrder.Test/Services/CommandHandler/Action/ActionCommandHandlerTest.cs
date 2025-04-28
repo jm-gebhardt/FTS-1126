@@ -54,6 +54,27 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_StartActionOfActionGroup_PreviousActionGroupWasChargeOrPark_Publishes_DockFrontFalse()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        const bool dockFront = true;
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
+            .AddActionGroup(actionGroup)
+            .WithLastActionDockFront(dockFront, true);
+
+        var startAction = new StartActionOfActionGroup(actionGroup.Actions.First(), agv.CorrelationId);
+
+        var startActionCommand = await fixture.PublishAndGetFirstMessageAsync<StartActionOfActionGroup, StartActionCommand>(startAction);
+
+        startActionCommand.Action.InfoToAgv.ShouldNotBeNull();
+        startActionCommand.Action.InfoToAgv.GetDockFront().ShouldBeFalse();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+    }
+
+    [TestMethod]
     public async Task Consume_StartActionOfActionGroup_FirstPickAction_Publishes_StartActionCommandAndActionGroupChangedActionGroupStarted()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");

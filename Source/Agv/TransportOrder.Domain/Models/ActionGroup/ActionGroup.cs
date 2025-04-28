@@ -382,12 +382,19 @@ public class ActionGroup
         var action = Actions.Single(a => a.CorrelationId == actionId);
         bool needsRotation = GetNeedsRotation();
 
-        bool isChargeActionGroup = Actions.Any(a => a.ActionType == ActionType.Charge);
-        if (isChargeActionGroup)
+        if (IsChargingOrder)
         {
             action.SetDockFront(needsRotation, null);
             return;
         }
+
+        bool isAutomaticParkOrder = Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1 && !IsManual && !HasPriority;
+        if (isAutomaticParkOrder)
+        {
+            action.SetDockFront(false, null);
+            return;
+        }
+
         if (action.IsFirstAction)
         {
             action.SetDockFront(needsRotation, dockFrontPreviousActionGroup);

@@ -439,4 +439,14 @@ public class KaeserGraphConfiguration
     {
         return target == "9070" && QueueIsOccupied;
     }
+
+    /// <summary>
+    /// Checks if the given target is a drop at AKL
+    /// </summary>
+    /// <param name="target">Target station.</param>
+    /// <returns>True, if the target is an AKL drop station.</returns>
+    public bool IsDropAtAkl(string target)
+    {
+        return PrismatKnownTargets.Contains(target) && !PrismatOutputLanes.Contains(target) && target != PrismatAplTarget && DoppelspielPickTargets.ContainsKey(target);
+    }
 }

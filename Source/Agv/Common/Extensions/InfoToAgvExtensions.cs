@@ -79,4 +79,21 @@ public static class InfoToAgvExtensions
         }
         return dockFront;
     }
+
+    /// <summary>
+    /// Returns force dropping backwards flag (bool) from the InfoToAgv dictionary.
+    /// </summary>
+    public static bool GetForceDroppingBackwards(this Dictionary<InfoToAgvKey, string> infoToAgv)
+    {
+        bool forceDroppingBackWards = false;
+        infoToAgv.TryGetValue(InfoToAgvKey.ForceDroppingBackwards, out string? forceDroppingBackWardsValue);
+        if (!string.IsNullOrEmpty(forceDroppingBackWardsValue))
+        {
+            if (bool.TryParse(forceDroppingBackWardsValue, out bool parsedDockFront))
+            {
+                forceDroppingBackWards = parsedDockFront;
+            }
+        }
+        return forceDroppingBackWards;
+    }
 }

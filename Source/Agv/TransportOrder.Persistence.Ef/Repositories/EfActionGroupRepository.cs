@@ -582,7 +582,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<bool?> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId)
+    public async Task<(bool? dockfront, bool isAutomaticChargeOrPark)> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
@@ -591,8 +591,10 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Where(a => a.AssignedAgv == agvCorrelationId && a.State == ActionGroupState.Completed)
             .OrderByDescending(a => a.CompletedDate)
             .FirstOrDefaultAsync();
-
-        return actionGroup?.Actions.OrderByDescending(a => a.Sequence).First().InfoToAgv?.GetDockFront();
+        bool? dockFront = actionGroup?.Actions.OrderByDescending(a => a.Sequence).First().InfoToAgv?.GetDockFront();
+        bool isAutomaticParkOrder = actionGroup != null && actionGroup.Actions.All(a => a.ActionType == ActionType.Move) && actionGroup.Actions.Count == 1 && actionGroup is { IsManual: false, HasPriority: false };
+        bool isAutomaticChargeOrPark =  actionGroup != null && (actionGroup.IsChargingOrder || isAutomaticParkOrder) ;
+        return (dockFront, isAutomaticChargeOrPark);
     }
 
     /// <inheritdoc/>

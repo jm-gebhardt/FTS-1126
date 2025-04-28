@@ -142,5 +142,10 @@ public enum InfoToAgvKey
     /// <summary>
     /// The lift height in [m] at the station for action.
     /// </summary>
-    LiftHeight
+    LiftHeight,
+
+    /// <summary>
+    /// Force dropping direction to be backwards
+    /// </summary>
+    ForceDroppingBackwards
 }

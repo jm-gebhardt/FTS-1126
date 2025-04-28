@@ -8,7 +8,6 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Station = Gebhardt.Acc.TransportOrder.Domain.Models.Station.Station;
 
 namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 
@@ -51,7 +50,7 @@ public class DecisionPointEventHandler(
         while (selectedTarget == null)
         {
             ICollection<StationOccupancy> occupancies = await stationRepository.GetStationOccupancy();
-            ICollection<Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
+            ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
 
             //Try to take the station that is not occupied, is not locked,  and was not chosen last (to compensate for the delay between setting target and starting action)
             ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
@@ -73,7 +72,7 @@ public class DecisionPointEventHandler(
         return selectedTarget;
     }
 
-    private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies, ICollection<Station> stations)
+    private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies, ICollection<TransportOrder.Domain.Models.Station.Station> stations)
     {
         // By agreement conveyor stations are named "WE01", "WE02", "WE03", thus ordering by conveyor station
         // name ensures priority of WE01 over WE02 and WE03

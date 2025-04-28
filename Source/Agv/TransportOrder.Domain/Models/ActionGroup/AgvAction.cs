@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -244,20 +245,26 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// Set dock front of an action.
     /// </summary>
     /// <param name="needsRotation">True, if the pallet needs rotation.</param>
-    /// <param name="previousDockFront">Value of dockfront of the previous action.</param>
+    /// <param name="previousDockFront">Value of dockFront of the previous action.</param>
     public void SetDockFront(bool needsRotation, bool? previousDockFront)
     {
+        bool dockFront;
         switch (ActionType)
         {
             case ActionType.Pick:
             case ActionType.Move:
-                SetDockFrontValue(previousDockFront?? true);
+                dockFront = previousDockFront?? true;
+                SetDockFrontValue(dockFront);
                 return;
 
             case ActionType.Drop:
             {
-                bool value = needsRotation ? previousDockFront!.Value : !previousDockFront!.Value;
-                SetDockFrontValue(value);
+                dockFront = needsRotation ? previousDockFront!.Value : !previousDockFront!.Value;
+                if (ForceDropBackWards())
+                {
+                    dockFront = false;
+                }
+                SetDockFrontValue(dockFront);
                 return;
             }
 
@@ -271,6 +278,11 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     {
         InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
         InfoToAgv[InfoToAgvKey.DockFront] = dockFront.ToString();
+    }
+
+    private bool ForceDropBackWards()
+    {
+        return InfoToAgv != null && InfoToAgv.GetForceDroppingBackwards();
     }
 
     /// <summary>

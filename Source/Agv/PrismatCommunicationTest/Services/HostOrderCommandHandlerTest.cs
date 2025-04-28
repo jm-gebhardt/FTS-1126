@@ -250,6 +250,7 @@ public class HostOrderCommandHandlerTest
         pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.CargoRotation, out string? _).ShouldBeTrue();
         pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.LiftHeight, out string? _).ShouldBeFalse();
         dropAction.InfoToAgv?.TryGetValue(InfoToAgvKey.LiftHeight, out string? _).ShouldBeTrue();
+        dropAction.InfoToAgv?.TryGetValue(InfoToAgvKey.ForceDroppingBackwards, out string? _).ShouldBeTrue();
     }
 
     [TestMethod]

@@ -40,14 +40,14 @@ public static class OrderGenerator
             return new OrderDetails(Guid.NewGuid(),
                 "OrderId",
                 "1020",
-                KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
+                KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2') && t.EndsWith("10")),
                 Guid.NewGuid().ToString(),
                 HostOrderCreator.Wms,
                 huRotation);
         }
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2')),
+            KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2') && t.EndsWith("30")),
             "1050",
             Guid.NewGuid().ToString(),
             HostOrderCreator.Wms, huRotation);
