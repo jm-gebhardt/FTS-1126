@@ -398,8 +398,9 @@ public class HostOrderCommandHandler(
     {
         var (correlationId, actionCorrelationId, timestamp) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        var pickAction = hostOrder.Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick && a.CorrelationId == actionCorrelationId);
-        if (pickAction == null)
+        var pickAction = hostOrder.Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick);
+        var action = hostOrder.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
+        if (pickAction == null || (action != null && action.ActionType != ActionType.Pick))
         {
             logger.LogError("Could not report completion off pick action {ActionCorrelationId} of group {CorrelationId}, action not found ", actionCorrelationId, correlationId);
             return;

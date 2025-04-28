@@ -616,6 +616,42 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_FinishPick_LongLoop_PickCompletionReported()
+    {
+        var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var pickAction = order.Actions.Single(a => a.ActionType == ActionType.Pick);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var command = new FinishPick(order.CorrelationId, pickAction.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<FinishPick>();
+        fixture.VerifyPickCompletion(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_FinishPick_LongLoopUpdatedMoveFinished_PickCompletionReported()
+    {
+        var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrderRepository(order)
+            .WithHostCommunicator();
+
+        var actionGroup = order.CreateMovePickDropActionGroup(fixture.Configuration, DateTime.UtcNow);
+        var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+
+        var command = new FinishPick(order.CorrelationId, pickAction.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<FinishPick>();
+        fixture.VerifyPickCompletion(Times.Once());
+    }
+
+    [TestMethod]
     public async Task Consume_FinishPick_UnknownOrder_PickCompletionNotReported()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
