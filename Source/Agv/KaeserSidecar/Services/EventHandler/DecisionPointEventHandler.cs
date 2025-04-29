@@ -74,8 +74,8 @@ public class DecisionPointEventHandler(
 
     private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies, ICollection<TransportOrder.Domain.Models.Station.Station> stations)
     {
-        // By agreement conveyor stations are named "WE01", "WE02", "WE03", thus ordering by conveyor station
-        // name ensures priority of WE01 over WE02 and WE03
+        // By agreement conveyor stations are named "PS01", "PS02", "PS03", thus ordering by conveyor station
+        // name ensures priority of PS01 over PS02 and PS03
         IOrderedEnumerable<KeyValuePair<string, string>> orderedConveyorStations = configuration.ConveyorStationMapping.OrderBy(m => m.Value); 
         ICollection<StationOccupancy> orderedOccupancies = [];
         foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Take(consideredStations))

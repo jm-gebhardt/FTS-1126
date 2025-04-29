@@ -20,4 +20,11 @@ public class SimulationConveyorCommunicator(ILogger<SimulationConveyorCommunicat
         var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, hu, DateTime.UtcNow);
         logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor", agvWeStation.ToString());
     }
+
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void ReportPalletDrop(string source,string destination, string hu)
+    {
+        var tord = new Tord(source, destination, hu, DateTime.UtcNow);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor", tord.ToString());
+    }
 }

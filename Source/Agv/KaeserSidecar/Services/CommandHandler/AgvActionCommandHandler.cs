@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
@@ -18,6 +19,7 @@ public class AgvActionCommandHandler(
     ILogger<AgvActionCommandHandler> logger,
     ITransportOrderDb transportOrderDb,
     KaeserGraphConfiguration configuration,
+    IConveyorCommunicator conveyorCommunicator,
     IPrismatCommunicationHostOrderRepository hostOrderRepository) :
     IConsumer<ActionStarted>,
     IConsumer<ActionCompleted>
@@ -70,15 +72,17 @@ public class AgvActionCommandHandler(
         var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
         if (action == null)
         {
+            logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} to handle action completion", actionCorrelationId, actionGroup.CorrelationId);
             return;
         }
 
-        if (actionGroup.IsMovingCargo)
+        if (actionGroup is { IsMovingCargo: true, IsManual: false })
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
 
             if (action.ActionType == ActionType.Pick)
             {
+                logger.LogInformation("Agv {AgvCorrelationId} finished pick {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
                 string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
                 if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
                 {
@@ -88,15 +92,18 @@ public class AgvActionCommandHandler(
 
             if (action.ActionType == ActionType.Drop)
             {
+                logger.LogInformation("Agv {AgvCorrelationId} finished drop {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
+
                 string dropTarget = order.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
                 if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
                 {
                     await context.Publish(new AgvFinishedDrop(order.CorrelationId, dropTarget));
+                    conveyorCommunicator.ReportPalletDrop(action.Target.NodeId!, dropTarget, order.Hu);
                 }
             }
         }
 
         string station = action.Target.NodeId!;
-        await context.Publish( new OccupyStation(station, agvCorrelationId));
+        await context.Publish(new OccupyStation(station, agvCorrelationId));
     }
 }

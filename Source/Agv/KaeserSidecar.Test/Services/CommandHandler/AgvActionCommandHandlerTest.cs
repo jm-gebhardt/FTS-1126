@@ -6,6 +6,7 @@ using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.CommandHandler;
 
@@ -162,6 +163,7 @@ public class AgvActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedDrop>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        fixture.VerifyReportingToConveyors(times: Times.Never());
     }
 
     [TestMethod]
@@ -183,6 +185,7 @@ public class AgvActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        fixture.VerifyReportingToConveyors(times: Times.Never());
     }
 
     [TestMethod]
@@ -204,6 +207,7 @@ public class AgvActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldHavePublishedAsync<AgvFinishedDrop>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        fixture.VerifyReportingToConveyors(order.Hu, orderDetails.Destination, station, Times.Once());
     }
 
     [TestMethod]

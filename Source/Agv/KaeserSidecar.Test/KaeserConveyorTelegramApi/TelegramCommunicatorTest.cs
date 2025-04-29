@@ -18,14 +18,14 @@ public class TelegramCommunicatorTest
         const string dropStation = "1060";
         const string hu = "123";
 
-        fixture.AgvWeStationProcessor.HasSendDemand().ShouldBeFalse();
+        fixture.ToWePlcTelegramProcessor.HasSendDemand().ShouldBeFalse();
 
         fixture.Communicator.ReportPalletPickDropStation(targetStation, pickStation, dropStation, hu);
 
-        fixture.AgvWeStationProcessor.HasSendDemand().ShouldBeTrue();
-        fixture.AgvWeStationProcessor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
+        fixture.ToWePlcTelegramProcessor.HasSendDemand().ShouldBeTrue();
+        fixture.ToWePlcTelegramProcessor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
 
-        var agvWeStation = new AgvWeStation("any", "any", "any", "any", DateTime.UtcNow);
+        var agvWeStation = new AgvWeStation();
         agvWeStation.Load(nextTelegram);
 
         agvWeStation.Drop.ShouldBe(dropStation);

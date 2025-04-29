@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 
 /// <inheritdoc cref="IConveyorCommunicator"/>>
 [PublicAPI]
-public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] AgvWeStationTelegramProcessor aplWeStationTelegramProcessor, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] AgvAplCargoStateProcessor agvCargoStateTelegramProcessor) : IConveyorCommunicator
+public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] ToWePlcTelegramProcessor toWePlcTelegramProcessor, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] AgvAplCargoStateProcessor agvCargoStateTelegramProcessor) : IConveyorCommunicator
 {
     /// <inheritdoc cref="IConveyorCommunicator"/>>
     public void ReportAplCargoState(bool cargo)
@@ -24,7 +24,15 @@ public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> 
     public void ReportPalletPickDropStation(string targetStation, string? pickStation, string? dropStation, string? hu)
     {
         var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, hu, DateTime.UtcNow);
-        aplWeStationTelegramProcessor.EnqueueTelegram(agvWeStation);
+        toWePlcTelegramProcessor.EnqueueTelegram(agvWeStation);
         logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvWeStation.ToString(), ServiceKeyProvider.AplWeStation);
+    }
+
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void ReportPalletDrop(string source, string destination, string hu)
+    {
+        var tord = new Tord(source, destination, hu, DateTime.UtcNow);
+        toWePlcTelegramProcessor.EnqueueTelegram(tord);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", tord.ToString(), ServiceKeyProvider.AplWeStation);
     }
 }

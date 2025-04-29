@@ -16,7 +16,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// Unique CorrelationId of this action
     /// </summary>
-    public Guid CorrelationId { get; set; }
+    public Guid CorrelationId { get; init; }
 
     /// <inheritdoc/>
     public Guid ParentId { get; init; }
@@ -390,23 +390,8 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <inheritdoc cref="IEquatable{T}"/>>
     public override int GetHashCode()
     {
-        // ReSharper disable NonReadonlyMemberInGetHashCode
         var hashCode = new HashCode();
         hashCode.Add(value: CorrelationId);
-        hashCode.Add(ParentId);
-        hashCode.Add(Sequence);
-        hashCode.Add((int)State);
-        hashCode.Add((int)ActionType);
-        hashCode.Add(Target);
-        hashCode.Add(Nodes);
-        hashCode.Add(Edges);
-        hashCode.Add(CreatedDate);
-        hashCode.Add(StartedDate);
-        hashCode.Add(CompletedDate);
-        hashCode.Add(PausedDate);
-        hashCode.Add(InfoToAgv);
-        hashCode.Add(PausedDuration);
-        hashCode.Add(ShouldSkip);
         return hashCode.ToHashCode();
     }
 }

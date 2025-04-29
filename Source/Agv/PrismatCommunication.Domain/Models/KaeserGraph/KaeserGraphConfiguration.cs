@@ -199,9 +199,9 @@ public class KaeserGraphConfiguration
 
         ConveyorStationMapping = new Dictionary<string, string>()
         {
-            { "1", "WE01" },
-            { "2", "WE02" },
-            { "3", "WE03" }
+            { "1", "PS01" },
+            { "2", "PS02" },
+            { "3", "PS03" }
         };
     }
 

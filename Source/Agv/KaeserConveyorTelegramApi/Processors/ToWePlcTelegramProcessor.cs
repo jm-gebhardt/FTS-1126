@@ -1,17 +1,17 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
+﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Microsoft.Extensions.Logging;
 using System.Text;
-using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 
 /// <summary>
 /// Provides a processor for telegrams sent to the conveyor
 /// </summary>
-public class AgvWeStationTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
+public class ToWePlcTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
 {
     private bool ReceiveAcknowledgement { get; set; }
 
@@ -20,7 +20,7 @@ public class AgvWeStationTelegramProcessor : TelegramProcessorBase<ConveyorTeleg
     /// <summary>
     ///  The send queue.
     /// </summary>
-    private ObservableConcurrentQueue<ConveyorTelegram> SendQueue { get; }
+    private ConcurrentQueue<ConveyorTelegram> SendQueue { get; } = new();
 
     /// <summary>
     ///  The send sequence counter.
@@ -58,17 +58,16 @@ public class AgvWeStationTelegramProcessor : TelegramProcessorBase<ConveyorTeleg
     public int RemainingAttempts { get; private set; }
 
     private int _acknowledgementWaitTime;
-    private readonly ILogger<AgvWeStationTelegramProcessor> _logger;
+    private readonly ILogger<ToWePlcTelegramProcessor> _logger;
     private readonly ITimeProvider _timeProvider;
     private readonly TelegramCommunicationConfiguration _configuration;
 
     /// <summary>
     /// Provides a processor for telegrams sent to the conveyor
     /// </summary>
-    public AgvWeStationTelegramProcessor(ILogger<AgvWeStationTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration, ObservableConcurrentQueue<ConveyorTelegram> queue)
+    public ToWePlcTelegramProcessor(ILogger<ToWePlcTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration)
     {
         _logger = logger;
-        SendQueue = queue;
         _timeProvider = timeProvider;
         _configuration = configuration;
         TriggerRestart = false;

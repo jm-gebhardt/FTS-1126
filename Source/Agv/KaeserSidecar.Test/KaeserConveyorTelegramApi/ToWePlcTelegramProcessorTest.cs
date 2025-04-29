@@ -3,17 +3,16 @@ using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using Life = Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams.Life;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi;
 
 [TestClass]
-public class AgvWeStationTelegramProcessorTest
+public class ToWePlcTelegramProcessorTest
 {
     [TestMethod]
     public void TrySendLifeTelegram_NoTelegramToSend_LifeTelegramQueued()
     {
-        TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram>(null)
+        TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(null)
             .Build();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.TrySendLifeTelegram();
@@ -24,23 +23,9 @@ public class AgvWeStationTelegramProcessorTest
     }
 
     [TestMethod]
-    public void GetNextTelegramToSend_NoDemandLifeTelegramDue_ReturnsLifeTelegram()
-    {
-        var fixture = new ToConveyorTelegramProcessorTestFixture();
-        fixture.Processor.HasSendDemand().ShouldBeFalse();
-        fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
-
-        fixture.Processor.CurrentTelegram.ShouldNotBeNull();
-        fixture.Processor.CurrentTelegram.Func.ShouldBe("Life");
-
-        nextTelegram.ShouldBe(fixture.Processor.CurrentTelegram.ToString());
-        ToConveyorTelegramProcessorTestFixture.DequeueEventTriggered.ShouldBeTrue();
-    }
-
-    [TestMethod]
     public void ProcessReceivedTelegram_FullSendReceiveCycle_AcknowledgementHandled()
     {
-        TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram>(null)
+        TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(null)
             .Build();
         var telegram = new Life(DateTime.UtcNow);
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
@@ -56,7 +41,7 @@ public class AgvWeStationTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoAcknowledgementReceived_ResendUntilMaxRetryIsReached()
     {
-        TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<AgvWeStationTelegramProcessor, ConveyorTelegram>(null)
+        TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(null)
             .Build();
 
         var now = DateTime.UtcNow;

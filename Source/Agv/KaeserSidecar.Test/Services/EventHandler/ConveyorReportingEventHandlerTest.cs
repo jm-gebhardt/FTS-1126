@@ -32,7 +32,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
 
-        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, dropHostOrder.Hu, Times.Once());
+        fixture.VerifyReportingToConveyors("PS03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, dropHostOrder.Hu, Times.Once());
         (await fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId)).ShouldBe(pickStation!=null);
         (await fixture.OrderRepository.HasOrderBeenReported(dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, dropHostOrder.CorrelationId)).ShouldBeTrue();
     }
@@ -55,7 +55,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
         
-        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, dropHostOrder.Hu, Times.Once());
+        fixture.VerifyReportingToConveyors("PS03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, dropHostOrder.Hu, Times.Once());
         (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId)).ShouldBeFalse();
         (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId)).ShouldBeTrue();
     }
@@ -80,7 +80,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
 
-        fixture.VerifyReportingToConveyors("WE03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, dropHostOrder.Hu, Times.Never());
+        fixture.VerifyReportingToConveyors("PS03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, dropHostOrder.Hu, Times.Never());
         (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId)).ShouldBeFalse();
         (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId)).ShouldBeTrue();
     }
@@ -94,10 +94,10 @@ public class ConveyorReportingEventHandlerTest
             .WithHostOrders(order);
         (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeFalse();
 
-        await fixture.TestHarness.Bus.Publish(new AgvStartedPick("WE03", order.CorrelationId, "1020"));
+        await fixture.TestHarness.Bus.Publish(new AgvStartedPick("PS03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedPick>();
 
-        fixture.VerifyReportingToConveyors("WE03", null, "1020", null, Times.Once());
+        fixture.VerifyReportingToConveyors("PS03", null, "1020", null, Times.Once());
         (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeTrue();
     }
 
@@ -111,10 +111,10 @@ public class ConveyorReportingEventHandlerTest
         await fixture.OrderRepository.StoreOrderReport("1020", order.CorrelationId);
         (await fixture.OrderRepository.HasOrderBeenReported("1020", order.CorrelationId)).ShouldBeTrue();
 
-        await fixture.TestHarness.Bus.Publish(new AgvStartedPick("WE03", order.CorrelationId, "1020"));
+        await fixture.TestHarness.Bus.Publish(new AgvStartedPick("PS03", order.CorrelationId, "1020"));
         await fixture.ShouldHaveConsumedAsync<AgvStartedPick>();
 
-        fixture.VerifyReportingToConveyors("WE03", null, "1020", null, Times.Never());
+        fixture.VerifyReportingToConveyors("PS03", null, "1020", null, Times.Never());
     }
 
     [TestMethod]

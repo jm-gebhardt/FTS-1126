@@ -28,8 +28,6 @@ public class KaeserSidecarDbContext: DbContext
     {
         modelBuilder.ApplyConfiguration(new StationOccupancyEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OrderReportEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new AgvWeStationTelegramEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new AgvAplCargoStateTelegramEntityConfiguration());
     }
 
     /// <summary>
