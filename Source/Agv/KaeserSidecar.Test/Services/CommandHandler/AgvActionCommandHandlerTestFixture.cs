@@ -51,6 +51,15 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
                 }
                 throw new Exception();
             });
+        _transportOrderDb.Setup(x => x.ActionGroups.GetActionGroupAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid _) =>
+            {
+                if (actionGroup != null)
+                {
+                    return actionGroup;
+                }
+                throw new Exception();
+            });
         return this;
     }
 

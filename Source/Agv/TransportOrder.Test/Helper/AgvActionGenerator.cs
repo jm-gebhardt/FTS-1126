@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using JetBrains.Annotations;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -415,5 +416,11 @@ public static class AgvActionGenerator
                 break;
         }
         return actionGroup;
+    }
+
+    public static Common.Messages.ActionGroups.ActionGroup ConvertToMessage(ActionGroup actionGroup)
+    {
+        var mapper = MappingHelper.GetMapper(new ActionProfile());
+        return mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
     }
 }

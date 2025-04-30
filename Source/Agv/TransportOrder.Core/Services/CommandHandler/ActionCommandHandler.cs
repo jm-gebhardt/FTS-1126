@@ -707,6 +707,11 @@ public class ActionCommandHandler :
             await context.Publish(new PickActionCompleted(actionGroup.CorrelationId, action.CorrelationId, action.CompletedDate.GetValueOrDefault()), cancellationToken);
         }
 
+        if (action.ActionType == ActionType.Drop)
+        {
+            await context.Publish(new DropActionCompleted(actionGroup.CorrelationId, action.CorrelationId, action.CompletedDate.GetValueOrDefault()), cancellationToken);
+        }
+
         if (actionGroup.State != ActionGroupState.Completed)
         {
             _logger.LogOrderInformation(LogCodes.OrderActionCompleted, actionGroup.AssignedAgv.GetValueOrDefault(),

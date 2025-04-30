@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
@@ -21,31 +22,35 @@ public class AgvActionCommandHandler(
     KaeserGraphConfiguration configuration,
     IConveyorCommunicator conveyorCommunicator,
     IPrismatCommunicationHostOrderRepository hostOrderRepository) :
-    IConsumer<ActionStarted>,
-    IConsumer<ActionCompleted>
+    IConsumer<StartActionCommand>,
+    IConsumer<PickActionCompleted>,
+    IConsumer<DropActionCompleted>,
+    IConsumer<ActionGroupCompleted>
 {
     /// <summary>
-    /// Handles the <see cref="ActionStarted"/> message.
+    /// Handles the <see cref="StartActionCommand"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<ActionStarted> context)
+    public async Task Consume(ConsumeContext<StartActionCommand> context)
     {
-        var actionCorrelationId = context.Message.CorrelationId;
-        var agvCorrelationId = context.Message.AgvCorrelationId;
-        var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-
-        var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
-        if (action == null)
+        var agvCorrelationId = context.Message.CorrelationId;
+        var action = context.Message.Action;
+        var actionGroup = await transportOrderDb.ActionGroups.GetActionGroupAsync(action.ParentId);
+        if (actionGroup == null)
         {
-            logger.LogWarning("Action {ActionCorrelationId} not found", actionCorrelationId);
+            logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} to handle action completion", action.CorrelationId, action.ParentId);
             return;
         }
-        string? station = action.Nodes.FirstOrDefault();
+
+        logger.LogInformation("Handling start of action {CorrelationId} for agv {AgvCorrelationId}", action.CorrelationId, agvCorrelationId);
+        string[] nodes = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).Nodes;
+        logger.LogInformation("Nodes of action: {Nodes}", string.Join(",", nodes));
+        string? station = nodes.FirstOrDefault();
         if (station == null)
         {
-            logger.LogWarning("Action {ActionCorrelationId} has no start node", actionCorrelationId);
+            logger.LogWarning("Action {ActionCorrelationId} has no start node", action.CorrelationId);
             return;
         }
-        bool gotPickAssignedOnStation = action.Nodes.First() == action.Nodes.Last();
+        bool gotPickAssignedOnStation = nodes.First() == nodes.Last();
 
         if (action.ActionType == ActionType.Pick && gotPickAssignedOnStation)
         {
@@ -61,12 +66,32 @@ public class AgvActionCommandHandler(
     }
 
     /// <summary>
-    /// Handles the <see cref="ActionCompleted"/> message.
+    /// Handles the <see cref="PickActionCompleted"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<ActionCompleted> context)
+    public async Task Consume(ConsumeContext<PickActionCompleted> context)
     {
-        var actionCorrelationId = context.Message.CorrelationId;
-        var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
+        var (correlationId, actionCorrelationId, _) = context.Message;
+        await HandleActionCompletion(context, correlationId, actionCorrelationId);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="DropActionCompleted"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<DropActionCompleted> context)
+    {
+        var (correlationId, actionCorrelationId, _) = context.Message;
+        await HandleActionCompletion(context, correlationId, actionCorrelationId);
+    }
+
+    private async Task HandleActionCompletion(IPublishEndpoint context, Guid correlationId, Guid actionCorrelationId)
+    {
+        var actionGroup = await transportOrderDb.ActionGroups.GetActionGroupAsync(correlationId);
+        if (actionGroup == null)
+        {
+            logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} to handle action completion", actionCorrelationId, correlationId);
+            return;
+        }
+
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
 
         var action = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
@@ -76,33 +101,68 @@ public class AgvActionCommandHandler(
             return;
         }
 
-        if (actionGroup is { IsMovingCargo: true, IsManual: false })
-        {
-            var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
+        logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
+        string station = action.Target.NodeId!;
+        await context.Publish(new OccupyStation(station, agvCorrelationId));
 
-            if (action.ActionType == ActionType.Pick)
+        if (actionGroup.IsManual)
+        {
+            return;
+        }
+
+        var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
+
+        switch (action.ActionType)
+        {
+            case ActionType.Pick:
             {
-                logger.LogInformation("Agv {AgvCorrelationId} finished pick {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
                 string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
                 if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
                 {
                     await context.Publish(new AgvFinishedPick(order.CorrelationId, pickTarget));
                 }
+                return;
             }
 
-            if (action.ActionType == ActionType.Drop)
+            case ActionType.Drop:
             {
-                logger.LogInformation("Agv {AgvCorrelationId} finished drop {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
-
                 string dropTarget = order.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
                 if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
                 {
                     await context.Publish(new AgvFinishedDrop(order.CorrelationId, dropTarget));
                     conveyorCommunicator.ReportPalletDrop(action.Target.NodeId!, dropTarget, order.Hu);
                 }
+                break;
             }
         }
+    }
 
+    /// <summary>
+    /// Handles the <see cref="ActionGroupCompleted"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionGroupCompleted> context)
+    {
+        var actionGroup = await transportOrderDb.ActionGroups.GetActionGroupAsync(context.Message.CorrelationId);
+        if (actionGroup == null)
+        {
+            logger.LogWarning("Could not find group {ActionGroupCorrelationId} to handle action completion", context.Message.CorrelationId);
+            return;
+        }
+
+        if (!actionGroup.IsManual)
+        {
+            return;
+        }
+
+        var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+
+        var action = actionGroup.Actions.OrderBy(a => a.CompletedDate).Last();
+        if (action.ActionType == ActionType.Drop)
+        {
+            return;
+        }
+
+        logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", action.ActionType, actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
         string station = action.Target.NodeId!;
         await context.Publish(new OccupyStation(station, agvCorrelationId));
     }

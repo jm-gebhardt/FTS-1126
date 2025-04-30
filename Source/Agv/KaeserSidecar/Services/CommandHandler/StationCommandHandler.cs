@@ -23,6 +23,7 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         (string station, var agvCorrelationId) = context.Message;
         if (!configuration.ConveyorStationMapping.Keys.Contains(station))
         {
+            logger.LogInformation("Ignoring station occupancy for agv {Agv} at non WE station {Station} ", agvCorrelationId, station);
             return;
         }
         logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
