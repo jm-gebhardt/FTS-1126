@@ -1919,4 +1919,20 @@ public class ActionCommandHandlerTest
         pickDropActionGroup.HasPriority.ShouldBeTrue();
         pickDropActionGroup.IsManual.ShouldBeTrue();
     }
+
+    [TestMethod]
+    public async Task ForceQueueActionGroup_ValidData_PublishesActionGroupQueued()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued:false);
+        actionGroup.IsQueued.ShouldBeFalse();
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+
+        await fixture.TestHarness.Bus.Publish(new ForceQueueActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldHaveConsumedAsync<ForceQueueActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupQueued>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+    }
 }

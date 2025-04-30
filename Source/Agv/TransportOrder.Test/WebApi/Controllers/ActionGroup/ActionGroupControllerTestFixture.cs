@@ -91,6 +91,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         IRequestClient<CreatePickDropActionGroup> createActionGroupRequestClient = GetRequestClient<CreatePickDropActionGroup>();
         IRequestClient<TryReassignActionGroup> reassignActionGroupClient = GetRequestClient<TryReassignActionGroup>();
         IRequestClient<TriggerActionCompletion> actionCompletionClient = GetRequestClient<TriggerActionCompletion>();
+        IRequestClient<TriggerActionGroupQueueing> actionGroupQueueingClient = GetRequestClient<TriggerActionGroupQueueing>();
 
         var controller = new ActionGroupController(Mapper,
             getActionGroupRequestClient,
@@ -99,7 +100,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             triggerResetRequestClient,
             createActionGroupRequestClient,
             reassignActionGroupClient,
-            actionCompletionClient)
+            actionCompletionClient,
+            actionGroupQueueingClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(

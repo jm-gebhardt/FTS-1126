@@ -159,4 +159,26 @@ public class ActionEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
     }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupQueued_NoAssignedAgv_PublishesTryReactivateParkingAgvs()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+
+        await fixture.TestHarness.Bus.Publish(new ActionGroupQueued(new ActionGroup(), Guid.NewGuid(), null));
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupQueued>();
+        await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupQueued_AssignedAgv_PublishesAgvBecameIdle()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+
+        await fixture.TestHarness.Bus.Publish(new ActionGroupQueued(new ActionGroup(), Guid.NewGuid(), "assignedAgv".ToGuid()));
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupQueued>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+    }
 }

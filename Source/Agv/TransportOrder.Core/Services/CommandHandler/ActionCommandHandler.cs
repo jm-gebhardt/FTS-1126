@@ -58,7 +58,8 @@ public class ActionCommandHandler :
     IConsumer<SaveActionGroupAbortion>,
     IConsumer<TryUpdateIdleAction>,
     IConsumer<ReassignActionGroup>,
-    IConsumer<CreateActionGroup>
+    IConsumer<CreateActionGroup>,
+    IConsumer<ForceQueueActionGroup>
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
@@ -1242,5 +1243,24 @@ public class ActionCommandHandler :
                     { LogLabels.AgvSerialNumber, newAssignedAgv }
                 });
         }, context.CancellationToken);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ForceQueueActionGroup"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ForceQueueActionGroup> context)
+    {
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
+        actionGroup.Queue();
+        await _actionService.TryUpdateActionGroup(actionGroup);
+        
+        var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
+
+        _logger.LogOrderInformation(LogCodes.OrderQueued, actionGroupMessageContent.AssignedAgv.GetValueOrDefault(),
+            actionGroupMessageContent.CorrelationId, "Order Queued", $"Order {actionGroupMessageContent.OrderId} has been queued",
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroupMessageContent.OrderId } });
+
+        await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), context.CancellationToken);
+        await context.Publish(new ActionGroupQueued(actionGroupMessageContent, actionGroup.CorrelationId, actionGroup.AssignedAgv), context.CancellationToken);
     }
 }

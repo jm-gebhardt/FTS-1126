@@ -187,6 +187,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<ResetActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CreateActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<QueueActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<ForceQueueActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<EstimateActionGroupDuration, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<StartActionOfActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CompleteActionOfActionGroup, ActionCommandHandler>(c);
@@ -274,6 +275,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<QueueActionGroup>();
         configurator.AddRequestClient<TryReassignActionGroup>();
         configurator.AddRequestClient<TriggerActionCompletion>();
+        configurator.AddRequestClient<TriggerActionGroupQueueing>();
 
         configurator.AddRequestClient<GetActionGroupStatistics>();
         configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();

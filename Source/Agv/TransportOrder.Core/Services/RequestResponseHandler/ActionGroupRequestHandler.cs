@@ -22,7 +22,8 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<TriggerActionGroupAbortion>,
     IConsumer<TriggerActionGroupReset>,
     IConsumer<TryReassignActionGroup>,
-    IConsumer<TriggerActionCompletion>
+    IConsumer<TriggerActionCompletion>,
+    IConsumer<TriggerActionGroupQueueing>
 {
     private readonly IBus _bus;
     private readonly IActionGroupRetrievalService _retrievalService;
@@ -142,6 +143,17 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         _logger.LogInformation("Triggering completion of action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", correlationId, actionCorrelationId);
         await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId));
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TriggerActionGroupQueueing"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TriggerActionGroupQueueing> context)
+    {
+        var actionGroupCorrelationId = context.Message.CorrelationId;
+        await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
+        await _bus.Publish(new ForceQueueActionGroup(actionGroupCorrelationId));
         await context.RespondAsync(new Success());
     }
 }

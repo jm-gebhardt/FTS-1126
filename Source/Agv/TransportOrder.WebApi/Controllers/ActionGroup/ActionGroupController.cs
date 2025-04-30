@@ -28,6 +28,7 @@ public class ActionGroupController : Controller
     private readonly IRequestClient<CreatePickDropActionGroup> _createActionGroupClient;
     private readonly IRequestClient<TryReassignActionGroup> _reassignActionGroupClient;
     private readonly IRequestClient<TriggerActionCompletion> _actionCompletionClient;
+    private readonly IRequestClient<TriggerActionGroupQueueing> _actionGroupQueueingClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -40,7 +41,8 @@ public class ActionGroupController : Controller
         IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient,
         IRequestClient<CreatePickDropActionGroup> createActionGroupClient,
         IRequestClient<TryReassignActionGroup> reassignActionGroupClient,
-        IRequestClient<TriggerActionCompletion> actionCompletionClient)
+        IRequestClient<TriggerActionCompletion> actionCompletionClient,
+            IRequestClient<TriggerActionGroupQueueing> actionGroupQueueingClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
@@ -50,6 +52,7 @@ public class ActionGroupController : Controller
         _createActionGroupClient = createActionGroupClient;
         _reassignActionGroupClient = reassignActionGroupClient;
         _actionCompletionClient = actionCompletionClient;
+        _actionGroupQueueingClient = actionGroupQueueingClient;
     }
 
     /// <summary>
@@ -157,6 +160,19 @@ public class ActionGroupController : Controller
     public async Task<ActionResult> CompleteAction(Guid correlationId, Guid actionCorrelationId)
     {
         await _actionCompletionClient.GetResponse<Success>(new TriggerActionCompletion(correlationId, actionCorrelationId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Queue action group.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group with given correlationId not found.</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/queue")]
+    public async Task<ActionResult> QueueActionGroup(Guid correlationId)
+    {
+        await _actionGroupQueueingClient.GetResponse<Success>(new TriggerActionGroupQueueing(correlationId));
         return Ok();
     }
 }
