@@ -22,7 +22,6 @@ using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.Action
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvMode = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvMode;
 using ReassignActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.ReassignActionGroup;
-using ResetActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.ResetActionGroup;
 using Route = Gebhardt.Acc.TransportOrder.Routing.Models.Route;
 using SaveActionGroupAbortion = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.SaveActionGroupAbortion;
 using ValidationResult = FluentValidation.Results.ValidationResult;
@@ -1444,6 +1443,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<Success>();
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         actionGroup.State.ShouldBe(ActionGroupState.Created);
         actionGroup.AssignedAgv.ShouldBeNull();
         actionGroup.StartedDate.ShouldBeNull();
@@ -1466,6 +1466,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<Success>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
 
         actionGroup.State.ShouldBe(ActionGroupState.Created);
@@ -1487,6 +1488,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<Success>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
 
         actionGroup.State.ShouldBe(ActionGroupState.Created);
@@ -1888,6 +1890,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         pickDropActionGroup.AssignedAgv.ShouldBeNull();
         pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
@@ -1911,6 +1914,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
 

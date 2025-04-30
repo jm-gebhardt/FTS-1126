@@ -122,6 +122,11 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         _hostCommunicatorMock.Verify(x => x.ReportOrderError(hu, source, destination, errorCode, It.IsAny<string>(), It.IsAny<DateTime>()), times);
     }
 
+    public void VerifyDoppelspielIsNull(Times times)
+    {
+        HostOrderRepositoryMock.Verify(r => r.UpdateAsync(It.Is<HostOrder>(ho => ho.DoppelspielPartner == null)), times);
+    }
+
     public void Dispose()
     {
         _hostCommunicatorMock.Invocations.Clear();

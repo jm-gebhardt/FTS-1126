@@ -33,7 +33,8 @@ public class HostOrderCommandHandler(
     IConsumer<FinishPick>,
     IConsumer<PassTriggerPoint>,
     IConsumer<AbortHostOrder>,
-    IConsumer<TryQueueDelayedOrder>
+    IConsumer<TryQueueDelayedOrder>,
+    IConsumer<ResetDoppelspielPartner>
 
 {
     /// <summary>
@@ -493,5 +494,30 @@ public class HostOrderCommandHandler(
         }
         hostOrder.SetDoppelspielPartner(null);
         await QueueHostOrder(context, hostOrder, DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResetDoppelspielPartner"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResetDoppelspielPartner> context)
+    {
+        var actionGroupId = context.Message.ActionGroupCorrelationId;
+        
+        var hostOrder = await hostOrderRepository.GetByIdAsync(actionGroupId);
+
+        Guid? partner = hostOrder.DoppelspielPartner;
+
+        if (partner == null)
+        {
+            return;
+        }
+
+        var partnerOrder = await hostOrderRepository.GetByIdAsync(partner.Value);
+
+        hostOrder.SetDoppelspielPartner(null);
+        partnerOrder.SetDoppelspielPartner(null);
+
+        await hostOrderRepository.UpdateAsync(hostOrder);
+        await hostOrderRepository.UpdateAsync(partnerOrder);
     }
 }

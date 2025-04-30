@@ -985,4 +985,29 @@ public class HostOrderCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
     }
+
+    [TestMethod]
+    public async Task Consume_ResetDoppelspielPartner_ValidData_ResetsDoppelspiel()
+    {
+        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
+
+        systemStatus.SetUseAklAgvLimit(true);
+        var orderId = Guid.NewGuid();
+        var partnerOrderId = Guid.NewGuid();
+        List<HostOrder> orders = [
+            OrderGenerator.GenerateHostOrderFromOrderDetails(new OrderDetails(orderId, "HU", "A", "B", "leNo", HostOrderCreator.Wms, DateTime.UtcNow)), 
+            OrderGenerator.GenerateHostOrderFromOrderDetails(new OrderDetails(partnerOrderId, "HU", "B", "A", "leNo", HostOrderCreator.Wms, DateTime.UtcNow))
+        ];
+
+        orders[0].SetDoppelspielPartner(partnerOrderId);
+        orders[1].SetDoppelspielPartner(orderId);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders(orders);
+
+        var command = new ResetDoppelspielPartner(orderId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<ResetDoppelspielPartner>();
+        fixture.VerifyDoppelspielIsNull(Times.Exactly(2));
+    }
 }

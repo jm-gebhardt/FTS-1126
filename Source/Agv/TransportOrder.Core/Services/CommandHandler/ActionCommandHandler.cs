@@ -884,6 +884,9 @@ public class ActionCommandHandler :
         _logger.LogOrderWarning(LogCodes.OrderReset, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Reset", $"Order {actionGroup.OrderId} was reset ",
             new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
+
+        await context.Publish(new ActionGroupReassignedOrReset(actionGroup.CorrelationId, actionGroup.Creator));
+
         await context.RespondAsync(new Success());
     }
 
@@ -1229,7 +1232,9 @@ public class ActionCommandHandler :
 
             await context.Publish(new ActionGroupChanged(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId));
 
-            string newAssignedAgv = readyAgvs.Single(a => a.CorrelationId == closestAgvRoute.agv!.Value).SerialNumber;
+            var newAssignedAgv = readyAgvs.Single(a => a.CorrelationId == closestAgvRoute.agv!.Value);
+
+            await context.Publish(new ActionGroupReassignedOrReset(actionGroup.CorrelationId, actionGroup.Creator));
 
             _logger.LogOrderInformation(
                 LogCodes.OrderReassigned,
@@ -1240,7 +1245,7 @@ public class ActionCommandHandler :
                 new Dictionary<string, object?>
                 {
                     { LogLabels.OrderId, actionGroup.OrderId },
-                    { LogLabels.AgvSerialNumber, newAssignedAgv }
+                    { LogLabels.AgvSerialNumber, newAssignedAgv.SerialNumber }
                 });
         }, context.CancellationToken);
     }

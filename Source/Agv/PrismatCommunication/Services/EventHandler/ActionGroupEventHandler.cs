@@ -18,7 +18,8 @@ public class ActionGroupEventHandler :
     IConsumer<ActionGroupInvalid>,
     IConsumer<PickActionCompleted>,
     IConsumer<ActionAborted>,
-    IConsumer<DroppingAgvPassedDoppelspielTriggerPoint>
+    IConsumer<DroppingAgvPassedDoppelspielTriggerPoint>,
+    IConsumer<ActionGroupReassignedOrReset>
 {
     /// <summary>
     /// Handles the <see cref="ActionGroupCompleted"/> event.
@@ -83,5 +84,20 @@ public class ActionGroupEventHandler :
         var (_, action) = context.Message;
 
         await context.Publish(new AbortHostOrder(action.ParentId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionGroupInvalid"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionGroupReassignedOrReset> context)
+    {
+        var (actionGroupId, creator) = context.Message;
+
+        if (creator != ActionGroupCreator.Wms)
+        {
+            return;
+        }
+
+        await context.Publish(new ResetDoppelspielPartner(actionGroupId));
     }
 }
