@@ -398,6 +398,7 @@ public class HostOrderCommandHandler(
     {
         var (correlationId, actionCorrelationId, timestamp) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+        hostOrder.FinishAction(timestamp, ActionType.Pick);
         var pickAction = hostOrder.Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick);
         var action = hostOrder.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
         if (pickAction == null || (action != null && action.ActionType != ActionType.Pick))
@@ -406,6 +407,7 @@ public class HostOrderCommandHandler(
             return;
         }
         hostCommunicator.ReportPickCompletion(hostOrder.Hu, pickAction.Node, timestamp);
+        await hostOrderRepository.UpdateAsync(hostOrder);
     }
 
     /// <summary>

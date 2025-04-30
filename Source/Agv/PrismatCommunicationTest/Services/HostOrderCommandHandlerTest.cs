@@ -468,7 +468,8 @@ public class HostOrderCommandHandlerTest
     public async Task Consume_FinishHostOrder_ValidData_ReportOrderCompletion()
     {
         var hostOrder = new HostOrder("OrderId", "Hu", DateTime.UtcNow);
-        hostOrder.AddAction("node", ActionType.Move);
+        hostOrder.AddAction("node", ActionType.Pick);
+        hostOrder.AddAction("node", ActionType.Drop);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
@@ -586,7 +587,7 @@ public class HostOrderCommandHandlerTest
     public async Task Consume_FinishHostOrder_InformationOutdated_NoReportOrderCompletion()
     {
         var now = DateTime.UtcNow;
-        var hostOrder = new HostOrder("OrderId", "Hu", DateTime.UtcNow);
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         hostOrder.Finish(now.AddDays(1));
 
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
@@ -613,6 +614,7 @@ public class HostOrderCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<FinishPick>();
         fixture.VerifyPickCompletion(Times.Once());
+        pickAction.FinishedDate.ShouldBe(command.Timestamp);
     }
 
     [TestMethod]

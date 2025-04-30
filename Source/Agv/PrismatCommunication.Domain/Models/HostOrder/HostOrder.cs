@@ -182,6 +182,18 @@ public class HostOrder
             throw new HostOrderInformationOutdatedException($"Order completion information from {timestamp} outdated, already started {StartedDate} / finished {FinishedDate}/ canceled {CanceledDate}.");
         }
         FinishedDate = timestamp;
+        FinishAction(timestamp, ActionType.Drop);
+    }
+
+    /// <summary>
+    /// Finish action of given type.
+    /// </summary>
+    /// <param name="timestamp">The time the action finished.</param>
+    /// <param name="type">The type of the action.</param>
+    public void FinishAction(DateTime timestamp, ActionType type)
+    {
+       var action = Actions.Single(a => a.ActionType == type);
+       action.Finish(timestamp);
     }
 
     /// <summary>

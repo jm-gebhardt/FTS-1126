@@ -41,7 +41,8 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                      && h.StartedDate != null
                      && h.IsQueued
                      && h.DoppelspielPartner == null
-                     && h.Actions.Any(a => a.ActionType == ActionType.Drop && a.Node == dropTarget))
+                     && h.Actions.Any(a => a.ActionType == ActionType.Drop && a.Node == dropTarget)
+                     && h.Actions.Any(a  => a.ActionType == ActionType.Pick && a.FinishedDate != null))
             .OrderBy(o => o.StartedDate).FirstOrDefaultAsync();
         return order?.CorrelationId;
     }
