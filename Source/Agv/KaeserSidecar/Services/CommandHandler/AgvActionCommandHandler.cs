@@ -59,10 +59,10 @@ public class AgvActionCommandHandler(
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
             {
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
-                return;
+               // return;
             }
         }
-        await context.Publish(new FreeStation(station, agvCorrelationId));
+//        await context.Publish(new FreeStation(station, agvCorrelationId));
     }
 
     /// <summary>
@@ -103,7 +103,8 @@ public class AgvActionCommandHandler(
 
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
         string station = action.Target.NodeId!;
-        await context.Publish(new OccupyStation(station, agvCorrelationId));
+    //    await context.Publish(new OccupyStation(station, agvCorrelationId));
+        await context.Publish(new FreeStation(station, agvCorrelationId));
 
         if (actionGroup.IsManual)
         {
