@@ -155,7 +155,7 @@ public class AgvActionCommandHandler(
             return;
         }
 
-        var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+        //   var agvCorrelationId = actionGroup.AssignedAgv!.Value;
 
         var action = actionGroup.Actions.OrderBy(a => a.CompletedDate).Last();
         if (action.ActionType == ActionType.Drop)
@@ -164,7 +164,7 @@ public class AgvActionCommandHandler(
         }
 
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", action.ActionType, actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
-        string station = action.Target.NodeId!;
-        await context.Publish(new OccupyStation(station, agvCorrelationId));
+        //string station = action.Target.NodeId!;
+        //await context.Publish(new OccupyStation(station, agvCorrelationId));
     }
 }
