@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
@@ -42,6 +43,8 @@ public class DecisionPointEventHandler(
         }
         var action = actionGroup.Actions.FirstOrDefault(a => a.Target.NodeId == string.Empty);
         await SetTarget(context, targetNode, agvStatus, actionGroup, action!.CorrelationId);
+        await context.Publish(new OccupyStation(targetNode, agvStatus.CorrelationId));
+        logger.LogInformation("OccupyStation published for agv {agv}, station {station}", agvStatus.CorrelationId, targetNode);
     }
 
     private async Task<string?> SelectTarget(int consideredStations)
@@ -56,8 +59,10 @@ public class DecisionPointEventHandler(
             ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
             foreach (var occupancy in availableStations)
             {
+                logger.LogInformation("Count for station {Station}: {Count} occupancy", occupancy.Station, occupancy.Count);
                 if (occupancy.Count != 0 || (targetStation.Last == occupancy.Station && availableStations.Count > 1))
                 {
+                    logger.LogInformation("No free station found.");
                     continue;
                 }
                 selectedTarget = occupancy.Station;
