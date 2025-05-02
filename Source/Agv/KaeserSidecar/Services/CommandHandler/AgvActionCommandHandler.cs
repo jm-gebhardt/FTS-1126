@@ -59,10 +59,10 @@ public class AgvActionCommandHandler(
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
             {
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
-               // return;
+                return;
             }
         }
-//        await context.Publish(new FreeStation(station, agvCorrelationId));
+        await context.Publish(new FreeStation(station, agvCorrelationId));
     }
 
     /// <summary>
@@ -101,10 +101,16 @@ public class AgvActionCommandHandler(
             return;
         }
 
+        if (action.ShouldSkip)
+        {
+            logger.LogWarning("Ignoring completion of skipped action {ActionCorrelationId} or group {ActionGroupCorrelationId} to handle action completion", actionCorrelationId, actionGroup.CorrelationId);
+            return;
+        }
+
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
-        string station = action.Target.NodeId!;
-    //    await context.Publish(new OccupyStation(station, agvCorrelationId));
-        await context.Publish(new FreeStation(station, agvCorrelationId));
+
+        string station = action.Target.NodeId!; 
+        await context.Publish(new OccupyStation(station, agvCorrelationId));
 
         if (actionGroup.IsManual)
         {
@@ -154,8 +160,7 @@ public class AgvActionCommandHandler(
         {
             return;
         }
-
-        //   var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+        var agvCorrelationId = actionGroup.AssignedAgv!.Value;
 
         var action = actionGroup.Actions.OrderBy(a => a.CompletedDate).Last();
         if (action.ActionType == ActionType.Drop)
@@ -164,7 +169,7 @@ public class AgvActionCommandHandler(
         }
 
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", action.ActionType, actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
-        //string station = action.Target.NodeId!;
-        //await context.Publish(new OccupyStation(station, agvCorrelationId));
+        string station = action.Target.NodeId!;
+        await context.Publish(new OccupyStation(station, agvCorrelationId));
     }
 }

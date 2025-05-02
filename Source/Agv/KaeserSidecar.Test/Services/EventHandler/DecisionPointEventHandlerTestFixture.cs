@@ -1,5 +1,7 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
+using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
@@ -25,6 +27,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
     private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
+    private readonly SemaphoreProvider<ITargetSelectionSemaphore> _semaphore = new();
 
     /// <inheritdoc cref="MassTransitConsumerTestFixture{DecisionPointEventHandler}"/>>
     protected override MassTransitConsumerTestFixture<DecisionPointEventHandler> AddServices(IServiceCollection collection)
@@ -39,7 +42,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddTransient(_ => _agvSettingsService.Object);
         collection.AddTransient(_ => _transportOrderDb.Object);
-        collection.AddSingleton<TargetStation>();
+        collection.AddSingleton<ITargetSelector>(_ => new TargetSelector(new Mock<ILogger<TargetSelector>>().Object, _repository, OrderGenerator.KaeserConfiguration, _transportOrderDb.Object, _semaphore));
         return this;
     }
 

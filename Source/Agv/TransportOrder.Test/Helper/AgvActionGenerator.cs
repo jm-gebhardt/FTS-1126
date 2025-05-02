@@ -427,4 +427,10 @@ public static class AgvActionGenerator
         var mapper = MappingHelper.GetMapper(new ActionProfile());
         return mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
     }
+
+    public static ActionGroup ConvertFromMessage(Common.Messages.ActionGroups.ActionGroup actionGroup)
+    {
+        var mapper = MappingHelper.GetMapper(new ActionProfile());
+        return mapper.Map<ActionGroup>(actionGroup);
+    }
 }

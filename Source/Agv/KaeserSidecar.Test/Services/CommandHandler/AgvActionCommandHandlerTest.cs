@@ -31,7 +31,7 @@ public class AgvActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(startActionCommand);
         await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        //await fixture.ShouldHavePublishedAsync<FreeStation>();
+        await fixture.ShouldHavePublishedAsync<FreeStation>();
     }
 
     [TestMethod]
@@ -167,7 +167,7 @@ public class AgvActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<DropActionCompleted>();
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedDrop>();
-        await fixture.ShouldHavePublishedAsync<FreeStation>();
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
     }
 
@@ -189,7 +189,34 @@ public class AgvActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<PickActionCompleted>();
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
-        await fixture.ShouldHavePublishedAsync<FreeStation>();
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        fixture.VerifyReportingToConveyors(times: Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_PickActionCompleted_UpdatedMove_PublishesAgvFinishedShortLoopPick()
+    {
+        var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var actionGroupMessageContent = order.CreateMovePickDropActionGroup(OrderGenerator.KaeserConfiguration, DateTime.UtcNow);
+        actionGroupMessageContent.AssignedAgv = Guid.NewGuid();
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
+        var actionGroup = AgvActionGenerator.ConvertFromMessage(actionGroupMessageContent);
+        var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
+        actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, station);
+        actionGroup.SetTargetForAction(pickAction.CorrelationId, station);
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        var actionCompleted = new PickActionCompleted(actionGroup.CorrelationId, moveAction.CorrelationId, DateTime.UtcNow);
+
+        await fixture.TestHarness.Bus.Publish(actionCompleted);
+        await fixture.ShouldHaveConsumedAsync<PickActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
     }
 
@@ -211,7 +238,7 @@ public class AgvActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<DropActionCompleted>();
         await fixture.ShouldHavePublishedAsync<AgvFinishedDrop>();
-        await fixture.ShouldHavePublishedAsync<FreeStation>();
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(order.Hu, orderDetails.Destination, station, Times.Once());
     }
 
@@ -279,6 +306,6 @@ public class AgvActionCommandHandlerTest
 
         await fixture.TestHarness.Bus.Publish(actionCompleted);
         await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
-        //await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
-using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
@@ -37,7 +36,6 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
         collection.AddTransient(_ => _transportOrderDb.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _systemStatusRepository.Object);
-        collection.AddSingleton<TargetStation>();
         return this;
     }
 
