@@ -1,9 +1,11 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.Common.Testing.Time;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
+using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,6 +21,8 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
    
     public TelegramConveyorCommunicator Communicator { get; private set; } = null!;
 
+    private readonly ConcurrentQueue<ConveyorTelegram> _queue = new();
+
     public TelegramConveyorCommunicatorTestFixture()
     {
         AddServices(s =>
@@ -32,7 +36,7 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
                 {
                     var logger = serviceProvider.GetRequiredService<ILogger<ToWePlcTelegramProcessor>>();
                     var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
-                    return new ToWePlcTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration());
+                    return new ToWePlcTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration(), _queue);
                 });
 
             s.AddKeyedSingleton<AgvAplCargoStateProcessor>(ServiceKeyProvider.AgvCargoState,

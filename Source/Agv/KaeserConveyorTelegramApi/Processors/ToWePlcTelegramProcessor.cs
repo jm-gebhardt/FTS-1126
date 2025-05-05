@@ -20,7 +20,7 @@ public class ToWePlcTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
     /// <summary>
     ///  The send queue.
     /// </summary>
-    private ConcurrentQueue<ConveyorTelegram> SendQueue { get; } = new();
+    private ConcurrentQueue<ConveyorTelegram> SendQueue { get; }
 
     /// <summary>
     ///  The send sequence counter.
@@ -65,12 +65,13 @@ public class ToWePlcTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
     /// <summary>
     /// Provides a processor for telegrams sent to the conveyor
     /// </summary>
-    public ToWePlcTelegramProcessor(ILogger<ToWePlcTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration)
+    public ToWePlcTelegramProcessor(ILogger<ToWePlcTelegramProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration, ConcurrentQueue<ConveyorTelegram> sendQueue)
     {
         _logger = logger;
         _timeProvider = timeProvider;
         _configuration = configuration;
         TriggerRestart = false;
+        SendQueue = sendQueue;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
@@ -54,12 +55,16 @@ public static class ServiceCollectionExtension
             return new Client(logger, config);
         });
 
+        // Queue
+        serviceCollection.AddKeyedSingleton<ConcurrentQueue<ConveyorTelegram>>(plc);
+
         serviceCollection.AddKeyedSingleton<ToWePlcTelegramProcessor>(plc,
             (serviceProvider, _) =>
             {
                 var logger = serviceProvider.GetRequiredService<ILogger<ToWePlcTelegramProcessor>>();
                 var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
-                return new ToWePlcTelegramProcessor(logger, timeProvider, config);
+                var queue = serviceProvider.GetRequiredKeyedService<ConcurrentQueue<ConveyorTelegram>>(plc);
+                return new ToWePlcTelegramProcessor(logger, timeProvider, config, queue);
             });
 
         serviceCollection.AddKeyedSingleton<Sender<ConveyorTelegram>>(plc,
