@@ -21,11 +21,13 @@ public class AgvActionCommandHandler(
     ITransportOrderDb transportOrderDb,
     KaeserGraphConfiguration configuration,
     IConveyorCommunicator conveyorCommunicator,
-    IPrismatCommunicationHostOrderRepository hostOrderRepository) :
+    IPrismatCommunicationHostOrderRepository hostOrderRepository,
+    ITargetSelector targetSelector) :
     IConsumer<StartActionCommand>,
     IConsumer<PickActionCompleted>,
     IConsumer<DropActionCompleted>,
-    IConsumer<ActionGroupCompleted>
+    IConsumer<ActionGroupCompleted>,
+    IConsumer<ActionAborted>
 {
     /// <summary>
     /// Handles the <see cref="StartActionCommand"/> message.
@@ -127,6 +129,7 @@ public class AgvActionCommandHandler(
                 if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
                 {
                     await context.Publish(new AgvFinishedPick(order.CorrelationId, pickTarget));
+                    await targetSelector.Dequeue(action.CorrelationId);
                 }
                 return;
             }
@@ -138,6 +141,7 @@ public class AgvActionCommandHandler(
                 {
                     await context.Publish(new AgvFinishedDrop(order.CorrelationId, dropTarget));
                     conveyorCommunicator.ReportPalletDrop(action.Target.NodeId!, dropTarget, order.Hu);
+                    await targetSelector.Dequeue(action.CorrelationId);
                 }
                 break;
             }
@@ -171,5 +175,17 @@ public class AgvActionCommandHandler(
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", action.ActionType, actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
         string station = action.Target.NodeId!;
         await context.Publish(new OccupyStation(station, agvCorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionAborted"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionAborted> context)
+    {
+        var action = context.Message.Action;
+        if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+        {
+            await targetSelector.Dequeue(action.CorrelationId);
+        }
     }
 }

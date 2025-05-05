@@ -65,6 +65,7 @@ public static class HostBuilderExtension
             services.AddConfigurationTypeManager();
             services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
             services.AddSingleton<ITargetSelector, TargetSelector>();
+            services.AddSingleton<IHostedService>(sp => (IHostedService)sp.GetRequiredService<ITargetSelector>());
             // Add prismat communication db connection
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
@@ -74,6 +75,7 @@ public static class HostBuilderExtension
             services.AddTransient<ITransportOrderDb, TransportOrderDb>();
             services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
             services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();
+            services.AddTransient<IDecisionPointActionRepository, EfDecisionPointActionRepository>();
             services.AddTransient<ITransportOrderStationRepository, TransportOrderStationRepository>();
             services.AddTransient<ITransportOrderAgvSettingsProvider, TransportOrderAgvSettingsProvider>();
             services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();

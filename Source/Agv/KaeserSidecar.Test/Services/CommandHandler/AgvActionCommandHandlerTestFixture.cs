@@ -16,6 +16,7 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
+    private readonly Mock<ITargetSelector> _targetSelectorMock = new();
 
     protected override MassTransitConsumerTestFixture<AgvActionCommandHandler> AddServices(IServiceCollection collection)
     {
@@ -25,13 +26,20 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
         collection.AddTransient(_ => _transportOrderDb.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddSingleton(_ => _communicator.Object);
+        collection.AddTransient(_ => _targetSelectorMock.Object);
         return this;
+    }
+
+    public void VerifyActionDequeued(Guid action, Times times)
+    {
+        _targetSelectorMock.Verify(x => x.Dequeue(action), times);
     }
 
     public AgvActionCommandHandlerTestFixture()
     {
         _communicator.Setup(x => x.ReportPalletDrop(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Verifiable();
         Build();
+        _targetSelectorMock.Setup(x => x.Dequeue(It.IsAny<Guid>())).Verifiable();
     }
 
     public AgvActionCommandHandlerTestFixture WithHostOrder(HostOrder order)

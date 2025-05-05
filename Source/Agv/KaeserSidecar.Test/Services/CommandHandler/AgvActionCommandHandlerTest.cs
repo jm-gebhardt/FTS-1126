@@ -32,6 +32,7 @@ public class AgvActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         await fixture.ShouldHavePublishedAsync<FreeStation>();
+        fixture.VerifyActionDequeued(actionGroup.Actions.First().CorrelationId, Times.Never());
     }
 
     [TestMethod]

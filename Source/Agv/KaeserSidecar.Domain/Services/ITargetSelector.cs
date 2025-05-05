@@ -6,9 +6,20 @@
 public interface ITargetSelector
 {
     /// <summary>
-    /// Select the next target.
+    /// Set a new station count
     /// </summary>
-    /// <param name="consideredStations">Number of considered stations.</param>
-    /// <returns>The target station if any.</returns>
-    Task<string?> Select(int consideredStations);
+    /// <param name="stationCount">Number of considered stations.</param>
+    void SetStationCount(int stationCount);
+
+    /// <summary>
+    /// Enqueue an agv
+    /// </summary>
+    /// <param name="actionCorrelationId"></param>
+    /// <param name="agvCorrelationId"></param>
+    Task Enqueue(Guid actionCorrelationId, Guid agvCorrelationId);
+
+    /// <summary>
+    /// Dequeue an agv.
+    /// </summary>
+    Task Dequeue(Guid actionCorrelationId);
 }
