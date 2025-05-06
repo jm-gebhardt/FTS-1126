@@ -461,7 +461,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .AsNoTracking()
             .FirstOrDefaultAsync();
 
-        var subsequentAction = startedGroup?.Actions.Where(action => action.State != ActionState.Completed).MinBy(a => a.Sequence);
+        var subsequentAction = startedGroup?.Actions.Where(action => action.State != ActionState.Completed && !action.ShouldSkip).MinBy(a => a.Sequence);
 
         if (subsequentAction == null)
         {

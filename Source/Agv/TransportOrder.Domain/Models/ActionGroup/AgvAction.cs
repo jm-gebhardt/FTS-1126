@@ -143,12 +143,47 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// Just to satisfy Entity Framework
     /// </summary>
     [UsedImplicitly]
-    [JsonConstructor]
     public AgvAction()
     {
         CorrelationId = Guid.Empty;
-        ActionType = ActionType.Pick;
         ParentId = Guid.Empty;
+    }
+
+    /// <inheritdoc cref="AgvAction"/>>
+    [JsonConstructor]
+    public AgvAction(
+        Guid correlationId,
+        Guid parentId,
+        int sequence,
+        ActionState state,
+        ActionType actionType,
+        ActionTarget target,
+        string[] nodes,
+        Guid[] edges,
+        DateTime createdDate,
+        DateTime? startedDate,
+        DateTime? completedDate,
+        DateTime? pausedDate,
+        Dictionary<InfoToAgvKey, string>? infoToAgv,
+        TimeSpan pausedDuration,
+        bool shouldSkip
+    )
+    {
+        CorrelationId = correlationId;
+        ParentId = parentId;
+        Sequence = sequence;
+        State = state;
+        ActionType = actionType;
+        Target = target;
+        Nodes = nodes;
+        Edges = edges;
+        CreatedDate = createdDate;
+        StartedDate = startedDate;
+        CompletedDate = completedDate;
+        PausedDate = pausedDate;
+        InfoToAgv = infoToAgv;
+        PausedDuration = pausedDuration;
+        ShouldSkip = shouldSkip;
     }
 
     /// <summary>
@@ -290,7 +325,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// </summary>
     public override string ToString()
     {
-        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {Target.NodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
+        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {Target.NodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId} Type: {ActionType}, State {State}, ShouldSkip {ShouldSkip}";
     }
 
     /// <inheritdoc cref="IEquatable{T}"/>>
