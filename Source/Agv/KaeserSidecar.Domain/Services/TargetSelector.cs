@@ -26,7 +26,7 @@ public class TargetSelector(
     private readonly List<Guid> _lastEvaluatedActions = [];
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
     private int _consideredStations = 3;
-    private readonly TimeSpan _waitingTime = TimeSpan.FromMilliseconds(100);
+    private readonly TimeSpan _waitingTime = TimeSpan.FromMilliseconds(500);
 
     /// <inheritdoc cref="BackgroundService"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,7 +36,7 @@ public class TargetSelector(
         {
             if (_actionsToSelectTarget.IsEmpty)
             {
-                logger.LogInformation("No action listed for target selection ");
+                logger.LogDebug("No action listed for target selection ");
                 await Task.Delay(_waitingTime, stoppingToken);
                 continue;
             }
@@ -60,7 +60,7 @@ public class TargetSelector(
                 }
                 if (action == null)
                 {
-                    logger.LogInformation("No action found for target selection ");
+                    logger.LogDebug("No action found for target selection ");
                     return;
                 }
 
@@ -104,7 +104,7 @@ public class TargetSelector(
         {
             if (occupancy.Count != 0 || (_lastTargetStation == occupancy.Station && availableStations.Count > 1))
             {
-                logger.LogInformation("No free station found: {Station} is occupied by {occupancy.Count}, last chosen station {LastTarget}", occupancy.Station, occupancy.Count, _lastTargetStation);
+                logger.LogInformation("No free station found: {Station} is occupied by {occupancy.Count}, last chosen station {LastTarget}, StationCount set to {StationCount}", occupancy.Station, occupancy.Count, _lastTargetStation, consideredStations);
                 continue;
             }
             selectedTarget = occupancy.Station;

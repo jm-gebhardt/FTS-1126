@@ -46,12 +46,12 @@ public class EfTriggerRepository : ITriggerRepository
             return;
         }
         await context.AddAsync(trigger);
-        await context.SaveChangesAsync(); 
+        await context.SaveChangesAsync();
         if (trigger.Locations.Count > 0)
         {
             foreach (var location in trigger.Locations)
             {
-                AddTriggerToLocationDictionary(trigger, location);
+                AddTriggerLocationToDictionary(trigger, location);
             }
         }
     }
@@ -107,7 +107,7 @@ public class EfTriggerRepository : ITriggerRepository
             if (triggerToUpdate.Locations.Count > trigger.Locations.Count)
             {
                 List<Guid> newLocations = trigger.Locations.Select(l => l.Id).ToList();
-                List<Location> locationToRemove = triggerToUpdate.Locations.Where(l => !newLocations.Contains(l.Id)).ToList(); 
+                List<Location> locationToRemove = triggerToUpdate.Locations.Where(l => !newLocations.Contains(l.Id)).ToList();
                 foreach (var location in locationToRemove)
                 {
                     if (location.Polygon.Count > 0)
@@ -128,24 +128,34 @@ public class EfTriggerRepository : ITriggerRepository
                     {
                         await context.Set<TriggerPolygonPoint>().AddRangeAsync(location.Polygon);
                     }
-                    AddTriggerToLocationDictionary(trigger, location);
+                    AddTriggerLocationToDictionary(trigger, location);
                     await context.Set<Location>().AddAsync(location);
                 }
-            } else if (triggerToUpdate.Locations.Count > 0 && triggerToUpdate.Locations.Count == trigger.Locations.Count)
+            }
+            else if (triggerToUpdate.Locations.Count > 0 && triggerToUpdate.Locations.Count == trigger.Locations.Count)
             {
-                _logger.LogInformation("Update(trigger):  Location count {LocCount}.", trigger.Locations.Count);
+                _logger.LogInformation("Update(trigger): Location count {LocCount}", trigger.Locations.Count);
                 ICollection<Location> locationsToUpdate = triggerToUpdate.Locations;
                 ICollection<Location> newLocations = trigger.Locations;
                 bool updateLocationSequence = !locationsToUpdate.SequenceEqual(newLocations);
 
                 if (updateLocationSequence)
                 {
+                    foreach (var oldLocation in locationsToUpdate)
+                    {
+                        RemoveTriggerFromLocationDictionary(oldLocation);
+                    }
+                    
+                    foreach (var location in newLocations)
+                    {
+                        AddTriggerLocationToDictionary(trigger, location);
+                    }
                     context.Set<Location>().RemoveRange(triggerToUpdate.Locations);
                     await context.Set<Location>().AddRangeAsync(trigger.Locations);
                 }
             }
         }
-        
+
         if (!triggerToUpdate.ConfigurationParameters.Equals(trigger.ConfigurationParameters))
         {
             var parameter = triggerToUpdate.ConfigurationParameters.SingleOrDefault(t => t.Value != trigger.ConfigurationParameters.Single(tt => tt.Name == t.Name).Value);
@@ -163,11 +173,11 @@ public class EfTriggerRepository : ITriggerRepository
         _ = _triggerLocationDictionaryProvider.ConcurrentDict.TryRemove(location.Id, out _);
     }
 
-    private void AddTriggerToLocationDictionary(Trigger trigger, Location location)
+    private void AddTriggerLocationToDictionary(Trigger trigger, Location location)
     {
         _triggerLocationDictionaryProvider.ConcurrentDict.AddOrUpdate(location.Id, location, (_, _) => location);
-        _logger.LogDebug("{Method}: Added trigger {TriggerId} to location {LocationId} (NodeId: {NodeId}, EdgeId: {EdgeId}, Polygon: {IsPolygon}, Number of AGVs: {AgvCount})", 
-            nameof(AddTriggerToLocationDictionary), trigger.Id, location.Id, location.NodeId, location.EdgeId, location.Polygon.Count > 0, location.Agvs.Count);
+        _logger.LogDebug("{Method}: Added trigger {TriggerId} to location {LocationId} (NodeId: {NodeId}, EdgeId: {EdgeId}, Polygon: {IsPolygon}, Number of AGVs: {AgvCount})",
+            nameof(AddTriggerLocationToDictionary), trigger.Id, location.Id, location.NodeId, location.EdgeId, location.Polygon.Count > 0, location.Agvs.Count);
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
@@ -222,8 +232,8 @@ public class EfTriggerRepository : ITriggerRepository
                         locationRecord.Agvs.Remove(agvId);
                         _logger.LogTrace("{Method}: After remove agvGuidString is {AgvGuidString}", nameof(GetPolygonTriggerLocations), string.Join(',', locationRecord.Agvs));
                     }
-                    int count =  await context.SaveChangesAsync();
-                   _logger.LogTrace("{Method}: Saved {Count} records!", nameof(GetPolygonTriggerLocations), count);
+                    int count = await context.SaveChangesAsync();
+                    _logger.LogTrace("{Method}: Saved {Count} records!", nameof(GetPolygonTriggerLocations), count);
                 }
             }
         }
@@ -244,7 +254,7 @@ public class EfTriggerRepository : ITriggerRepository
             }
             foreach (var location in trigger.Locations)
             {
-                AddTriggerToLocationDictionary(trigger, location);
+                AddTriggerLocationToDictionary(trigger, location);
             }
         }
     }
