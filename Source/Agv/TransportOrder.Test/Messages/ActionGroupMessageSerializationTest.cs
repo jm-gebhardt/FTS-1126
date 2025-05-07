@@ -34,6 +34,7 @@ public class ActionGroupMessageSerializationTest
         actionGroup.CompleteAction(moveAction.CorrelationId);
         dropAction.Nodes = ["node 1", "node2"];
         dropAction.Edges = [Guid.NewGuid()];
+        dropAction.AdditionalInfo = "SAP:9070";
         var message = new StartActionOfActionGroup(dropAction, actionGroup.AssignedAgv!.Value);
         var fixture = new MessageSerialisationTestFixture();
 

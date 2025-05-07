@@ -422,6 +422,52 @@ public class ActionGroupTests
         dropAction.InfoToAgv.GetDockFront().ShouldBe(drop);
     }
 
+    [DataRow(null, true)] 
+    [DataRow(true, true)] 
+    [DataRow(false, false)] 
+    [DataTestMethod]
+    public void SetDockFrontOfAction_ManualPickDropActionGroup_ExternalValue_DockFrontSetToExternalValue(bool? previous, bool externalValue)
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.IsManual = true;
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        pickAction.SetDockFrontValue(externalValue);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        dropAction.SetDockFrontValue(externalValue);
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, previous);
+        pickAction.InfoToAgv.ShouldNotBeNull();
+        pickAction.InfoToAgv.GetDockFront().ShouldBe(externalValue);
+
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, previous);
+        dropAction.InfoToAgv.ShouldNotBeNull();
+        dropAction.InfoToAgv.GetDockFront().ShouldBe(externalValue);
+    }
+
+    [DataRow(null, true, false)] // no previous action group, pick: true, drop: false
+    [DataRow(true, true, false)] // true on last action of previous action group, pick: true, drop: false
+    [DataRow(false, false, true)] // false on last action of previous action group, pick: false, drop: true
+    [DataTestMethod]
+    public void SetDockFrontOfAction_AutomaticPickDropActionGroup_ExternalValue_DockFrontSet_ExternalValueIgnored(bool? previous, bool pick, bool drop)
+    {
+        const bool external = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        pickAction.SetDockFrontValue(external);
+        pickAction.InfoToAgv.ShouldNotBeNull();
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        dropAction.SetDockFrontValue(external);
+        dropAction.InfoToAgv.ShouldNotBeNull();
+
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, previous);
+        pickAction.InfoToAgv.ShouldNotBeNull();
+        pickAction.InfoToAgv.GetDockFront().ShouldBe(pick);
+
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, previous);
+        dropAction.InfoToAgv.ShouldNotBeNull();
+        dropAction.InfoToAgv.GetDockFront().ShouldBe(drop);
+    }
+
     [DataRow(null, true, false)] // no previous action group, pick: true, drop: false
     [DataRow(true, true, false)] // true on last action of previous action group, pick: true, drop: false
     [DataRow(false, false, false)] // false on last action of previous action group, pick: false, drop: false

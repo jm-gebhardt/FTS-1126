@@ -112,6 +112,11 @@ public class ActionGroup
     public bool HasPriority { get; set; }
 
     /// <summary>
+    /// The handling unit corresponding to this ActionGroup.
+    /// </summary>
+    public string? HandlingUnit { get; init; }
+
+    /// <summary>
     /// Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
     /// </summary>
     [UsedImplicitly]
@@ -380,6 +385,12 @@ public class ActionGroup
     public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup)
     {
         var action = Actions.Single(a => a.CorrelationId == actionId);
+
+        if (IsManual && action.HasDockFront())
+        {
+            return;
+        }
+
         bool needsRotation = GetNeedsRotation();
 
         if (IsChargingOrder)

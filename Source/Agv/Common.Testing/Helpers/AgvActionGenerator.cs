@@ -120,7 +120,9 @@ public static class AgvActionGenerator
         ActionState actionState = ActionState.Created,
         string? source = null,
         string? destination = null,
-        Guid? assignedAgv = null)
+        Guid? assignedAgv = null,
+        string? hu = null,
+        string? additionalPickInfo = null)
     {
         const string orderId = "orderId-pick-drop";
         groupId ??= Guid.NewGuid();
@@ -129,7 +131,8 @@ public static class AgvActionGenerator
         var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
         {
             Sequence = 0,
-            State = actionState
+            State = actionState,
+            AdditionalInfo = additionalPickInfo
         };
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
         {
@@ -140,7 +143,8 @@ public static class AgvActionGenerator
         var actionGroup = new ActionGroup(groupId.Value, orderId, new List<AgvAction> { pickAction, dropAction }, ActionGroupCreator.Wms)
         {
             State = actionGroupState,
-            AssignedAgv = assignedAgv
+            AssignedAgv = assignedAgv,
+            HandlingUnit = hu
         };
 
         return actionGroup;

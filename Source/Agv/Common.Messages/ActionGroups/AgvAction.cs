@@ -84,6 +84,11 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; set; }
 
     /// <summary>
+    /// Additional information for this action, often used for external systems.
+    /// </summary>
+    public string? AdditionalInfo { get; set; }
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>

@@ -42,7 +42,7 @@ public class ActionProfileTest
     {
         var mapper = MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.ActionProfile());
 
-        var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First().ConvertFromAgvActionWithFakeNodeType();
+        var action = AgvActionGenerator.GeneratePickDropActionGroup(additionalPickInfo:"SAP:1020").Actions.First().ConvertFromAgvActionWithFakeNodeType();
         var actionDto = mapper.Map<AgvActionDto>(action);
         actionDto.CorrelationId.ShouldBe(action!.CorrelationId);
         actionDto.ParentId.ShouldBe(action.ParentId);
@@ -55,6 +55,7 @@ public class ActionProfileTest
         actionDto.StartedDate.ShouldBe(action.StartedDate!);
         actionDto.CompletedDate.ShouldBe(action.CompletedDate);
         actionDto.TargetNodeType.ShouldBe(action.TargetNodeType);
+        actionDto.AdditionalInfo.ShouldBe(action.AdditionalInfo);
     }
 
     [TestMethod]
@@ -62,7 +63,7 @@ public class ActionProfileTest
     {
         var mapper = MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.ActionProfile(), new ActionProfile());
 
-        var actionGroup = mapper.Map<ActionGroup>(AgvActionGenerator.GeneratePickDropActionGroup()).ConvertFromActionGroupWithFakeNodeType();
+        var actionGroup = mapper.Map<ActionGroup>(AgvActionGenerator.GeneratePickDropActionGroup(hu: "hu")).ConvertFromActionGroupWithFakeNodeType();
         var actionGroupDto = mapper.Map<ActionGroupDto>(actionGroup);
 
         actionGroupDto.CorrelationId.ShouldBe(actionGroup!.CorrelationId);
@@ -75,6 +76,7 @@ public class ActionProfileTest
         actionGroupDto.Actions.ShouldNotBeEmpty();
         actionGroupDto.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         actionGroupDto.IsManual.ShouldBe(actionGroup.IsManual);
+        actionGroupDto.HandlingUnit.ShouldBe(actionGroup.HandlingUnit);
     }
 
     [TestMethod]

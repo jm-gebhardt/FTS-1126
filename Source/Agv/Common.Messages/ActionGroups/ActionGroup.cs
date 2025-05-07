@@ -86,6 +86,12 @@ public record ActionGroup : CorrelatedBy<Guid>
     [UsedImplicitly]
     public List<Reason> Reasons { get; set; } = new();
 
+    /// <summary>
+    /// The handling unit corresponding to this ActionGroup.
+    /// </summary>
+    [UsedImplicitly]
+    public string? HandlingUnit { get; set; }
+
     /// <inheritdoc cref="ActionGroup"/>
     /// <param name="correlationId">The CorrelationId of the <see cref="ActionGroup"/></param>
     /// <param name="actions">The child Actions of the <see cref="ActionGroup"/></param>

@@ -120,6 +120,11 @@ public class ActionGroupController : Controller
     /// </summary>
     /// <param name="pickStation">The pick station.</param>
     /// <param name="dropStation">The drop station.</param>
+    /// <param name="dockFrontPick">Whether to dock front for the pick.</param>
+    /// <param name="dockFrontDrop">Whether to dock front for the drop.</param>
+    /// <param name="handlingUnit">The handling unit of the action group.</param>
+    /// <param name="additionalPickInfo">Additional info for the pick station (optional).</param>
+    /// <param name="additionalDropInfo">Additional info for the drop station (optional).</param>
     /// <param name="agvCorrelationId">The assigned agv (optional).</param>
     /// <returns>The created action group.</returns>
     /// <response code="200">Ok</response>
@@ -130,9 +135,18 @@ public class ActionGroupController : Controller
     /// <response code="404">AGV with given correlationId not found .</response>
     [HttpPost]
     [Route("/actionGroup")]
-    public async Task<ActionResult<ActionGroupDto>> CreatePickDropActionGroup(string pickStation, string dropStation, Guid? agvCorrelationId)
+    public async Task<ActionResult<ActionGroupDto>> CreatePickDropActionGroup(
+        string pickStation,
+        string dropStation, 
+        bool dockFrontPick,
+        bool dockFrontDrop,
+        string? handlingUnit,
+        string? additionalPickInfo, 
+        string? additionalDropInfo,
+        Guid? agvCorrelationId
+    )
     {
-        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, agvCorrelationId, false, ActionGroupCreator.TransportOrderWebApi));
+        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, additionalPickInfo, additionalDropInfo, false, ActionGroupCreator.TransportOrderWebApi));
         return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
     }
 

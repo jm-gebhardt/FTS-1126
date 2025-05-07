@@ -84,6 +84,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             g.EstimatedDuration,
             g.State,
             g.Creator,
+            g.HandlingUnit,
             g.Actions.Select(a =>
             {
                 if (a.Target.NodeId != null)
@@ -104,7 +105,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                         a.StartedDate,
                         a.CompletedDate,
                         a.PausedDate,
-                        a.PausedDuration);
+                        a.PausedDuration,
+                        a.InfoToAgv,
+                        a.AdditionalInfo);
                 }
                 return new AgvActionReadModel(
                     a.CorrelationId,
@@ -120,7 +123,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     a.StartedDate,
                     a.CompletedDate,
                     a.PausedDate,
-                    a.PausedDuration);
+                    a.PausedDuration,
+                    a.InfoToAgv,
+                    a.AdditionalInfo);
             }).Distinct().ToList(),
             g.IsManual,
             g.HasPriority,
@@ -167,6 +172,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     actionGroup.EstimatedDuration,
                     actionGroup.State,
                     actionGroup.Creator,
+                    actionGroup.HandlingUnit,
                     GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
                     actionGroup.IsManual,
                     actionGroup.HasPriority,
@@ -188,7 +194,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         {
             agvActionReadModels1 = actionGroup.Actions.Join(graphNodes, a => a.Target.NodeId!, n => n.Id, (a, n) =>
                     new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State, a.ActionType,
-                        a.Target.NodeId ?? string.Empty, n.Type.GetTypeForActionType(a.ActionType), a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration))
+                        a.Target.NodeId ?? string.Empty, n.Type.GetTypeForActionType(a.ActionType), a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration, a.InfoToAgv, a.AdditionalInfo))
                 .Distinct().ToList();
 
             if (!unknownTargetNodeIds.Any())
@@ -201,7 +207,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         {
             agvActionReadModels2 = actionGroup.Actions.Join(unknownTargetNodeIds, a => a.Target.NodeId!, u => u, (a, _) =>
                 new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State, a.ActionType,
-                    a.Target.NodeId ?? string.Empty, AgvGraph.NodeType.WayPoint, a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration)).Distinct().ToList();
+                    a.Target.NodeId ?? string.Empty, AgvGraph.NodeType.WayPoint, a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration, a.InfoToAgv, a.AdditionalInfo)).Distinct().ToList();
             if (!graphNodes.Any())
             {
                 return agvActionReadModels2.ToList();
@@ -223,7 +229,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                 a.StartedDate,
                 a.CompletedDate,
                 a.PausedDate,
-                a.PausedDuration)).ToList();
+                a.PausedDuration,
+                a.InfoToAgv,
+                a.AdditionalInfo)).ToList();
         }
 
         return agvActionReadModels2.Union(agvActionReadModels1).Union(agvActionReadModels3).ToList();
@@ -251,6 +259,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.EstimatedDuration,
             actionGroup.State,
             actionGroup.Creator,
+            actionGroup.HandlingUnit,
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.HasPriority,
@@ -290,6 +299,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.EstimatedDuration,
             actionGroup.State,
             actionGroup.Creator,
+            actionGroup.HandlingUnit,
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.HasPriority,
@@ -327,6 +337,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.EstimatedDuration,
             actionGroup.State,
             actionGroup.Creator,
+            actionGroup.HandlingUnit,
             GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
             actionGroup.IsManual,
             actionGroup.HasPriority,

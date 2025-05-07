@@ -64,6 +64,12 @@ public record ActionGroupDto : DatedMessage
     public bool IsQueued { get; init; }
 
     /// <summary>
+    /// The handling unit corresponding to this ActionGroup.
+    /// </summary>
+    [UsedImplicitly]
+    public string? HandlingUnit { get; set; }
+
+    /// <summary>
     /// List of actions
     /// </summary>
     public IList<AgvActionDto> Actions

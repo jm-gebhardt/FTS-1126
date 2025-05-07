@@ -24,7 +24,8 @@ public class ConveyorReportingEventHandler(
     IConsumer<PickingAgvPassedDoppelspielTriggerPoint>,
     IConsumer<AgvStartedPick>,
     IConsumer<AgvFinishedPick>,
-    IConsumer<AgvFinishedDrop>
+    IConsumer<AgvFinishedDrop>,
+    IConsumer<ManualActionPassedDoppelspielTrigger>
 {
     /// <summary>
     /// Handles the <see cref="DroppingAgvPassedDoppelspielTriggerPoint"/> event.
@@ -127,5 +128,32 @@ public class ConveyorReportingEventHandler(
             return;
         }
         await orderRepository.RemoveOrderReport(dropStation, orderId);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ManualActionPassedDoppelspielTrigger"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ManualActionPassedDoppelspielTrigger> context)
+    {
+        var (sap, actionTarget, isPicking, hu, orderId, agvCorrelationId) = context.Message;
+        if (!configuration.ConveyorStationMapping.TryGetValue(actionTarget, out string? targetStation))
+        {
+            return;
+        }
+        if (await orderRepository.HasOrderBeenReported(sap, orderId))
+        {
+            logger.LogWarning("Order {Order} for target at {Station}/{Target} has already been reported", orderId, targetStation, sap);
+            return;
+        }
+        await orderRepository.StoreOrderReport(sap, orderId);
+        if (isPicking)
+        {
+            logger.LogInformation("Reporting order {OrderCorrelationId} of agv {AgvCorrelationId} for picking at target {TargetStation}/{Target} at {Time}", orderId, agvCorrelationId, sap, targetStation, DateTime.UtcNow);
+            conveyorCommunicator.ReportPalletPickDropStation(targetStation, sap, null, null);
+            return;
+        }
+
+        logger.LogInformation("Reporting order {OrderCorrelationId} of agv {AgvCorrelationId} for dropping at target {TargetStation}/{Target} at {Time}", orderId, agvCorrelationId, sap, targetStation, DateTime.UtcNow);
+        conveyorCommunicator.ReportPalletPickDropStation(targetStation, null, sap, hu);
     }
 }

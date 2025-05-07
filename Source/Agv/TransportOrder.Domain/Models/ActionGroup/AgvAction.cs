@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
@@ -81,6 +82,11 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; set; }
 
     /// <summary>
+    /// Additional information for this action, often used for external systems.
+    /// </summary>
+    public string? AdditionalInfo { get; set; }
+
+    /// <summary>
     /// Duration that the action has been paused for.
     /// </summary>
     public TimeSpan PausedDuration { get; set; } = TimeSpan.Zero;
@@ -104,6 +110,19 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// True if the action is complete, i.e. its target is not defined.
     /// </summary>
     public bool IsIncomplete => Target.NodeId == string.Empty;
+
+    /// <summary>
+    /// True, if Dockfront has been set externally.
+    /// </summary>
+    public bool HasDockFront()
+    {
+        if (InfoToAgv == null)
+        {
+            return false;
+        }
+
+        return InfoToAgv.TryGetValue(InfoToAgvKey.DockFront, out string? value) && bool.TryParse(value, out _);
+    }
 
     /// <summary>
     /// Constructor
@@ -309,7 +328,11 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         }
     }
 
-    private void SetDockFrontValue(bool dockFront)
+    /// <summary>
+    /// Sets the dock front of this Action
+    /// </summary>
+    /// <param name="dockFront">What to set the dock front to.</param>
+    public void SetDockFrontValue(bool dockFront)
     {
         InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
         InfoToAgv[InfoToAgvKey.DockFront] = dockFront.ToString();
@@ -428,5 +451,29 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         var hashCode = new HashCode();
         hashCode.Add(value: CorrelationId);
         return hashCode.ToHashCode();
+    }
+
+    /// <summary>
+    /// Gets the SAP information from the additional action information.
+    /// </summary>
+    /// <returns>The value of SAP.</returns>
+    public string? GetSap()
+    {
+        return AdditionalInfo.ExtractValue("SAP", ";");
+    }
+
+    /// <summary>
+    /// Set the lift height based on additional action information.
+    /// </summary>
+    public void SetLiftHeight()
+    {
+        string? liftHeight = AdditionalInfo.ExtractValue("LiftHeight", ";");
+        if (liftHeight == null)
+        {
+            return;
+        }
+        
+        InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
+        InfoToAgv[InfoToAgvKey.LiftHeight] = liftHeight;
     }
 }

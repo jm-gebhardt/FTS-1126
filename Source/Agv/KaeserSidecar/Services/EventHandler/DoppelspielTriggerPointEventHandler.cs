@@ -1,8 +1,10 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.KaeserSidecar.Domain.Extensions;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
+using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using JetBrains.Annotations;
 using MassTransit;
@@ -45,10 +47,16 @@ public class DoppelspielTriggerPointEventHandler(
         }
 
         bool isDropping = action is { ActionType: ActionType.Drop };
+
+        if (actionGroup.IsManual)
+        {
+            await HandleManualPickDropActionGroup(context, actionGroup, action, !isDropping);
+            return;
+        }
         var hostOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
         if (isDropping)
         {
-            var nextPickOrder = hostOrder.DoppelspielPartner != null? await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value) : null;
+            var nextPickOrder = hostOrder.DoppelspielPartner != null ? await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value) : null;
             bool hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(agvStatus.CorrelationId);
             Guid? nextPickOrderId = nextPickOrder == null || nextPickOrder.IsQueued ? null : nextPickOrder.CorrelationId;
             bool shouldPickNext = !hasLowBatteryLevel && nextPickOrderId != null && await CanBeUsedForDoppelspiel(nextPickOrder);
@@ -59,6 +67,17 @@ public class DoppelspielTriggerPointEventHandler(
         }
         logger.LogInformation("Picking agv {AgvCorrelationId} passed Doppelspiel trigger point and will pick at {Target} ", actionGroup.AssignedAgv!.Value, action.Target.NodeId!);
         await context.Publish(new PickingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId));
+    }
+
+    private async Task HandleManualPickDropActionGroup(IPublishEndpoint context, ActionGroup actionGroup, AgvAction action, bool isPicking)
+    {
+        string? sap = action.GetSap();
+        if (sap == null)
+        {
+            logger.LogError("SAP not given for manual pick drop action group.");
+            return;
+        }
+        await context.Publish(new ManualActionPassedDoppelspielTrigger(sap, action.Target.NodeId!, isPicking, actionGroup.HandlingUnit!, action.CorrelationId, actionGroup.AssignedAgv!.Value));
     }
 
     private async Task<bool> CanBeUsedForDoppelspiel(HostOrder? hostOrder)

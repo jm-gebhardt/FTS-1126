@@ -54,7 +54,7 @@ public class AgvActionCommandHandler(
         }
         bool gotPickAssignedOnStation = nodes.First() == nodes.Last();
 
-        if (action.ActionType == ActionType.Pick && gotPickAssignedOnStation)
+        if (action.ActionType == ActionType.Pick && gotPickAssignedOnStation && !actionGroup.IsManual)
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
@@ -160,20 +160,38 @@ public class AgvActionCommandHandler(
             return;
         }
 
-        if (!actionGroup.IsManual)
+        if (!actionGroup.IsManual || actionGroup.IsChargingOrder)
         {
             return;
         }
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
 
         var action = actionGroup.Actions.OrderBy(a => a.CompletedDate).Last();
-        if (action.ActionType == ActionType.Drop)
+        if (action is { ActionType: ActionType.Drop, ShouldSkip: false })
+        {
+            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+            {
+                string? sap = action.GetSap();
+                if (sap == null)
+                {
+                    logger.LogError("Sap not given on manual drop {ActionCorrelationId}, can not send tord", action.CorrelationId);
+                    return;
+                }
+                if (actionGroup.HandlingUnit == null)
+                {
+                    logger.LogError("Hu not given for manual drop {ActionCorrelationId}, can not send tord", action.CorrelationId);
+                    return;
+                }
+                conveyorCommunicator.ReportPalletDrop(action.Target.NodeId!, sap, actionGroup.HandlingUnit);
+            }
+        }
+
+        string? station = action.Target.NodeId;
+        if (station == null)
         {
             return;
         }
-
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", action.ActionType, actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
-        string station = action.Target.NodeId!;
         await context.Publish(new OccupyStation(station, agvCorrelationId));
     }
 
