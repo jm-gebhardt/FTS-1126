@@ -13,7 +13,7 @@ public abstract class SocketCommunicator<TTelegramType>
     where TTelegramType : TelegramBase
 {
     private readonly object _runLock = new();
-    
+
     private volatile bool _run;
 
     private readonly object _restartMeLock = new();
@@ -42,7 +42,7 @@ public abstract class SocketCommunicator<TTelegramType>
     /// The name of the thread
     /// </summary>
     public readonly string Name;
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -149,9 +149,9 @@ public abstract class SocketCommunicator<TTelegramType>
     {
         try
         {
-             SetRun = true;
-            _cts =  new CancellationTokenSource();  
-            _thread = new Thread( _ => Communicate(_cts.Token));
+            SetRun = true;
+            _cts = new CancellationTokenSource();
+            _thread = new Thread(_ => Communicate(_cts.Token));
             _thread.Start();
             return true;
         }
@@ -256,38 +256,38 @@ public abstract class SocketCommunicator<TTelegramType>
             Thread.CurrentThread.Name ??= Name;
 
             Logger.LogDebug("Started thread for {Name}, cancellation requested {IsCancellationRequested}", Name, cancellationToken.IsCancellationRequested);
+
+            while (_run && !cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    if (ExchangeMessages())
+                    {
+                        Logger.LogDebug("Exchange was successful");
+                    }
+                    Thread.Sleep(_threadSleepingTime);
+                }
+                catch (Exception ex)
+                {
+                    if (_run)
+                    {
+                        Logger.LogError("Could not communicate, got : {ErrorMessage}", ex.Message);
+                        SetRun = false;
+                        RestartMe = true;
+                        SendRestartRequest("Failed to communicate");
+                    }
+                }
+            }
+            Logger.LogDebug("Stopped communicating in thread for {Name}", Name);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                Logger.LogDebug("Restarting worker");
+                RestartWorker();
+            }
         }
         catch (Exception ex)
         {
             Logger.LogError("Could not communicate, got : {ErrorMessage} - restarting worker", ex.Message);
-            RestartWorker();
-        }
-
-        while (_run && !cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                if (ExchangeMessages())
-                {
-                    Logger.LogDebug("Exchange was successful");
-                }
-                Thread.Sleep(_threadSleepingTime);
-            }
-            catch (Exception ex)
-            {
-                if (_run)
-                {
-                    Logger.LogError("Could not communicate, got : {ErrorMessage}", ex.Message);
-                    SetRun = false;
-                    RestartMe = true;
-                    SendRestartRequest("Failed to communicate");
-                }
-            }
-        }
-        Logger.LogDebug("Stopped communicating in thread for {Name}", Name);
-        if (!cancellationToken.IsCancellationRequested)
-        {
-            Logger.LogDebug("Restarting worker");
             RestartWorker();
         }
     }
