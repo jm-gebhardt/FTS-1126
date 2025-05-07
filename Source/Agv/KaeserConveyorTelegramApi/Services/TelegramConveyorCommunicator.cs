@@ -10,21 +10,29 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 
 /// <inheritdoc cref="IConveyorCommunicator"/>>
 [PublicAPI]
-public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] ToConveyorTelegramProcessor aplWeStationTelegramProcessor, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] ToConveyorTelegramProcessor agvCargoStateTelegramProcessor) : IConveyorCommunicator
+public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] ToWePlcTelegramProcessor toWePlcTelegramProcessor, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] AgvAplCargoStateProcessor agvCargoStateTelegramProcessor) : IConveyorCommunicator
 {
     /// <inheritdoc cref="IConveyorCommunicator"/>>
     public void ReportAplCargoState(bool cargo)
     {
         var agvAplCargoState = new AgvAplCargoState(cargo, DateTime.UtcNow);
         agvCargoStateTelegramProcessor.EnqueueTelegram(agvAplCargoState);
-        logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvAplCargoState.ToString(), ServiceKeyProvider.AgvCargoState);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvAplCargoState.ToString(), ServiceKeyProvider.AgvCargoState);
     }
     
     /// <inheritdoc cref="IConveyorCommunicator"/>>
     public void ReportPalletPickDropStation(string targetStation, string? pickStation, string? dropStation, string? hu)
     {
         var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, hu, DateTime.UtcNow);
-        aplWeStationTelegramProcessor.EnqueueTelegram(agvWeStation);
-        logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvWeStation.ToString(), ServiceKeyProvider.AplWeStation);
+        toWePlcTelegramProcessor.EnqueueTelegram(agvWeStation);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvWeStation.ToString(), ServiceKeyProvider.AplWeStation);
+    }
+
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void ReportPalletDrop(string source, string destination, string hu)
+    {
+        var tord = new Tord(source, destination, hu, DateTime.UtcNow);
+        toWePlcTelegramProcessor.EnqueueTelegram(tord);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", tord.ToString(), ServiceKeyProvider.AplWeStation);
     }
 }

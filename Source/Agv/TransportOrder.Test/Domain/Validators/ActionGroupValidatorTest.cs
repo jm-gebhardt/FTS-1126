@@ -392,6 +392,7 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Simulation,
+            false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -427,6 +428,7 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Simulation,
+            false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -462,6 +464,7 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Simulation,
+            false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)

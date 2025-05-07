@@ -13,7 +13,7 @@ public class TelegramHostCommunicator(ILogger<TelegramHostCommunicator> logger, 
     /// <inheritdoc cref="IHostCommunicator"/>>
     public async Task ReportOrderCompletion(string hu, string orderId, string destination)
     {
-        logger.LogInformation("Reporting order completion to prismat");
+        logger.LogDebug("Reporting order completion to prismat");
         telegramProcessor.EnqueueTelegram(new Arrival(DateTime.UtcNow, destination, hu));
         await Task.CompletedTask;
     }
@@ -21,21 +21,21 @@ public class TelegramHostCommunicator(ILogger<TelegramHostCommunicator> logger, 
     /// <inheritdoc cref="IHostCommunicator"/>>
     public void ReportPickCompletion(string hu, string position, DateTime time)
     {
-        logger.LogInformation("Reporting pick completion to prismat");
+        logger.LogDebug("Reporting pick completion to prismat");
         telegramProcessor.EnqueueTelegram(new Pick(hu, position, time));
     }
 
     /// <inheritdoc cref="IHostCommunicator"/>>
     public void ReportOrderError(string hu, string source, string destination, int errorCode, string errorInfo, DateTime time)
     {
-        logger.LogInformation("Reporting transport order error to prismat");
+        logger.LogDebug("Reporting transport order error to prismat");
         telegramProcessor.EnqueueTelegram(new TordError(hu, source, destination, errorInfo, errorCode, time));
     }
     
     /// <inheritdoc cref="IHostCommunicator"/>>
     public void ReportSystemStatus(bool isReady, int errorCode, string errorInfo, DateTime time)
     {
-        logger.LogInformation("Reporting system status to prismat");
+        logger.LogDebug("Reporting system status to prismat");
         telegramProcessor.EnqueueTelegram(new Status(isReady? SystemState.AUTO: SystemState.AUS, time, errorCode, errorInfo));
     }
 }

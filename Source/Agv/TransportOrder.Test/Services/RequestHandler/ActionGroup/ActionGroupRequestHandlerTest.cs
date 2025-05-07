@@ -312,4 +312,17 @@ public class ActionGroupRequestHandlerTest
 
         await fixture.ShouldHavePublishedAsync<ReassignActionGroup>();
     }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupQueueing_ValidData_PublishesForceQueueActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        ActionGroupRequestHandlerTestFixture<TriggerActionGroupQueueing, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupQueueing, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup).BuildAsync();
+
+        await fixture.GetResponseAsync<Success>(new TriggerActionGroupQueueing(actionGroup.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<ForceQueueActionGroup>();
+    }
 }

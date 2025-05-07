@@ -43,11 +43,6 @@ public class StationCommandHandler(
 
         var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
 
-        if (nodeState != null)
-        {
-            await context.Publish(new NodeStateChanged(nodeState, null, station.LockedBy, station.LockReason, station.LockDescription));
-        }
-
         station.Lock(user, reason, lockDescription, lockOrderHandling);
 
         await stationRepository.Update(station);
@@ -56,6 +51,11 @@ public class StationCommandHandler(
             $"User {user} locked station because {reason}",
             new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
         await context.Publish(new StationLocked(station.Name));
+
+        if (nodeState != null)
+        {
+            await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        }
     }
 
     /// <summary>
@@ -77,13 +77,13 @@ public class StationCommandHandler(
 
         var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
 
-        if (nodeState != null)
-        {
-            await context.Publish(new NodeStateChanged(nodeState, null, station.LockedBy, station.LockReason, station.LockDescription));
-        }
-
         station.Unlock();
         await stationRepository.Update(station);
+
+        if (nodeState != null)
+        {
+            await context.Publish(new NodeStateChanged(nodeState, station.Id, user, station.LockReason, station.LockDescription));
+        }
 
         logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked",
             $"User {user} unlocked station",

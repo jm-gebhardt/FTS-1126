@@ -81,6 +81,11 @@ public record AgvActionDto
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; init; }
 
     /// <summary>
+    /// Additional information for this action, often used for external systems.
+    /// </summary>
+    public string? AdditionalInfo { get; set; }
+
+    /// <summary>
     /// AgvAction model
     /// <param name="correlationId">Correlation ID</param>
     /// <param name="parentId">Action group ID</param>

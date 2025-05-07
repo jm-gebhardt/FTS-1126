@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
@@ -27,6 +28,7 @@ public static class BusRegistrationExtension
             partitioner.PartitionMessageById<FinishHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<CancelInvalidHostOrder, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<AbortHostOrder, HostOrderCommandHandler>(c);
             c.Message<PassTriggerPoint>(x => x.UsePartitioner(partitioner, p => p.Message.DroppingHostOrderCorrelationId));
 
             var huPartitioner = c.CreatePartitioner(16);
@@ -46,7 +48,9 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<TriggerEventHandler>();
         cfg.AddConsumer<QueueEventHandler>();
         cfg.AddConsumer<StationEventHandler>();
+        cfg.AddConsumer<StationCommandHandler>();
 
+        cfg.AddRequestClient<AddOrUpdateStationGroup>();
         cfg.AddRequestClient<GetQueueFillQuantities>();
         cfg.AddRequestClient<GetTriggerMapping>();
         return cfg;

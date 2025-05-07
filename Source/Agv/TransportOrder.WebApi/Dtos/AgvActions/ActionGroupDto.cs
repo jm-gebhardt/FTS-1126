@@ -59,6 +59,17 @@ public record ActionGroupDto : DatedMessage
     public ActionGroupCreator Creator { get; init; }
 
     /// <summary>
+    /// True, if the action group is queued.
+    /// </summary>
+    public bool IsQueued { get; init; }
+
+    /// <summary>
+    /// The handling unit corresponding to this ActionGroup.
+    /// </summary>
+    [UsedImplicitly]
+    public string? HandlingUnit { get; set; }
+
+    /// <summary>
     /// List of actions
     /// </summary>
     public IList<AgvActionDto> Actions

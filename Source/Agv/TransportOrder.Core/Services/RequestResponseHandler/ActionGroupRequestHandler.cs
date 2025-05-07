@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -20,23 +21,24 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<GetActionGroupCountsByState>,
     IConsumer<TriggerActionGroupAbortion>,
     IConsumer<TriggerActionGroupReset>,
-    IConsumer<TryReassignActionGroup>
+    IConsumer<TryReassignActionGroup>,
+    IConsumer<TriggerActionCompletion>,
+    IConsumer<TriggerActionGroupQueueing>
 {
     private readonly IBus _bus;
     private readonly IActionGroupRetrievalService _retrievalService;
     private readonly IActionGroupRepository _actionGroupRepository;
+    private readonly ILogger<ActionGroupRequestHandler> _logger;
 
     /// <summary>
     ///  Initializes a new <see cref="ActionGroupRequestHandler"/> instance.
     /// </summary>
-    /// <param name="retrievalService">The action group read model retrieval service.</param>
-    /// <param name="actionGroupRepository">The action group repository.</param>
-    /// <param name="bus">The message bus.</param>
-    public ActionGroupRequestHandler(IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IBus bus)
+    public ActionGroupRequestHandler(ILogger<ActionGroupRequestHandler> logger, IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IBus bus)
     {
         _bus = bus;
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
+        _logger = logger;
     }
 
     /// <summary>
@@ -124,6 +126,34 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         await _bus.Publish(new ReassignActionGroup(actionGroup.CorrelationId));
 
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TriggerActionCompletion"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TriggerActionCompletion> context)
+    {
+        var (correlationId, actionCorrelationId) = context.Message;
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
+        if (actionGroup.Actions.All(a => a.CorrelationId != actionCorrelationId))
+        {
+            throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionCorrelationId);
+        }
+
+        _logger.LogInformation("Triggering completion of action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", correlationId, actionCorrelationId);
+        await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId));
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TriggerActionGroupQueueing"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TriggerActionGroupQueueing> context)
+    {
+        var actionGroupCorrelationId = context.Message.CorrelationId;
+        await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
+        await _bus.Publish(new ForceQueueActionGroup(actionGroupCorrelationId));
         await context.RespondAsync(new Success());
     }
 }

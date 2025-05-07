@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.Common.Testing.Time;
@@ -15,12 +15,13 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi;
 
 public class TelegramConveyorCommunicatorTestFixture: FixtureBase
 {
-    public ToConveyorTelegramProcessor Processor { get; private set; } = null!;
+    public AgvAplCargoStateProcessor AplCargoStateProcessor { get; private set; } = null!;
 
+    public ToWePlcTelegramProcessor ToWePlcTelegramProcessor { get; private set; } = null!;
+   
     public TelegramConveyorCommunicator Communicator { get; private set; } = null!;
 
-    private readonly ObservableConcurrentQueue<ConveyorTelegram> _agvCargoStateQueue = new();
-    private readonly ObservableConcurrentQueue<ConveyorTelegram> _aplWeStationQueue = new();
+    private readonly ConcurrentQueue<ConveyorTelegram> _queue = new();
 
     public TelegramConveyorCommunicatorTestFixture()
     {
@@ -28,24 +29,26 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
         {
             s.AddSingleton(_ => TestConfigurationProvider.GetConfiguration());
             s.AddSingleton(_ => new Mock<ILogger<TelegramConveyorCommunicator>>().Object);
-            s.AddSingleton(_ => new Mock<ILogger<ToConveyorTelegramProcessor>>().Object);
-            s.AddKeyedSingleton<ToConveyorTelegramProcessor>(ServiceKeyProvider.AplWeStation,
+            s.AddSingleton(_ => new Mock<ILogger<ToWePlcTelegramProcessor>>().Object);
+            s.AddSingleton(_ => new Mock<ILogger<AgvAplCargoStateProcessor>>().Object);
+            s.AddKeyedSingleton<ToWePlcTelegramProcessor>(ServiceKeyProvider.AplWeStation,
                 (serviceProvider, _) =>
                 {
-                    var logger = serviceProvider.GetRequiredService<ILogger<ToConveyorTelegramProcessor>>();
+                    var logger = serviceProvider.GetRequiredService<ILogger<ToWePlcTelegramProcessor>>();
                     var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
-                    return new ToConveyorTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration(), _aplWeStationQueue);
+                    return new ToWePlcTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration(), _queue);
                 });
 
-            s.AddKeyedSingleton<ToConveyorTelegramProcessor>(ServiceKeyProvider.AgvCargoState,
+            s.AddKeyedSingleton<AgvAplCargoStateProcessor>(ServiceKeyProvider.AgvCargoState,
                 (serviceProvider, _) =>
                 {
-                    var logger = serviceProvider.GetRequiredService<ILogger<ToConveyorTelegramProcessor>>();
+                    var logger = serviceProvider.GetRequiredService<ILogger<AgvAplCargoStateProcessor>>();
                     var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
-                    return new ToConveyorTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration(), _agvCargoStateQueue);
+                    return new AgvAplCargoStateProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration());
                 });
             s.AddSingleton(_ => new FakeTimeProvider());
-            s.AddSingleton<ToConveyorTelegramProcessor>();
+            s.AddSingleton<ToWePlcTelegramProcessor>();
+            s.AddSingleton<AgvAplCargoStateProcessor>();
             s.AddSingleton<TelegramConveyorCommunicator>();
         });
     }
@@ -53,7 +56,8 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
     public TelegramConveyorCommunicatorTestFixture Build(string serviceKey)
     {
         base.Build();
-        Processor = Provider.GetKeyedService<ToConveyorTelegramProcessor>(serviceKey)!;
+        ToWePlcTelegramProcessor = Provider.GetKeyedService<ToWePlcTelegramProcessor>(serviceKey)!;
+        AplCargoStateProcessor = Provider.GetKeyedService<AgvAplCargoStateProcessor>(serviceKey)!;
         Communicator = Provider.GetRequiredService<TelegramConveyorCommunicator>();
         return this;
     }

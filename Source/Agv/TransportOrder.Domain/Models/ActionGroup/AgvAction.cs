@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -10,12 +12,12 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 /// Agv Action
 /// </summary>
 [PublicAPI]
-public class AgvAction : IParentedBy<Guid>
+public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 {
     /// <summary>
     /// Unique CorrelationId of this action
     /// </summary>
-    public Guid CorrelationId { get; set; }
+    public Guid CorrelationId { get; init; }
 
     /// <inheritdoc/>
     public Guid ParentId { get; init; }
@@ -80,6 +82,11 @@ public class AgvAction : IParentedBy<Guid>
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; set; }
 
     /// <summary>
+    /// Additional information for this action, often used for external systems.
+    /// </summary>
+    public string? AdditionalInfo { get; set; }
+
+    /// <summary>
     /// Duration that the action has been paused for.
     /// </summary>
     public TimeSpan PausedDuration { get; set; } = TimeSpan.Zero;
@@ -103,6 +110,19 @@ public class AgvAction : IParentedBy<Guid>
     /// True if the action is complete, i.e. its target is not defined.
     /// </summary>
     public bool IsIncomplete => Target.NodeId == string.Empty;
+
+    /// <summary>
+    /// True, if Dockfront has been set externally.
+    /// </summary>
+    public bool HasDockFront()
+    {
+        if (InfoToAgv == null)
+        {
+            return false;
+        }
+
+        return InfoToAgv.TryGetValue(InfoToAgvKey.DockFront, out string? value) && bool.TryParse(value, out _);
+    }
 
     /// <summary>
     /// Constructor
@@ -142,12 +162,47 @@ public class AgvAction : IParentedBy<Guid>
     /// Just to satisfy Entity Framework
     /// </summary>
     [UsedImplicitly]
-    [JsonConstructor]
     public AgvAction()
     {
         CorrelationId = Guid.Empty;
-        ActionType = ActionType.Pick;
         ParentId = Guid.Empty;
+    }
+
+    /// <inheritdoc cref="AgvAction"/>>
+    [JsonConstructor]
+    public AgvAction(
+        Guid correlationId,
+        Guid parentId,
+        int sequence,
+        ActionState state,
+        ActionType actionType,
+        ActionTarget target,
+        string[] nodes,
+        Guid[] edges,
+        DateTime createdDate,
+        DateTime? startedDate,
+        DateTime? completedDate,
+        DateTime? pausedDate,
+        Dictionary<InfoToAgvKey, string>? infoToAgv,
+        TimeSpan pausedDuration,
+        bool shouldSkip
+    )
+    {
+        CorrelationId = correlationId;
+        ParentId = parentId;
+        Sequence = sequence;
+        State = state;
+        ActionType = actionType;
+        Target = target;
+        Nodes = nodes;
+        Edges = edges;
+        CreatedDate = createdDate;
+        StartedDate = startedDate;
+        CompletedDate = completedDate;
+        PausedDate = pausedDate;
+        InfoToAgv = infoToAgv;
+        PausedDuration = pausedDuration;
+        ShouldSkip = shouldSkip;
     }
 
     /// <summary>
@@ -244,20 +299,26 @@ public class AgvAction : IParentedBy<Guid>
     /// Set dock front of an action.
     /// </summary>
     /// <param name="needsRotation">True, if the pallet needs rotation.</param>
-    /// <param name="previousDockFront">Value of dockfront of the previous action.</param>
+    /// <param name="previousDockFront">Value of dockFront of the previous action.</param>
     public void SetDockFront(bool needsRotation, bool? previousDockFront)
     {
+        bool dockFront;
         switch (ActionType)
         {
             case ActionType.Pick:
             case ActionType.Move:
-                SetDockFrontValue(previousDockFront?? true);
+                dockFront = previousDockFront?? true;
+                SetDockFrontValue(dockFront);
                 return;
 
             case ActionType.Drop:
             {
-                bool value = needsRotation ? previousDockFront!.Value : !previousDockFront!.Value;
-                SetDockFrontValue(value);
+                dockFront = needsRotation ? previousDockFront!.Value : !previousDockFront!.Value;
+                if (ForceDropBackWards())
+                {
+                    dockFront = false;
+                }
+                SetDockFrontValue(dockFront);
                 return;
             }
 
@@ -267,10 +328,19 @@ public class AgvAction : IParentedBy<Guid>
         }
     }
 
-    private void SetDockFrontValue(bool dockFront)
+    /// <summary>
+    /// Sets the dock front of this Action
+    /// </summary>
+    /// <param name="dockFront">What to set the dock front to.</param>
+    public void SetDockFrontValue(bool dockFront)
     {
         InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
         InfoToAgv[InfoToAgvKey.DockFront] = dockFront.ToString();
+    }
+
+    private bool ForceDropBackWards()
+    {
+        return InfoToAgv != null && InfoToAgv.GetForceDroppingBackwards();
     }
 
     /// <summary>
@@ -278,6 +348,132 @@ public class AgvAction : IParentedBy<Guid>
     /// </summary>
     public override string ToString()
     {
-        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {Target.NodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId}";
+        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {Target.NodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId} Type: {ActionType}, State {State}, ShouldSkip {ShouldSkip}";
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public bool Equals(AgvAction? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        if (!CorrelationId.Equals(other.CorrelationId))
+        {
+            return false;
+        }
+        if (!ParentId.Equals(other.ParentId))
+        {
+            return false;
+        }
+        if (Sequence != other.Sequence)
+        {
+            return false;
+        }
+        if (State != other.State)
+        {
+            return false;
+        }
+        if (ActionType != other.ActionType)
+        {
+            return false;
+        }
+        if (!Target.Equals(other.Target))
+        {
+            return false;
+        }
+        if (!Nodes.Equals(other.Nodes))
+        {
+            return false;
+        }
+        if (!Edges.Equals(other.Edges))
+        {
+            return false;
+        }
+        if (!CreatedDate.Equals(other.CreatedDate))
+        {
+            return false;
+        }
+        if (!Nullable.Equals(StartedDate, other.StartedDate))
+        {
+            return false;
+        }
+        if (!Nullable.Equals(CompletedDate, other.CompletedDate))
+        {
+            return false;
+        }
+        if (!Nullable.Equals(PausedDate, other.PausedDate))
+        {
+            return false;
+        }
+        if (!Equals(InfoToAgv, other.InfoToAgv))
+        {
+            return false;
+        }
+        if (!PausedDuration.Equals(other.PausedDuration))
+        {
+            return false;
+        }
+        if (ShouldSkip != other.ShouldSkip)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+        return Equals((AgvAction)obj);
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+        hashCode.Add(value: CorrelationId);
+        return hashCode.ToHashCode();
+    }
+
+    /// <summary>
+    /// Gets the SAP information from the additional action information.
+    /// </summary>
+    /// <returns>The value of SAP.</returns>
+    public string? GetSap()
+    {
+        return AdditionalInfo.ExtractValue("SAP", ";");
+    }
+
+    /// <summary>
+    /// Set the lift height based on additional action information.
+    /// </summary>
+    public void SetLiftHeight()
+    {
+        string? liftHeight = AdditionalInfo.ExtractValue("LiftHeight", ";");
+        if (liftHeight == null)
+        {
+            return;
+        }
+        
+        InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
+        InfoToAgv[InfoToAgvKey.LiftHeight] = liftHeight;
     }
 }

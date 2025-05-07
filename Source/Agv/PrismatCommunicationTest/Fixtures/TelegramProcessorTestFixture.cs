@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
@@ -27,6 +28,7 @@ public class TelegramProcessorTestFixture<TProcessor, TTelegramType> : MassTrans
             }
             s.AddSingleton(_ => new Mock<ILogger<TProcessor>>().Object);
             s.AddSingleton<TProcessor>();
+            s.AddSingleton<ConcurrentQueue<TTelegramType>>();
             s.AddSingleton(_ => new ObservableConcurrentQueue<TTelegramType>());
         });
     }

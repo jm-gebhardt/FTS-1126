@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.TriggerDefinition;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TriggerDecisionPoint1;
 
@@ -12,7 +13,7 @@ namespace Gebhardt.Acc.TriggerDecisionPoint1;
 /// Represents a trigger at decision point 1.
 /// </summary>
 [UsedImplicitly]
-public class DecisionPoint1Trigger(IBus bus) : IFfcTrigger
+public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logger) : IFfcTrigger
 {
     private const string PropertyName = "StationCount";
     private const string PropertyDescription = "Anzahl der Stationen, die als Ziel für APL 1060 verwendet werden können, d.h. wenn 3 : WE01, WE02, WE03, wenn 2: WE01, WE02, wenn 1: WE01";
@@ -45,6 +46,7 @@ public class DecisionPoint1Trigger(IBus bus) : IFfcTrigger
         var stationCountParameter = parameters.GetValueOrDefault(PropertyName) ??
                                     GetDefaultConfigurationParameters().GetValueOrDefault(PropertyName);
         int stationCount = int.Parse(stationCountParameter!.Value);
+        logger.LogInformation("Current StationCount set to {stationCount}", stationCount);
 
         await bus.Publish(new AgvPassedDecisionPoint1(agvData, agvStatus, actionGroup, cargo, errors, stationCount));
     }

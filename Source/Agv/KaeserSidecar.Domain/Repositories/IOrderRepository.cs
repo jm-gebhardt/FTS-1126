@@ -6,24 +6,23 @@
 public interface IOrderRepository
 {
     /// <summary>
-    /// Store reporting of a pick at a station.
+    /// Store reporting of an order.
     /// </summary>
     /// <param name="station">The station.</param>
     /// <param name="orderId">The order id.</param>
-    Task StorePickOrderReport(string station, Guid orderId);
+    Task StoreOrderReport(string station, Guid orderId);
 
     /// <summary>
-    /// Remove report of a pick at a station.
+    /// Remove report of an order.
     /// </summary>
     /// <param name="station">The station.</param>
     /// <param name="orderId">The order id.</param>
-    Task RemovePickOrderReport(string station, Guid orderId);
+    Task RemoveOrderReport(string station, Guid orderId);
 
     /// <summary>
-    /// True, if the order for a pick at this station has been reported to the conveyors.
+    /// True, if the order for this station has been reported to the conveyors.
     /// </summary>
-    /// <param name="station">The pick station</param>
+    /// <param name="station">The station</param>
     /// <param name="orderId">The order id.</param>
-    /// <returns></returns>
     Task<bool> HasOrderBeenReported(string station, Guid orderId);
 }

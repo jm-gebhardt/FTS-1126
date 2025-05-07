@@ -17,14 +17,24 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 /// Provides handlers for host order related commands.
 /// </summary>
 [UsedImplicitly]
-public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IHostOrderRepository hostOrderRepository, IHostCommunicator hostCommunicator, KaeserGraphConfiguration configuration, IHostOrderValidationService validationService) :
+public class HostOrderCommandHandler(
+    ILogger<HostOrderCommandHandler> logger,
+    IHostOrderRepository hostOrderRepository,
+    IHostCommunicator hostCommunicator,
+    KaeserGraphConfiguration configuration,
+    IHostOrderValidationService validationService,
+    ISystemStatusRepository systemStatusRepository,
+    IStationRepository stationRepository) :
     IConsumer<CreateHostOrder>,
     IConsumer<CancelHostOrder>,
     IConsumer<CancelInvalidHostOrder>,
     IConsumer<HandleHostOrderStart>,
     IConsumer<FinishHostOrder>,
     IConsumer<FinishPick>,
-    IConsumer<PassTriggerPoint>
+    IConsumer<PassTriggerPoint>,
+    IConsumer<AbortHostOrder>,
+    IConsumer<TryQueueDelayedOrder>,
+    IConsumer<ResetDoppelspielPartner>
 
 {
     /// <summary>
@@ -72,6 +82,13 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             await hostOrderRepository.UpdateAsync(dropOrder);
             await hostOrderRepository.SaveAsync();
             logger.LogInformation("Doppelspiel expected for order  {OrderCorrelationId}", hostOrder.CorrelationId);
+            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, dropOrder.AssignedAgv);
+            return;
+        }
+
+        if (await ViolatesAklAgvLimitation(hostOrder))
+        {
+            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, hostOrder.AssignedAgv);
             return;
         }
 
@@ -117,8 +134,50 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         }
     }
 
+    private async Task CreateHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null)
+    {
+        // Short circuit
+        var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
+        if (actionGroup != null)
+        {
+            actionGroup.AssignedAgv = assignedAgv;
+            await context.Publish(new CreateActionGroup(actionGroup));
+            hostOrder.IsQueued = false;
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
+        // Long circuit
+
+        if (hostOrder.HasUnknownPickTarget(configuration))
+        {
+            actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
+            actionGroup.AssignedAgv = assignedAgv;
+            await context.Publish(new CreateActionGroup(actionGroup));
+            hostOrder.IsQueued = false;
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
+        if (hostOrder.HasUnknownDropTarget(configuration))
+        {
+            actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
+            actionGroup.AssignedAgv = assignedAgv;
+            await context.Publish(new CreateActionGroup(actionGroup));
+            hostOrder.IsQueued = false;
+            await hostOrderRepository.SaveAsync();
+        }
+    }
+
     private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null, string? pickNode = null)
     {
+        if (await ViolatesAklAgvLimitation(hostOrder))
+        {
+            hostOrder.SetDoppelspielPartner(null);
+            await hostOrderRepository.SaveAsync();
+            return;
+        }
+
         ActionGroup? actionGroup;
         if (pickNode != null && !hostOrder.HasUnknownDropTarget(configuration))
         {
@@ -172,6 +231,46 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             hostOrder.IsQueued = true;
             await hostOrderRepository.SaveAsync();
         }
+    }
+
+    private async Task<bool> ViolatesAklAgvLimitation(HostOrder hostOrder)
+    {
+        if (!hostOrder.IsShortCircuitOrder(configuration))
+        {
+            // Long loop order
+            return false;
+        }
+
+        if (configuration.PrismatInputLanes.Contains(hostOrder.Source) && hostOrder.DoppelspielPartner != null)
+        {
+            // Already reported Doppelspiel partner
+            return false;
+        }
+
+        var systemStatus = await systemStatusRepository.GetStatus();
+        if (systemStatus is not { UseAklAgvLimit: true })
+        {
+            return false;
+        }
+
+        var stationGroup = await stationRepository.GetStationGroup(hostOrder.Source, hostOrder.Target);
+        if (stationGroup == null)
+        {
+            return false;
+        }
+
+        if (stationGroup.IsOccupied)
+        {
+            logger.LogWarning("Delaying host order {CorrelationId}, station group {StationGroupId} at {FirstSource}/{LastSource} is occupied.", hostOrder.CorrelationId, stationGroup.GroupId, stationGroup.Sources.First(), stationGroup.Sources.Last());
+            return true;
+        }
+
+        if (await hostOrderRepository.HasCurrentHostOrdersForStationGroup(stationGroup.Sources, stationGroup.Targets))
+        {
+            logger.LogWarning("Delaying host order {CorrelationId}, orders are heading towards it.", hostOrder.CorrelationId);
+            return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -250,6 +349,12 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
             dropInfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeightDrop.Value.ToString(CultureInfo.InvariantCulture) } };
         }
 
+        if (configuration.IsDropAtAkl(orderDetails.Destination))
+        {
+            dropInfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
+            dropInfoToAgv.Add(InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture));
+        }
+
         return (pickInfoToAgv, dropInfoToAgv);
     }
 
@@ -274,7 +379,8 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
         hostOrder.Finish(timestamp);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await hostCommunicator.ReportOrderCompletion(hostOrder.Hu, hostOrder.OrderId, hostOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
-
+        logger.LogInformation("Finished host order {HostOrder} with DoppelSpielPartner {Partner}", hostOrder.CorrelationId, hostOrder.DoppelspielPartner);
+     
         if (hostOrder.DoppelspielPartner != null)
         {
             var doppelSpielPartner = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner!.Value);
@@ -293,13 +399,16 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
     {
         var (correlationId, actionCorrelationId, timestamp) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-        var pickAction = hostOrder.Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick && a.CorrelationId == actionCorrelationId);
-        if (pickAction == null)
+        hostOrder.FinishAction(timestamp, ActionType.Pick);
+        var pickAction = hostOrder.Actions.SingleOrDefault(a => a.ActionType == ActionType.Pick);
+        var action = hostOrder.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
+        if (pickAction == null || (action != null && action.ActionType != ActionType.Pick))
         {
             logger.LogError("Could not report completion off pick action {ActionCorrelationId} of group {CorrelationId}, action not found ", actionCorrelationId, correlationId);
             return;
         }
         hostCommunicator.ReportPickCompletion(hostOrder.Hu, pickAction.Node, timestamp);
+        await hostOrderRepository.UpdateAsync(hostOrder);
     }
 
     /// <summary>
@@ -336,5 +445,79 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger, IH
                 await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
             }
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AbortHostOrder"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AbortHostOrder> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        try
+        {
+            var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+            hostOrder.Cancel(DateTime.UtcNow);
+            await hostOrderRepository.UpdateAsync(hostOrder);
+            await hostOrderRepository.SaveAsync();
+
+            if (hostOrder.DoppelspielPartner != null)
+            {
+                var pickingHostOrder = await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value);
+                if (!pickingHostOrder.IsQueued) // avoid queue loops
+                {
+                    logger.LogInformation("Doppelspiel partner got aborted: queueing partner order {HostOrder} calling for different agv", pickingHostOrder.CorrelationId);
+                    await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow);
+                }
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // not order known to prismat
+        }
+    }
+    
+    /// <summary>
+    /// Handles the <see cref="TryQueueDelayedOrder"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryQueueDelayedOrder> context)
+    {
+        var stationGroup = await stationRepository.GetStationGroup(context.Message.Source, context.Message.Target);
+        if (stationGroup == null)
+        {
+            return;
+        }
+
+        var hostOrder = await hostOrderRepository.GetNextHostOrderForStationGroup(stationGroup.Sources, stationGroup.Targets);
+        if (hostOrder == null)
+        {
+            return;
+        }
+        hostOrder.SetDoppelspielPartner(null);
+        await QueueHostOrder(context, hostOrder, DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ResetDoppelspielPartner"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ResetDoppelspielPartner> context)
+    {
+        var actionGroupId = context.Message.ActionGroupCorrelationId;
+        
+        var hostOrder = await hostOrderRepository.GetByIdAsync(actionGroupId);
+
+        Guid? partner = hostOrder.DoppelspielPartner;
+
+        if (partner == null)
+        {
+            return;
+        }
+
+        var partnerOrder = await hostOrderRepository.GetByIdAsync(partner.Value);
+
+        hostOrder.SetDoppelspielPartner(null);
+        partnerOrder.SetDoppelspielPartner(null);
+
+        await hostOrderRepository.UpdateAsync(hostOrder);
+        await hostOrderRepository.UpdateAsync(partnerOrder);
     }
 }

@@ -116,4 +116,89 @@ public class AgvActionTest
 
         action.ShouldSkip.ShouldBeTrue();
     }
+
+    [TestMethod]
+    public void Equals_IdenticalAction_ReturnsTrue()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid());
+        var other = new TransportOrder.Domain.Models.ActionGroup.AgvAction(action.CorrelationId, ActionType.Drop, new ActionTarget(string.Empty), action.ParentId){CreatedDate = action.CreatedDate};
+        action.Equals(other).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void HasDockFront_DockFrontSet_ReturnsTrue()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid());
+        action.SetDockFrontValue(true);
+
+        action.HasDockFront().ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void HasDockFront_DockFrontNotSet_ReturnsFalse()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid());
+
+        action.HasDockFront().ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void SetLiftHeight_LiftHeightInAdditionalInfo_LiftHeightSet()
+    {
+        const string liftHeight = "0.9";
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        {
+            AdditionalInfo = $"LiftHeight:{liftHeight}"
+        };
+        action.SetLiftHeight();
+        action.InfoToAgv.ShouldNotBeNull();
+        action.InfoToAgv[InfoToAgvKey.LiftHeight].ShouldBe(liftHeight);
+    }
+
+    [TestMethod]
+    public void SetLiftHeight_InfoToAgvExists_LiftHeightNotInAdditionalInfo_LiftHeightNotSet()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        {
+            AdditionalInfo = "Some other info"
+        };
+        action.SetDockFrontValue(true);
+        action.SetLiftHeight();
+        action.InfoToAgv.ShouldNotBeNull();
+        action.InfoToAgv.TryGetValue(InfoToAgvKey.LiftHeight, out string? liftHeight);
+        liftHeight.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void SetLiftHeight_InfoToAgvDoesNotExist_LiftHeightNotInAdditionalInfo_LiftHeightNotSet()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        {
+            AdditionalInfo = "Some other info"
+        };
+        action.SetLiftHeight();
+        action.InfoToAgv.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void GetSap_ValidData_ReturnsSapValue()
+    {
+        const string sap = "1020";
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        {
+            AdditionalInfo = $"SAP:{sap}"
+        };
+
+        action.GetSap().ShouldBe(sap);
+    }
+
+    [TestMethod]
+    public void GetSapSapNotSet_ReturnsNull()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        {
+            AdditionalInfo = "Some other info"
+        };
+        action.GetSap().ShouldBeNull();
+    }
 } 

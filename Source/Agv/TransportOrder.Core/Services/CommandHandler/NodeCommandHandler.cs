@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -22,6 +24,7 @@ public class NodeCommandHandler(
     IQueueRepository queueRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository, 
+    IGraphRepository graphRepository,
     ILogger<NodeCommandHandler> logger) :
     IConsumer<FreeNode>,
     IConsumer<UpdateNodeOccupancy>,
@@ -33,19 +36,28 @@ public class NodeCommandHandler(
     public async Task Consume(ConsumeContext<FreeNode> context)
     {
         string nodeId = context.Message.NodeId;
+        bool reservedOnly = context.Message.ReservedOnly;
         var station = await stationRepository.GetStation(nodeId);
-        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
-        {
-            logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
-        }
-
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
         if (nodeState == null)
         {
             logger.LogWarning("Could not retrieve node state for node {NodeId}", nodeId);
             return;
         }
-        await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+
+        if (reservedOnly && nodeState.NodeState != NodeLockState.Reserved)
+        {
+            logger.LogWarning("Node {NodeId} not reserved, but free is restricted to reserved nodes", nodeId);
+            return;
+        }
+
+        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
+        {
+            logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
+        }
+
+        nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
+        await context.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 
     /// <summary>
@@ -55,12 +67,13 @@ public class NodeCommandHandler(
     {
         await Task.Delay(Agv.OfflineTolerance);
         ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(context.Message.AgvCorrelationId);
+        ICollection<GraphNode> nodes = await graphRepository.GetNodesByIdsAsync(nodeLocksForAgv.Select(n => n.NodeId).ToList());
         ICollection<Task<bool>> freeNodeTasks = [];
         ICollection<Task> publishTasks = [];
-        foreach (var node in nodeLocksForAgv)
+        foreach (var node in nodes.Where(n => !n.IsCharger() && !n.IsParker()))
         {
-            freeNodeTasks.Add(nodeStateRepository.FreeNodeAsync(node.NodeId));
-            publishTasks.Add(PublishNodeStateChange(context, node.NodeId));
+            freeNodeTasks.Add(nodeStateRepository.FreeNodeAsync(node.Id));
+            publishTasks.Add(PublishNodeStateChange(context, node.Id));
         }
         await Task.WhenAll(freeNodeTasks);
         await Task.WhenAll(publishTasks);

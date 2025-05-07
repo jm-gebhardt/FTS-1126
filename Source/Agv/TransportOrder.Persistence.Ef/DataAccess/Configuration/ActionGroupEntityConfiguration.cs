@@ -18,7 +18,9 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.IsIncomplete);
         builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);
         builder.HasIndex(g => g.AssignedAgv);
+        builder.Property(e => e.IsQueued);
         builder.Property(e => e.AssignedAgv);
+        builder.Property(e => e.HandlingUnit).HasMaxLength(DbStringLimits.OrderId);
         builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
 
         // Reasons is just an information, we will never want to query it, so we can simply store it as json without introducing new tables
@@ -33,6 +35,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             a.Property(e => e.Nodes).HasJsonConversion();
             a.Property(e => e.State).HasMaxLength(DbStringLimits.State);
             a.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
+            a.Property(e => e.AdditionalInfo).HasMaxLength(DbStringLimits.Description);
             a.OwnsOne(e => e.Target, c =>
             {
                 c.Property(t => t.NodeId).HasMaxLength(DbStringLimits.NodeId);

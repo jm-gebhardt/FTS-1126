@@ -185,7 +185,9 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<CreateChargingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<AbortActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResetActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<CreateActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<QueueActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<ForceQueueActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<EstimateActionGroupDuration, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<StartActionOfActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CompleteActionOfActionGroup, ActionCommandHandler>(c);
@@ -272,6 +274,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<ActionCommandHandler>();
         configurator.AddRequestClient<QueueActionGroup>();
         configurator.AddRequestClient<TryReassignActionGroup>();
+        configurator.AddRequestClient<TriggerActionCompletion>();
+        configurator.AddRequestClient<TriggerActionGroupQueueing>();
 
         configurator.AddRequestClient<GetActionGroupStatistics>();
         configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();
@@ -291,6 +295,9 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddConsumer<AgvZonesRequestHandler>();
         configurator.AddRequestClient<RemoveAgvFromZones>();
+
+        configurator.AddConsumer<AgvErrorRequestHandler>();
+        configurator.AddRequestClient<SolveRessourceBlockingErrors>();
     }
 
     private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)

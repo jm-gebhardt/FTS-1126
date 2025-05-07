@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -50,5 +51,31 @@ public class HostOrderRepositoryTest
         await fixture.Repository.SaveAsync();
 
         (await fixture.Repository.GetLatestUnfinishedOrderByHu(hu)).ShouldBeEquivalentTo(unfinishedOrder);
+    }
+
+    [TestMethod]
+    public async Task GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint_ValidData_DoppelspielPartnerReturned()
+    {
+        var doppelspielPartnerCandidate = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false));
+        doppelspielPartnerCandidate.Start(DateTime.UtcNow, Guid.NewGuid());
+        doppelspielPartnerCandidate.FinishAction(DateTime.UtcNow, ActionType.Pick);
+        doppelspielPartnerCandidate.IsQueued = true;
+
+        var unfinishedPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        unfinishedPickOrder.IsQueued = true;
+        unfinishedPickOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+
+        var notStartedOrderPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+
+        var passedTriggerPointOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        passedTriggerPointOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        passedTriggerPointOrder.FinishAction(DateTime.UtcNow, ActionType.Pick);
+        passedTriggerPointOrder.IsQueued = true;
+        passedTriggerPointOrder.PassTriggerPoint();
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(doppelspielPartnerCandidate, notStartedOrderPickOrder, unfinishedPickOrder, passedTriggerPointOrder);
+        await fixture.Repository.SaveAsync();
+        (await fixture.Repository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelspielPartnerCandidate.Target)).ShouldBe(doppelspielPartnerCandidate.CorrelationId);
     }
 }

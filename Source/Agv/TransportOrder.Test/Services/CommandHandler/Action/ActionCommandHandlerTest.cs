@@ -22,7 +22,6 @@ using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.Action
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvMode = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvMode;
 using ReassignActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.ReassignActionGroup;
-using ResetActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.ResetActionGroup;
 using Route = Gebhardt.Acc.TransportOrder.Routing.Models.Route;
 using SaveActionGroupAbortion = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.SaveActionGroupAbortion;
 using ValidationResult = FluentValidation.Results.ValidationResult;
@@ -50,6 +49,27 @@ public class ActionCommandHandlerTest
 
         startActionCommand.Action.InfoToAgv.ShouldNotBeNull();
         startActionCommand.Action.InfoToAgv.GetDockFront().ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_StartActionOfActionGroup_PreviousActionGroupWasChargeOrPark_Publishes_DockFrontFalse()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        const bool dockFront = true;
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
+            .AddActionGroup(actionGroup)
+            .WithLastActionDockFront(dockFront, true);
+
+        var startAction = new StartActionOfActionGroup(actionGroup.Actions.First(), agv.CorrelationId);
+
+        var startActionCommand = await fixture.PublishAndGetFirstMessageAsync<StartActionOfActionGroup, StartActionCommand>(startAction);
+
+        startActionCommand.Action.InfoToAgv.ShouldNotBeNull();
+        startActionCommand.Action.InfoToAgv.GetDockFront().ShouldBeFalse();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
     }
 
@@ -720,10 +740,38 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CreateActionGroup_InvalidActionGroup_SavesInvalidActionGroupAndPublishesActionGroupCreatedAndActionGroupInvalid()
+    {
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithAddOrUpdateActionGroupIsUpdating(false);
+        const string failureReason = "reason";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
+
+        var actionGroupCreatedEvent = await fixture.PublishAndGetFirstMessageAsync<CreateActionGroup, ActionGroupCreated>(
+            new CreateActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup)));
+
+        await fixture.ShouldHaveConsumedAsync<CreateActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        actionGroupCreatedEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        actionGroupCreatedEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
+
+        await fixture.ShouldHavePublishedAsync<ActionGroupInvalid>();
+        var invalidEvent = await fixture.GetFirstPublishedMessageAsync<ActionGroupInvalid>();
+        invalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        invalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
+
+        var actionGroupInvalidEvent = await fixture.GetFirstPublishedMessageAsync<ActionGroupInvalid>();
+        actionGroupInvalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        actionGroupInvalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
+        actionGroupInvalidEvent.ValidationErrors.ShouldBe(new List<string> { failureReason });
+    }
+
+    [TestMethod]
     public async Task Consume_QueueActionGroup_InvalidActionGroup_DoNotThrowException_SavesInvalidActionGroupAndPublishesActionGroupCreatedAndActionGroupInvalid()
     {
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithAddActionGroupIsSuccessful();
+            .WithAddOrUpdateActionGroupIsUpdating(false);
         const string failureReason = "reason";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         fixture.SetupValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", failureReason) }));
@@ -745,7 +793,6 @@ public class ActionCommandHandlerTest
         actionGroupInvalidEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupInvalidEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroupInvalidEvent.ValidationErrors.ShouldBe(new List<string> { failureReason });
-        fixture.IsActionGroupSaved(Times.Once());
     }
 
     [TestMethod]
@@ -769,7 +816,7 @@ public class ActionCommandHandlerTest
     public async Task Consume_QueueActionGroup_AssignedAgv_PublishesActionGroupCreated()
     {
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithAddActionGroupIsSuccessful();
+            .WithAddOrUpdateActionGroupIsUpdating(false);
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         fixture.SetupValidationResult(new ValidationResult());
@@ -781,14 +828,30 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<Success>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
-        fixture.IsActionGroupSaved(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateActionGroup_AssignedAgv_PublishesActionGroupCreated()
+    {
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithAddOrUpdateActionGroupIsUpdating(false);
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        fixture.SetupValidationResult(new ValidationResult());
+        fixture.AddAgv(agv);
+
+        await fixture.TestHarness.Bus.Publish(new CreateActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup)));
+
+        await fixture.ShouldHaveConsumedAsync<CreateActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
 
     [TestMethod]
     public async Task Consume_QueueActionGroup_NoAssignedAgv_PublishesActionGroupCreated_DoesNotRespondSuccess()
     {
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithAddActionGroupIsSuccessful();
+            .WithAddOrUpdateActionGroupIsUpdating(false);
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
         fixture.SetupValidationResult(new ValidationResult());
@@ -800,14 +863,13 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldNotHavePublishedAsync<Success>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
-        fixture.IsActionGroupSaved(Times.Once());
     }
 
     [TestMethod]
-    public async Task Consume_QueueActionGroup_AssignedActionGroupWithIncompleteFirstAction_PublishesActionGroupCreated()
+    public async Task Consume_QueueActionGroup_AssignedActionGroupWithIncompleteFirstAction_NewActionGroup_PublishesActionGroupCreated()
     {
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithAddActionGroupIsSuccessful();
+            .WithAddOrUpdateActionGroupIsUpdating(false);
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, source: string.Empty);
         fixture.SetupValidationResult(new ValidationResult());
@@ -817,24 +879,25 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
-
-        fixture.IsActionGroupSaved(Times.Once());
     }
 
     [TestMethod]
-    public async Task Consume_QueueActionGroup_AddingActionGroupNotSuccessful_DoesNotPublishEvents()
+    public async Task Consume_QueueActionGroup_AssignedActionGroupWithIncompleteFirstAction_ExistingActionGroup_PublishesActionGroupChanged()
     {
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithAddActionGroupIsSuccessful(false);
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+            .WithAddOrUpdateActionGroupIsUpdating();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, source: string.Empty);
         fixture.SetupValidationResult(new ValidationResult());
+        fixture.AddAgv(agv);
 
-        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
+        await fixture.TestHarness.Bus.Publish(new QueueActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), true));
 
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
-        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
 
@@ -1380,6 +1443,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<Success>();
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         actionGroup.State.ShouldBe(ActionGroupState.Created);
         actionGroup.AssignedAgv.ShouldBeNull();
         actionGroup.StartedDate.ShouldBeNull();
@@ -1402,6 +1466,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<Success>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
 
         actionGroup.State.ShouldBe(ActionGroupState.Created);
@@ -1423,6 +1488,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<Success>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
 
         actionGroup.State.ShouldBe(ActionGroupState.Created);
@@ -1824,6 +1890,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         pickDropActionGroup.AssignedAgv.ShouldBeNull();
         pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
@@ -1847,6 +1914,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
 
@@ -1854,5 +1922,21 @@ public class ActionCommandHandlerTest
         pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
         pickDropActionGroup.HasPriority.ShouldBeTrue();
         pickDropActionGroup.IsManual.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task ForceQueueActionGroup_ValidData_PublishesActionGroupQueued()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued:false);
+        actionGroup.IsQueued.ShouldBeFalse();
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+
+        await fixture.TestHarness.Bus.Publish(new ForceQueueActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldHaveConsumedAsync<ForceQueueActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupQueued>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
     }
 }

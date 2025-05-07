@@ -6,10 +6,10 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
 public static class ZoneHelper
 {
-    public static Zone GenerateZoneFromPosition(AgvPositionStatus position, bool isInside = false)
+    public static Zone GenerateZoneFromPosition( AgvPositionStatus position, bool isInside = false, Guid? zoneId = null)
     {
-        const string zoneId = "a zone";
-        var zoneCorrelationId = zoneId.ToGuid();
+        const string zoneName = "a zone";
+        var zoneCorrelationId = zoneId ?? zoneName.ToGuid();
         List<ZonePolygonPoint> zonePoints;
         if (isInside)
         {
@@ -20,7 +20,7 @@ public static class ZoneHelper
                 new(position.AgvPosition.X + 1, position.AgvPosition.Y, 2, zoneCorrelationId),
                 new(position.AgvPosition.X, position.AgvPosition.Y + 1, 3, zoneCorrelationId)
             };
-            return new Zone(zonePoints, zoneId, zoneCorrelationId, 1);
+            return new Zone(zonePoints, zoneName, zoneCorrelationId, 1);
         }
 
         zonePoints = new List<ZonePolygonPoint>
@@ -30,6 +30,6 @@ public static class ZoneHelper
             new(position.AgvPosition.X - 3, position.AgvPosition.Y, 2, zoneCorrelationId),
             new(position.AgvPosition.X - 2, position.AgvPosition.Y + 1, 3, zoneCorrelationId)
         };
-        return new Zone(zonePoints, zoneId, zoneCorrelationId, 1);
+        return new Zone(zonePoints, zoneName, zoneCorrelationId, 1);
     }
 }

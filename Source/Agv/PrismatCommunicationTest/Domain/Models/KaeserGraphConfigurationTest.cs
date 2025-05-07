@@ -15,8 +15,8 @@ public class KaeserGraphConfigurationTest
         const string newKey = "new";
         const double newValue = 1.555d;
         var kaeserGraph = new KaeserGraphConfiguration();
-        kaeserGraph.TargetLiftHeight["2110"].ShouldBe(2.211d, tolerance:double.Epsilon);
-        kaeserGraph.TargetLiftHeight["2130"].ShouldBe(1.213d, tolerance:double.Epsilon);
+        kaeserGraph.TargetLiftHeight["2110"].ShouldBe(2.211d, tolerance: double.Epsilon);
+        kaeserGraph.TargetLiftHeight["2130"].ShouldBe(1.213d, tolerance: double.Epsilon);
         kaeserGraph.TargetLiftHeight["2210"].ShouldBe(2.221d, tolerance: double.Epsilon);
         kaeserGraph.TargetLiftHeight["2230"].ShouldBe(1.223d, tolerance: double.Epsilon);
         kaeserGraph.TargetLiftHeight["2310"].ShouldBe(2.231d, tolerance: double.Epsilon);
@@ -24,8 +24,29 @@ public class KaeserGraphConfigurationTest
         kaeserGraph.TargetLiftHeight["2410"].ShouldBe(2.241d, tolerance: double.Epsilon);
         kaeserGraph.TargetLiftHeight["2430"].ShouldBe(1.243d, tolerance: double.Epsilon);
 
-        kaeserGraph.UpdateLiftHeights(new Dictionary<string, double>{{updatedKey, updatedValue}, {newKey, newValue}});
+        kaeserGraph.UpdateLiftHeights(new Dictionary<string, double> { { updatedKey, updatedValue }, { newKey, newValue } });
         kaeserGraph.TargetLiftHeight[newKey].ShouldBe(newValue, tolerance: double.Epsilon);
         kaeserGraph.TargetLiftHeight[updatedKey].ShouldBe(updatedValue, tolerance: double.Epsilon);
+    }
+
+    [DataRow("2110", true)]
+    [DataRow("2210", true)]
+    [DataRow("2310", true)]
+    [DataRow("2410", true)]
+    [DataRow("2130", false)]
+    [DataRow("2230", false)]
+    [DataRow("2330", false)]
+    [DataRow("2430", false)]
+    [DataRow("1050", false)]
+    [DataRow("1060", false)]
+    [DataRow("1020", false)]
+    [DataRow("1040", false)]
+    [DataRow("9060", false)]
+    [DataRow("9070", false)]
+    [DataTestMethod]
+    public void IsDropAtAkl_ReturnsExpectedValue(string target, bool expected)
+    {
+        var kaeserGraph = new KaeserGraphConfiguration();
+        kaeserGraph.IsDropAtAkl(target).ShouldBe(expected);
     }
 }

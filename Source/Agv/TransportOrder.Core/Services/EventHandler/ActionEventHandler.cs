@@ -26,7 +26,8 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     IConsumer<ActionDurationEstimated>,
     IConsumer<AutomaticActionWithdrawn>,
     IConsumer<ActionGroupResumed>,
-    IConsumer<ActionGroupCreated>
+    IConsumer<ActionGroupCreated>,
+    IConsumer<ActionGroupQueued>
 {
     /// <summary>
     /// Handle <see cref="ActionCompleted"/> from DeviceCommunication
@@ -104,7 +105,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// </summary>
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
-        await context.Publish(new FreeNode(context.Message.TargetNodeId));
+        await context.Publish(new FreeNode(context.Message.TargetNodeId, context.Message.ReservedOnly));
     }
 
     /// <summary>
@@ -119,6 +120,27 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// Handles the <see cref="ActionGroupCreated"/> event.
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
+    {
+        (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
+        if (agvCorrelationId != null)
+        {
+            await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));
+            return;
+        }
+
+        if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Pick))
+        {
+            await context.Publish(new TryUpdateIdleAction(actionGroupCorrelationId));
+            return;
+        }
+
+        await context.Publish(new TryReactivateParkingAgvs());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionGroupQueued"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionGroupQueued> context)
     {
         (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
         if (agvCorrelationId != null)

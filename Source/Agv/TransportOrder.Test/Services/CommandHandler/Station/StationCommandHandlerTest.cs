@@ -6,6 +6,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Station;
 
@@ -16,36 +17,49 @@ public class StationCommandHandlerTest
     public async Task Consume_LockStation_ValidData_NodeStateUpdated()
     {
         const string nodeId = "PD-0";
+        const string user = "User";
+        const string reason = "Reason";
+        const string description = "Description";
 
         var fixture = new StationCommandHandlerTestFixture()
             .WithStation(nodeId)
             .WithLockableAndUnlockableNode(nodeId)
             .WithNodeState(new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow));
 
-        await fixture.TestHarness.Bus.Publish(new LockStation(nodeId.ToGuid(), "User", "Reason", "Description", LockedOrderHandlingType.AllowFinish));
+        await fixture.TestHarness.Bus.Publish(new LockStation(nodeId.ToGuid(), user, reason, description, LockedOrderHandlingType.AllowFinish));
 
         await fixture.ShouldHaveConsumedAsync<LockStation>();
         fixture.VerifyStationUpdated(Times.Once());
         fixture.NodeStateRepository.Verify(r => r.LockNodeAsync(nodeId), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+        var nodeStateChanged = fixture.TestHarness.Published.Select<NodeStateChanged>().First().Context.Message;
+        nodeStateChanged.LockDescription.ShouldBe(description);
+        nodeStateChanged.LockReason.ShouldBe(reason);
+        nodeStateChanged.ModifyingUser.ShouldBe(user);
+        nodeStateChanged.StationId.ShouldNotBeNull();
     }
 
     [TestMethod]
     public async Task Consume_UnlockStation_ValidData_NodeStateUpdated()
     {
         const string nodeId = "PD-0";
-
+        const string user = "User";
         var fixture = new StationCommandHandlerTestFixture()
             .WithStation(nodeId)
             .WithLockableAndUnlockableNode(nodeId)
             .WithNodeState(new NodeLock(nodeId, NodeLockState.Free, true, null, DateTime.UtcNow));
 
-        await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid(), "User"));
+        await fixture.TestHarness.Bus.Publish(new UnlockStation(nodeId.ToGuid(), user));
 
         await fixture.ShouldHaveConsumedAsync<UnlockStation>();
         fixture.VerifyStationUpdated(Times.Once());
         fixture.NodeStateRepository.Verify(r => r.UnlockNodeAsync(nodeId), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+        var nodeStateChanged = fixture.TestHarness.Published.Select<NodeStateChanged>().First().Context.Message;
+        nodeStateChanged.LockDescription.ShouldBeNull();
+        nodeStateChanged.LockReason.ShouldBeNull();
+        nodeStateChanged.ModifyingUser.ShouldBe(user);
+        nodeStateChanged.StationId.ShouldNotBeNull();
     }
 
     [TestMethod]

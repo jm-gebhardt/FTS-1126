@@ -20,9 +20,9 @@ public static class ActionGroupReadModelExtension
         }
 
         return new ActionGroupReadModel(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.AssignedAgv,
-            actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.EstimatedDuration, actionGroup.State, actionGroup.Creator,
+            actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.EstimatedDuration, actionGroup.State, actionGroup.Creator, actionGroup.HandlingUnit,
             actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State,
-                a.ActionType, a.Target.NodeId!, AgvGraph.NodeType.Charge, a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration)).ToList(), actionGroup.IsManual, actionGroup.HasPriority, actionGroup.Reasons);
+                a.ActionType, a.Target.NodeId!, AgvGraph.NodeType.Charge, a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration)).ToList(), actionGroup.IsManual, actionGroup.HasPriority, actionGroup.IsQueued, actionGroup.Reasons);
     }
 
     /// <summary>
@@ -38,8 +38,8 @@ public static class ActionGroupReadModelExtension
         }
 
         return new ActionGroupReadModel(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.AssignedAgv,
-            actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.EstimatedDuration, actionGroup.State, actionGroup.Creator,
+            actionGroup.CreatedDate, actionGroup.StartedDate, actionGroup.CompletedDate, actionGroup.EstimatedDuration, actionGroup.State, actionGroup.Creator, actionGroup.HandlingUnit,
             actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State,
-                a.ActionType, a.Target.NodeId!, nodeType, a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration)).ToList(), actionGroup.IsManual, actionGroup.HasPriority, actionGroup.Reasons);
+                a.ActionType, a.Target.NodeId!, nodeType, a.Nodes, a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PausedDuration)).ToList(), actionGroup.IsManual, actionGroup.HasPriority, actionGroup.IsQueued, actionGroup.Reasons);
     }
 }

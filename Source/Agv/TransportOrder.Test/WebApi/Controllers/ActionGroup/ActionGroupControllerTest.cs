@@ -23,7 +23,7 @@ public class ActionGroupControllerTest
     {
         var correlationId = Guid.NewGuid();
         var startedDate = DateTime.Parse("2021-01-01T00:00:54Z").ToUniversalTime();
-        var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, startedDate, null, TimeSpan.FromSeconds(6), ActionGroupState.Created, ActionGroupCreator.TransportOrder, new List<AgvActionReadModel>(), true, false, new List<Reason>());
+        var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, startedDate, null, TimeSpan.FromSeconds(6), ActionGroupState.Created, ActionGroupCreator.TransportOrder, "hu", new List<AgvActionReadModel>(), true, false, true, new List<Reason>());
         ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .Build();

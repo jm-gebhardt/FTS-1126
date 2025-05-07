@@ -7,6 +7,8 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -28,6 +30,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
+    private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
 
     public AgvSettingsReadModel AgvSettings => EfAgvSettingsProvider.DefaultSettings;
 
@@ -41,6 +44,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _actionGroupRetrievalService.Object);
             s.AddTransient(_ => _actionGroupRepository.Object);
+            s.AddTransient(_ => _nodeStateRepositoryMock.Object);
             s.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             if (bus != null)
             {
@@ -82,6 +86,18 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         return this;
     }
 
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithNodesStates(ICollection<NodeLock> nodeLocks)
+    {
+        _nodeStateRepositoryMock.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
+        return this;
+    }
+
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithPostion(AgvPositionStatus position)
+    {
+        _agvDb.AddPosition(position);
+        return this;
+    }
+    
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvErrorRepository()
     {
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());

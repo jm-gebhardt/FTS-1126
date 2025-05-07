@@ -13,7 +13,7 @@ public class OrderRepositoryTest
         const string station = "station";
         var order = Guid.NewGuid();
 
-        await repository.StorePickOrderReport(station, order);
+        await repository.StoreOrderReport(station, order);
 
        (await repository.HasOrderBeenReported(station, order)).ShouldBeTrue();
     }
@@ -24,10 +24,10 @@ public class OrderRepositoryTest
         var repository = new OrderRepositoryTestFixture().Repository;
         const string station = "station";
         var order = Guid.NewGuid();
-        await repository.StorePickOrderReport(station, order);
+        await repository.StoreOrderReport(station, order);
         (await repository.HasOrderBeenReported(station, order)).ShouldBeTrue();
 
-        await repository.RemovePickOrderReport(station, order);
+        await repository.RemoveOrderReport(station, order);
 
         (await repository.HasOrderBeenReported(station, order)).ShouldBeFalse();
     }
@@ -37,7 +37,7 @@ public class OrderRepositoryTest
     {
         var repository = new OrderRepositoryTestFixture().Repository;
         var order = Guid.NewGuid();
-        await repository.StorePickOrderReport("station", order);
+        await repository.StoreOrderReport("station", order);
 
         (await repository.HasOrderBeenReported("different station", order)).ShouldBeFalse();
     }
@@ -48,7 +48,7 @@ public class OrderRepositoryTest
         var repository = new OrderRepositoryTestFixture().Repository;
         const string station = "station";
         var order = Guid.NewGuid();
-        await repository.StorePickOrderReport(station, order);
+        await repository.StoreOrderReport(station, order);
 
         (await repository.HasOrderBeenReported(station, Guid.NewGuid())).ShouldBeFalse();
     }

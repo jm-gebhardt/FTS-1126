@@ -22,25 +22,25 @@ public class TelegramProcessorFactory(IServiceProvider provider, ILogger<Telegra
         {
             case nameof(Tord):
             {
-                logger.LogInformation("Tord processor requested");
+                logger.LogDebug("Tord processor requested");
                 return provider.GetRequiredService<TordProcessor>();
             }
 
             case nameof(Life):
             {
-                logger.LogInformation("Life processor requested");
+                logger.LogDebug("Life processor requested");
                 return provider.GetRequiredService<LifeProcessor>();
             }
 
             case nameof(TordDelete):
             {
-                logger.LogInformation("TordDelete processor requested.");
+                logger.LogDebug("TordDelete processor requested.");
                 return provider.GetRequiredService<TordDeleteProcessor>();
             }
 
             case nameof(PosStateReq):
             {
-                logger.LogInformation("PosStateReq processor requested.");
+                logger.LogDebug("PosStateReq processor requested.");
                 return provider.GetRequiredService<PosStateReqProcessor>();
             }
 

@@ -533,7 +533,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgvWithZoneError_PublishesAgvOnlineChangedUpdateErrorStatusAndBecameIdle()
+    public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgvWithZoneErrorAndRessourceError_PublishesAgvOnlineChangedUpdateErrorStatusAndBecameIdle()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
@@ -541,8 +541,9 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithGraphExists(true)
             .WithCurrentStartedOrCreatedActionGroups([])
+            .WithNodesStates([new NodeLock("node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
-            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone")]);
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
@@ -550,6 +551,35 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        List<UpdateErrorStatus> updateErrorStatus = fixture.TestHarness.Published.Select<UpdateErrorStatus>().Select(c => c.Context.Message).ToList();
+        var updateForZoneError = updateErrorStatus.FirstOrDefault(es => es.Errors.Any(e => e.IsRessourceError()));
+        updateForZoneError.ShouldNotBeNull();
+        var updateForRessourceError = updateErrorStatus.FirstOrDefault(es => es.Errors.Any(e => e.IsRessourceError() || e.IsZoneError()));
+        updateForRessourceError.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_ZoneIdChanges_WithZoneErrorAndRessourceError_PublishesUpdateErrorStatus()
+    {
+        var zoneId = Guid.NewGuid();
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zoneId.ToString()]);
+        var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
+        var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true, zoneId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true)
+            .WithZones([zone])
+            .WithCurrentStartedOrCreatedActionGroups([])
+            .WithNodesStates([new NodeLock("node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
+
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        List<UpdateErrorStatus> updateErrorStatus = fixture.TestHarness.Published.Select<UpdateErrorStatus>().Select(c => c.Context.Message).ToList();
+        var updateForZoneError = updateErrorStatus.FirstOrDefault(es => es.Errors.Any(e => e.IsRessourceError()));
+        updateForZoneError.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -651,6 +681,7 @@ public class AgvCommandHandlerTest
         agv.SetOnline();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithNodesStates([], [])
             .WithHasOnlineAgvs(false);
 
         await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
@@ -672,6 +703,7 @@ public class AgvCommandHandlerTest
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithPostion(position)
             .WithZones([zone])
+            .WithNodesStates([], [])
             .WithHasOnlineAgvs(false);
 
         await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));

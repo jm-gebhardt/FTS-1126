@@ -19,9 +19,11 @@ public class ActionProfile : WebApiProfile
         CreateMap<ActionGroupReadModel, ActionGroupDto>()
             .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration))
             .ForSourceMember(g => g.HasPriority, opt => opt.DoNotValidate());
+
         CreateMap<AgvActionReadModel, AgvActionDto>();
         CreateMap<AgvGroupCountByState, AgvGroupCountByStateDto>();
         CreateMap<ActionGroup, ActionGroupDto>()
+            .ForMember(g => g.IsQueued, opt => opt.MapFrom(s => true))
             .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration));
         CreateMap<AgvAction, AgvActionDto>()
             .ForMember(m => m.TargetNodeType, opt => opt.Ignore())

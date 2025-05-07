@@ -89,15 +89,15 @@ public class FromPrismatTelegramProcessor : InboundTelegramProcessorBase<Prismat
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override void ProcessReceivedTelegram(string telegram)
     {
-        _logger.LogInformation("Received telegram {Telegram}", telegram);
+        _logger.LogDebug("Received telegram {Telegram}", telegram);
 
         var prismatTelegram = new PrismatTelegram();
         if (!prismatTelegram.Load(telegram))
         {
-            _logger.LogInformation("Failed to load telegram {Telegram}", telegram);
+            _logger.LogError("Failed to load telegram {Telegram}", telegram);
             return;
         }
-        _logger.LogInformation("Converted to telegram {Telegram}", prismatTelegram);
+        _logger.LogDebug("Converted to telegram {Telegram}", prismatTelegram);
         if (prismatTelegram.Seq == 0)
         {
             HandleResetTelegram(prismatTelegram);
@@ -113,7 +113,7 @@ public class FromPrismatTelegramProcessor : InboundTelegramProcessorBase<Prismat
         CurrentProcessor = _processorFactory.GetReceiveProcessor(prismatTelegram);
         if (CurrentProcessor != null)
         {
-            _logger.LogInformation("Sending it to processor");
+            _logger.LogDebug("Sending it to processor");
 
             CurrentProcessor.ProcessReceivedTelegram(telegram);
             SendAcknowledgement = true;

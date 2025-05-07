@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using JetBrains.Annotations;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -10,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 public static class AgvActionGenerator
 {
     public static ActionGroup GenerateChargeActionGroup(string targetNodeId = "charger", Guid? assignedAgv = null,
-        ActionState actionStateMove = ActionState.Created, ActionState actionStateCharge = ActionState.Created, DateTime? createdDate=null)
+        ActionState actionStateMove = ActionState.Created, ActionState actionStateCharge = ActionState.Created, DateTime? createdDate=null, DateTime? completedDate = null)
     {
         var groupId = Guid.NewGuid();
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId, groupId)
@@ -36,6 +37,11 @@ public static class AgvActionGenerator
             CreatedDate = createdDate ?? DateTime.UtcNow
         };
         actionGroup.UpdateActionGroupState();
+        actionGroup.Queue();
+        if (completedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
+        }
 
         return actionGroup;
     }
@@ -62,7 +68,12 @@ public static class AgvActionGenerator
         return parkAction;
     }
 
-    public static ActionGroup GenerateParkActionGroup(string? targetNodeId = null,  ActionState actionState = ActionState.Created, Guid ? assignedAgv = null)
+    public static ActionGroup GenerateParkActionGroup(
+        string? targetNodeId = null,
+        ActionState actionState = ActionState.Created,
+        Guid? assignedAgv = null,
+        DateTime? completedDate = null
+    )
     {
         var groupId = Guid.NewGuid();
         var parkAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.ParkClose.Id, groupId)
@@ -76,6 +87,10 @@ public static class AgvActionGenerator
         parkAction.UpdateActionState(actionState);
         var actionGroup = new ActionGroup(groupId, string.Empty, [parkAction], ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
         actionGroup.UpdateActionGroupState();
+        if (completedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
+        }
         return actionGroup;
     }
 
@@ -104,7 +119,9 @@ public static class AgvActionGenerator
         DateTime? startedDate = null,
         TimeSpan? duration = null,
         bool hasPriority = false,
-        Dictionary<InfoToAgvKey, string>? infoToAgv=null
+        bool isQueued = true,
+        Dictionary<InfoToAgvKey, string>? infoToAgv=null,
+        Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null
     )
     {
         const string orderId = "orderId";
@@ -120,7 +137,8 @@ public static class AgvActionGenerator
         pickAction.UpdateActionState(pickActionState);
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId)
         {
-            Sequence = partial == 3 ? 0 : 1
+            Sequence = partial == 3 ? 0 : 1,
+            InfoToAgv = dropInfoToAgv
         };
         dropAction.UpdateActionState(dropActionState);
 
@@ -138,6 +156,10 @@ public static class AgvActionGenerator
             EstimatedDuration = duration,
             HasPriority = hasPriority
         };
+        if (isQueued)
+        {
+            actionGroup.Queue();
+        }
         actionGroup.UpdateActionGroupState();
         if (createdDate != default)
         {
@@ -307,7 +329,7 @@ public static class AgvActionGenerator
             EstimatedDuration = duration,
             CreatedDate = createdDate ?? DateTime.UtcNow
         };
-
+        actionGroup.Queue();
         return actionGroup;
     }
 
@@ -398,5 +420,17 @@ public static class AgvActionGenerator
                 break;
         }
         return actionGroup;
+    }
+
+    public static Common.Messages.ActionGroups.ActionGroup ConvertToMessage(ActionGroup actionGroup)
+    {
+        var mapper = MappingHelper.GetMapper(new ActionProfile());
+        return mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+    }
+
+    public static ActionGroup ConvertFromMessage(Common.Messages.ActionGroups.ActionGroup actionGroup)
+    {
+        var mapper = MappingHelper.GetMapper(new ActionProfile());
+        return mapper.Map<ActionGroup>(actionGroup);
     }
 }

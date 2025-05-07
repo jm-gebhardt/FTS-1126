@@ -78,6 +78,11 @@ public class ActionGroup
     public bool IsIncomplete => Actions.Any(a => a.IsIncomplete);
 
     /// <summary>
+    /// True, if the action group is queued.
+    /// </summary>
+    public bool IsQueued { get; private set; }
+
+    /// <summary>
     /// List of actions (ordered by sequence).
     /// </summary>
     public IReadOnlyList<AgvAction> Actions
@@ -107,24 +112,22 @@ public class ActionGroup
     public bool HasPriority { get; set; }
 
     /// <summary>
+    /// The handling unit corresponding to this ActionGroup.
+    /// </summary>
+    public string? HandlingUnit { get; init; }
+
+    /// <summary>
     /// Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
     /// </summary>
     [UsedImplicitly]
     public List<Reason> Reasons { get; set; } = new();
 
     /// <inheritdoc cref="ActionGroup"/>
-    /// <param name="correlationId">The correlation id of the <see cref="ActionGroup"/>.</param>
-    /// <param name="actions">The child actions of the <see cref="ActionGroup"/>.</param>
-    /// <param name="orderId">The order id.</param>
-    /// <param name="assignedAgv">The assigned agv of this <see cref="ActionGroup"/>.</param>
-    /// <param name="creator">The creator of this <see cref="ActionGroup"/>.</param>
-    /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/>.</param>
-    /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system.</param>
-    /// <param name="hasPriority">If true, then this <see cref="ActionGroup"/> has priority over others.</param>
-    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, bool isQueued = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
+        IsQueued = isQueued;
         HasPriority = hasPriority;
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
         Actions = actions.ToList();
@@ -148,6 +151,14 @@ public class ActionGroup
     public ActionGroup()
     {
         OrderId = "";
+    }
+
+    /// <summary>
+    /// Queue the action group.
+    /// </summary>
+    public void Queue()
+    {
+        IsQueued = true;
     }
 
     /// <summary>
@@ -374,14 +385,27 @@ public class ActionGroup
     public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup)
     {
         var action = Actions.Single(a => a.CorrelationId == actionId);
+
+        if (IsManual && action.HasDockFront())
+        {
+            return;
+        }
+
         bool needsRotation = GetNeedsRotation();
 
-        bool isChargeActionGroup = Actions.Any(a => a.ActionType == ActionType.Charge);
-        if (isChargeActionGroup)
+        if (IsChargingOrder)
         {
             action.SetDockFront(needsRotation, null);
             return;
         }
+
+        bool isAutomaticParkOrder = Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1 && !IsManual && !HasPriority;
+        if (isAutomaticParkOrder)
+        {
+            action.SetDockFront(false, null);
+            return;
+        }
+
         if (action.IsFirstAction)
         {
             action.SetDockFront(needsRotation, dockFrontPreviousActionGroup);

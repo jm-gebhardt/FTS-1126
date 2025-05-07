@@ -1,0 +1,53 @@
+﻿namespace Gebhardt.Acc.KaeserSidecar.Domain.Models;
+
+/// <summary>
+/// Represents an action handled at the decision point.
+/// </summary>
+public class DecisionPointAction
+{
+    /// <summary>
+    /// The correlation id of the action.
+    /// </summary>
+    public Guid CorrelationId { get; init; }
+
+    /// <summary>
+    /// The correlation id of the agv.
+    /// </summary>
+    public Guid AgvCorrelationId { get; init; }
+
+    /// <summary>
+    /// The target station.
+    /// </summary>
+    public string? Target { get; private set; }
+
+    /// <summary>
+    /// The time the agv entered the decision point.
+    /// </summary>
+    public DateTime EntryTime { get; init; }
+
+    /// <inheritdoc cref="DecisionPointAction"/>>
+    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, string? target, DateTime entryTime)
+    {
+        CorrelationId = correlationId;
+        AgvCorrelationId = agvCorrelationId;
+        Target = target;
+        EntryTime = entryTime;
+    }
+
+    /// <inheritdoc cref="DecisionPointAction"/>>
+    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, DateTime entryTime)
+    {
+        CorrelationId = correlationId;
+        AgvCorrelationId = agvCorrelationId;
+        EntryTime = entryTime;
+    }
+
+    /// <summary>
+    /// The target of the action.
+    /// </summary>
+    /// <param name="target"></param>
+    public void SetTarget(string target)
+    {
+        Target = target;
+    }
+}

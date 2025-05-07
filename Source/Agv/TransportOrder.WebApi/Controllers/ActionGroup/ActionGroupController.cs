@@ -27,6 +27,8 @@ public class ActionGroupController : Controller
     private readonly IRequestClient<TriggerActionGroupReset> _resetActionGroupRequestClient;
     private readonly IRequestClient<CreatePickDropActionGroup> _createActionGroupClient;
     private readonly IRequestClient<TryReassignActionGroup> _reassignActionGroupClient;
+    private readonly IRequestClient<TriggerActionCompletion> _actionCompletionClient;
+    private readonly IRequestClient<TriggerActionGroupQueueing> _actionGroupQueueingClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -38,7 +40,9 @@ public class ActionGroupController : Controller
         IRequestClient<TriggerActionGroupAbortion> abortionRequestClient,
         IRequestClient<TriggerActionGroupReset> resetActionGroupRequestClient,
         IRequestClient<CreatePickDropActionGroup> createActionGroupClient,
-        IRequestClient<TryReassignActionGroup> reassignActionGroupClient)
+        IRequestClient<TryReassignActionGroup> reassignActionGroupClient,
+        IRequestClient<TriggerActionCompletion> actionCompletionClient,
+            IRequestClient<TriggerActionGroupQueueing> actionGroupQueueingClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
@@ -47,6 +51,8 @@ public class ActionGroupController : Controller
         _resetActionGroupRequestClient = resetActionGroupRequestClient;
         _createActionGroupClient = createActionGroupClient;
         _reassignActionGroupClient = reassignActionGroupClient;
+        _actionCompletionClient = actionCompletionClient;
+        _actionGroupQueueingClient = actionGroupQueueingClient;
     }
 
     /// <summary>
@@ -114,6 +120,11 @@ public class ActionGroupController : Controller
     /// </summary>
     /// <param name="pickStation">The pick station.</param>
     /// <param name="dropStation">The drop station.</param>
+    /// <param name="dockFrontPick">Whether to dock front for the pick.</param>
+    /// <param name="dockFrontDrop">Whether to dock front for the drop.</param>
+    /// <param name="handlingUnit">The handling unit of the action group.</param>
+    /// <param name="additionalPickInfo">Additional info for the pick station (optional).</param>
+    /// <param name="additionalDropInfo">Additional info for the drop station (optional).</param>
     /// <param name="agvCorrelationId">The assigned agv (optional).</param>
     /// <returns>The created action group.</returns>
     /// <response code="200">Ok</response>
@@ -124,9 +135,18 @@ public class ActionGroupController : Controller
     /// <response code="404">AGV with given correlationId not found .</response>
     [HttpPost]
     [Route("/actionGroup")]
-    public async Task<ActionResult<ActionGroupDto>> CreatePickDropActionGroup(string pickStation, string dropStation, Guid? agvCorrelationId)
+    public async Task<ActionResult<ActionGroupDto>> CreatePickDropActionGroup(
+        string pickStation,
+        string dropStation, 
+        bool dockFrontPick,
+        bool dockFrontDrop,
+        string? handlingUnit,
+        string? additionalPickInfo, 
+        string? additionalDropInfo,
+        Guid? agvCorrelationId
+    )
     {
-        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, agvCorrelationId, false, ActionGroupCreator.TransportOrderWebApi));
+        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, additionalPickInfo, additionalDropInfo, false, ActionGroupCreator.TransportOrderWebApi));
         return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
     }
 
@@ -141,6 +161,32 @@ public class ActionGroupController : Controller
     public async Task<ActionResult> ReassignActionGroup(Guid correlationId)
     {
         await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Complete an action of an action group.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group with given correlationId or the action was not found.</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId}/complete")]
+    public async Task<ActionResult> CompleteAction(Guid correlationId, Guid actionCorrelationId)
+    {
+        await _actionCompletionClient.GetResponse<Success>(new TriggerActionCompletion(correlationId, actionCorrelationId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Queue action group.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group with given correlationId not found.</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/queue")]
+    public async Task<ActionResult> QueueActionGroup(Guid correlationId)
+    {
+        await _actionGroupQueueingClient.GetResponse<Success>(new TriggerActionGroupQueueing(correlationId));
         return Ok();
     }
 }

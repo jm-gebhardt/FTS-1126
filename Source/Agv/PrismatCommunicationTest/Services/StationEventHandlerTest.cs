@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -89,5 +91,16 @@ public class StationEventHandlerTest
         fixture.Configuration.GetShortLoopTarget().ShouldBe(shortLoopTarget.Current);
         shortLoopTarget.Current.ShouldBe(nextStation);
         shortLoopTarget.Primary.ShouldBe(defaultStation);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvLeftStation_ValidData_PublishesTryQueueDelayedOrder()
+    {
+        using var fixture = new StationEventHandlerTestFixture();
+
+        await fixture.TestHarness.Bus.Publish(new AgvLeftStation("2430", "2410"));
+
+        await fixture.ShouldHaveConsumedAsync<AgvLeftStation>();
+        await fixture.ShouldHavePublishedAsync<TryQueueDelayedOrder>();
     }
 }

@@ -21,6 +21,13 @@ public interface IActionGroupRepository
     Task<bool> AddAsync(ActionGroup actionGroup);
 
     /// <summary>
+    /// Saves the action
+    /// </summary>
+    /// <param name="actionGroup">Agv Action</param>
+    /// <returns>True, if the action group has been updated. False if it has been added.</returns>
+    Task<bool> AddOrUpdateAsync(ActionGroup actionGroup);
+
+    /// <summary>
     /// Get a list of ActionGroup.
     /// </summary>
     /// <param name="states">Can be one actionGroupState filter or contain multiple states which should be included in the return. If null, the filter is inactive</param>
@@ -255,8 +262,8 @@ public interface IActionGroupRepository
     /// Gets the DockFront value of the last completed action of an agv.
     /// </summary>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
-    /// <returns>The Dockfront value of the action.</returns>
-    Task<bool?> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId);
+    /// <returns>The Dockfront value of the action and if it was an automatic charge or park action.</returns>
+    Task<(bool? dockfront, bool isAutomaticChargeOrPark)> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId);
 
     /// <summary>
     /// Returns boolean specifying that an AGV already has a charging group in created state.

@@ -25,6 +25,7 @@ public class ActionGroupsControllerTest
                 null,
                 ActionGroupState.Created,
                 ActionGroupCreator.TransportOrder,
+                "hu",
                 [
                     new AgvActionReadModel(Guid.NewGuid(),
                         Guid.NewGuid(),
@@ -40,7 +41,7 @@ public class ActionGroupsControllerTest
                         null,
                         null,
                         TimeSpan.Zero)
-                ], false, false, [])
+                ], false, false, true, [])
         };
         var fixture = new ActionGroupsControllerTestFixture()
             .WithActionGroups(actionGroups)

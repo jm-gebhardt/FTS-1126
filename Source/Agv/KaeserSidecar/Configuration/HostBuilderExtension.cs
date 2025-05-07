@@ -1,10 +1,10 @@
 ﻿using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 using Gebhardt.Acc.KaeserSidecar.CmdOptions;
-using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.DataAccess;
@@ -63,14 +63,19 @@ public static class HostBuilderExtension
         hostBuilder.ConfigureServices((context, services) =>
         {
             services.AddConfigurationTypeManager();
-            services.AddSingleton<TargetStation>();
+            services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+            services.AddSingleton<ITargetSelector, TargetSelector>();
+            services.AddSingleton<IHostedService>(sp => (IHostedService)sp.GetRequiredService<ITargetSelector>());
             // Add prismat communication db connection
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
             services.AddTransient<IPrismatCommunicationHostOrderRepository, PrismatCommunicationHostOrderRepository>();
+            services.AddTransient<IPrismatCommunicationStationRepository, PrismatCommunicationStationRepository>();
+            services.AddTransient<IPrismatCommunicationSystemStatusRepository, PrismatCommunicationSystemStatusRepository>();
             services.AddTransient<ITransportOrderDb, TransportOrderDb>();
             services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
             services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();
+            services.AddTransient<IDecisionPointActionRepository, EfDecisionPointActionRepository>();
             services.AddTransient<ITransportOrderStationRepository, TransportOrderStationRepository>();
             services.AddTransient<ITransportOrderAgvSettingsProvider, TransportOrderAgvSettingsProvider>();
             services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();

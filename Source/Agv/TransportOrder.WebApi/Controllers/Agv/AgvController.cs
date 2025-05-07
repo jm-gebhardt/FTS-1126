@@ -69,6 +69,7 @@ public class AgvController : Controller
     private readonly IRequestClient<StartInstantAction> _startInstantActionsClient;
     private readonly IRequestClient<ResendAction> _resendActionClient;
     private readonly IRequestClient<RemoveAgvFromZones> _removeAgvFromZonesClient;
+    private readonly IRequestClient<SolveRessourceBlockingErrors> _ressourceBlockingClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -107,7 +108,8 @@ public class AgvController : Controller
         IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient,
         IRequestClient<StartInstantAction> startInstantActionsClient,
         IRequestClient<ResendAction> resendActionClient,
-        IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient
+        IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient,
+        IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -143,6 +145,7 @@ public class AgvController : Controller
         _startInstantActionsClient = startInstantActionsClient;
         _resendActionClient = resendActionClient;
         _removeAgvFromZonesClient = removeAgvFromZonesClient;
+        _ressourceBlockingClient = ressourceBlockingClient;
     }
 
     /// <summary>
@@ -707,6 +710,20 @@ public class AgvController : Controller
             return Conflict();
         }
 
+        return Ok();
+    }
+
+    /// <summary>
+    /// Solve all ressource blocking errors for an agv: remove all node locks.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/solveRessourceErrors")]
+    public async Task<ActionResult> SolveRessourceErrors([FromRoute] Guid correlationId)
+    {
+        await _ressourceBlockingClient.GetResponse<Success>(new SolveRessourceBlockingErrors(correlationId));
         return Ok();
     }
 }

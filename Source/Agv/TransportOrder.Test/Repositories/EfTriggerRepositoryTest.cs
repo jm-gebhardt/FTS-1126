@@ -209,6 +209,86 @@ public class EfTriggerRepositoryTest
         updatedTrigger.ShouldBeEquivalentTo(trigger);
         updatedTrigger.ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue);
     }
+    
+    [TestMethod]
+    public async Task UpdateLocation_WithUpdatedConfigurationParameter_ParameterUpdated()
+    {
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        ICollection<PolygonPoint> polygon =
+        [
+            new(1, 1, 0),
+            new(1, 2, 1),
+            new(2, 1, 2),
+            new(2, 2, 3)
+        ];
+        
+        //Add trigger with location
+        await fixture.AddAsync(trigger);
+        var addedLocation = trigger.AddLocation(polygon, null, [], [Guid.NewGuid()]);
+        await fixture.Repository.Update(trigger, true);
+
+        var triggerToUpdate = await fixture.Repository.GetById(trigger.Id);
+        // Update location 
+        triggerToUpdate.Locations.ShouldNotBeEmpty();
+        await fixture.Repository.Update(triggerToUpdate, true);
+
+        const string updatedValue = "1";
+        trigger.UpdateConfigurationParameterAtLocation(addedLocation.Id, "parameter name", updatedValue);
+        await fixture.Repository.Update(trigger, true);
+
+        var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
+        updatedTrigger.ShouldBeEquivalentTo(trigger);
+        updatedTrigger.Locations.First(l => l.Id == addedLocation.Id).ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue);
+    }
+    
+    [TestMethod]
+    public async Task UpdateMultipleLocations_WithUpdatedConfigurationParameter_ParameterUpdated()
+    {
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        ICollection<PolygonPoint> polygon =
+        [
+            new(1, 1, 0),
+            new(1, 2, 1),
+            new(2, 1, 2),
+            new(2, 2, 3)
+        ];
+        
+        ICollection<PolygonPoint> polygon2 =
+        [
+            new(2, 9, 0),
+            new(2, 7, 1),
+            new(2, 6, 2),
+            new(3, 5, 3)
+        ];
+        
+        //Add trigger with two locations
+        await fixture.AddAsync(trigger);
+        var addedLocation1 = trigger.AddLocation(polygon, null, [], [Guid.NewGuid()]);
+        var addedLocation2 = trigger.AddLocation(polygon2, null, [], [Guid.NewGuid()]);
+        await fixture.Repository.Update(trigger, true);
+
+        var triggerToUpdate = await fixture.Repository.GetById(trigger.Id);
+        // Update location 
+        triggerToUpdate.Locations.ShouldNotBeEmpty();
+        await fixture.Repository.Update(triggerToUpdate, true);
+
+        const string updatedValue1 = "1";
+        const string updatedValue2 = "5";
+        trigger.UpdateConfigurationParameterAtLocation(addedLocation1.Id, "parameter name", updatedValue1);
+        trigger.UpdateConfigurationParameterAtLocation(addedLocation2.Id, "parameter name", updatedValue2);
+        await fixture.Repository.Update(trigger, true);
+
+        var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
+        updatedTrigger.ShouldBeEquivalentTo(trigger);
+        updatedTrigger.Locations.First(l => l.Id == addedLocation1.Id).ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue1);
+        updatedTrigger.Locations.First(l => l.Id == addedLocation2.Id).ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue2);
+    }
 
     [TestMethod]
     public async Task GetTriggersAssignedToNode_WithNodeLocation_TriggersReturned()

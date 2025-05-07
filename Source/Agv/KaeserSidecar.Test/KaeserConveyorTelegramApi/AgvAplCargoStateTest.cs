@@ -26,7 +26,7 @@ public class AgvAplCargoStateTest
     [TestMethod]
     public void ToString_ValidData_TelegramFormat()
     {
-        var agvAplCargoState = new AgvAplCargoState( true,  DateTime.UtcNow);
+        var agvAplCargoState = new AgvAplCargoState();
         agvAplCargoState.Load(TestTelegram.AgvAplCargoState);
         agvAplCargoState.ToString().ShouldBe(TestTelegram.AgvAplCargoState);
     }

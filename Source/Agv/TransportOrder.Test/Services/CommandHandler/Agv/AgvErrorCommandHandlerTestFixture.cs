@@ -24,6 +24,7 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
         base.AddServices(collection);
         collection.AddTransient(_ => AgvDbMock.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
+        AgvDbMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync([]);
         AgvDbMock.Setup(x => x.Errors.AddOrUpdateAgvErrorStatus(It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).ReturnsAsync(() => _addOrUpdateAgvErrorStatusReturnValue);
         _metricCollectorServiceMock.Setup(x => x.CollectSafetyFieldViolationMetrics(It.IsAny<Guid>(), It.IsAny<List<AgvError>>(), It.IsAny<List<AgvError>>())).Verifiable();
         return this;

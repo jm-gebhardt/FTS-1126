@@ -4,8 +4,6 @@ using Gebhardt.Acc.Common.Messages.Filters;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
 using Gebhardt.Acc.Common.Time;
-using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
-using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
@@ -19,6 +17,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.PrismatCommunication.Messages.Filters;
+using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Services.Filters;
@@ -30,6 +31,8 @@ namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 /// </summary>
 public static class HostBuilderExtension
 {
+    private static readonly TimeSpan _busStartTimeout = TimeSpan.FromSeconds(45);
+
     /// <summary>
     /// Add MassTransit configuration.
     /// </summary>
@@ -48,6 +51,12 @@ public static class HostBuilderExtension
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
                     cfg.UseConsumeFilter<ActionGroupEventConsumeFilter>(ctx);
                 });
+                services.AddOptions<MassTransitHostOptions>()
+                    .Configure(options =>
+                    {
+                        options.WaitUntilStarted = true;
+                        options.StartTimeout = _busStartTimeout;
+                    });
             }
             catch (InvalidOperationException e)
             {
@@ -95,6 +104,7 @@ public static class HostBuilderExtension
             
             services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
             services.AddTransient<ISystemStatusRepository, EfSystemStatusRepository>();
+            services.AddTransient<IStationRepository, EfStationRepository>();
             services.AddTransient<IShortLoopWeTargetStationRepository, EfShortLoopWeTargetStationRepository>();
             services.AddTransient<ITelegramRepository, EfTelegramRepository>();
             services.TryAddKaeserGraphConfiguration(simulateOptions != null);
