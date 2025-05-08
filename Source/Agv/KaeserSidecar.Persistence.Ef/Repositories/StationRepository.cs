@@ -30,7 +30,14 @@ public class StationRepository : IStationRepository
             addValueFactory: (_) => [agv],
             updateValueFactory: (_, oldValue) =>
             {
-                oldValue.Add(agv);
+                if (oldValue.Count > 0)
+                {
+                    oldValue[0] = agv;
+                }
+                else
+                {
+                    oldValue.Add(agv);
+                }
                 return oldValue;
             });
         _logger.LogInformation("Added agv {Agv} to station {Station}, new occupancy is {Occupancy}", agv, station, _stationOccupancies[station].Count);

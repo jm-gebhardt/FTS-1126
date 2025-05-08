@@ -14,6 +14,11 @@ public class StationOccupancy
     /// The agv count.
     /// </summary>
     public int Count { get; private set; }
+    
+    /// <summary>
+    /// True if the station does not have any agv (count).
+    /// </summary>
+    public bool IsEmpty=> Count == 0;
 
     /// <summary>
     /// The correlation id of the agv that occupies the station.

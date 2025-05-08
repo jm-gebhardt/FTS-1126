@@ -8,7 +8,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IStationRepository"/>>
-public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> contextFactory, KaeserGraphConfiguration configuration) : EfRepository<StationOccupancy, KaeserSidecarDbContext, IDbContextFactory<KaeserSidecarDbContext>>(contextFactory), IStationRepository
+public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> contextFactory, KaeserGraphConfiguration configuration) : 
+    EfRepository<StationOccupancy, KaeserSidecarDbContext, IDbContextFactory<KaeserSidecarDbContext>>(contextFactory), IStationRepository
 {
     /// <inheritdoc cref="IStationRepository"/>>
     public async Task OccupyStation(string station, Guid agv)

@@ -180,8 +180,8 @@ public abstract class SocketCommunicator<TTelegramType>
         {
             if (_thread != null! && _thread.IsAlive)
             {
-                _cts!.Cancel();
-                Logger.LogDebug("Stopping by cancellation of token {CancellationRequested}, waiting {WaitingTime}ms for thread to finish", _cts.Token.IsCancellationRequested, ThreadWaitingTime);
+                _cts?.Cancel();
+                Logger.LogDebug("Stopping by cancellation of token {CancellationRequested}, waiting {WaitingTime}ms for thread to finish", _cts?.Token.IsCancellationRequested, ThreadWaitingTime);
                 if (!_thread.Join(ThreadWaitingTime))
                 {
                     Logger.LogWarning("Thread {Name} did not stop, aborting", Name);
@@ -207,13 +207,18 @@ public abstract class SocketCommunicator<TTelegramType>
     /// <returns></returns>
     public void Restart()
     {
+        if (!RestartMe)
+        {
+            Logger.LogWarning("Already restarted via different branch");
+            return;
+        }
         RestartMe = false;
         BeginStop();
         FinishStop();
         bool connected = Socket.IsConnected();
         while (!connected)
         {
-            Task.Delay(ThreadWaitingTime);
+            Thread.Sleep(ThreadWaitingTime);
             Logger.LogDebug("Trying to connect to socket");
             connected = Socket.Initialize();
         }
@@ -225,6 +230,11 @@ public abstract class SocketCommunicator<TTelegramType>
     /// </summary>
     public async Task RestartAsync()
     {
+        if (!RestartMe)
+        {
+            Logger.LogWarning("Already restarted via different branch");
+            return;
+        }
         RestartMe = false;
         BeginStop();
         FinishStop();

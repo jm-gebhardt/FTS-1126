@@ -16,7 +16,7 @@ public class AgvCargoStateCommunicationManager(
     ILogger<AgvCargoStateCommunicationManager> logger,
     [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
     Sender<ConveyorTelegram> sender,
-   [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
     Client client) : BackgroundService
 {
     private const int ConnectionDelayMs = 10000;
@@ -40,10 +40,10 @@ public class AgvCargoStateCommunicationManager(
         while (!initialized)
         {
             logger.LogInformation("Trying to connect to {Server} telegram server", ServiceKeyProvider.AgvCargoState);
-            initialized =  await client.InitializeAsync();
+            initialized = await client.InitializeAsync();
             await Task.Delay(ConnectionDelayMs, stoppingToken);
         }
-       
+
         sender.RestartRequest += OnRestartRequest!;
     }
 
@@ -68,14 +68,21 @@ public class AgvCargoStateCommunicationManager(
     /// <param name="eventArgs">The arguments of the event</param>
     private void OnRestartRequest(object issuer, EventArgs eventArgs)
     {
-        if (issuer is not SocketCommunicator<ConveyorTelegram> communicator)
+        try
         {
-            return;
+            if (issuer is not SocketCommunicator<ConveyorTelegram> communicator)
+            {
+                return;
+            }
+            logger.LogInformation("Restart requested from {Name}", communicator.Name);
+            if (communicator.RestartMe)
+            {
+                communicator.Restart();
+            }
         }
-        logger.LogInformation("Restart requested from {Name}", communicator.Name);
-        if (communicator.RestartMe)
+        catch (Exception ex)
         {
-            communicator.Restart();
+            logger.LogError("Restarting failed: {Message}", ex.Message);
         }
     }
 }
