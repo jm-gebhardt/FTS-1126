@@ -7,25 +7,28 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IDecisionPointActionRepository"/>>
-public class EfDecisionPointActionRepository(KaeserSidecarDbContext context): EfRepository<DecisionPointAction, KaeserSidecarDbContext>(context), IDecisionPointActionRepository
+public class EfDecisionPointActionRepository(IDbContextFactory<KaeserSidecarDbContext> contextFactory) :
+    EfRepository<DecisionPointAction, KaeserSidecarDbContext, IDbContextFactory<KaeserSidecarDbContext>>(contextFactory), IDecisionPointActionRepository
 {
-    private readonly KaeserSidecarDbContext _context = context;
-   
     /// <inheritdoc cref="IDecisionPointActionRepository"/>>
     public async Task RemoveById(Guid actionCorrelationId)
     {
-        var action = await _context.Set<DecisionPointAction>().SingleOrDefaultAsync(a => a.CorrelationId == actionCorrelationId);
+        await using var context = await ContextFactory.CreateDbContextAsync();
+
+        var action = await context.Set<DecisionPointAction>().SingleOrDefaultAsync(a => a.CorrelationId == actionCorrelationId);
         if (action != null)
         {
-            _context.Remove(action);
-            await _context.SaveChangesAsync();
+            context.Remove(action);
+            await context.SaveChangesAsync();
         }
     }
-    
+
     /// <inheritdoc cref="IDecisionPointActionRepository"/>>
     public async Task UpdateAsync(DecisionPointAction action)
     {
-        _context.Update(action);
-        await _context.SaveChangesAsync();
+        await using var context = await ContextFactory.CreateDbContextAsync();
+
+        context.Update(action);
+        await context.SaveChangesAsync();
     }
 }

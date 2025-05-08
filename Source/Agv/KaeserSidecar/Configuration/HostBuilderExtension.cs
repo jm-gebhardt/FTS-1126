@@ -97,7 +97,6 @@ public static class HostBuilderExtension
                 });
             }
 
-            services.AddDbContext<KaeserSidecarDbContext>(ConfigureDbContextOptions);
             services.AddDbContextFactory<KaeserSidecarDbContext>(ConfigureDbContextOptions);
             
             services.AddTransient<IAgvSettingsService, AgvSettingsService>();
