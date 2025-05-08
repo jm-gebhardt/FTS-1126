@@ -57,17 +57,24 @@ public class AgvAplCargoStateCommunicationManager(ILogger<AgvAplCargoStateCommun
 
     private async Task HandleRestartRequestAsync(object sender, EventArgs _)
     {
-        if (sender is not SocketCommunicator<ConveyorTelegram> communicator)
+        try
         {
-            return;
+            if (sender is not SocketCommunicator<ConveyorTelegram> communicator)
+            {
+                return;
+            }
+
+            logger.LogInformation("Restart requested from {Name}", communicator.Name);
+
+            if (communicator.RestartMe)
+            {
+                logger.LogInformation("Restarting {Name}", communicator.Name);
+                await communicator.RestartAsync();
+            }
         }
-
-        logger.LogInformation("Restart requested from {Name}", communicator.Name);
-
-        if (communicator.RestartMe)
+        catch (Exception ex)
         {
-            logger.LogInformation("Restarting {Name}", communicator.Name);
-            await communicator.RestartAsync(); 
+            logger.LogError("Restarting failed: {Message}", ex.Message);
         }
     }
 }

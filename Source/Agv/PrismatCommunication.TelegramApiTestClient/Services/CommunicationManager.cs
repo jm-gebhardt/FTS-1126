@@ -67,14 +67,21 @@ public class CommunicationManager : BackgroundService
     /// <param name="eventArgs">The arguments of the event</param>
     private void OnRestartRequest(object sender, EventArgs eventArgs)
     {
-        if (sender is not SocketCommunicator<PrismatTelegram> communicator)
+        try
         {
-            return;
+            if (sender is not SocketCommunicator<PrismatTelegram> communicator)
+            {
+                return;
+            }
+            _logger.LogInformation("Restart requested from {Name}", communicator.Name);
+            if (communicator.RestartMe)
+            {
+                communicator.Restart();
+            }
         }
-        _logger.LogInformation("Restart requested from {Name}", communicator.Name);
-        if (communicator.RestartMe)
+        catch (Exception ex)
         {
-            communicator.Restart();
+            _logger.LogError("Restarting failed: {Message}", ex.Message);
         }
     }
 }

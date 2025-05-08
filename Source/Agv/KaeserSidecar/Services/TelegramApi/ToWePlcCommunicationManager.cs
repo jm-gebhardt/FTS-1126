@@ -68,14 +68,21 @@ public class ToWePlcCommunicationManager(
     /// <param name="eventArgs">The arguments of the event</param>
     private void OnRestartRequest(object issuer, EventArgs eventArgs)
     {
-        if (issuer is not SocketCommunicator<ConveyorTelegram> communicator)
+        try
         {
-            return;
+            if (issuer is not SocketCommunicator<ConveyorTelegram> communicator)
+            {
+                return;
+            }
+            logger.LogInformation("Restart requested from {Name}", communicator.Name);
+            if (communicator.RestartMe)
+            {
+                communicator.Restart();
+            }
         }
-        logger.LogInformation("Restart requested from {Name}", communicator.Name);
-        if (communicator.RestartMe)
+        catch (Exception ex)
         {
-            communicator.Restart();
+            logger.LogError("Restarting failed: {Message}", ex.Message);
         }
     }
 }

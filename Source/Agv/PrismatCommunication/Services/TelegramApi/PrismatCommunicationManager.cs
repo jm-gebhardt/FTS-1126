@@ -94,17 +94,24 @@ public class PrismatCommunicationManager : BackgroundService
 
     private async Task HandleRestartRequestAsync(object sender, EventArgs _)
     {
-        if (sender is not SocketCommunicator<PrismatTelegram> communicator)
+        try
         {
-            return;
+            if (sender is not SocketCommunicator<PrismatTelegram> communicator)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Restart requested from {Name}", communicator.Name);
+
+            if (communicator.RestartMe)
+            {
+                _logger.LogInformation("Restarting {Name}", communicator.Name);
+                await communicator.RestartAsync();
+            }
         }
-
-        _logger.LogInformation("Restart requested from {Name}", communicator.Name);
-
-        if (communicator.RestartMe)
+        catch (Exception ex)
         {
-            _logger.LogInformation("Restarting {Name}", communicator.Name);
-            await communicator.RestartAsync(); 
+            _logger.LogError("Restarting failed: {Message}", ex.Message);
         }
     }
 }
