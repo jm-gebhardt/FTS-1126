@@ -29,5 +29,5 @@ public static class TestTelegram
 
     public const string AgvAplCargoState = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:AgvAplCargoState..../Cargo:1/$$:";
     public const string AgvWeStation = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:AgvWeStation......../Station:PS01/Pick:1040/Drop:1060/HU:1234567890........../$$:";
-    public const string TordPlc = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:Tord................/HU:1234567890........../Src:PS01....../Dest:1060/$$:";
+    public const string TordPlc = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:Tord................/HU:1234567890........../Src:PS01....../Dest:1060....../$$:";
 }
