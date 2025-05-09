@@ -14,25 +14,64 @@ steps:
       containerRegistry: ${{ parameters.containerRegistryConnectionName }}
 
   - ${{ each projectName in parameters.components }}:
-      - task: Docker@2
-        displayName: Building image ${{ projectName }}
-        inputs:
-          command: 'build'
-          Dockerfile: $(SourceDirectory)/Dockerfile
-          repository: 'gebhardt/fleet-management/${{projectName}}'
-          arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
-          tags: |
-            $(GitVersion.SemVer)
-            latest
+    - task: Docker@2
+      displayName: Building image ${{ projectName }}
+      inputs:
+        command: 'build'
+        Dockerfile: $(SourceDirectory)/Dockerfile
+        repository: 'gebhardt/fleet-management/${{projectName}}'
+        arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }} --platform linux/arm64
+        tags: |
+          arm64-$(GitVersion.SemVer)
+
+  - ${{ each projectName in parameters.components }}:
+    - task: Docker@2
+      displayName: Building image ${{ projectName }}
+      inputs:
+        command: 'build'
+        Dockerfile: $(SourceDirectory)/Dockerfile
+        repository: 'gebhardt/fleet-management/${{projectName}}'
+        arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }} --platform linux/arm64
+        tags: |
+          amd64-$(GitVersion.SemVer)
 
 
   - ${{ each projectName in parameters.components }}:
-      - task: Docker@2
-        displayName: Push docker images ${{ projectName }}
-        inputs:
-          containerRegistry: ${{ parameters.containerRegistryConnectionName }}
-          repository: 'gebhardt/fleet-management/${{projectName}}'
-          command: 'push'
-          tags: |
-            $(GitVersion.SemVer)
-            latest
+    - task: Docker@2
+      displayName: Push docker images ${{ projectName }}
+      inputs:
+        containerRegistry: ${{ parameters.containerRegistryConnectionName }}
+        repository: 'gebhardt/fleet-management/${{projectName}}'
+        command: 'push'
+        tags: |
+          arm64-$(GitVersion.SemVer)
+
+  - ${{ each projectName in parameters.components }}:
+    - task: Docker@2
+      displayName: Push docker images ${{ projectName }}
+      inputs:
+        containerRegistry: ${{ parameters.containerRegistryConnectionName }}
+        repository: 'gebhardt/fleet-management/${{projectName}}'
+        command: 'push'
+        tags: |
+          amd64-$(GitVersion.SemVer)
+
+  - ${{ each projectName in parameters.components }}:
+    - task: Docker@2
+      displayName: Push docker images ${{ projectName }}
+      inputs:
+        containerRegistry: ${{ parameters.containerRegistryConnectionName }}
+        repository: 'gebhardt/fleet-management/${{projectName}}'
+        command: 'push'
+        tags: |
+          amd64-$(GitVersion.SemVer)
+
+  - ${{ each projectName in parameters.components }}:
+    - bash: |
+        docker manifest create \
+          crffcpocarc.azurecr.io/gebhardt/fleet-management/${{projectName}}:arm64-$(GitVersion.SemVer) \
+          crffcpocarc.azurecr.io/gebhardt/fleet-management/${{projectName}}:amd64-$(GitVersion.SemVer) \
+          crffcpocarc.azurecr.io/gebhardt/fleet-management/${{projectName}}:latest 
+
+    - bash: |
+        docker manifest push --purge crffcpocarc.azurecr.io/gebhardt/fleet-management/${{projectName}}:latest 
