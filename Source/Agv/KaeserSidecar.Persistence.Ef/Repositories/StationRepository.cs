@@ -23,9 +23,8 @@ public class StationRepository : IStationRepository
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task OccupyStation(string station, Guid agv)
+    public Task OccupyStation(string station, Guid agv)
     {
-        await Task.Delay(0);
         _stationOccupancies.AddOrUpdate(station,
             addValueFactory: (_) => [agv],
             updateValueFactory: (_, oldValue) =>
@@ -41,24 +40,25 @@ public class StationRepository : IStationRepository
                 return oldValue;
             });
         _logger.LogInformation("Added agv {Agv} to station {Station}, new occupancy is {Occupancy}", agv, station, _stationOccupancies[station].Count);
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task FreeStation(string station, Guid agv)
+    public Task FreeStation(string station, Guid agv)
     {
-        await Task.Delay(0);
         if (_stationOccupancies.TryGetValue(station, out List<Guid>? agvs))
         {
             agvs.Remove(agv);
         }
         _logger.LogInformation("Removed agv {Agv} from station {Station}, new occupancy is {Occupancy}", agv, station, _stationOccupancies[station].Count);
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<ICollection<StationOccupancy>> GetStationOccupancy()
+    public Task<ICollection<StationOccupancy>> GetStationOccupancy()
     {
-        await Task.Delay(0);
-        return _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key, kvp.Value.Count, null)).OrderBy(s => s.Station).ToList();
+        return Task.FromResult<ICollection<StationOccupancy>>(
+            _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key, kvp.Value.Count, kvp.Value.Cast<Guid?>().SingleOrDefault())).OrderBy(s => s.Station).ToList());
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
@@ -66,7 +66,22 @@ public class StationRepository : IStationRepository
     {
         return Task.FromResult(_stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key,
                 kvp.Value.Count,
-                null))
-            .FirstOrDefault(s => s.AgvCorrelationId == agvCorrelationId));
+                kvp.Value.SingleOrDefault()))
+            .SingleOrDefault(s => s.AgvCorrelationId == agvCorrelationId));
+    }
+    
+    /// <summary>
+    /// Sets the occupancy of the stations.
+    /// </summary>
+    /// <param name="occupancies"></param>
+    public void WithOccupancies(ICollection<StationOccupancy> occupancies)
+    {
+        foreach (var occupancy in occupancies)
+        {
+            for (int i = 0; i < occupancy.Count; i++)
+            {
+                OccupyStation(occupancy.Station, (Guid) occupancy.AgvCorrelationId!);
+            }
+        }
     }
 }

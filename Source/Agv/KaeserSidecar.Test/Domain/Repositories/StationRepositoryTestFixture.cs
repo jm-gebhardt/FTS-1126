@@ -5,7 +5,7 @@ using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Repositories;
 
-public class StationRepositoryTestFixture: DbTestFixtureBase<KaeserSidecarDbContext>
+public class StationRepositoryTestFixture : DbTestFixtureBase<KaeserSidecarDbContext>
 {
     public readonly EfStationRepository Repository;
 
