@@ -7,6 +7,7 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups;
 /// <summary>
 /// Grouping actions and sending them across service modules
 /// </summary>
+[PublicAPI]
 public record ActionGroup : CorrelatedBy<Guid>
 {
     /// <inheritdoc />
@@ -92,16 +93,13 @@ public record ActionGroup : CorrelatedBy<Guid>
     [UsedImplicitly]
     public string? HandlingUnit { get; set; }
 
+    /// <summary>
+    /// True, if the action group has been queued.
+    /// </summary>
+    public bool IsQueued { get; set; }
+
     /// <inheritdoc cref="ActionGroup"/>
-    /// <param name="correlationId">The CorrelationId of the <see cref="ActionGroup"/></param>
-    /// <param name="actions">The child Actions of the <see cref="ActionGroup"/></param>
-    /// <param name="orderId">The OrderID</param>
-    /// <param name="assignedAgv">The assigned Agv of this <see cref="ActionGroup"/></param>
-    /// <param name="creator">The creator of this <see cref="ActionGroup"/></param>
-    /// <param name="createdDate">The date of the creation of this <see cref="ActionGroup"/></param>
-    /// <param name="isManual">If true, then this <see cref="ActionGroup"/> was created manually, not by the system</param>
-    /// <param name="hasPriority">If true, then this <see cref="ActionGroup"/> has priority over others.</param>
-    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false, bool isQueued = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
@@ -109,6 +107,7 @@ public record ActionGroup : CorrelatedBy<Guid>
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
         Actions = actions;
         Creator = creator;
+        IsQueued = isQueued;
     }
 
     /// <summary>
