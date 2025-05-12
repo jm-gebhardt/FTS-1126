@@ -124,6 +124,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriggerDoppelspiel", "Trigg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrismatCommunication.Domain", "PrismatCommunication.Domain\PrismatCommunication.Domain.csproj", "{5DA191B4-18F2-41CB-84E4-F306DAACDF9E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriggerQueueEvacuation", "TriggerQueueEvacuation\TriggerQueueEvacuation.csproj", "{0B7BEBE5-999B-47CA-A850-2AA94982611B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -334,6 +336,10 @@ Global
 		{5DA191B4-18F2-41CB-84E4-F306DAACDF9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DA191B4-18F2-41CB-84E4-F306DAACDF9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DA191B4-18F2-41CB-84E4-F306DAACDF9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B7BEBE5-999B-47CA-A850-2AA94982611B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B7BEBE5-999B-47CA-A850-2AA94982611B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B7BEBE5-999B-47CA-A850-2AA94982611B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B7BEBE5-999B-47CA-A850-2AA94982611B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -390,6 +396,7 @@ Global
 		{6383DF72-C59A-4DFA-B661-81BFEC2F96C5} = {1FCAC2CE-4DA2-4BDF-B4BB-10EE3513529D}
 		{CA461C8D-E60B-4774-B80D-B2E14C36DB95} = {1FCAC2CE-4DA2-4BDF-B4BB-10EE3513529D}
 		{5DA191B4-18F2-41CB-84E4-F306DAACDF9E} = {7A1D4655-2027-455F-80F0-86FFA7D70BDD}
+		{0B7BEBE5-999B-47CA-A850-2AA94982611B} = {1FCAC2CE-4DA2-4BDF-B4BB-10EE3513529D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8AF26A4-DDC8-432C-9E5A-C27502C1D249}

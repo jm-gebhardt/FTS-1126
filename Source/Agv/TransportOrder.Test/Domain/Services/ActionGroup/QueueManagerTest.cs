@@ -133,7 +133,10 @@ public class QueueManagerTest
         var head = queue.Head!;
         head.State!.AgvCorrelationId = agv;
         var agvToMove = queue.Nodes.Single(n => n.NodeId != head.NodeId).State!.AgvCorrelationId!.Value;
+        var agvInQueue = AgvGenerator.GenerateRawAgv(agvToMove, "serial number");
+        agvInQueue.IsQueueing = true;
         var fixture = new QueueManagerTestFixture()
+            .WithAgv(agvInQueue)
             .WithQueue(queue);
 
         Dictionary<Guid, string>? agvsToMove = await fixture.QueueManager.TryDequeueAgv(agv);
@@ -174,7 +177,10 @@ public class QueueManagerTest
         var nodeToEscape = queue.Nodes.OrderBy(n => n.Position).Skip(1).Take(1).Single();
         var agv = nodeToEscape.State!.AgvCorrelationId!.Value;
         var agvToMove = queue.Nodes.Single(n => n.Position > nodeToEscape.Position).State!.AgvCorrelationId!.Value;
+        var agvInQueue = AgvGenerator.GenerateRawAgv(agvToMove, "serial number");
+        agvInQueue.IsQueueing = true;
         var fixture = new QueueManagerTestFixture()
+            .WithAgv(agvInQueue)
             .WithQueue(queue);
 
         (Dictionary<Guid, string>? agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv, nodeToEscape.NodeId);

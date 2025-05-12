@@ -844,14 +844,16 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_WasQueuingAtQueueHead_AutomaticPickDropAction_CreateQueueingActionGroup()
     {
-        var agvsToMove = new Dictionary<Guid, string> { { Guid.NewGuid(), "a queue head" } };
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agvInQueue = AgvGenerator.GenerateRawAgv(Guid.NewGuid(), "serial number");
+        agvInQueue.IsQueueing = true;
+      
+        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "a queue head" } };
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup);
-
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
 
@@ -904,13 +906,16 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ManualPickDropAction_CreateQueueingActionGroup()
     {
-        var agvsToMove = new Dictionary<Guid, string> { { Guid.NewGuid(), "queue node" } };
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
         agv.IsQueueing = true;
+        var agvInQueue = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        agvInQueue.IsQueueing = true;
+        var agvsToMove = new Dictionary<Guid, string> { {agvInQueue.CorrelationId, "queue node" } };
+
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.IsManual = true;
         var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([agv])
+            .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup)
             .WithIsOnAQueueNode(true);
@@ -928,12 +933,15 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_CreateQueueingActionGroup()
     {
-        var agvsToMove = new Dictionary<Guid, string> { { Guid.NewGuid(), "queue node" } };
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
         agv.IsQueueing = true;
+        var agvInQueue = AgvGenerator.GenerateIdleAgv();
+        agvInQueue.IsQueueing = true;
+        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "queue node" } };
+
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([agv])
+            .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup)
             .WithIsOnAQueueNode(true);

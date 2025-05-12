@@ -40,6 +40,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Agv;
 public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCommandHandler>
 {
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
@@ -69,6 +70,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     {
         base.AddServices(collection);
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+        collection.AddSingleton<ISemaphoreProvider<IQueueingSemaphore>>(_ => _queueSemaphoreProvider);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _logger.Object);
         collection.AddTransient(_ => _mapRepository.Object);

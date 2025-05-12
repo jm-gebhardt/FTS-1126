@@ -73,6 +73,7 @@ public class QueueManagerTestFixture: FixtureBase
     {
         var agvData = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         _agvDb.Setup(x => x.Data.GetAgvDataAsync(agv.CorrelationId)).ReturnsAsync(agvData);
+        _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
         _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>())).ReturnsAsync(true);
         return this;
     }

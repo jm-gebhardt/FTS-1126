@@ -67,6 +67,11 @@ public class Queue
     /// </summary>
     public bool AllAgvsEntered => Nodes.Count(n => n.State?.AgvCorrelationId != null) == Nodes.Count;
 
+    /// <summary>
+    /// The agvs in the queue, ordered from entry node to head.
+    /// </summary>
+    public List<Guid> Agvs => Nodes.OrderByDescending(n => n.Position).Where(n => n.State is { AgvCorrelationId: not null }).Select(n => n.State!.AgvCorrelationId!.Value).ToList();
+    
     /// <inheritdoc cref="Queue"/>>
     public Queue(string name)
     {

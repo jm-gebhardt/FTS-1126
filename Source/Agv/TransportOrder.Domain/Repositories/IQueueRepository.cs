@@ -43,6 +43,14 @@ public interface IQueueRepository
     Task<Queue> GetQueueById(Guid id);
 
     /// <summary>
+    /// Get a single queue by its name.
+    /// </summary>
+    /// <param name="name">The name of the queue.</param>
+    /// <returns>The queue.</returns>
+    /// <exception cref="QueueNotFoundException">When no queue with the given id exists.</exception>
+    Task<Queue> GetQueueByName(string name);
+
+    /// <summary>
     /// Remove a queue.
     /// </summary>
     /// <param name="id">The id of the queue.</param>

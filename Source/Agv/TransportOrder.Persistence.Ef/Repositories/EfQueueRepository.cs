@@ -77,6 +77,18 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
+    public async Task<Queue> GetQueueByName(string name)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        var queue = await context.Set<Queue>()
+            .AsSplitQuery()
+            .Where(q => q.Name == name)
+            .AsNoTracking()
+            .SingleOrDefaultAsync();
+        return queue ?? throw new QueueNotFoundException(name);
+    }
+
+    /// <inheritdoc cref="IQueueRepository"/>>
     public async Task RemoveQueue(Guid id)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();

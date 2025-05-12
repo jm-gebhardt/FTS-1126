@@ -19,6 +19,7 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
 
         builder.Ignore(e => e.Head);
         builder.Ignore(e => e.Tail);
+        builder.Ignore(e => e.Agvs);
 
         builder.OwnsMany(q => q.Nodes, nodeBuilder =>
         {
