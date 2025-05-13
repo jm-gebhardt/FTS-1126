@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<StationCommandHandler>, IDisposable
 {
     private readonly Mock<IStationRepository> _stationRepository = new();
-    
+
     public StationCommandHandlerTestFixture()
     {
         _stationRepository.Setup(x => x.AddOrUpdateStationsOfGroup(It.IsAny<ICollection<Station>>(), It.IsAny<Guid>())).Verifiable();
@@ -25,7 +25,7 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
 
     public StationCommandHandlerTestFixture WithStation(Station? station)
     {
-        _stationRepository.Setup(x => x.GetStationByOccupyingAgv(It.IsAny<Guid>())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStationByOccupyingAgv(It.Is<Guid>(g => station != null && g == station.AgvCorrelationId))).ReturnsAsync(station);
         _stationRepository.Setup(x => x.GetStationByNode(It.IsAny<string>())).ReturnsAsync(station);
         return this;
     }

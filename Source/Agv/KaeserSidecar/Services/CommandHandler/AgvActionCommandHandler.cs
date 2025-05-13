@@ -60,10 +60,12 @@ public class AgvActionCommandHandler(
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
             {
+                logger.LogInformation("Agv {AgvCorrelationId} started pick {ActionCorrelationId} at station {Station}", agvCorrelationId, action.CorrelationId, targetStation);
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
                 return;
             }
         }
+        logger.LogInformation("Agv {AgvCorrelationId} started action {ActionCorrelationId} at station {Station}", agvCorrelationId, action.CorrelationId, station);
         await context.Publish(new FreeStation(station, agvCorrelationId));
     }
 

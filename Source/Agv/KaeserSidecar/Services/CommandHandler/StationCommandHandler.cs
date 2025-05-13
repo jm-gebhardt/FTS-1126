@@ -40,7 +40,7 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         var occupancy = await stationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         if (occupancy?.Station != station)
         {
-            logger.LogDebug("AGV {AgvCorrelationId} does not occupy station {Station} at all, ignoring FreeStation command", agvCorrelationId, station);
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station {Station} at all, ignoring FreeStation command", agvCorrelationId, station);
             return;
         }
         logger.LogInformation("Removing agv {Agv} from station: {Station}", agvCorrelationId, station);

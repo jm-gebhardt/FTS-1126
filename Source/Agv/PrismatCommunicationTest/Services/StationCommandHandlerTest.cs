@@ -27,7 +27,7 @@ public class StationCommandHandlerTest
     [TestMethod]
     public async Task Consume_FreeStation_ValidData_PublishesAgvLeftStation()
     {
-        var station = new Station("source", "target"){Node = "node"};
+        var station = new Station("source", "target") {Node = "node"};
         station.AddAgv(Guid.NewGuid());
         station.Occupancy.ShouldBe(1);
         using var fixture = new StationCommandHandlerTestFixture()
@@ -41,24 +41,25 @@ public class StationCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_FreeStation_StationNotFound_DoesNotPublishAgvLeftStation()
+    public async Task Consume_FreeStation_StationNotOccupied_DoesNotPublishAgvLeftStation()
     {
-        var station = new Station("source", "target") { Node = "node" };
-        station.AddAgv(Guid.NewGuid());
-        station.Occupancy.ShouldBe(1);
-        using var fixture = new StationCommandHandlerTestFixture();
+        var agvCorrelationId = Guid.NewGuid();
+        var occupiedStation = new Station("source2", "target3") {Node = "station"};
+        occupiedStation.AddAgv(agvCorrelationId);
 
-        await fixture.TestHarness.Bus.Publish(new FreeStation(station.Node!, station.AgvCorrelationId!.Value));
+        using var fixture = new StationCommandHandlerTestFixture()
+            .WithStation(occupiedStation);
+
+        await fixture.TestHarness.Bus.Publish(new FreeStation("somewhere-elese", agvCorrelationId));
 
         await fixture.ShouldHaveConsumedAsync<FreeStation>();
-        station.Occupancy.ShouldBe(1);
         await fixture.ShouldNotHavePublishedAsync<AgvLeftStation>();
     }
 
     [TestMethod]
     public async Task Consume_OccupyStation_ValidData_OccupiesStation()
     {
-        var station = new Station("source", "target") { Node = "node" };
+        var station = new Station("source", "target") {Node = "node"};
         station.Occupancy.ShouldBe(0);
         var agv = Guid.NewGuid();
         using var fixture = new StationCommandHandlerTestFixture()
@@ -74,7 +75,7 @@ public class StationCommandHandlerTest
     [TestMethod]
     public async Task Consume_OccupyStation_UnknownStation_DoesNotOccupiesStation()
     {
-        var station = new Station("source", "target") { Node = "node" };
+        var station = new Station("source", "target") {Node = "node"};
         station.Occupancy.ShouldBe(0);
         var agv = Guid.NewGuid();
         using var fixture = new StationCommandHandlerTestFixture();

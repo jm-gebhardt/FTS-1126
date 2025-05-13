@@ -40,9 +40,9 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         var agvCorrelationId = context.Message.AgvCorrelationId;
 
         var station = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
-        if (station == null)
+        if (station?.Node != context.Message.Station)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} does not occupy any station", agvCorrelationId);
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station: {Station}", agvCorrelationId, station?.Node);
             return;
         }
 
