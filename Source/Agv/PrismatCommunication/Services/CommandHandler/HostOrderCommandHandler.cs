@@ -173,6 +173,7 @@ public class HostOrderCommandHandler(
     {
         if (await ViolatesAklAgvLimitation(hostOrder))
         {
+            logger.LogInformation("Host order {OrderId} / {CorrelationId} is kept back because of AKL station limitation.", hostOrder.Hu, hostOrder.CorrelationId);
             hostOrder.SetDoppelspielPartner(null);
             await hostOrderRepository.SaveAsync();
             return;
@@ -484,6 +485,7 @@ public class HostOrderCommandHandler(
         var stationGroup = await stationRepository.GetStationGroup(context.Message.Source, context.Message.Target);
         if (stationGroup == null)
         {
+            logger.LogInformation("Station group AKL changed. Failed to queue next order because there is no station group with source {Source} and target {Target}", context.Message.Source, context.Message.Target);
             return;
         }
 
@@ -492,6 +494,8 @@ public class HostOrderCommandHandler(
         {
             return;
         }
+
+        logger.LogInformation("Station group AKL changed. Queuing order {OrderId} / {CorrelationId} that was kept back because of AKL station limitation.", hostOrder.Hu, hostOrder.CorrelationId);
         hostOrder.SetDoppelspielPartner(null);
         await QueueHostOrder(context, hostOrder, DateTime.UtcNow);
     }

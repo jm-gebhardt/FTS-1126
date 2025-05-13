@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 
 /// <summary>
-/// Handles station related events.
+/// Handles station-related events.
 /// </summary>
 [UsedImplicitly]
 public class StationEventHandler(KaeserGraphConfiguration configuration, IShortLoopWeTargetStationRepository targetStationRepository,  ILogger<StationEventHandler> logger) :
@@ -55,6 +55,7 @@ public class StationEventHandler(KaeserGraphConfiguration configuration, IShortL
     /// </summary>
     public async Task Consume(ConsumeContext<AgvLeftStation> context)
     {
+        logger.LogInformation("Reporting station free with {Source} and target {Target}", context.Message.Source, context.Message.Target);
         await context.Publish(new TryQueueDelayedOrder(context.Message.Source, context.Message.Target));
     }
 }

@@ -527,7 +527,7 @@ public class ActionGroup
     /// </summary>
     /// <param name="actionId">The action id to skip.</param>
     /// <param name="targetNodeId">The id of the new target node.</param>
-    /// <param name="route">The route if any.</param>
+    /// <param name="route">The route, if any.</param>
     public AgvAction SetTargetForActionWithUpdate(Guid actionId, string targetNodeId, Route? route = null)
     {
         if (Actions.All(a => a.CorrelationId != actionId))
