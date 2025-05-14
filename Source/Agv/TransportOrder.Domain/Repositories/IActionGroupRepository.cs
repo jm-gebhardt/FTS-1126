@@ -308,7 +308,7 @@ public interface IActionGroupRepository
     /// <summary>
     /// Returns agvs that have priority action groups.
     /// </summary>
-    /// <param name="agvs">The gav correlation ids.</param>
+    /// <param name="agvs">The agv correlation ids.</param>
     /// <returns>Collection of agv correlation id that have priority action groups. </returns>
     Task<ICollection<Guid>> FilterAgvsWithPriorityActionGroups(ICollection<Guid> agvs);
 

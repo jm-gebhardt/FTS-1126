@@ -76,6 +76,8 @@ public class ActionCommandHandler :
     private readonly ActionCommandHelper _actionService;
     private readonly IQueueManager _queueManager;
 
+    private const string QueuingOrderId = "Queuing";
+
     /// <inheritdoc cref="ActionCommandHandler"/>
     public ActionCommandHandler(
         IRouteService routeService,
@@ -423,7 +425,7 @@ public class ActionCommandHandler :
 
         var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
             groupCorrelationId,
-            "Queuing",
+            QueuingOrderId,
             actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, queueNode, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder,
@@ -1041,6 +1043,13 @@ public class ActionCommandHandler :
             await context.Publish(new CancelActionGroup(actionGroupId, CancelReason.External));
             return;
         }
+        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(actionGroup.CorrelationId);
+        //if actiongroup was queueing order, set AGV free of queing
+        if (actionGroup.OrderId.Equals(QueuingOrderId))
+        {
+            assignedAgv.IsQueueing = false;
+            await _agvDb.Agvs.UpdateAgvAsync(assignedAgv);
+        }
         await context.Publish(new AbortActionGroup(actionGroupId, AbortReason.External));
     }
 
@@ -1083,26 +1092,40 @@ public class ActionCommandHandler :
         await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             // Get and select agv
+            //Get a list of all action groups that are started but idling
             ICollection<Domain.Models.ActionGroup.ActionGroup> idleActionGroups = await _actionGroupRepository.GetRunningIdleActionGroups();
+            //Get AGV that handles this already started actiongroups
             List<Guid> idleAgvCorrelationIds = idleActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
+            
+            //Get all AGVs in queue heads
             ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
+            
+            //Get all ready AGV
             ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
             List<Agv> agvs = readyAgvs.ToList();
 
+            //if there are already started action groups and the lst of assigned AGV to this groups is not empty
             if (idleActionGroups.Count != 0)
             {
                 ICollection<Agv> idleAgvs = await _agvDb.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(idleAgvCorrelationIds);
+                //add those AGV to the list of ready AGV
                 agvs.AddRange(idleAgvs);
             }
+            //if the list of AGV at a queue head is not empty
             if (agvsAtQueueHeads.Count > 0)
             {
                 List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList())).ToList();
+                //add those AGV to the list of ready AGV
                 agvs.AddRange(queueingAgvs);
             }
+            
+            //remove duplicates if any
             agvs = agvs.DistinctBy(a => a.CorrelationId).OrderBy(a => a.CorrelationId).ToList();
 
             // Do not use agvs that already have priority action groups assigned to it
             List<Guid> unfilteredAgvs = agvs.Select(a => a.CorrelationId).ToList();
+            
+            //Remove AGV that have a priority action group assigned, e.g. manual moves with prio
             ICollection<Guid> agvsWithPriorityActionGroups = await _actionGroupRepository.FilterAgvsWithPriorityActionGroups(unfilteredAgvs);
             agvs = agvs.Where(a => !agvsWithPriorityActionGroups.Contains(a.CorrelationId)).OrderBy(a => a.CorrelationId).ToList();
             if (agvs.Count == 0)
@@ -1111,8 +1134,10 @@ public class ActionCommandHandler :
                 return;
             }
 
+            //get list of all AGV data from the available AGV
             List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
 
+            //create tuples of AGV and route costs to action group
             (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNode);
             if (closestAgvRoute.agv == null)
             {
