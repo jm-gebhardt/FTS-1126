@@ -70,8 +70,8 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                  h.FinishedDate == null &&
                  h.StartedDate != null &&
                  h.FailedDate == null &&
-                 (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node)) ||
-                  h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node))))
+                 (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.FinishedDate == null) ||
+                  h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.FinishedDate == null)))
             .AnyAsync();
     }
 }
