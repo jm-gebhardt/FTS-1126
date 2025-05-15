@@ -309,4 +309,21 @@ public class AgvActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
     }
+    
+    [TestMethod]
+    public async Task Consume_ActionAborted_ValidData_PublishesFreeStation()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        var action = actionGroup.Actions.First();
+        var actionGroupMessage = AgvActionGenerator.ConvertToMessage(actionGroup);
+        var abortedAction = actionGroupMessage.Actions.First();
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithActionGroup(actionGroup);
+
+        var actionAborted = new ActionAborted(action.CorrelationId, abortedAction);
+
+        await fixture.TestHarness.Bus.Publish(actionAborted);
+        await fixture.ShouldHaveConsumedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<FreeStation>();
+    }
 }

@@ -598,6 +598,23 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
+    public async Task<AgvAction?> GetLastCompletedActionAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var actionGroup = await queryable
+            .Where(ag => ag.AssignedAgv == agvCorrelationId)
+            .OrderByDescending(ag => ag.StartedDate)
+            .ThenByDescending(ag => ag.CompletedDate)
+            .Include(ag => ag.Actions)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ag => ag.Actions.Any(a => a.State == ActionState.Completed));
+        
+        var action = actionGroup?.Actions.OrderByDescending(a => a.CompletedDate).FirstOrDefault(a => a.CompletedDate != null);
+        return action;
+    }
+
+    /// <inheritdoc/>
     public async Task<bool> HasCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

@@ -134,6 +134,7 @@ public class ActionCommandHandler :
             actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
             await _actionService.TryUpdateActionGroup(actionGroup);
             action = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
+            
             var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
             await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
             await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);

@@ -29,9 +29,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     IConsumer<ActionGroupCreated>,
     IConsumer<ActionGroupQueued>
 {
-    /// <summary>
-    /// Handle <see cref="ActionCompleted"/> from DeviceCommunication
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionCompleted> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
@@ -40,39 +38,31 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
         await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="StartingActionForAgvFailed"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<StartingActionForAgvFailed> context)
     {
         await context.Publish(new HandleAgvActionStartFailure(context.Message.CorrelationId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="NonChargingActionCompleted"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<NonChargingActionCompleted> context)
     {
         await context.Publish(new HandleActionCompletion(context.Message.CorrelationId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="NodesSelectedForAction"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<NodesSelectedForAction> context)
     {
         await context.Publish(new EstimateActionGroupDuration(context.Message.Action, context.Message.AssignedAgv, context.Message.Action.ParentId));
     }
 
-    /// <inheritdoc cref="ActionDurationEstimated" />
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionDurationEstimated> context)
     {
         await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, context.Message.AgvId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionAbortionCompleted"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionAbortionCompleted> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
@@ -85,9 +75,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionCanceled"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionCanceled> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
@@ -100,25 +88,19 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));
     }
 
-    /// <summary>
-    /// Handles the <see cref="AutomaticActionWithdrawn"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
         await context.Publish(new FreeNode(context.Message.TargetNodeId, context.Message.ReservedOnly));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionGroupResumed"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupResumed> context)
     {
         await context.Publish(new SetNormalMode(context.Message.AgvCorrelationId, context.Message.InitiatingUser));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionGroupCreated"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
         (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
@@ -137,9 +119,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
         await context.Publish(new TryReactivateParkingAgvs());
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionGroupQueued"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupQueued> context)
     {
         (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
