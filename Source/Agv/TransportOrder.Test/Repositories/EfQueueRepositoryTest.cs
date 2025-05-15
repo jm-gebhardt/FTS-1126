@@ -27,7 +27,7 @@ public class EfQueueRepositoryTest
         returnedQueue.Nodes.Count.ShouldBe(queue.Nodes.Count);
         var returnedQueueNode = returnedQueue.Nodes.First();
         returnedQueueNode.Node.ShouldBeEquivalentTo(queue.Nodes.First().Node);
-        returnedQueueNode.State.ShouldBeEquivalentTo(queue.Nodes.First().State);
+        returnedQueueNode.OccupiedAgv.ShouldBeEquivalentTo(queue.Nodes.First().OccupiedAgv);
         returnedQueueNode.Position.ShouldBe(0);
         returnedQueueNode.NodeId.ShouldBe(queue.Nodes.First().NodeId);
     }
@@ -39,7 +39,6 @@ public class EfQueueRepositoryTest
 
         var fixture = new EfQueueRepositoryTestFixture();
         await fixture.AddRangeAsync(queue.Nodes.Select(q => q.Node));
-        await fixture.AddRangeAsync(queue.Nodes.Select(q => q.State));
 
         await fixture.Repository.AddQueue(queue);
         
@@ -52,7 +51,6 @@ public class EfQueueRepositoryTest
         returnedQueue.Nodes.Count.ShouldBe(queue.Nodes.Count);
         var returnedQueueNode = returnedQueue.Nodes.First();
         returnedQueueNode.Node.ShouldBeEquivalentTo(queue.Nodes.First().Node);
-        returnedQueueNode.State.ShouldBeEquivalentTo(queue.Nodes.First().State);
         returnedQueueNode.Position.ShouldBe(0);
         returnedQueueNode.NodeId.ShouldBe(queue.Nodes.First().NodeId);
     }
@@ -107,7 +105,7 @@ public class EfQueueRepositoryTest
         var fixture = new EfQueueRepositoryTestFixture();
         await fixture.AddRangeAsync(queue);
 
-        var agv = queue.Nodes.First(n => n.State!.NodeState != NodeLockState.Free).State!.AgvCorrelationId!.Value;
+        var agv = queue.Nodes.First(n => n.GetCurrentAgv() != null).GetCurrentAgv()!.Value;
         (await fixture.Repository.GetQueueForAgv(agv)).ShouldBeEquivalentTo(queue);
     }
 

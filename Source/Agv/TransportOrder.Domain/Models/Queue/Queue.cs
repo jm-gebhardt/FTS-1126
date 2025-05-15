@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 
@@ -33,7 +32,7 @@ public class Queue
         get
         {
             var node = Nodes.MinBy(n => n.Position);
-            bool isOccupied = node?.State?.NodeState == NodeLockState.Occupied;
+            bool isOccupied = node?.OccupiedAgv != null ;
             if (isOccupied)
             {
                 return node;
@@ -45,7 +44,7 @@ public class Queue
     /// <summary>
     /// The node at the position at which to enqueue if the queue isn't full.
     /// </summary>
-    public QueueNode? Tail => Nodes.OrderBy(n => n.Position).FirstOrDefault(n => n.State is { NodeState: NodeLockState.Free, IsLocked: false });
+    public QueueNode? Tail => Nodes.OrderBy(n => n.Position).FirstOrDefault(n => n.GetCurrentAgv() == null);
 
     /// <summary>
     /// The id of the node where agvs enter the queue.
@@ -65,12 +64,12 @@ public class Queue
     /// <summary>
     /// True if all agvs reached the queue.
     /// </summary>
-    public bool AllAgvsEntered => Nodes.Count(n => n.State?.AgvCorrelationId != null) == Nodes.Count;
+    public bool AllAgvsEntered => Nodes.Count(n => n.OccupiedAgv != null || n.ReservedAgv != null) == Nodes.Count;
 
     /// <summary>
     /// The agvs in the queue, ordered from entry node to head.
     /// </summary>
-    public List<Guid> Agvs => Nodes.OrderByDescending(n => n.Position).Where(n => n.State is { AgvCorrelationId: not null }).Select(n => n.State!.AgvCorrelationId!.Value).ToList();
+    public List<Guid> Agvs => Nodes.OrderByDescending(n => n.Position).Where(n => n.GetCurrentAgv() != null).Select(n => n.GetCurrentAgv()!.Value).ToList();
     
     /// <inheritdoc cref="Queue"/>>
     public Queue(string name)
@@ -148,7 +147,6 @@ public class Queue
     /// <param name="targetNode">The id of the target node to enqueue to.</param>
     public bool TryEnqueue(Guid agvCorrelationId, [MaybeNullWhen(false)] out string targetNode)
     {
-        ResolveDuplications();
         if (AgvFillQuantity==0 )
         { 
             targetNode = null;
@@ -161,43 +159,15 @@ public class Queue
         }
         int tail = Tail!.Position ;
         var node = Nodes.Single(n => n.Position == tail);
+        if (node.NodeId == EntryNode)
+        {
+             node.Occupy(agvCorrelationId);
+             targetNode = node.NodeId;
+             return true;
+        }
         node.Reserve(agvCorrelationId);
         targetNode = node.NodeId;
         return true;
-    }
-
-    /// <summary>
-    /// If there are multiple not free nodes with the same agv,
-    /// set state of node with higher position to "free".
-    /// This can happen, when enqueuing is invoked shortly after
-    /// escaping/dequeuing if the agv did not move yet, but was already
-    /// assigned to move in the queue. In that case for the agv there could
-    /// be an occupied and a reserved node in the queue.
-    /// </summary>
-    private void ResolveDuplications()
-    {
-        IEnumerable<IGrouping<Guid?, QueueNode>> nodeGroup = Nodes
-            .Where(n => n.State?.AgvCorrelationId != null)
-            .GroupBy(n => n.State?.AgvCorrelationId)
-            .Where(g => g.Count() > 1);
-
-        foreach (IGrouping<Guid?, QueueNode> group in nodeGroup)
-        {
-            List<QueueNode> orderedNodes = group.OrderByDescending(n => n.Position).ToList();
-            for (int i = 0; i < orderedNodes.Count - 1; i++)
-            {
-                var node = orderedNodes[i];
-                if (node.State != null)
-                {
-                    node.State = node.State with
-                    {
-                        AgvCorrelationId = null,
-                        NodeState = NodeLockState.Free,
-                        IsLocked = false
-                    };
-                }
-            }
-        }
     }
 
     /// <summary>
@@ -206,7 +176,6 @@ public class Queue
     /// <param name="agvsToMove">Output: Agvs that are to move down the queue and their target node ids.</param>
     public Guid? TryDequeue(out Dictionary<Guid, string> agvsToMove)
     {
-        ResolveDuplications();
         agvsToMove = new Dictionary<Guid, string>();
         if (AgvFillQuantity == 0 || Head == null)
         {
@@ -214,41 +183,37 @@ public class Queue
         }
         int head = Head!.Position;
         var node = Nodes.Single(n => n.Position == head);
-        if (node.State?.AgvCorrelationId == null)
+        if (node.OccupiedAgv == null)
         {
             return null;
         }
-        var agv = node.State!.AgvCorrelationId!.Value;
-        if (!TryShiftDown(ref agvsToMove, head))
-        {
-            return null;
-        }
+        var agv = node.OccupiedAgv!.Value;
+        ShiftDown(ref agvsToMove, head);
+        node.RemoveAgv(agv);
         AgvFillQuantity -= 1;
         AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
         return agv;
     }
 
     /// <summary>
-    ///  Try to shift agvs down in the queue.
+    /// Shift agvs down in the queue.
     /// </summary>
     /// <param name="agvsToMove">Output: agvs to move one position down.</param>
     /// <param name="startPosition">The position from which to start moving down.</param>
-    /// <returns>True, if shifting was successful</returns>
-    private bool TryShiftDown(ref Dictionary<Guid, string> agvsToMove, int startPosition)
+    private void ShiftDown(ref Dictionary<Guid, string> agvsToMove, int startPosition)
     {
-        foreach (var node in Nodes.Where(n => n.Position > startPosition && n.State?.NodeState != NodeLockState.Free).OrderBy(n => n.Position))
+        foreach (var node in Nodes.Where(n => n.Position > startPosition && n.GetCurrentAgv() != null).OrderBy(n => n.Position))
         {
-            if (node.State?.AgvCorrelationId == null)
+            Guid? agv = node.GetCurrentAgv();
+            if (agv == null)
             {
-                agvsToMove =  new Dictionary<Guid, string>();
-                return false;
+                continue;
             }
-            var agv = node.State!.AgvCorrelationId!.Value;
+            node.RemoveAgv(agv.Value);
             var target = Nodes.Single(n => n.Position == node.Position - 1);
-            target.Reserve(agv);
-            agvsToMove.Add(agv, target.NodeId);
+            target.Reserve(agv.Value);
+            agvsToMove.Add(agv.Value, target.NodeId);
         }
-        return true;
     }
 
     /// <summary>
@@ -257,7 +222,7 @@ public class Queue
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     public bool IsEnqueued(Guid agvCorrelationId)
     {
-        return Nodes.Any(n => n.State?.AgvCorrelationId == agvCorrelationId && n.State?.NodeState != NodeLockState.Free);
+        return Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId));
     }
 
     /// <summary>
@@ -270,7 +235,7 @@ public class Queue
     public bool IsAgvAtQueueHead(Guid agvCorrelationId, string nodeId)
     {
         var lastNode = Nodes.MinBy(n => n.Position);
-        return lastNode?.State?.AgvCorrelationId == agvCorrelationId && lastNode.NodeId == nodeId;
+        return lastNode!= null && lastNode.AgvIsAssigned(agvCorrelationId) && lastNode.NodeId == nodeId;
     }
 
     /// <summary>
@@ -281,27 +246,45 @@ public class Queue
     /// <returns>Node at which the queue was escaped.</returns>
     public string? TryEscapeQueue(Guid agvCorrelationId, out Dictionary<Guid, string> agvsToMove)
     {
-        ResolveDuplications();
         agvsToMove = new Dictionary<Guid, string>();
-        var node = Nodes.SingleOrDefault(n => n.State?.AgvCorrelationId == agvCorrelationId && n.State?.NodeState != NodeLockState.Free);
+        var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == agvCorrelationId);
         if (node == null)
         {
             return null;
         }
-        if (!TryShiftDown(ref agvsToMove, node.Position))
-        {
-            return null;
-        }
+        ShiftDown(ref agvsToMove, node.Position);
+        node.RemoveAgv(agvCorrelationId);
         AgvFillQuantity -= 1;
         AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
         return node.NodeId;
     }
 
     /// <summary>
+    /// Reach a queue node.
+    /// </summary>
+    /// <param name="nodeId">The id of the node.</param>
+    /// <param name="agvCorrelationId">The agv that reaches the node.</param>
+    public void ReachNode(string nodeId, Guid agvCorrelationId)
+    {
+        var node = Nodes.SingleOrDefault(n => n.NodeId == nodeId);
+        if (node == null)
+        {
+            return;
+        }
+        node.Occupy(agvCorrelationId);
+    }
+
+    /// <summary>
     /// Remove an agv from the queue without updating other agvs positions.
     /// </summary>
-    public void RemoveAgv()
+    public void RemoveAgv(Guid agvCorrelationId)
     {
+        var node = Nodes.SingleOrDefault(n => n.AgvIsAssigned(agvCorrelationId));
+        if (node != null) // Agv already enqueued.
+        {
+            node.Free(agvCorrelationId);
+        }
+        
         AgvFillQuantity -= 1;
         AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
     }

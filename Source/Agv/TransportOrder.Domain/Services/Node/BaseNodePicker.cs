@@ -12,6 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Node;
 /// <summary>
 /// Abstract class to implement when choosing nodes.
 /// </summary>
+[PublicAPI]
 public abstract class BaseNodePicker
 {
     /// <summary>

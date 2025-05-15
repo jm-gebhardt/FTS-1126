@@ -15,6 +15,12 @@ public interface IQueueRepository
     Task AddQueue(Queue queue);
 
     /// <summary>
+    /// Update a queue.
+    /// </summary>
+    /// <param name="queue">The queue</param>
+    Task UpdateQueueAsync(Queue queue);
+
+    /// <summary>
     /// Update the queue size.
     /// </summary>
     /// <param name="queueId">The queue id</param>

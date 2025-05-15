@@ -16,6 +16,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.IsMovingCargo);
         builder.Ignore(e => e.IsChargingOrder);
         builder.Ignore(e => e.IsIncomplete);
+        builder.Ignore(e => e.IsQueueingOrder);
         builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);
         builder.HasIndex(g => g.AssignedAgv);
         builder.Property(e => e.IsQueued);

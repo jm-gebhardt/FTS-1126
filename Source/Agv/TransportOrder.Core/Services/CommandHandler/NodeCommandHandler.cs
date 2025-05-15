@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
-using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
@@ -21,7 +20,6 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class NodeCommandHandler(
     INodeStateRepository nodeStateRepository, 
-    IQueueRepository queueRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository, 
     IGraphRepository graphRepository,
@@ -101,7 +99,6 @@ public class NodeCommandHandler(
         if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
         {
             await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
-            await context.Publish(new TryReachQueueHead(agvCorrelationId, newLastNodeId));
             await PublishNodeStateChange(context, newLastNodeId!);
             nodeLocksForAgv.Remove(newLastNode);
         }
@@ -116,11 +113,6 @@ public class NodeCommandHandler(
 
     private async Task FreeUnusedNodes(IPublishEndpoint context, ICollection<NodeLock> nodeLocks, Guid agvCorrelationId)
     {
-        var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
-        if (queue != null)
-        {
-            nodeLocks = nodeLocks.Except(queue.Nodes.Where(n => n.State?.AgvCorrelationId == agvCorrelationId).Select(q => q.State!).ToList()).ToList();
-        }
         ICollection<ActionGroup> agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
         ICollection<Task<bool>> freeNodeTasks = [];
         ICollection<Task> publishTasks = [];

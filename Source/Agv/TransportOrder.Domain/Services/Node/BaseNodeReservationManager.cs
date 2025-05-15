@@ -11,6 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Node;
 /// <summary>
 /// Reserve Nodes
 /// </summary>
+[PublicAPI]
 public abstract class BaseNodeReservationManager : BaseNodePicker
 {
     /// <summary>

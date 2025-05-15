@@ -50,7 +50,14 @@ public static class QueueGenerator
         {
             queue.AddNode(node.state.NodeId, node.index);
             var queueNode = queue.Nodes.Single(n => n.Position == node.index);
-            queueNode.State = node.state;
+            if (node.state is { NodeState: NodeLockState.Reserved, AgvCorrelationId: not null })
+            {
+                queueNode.Reserve(node.state.AgvCorrelationId.Value);
+            }
+            if (node.state is { NodeState: NodeLockState.Occupied, AgvCorrelationId: not null })
+            {
+                queueNode.Occupy(node.state.AgvCorrelationId.Value);
+            }
             var graphNode = new GraphNode(node.state.NodeId);
             queueNode.Node = mapper.Map<EfNode>(graphNode);
         }

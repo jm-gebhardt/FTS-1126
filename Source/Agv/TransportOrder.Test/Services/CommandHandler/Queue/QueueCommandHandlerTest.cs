@@ -27,8 +27,9 @@ public class QueueCommandHandlerTest
         List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(queue.AgvFillQuantity);
 
-        foreach (var agv in queue.Nodes.Select(n => n.State!.AgvCorrelationId!.Value))
+        foreach (var node  in queue.Nodes)
         {
+            Guid? agv = node.GetCurrentAgv();
             var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
             message.ShouldNotBeNull();
             message.ActionGroup.IsManual.ShouldBeTrue();
@@ -69,8 +70,13 @@ public class QueueCommandHandlerTest
         List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(queue.AgvFillQuantity + 1);
 
-        foreach (var agv in queue.Nodes.Where(n => n.State!.NodeState != NodeLockState.Free).Select(n => n.State!.AgvCorrelationId!.Value))
+        foreach (var node in queue.Nodes)
         {
+            Guid? agv = node.GetCurrentAgv();
+            if (agv == null)
+            {
+                continue;
+            }
             var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
             message.ShouldNotBeNull();
             message.ActionGroup.IsManual.ShouldBeTrue();

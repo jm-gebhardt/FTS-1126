@@ -81,7 +81,6 @@ public class AgvCommandHandler :
     IConsumer<TryReactivateParkingAgvs>,
     IConsumer<SwitchMode>,
     IConsumer<TryEnqueueAgv>,
-    IConsumer<TryReachQueueHead>,
     IConsumer<ReceiveAgvZones>,
     IConsumer<RemoveAgvFromZones>
 {
@@ -1051,20 +1050,6 @@ public class AgvCommandHandler :
                 await context.Publish(new QueueEntered());
             }
         });
-    }
-
-    /// <summary>
-    /// Handles the <see cref="TryReachQueueHead"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<TryReachQueueHead> context)
-    {
-        (var agvCorrelationId, string? targetNode) = context.Message;
-
-        if (targetNode != null)
-        {
-            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-            await _queueManager.TryReachQueueHead(agv, targetNode);
-        }
     }
 
     private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Guid agvCorrelationId, string? agvLastNodeId)

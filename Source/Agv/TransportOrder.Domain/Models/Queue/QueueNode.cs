@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 
@@ -22,12 +21,27 @@ public class QueueNode
     /// <summary>
     /// The corresponding <see cref="EfNode"/>.
     /// </summary>
-    public EfNode? Node { get; set; } 
+    public EfNode? Node { get; set; }
 
     /// <summary>
-    /// The state of the node, i.e. corresponding <see cref="NodeLock"/>
+    /// The agv the node is reserved for.
     /// </summary>
-    public NodeLock? State { get; set; }
+    public Guid? ReservedAgv { get; private set; }
+
+    /// <summary>
+    /// The time the node was last reserved.
+    /// </summary>
+    public DateTime? LastReservedDate { get; private set; }
+
+    /// <summary>
+    /// The agv that occupies the queue node.
+    /// </summary>
+    public Guid? OccupiedAgv { get; private set; }
+
+    /// <summary>
+    /// The time the node was last occupied.
+    /// </summary>
+    public DateTime? LastOccupiedDate { get; private set; }
 
     /// <inheritdoc cref="QueueNode"/>>
     [JsonConstructor]
@@ -43,12 +57,11 @@ public class QueueNode
     }
 
     /// <inheritdoc cref="QueueNode"/>>
-    public QueueNode(string nodeId, int position, EfNode node, NodeLock? state )
+    public QueueNode(string nodeId, int position, EfNode node)
     {
         NodeId = nodeId;
         Position = position;
         Node = node;
-        State = state;
     }
 
     /// <summary>
@@ -57,6 +70,81 @@ public class QueueNode
     /// <param name="agvCorrelationId">The agv to reserve the queue node for.</param>
     public void Reserve(Guid agvCorrelationId)
     {
-        State = new NodeLock(NodeId, NodeLockState.Reserved, false, agvCorrelationId, DateTime.UtcNow);
+        ReservedAgv = agvCorrelationId;
+        LastReservedDate = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Occupy the queue node.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    public void Occupy(Guid agvCorrelationId)
+    {
+        OccupiedAgv = agvCorrelationId;
+        LastOccupiedDate = DateTime.UtcNow;
+        if (ReservedAgv == OccupiedAgv)
+        {
+            ReservedAgv = null;
+            LastReservedDate = null;
+        }
+    }
+
+    /// <summary>
+    /// Free the queue node.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    public void Free(Guid agvCorrelationId)
+    {
+        if (OccupiedAgv != agvCorrelationId)
+        {
+            return;
+        }
+        OccupiedAgv = null;
+        LastOccupiedDate = null;
+    }
+
+    /// <summary>
+    /// Remove an agv from a node.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    public void RemoveAgv(Guid agvCorrelationId)
+    {
+        if (ReservedAgv == agvCorrelationId)
+        {
+            ReservedAgv = null;
+            LastReservedDate = null;
+        }
+        if (OccupiedAgv == agvCorrelationId)
+        {
+            OccupiedAgv = null;
+            LastOccupiedDate = null;
+        }
+    }
+
+    /// <summary>
+    /// True, if the agv is reserved for or already arrived at a node.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <returns>True, if the agv has a reserved or occupied node in the queue.</returns>
+    public bool AgvIsAssigned(Guid agvCorrelationId)
+    {
+        return OccupiedAgv == agvCorrelationId || ReservedAgv == agvCorrelationId;
+    }
+
+    /// <summary>
+    /// The agv that either occupied or the reserved the node last.
+    /// </summary>
+    /// <returns>The correlation id of the agv.</returns>
+    public Guid? GetCurrentAgv()
+    {
+        if (LastOccupiedDate == null && LastReservedDate == null)
+        {
+            return null;
+        }
+        if (LastOccupiedDate > LastReservedDate || LastReservedDate == null)
+        {
+            return OccupiedAgv;
+        }
+        return ReservedAgv;
     }
 }

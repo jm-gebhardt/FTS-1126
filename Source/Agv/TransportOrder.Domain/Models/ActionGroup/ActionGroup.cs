@@ -72,6 +72,11 @@ public class ActionGroup
     public bool IsChargingOrder => Actions.Any(a => a.ActionType == ActionType.Charge);
 
     /// <summary>
+    /// True, if the action group is a queueing order.
+    /// </summary>
+    public bool IsQueueingOrder => HasPriority && !IsManual && Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1;
+
+    /// <summary>
     /// True if any of the actions is incomplete, i.e. its target is undefined.
     /// </summary>
 

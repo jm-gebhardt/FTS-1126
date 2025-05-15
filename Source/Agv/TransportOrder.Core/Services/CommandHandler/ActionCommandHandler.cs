@@ -735,6 +735,7 @@ public class ActionCommandHandler :
 
         if (agv.IsQueueing && action.Target.NodeId != null)
         {
+            await _queueManager.TryReachQueueNode(agv, action.Target.NodeId);
             await context.Publish(new TryEnqueueAgv(agv.CorrelationId, action.Target.NodeId), cancellationToken);
         }
 
@@ -774,6 +775,11 @@ public class ActionCommandHandler :
         }
         var agv = await _agvDb.Agvs.GetAgvAsync((Guid)actionGroup.AssignedAgv!);
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason());
+
+        if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && agv.IsQueueing)
+        {
+            await _queueManager.RemoveAgvFromQueueEntry(agv.CorrelationId, action.Target.NodeId!);
+        }
 
         await context.Publish(new ActionAborted(agv.CorrelationId, _mapper.Map<MessageAgvAction>(action)));
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);

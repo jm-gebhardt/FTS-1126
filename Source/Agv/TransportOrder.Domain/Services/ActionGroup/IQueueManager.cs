@@ -46,11 +46,18 @@ public interface IQueueManager
     /// <param name="agv">The agv.</param>
     /// <param name="nodeId">The node id.</param>
     /// <returns></returns>
-    Task TryReachQueueHead(Agv agv, string nodeId);
+    Task TryReachQueueNode(Agv agv, string nodeId);
 
     /// <summary>
     /// Get all agvs at queue heads.
     /// </summary>
     /// <returns>The agvs at queue heads.</returns>
     Task<ICollection<Guid>> GetAgvsAtQueueHeads();
+
+    /// <summary>
+    /// Remove an agv from its queue.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="targetNode">The target node of the queue.</param>
+    Task RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode);
 }

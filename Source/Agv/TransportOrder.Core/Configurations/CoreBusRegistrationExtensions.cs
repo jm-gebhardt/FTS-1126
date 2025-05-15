@@ -91,7 +91,6 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<PrepareChargingOfAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvSettingsGroupReference, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SwitchMode, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<TryReachQueueHead, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<ReceiveAgvZones, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveAgvFromZones, AgvCommandHandler>(c);
         });
