@@ -34,7 +34,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
-using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.IdentityModel.Tokens;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
@@ -206,20 +205,21 @@ public class AgvCommandHandler :
 
         if (await _actionGroupRepository.HasCurrentAssignedActionGroupAsync(agvCorrelationId))
         {
-            _logger.LogDebug("No need for a park / queue action because the agv {AgvCorrelationId} is already assigned to an action group", agv.CorrelationId);
-            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+            _logger.LogDebug("No need for a park / queue action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
+            await context.Publish(new AgvBecameIdle(agvCorrelationId));
             return;
         }
 
-        if (ParkerState.HasParkers && (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agvCorrelationId)))
+        bool hasParkers = await  _parkPointService.HasParkersAsync(agvCorrelationId);
+        if (hasParkers && (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agvCorrelationId)))
         {
-            _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}", agvCorrelationId);
             return;
         }
 
         if (agv.IsQueueing || await _queueManager.IsOnAQueueNode(agvCorrelationId))
         {
-            _logger.LogDebug("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogDebug("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}", agvCorrelationId);
             return;
         }
 
@@ -228,17 +228,17 @@ public class AgvCommandHandler :
         {
             agv.IsQueueing = true;
             await _agvDb.Agvs.UpdateAgvAsync(agv);
-            _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
-            await context.Publish(new QueueNodeSelectedForAgv(agv.CorrelationId, targetNode));
+            _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}.", agvCorrelationId);
+            await context.Publish(new QueueNodeSelectedForAgv(agvCorrelationId, targetNode));
             return;
         }
 
-        if (ParkerState.HasParkers)
+        if (hasParkers)
         {
-            _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}", agvCorrelationId);
             var parkNode = await _parkPointService.ReserveParkAsync(agv);
             await PublishNodeStateChange(context, parkNode.Id);
-            await context.Publish(new ParkingNodeSelectedForAgv(agv.CorrelationId, parkNode.Id));
+            await context.Publish(new ParkingNodeSelectedForAgv(agvCorrelationId, parkNode.Id));
         }
         else
         {

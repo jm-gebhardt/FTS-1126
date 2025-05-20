@@ -51,7 +51,7 @@ public class AgvActionCommandHandler(
         string? startNode = lastFinishedAction?.Target.NodeId;
         if (startNode != null && !startNode.Equals(nodes.FirstOrDefault()))
         {
-            logger.LogWarning("Target node of last completed action and first node of started action for AGV {ActionCorrelationId} differ. Last {LastTargetNode} Started {StartNode}", action.CorrelationId, startNode, nodes.FirstOrDefault());
+            logger.LogWarning("Target node of last completed action and first node of started action for AGV {AgvCorrelationId} differ. Last {LastTargetNode} Started {StartNode}", agvCorrelationId, startNode, nodes.FirstOrDefault());
         }
         if (startNode == null)
         {

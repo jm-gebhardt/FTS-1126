@@ -132,4 +132,12 @@ public interface IGraphRepository
     /// <param name="lastNodeIdsByAgvCorrelationId">A dictionary with agv correlation id and last node id.</param>
     /// <returns></returns>
     public Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, string?> lastNodeIdsByAgvCorrelationId);
+
+    /// <summary>
+    /// Check if the agv has a node of the given type.
+    /// </summary>
+    /// <param name="agvCorrelationId">The Agv correlation Id</param>
+    /// <param name="nodeType">The node type to check</param>
+    /// <returns>True, if the agv has a node of the given type.</returns>
+    Task<bool> HasAnyNodeOfTypeAsync(Guid agvCorrelationId, AgvGraph.NodeType nodeType);
 }

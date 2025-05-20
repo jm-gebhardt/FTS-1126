@@ -1,9 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Graphs;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
-using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -33,14 +31,10 @@ public class GraphCommandHandler : IConsumer<UpdateGraph>
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateGraph> context)
     {
-        _logger.LogDebug("Update Graph");
+        _logger.LogInformation("Update Graph");
 
         var graph = context.Message.Graph;
         graph.Validate();
-        if (graph.Nodes.Any(n => n.IsParker()))
-        {
-            ParkerState.UpdateHasParkers(true);
-        }
 
         await _graphRepository.UpdateGraphAsync(graph);
 

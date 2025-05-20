@@ -88,6 +88,18 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
+    public async Task<bool> HasAnyNodeOfTypeAsync(Guid agvCorrelationId, AgvGraph.NodeType nodeType)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        bool exists = await context.Set<EfAgvGraph>()
+            .Include(g => g.Nodes)
+            .AsNoTracking()
+            .AnyAsync(g => g.CorrelationId == agvCorrelationId && g.Nodes.Any(n => n.Type == (object) nodeType));
+
+        return exists;
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<GraphNode>> GetNodesAsync(Guid agvCorrelationId, Expression<Func<GraphNode, bool>>? predicate = null)
     {
         var graph = await GetAgvGraphAsync(agvCorrelationId);
@@ -181,7 +193,7 @@ public class EfGraphRepository : IGraphRepository
 
             var existingGraph = await context.Set<EfAgvGraph>()
                 .SingleOrDefaultAsync(g => g.CorrelationId == agvGraph.CorrelationId);
-            
+
             if (await context.Set<EfNode>()
                     .Where(node => efGraph.Nodes.Select(n => n.Id).Contains(node.Id))
                     .CountAsync() != efGraph.Nodes.Count ||

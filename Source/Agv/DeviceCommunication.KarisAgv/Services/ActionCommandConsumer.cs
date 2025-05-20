@@ -116,8 +116,8 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
                 action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.Position!);
             return;
         }
-        logger.LogInformation("Sent update transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
-            action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
+        logger.LogInformation("Aborted Action: {ActionCorrelationId} and sent update transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
+            abortedActionCorrelationId, action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
     }
 
     /// <summary>
