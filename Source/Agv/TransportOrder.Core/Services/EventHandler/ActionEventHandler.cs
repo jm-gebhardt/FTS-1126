@@ -34,7 +34,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-
+        
         await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }
 
@@ -47,7 +47,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<NonChargingActionCompleted> context)
     {
-        await context.Publish(new HandleActionCompletion(context.Message.CorrelationId));
+        await context.Publish(new HandleActionCompletion(context.Message.CorrelationId, context.Message.IsQueueing));
     }
 
     /// <inheritdoc />

@@ -271,6 +271,11 @@ public class Queue
         {
             return;
         }
+        if(Nodes.Any(n => n.NodeId != node.NodeId && n.GetCurrentAgv() == agvCorrelationId && n.Position < node.Position))
+        {
+           // do not occupy if another downstream node has already been reserved for this agv
+           return;
+        }
         node.Occupy(agvCorrelationId);
     }
 

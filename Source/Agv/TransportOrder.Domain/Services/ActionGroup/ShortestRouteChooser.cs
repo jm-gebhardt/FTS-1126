@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <summary>
-/// Simple logic based on the optimization of fastest route
+/// Simple logic based on the optimization of the fastest route
 /// </summary>
 public class ShortestRouteChooser : BaseChooseAgvActionGroupService
 {
@@ -17,8 +17,9 @@ public class ShortestRouteChooser : BaseChooseAgvActionGroupService
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
+        IQueueManager queueManager,
         ILogger<ShortestRouteChooser> logger
-    ): base(actionGroupRepository, nodeStateRepository, queueRepository, routeService, logger)
+    ): base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger)
     {
     }
 

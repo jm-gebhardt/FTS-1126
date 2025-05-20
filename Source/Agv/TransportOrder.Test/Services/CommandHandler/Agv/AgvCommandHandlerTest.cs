@@ -318,7 +318,7 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         fixture.VerifyAgvUpdated(Times.Once());
-        fixture.VerifyNodeStateChange(forceReserve:Times.Never(), forceOccupy:Times.Never(), reserve:Times.Never());
+        fixture.VerifyNodeStateChange(forceReserve: Times.Never(), forceOccupy: Times.Never(), reserve: Times.Never());
     }
 
     [TestMethod]
@@ -337,7 +337,7 @@ public class AgvCommandHandlerTest
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
-        
+
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         fixture.VerifyAgvUpdated(Times.Once());
@@ -351,7 +351,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId:AgvGraphGenerator.Crg1);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Crg1);
         ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
@@ -378,7 +378,7 @@ public class AgvCommandHandlerTest
         ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
-            .WithNodesStates([], nodes, nodeReservationFails:true)
+            .WithNodesStates([], nodes, nodeReservationFails: true)
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
@@ -425,7 +425,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Crg1, createdDate:DateTime.UtcNow.AddMinutes(-15));
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Crg1, createdDate: DateTime.UtcNow.AddMinutes(-15));
         ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
@@ -489,7 +489,6 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
         fixture.VerifyAgvUpdated(Times.Once());
-        fixture.VerifyNodeStateChange(forceReserve: Times.Once(), forceOccupy: Times.Never(), reserve: Times.Never());
     }
 
     [TestMethod]
@@ -847,7 +846,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
         var agvInQueue = AgvGenerator.GenerateRawAgv(Guid.NewGuid(), "serial number");
         agvInQueue.IsQueueing = true;
-      
+
         var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "a queue head" } };
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
@@ -910,7 +909,7 @@ public class AgvCommandHandlerTest
         agv.IsQueueing = true;
         var agvInQueue = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
         agvInQueue.IsQueueing = true;
-        var agvsToMove = new Dictionary<Guid, string> { {agvInQueue.CorrelationId, "queue node" } };
+        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "queue node" } };
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.IsManual = true;
@@ -1507,7 +1506,7 @@ public class AgvCommandHandlerTest
             .WithPostion(position)
             .WithZones([zone])
             .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
-        
+
         await fixture.PublishMessageAsync(new RemoveAgvFromZones(agv.CorrelationId));
         await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();

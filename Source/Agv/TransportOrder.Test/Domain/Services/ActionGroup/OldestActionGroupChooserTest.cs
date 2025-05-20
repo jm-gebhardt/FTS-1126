@@ -23,6 +23,7 @@ public class OldestActionGroupChooserTest
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.NodeId!, oldSlowActionGroup.Actions.Last().Target.NodeId!, oldSlowActionGroup, 10f)
             .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.NodeId!, fastActionGroup.Actions.Last().Target.NodeId!, fastActionGroup, 1f)
+            .WithAgvAtQueueHead([])
             .Build();
 
         var chosenGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);

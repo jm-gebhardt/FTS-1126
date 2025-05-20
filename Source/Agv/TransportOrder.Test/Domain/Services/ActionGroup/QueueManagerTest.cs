@@ -32,7 +32,6 @@ public class QueueManagerTest
        
         (await fixture.QueueManager.TryEnterQueue(agv)).ShouldBe(entryNode);
         fixture.VerifyQueueWasUpdated();
-        fixture.VerifyAgvWasUpdated();
         queue.AgvFillQuantity.ShouldBe(1);
     }
 
@@ -250,9 +249,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
-        await fixture.QueueManager.TryReachQueueNode(agv, queue.Head!.NodeId);
-        fixture.VerifyAgvWasUpdated();
-        agv.IsQueueing.ShouldBeFalse();
+        (await fixture.QueueManager.TryReachQueueNode(agv, queue.Head!.NodeId)).ShouldBeTrue();
     }
 
     [TestMethod]

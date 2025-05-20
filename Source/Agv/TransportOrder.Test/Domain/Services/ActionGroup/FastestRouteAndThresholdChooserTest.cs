@@ -22,6 +22,7 @@ public class FastestRouteAndThresholdChooserTest
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, slowActionGroup.Actions.First().Target.NodeId!, slowActionGroup.Actions.Last().Target.NodeId!, slowActionGroup, 10f)
             .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.NodeId!, fastActionGroup.Actions.Last().Target.NodeId!, fastActionGroup, 1f)
+            .WithAgvAtQueueHead([])
             .Build();
 
         var chosenGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
@@ -43,6 +44,7 @@ public class FastestRouteAndThresholdChooserTest
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, slowOldActionGroup.Actions.First().Target.NodeId!, slowOldActionGroup.Actions.Last().Target.NodeId!, slowOldActionGroup, 10f)
             .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.NodeId!, fastActionGroup.Actions.Last().Target.NodeId!, fastActionGroup, 1f)
+            .WithAgvAtQueueHead([])
             .Build();
 
         var chosenGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);

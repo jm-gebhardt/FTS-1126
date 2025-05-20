@@ -22,6 +22,7 @@ public class AlternatingModeChooserTest
             .WithNotStartedActionGroup(actionGroup2)
             .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
             .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.NodeId!, actionGroup2.Actions.Last().Target.NodeId!, actionGroup2, 1f)
+            .WithAgvAtQueueHead([])
             .Build();
 
         await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
@@ -45,6 +46,7 @@ public class AlternatingModeChooserTest
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.NodeId!, oldSlowActionGroup.Actions.Last().Target.NodeId!, oldSlowActionGroup, 10f)
             .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.NodeId!, fastActionGroup.Actions.Last().Target.NodeId!, fastActionGroup, 1f)
+            .WithAgvAtQueueHead([])
             .Build();
 
         var chosenGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);

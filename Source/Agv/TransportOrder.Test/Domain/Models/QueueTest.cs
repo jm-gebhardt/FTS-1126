@@ -278,7 +278,7 @@ public class QueueTest
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [lockState, NodeLockState.Reserved, NodeLockState.Free]);
         if (lockState == NodeLockState.Reserved)
         {
-            queue.Nodes.OrderBy(n => n.Position).First().Reserve(agv); 
+            queue.Nodes.OrderBy(n => n.Position).First().Reserve(agv);
         }
         if (lockState == NodeLockState.Occupied)
         {
@@ -331,5 +331,77 @@ public class QueueTest
 
         queue.RemoveAgv(Guid.NewGuid());
         queue.AgvFillQuantity.ShouldBe(queueSize);
+    }
+
+    [TestMethod]
+    public void ReachNode_ValidData_NodeOccupied()
+    {
+        var agv = Guid.NewGuid();
+
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        queue.TryEnterQueue();
+        queue.TryEnqueue(agv, out string? target);
+
+        queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBe(agv);
+
+        queue.ReachNode(target!, agv);
+        queue.Nodes.Single(n => n.NodeId == target).OccupiedAgv.ShouldBe(agv);
+        queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void ReachNode_UnknownNode_NodeNotOccupied()
+    {
+        var agv = Guid.NewGuid();
+
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        queue.TryEnterQueue();
+        queue.TryEnqueue(agv, out string? target);
+
+        queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBe(agv);
+
+        queue.ReachNode("unknown", agv);
+        queue.Nodes.Any(n => n.OccupiedAgv != null).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void ReachNode_DownStreamNodeReserved_NodeNotOccupied()
+    {
+        var agv = Guid.NewGuid();
+        var agvThatDidNotReachNodeYet = Guid.NewGuid();
+
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        queue.TryEnterQueue();
+        queue.TryEnterQueue();
+
+        // agv reaches the queue entry node first
+        queue.TryEnqueue(agv, out string? downstreamNode);
+        queue.Nodes.Single(n => n.NodeId == downstreamNode).ReservedAgv.ShouldBe(agv);
+        // than agvThatDidNotReachNodeYet reaches the queue entry node
+        queue.TryEnqueue(agvThatDidNotReachNodeYet, out string? upstreamNode);
+        queue.Nodes.Single(n => n.NodeId == upstreamNode).ReservedAgv.ShouldBe(agvThatDidNotReachNodeYet);
+
+        // agv reaches the queue head
+        queue.ReachNode(downstreamNode!, agv);
+        queue.Nodes.Single(n => n.NodeId == downstreamNode).OccupiedAgv.ShouldBe(agv);
+        queue.IsAgvAtQueueHead(agv, downstreamNode!).ShouldBeTrue();
+
+        // agv gets dequeued
+        queue.TryDequeue(out Dictionary<Guid, string> agvsToMove);
+        queue.Nodes.Any(n => n.GetCurrentAgv() == agv).ShouldBeFalse();
+        // and reserves the head for agvThatDidNotReachNodeYet
+        agvsToMove[agvThatDidNotReachNodeYet].ShouldBe(downstreamNode!);
+        queue.Nodes.Single(n => n.NodeId == upstreamNode).ReservedAgv.ShouldBeNull();
+        queue.Nodes.Single(n => n.NodeId == downstreamNode).ReservedAgv.ShouldBe(agvThatDidNotReachNodeYet);
+
+        // agvThatDidNotReachNodeYet reaches the original node it was enqueued to
+        queue.ReachNode(upstreamNode!, agvThatDidNotReachNodeYet);
+        queue.Nodes.Single(n => n.NodeId == upstreamNode).ReservedAgv.ShouldBeNull();
+        queue.Nodes.Single(n => n.NodeId == upstreamNode).OccupiedAgv.ShouldBeNull();
+
+        // agvThatDidNotReachNodeYet reaches the queue head
+        queue.ReachNode(downstreamNode!, agvThatDidNotReachNodeYet);
+        queue.Nodes.Single(n => n.NodeId == downstreamNode).OccupiedAgv.ShouldBe(agvThatDidNotReachNodeYet);
+        queue.Nodes.Single(n => n.NodeId == downstreamNode).ReservedAgv.ShouldBeNull();
     }
 }

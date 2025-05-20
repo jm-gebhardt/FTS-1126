@@ -697,7 +697,6 @@ public class ActionCommandHandler :
 
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
-        await context.Publish(new NonChargingActionCompleted(agvCorrelationId), cancellationToken);
 
         if (!agv.CanStartAutomaticAction && !actionGroup.IsManual && actionGroup.State != ActionGroupState.Paused)
         {
@@ -718,6 +717,7 @@ public class ActionCommandHandler :
 
         if (actionGroup.State != ActionGroupState.Completed)
         {
+            await context.Publish(new NonChargingActionCompleted(agvCorrelationId), cancellationToken);
             _logger.LogOrderInformation(LogCodes.OrderActionCompleted, actionGroup.AssignedAgv.GetValueOrDefault(),
                 actionGroup.CorrelationId, "Order Updated",
                 $"{actionGroup.Actions.First(a => a.CorrelationId == correlationId).ActionType.ToString()} of order {actionGroup.OrderId} has been completed",
@@ -733,17 +733,19 @@ public class ActionCommandHandler :
             return;
         }
 
+        bool isQueueing = agv.IsQueueing;
         if (agv.IsQueueing && action.Target.NodeId != null)
         {
-            await _queueManager.TryReachQueueNode(agv, action.Target.NodeId);
-            await context.Publish(new TryEnqueueAgv(agv.CorrelationId, action.Target.NodeId), cancellationToken);
+           bool isAgvAtQueueHead = await _queueManager.TryReachQueueNode(agv, action.Target.NodeId);
+           isQueueing = !isAgvAtQueueHead;
+           await context.Publish(new TryEnqueueAgv(agv.CorrelationId, action.Target.NodeId), cancellationToken);
         }
 
         if (agv.HasPendingModeSwitch && agv.Mode.CurrentActionGroupPolicy != CurrentActionGroupPolicy.Pause)
         {
             await context.Publish(new SwitchMode(agv.CorrelationId), cancellationToken);
         }
-
+        await context.Publish(new NonChargingActionCompleted(agvCorrelationId, isQueueing), cancellationToken);
         await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
         _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully",
@@ -778,7 +780,10 @@ public class ActionCommandHandler :
 
         if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && agv.IsQueueing)
         {
-            await _queueManager.RemoveAgvFromQueueEntry(agv.CorrelationId, action.Target.NodeId!);
+            if (await _queueManager.RemoveAgvFromQueueEntry(agv.CorrelationId, action.Target.NodeId!))
+            {
+                await context.Publish(new LeaveQueue(agv.CorrelationId));
+            }
         }
 
         await context.Publish(new ActionAborted(agv.CorrelationId, _mapper.Map<MessageAgvAction>(action)));
@@ -1101,40 +1106,50 @@ public class ActionCommandHandler :
             // Get and select agv
             //Get a list of all action groups that are started but idling
             ICollection<Domain.Models.ActionGroup.ActionGroup> idleActionGroups = await _actionGroupRepository.GetRunningIdleActionGroups();
-            //Get AGV that handles this already started actiongroups
+            //Get AGV that handles these already started action groups
             List<Guid> idleAgvCorrelationIds = idleActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
-            
+            _logger.LogInformation("There are AGVs {ListOfAgvs} with started action groups", string.Join(',', idleAgvCorrelationIds));
+
             //Get all AGVs in queue heads
             ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
-            
+
             //Get all ready AGV
             ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+            List<Guid> readyAgvsList = readyAgvs.Select(a => a.CorrelationId).ToList();
+            _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready", string.Join(',', readyAgvsList));
+
             List<Agv> agvs = readyAgvs.ToList();
 
-            //if there are already started action groups and the lst of assigned AGV to this groups is not empty
+            //if there are already started action groups, and the last assigned AGV to this group is not empty
             if (idleActionGroups.Count != 0)
             {
                 ICollection<Agv> idleAgvs = await _agvDb.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(idleAgvCorrelationIds);
                 //add those AGV to the list of ready AGV
                 agvs.AddRange(idleAgvs);
             }
+            
             //if the list of AGV at a queue head is not empty
             if (agvsAtQueueHeads.Count > 0)
             {
+                _logger.LogInformation("There are AGVs {ListOfAgvs} at queue heads, adding them", string.Join(',', agvsAtQueueHeads));
+
                 List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList())).ToList();
                 //add those AGV to the list of ready AGV
                 agvs.AddRange(queueingAgvs);
             }
             
             //remove duplicates if any
+            _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready before removing duplicates", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
             agvs = agvs.DistinctBy(a => a.CorrelationId).OrderBy(a => a.CorrelationId).ToList();
+            _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready after removing duplicates", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
 
-            // Do not use agvs that already have priority action groups assigned to it
             List<Guid> unfilteredAgvs = agvs.Select(a => a.CorrelationId).ToList();
             
-            //Remove AGV that have a priority action group assigned, e.g. manual moves with prio
+            //Remove AGV that have a priority action group assigned, e.g. manual moves with priority
             ICollection<Guid> agvsWithPriorityActionGroups = await _actionGroupRepository.FilterAgvsWithPriorityActionGroups(unfilteredAgvs);
             agvs = agvs.Where(a => !agvsWithPriorityActionGroups.Contains(a.CorrelationId)).OrderBy(a => a.CorrelationId).ToList();
+            _logger.LogInformation("There are AGVs {ListOfAgvs} that are left after removing prio actions", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
+
             if (agvs.Count == 0)
             {
                 _logger.LogInformation("No agv available for reactivating idle action");

@@ -19,8 +19,9 @@ public class FastestRouteOfXOldestActionGroupsChooser : BaseChooseAgvActionGroup
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
+        IQueueManager queueManager,
         ILogger<FastestRouteOfXOldestActionGroupsChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, routeService, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger)
     {
         _numberOfOrders = 2;
     }

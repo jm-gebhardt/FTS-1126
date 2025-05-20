@@ -29,8 +29,6 @@ public class QueueManager(IAgvDb agvDb,
                 logger.LogWarning("No queue available for entering agv {AgvCorrelationId} to queue", agv.CorrelationId);
                 return null;
             }
-            agv.IsQueueing = true;
-            await agvDb.Agvs.UpdateAgvAsync(agv);
             await queueRepository.UpdateQueueAsync(queue);
             logger.LogInformation("Queue {QueueName} selected for entering agv {AgvCorrelationId}", queue.Name, agv.CorrelationId);
             return entryNode;
@@ -150,11 +148,12 @@ public class QueueManager(IAgvDb agvDb,
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task TryReachQueueNode(Agv agv, string nodeId)
+    public async Task<bool> TryReachQueueNode(Agv agv, string nodeId)
     {
+        Queue? queue = null;
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var queue = await queueRepository.GetQueueForAgv(agv.CorrelationId);
+            queue = await queueRepository.GetQueueForAgv(agv.CorrelationId);
             if (queue == null)
             {
                 logger.LogDebug("Agv {AgvCorrelationId} could not reach queue head {Head}, no queue found", agv.CorrelationId, nodeId);
@@ -164,13 +163,12 @@ public class QueueManager(IAgvDb agvDb,
             await queueRepository.UpdateQueueAsync(queue);
             if (queue.IsAgvAtQueueHead(agv.CorrelationId, nodeId))
             {
-                agv.IsQueueing = false;
-                await agvDb.Agvs.UpdateAgvAsync(agv);
                 logger.LogInformation("Agv {AgvCorrelationId} reached queue head {Head}", agv.CorrelationId, nodeId);
                 return;
             }
             logger.LogDebug("Agv {AgvCorrelationId} could not reach queue head {Head}, agv does not occupy head {NodeId}", agv.CorrelationId, nodeId, queue.Head?.NodeId);
         });
+        return queue != null && queue!.IsAgvAtQueueHead(agv.CorrelationId, nodeId);
     }
 
     /// <inheritdoc cref="IQueueManager"/>
@@ -195,8 +193,9 @@ public class QueueManager(IAgvDb agvDb,
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode)
+    public async Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode)
     {
+        bool removed = false;
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var queue = await queueRepository.GetQueueByEntryNode(targetNode);
@@ -207,10 +206,9 @@ public class QueueManager(IAgvDb agvDb,
             }
             queue.RemoveAgv(agvCorrelationId);
             await queueRepository.UpdateQueueAsync(queue);
-            var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-            agv.IsQueueing = false;
-            await agvDb.Agvs.UpdateAgvAsync(agv);
+            removed = true;
             logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
         });
+        return removed;
     } 
 }

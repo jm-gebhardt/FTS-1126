@@ -18,6 +18,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly ILogger<IChooseAgvActionGroupService> _logger;
     private readonly IQueueRepository _queueRepository;
+    private readonly IQueueManager _queueManager;
     
     /// <summary>
     /// The route service
@@ -29,6 +30,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
+        IQueueManager queueManager,
         IRouteService routeService,
         ILogger<IChooseAgvActionGroupService> logger
     )
@@ -37,6 +39,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         _actionGroupRepository = actionGroupRepository;
         _nodeStateRepository = nodeStateRepository;
         _queueRepository = queueRepository;
+        _queueManager = queueManager;
         RouteService = routeService;
     }
 
@@ -107,8 +110,23 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             }
         }
 
+        //Get nodes that are not allowed to be on the route from the current AGV
+        //To be specific: Nodes that part of a queue and route would lead through a queue
+    
         ICollection<string> nodesToAvoid = await GetNodesToAvoid(agv.AgvStatus?.LastNodeId);
-
+        
+        //If e.g., lastNodeId from AGV was not correct, we check if AGV is at queue head
+        //and remove queue head node explicitly agein from nodes to avoid
+        if ((await _queueManager.GetAgvsAtQueueHeads()).Contains(agv.CorrelationId))
+        {
+            var queueAgvIsIn = await _queueRepository.GetQueueForAgv(agv.CorrelationId);
+            if (queueAgvIsIn?.Head?.NodeId != null)
+            {
+                string queueHead = queueAgvIsIn.Head.NodeId;
+                nodesToAvoid = nodesToAvoid.Except([queueHead]).ToList();
+            }
+        }
+        
         List<Models.ActionGroup.ActionGroup> nextActionGroups = filteredNextActionGroups.Except(priorityActionGroups).ToList();
 
         List<Models.ActionGroup.ActionGroup> nextActionGroupsForAgv = nextActionGroups.Where(a => a.AssignedAgv == agv.CorrelationId).ToList();

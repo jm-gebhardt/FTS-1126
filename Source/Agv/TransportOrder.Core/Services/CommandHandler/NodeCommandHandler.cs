@@ -19,7 +19,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// </summary>
 [UsedImplicitly]
 public class NodeCommandHandler(
-    INodeStateRepository nodeStateRepository, 
+    INodeStateRepository nodeStateRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository, 
     IGraphRepository graphRepository,
@@ -98,6 +98,7 @@ public class NodeCommandHandler(
 
         if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
         {
+            logger.LogWarning("Setting {nodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
             await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
             await PublishNodeStateChange(context, newLastNodeId!);
             nodeLocksForAgv.Remove(newLastNode);
@@ -143,7 +144,7 @@ public class NodeCommandHandler(
             stationId = station.Id;
             user = station.LockedBy;
             lockReason = station.LockReason;
-            lockDescription = station.LockDescription;      
+            lockDescription = station.LockDescription;
         }
         catch (NodeNotFoundException)
         {
@@ -152,7 +153,7 @@ public class NodeCommandHandler(
             lockReason = null;
             lockDescription = null;
         }
-       
+
         if (nodeState != null)
         {
             await context.Publish(new NodeStateChanged(nodeState, stationId, user, lockReason, lockDescription));
