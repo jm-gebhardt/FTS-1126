@@ -175,6 +175,13 @@ public class AgvCommandHandler :
             return;
         }
 
+        if (await _chargingPointManager.IsOnAChargingNodeAsync(agv))
+        {
+            _logger.LogInformation("Agv {AgvCorrelationId} is already on charger {NodeId}, no need to reserve one", agv.CorrelationId, agv.AgvStatus?.LastNodeId);
+            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, agv.AgvStatus!.LastNodeId!, initiator));
+            return;
+        }
+
         var reservedChargingNode = await _chargingPointManager.GetReservedChargerForAgvAsync(agvCorrelationId);
         string nodeIdToPublish = reservedChargingNode?.NodeId ?? (await _chargingPointManager.ReserveChargerAsync(agv)).Id;
 

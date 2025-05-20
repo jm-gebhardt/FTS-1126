@@ -86,6 +86,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _routeService.Object);
         _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
         AgvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
+        _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
         return this;
     }
 
@@ -221,6 +222,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithoutAgv()
     {
         AgvDb.AddAgvs();
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithAgvIsOnCharger(bool isAgvOnCharger)
+    {
+        _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(isAgvOnCharger);
         return this;
     }
 

@@ -1189,6 +1189,27 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_PrepareChargingOfAgv_AgvIsOnCharger_PublishesChargingNodeSelectedForAgv()
+    {
+        const string chargeNodeName = "Charger-1";
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: chargeNodeName);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .HasAlreadyReservedNode(false)
+            .WithAgvIsOnCharger(true)
+            .WithUnfinishedActionGroup(false)
+            .WithActionGroups([])
+            .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
+
+        var command = new PrepareChargingOfAgv(agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
+    }
+
+    [TestMethod]
     public async Task Consume_PrepareChargingOfAgv_AgvIsLocked_DoesNotPublishChargingNodeSelectedForAgv()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
