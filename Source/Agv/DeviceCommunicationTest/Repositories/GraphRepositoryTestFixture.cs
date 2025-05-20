@@ -1,22 +1,26 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Profiles;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.SemaphoreProvider;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 
 // ReSharper disable ConvertConstructorToMemberInitializers
 public class GraphRepositoryTestFixture : DeviceCommunicationDbTestFixture
 {
+    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new();
+
     public IGraphRepository GraphRepository { get; }
 
     public GraphRepositoryTestFixture()
     {
         var mapper = MappingHelper.GetMapper(new MqttEdgeMappingProfile());
-        GraphRepository = new EfGraphRepository(ContextFactory, mapper, new MqttEdgeMappingCache(), new MqttNodeCache());
+        GraphRepository = new EfGraphRepository(ContextFactory, mapper, new MqttEdgeMappingCache(), new MqttNodeCache(), _semaphoreProvider);
     }
 
     private static readonly MqttNode[] _mqttNodes =

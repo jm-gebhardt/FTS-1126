@@ -118,6 +118,7 @@ public class EfGraphRepository : IGraphRepository
             .Include(g => g.Nodes)
             .SelectMany(g => g.Nodes)
             .Where(n => nodeIds.Contains(n.Id))
+            .AsNoTracking()
             .ToListAsync();
         return _mapper.Map<List<GraphNode>>(nodes);
     }
@@ -291,9 +292,11 @@ public class EfGraphRepository : IGraphRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<EfNode> efNodes = await context.Set<EfNode>()
+            .AsNoTracking()
             .ToListAsync();
 
         List<EfEdge> efEdges = await context.Set<EfEdge>()
+            .AsNoTracking()
             .ToListAsync();
 
         var graph = new Graph
@@ -334,6 +337,7 @@ public class EfGraphRepository : IGraphRepository
 
             List<EfNode> existingNodes = await context.Set<EfNode>()
                 .Where(efNode => graph.Nodes.Select(n => n.Id).Contains(efNode.Id))
+                .AsNoTracking()
                 .ToListAsync();
 
             List<EfNode> newNodes = efNodes.Where(efNode => !existingNodes.Select(n => n.Id).Contains(efNode.Id)).ToList();
@@ -341,6 +345,7 @@ public class EfGraphRepository : IGraphRepository
 
             List<EfEdge> existingEdges = await context.Set<EfEdge>()
                 .Where(efEdge => graph.Edges.Select(n => n.Id).Contains(efEdge.Id))
+                .AsNoTracking()
                 .ToListAsync();
 
             IEnumerable<EfEdge> newEdges = efEdges.Where(efEdge => !existingEdges.Select(n => n.Id).Contains(efEdge.Id));
@@ -371,7 +376,9 @@ public class EfGraphRepository : IGraphRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<EfNode> nodeContext = context.Set<EfNode>();
-        List<EfNode> nodeList = await nodeContext.Where(n => lastNodeIdsByAgvCorrelationId.Select(l => l.Value).Contains(n.Id)).AsNoTracking().ToListAsync();
+        List<EfNode> nodeList = await nodeContext.Where(n => lastNodeIdsByAgvCorrelationId.Select(l => l.Value).Contains(n.Id))
+            .AsNoTracking()
+            .ToListAsync();
         Dictionary<Guid, GraphNode?> nodesByAgv = new();
         foreach (KeyValuePair<Guid, string?> element in lastNodeIdsByAgvCorrelationId)
         {
