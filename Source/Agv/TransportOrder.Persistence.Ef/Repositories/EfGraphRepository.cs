@@ -94,7 +94,7 @@ public class EfGraphRepository : IGraphRepository
         bool exists = await context.Set<EfAgvGraph>()
             .Include(g => g.Nodes)
             .AsNoTracking()
-            .AnyAsync(g => g.CorrelationId == agvCorrelationId && g.Nodes.Any(n => n.Type == (object) nodeType));
+            .AnyAsync(g => g.CorrelationId == agvCorrelationId && g.Nodes.Any(n => ((string) n.Type).Contains(nodeType.ToString())));
 
         return exists;
     }
