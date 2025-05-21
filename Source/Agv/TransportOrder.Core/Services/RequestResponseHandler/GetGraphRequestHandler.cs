@@ -54,7 +54,6 @@ public class GetGraphRequestHandler :
     /// Handles the <see cref="GetAgvGraphs"/> request.
     /// </summary>
     /// <exception cref="AgvsNotFoundException"></exception>
-    /// <exception cref="AgvGraphsNotDefinedException"></exception>
     public async Task Consume(ConsumeContext<GetAgvGraphs> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
@@ -66,11 +65,6 @@ public class GetGraphRequestHandler :
         }
 
         ICollection<AgvGraph> agvGraphs = await _agvDb.Graphs.GetSelectedAgvGraphsAsync(selectedAgvs);
-        List<Guid> undefinedGraphs = selectedAgvs.Except(agvGraphs.Select(g => g.CorrelationId)).ToList();
-        if (undefinedGraphs.Any())
-        {
-            throw new AgvGraphsNotDefinedException(undefinedGraphs);
-        }
         var graphs = _mapper.Map<List<Graph>>(agvGraphs);
         await context.RespondAsync(new GotAgvGraphs(graphs));
     }

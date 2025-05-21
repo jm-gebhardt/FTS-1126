@@ -5,7 +5,9 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
+using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
 
@@ -49,7 +51,7 @@ public class GetAgvGraphRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_GetAgvGraphs_AgvsGraphNotDefined_ThrowsAgvGraphsNotDefinedException()
+    public async Task Consume_GetAgvGraphs_AgvsGraphNotDefined_DoesNotReturnGraph()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
 
@@ -57,6 +59,10 @@ public class GetAgvGraphRequestHandlerTest
             .WithEmptyGraphRepository()
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .Build();
-        await MediatorShould.ThrowRequestExceptionAsync<AgvGraphsNotDefinedException>(async () => await fixture.GetResponseAsync<GotAgvGraphs>(new GetAgvGraphs(new List<Guid> { agv.CorrelationId })));
+
+       Response<GotAgvGraphs> response = await fixture.GetResponseAsync<GotAgvGraphs>(new GetAgvGraphs(new List<Guid> { agv.CorrelationId }));
+
+       response.Message.Graphs.ShouldNotBeNull();
+       response.Message.Graphs.ShouldBeEmpty();
     }
 }
