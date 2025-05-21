@@ -10,6 +10,11 @@ public abstract class TelegramProcessorBase<TTelegramType> : ITelegramProcessor
 where TTelegramType : TelegramBase
 {
     /// <summary>
+    /// Set to true, if the connection should be restarted.
+    /// </summary>
+    protected bool RestartRequested { get; set; }
+
+    /// <summary>
     /// Enqueue a telegram for sending
     /// </summary>
     /// <param name="telegram">The telegram</param>
@@ -62,12 +67,7 @@ where TTelegramType : TelegramBase
     /// True if the connection should be restarted
     /// </summary>
     /// <returns></returns>
-    public abstract bool ShouldRestart();
-
-    /// <summary>
-    /// Restart the connection
-    /// </summary>
-    public abstract void RestartConnection();
+    public bool ShouldRestart() => RestartRequested;
 
     /// <summary>
     /// Cancel telegram processing
@@ -83,4 +83,12 @@ where TTelegramType : TelegramBase
     /// True, if life telegrams are used on the connection.
     /// </summary>
     public abstract bool GetUseLifeTelegrams();
+
+    /// <summary>
+    /// Initialize the processor, like resetting things.
+    /// </summary>
+    public void Init()
+    {
+        RestartRequested = false;
+    }
 }

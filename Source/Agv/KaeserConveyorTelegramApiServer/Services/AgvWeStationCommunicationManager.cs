@@ -22,13 +22,12 @@ public class AgvWeStationCommunicationManager(ILogger<AgvWeStationCommunicationM
             await Task.Delay(1000, stoppingToken);
         }
 
-        Stop();
+        await StopAsync();
     }
 
     private void Connect()
     {
-        server.Initialize();
-        receiver.RestartRequest += OnRestartRequest!;
+        server.TryInitialize();
     }
 
     private void Start()
@@ -37,44 +36,10 @@ public class AgvWeStationCommunicationManager(ILogger<AgvWeStationCommunicationM
         receiver.Start();
     }
 
-    private void Stop()
+    private async Task StopAsync()
     {
         logger.LogInformation("Stopping sender for conveyor communication with {Server} server", ServiceKeyProvider.AplWeStation);
-        receiver.BeginStop();
-        receiver.FinishStop();
+        await receiver.StopAsync();
         server.Disconnect();
-    }
-
-    /// <summary>
-    /// Handle restart request
-    /// </summary>
-    /// <param name="sender">The sender of the event</param>
-    /// <param name="eventArgs">The arguments of the event</param>
-    private void OnRestartRequest(object sender, EventArgs eventArgs)
-    {
-        _ = HandleRestartRequestAsync(sender, eventArgs);
-    }
-
-    private async Task HandleRestartRequestAsync(object sender, EventArgs _)
-    {
-        try
-        {
-            if (sender is not SocketCommunicator<ConveyorTelegram> communicator)
-            {
-                return;
-            }
-
-            logger.LogInformation("Restart requested from {Name}", communicator.Name);
-
-            if (communicator.RestartMe)
-            {
-                logger.LogInformation("Restarting {Name}", communicator.Name);
-                await communicator.RestartAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Restarting failed: {Message}", ex.Message);
-        }
     }
 }

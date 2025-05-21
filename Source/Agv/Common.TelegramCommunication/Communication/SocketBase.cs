@@ -22,11 +22,6 @@ public abstract class SocketBase
     public static string TimeoutTelegram => "timeout";
 
     /// <summary>
-    /// True, if the socket is connected.
-    /// </summary>
-    public abstract bool IsConnected();
-
-    /// <summary>
     /// The logger.
     /// </summary>
     protected readonly ILogger<SocketBase> Logger;
@@ -40,12 +35,12 @@ public abstract class SocketBase
     /// <summary>
     /// Initialize
     /// </summary>
-    public abstract bool Initialize();
+    public abstract bool TryInitialize();
 
     /// <summary>
     /// Initialize async
     /// </summary>
-    public abstract Task<bool> InitializeAsync();
+    public abstract Task<bool> TryInitializeAsync();
 
     /// <summary>
     /// Disconnect
@@ -64,11 +59,11 @@ public abstract class SocketBase
         }
         catch (SocketException socketException)
         {
-            Logger.LogError("Could not disconnect, got : {ErrorCode} / {ErrorMessage}", socketException.ErrorCode, socketException.Message);
+            Logger.LogError("Could not disconnect due to socket exception: {ErrorCode} / {ErrorMessage}", socketException.ErrorCode, socketException.Message);
         }
         catch (Exception ex)
         {
-            Logger.LogError("Could not disconnect, got : {ErrorMessage}", ex.Message);
+            Logger.LogError("Could not disconnect due to general exception: {ErrorMessage}", ex.Message);
         }
     }
 
@@ -89,7 +84,7 @@ public abstract class SocketBase
 
         if (Socket == null)
         {
-            Initialize();
+            TryInitialize();
         }
 
         byte[] receiveBuffer = new byte[telegramLength];
@@ -156,7 +151,7 @@ public abstract class SocketBase
         {
             if (Socket == null)
             {
-                Initialize();
+                TryInitialize();
             }
             Socket!.ReceiveTimeout = receiveTimeout;
             while (true)
@@ -208,7 +203,7 @@ public abstract class SocketBase
     {
         if (Socket == null)
         {
-            Initialize();
+            TryInitialize();
         }
         try
         {

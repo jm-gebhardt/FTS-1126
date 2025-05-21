@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
-using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
@@ -17,12 +16,6 @@ public class InboundTelegramProcessorBase<TTelegramType>([FromKeyedServices(Serv
     ///If true, should receive telegrams
     /// </summary>
     protected bool ShouldReceive { get; set; } = true;
-
-    /// <summary>
-    /// If true, trigger restart
-    /// </summary>
-    [PublicAPI]
-    protected bool TriggerRestart { get; set; }
 
     /// <summary>
     /// Outbound telegram sequence counter
@@ -69,23 +62,9 @@ public class InboundTelegramProcessorBase<TTelegramType>([FromKeyedServices(Serv
         return configuration.TelegramWaitingTime;
     }
 
-    /// <inheritdoc cref="TelegramProcessorBase{TTelegramType}"/>>
-    public override bool ShouldRestart()
-    {
-        return TriggerRestart;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{TTelegramType}"/>>
-    public override void RestartConnection()
-    {
-        Cancel();
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{TTelegramType}"/>>
+    /// <inheritdoc />
     public override void Cancel()
     {
-        // implemented by parent
-        throw new NotImplementedException();
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{TTelegramType}"/>>

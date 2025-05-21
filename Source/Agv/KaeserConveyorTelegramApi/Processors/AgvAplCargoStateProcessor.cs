@@ -17,8 +17,6 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
 {
     private bool ReceiveAcknowledgement { get; set; }
 
-    private bool TriggerRestart { get; set; }
-
     /// <summary>
     ///  The send queue.
     /// </summary>
@@ -70,7 +68,7 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
         _logger = logger;
         _timeProvider = timeProvider;
         _configuration = configuration;
-        TriggerRestart = false;
+        RestartRequested = false;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
@@ -98,7 +96,7 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts <= 0)
         {
             _logger.LogInformation("No more remaining attempts for resending telegram {Telegram}, trigger restart", CurrentTelegram.ToString());
-            TriggerRestart = true;
+            RestartRequested = true;
         }
 
         if (!HasSendDemand())
@@ -157,18 +155,6 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
     public override int GetWaitingTime()
     {
         return _configuration.TelegramWaitingTime;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
-    public override bool ShouldRestart()
-    {
-        return TriggerRestart;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
-    public override void RestartConnection()
-    {
-        TriggerRestart = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>

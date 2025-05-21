@@ -16,8 +16,6 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
 {
     private bool ReceiveAcknowledgement { get; set; }
 
-    private bool TriggerRestart { get; set; }
-
     /// <summary>
     ///  The send queue.
     /// </summary>
@@ -71,7 +69,7 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
         _logger = logger;
         _timeProvider = timeProvider;
         _configuration = configuration;
-        TriggerRestart = false;
+        RestartRequested = false;
         SendQueue = observableQueue;
     }
 
@@ -100,7 +98,7 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts <= 0)
         {
             _logger.LogInformation("No more remaining attempts for resending telegram {Telegram}, trigger restart", CurrentTelegram.ToString());
-            TriggerRestart = true;
+            RestartRequested = true;
         }
 
         if (!HasSendDemand())
@@ -158,18 +156,6 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     public override int GetWaitingTime()
     {
         return _configuration.TelegramWaitingTime;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
-    public override bool ShouldRestart()
-    {
-        return TriggerRestart;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
-    public override void RestartConnection()
-    {
-        TriggerRestart = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>

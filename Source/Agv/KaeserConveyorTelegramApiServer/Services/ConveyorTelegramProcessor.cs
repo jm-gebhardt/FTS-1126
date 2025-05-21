@@ -12,9 +12,6 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApiServer.Services;
 public class ConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
 {
     private readonly ILogger<ConveyorTelegramProcessor> _logger;
-
-    private bool TriggerRestart { get; set; }
-
     private readonly TelegramCommunicationConfiguration _configuration;
 
     /// <summary>
@@ -23,7 +20,7 @@ public class ConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
     public ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger, TelegramCommunicationConfiguration configuration)
     {
         _logger = logger;
-        TriggerRestart = false;
+        RestartRequested = false;
         _configuration = configuration;
     }
 
@@ -84,21 +81,9 @@ public class ConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
-    public override bool ShouldRestart()
-    {
-        return TriggerRestart;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
-    public override void RestartConnection()
-    {
-        Cancel();
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override void Cancel()
     {
-        TriggerRestart = true;
+        RestartRequested = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>

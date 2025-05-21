@@ -46,6 +46,5 @@ public class LifeProcessor(ILogger<LifeProcessor> logger, [FromKeyedServices(Ser
     public override void Cancel()
     {
         CurrentTelegram = null;
-        TriggerRestart = true;
     }
 }
