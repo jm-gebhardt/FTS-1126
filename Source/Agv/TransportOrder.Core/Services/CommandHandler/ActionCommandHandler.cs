@@ -1133,9 +1133,13 @@ public class ActionCommandHandler :
             {
                 _logger.LogInformation("There are AGVs {ListOfAgvs} at queue heads, adding them", string.Join(',', agvsAtQueueHeads));
 
-                List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList())).ToList();
-                //add those AGV to the list of ready AGV
-                agvs.AddRange(queueingAgvs);
+                List<Guid> missingAgvsFromQueueHead = agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList();
+                if (missingAgvsFromQueueHead.Any())
+                {
+                    List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(missingAgvsFromQueueHead)).ToList();
+                    //add those AGV to the list of ready AGV
+                    agvs.AddRange(queueingAgvs);
+                }
             }
             
             //remove duplicates if any

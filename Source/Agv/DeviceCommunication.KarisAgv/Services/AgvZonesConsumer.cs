@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 /// Handler for agv zones related commands.
 /// </summary>
 [UsedImplicitly]
-public class AgvZonesConsumer(ILogger<AgvZonesConsumer> logger):
+public class AgvZonesConsumer(ILogger<AgvZonesConsumer> logger) :
     IConsumer<RequestAgvZones>,
     IConsumer<RemoveAgvFromZone>
 
@@ -22,7 +22,7 @@ public class AgvZonesConsumer(ILogger<AgvZonesConsumer> logger):
     public async Task Consume(ConsumeContext<RequestAgvZones> context)
     {
         await context.PublishMqtt(new MqttRequestZones(context.Message.SerialNumber, Guid.NewGuid()), context.CancellationToken);
-        logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvZones), context.Message.SerialNumber, context.CorrelationId);
+        logger.LogInformation("Request AgvZones from AGV {AgvId} / {CorrelationId} received", context.Message.SerialNumber, context.CorrelationId);
     }
 
     /// <summary>
