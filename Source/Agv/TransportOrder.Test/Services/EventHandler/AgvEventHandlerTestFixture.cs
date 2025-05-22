@@ -24,6 +24,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly SemaphoreProvider<IAgvsSemaphore> _agvSemaphoreProvider = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
+    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
 
     public const int BatteryLevelCritical = 10;
@@ -53,6 +54,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => _agvDb.Object);
+        collection.AddTransient(_ => _nodeStateRepository.Object);
         return this;
     }
 

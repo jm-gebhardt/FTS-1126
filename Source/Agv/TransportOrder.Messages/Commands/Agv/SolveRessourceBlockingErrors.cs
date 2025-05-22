@@ -4,4 +4,5 @@
 /// Provides a request to solve all ressource blocking errors of an agv.
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the agv.</param>
-public record SolveRessourceBlockingErrors(Guid CorrelationId);
+/// <param name="IgnoreErrorState">If the error state should be ignored when clearing the resources. Default false.</param>
+public record SolveRessourceBlockingErrors(Guid CorrelationId, bool IgnoreErrorState = false);

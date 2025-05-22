@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -38,5 +39,20 @@ public class StationCommandHandlerTest
 
         var occupancyAfter = await fixture.StationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         occupancyAfter.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_ForceAgvLeftStationReceived_OccupiedStations_EmitsFreeStations()
+    {
+        var agvId = Guid.NewGuid();
+
+        var fixture = new StationCommandHandlerTestFixture()
+            .WithOccupancies((2, agvId));
+
+        await fixture.TestHarness.Bus.Publish(new SolveResourceErrorsReceived(agvId));
+
+        await fixture.ShouldHaveConsumedAsync<SolveResourceErrorsReceived>();
+
+        (await fixture.TestHarness.Published.Any<FreeStation>()).ShouldBeTrue();
     }
 }

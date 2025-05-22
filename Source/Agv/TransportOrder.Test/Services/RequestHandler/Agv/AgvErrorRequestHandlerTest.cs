@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -26,6 +27,7 @@ public class AgvErrorRequestHandlerTest
 
         await fixture.GetResponseAsync<Success>(new SolveRessourceBlockingErrors(agv.CorrelationId));
         await fixture.ShouldHavePublishedAsync<FreeNode>();
+        await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
     }
 
@@ -43,6 +45,7 @@ public class AgvErrorRequestHandlerTest
 
         await fixture.GetResponseAsync<Success>(new SolveRessourceBlockingErrors(agv.CorrelationId));
         await fixture.ShouldNotHavePublishedAsync<FreeNode>();
+        await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
     }
 }
