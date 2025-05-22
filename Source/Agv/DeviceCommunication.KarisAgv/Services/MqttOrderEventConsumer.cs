@@ -34,8 +34,6 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
     public async Task Consume(ConsumeContext<MqttOrderEvent> context)
     {
         var message = context.Message;
-        _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
-
         var actionId = message.OrderId.ToGuid();
         
         // Only applicable if the internal order id and the one sent to the vehicle differ.
@@ -44,6 +42,8 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
         {
             actionId = internalOrderId.Value;
         }
+        
+        _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, actionId);
 
         var agvCorrelationId = (message.SerialNumber ?? throw new SerialNumberNotSetException(nameof(MqttOrderEvent))).ToGuid();
 
