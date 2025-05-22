@@ -108,5 +108,6 @@ public static class MockAgvDbExtensions
     public static void AddActiveErrors(this Mock<IAgvDb> repoMock, IList<AgvError> errors)
     {
         repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors);
+        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(errors);
     }
 }

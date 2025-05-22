@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FluentValidation;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -1147,10 +1148,13 @@ public class ActionCommandHandler :
             agvs = agvs.DistinctBy(a => a.CorrelationId).OrderBy(a => a.CorrelationId).ToList();
             _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready after removing duplicates", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
 
-            List<Guid> unfilteredAgvs = agvs.Select(a => a.CorrelationId).ToList();
-            
+            //Remove agvs with errors
+            IEnumerable<Guid> agvsWithErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agvs.Select(a => a.CorrelationId).ToList())).Where(e => e.ErrorLevel == ErrorLevel.Fatal).Select(e => e.AgvCorrelationId).Distinct();
+            agvs = agvs.Where(a => !agvsWithErrors.Contains(a.CorrelationId)).OrderBy(a => a.CorrelationId).ToList();
+            _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready after removing agvs with errors ", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
+
             //Remove AGV that have a priority action group assigned, e.g. manual moves with priority
-            ICollection<Guid> agvsWithPriorityActionGroups = await _actionGroupRepository.FilterAgvsWithPriorityActionGroups(unfilteredAgvs);
+            ICollection<Guid> agvsWithPriorityActionGroups = await _actionGroupRepository.FilterAgvsWithPriorityActionGroups(agvs.Select(a => a.CorrelationId).ToList());
             agvs = agvs.Where(a => !agvsWithPriorityActionGroups.Contains(a.CorrelationId)).OrderBy(a => a.CorrelationId).ToList();
             _logger.LogInformation("There are AGVs {ListOfAgvs} that are left after removing prio actions", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
 

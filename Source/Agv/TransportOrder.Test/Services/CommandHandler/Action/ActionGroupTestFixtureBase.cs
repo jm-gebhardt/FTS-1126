@@ -230,6 +230,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public ActionGroupTestFixtureBase<T> WithErrors(IList<AgvError> errors)
+    {
+        _agvDb.AddActiveErrors(errors);
+        return this;
+    }
+
     public void SetupValidationResult(ValidationResult validationResult)
     {
         _actionGroupValidationService.Setup(x => x.ValidateAsync(It.IsAny<ActionGroup>())).ReturnsAsync(validationResult);
