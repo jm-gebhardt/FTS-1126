@@ -98,7 +98,7 @@ public class StationEventHandler(
         }
         if (occupiedStation != null)
         {
-            logger.LogWarning("Agv {AgvCorrelationId} already occupies station {Station}, removing it before occupying {NodeId}", agvCorrelationId, occupiedStation.Node, nodeId);
+            logger.LogWarning("Agv {AgvCorrelationId} still occupies another station {Station}, removing it before occupying {NodeId}", agvCorrelationId, occupiedStation.Node, nodeId);
             await context.Publish(new RemoveAgvFromStation(occupiedStation.Id, agvCorrelationId));
         }
 
@@ -106,6 +106,8 @@ public class StationEventHandler(
         if (station != null)
         {
             await context.Publish(new AddAgvToStation(station.Id, agvCorrelationId));
+            return;
         }
+        logger.LogError("Station {NodeId} not found, cannot occupy", nodeId);
     }
 }
