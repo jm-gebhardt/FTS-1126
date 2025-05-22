@@ -1,21 +1,23 @@
 trigger: none # Disable CI trigger
 
 schedules:
-- cron: '0 3 * * *' # daily at 3 am
-  always: true # run even when there are no code changes
-  branches:
-    include:
-      - master
-  batch: true
-  displayName: Daily dependency check
+  - cron: '0 3 * * *' # daily at 3 am
+    always: true # run even when there are no code changes
+    branches:
+      include:
+        - master
+    batch: true
+    displayName: Daily dependency check
 
 pool:
-  vmImage: 'ubuntu-latest' 
+  name: 'FleetManagement'
 
-steps:
-- task: dependabot@1
-  inputs:
-    dockerImageTag: 'latest'
-    failOnException: false
-    useUpdateScriptVNext: true
-
+jobs:
+  - job:
+    timeoutInMinutes: 0
+    steps:
+      - task: dependabot@2
+        inputs:
+          dockerImageTag: 'latest'
+          failOnException: false
+          useUpdateScriptVNext: true
