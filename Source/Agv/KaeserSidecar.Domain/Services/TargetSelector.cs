@@ -177,13 +177,13 @@ public class TargetSelector(
             }
 
             // If not found, search in action groups for the original (skipped) action
-            logger.LogInformation("Trying to dequeue original action {ActionCorrelationId}", actionCorrelationId);
+            logger.LogInformation("Trying to dequeue action {ActionCorrelationId}", actionCorrelationId);
             var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
             var skippedAction = actionGroup.Actions.SingleOrDefault(a => a.ShouldSkip);
 
             if (skippedAction == null || !_actionsToSelectTarget.ContainsKey(skippedAction.CorrelationId))
             {
-                logger.LogWarning("Could not find action {ActionCorrelationId} or original to dequeue", actionCorrelationId);
+                logger.LogWarning("Could not find action {ActionCorrelationId} or skipped action on action group {ActionGroupCorrelationId}", actionCorrelationId, actionGroup.CorrelationId);
                 return;
             }
 

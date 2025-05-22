@@ -1,8 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using JetBrains.Annotations;
 using MassTransit;
@@ -16,8 +16,8 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 [UsedImplicitly]
 public class StationCommandHandler(IStationRepository stationRepository, ILogger<StationCommandHandler> logger) :
     IConsumer<AddOrUpdateStationGroup>,
-    IConsumer<FreeStation>,
-    IConsumer<OccupyStation>
+    IConsumer<RemoveAgvFromStation>,
+    IConsumer<AddAgvToStation>
 {
     /// <summary>
     /// Handles the <see cref="AddOrUpdateStationGroup"/> command.
@@ -33,16 +33,16 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     }
 
     /// <summary>
-    /// Handles the <see cref="FreeStation"/> command.
+    /// Handles the <see cref="RemoveAgvFromStation"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<FreeStation> context)
+    public async Task Consume(ConsumeContext<RemoveAgvFromStation> context)
     {
-        var agvCorrelationId = context.Message.AgvCorrelationId;
-
-        var station = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
-        if (station?.Node != context.Message.Station)
+        var(stationId, agvCorrelationId) = context.Message;
+       
+        var station = await stationRepository.GetByIdAsync(stationId);
+        if (station.AgvCorrelationId != agvCorrelationId)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station: {Station}", agvCorrelationId, station?.Node);
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station: {Station}", agvCorrelationId, station.Node);
             return;
         }
 
@@ -55,18 +55,13 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     }
 
     /// <summary>
-    /// Handles the <see cref="OccupyStation"/> command.
+    /// Handles the <see cref="AddAgvToStation"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<OccupyStation> context)
+    public async Task Consume(ConsumeContext<AddAgvToStation> context)
     {
-        (string nodeId, var agvCorrelationId) = context.Message;
+        var (stationId, agvCorrelationId) = context.Message;
 
-        var station = await stationRepository.GetStationByNode(nodeId);
-        if (station == null)
-        {
-            logger.LogWarning("Station {NodeId} unknown", nodeId);
-            return;
-        }
+        var station = await stationRepository.GetByIdAsync(stationId);
         logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station.Node);
         station.AddAgv(agvCorrelationId);
         await stationRepository.SaveAsync();

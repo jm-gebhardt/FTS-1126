@@ -27,6 +27,7 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
     {
         _stationRepository.Setup(x => x.GetStationByOccupyingAgv(It.Is<Guid>(g => station != null && g == station.AgvCorrelationId))).ReturnsAsync(station);
         _stationRepository.Setup(x => x.GetStationByNode(It.IsAny<string>())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(station!);
         return this;
     }
 

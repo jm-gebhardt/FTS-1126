@@ -12,6 +12,7 @@ public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<Stat
 {
     private readonly Mock<IShortLoopWeTargetStationRepository> _targetStationRepository = new();
     public readonly KaeserGraphConfiguration Configuration = OrderGenerator.KaeserConfiguration;
+    private readonly Mock<IStationRepository> _stationRepository = new();
 
     public StationEventHandlerTestFixture()
     {
@@ -19,6 +20,7 @@ public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<Stat
         AddServices(s =>
         {
             s.AddTransient(_ => _targetStationRepository.Object);
+            s.AddTransient(_ => _stationRepository.Object);
             s.AddSingleton(_ => Configuration);
         });
         Build();
@@ -38,5 +40,17 @@ public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<Stat
     public void VerifyShortLoopTargetUpdated(Times times)
     {
         _targetStationRepository.Verify(x => x.UpdateAsync(It.IsAny<ShortLoopWeTargetStation>()), times);
+    }
+
+    public StationEventHandlerTestFixture WithStation(Station? station)
+    {
+        _stationRepository.Setup(x => x.GetStationByNode(It.IsAny<string>())).ReturnsAsync(station);
+        return this;
+    }
+
+    public StationEventHandlerTestFixture WithOccupiedStation(Station? station)
+    {
+        _stationRepository.Setup(x => x.GetStationByOccupyingAgv(It.IsAny<Guid>())).ReturnsAsync(station);
+        return this;
     }
 }

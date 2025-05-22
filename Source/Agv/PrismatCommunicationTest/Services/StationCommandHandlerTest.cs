@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+﻿using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,7 +25,7 @@ public class StationCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_FreeStation_ValidData_PublishesAgvLeftStation()
+    public async Task Consume_RemoveAgvFromStation_ValidData_PublishesAgvLeftStation()
     {
         var station = new Station("source", "target") {Node = "node"};
         station.AddAgv(Guid.NewGuid());
@@ -33,31 +33,31 @@ public class StationCommandHandlerTest
         using var fixture = new StationCommandHandlerTestFixture()
             .WithStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new FreeStation(station.Node!, station.AgvCorrelationId!.Value));
+        await fixture.TestHarness.Bus.Publish(new RemoveAgvFromStation(station.Id, station.AgvCorrelationId!.Value));
 
-        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldHaveConsumedAsync<RemoveAgvFromStation>();
         station.Occupancy.ShouldBe(0);
         await fixture.ShouldHavePublishedAsync<AgvLeftStation>();
     }
 
     [TestMethod]
-    public async Task Consume_FreeStation_StationNotOccupied_DoesNotPublishAgvLeftStation()
+    public async Task Consume_RemoveAgvFromStation_StationNotOccupiedByThisAgv_DoesNotPublishAgvLeftStation()
     {
         var agvCorrelationId = Guid.NewGuid();
         var occupiedStation = new Station("source2", "target3") {Node = "station"};
-        occupiedStation.AddAgv(agvCorrelationId);
+        occupiedStation.AddAgv(Guid.NewGuid());
 
         using var fixture = new StationCommandHandlerTestFixture()
             .WithStation(occupiedStation);
 
-        await fixture.TestHarness.Bus.Publish(new FreeStation("somewhere-elese", agvCorrelationId));
+        await fixture.TestHarness.Bus.Publish(new RemoveAgvFromStation(occupiedStation.Id, agvCorrelationId));
 
-        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldHaveConsumedAsync<RemoveAgvFromStation>();
         await fixture.ShouldNotHavePublishedAsync<AgvLeftStation>();
     }
 
     [TestMethod]
-    public async Task Consume_OccupyStation_ValidData_OccupiesStation()
+    public async Task Consume_AddAgvToStation_ValidData_OccupiesStation()
     {
         var station = new Station("source", "target") {Node = "node"};
         station.Occupancy.ShouldBe(0);
@@ -65,24 +65,24 @@ public class StationCommandHandlerTest
         using var fixture = new StationCommandHandlerTestFixture()
             .WithStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+        await fixture.TestHarness.Bus.Publish(new AddAgvToStation(station.Id, agv));
 
-        await fixture.ShouldHaveConsumedAsync<OccupyStation>();
+        await fixture.ShouldHaveConsumedAsync<AddAgvToStation>();
         station.Occupancy.ShouldBe(1);
         station.AgvCorrelationId.ShouldBe(agv);
     }
 
     [TestMethod]
-    public async Task Consume_OccupyStation_UnknownStation_DoesNotOccupiesStation()
+    public async Task Consume_AddAgvToStation_UnknownStation_DoesNotOccupiesStation()
     {
         var station = new Station("source", "target") {Node = "node"};
         station.Occupancy.ShouldBe(0);
         var agv = Guid.NewGuid();
         using var fixture = new StationCommandHandlerTestFixture();
 
-        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+        await fixture.TestHarness.Bus.Publish(new AddAgvToStation(station.Id, agv));
 
-        await fixture.ShouldHaveConsumedAsync<OccupyStation>();
+        await fixture.ShouldHaveConsumedAsync<AddAgvToStation>();
         station.Occupancy.ShouldBe(0);
         station.AgvCorrelationId.ShouldBeNull();
     }

@@ -1,6 +1,8 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
@@ -102,5 +104,82 @@ public class StationEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<AgvLeftStation>();
         await fixture.ShouldHavePublishedAsync<TryQueueDelayedOrder>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_OccupyStation_ValidData_PublishesAddAgvToStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+        var agv = Guid.NewGuid();
+        using var fixture = new StationEventHandlerTestFixture()
+            .WithStation(station)
+            .WithOccupiedStation(null);
+
+        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+
+        await fixture.ShouldHaveConsumedAsync<OccupyStation>();
+        await fixture.ShouldHavePublishedAsync<AddAgvToStation>();
+        await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_OccupyStation_AgvOccupiesDifferentStation_PublishesRemoveAgvFromStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+        var occupiedStation = new Station("source", "target") { Node = "different node" };
+        var agv = Guid.NewGuid();
+        using var fixture = new StationEventHandlerTestFixture()
+            .WithStation(station)
+            .WithOccupiedStation(occupiedStation);
+
+        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+
+        await fixture.ShouldHaveConsumedAsync<OccupyStation>();
+        await fixture.ShouldHavePublishedAsync<AddAgvToStation>();
+        await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_OccupyStation_AgvAlreadyOccupiesStation_DoesNotPublishAddAgvToStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+        var agv = Guid.NewGuid();
+        using var fixture = new StationEventHandlerTestFixture()
+            .WithStation(station)
+            .WithOccupiedStation(station);
+
+        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+
+        await fixture.ShouldHaveConsumedAsync<OccupyStation>();
+        await fixture.ShouldNotHavePublishedAsync<AddAgvToStation>();
+        await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_FreeStation_ValidData_PublishesRemoveAgvFromStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+        var agv = Guid.NewGuid();
+        using var fixture = new StationEventHandlerTestFixture()
+            .WithOccupiedStation(station);
+
+        await fixture.TestHarness.Bus.Publish(new FreeStation(station.Node!, agv));
+
+        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_FreeStation_AgvOccupiesDifferentStation_DoesNotPublishRemoveAgvFromStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+        var agv = Guid.NewGuid();
+        using var fixture = new StationEventHandlerTestFixture()
+            .WithOccupiedStation(station);
+
+        await fixture.TestHarness.Bus.Publish(new FreeStation("different node", agv));
+
+        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 }
