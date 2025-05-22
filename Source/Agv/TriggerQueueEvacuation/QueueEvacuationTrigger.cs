@@ -64,9 +64,9 @@ public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> lo
             logger.LogInformation("Queue evacuation switched off");
             return;
         }
-        if (cargo.Count == 0 || actionGroup == null)
+        if (actionGroup == null || !actionGroup.Actions.Any(a => a.ActionType is ActionType.Pick or ActionType.Drop))
         {
-            logger.LogInformation("No cargo on agv {AgvCorrelationId} running action group {ActionGroupCorrelationId}, not triggering queue evacuation", agvStatus.CorrelationId, actionGroup?.CorrelationId);
+            logger.LogInformation("Agv {AgvCorrelationId} has no pick-drop action group {ActionGroupCorrelationId}, not triggering queue evacuation", agvStatus.CorrelationId, actionGroup?.CorrelationId);
             return;
         }
         string queueName = GetQueueName(parameters);
