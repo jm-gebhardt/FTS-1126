@@ -70,6 +70,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
 
         var order = await GetOrder(action, agvSerialNumber, OrderRecordType.OrderUpdate, orderId);
 
+        await TryRemoveOldMapping(action.CorrelationId);
         await context.PublishMqtt(order, context.CancellationToken);
 
         FeedAgvRepository(assignedAgv, action);
@@ -82,6 +83,15 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         }
         logger.LogInformation("Sent update transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
+    }
+
+    private async Task TryRemoveOldMapping(Guid orderId)
+    {
+        Guid? internalOrderId = await actionRepository.GetInternalOrderId(orderId);
+        if (internalOrderId != null)
+        {
+            await actionRepository.RemoveVehicleAndInternalOrderIdMapping(orderId);
+        }
     }
 
     /// <summary>

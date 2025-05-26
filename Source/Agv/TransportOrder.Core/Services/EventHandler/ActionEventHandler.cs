@@ -34,6 +34,12 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
+        var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
+        if (action.CompletedDate != null)
+        {
+            logger.LogWarning("Action {ActionId} of group {ActionGroupCorrelationId} is in state {ActionStation}, not triggering completion ", actionCorrelationId, actionGroup.CorrelationId, action.State);
+            return;
+        }
         
         await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }

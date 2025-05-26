@@ -28,8 +28,19 @@ public class ActionCommandConsumerTestFixture : MqttConsumerTestFixture<ActionCo
         await _graphRepositoryTestFixture.FillGraphRepository();
     }
 
+    public ActionCommandConsumerTestFixture WithVehicleAndOrderIdMapping(Guid orderId)
+    {
+        _actionRepository.Setup(x => x.GetInternalOrderId(It.IsAny<Guid>())).ReturnsAsync(orderId);
+        return this;
+    }
+
     public void VerifyOrderMappingAdded(Times times)
     {
         _actionRepository.Verify(x => x.AddVehicleAndInternalOrderIdMapping(It.IsAny<Guid>(), It.IsAny<Guid>()), times);
+    }
+
+    public void VerifyOrderMappingRemoved(Times times)
+    {
+        _actionRepository.Verify(x => x.RemoveVehicleAndInternalOrderIdMapping(It.IsAny<Guid>()), times);
     }
 }

@@ -35,15 +35,16 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
     {
         var message = context.Message;
         var actionId = message.OrderId.ToGuid();
-        
+
+        _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, actionId);
+
         // Only applicable if the internal order id and the one sent to the vehicle differ.
         Guid? internalOrderId = await _actionRepository.GetInternalOrderId(actionId);
         if (internalOrderId != null)
         {
+            _logger.LogInformation("Replacing {OrderId} by internally used {InternalOrderId}", actionId, internalOrderId);
             actionId = internalOrderId.Value;
         }
-        
-        _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, actionId);
 
         var agvCorrelationId = (message.SerialNumber ?? throw new SerialNumberNotSetException(nameof(MqttOrderEvent))).ToGuid();
 
