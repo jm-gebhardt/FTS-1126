@@ -10,7 +10,7 @@ schedules:
     displayName: Daily dependency check
 
 pool:
-  name: 'FleetManagement'
+  vmImage: 'ubuntu-latest'
 
 jobs:
   - job:
@@ -18,6 +18,4 @@ jobs:
     steps:
       - task: dependabot@2
         inputs:
-          dockerImageTag: 'latest'
-          failOnException: false
-          useUpdateScriptVNext: true
+          experiments: 'allow-refresh-group-with-all-dependencies=false,nuget-native-updater=false'
