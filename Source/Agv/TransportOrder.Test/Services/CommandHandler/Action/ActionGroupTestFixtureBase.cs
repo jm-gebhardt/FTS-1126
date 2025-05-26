@@ -138,6 +138,11 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public Task<TransportOrder.Domain.Models.Agv.Agv> GetAgvAsync(Guid agvCorrelationId)
+    {
+        return _agvDb.GetAgvAsync(agvCorrelationId);
+    }
+
     public ActionGroupTestFixtureBase<T> AddAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
         _queueManager.Setup(x => x.GetAgvsAtQueueHeads()).ReturnsAsync(agvs.Select(a => a.CorrelationId).ToList());

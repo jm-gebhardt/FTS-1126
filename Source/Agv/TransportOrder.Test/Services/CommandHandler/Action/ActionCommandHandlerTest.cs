@@ -1701,6 +1701,33 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task CancelOrAbortActionGroup_StartedActionGroup_ResetIsQueueingAndPublishAbortActionGroup()
+    { 
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Started, 
+            dropActionState: ActionState.Created, 
+            assignedAgv: agv.CorrelationId,
+            orderId: "Queuing"
+            );
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup)
+            .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
+        var dbAgv = await fixture.GetAgvAsync(agv.CorrelationId);
+        dbAgv.IsQueueing.ShouldBeTrue();
+
+        await fixture.PublishMessageAsync(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<CancelActionGroup>();
+        await fixture.ShouldHavePublishedAsync<AbortActionGroup>();
+        dbAgv = await fixture.GetAgvAsync(agv.CorrelationId);
+        dbAgv.IsQueueing.ShouldBeFalse();
+    }
+
+    [TestMethod]
     public async Task SaveActionGroupAbortion_ValidData_PublishesAutomaticActionWithdrawnActionGroupChanged()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: Guid.NewGuid(), actionStateMove: ActionState.Started);

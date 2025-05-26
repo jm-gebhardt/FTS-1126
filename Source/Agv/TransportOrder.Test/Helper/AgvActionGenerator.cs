@@ -121,10 +121,10 @@ public static class AgvActionGenerator
         bool hasPriority = false,
         bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv=null,
-        Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null
+        Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null,
+        string orderId = "orderId"
     )
     {
-        const string orderId = "orderId";
         var groupId = Guid.NewGuid();
 
         var pickActionGuid = Guid.NewGuid();

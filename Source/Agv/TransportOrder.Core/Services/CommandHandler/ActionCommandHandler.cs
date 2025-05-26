@@ -1051,12 +1051,13 @@ public class ActionCommandHandler :
     {
         var actionGroupId = context.Message.CorrelationId;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
-        if (actionGroup.AssignedAgv == null)
+        Guid? agvCorrelationId = actionGroup.AssignedAgv;
+        if (agvCorrelationId == null)
         {
             await context.Publish(new CancelActionGroup(actionGroupId, CancelReason.External));
             return;
         }
-        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(actionGroup.CorrelationId);
+        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
         //if actiongroup was queueing order, set AGV free of queing
         if (actionGroup.OrderId.Equals(QueuingOrderId))
         {
