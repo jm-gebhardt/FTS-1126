@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
@@ -33,13 +34,27 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
     {
         ICollection<ConfigurationParameter> configurationParameters = context.Message.ConfigurationParameters;
         var properties = context.Message.Properties;
-
+        Trigger? existingTrigger = null;
+        try
+        {
+            existingTrigger = await triggerRepository.GetById(properties.Id);
+        }
+        catch (TriggerNotFoundException)
+        {
+            // pass
+        }
         var trigger = new Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, configurationParameters);
 
         await triggerRepository.AddOrUpdate(trigger, false);
 
         logger.LogInformation("Trigger {Name} created or updated.", trigger.DisplayName);
-        await context.Publish(new TriggerChanged(trigger));
+
+        if (!trigger.Equals(existingTrigger))
+        {
+            // get trigger with locations
+            trigger = await triggerRepository.GetById(properties.Id);
+            await context.Publish(new TriggerChanged(trigger));
+        }
     }
 
     /// <summary>

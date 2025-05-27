@@ -32,6 +32,52 @@ public class TriggerCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_TriggerUnchanged_ValidData_DoesNotPublishTriggerChanged()
+    {
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var properties = new TriggerProperties("urn", "a trigger", "description", "version", 1);
+        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, [parameter]);
+        var fixture = new TriggerCommandHandlerTestFixture()
+            .WithTrigger(trigger);
+
+        var command = new CreateTrigger(properties, trigger.ConfigurationParameters);
+
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<CreateTrigger>();
+
+        fixture.UpdatedTrigger.DisplayName.ShouldBe(command.Properties.DisplayName);
+        fixture.UpdatedTrigger.Description.ShouldBe(command.Properties.Description);
+        fixture.UpdatedTrigger.Urn.ShouldBe(command.Properties.Urn);
+        fixture.UpdatedTrigger.ConfigurationParameters.ShouldBeEquivalentTo(command.ConfigurationParameters);
+
+        await fixture.ShouldNotHavePublishedAsync<TriggerChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerChanged_ValidData_PublishesTriggerChanged()
+    {
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var properties = new TriggerProperties("urn", "a trigger", "description", "version", 1);
+        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, [parameter]);
+        var fixture = new TriggerCommandHandlerTestFixture()
+            .WithTrigger(trigger);
+
+        var command = new CreateTrigger(new TriggerProperties(properties.Urn, properties.DisplayName, "new description", properties.Version, properties.InstanceMaximum), trigger.ConfigurationParameters);
+
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<CreateTrigger>();
+
+        fixture.UpdatedTrigger.DisplayName.ShouldBe(command.Properties.DisplayName);
+        fixture.UpdatedTrigger.Description.ShouldBe(command.Properties.Description);
+        fixture.UpdatedTrigger.Urn.ShouldBe(command.Properties.Urn);
+        fixture.UpdatedTrigger.ConfigurationParameters.ShouldBeEquivalentTo(command.ConfigurationParameters);
+
+        await fixture.ShouldHavePublishedAsync<TriggerChanged>();
+    }
+
+    [TestMethod]
     public async Task Consume_RemoveTriggerLocation_ValidData_TriggerLocationRemoved()
     {
         var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");

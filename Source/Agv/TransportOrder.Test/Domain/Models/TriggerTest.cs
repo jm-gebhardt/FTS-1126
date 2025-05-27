@@ -413,4 +413,49 @@ public class TriggerTest
         trigger.ResetConfigurationParameterAtLocation(location.Id, "unknown").ShouldBeNull();
         location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);
     }
+
+    [TestMethod]
+    public void Equals_IdenticalTrigger_True()
+    {
+        const string custom = "custom";
+        var map = Guid.NewGuid();
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        trigger.AddLocation("a node id", map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+        trigger.AddLocation( Guid.NewGuid(), map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+        trigger.AddLocation([new PolygonPoint(0,4,0), new PolygonPoint(1,4,1), new PolygonPoint(0.5,2, 2)], map, [new ConfigurationParameter(parameter.Name, parameter.Description, custom, parameter.Value)]);
+
+        trigger.Equals(trigger).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void Equals_SameTrigger_True()
+    {
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        var sameTrigger = new Trigger(trigger.Id, trigger.Urn, trigger.DisplayName,trigger.Version, trigger.Description, trigger.InstanceMaximum, trigger.ConfigurationParameters);
+        trigger.Equals(sameTrigger).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void Equals_DifferentConfigurationParameter_False()
+    {
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        var updatedTrigger = new Trigger(trigger.Id, trigger.Urn, trigger.DisplayName, trigger.Version, trigger.Description, trigger.InstanceMaximum, [new ConfigurationParameter(parameter.Name, parameter.Description, "different default value", string.Empty)]);
+        trigger.Equals(updatedTrigger).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void Equals_DifferentVersion_False()
+    {
+        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
+        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+
+        var updatedTrigger = new Trigger(trigger.Id, trigger.Urn, trigger.DisplayName, "new version", trigger.Description, trigger.InstanceMaximum, trigger.ConfigurationParameters);
+        trigger.Equals(updatedTrigger).ShouldBeFalse();
+    }
 }
