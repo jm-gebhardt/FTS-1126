@@ -75,14 +75,17 @@ public class GraphRepositoryTestFixture : DeviceCommunicationDbTestFixture
         }
 
         int j = 0;
+        var edges = new List<(Guid, MqttEdge)>();
         for (int i = 0; i < _graphEdges.Length; i++)
         {
-          await  GraphRepository.Add(_graphEdges[i].Id, _mqttEdges[j]);
+            edges.Add((_graphEdges[i].Id, _mqttEdges[j]));
             if (_mqttEdges[j].Bidirectional)
             {
-              await   GraphRepository.Add(_graphEdges[++i].Id, _mqttEdges[j]);
+                edges.Add((_graphEdges[++i].Id, _mqttEdges[j]));
             }
             j++;
         }
+        
+        await  GraphRepository.Add(edges.ToArray());
     }
 }

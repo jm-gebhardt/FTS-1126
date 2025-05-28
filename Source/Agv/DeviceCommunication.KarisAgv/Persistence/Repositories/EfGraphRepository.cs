@@ -66,52 +66,87 @@ public class EfGraphRepository(
     }
 
     /// <inheritdoc />
-    public Task Add(string graphNodeId, MqttNode mqttNode)
+    public Task Add(string graphNodeId, MqttNode mqttNode) => Add((graphNodeId, mqttNode));
+
+    private Task Add(params (string graphNodeId, MqttNode mqttNode)[] nodes)
     {
+        if (!nodes.Any())
+        {
+            throw new ArgumentException("Nodes cannot be empty.", nameof(nodes));
+        }
+
         return semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
-            if (nodeCache.ConcurrentDict.ContainsKey(graphNodeId) || await context.Set<MqttNode>().AnyAsync(n => n.NodeId == graphNodeId))
+
+            List<MqttNode> nodesToAdd = nodes.Where(n => !nodeCache.ConcurrentDict.ContainsKey(n.graphNodeId))
+                .Select(n => n.mqttNode).ToList();
+
+            if (!nodesToAdd.Any())
             {
                 return;
             }
-            if (nodeCache.ConcurrentDict.TryAdd(graphNodeId, mqttNode.NodeId))
+
+            context.Set<MqttNode>().AddRange(nodesToAdd);
+            await context.SaveChangesAsync();
+
+            foreach (var node in nodesToAdd)
             {
-                context.Set<MqttNode>().Add(mqttNode);
-                await context.SaveChangesAsync();
+                nodeCache.ConcurrentDict[node.NodeId] = node.NodeId;
             }
         });
     }
 
     /// <inheritdoc />
-    public Task Add(Guid graphEdgeId, MqttEdge mqttEdge)
+    public Task Add(Guid graphEdgeId, MqttEdge mqttEdge) => Add((graphEdgeId, mqttEdge));
+
+    /// <inheritdoc />
+    public Task Add(params (Guid GraphEdgeId, MqttEdge MqttEdge)[] edges)
     {
+        if (!edges.Any())
+        {
+            throw new ArgumentException("Edges cannot be empty.", nameof(edges));
+        }
+
         return semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
-            if (edgeCache.ConcurrentDict.ContainsKey(graphEdgeId) || await context.Set<MqttEdgeMapping>().AnyAsync(e => e.InternalEdge == graphEdgeId))
+
+            List<(Guid GraphEdgeId, MqttEdge MqttEdge, MqttEdgeMapping Mapping)> edgesToAdd = edges.Where(e => !edgeCache.ConcurrentDict.ContainsKey(e.GraphEdgeId))
+                .Select(e => (e.GraphEdgeId, e.MqttEdge, Mapping: new MqttEdgeMapping(e.GraphEdgeId)
+                {
+                    Attributes = e.MqttEdge.Attributes,
+                    Bidirectional = e.MqttEdge.Bidirectional,
+                    ControlPoints = e.MqttEdge.ControlPoints,
+                    EdgeId = e.MqttEdge.EdgeId,
+                    EndId = e.MqttEdge.EndId,
+                    EdgeType = e.MqttEdge.EdgeType,
+                    ExitAngle = e.MqttEdge.ExitAngle,
+                    ExitDistance = e.MqttEdge.ExitDistance,
+                    MaxVelocity = e.MqttEdge.MaxVelocity,
+                    StartId = e.MqttEdge.StartId
+                })).ToList();
+
+            if (!edgesToAdd.Any())
             {
                 return;
             }
-            var edgeMapping = new MqttEdgeMapping(graphEdgeId)
+
+            context.Set<MqttEdgeMapping>().AddRange(edgesToAdd.Select(e => e.Mapping));
+            await context.SaveChangesAsync();
+
+            foreach (var (graphEdgeId, mqttEdge, _) in edgesToAdd)
             {
-                Attributes = mqttEdge.Attributes,
-                Bidirectional = mqttEdge.Bidirectional,
-                ControlPoints = mqttEdge.ControlPoints,
-                EdgeId = mqttEdge.EdgeId,
-                EndId = mqttEdge.EndId,
-                EdgeType = mqttEdge.EdgeType,
-                ExitAngle = mqttEdge.ExitAngle,
-                ExitDistance = mqttEdge.ExitDistance,
-                MaxVelocity = mqttEdge.MaxVelocity,
-                StartId = mqttEdge.StartId
-            };
-            if (edgeCache.ConcurrentDict.TryAdd(graphEdgeId, mqttEdge.EdgeId))
-            {
-                context.Set<MqttEdgeMapping>().Add(edgeMapping);
-                await context.SaveChangesAsync();
+                edgeCache.ConcurrentDict[graphEdgeId] = mqttEdge.EdgeId;
             }
         });
+    }
+
+    /// <inheritdoc />
+    public async Task Add(Dictionary<string, MqttNode> nodesById, Dictionary<Guid, MqttEdge> edgesById)
+    {
+        await Add(nodesById.Select(n => (n.Key, n.Value)).ToArray());
+        await Add(edgesById.Select(e => (e.Key, e.Value)).ToArray());
     }
 
     /// <inheritdoc />

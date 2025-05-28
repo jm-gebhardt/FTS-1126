@@ -37,18 +37,32 @@ public interface IGraphRepository
     public Task<ICollection<MqttEdge>> GetMqttEdges(Guid[] graphEdgeIds);
 
     /// <summary>
-    /// Updates the repository with MqttNode.
+    /// Adds MqttNode to the repository.
     /// </summary>
     /// <param name="graphNodeId">The nodeId from GraphNode.</param>
     /// <param name="mqttNode">The mqtt node.</param>
     public Task Add(string graphNodeId, MqttNode mqttNode);
 
     /// <summary>
-    /// Updates the repository with MqttEdge.
+    /// Adds MqttNode to the repository.
     /// </summary>
     /// <param name="graphEdgeId">The edgeId from GraphNode.</param>
     /// <param name="mqttEdge">The mqtt edge.</param>
     public Task Add(Guid graphEdgeId, MqttEdge mqttEdge);
+
+    /// <summary>
+    /// Adds multiple MqttNodes to the repository.
+    /// </summary>
+    /// <param name="edges">The edges to add</param>
+    public Task Add(params (Guid GraphEdgeId, MqttEdge MqttEdge)[] edges);
+
+    /// <summary>
+    /// Adds multiple MqttNodes and MqttEdges to the repository.
+    /// </summary>
+    /// <param name="nodesById">The nodes to add, indexed by their nodeId.</param>
+    /// <param name="edgesById">The edges to add, indexed by their edgeId.</param>
+    /// <returns></returns>
+    Task Add(Dictionary<string, MqttNode> nodesById, Dictionary<Guid, MqttEdge> edgesById);
 
     /// <summary>
     /// Load cache.

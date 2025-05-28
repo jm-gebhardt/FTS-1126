@@ -86,6 +86,7 @@ public class AgvGraphBuilderSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
         }
 
         var parser = new StationListParser(MqttStationList, MqttGraph);
+        parser.Parse();
         AgvGraph = parser.Graph;
         RelatedMapId = parser.RelatedMapId;
         RelatedMapName = parser.RelatedMapName;
