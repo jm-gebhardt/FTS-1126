@@ -26,6 +26,6 @@ public class TriggerServiceConfiguration
     public void UpdateFromConfigurationSection(IConfigurationSection configuration)
     {
         TriggerFolder = configuration.GetValue("FOLDER", "triggers")!;
-        TriggerReloadIntervalMs = configuration.GetValue("RELOAD_INTERVAL_MS", 120000);
+        TriggerReloadIntervalMs = configuration.GetValue("RELOAD_INTERVAL_MS", -1);
     }
 }
