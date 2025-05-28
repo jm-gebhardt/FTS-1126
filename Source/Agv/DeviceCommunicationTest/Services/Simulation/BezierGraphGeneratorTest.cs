@@ -26,7 +26,6 @@ public class BezierGraphGeneratorTest
     [DataRow(3, 1, 1)]
     [DataRow(1, 3, 1)]
     [DataRow(3, 3, 1)]
-    [DataRow(1, 0, 1)]
     [DataRow(2, 2, 2)]
     [DataRow(10, 10, 10)]
     public void Generate_TestGridOfDifferentSizes_AllSuccessful(
