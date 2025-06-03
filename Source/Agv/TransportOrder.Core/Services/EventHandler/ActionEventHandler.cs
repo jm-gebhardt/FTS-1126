@@ -110,13 +110,14 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
         (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
+       
         if (agvCorrelationId != null)
         {
             await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));
             return;
         }
 
-        if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Pick))
+        if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Pick) && actionGroup.IsQueued)
         {
             await context.Publish(new TryUpdateIdleAction(actionGroupCorrelationId));
             return;

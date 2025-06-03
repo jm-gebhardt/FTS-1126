@@ -34,7 +34,8 @@ public class HostOrderCommandHandler(
     IConsumer<PassTriggerPoint>,
     IConsumer<AbortHostOrder>,
     IConsumer<TryQueueDelayedOrder>,
-    IConsumer<ResetDoppelspielPartner>
+    IConsumer<ResetDoppelspielPartner>,
+    IConsumer<TryQueueNextAklPick>
 
 {
     /// <summary>
@@ -68,9 +69,16 @@ public class HostOrderCommandHandler(
         }
         await CancelUnfinishedOrdersOfHu(context, hu, orderDetails.CreationDate);
 
+        if (configuration.IsPickAtAkl(hostOrder.Source))
+        {
+            logger.LogDebug("Order {OrderCorrelationId}, is pick at akl: delay queueing it", hostOrder.CorrelationId);
+            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate);
+            return;
+        }
+
         // Check if there are agvs that are to be selected to handle this order directly after dropping
-        string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).Node);
-        logger.LogInformation("Host order for order {Hu} created: {OrderCorrelationId}, corresponding drop target {Target}", hu, hostOrder.CorrelationId, doppelSpielDropTarget);
+        string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Source);
+        logger.LogInformation("Host order for order {Hu} created: {OrderCorrelationId}, Doppelspiel drop target corresponding to current pick {Pick} : {Target}", hu, hostOrder.CorrelationId, hostOrder.Source, doppelSpielDropTarget);
 
         Guid? dropOrderId = await hostOrderRepository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelSpielDropTarget);
         if (dropOrderId != null && !configuration.SkipDoppelspiel(doppelSpielDropTarget))
@@ -81,7 +89,7 @@ public class HostOrderCommandHandler(
             dropOrder.SetDoppelspielPartner(hostOrder.CorrelationId);
             await hostOrderRepository.UpdateAsync(dropOrder);
             await hostOrderRepository.SaveAsync();
-            logger.LogInformation("Doppelspiel expected for order  {OrderCorrelationId}", hostOrder.CorrelationId);
+            logger.LogInformation("Doppelspiel expected for order {OrderCorrelationId}", hostOrder.CorrelationId);
             await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, dropOrder.AssignedAgv);
             return;
         }
@@ -171,7 +179,7 @@ public class HostOrderCommandHandler(
 
     private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null, string? pickNode = null)
     {
-        if (await ViolatesAklAgvLimitation(hostOrder))
+        if (!configuration.IsPickAtAkl(hostOrder.Source) && await ViolatesAklAgvLimitation(hostOrder))
         {
             logger.LogInformation("Host order {OrderId} / {CorrelationId} is kept back because of AKL station limitation.", hostOrder.Hu, hostOrder.CorrelationId);
             hostOrder.SetDoppelspielPartner(null);
@@ -489,7 +497,14 @@ public class HostOrderCommandHandler(
             return;
         }
 
-        var hostOrder = await hostOrderRepository.GetNextHostOrderForStationGroup(stationGroup.Sources, stationGroup.Targets);
+        ICollection<string> sources = stationGroup.Sources;
+        if (configuration.IsPickAtAkl(context.Message.Source))
+        {  
+            // Do not queue AKL picks here, they are queued upon finish of the pick of a drop at AKL
+            sources = [];
+        }
+
+        var hostOrder = await hostOrderRepository.GetNextHostOrderForStationGroup(sources, stationGroup.Targets);
         if (hostOrder == null)
         {
             return;
@@ -523,5 +538,22 @@ public class HostOrderCommandHandler(
 
         await hostOrderRepository.UpdateAsync(hostOrder);
         await hostOrderRepository.UpdateAsync(partnerOrder);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryQueueNextAklPick"/> command
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryQueueNextAklPick> context)
+    {
+        (string pickTarget, var agvCorrelationId) = context.Message;
+        var hostOrder = await hostOrderRepository.GetNextHostOrderForStationGroup([pickTarget], []);
+        if (hostOrder == null)
+        {
+            logger.LogInformation("No delayed next akl pick at {Target}", pickTarget);
+            return;
+        }
+
+        logger.LogInformation("Queueing next alk pick order {CorrelationId} at {Target} for agv {AgvCorrelationId}", hostOrder.CorrelationId, pickTarget, agvCorrelationId);
+        await QueueHostOrder(context, hostOrder, DateTime.UtcNow, agvCorrelationId);
     }
 }

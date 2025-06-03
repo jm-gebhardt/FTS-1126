@@ -49,4 +49,25 @@ public class KaeserGraphConfigurationTest
         var kaeserGraph = new KaeserGraphConfiguration();
         kaeserGraph.IsDropAtAkl(target).ShouldBe(expected);
     }
+
+    [DataRow("2110", false)]
+    [DataRow("2210", false)]
+    [DataRow("2310", false)]
+    [DataRow("2410", false)]
+    [DataRow("2130", true)]
+    [DataRow("2230", true)]
+    [DataRow("2330", true)]
+    [DataRow("2430", true)]
+    [DataRow("1050", false)]
+    [DataRow("1060", false)]
+    [DataRow("1020", false)]
+    [DataRow("1040", false)]
+    [DataRow("9060", false)]
+    [DataRow("9070", false)]
+    [DataTestMethod]
+    public void IsPickAtAkl_ReturnsExpectedValue(string target, bool expected)
+    {
+        var kaeserGraph = new KaeserGraphConfiguration();
+        kaeserGraph.IsPickAtAkl(target).ShouldBe(expected);
+    }
 }
