@@ -11,12 +11,12 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TriggerQueueEvacuation;
 
 /// <summary>
-/// Represents a trigger that if enabled triggers evacuation of a queue if an agv with cargo on it passes the trigger.
+/// Represents a trigger that if enabled triggers evacuation of a queue when an agv running a pick drop action group passes the trigger.
 /// </summary>
 [PublicAPI]
 public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> logger): IFfcTrigger
 {
-    private readonly ConfigurationParameter _enableParameter = new("Enable", "Flag for switching on queue evacuation", false.ToString(), "^(true|false)$");
+    private readonly ConfigurationParameter _enableParameter = new("Enable", "Flag for switching on queue evacuation", false.ToString().ToLower(), "^(true|false)$");
     private readonly ConfigurationParameter _queueNameParameter = new("QueueName", "The name of the queue to evacuate", string.Empty, string.Empty);
     private readonly ConfigurationParameter _evacuationNodeParameter = new("EvacuationNode", "The node to evacuate the queue to", string.Empty, string.Empty);
   

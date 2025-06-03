@@ -26,7 +26,8 @@ public class QueueCommandHandler(
     ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider) :
     IConsumer<AddQueue>,
     IConsumer<GetQueueFillQuantities>,
-    IConsumer<EvacuateQueue>
+    IConsumer<EvacuateQueue>,
+    IConsumer<EvacuateQueueHead>
 {
     /// <summary>
     /// Handles the <see cref="AddQueue"/> command.
@@ -96,7 +97,7 @@ public class QueueCommandHandler(
                             evacuationTarget,
                             actionGroupId)
                     ],
-                    $"Manual {ActionType.Move}",
+                    $"Queue Evacuation {ActionType.Move}",
                     agv,
                     actionGroupId);
                 // Delay queueing the next manual move
@@ -119,5 +120,43 @@ public class QueueCommandHandler(
             creator: ActionGroupCreator.TransportOrder
         );
         await context.Publish(new QueueActionGroup(actionGroup, false));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="EvacuateQueueHead"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<EvacuateQueueHead> context)
+    {
+        (string queueName, string evacuationTarget) = context.Message;
+        await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            logger.LogInformation("Evacuating head of queue {Queue}", queueName);
+            var queue = await queueRepository.GetQueueByName(queueName);
+
+            if (queue.AgvFillQuantity == 0)
+            {
+                logger.LogInformation("Not evacuating empty queue {Queue}", queue.Name);
+                return;
+            }
+
+            Guid? agv = queue.Head?.GetCurrentAgv();
+            if (agv == null)
+            {
+                logger.LogInformation("No agv at head of queue {Queue}", queue.Name);
+                return;
+            }
+            logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTarget, agv);
+            var actionGroupId = Guid.NewGuid();
+            await QueueNewActionGroup(context,
+                [
+                    new AgvAction(Guid.NewGuid(),
+                        ActionType.Move,
+                        evacuationTarget,
+                        actionGroupId)
+                ],
+                $"Queue Evacuation {ActionType.Move}",
+                agv.Value,
+                actionGroupId);
+        });
     }
 }

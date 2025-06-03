@@ -90,4 +90,44 @@ public class QueueCommandHandlerTest
         messageForAgvOnTheWayForQueueing.ActionGroup.Actions.Count.ShouldBe(1);
         messageForAgvOnTheWayForQueueing.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(command.EvacuationTarget);
     }
+
+    [TestMethod]
+    public async Task Consume_EvacuateQueueHead_EmptyQueue_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue);
+
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateQueueHead_ValidData_PublishesQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue);
+
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+
+        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        queueActionGroupMessages.Count.ShouldBe(1);
+
+        queue.Head.ShouldNotBeNull();
+       
+        Guid? agv = queue.Head.GetCurrentAgv();
+        var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
+        message.ShouldNotBeNull();
+        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.Actions.Count.ShouldBe(1);
+        message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(command.EvacuationTarget);
+    }
 }
