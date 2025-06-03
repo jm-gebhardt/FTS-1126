@@ -74,12 +74,11 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
         double maxLength = 0.0;
         if (await agvData.AnyAsync())
         {
-            var agvDimension = agvData.GroupBy(a => 1)
-                .Select(g => new
-                {
-                    MaxWidth = g.Max(a => a.Width),
-                    MaxLength = g.Max(a => a.Length)
-                }).First();
+            var agvDimension = new
+            {
+                MaxWidth = agvData.Max(a => a.Width),
+                MaxLength = agvData.Max(a => a.Length)
+            };
 
             maxWidth = agvDimension.MaxWidth;
             maxLength = agvDimension.MaxLength;
@@ -157,7 +156,7 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
             .Select(s => new
             {
                 Station = s,
-                NodeLock = context.Set<NodeLock>().FirstOrDefault(n => n.NodeId == s.Name),
+                NodeLock = context.Set<NodeLock>().SingleOrDefault(n => n.NodeId == s.Name),
                 Agvs = context.Set<ActionGroup>()
                     .Where(a => a.Actions.Any(ac => ac.Target.NodeId == s.Name && ac.State == ActionState.Started))
                     .Select(a => a.AssignedAgv.GetValueOrDefault())

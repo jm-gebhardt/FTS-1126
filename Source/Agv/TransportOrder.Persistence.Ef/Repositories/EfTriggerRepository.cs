@@ -31,6 +31,11 @@ public class EfTriggerRepository : ITriggerRepository
         _logger = logger;
     }
 
+    private static Task<Location?> GetLocationByIdAsync(TransportOrderDbContext context, Location location)
+    {
+        return context.Set<Location>().AsSplitQuery().SingleOrDefaultAsync(l => l.Id == location.Id);
+    }
+    
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task AddOrUpdate(Trigger trigger, bool updateLocations)
     {
@@ -145,7 +150,7 @@ public class EfTriggerRepository : ITriggerRepository
                     {
                         RemoveTriggerFromLocationDictionary(oldLocation);
                     }
-                    
+
                     foreach (var location in newLocations)
                     {
                         AddTriggerLocationToDictionary(trigger, location);
@@ -205,7 +210,7 @@ public class EfTriggerRepository : ITriggerRepository
                     locationsWithTriggerToCall.Add(location);
                     _logger.LogDebug("{Method}: AGV {AgvId} entered polygon", nameof(GetPolygonTriggerLocations), agvId);
 
-                    var locationRecord = await context.Set<Location>().Where(l => l.Id == location.Id).FirstOrDefaultAsync();
+                    var locationRecord = await GetLocationByIdAsync(context, location);
                     if (locationRecord != null)
                     {
                         locationRecord.Agvs.Add(agvId);
@@ -226,7 +231,7 @@ public class EfTriggerRepository : ITriggerRepository
                     location.Agvs.Remove(agvId);
                     _logger.LogDebug("{Method}: AGV {AgvId} left polygon.", nameof(GetPolygonTriggerLocations), agvId);
 
-                    var locationRecord = await context.Set<Location>().Where(l => l.Id == location.Id).FirstOrDefaultAsync();
+                    var locationRecord = await GetLocationByIdAsync(context, location);
                     if (locationRecord != null)
                     {
                         locationRecord.Agvs.Remove(agvId);

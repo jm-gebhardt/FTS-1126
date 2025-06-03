@@ -388,7 +388,7 @@ public class EfGraphRepository : IGraphRepository
         Dictionary<Guid, GraphNode?> nodesByAgv = new();
         foreach (KeyValuePair<Guid, string?> element in lastNodeIdsByAgvCorrelationId)
         {
-            var efNode = nodeList.FirstOrDefault(pn => pn.Id == element.Value);
+            var efNode = nodeList.SingleOrDefault(pn => pn.Id == element.Value);
             nodesByAgv.Add(element.Key, _mapper.Map<GraphNode>(efNode));
         }
         return nodesByAgv;

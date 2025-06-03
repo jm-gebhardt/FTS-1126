@@ -68,7 +68,7 @@ public class EfStationRepository(PrismatCommunicationDbContext context): EfRepos
                     .Where(gs => gs.GroupId == s.GroupId)
                     .ToList()
             })
-            .FirstOrDefaultAsync();
+            .SingleOrDefaultAsync();
 
         return stationGroup == null ? null : new StationGroup(stationGroup.Stations);
     }

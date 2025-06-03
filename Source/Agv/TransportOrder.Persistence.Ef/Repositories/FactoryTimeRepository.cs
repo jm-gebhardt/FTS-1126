@@ -19,23 +19,27 @@ public class FactoryTimeRepository : IFactoryTimeRepository
         _dbContextFactory = dbContextFactory;
     }
 
+    private static IOrderedQueryable<FactoryTime> GetOrderedFactoryTime(TransportOrderDbContext context) => context.Set<FactoryTime>().OrderBy(f => f.Id);
+    
     /// <inheritdoc />
     public async Task<FactoryTime> GetFactoryTime()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Set<FactoryTime>().FirstAsync();
+        return await GetOrderedFactoryTime(context).FirstAsync();
     }
 
     /// <inheritdoc />
     public async Task SetFactoryTime(TimeZoneInfo factoryTimeZone)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<FactoryTime> dbSet = context.Set<FactoryTime>();
-        var factoryTime = await dbSet.FirstOrDefaultAsync();
+        var factoryTime = await GetOrderedFactoryTime(context).FirstOrDefaultAsync();
 
         if (factoryTime == null)
         {
-            dbSet.Add(new FactoryTime(factoryTimeZone));
+            context.Set<FactoryTime>().Add(new FactoryTime(factoryTimeZone)
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000000")
+            });
         }
         else
         {

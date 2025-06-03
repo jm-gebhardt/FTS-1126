@@ -93,7 +93,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).Skip(1).ToList();
+        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).OrderBy(n => n.Id).Skip(1).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 

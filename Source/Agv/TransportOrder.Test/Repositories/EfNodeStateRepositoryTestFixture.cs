@@ -22,6 +22,6 @@ public class EfNodeStateRepositoryTestFixture : TransportOrderDbFixture
     public NodeLock? Get(string nodeId)
     {
         using var context = ContextFactory.CreateDbContext();
-        return context.Set<NodeLock>().AsNoTracking().FirstOrDefault(n => n.NodeId == nodeId);
+        return context.Set<NodeLock>().AsNoTracking().SingleOrDefault(n => n.NodeId == nodeId);
     }
 }

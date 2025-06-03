@@ -197,7 +197,7 @@ public class EfNodeStateRepository : INodeStateRepository
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(n =>
+            .SingleOrDefaultAsync(n =>
                 nodes.Contains(n.NodeId)
                 && n.AgvCorrelationId == agvCorrelationId
                 && n.NodeState == NodeLockState.Reserved);
@@ -246,7 +246,7 @@ public class EfNodeStateRepository : INodeStateRepository
         using var dbContext = _dbContextFactory.CreateDbContext();
         return dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .FirstOrDefault(n => n.NodeId == nodeId);
+            .SingleOrDefault(n => n.NodeId == nodeId);
     }
 
     private NodeLock? GetNodeLockInState(Guid agvCorrelationId, NodeLockState nodeLockState)
@@ -255,7 +255,7 @@ public class EfNodeStateRepository : INodeStateRepository
 
         return dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .FirstOrDefault(n => n.AgvCorrelationId == agvCorrelationId && n.NodeState == nodeLockState);
+            .SingleOrDefault(n => n.AgvCorrelationId == agvCorrelationId && n.NodeState == nodeLockState);
     }
 
     private async Task<bool> UpdateNodeAsync(string nodeId, NodeLockState nodeState, Guid? agvCorrelationId, bool force=false)
@@ -264,7 +264,7 @@ public class EfNodeStateRepository : INodeStateRepository
         var currentLock = await dbContext
             .Set<NodeLock>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(n => n.NodeId == nodeId);
+            .SingleOrDefaultAsync(n => n.NodeId == nodeId);
         if (currentLock == null)
         {
             await dbContext.AddAsync(new NodeLock(nodeId, nodeState, false, agvCorrelationId, DateTime.UtcNow));
@@ -288,7 +288,7 @@ public class EfNodeStateRepository : INodeStateRepository
         var currentLock = await dbContext
             .Set<NodeLock>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(n => n.NodeId == nodeId);
+            .SingleOrDefaultAsync(n => n.NodeId == nodeId);
         if (currentLock == null)
         {
             await dbContext.AddAsync(new NodeLock(nodeId, NodeLockState.Free, isLocked, null, DateTime.UtcNow));

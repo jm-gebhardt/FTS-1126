@@ -131,6 +131,8 @@ public class EfActionGroupRepository : IActionGroupRepository
         }
 
         List<AgvAction> actions = await actionGroups
+            .OrderByDescending(a => a.StartedDate)
+            .Reverse()
             .Take(maxItems)
             .SelectMany(a => a.Actions)
             .ToListAsync();
@@ -180,10 +182,10 @@ public class EfActionGroupRepository : IActionGroupRepository
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
-        actionGroups = actionGroups.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.HasPriority);
-
         List<ActionGroup> actionGroupsAsync = await actionGroups
             .AsNoTracking()
+            .OrderByProperty(sortBy.ToString(), isDescending: sortDescending)
+            .ThenByDescending(g => g.HasPriority)
             .Take(maxItems)
             .ToListWithNoLockAsync();
         return actionGroupsAsync;
@@ -578,6 +580,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                 && ag.Actions.Any(a =>
                     a.ActionType == ActionType.Charge
                     && a.State == ActionState.Created))
+            .OrderByDescending(ag => ag.CreatedDate)
             .FirstOrDefaultAsync();
     }
 
@@ -644,7 +647,9 @@ public class EfActionGroupRepository : IActionGroupRepository
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking();
 
-        return await actionGroups.FirstOrDefaultAsync(ag =>
+        return await actionGroups
+            .OrderByDescending(ag => ag.StartedDate)
+            .FirstOrDefaultAsync(ag =>
             ag.AssignedAgv == agvCorrelationId
             && ag.State == ActionGroupState.Started);
     }

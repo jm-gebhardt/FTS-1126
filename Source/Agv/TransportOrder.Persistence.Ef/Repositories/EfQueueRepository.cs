@@ -124,7 +124,7 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return await context.Set<Queue>().AsSplitQuery()
             .Where(q => q.Nodes.OrderBy(p => p.Position).Last().NodeId == entryNode)
-            .FirstOrDefaultAsync();
+            .SingleOrDefaultAsync();
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
