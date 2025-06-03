@@ -42,11 +42,11 @@ public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
             await context.Publish(new AgvGraphChanged(agvGraph.CorrelationId));
             await _stationRepository.AddStations(agvGraph);
 
-            _logger.LogInformation("Graph {GraphCorrelationId} added or updated in repository.", agvGraph.CorrelationId);
+            _logger.LogInformation("Graph {GraphCorrelationId} added or updated in repository", agvGraph.CorrelationId);
         }
         else
         {
-            _logger.LogInformation("Graph {GraphCorrelationId} was not stored in the repository. Emitting GraphMissing event.", agvGraph.CorrelationId);
+            _logger.LogInformation("Graph {GraphCorrelationId} was not stored in the repository. Emitting GraphMissing event", agvGraph.CorrelationId);
             await context.Publish(new GraphMissing(agvGraph.CorrelationId), context.CancellationToken);
         }
     }

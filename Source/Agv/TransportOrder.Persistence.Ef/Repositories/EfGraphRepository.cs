@@ -192,22 +192,28 @@ public class EfGraphRepository : IGraphRepository
 
             var efGraph = _mapper.Map<EfAgvGraph>(agvGraph);
 
-            var existingGraph = await context.Set<EfAgvGraph>()
-                .SingleOrDefaultAsync(g => g.CorrelationId == agvGraph.CorrelationId);
-
-            if (await context.Set<EfNode>()
-                    .Where(node => efGraph.Nodes.Select(n => n.Id).Contains(node.Id))
-                    .CountAsync() != efGraph.Nodes.Count ||
-                await context.Set<EfEdge>()
-                    .Where(edge => efGraph.Edges.Select(e => e.Id).Contains(edge.Id))
-                    .CountAsync() != efGraph.Edges.Count)
+            int existingNodesCount = await context.Set<EfNode>().CountAsync(node => efGraph.Nodes.Select(n => n.Id).Contains(node.Id));
+            if (existingNodesCount < efGraph.Nodes.Count)
             {
-                _logger.LogWarning("Not all nodes or edges exist yet, so we cannot store the AgvGraph yet.");
+                List<string> missingNodes = efGraph.Nodes.Select(n => n.Id).Except(await context.Set<EfNode>().Select(n => n.Id).ToListAsync()).ToList();
+                _logger.LogWarning("Not all nodes exist yet, so we cannot store the AgvGraph yet. Missing nodes: {MissingNodes}", string.Join(", ", missingNodes));
+
+                return false;
+            }
+
+            int existingEdgesCount = await context.Set<EfEdge>().CountAsync(edge => efGraph.Edges.Select(e => e.Id).Contains(edge.Id));
+            if (existingEdgesCount < efGraph.Edges.Count)
+            {
+                List<Guid> missingEdges = efGraph.Edges.Select(e => e.Id).Except(await context.Set<EfEdge>().Select(e => e.Id).ToListAsync()).ToList();
+                _logger.LogWarning("Not all edges exist yet, so we cannot store the AgvGraph yet. Missing edges: {MissingEdges}", string.Join(", ", missingEdges));
                 return false;
             }
 
             context.AttachRange(efGraph.Nodes);
             context.AttachRange(efGraph.Edges);
+
+            var existingGraph = await context.Set<EfAgvGraph>()
+                .SingleOrDefaultAsync(g => g.CorrelationId == agvGraph.CorrelationId);
 
             if (existingGraph == null)
             {
