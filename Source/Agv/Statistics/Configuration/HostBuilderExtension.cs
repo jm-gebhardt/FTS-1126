@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.SemaphoreProviders;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Filters;
 using Gebhardt.Acc.Common.Services;
@@ -78,6 +79,8 @@ public static class HostBuilderExtension
             services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
             services.AddTransient<IGridAgvPositionRepository, EfGridAgvPositionRepository>();
             services.AddTransient<IMapAgvPositionsRepository, EfMapAgvPositionsRepository>();
+            
+            services.AddSingleton(typeof(IInMemoryCache<,>), typeof(InMemoryCache<,>));
             
             RegisterFilters(services);
         });
