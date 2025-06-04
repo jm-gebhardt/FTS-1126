@@ -75,7 +75,6 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
 
             case OrderEventType.Updated:
                 await context.Publish(new ActionUpdated(actionId, agvCorrelationId));
-                await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             default:
