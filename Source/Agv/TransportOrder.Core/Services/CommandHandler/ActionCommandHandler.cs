@@ -713,6 +713,7 @@ public class ActionCommandHandler :
 
         if (action.ActionType == ActionType.Drop)
         {
+            await _actionService.TryQueueDoppelspielPartner(context, actionGroup, action, agv, cancellationToken);
             await context.Publish(new DropActionCompleted(actionGroup.CorrelationId, action.CorrelationId, action.CompletedDate.GetValueOrDefault()), cancellationToken);
         }
 

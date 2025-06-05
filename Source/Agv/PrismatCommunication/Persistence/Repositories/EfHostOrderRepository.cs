@@ -38,7 +38,6 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                 h => !h.PassedTriggerPoint
                      && h.CanceledDate == null
                      && h.FinishedDate == null
-                     && h.StartedDate != null
                      && h.IsQueued
                      && h.DoppelspielPartner == null
                      && h.Actions.Any(a => a.ActionType == ActionType.Drop && a.Node == dropTarget)
@@ -73,5 +72,52 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                  (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.FinishedDate == null) ||
                   h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.FinishedDate == null)))
             .AnyAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<HostOrder?> GetNextPickForSources(ICollection<string> sources)
+    {
+        return await _context.Set<HostOrder>().Where(
+                h => !h.IsQueued &&
+                     h.CanceledDate == null &&
+                     h.FinishedDate == null &&
+                     h.StartedDate == null &&
+                     h.FailedDate == null &&
+                     h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
+            .OrderBy(h => h.CreatedDate)
+            .ThenByDescending(h => h.IsRegisteredForDoppelspiel)
+            .FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<HostOrder?> GetNextUnmatchedDoppelspielPick(ICollection<string> sources, ICollection<string> targets, Guid correlationId)
+    {
+        List<HostOrder> pickOrders = await _context.Set<HostOrder>().Where(
+                h => !h.IsQueued &&
+                     h.CanceledDate == null &&
+                     h.FinishedDate == null &&
+                     h.StartedDate == null &&
+                     h.FailedDate == null &&
+                     h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
+            .OrderBy(h => h.CreatedDate)
+            .ThenByDescending(h => h.IsRegisteredForDoppelspiel).ToListAsync();
+
+        int drops = await _context.Set<HostOrder>().Where(
+                h => 
+                    h.CorrelationId != correlationId &&
+                     h.CanceledDate == null &&
+                     h.FinishedDate == null &&
+                     h.StartedDate == null &&
+                     h.FailedDate == null &&
+                     h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node)))
+            .OrderBy(h => h.CreatedDate).CountAsync();
+        
+        if (pickOrders.Count <= drops)
+        {
+            // All picks will be part of a Doppelspiel
+            return null;
+        }
+
+        return pickOrders.Skip(drops).FirstOrDefault();
     }
 }

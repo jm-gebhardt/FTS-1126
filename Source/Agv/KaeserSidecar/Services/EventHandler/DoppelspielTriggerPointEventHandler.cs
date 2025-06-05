@@ -6,6 +6,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ public class DoppelspielTriggerPointEventHandler(
     IPrismatCommunicationHostOrderRepository hostOrderRepository,
     IPrismatCommunicationStationRepository stationRepository,
     IPrismatCommunicationSystemStatusRepository systemStatusRepository,
+    KaeserGraphConfiguration configuration,
     IAgvSettingsService agvSettingsService) :
     IConsumer<AgvPassedDoppelspielTriggerPoint>
 {
@@ -56,12 +58,13 @@ public class DoppelspielTriggerPointEventHandler(
         var hostOrder = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
         if (isDropping)
         {
-            var nextPickOrder = hostOrder.DoppelspielPartner != null ? await hostOrderRepository.GetByIdAsync(hostOrder.DoppelspielPartner.Value) : null;
-            bool hasLowBatteryLevel = await agvSettingsService.CheckAgvHasLowBatteryLevel(agvStatus.CorrelationId);
+            List<string>? sources = configuration.DoppelspielPickTargets.GetValueOrDefault(hostOrder.Target);
+            var nextPickOrder = sources != null ? await hostOrderRepository.GetNextPickForSources(sources) : null;
+            bool agvHasCriticalBatteryLevel = await agvSettingsService.CheckAgvHasCriticalBatteryLevel(agvStatus.CorrelationId);
             Guid? nextPickOrderId = nextPickOrder == null || nextPickOrder.IsQueued ? null : nextPickOrder.CorrelationId;
-            bool shouldPickNext = !hasLowBatteryLevel && nextPickOrderId != null && await CanBeUsedForDoppelspiel(nextPickOrder);
+            bool shouldPickNext = !agvHasCriticalBatteryLevel && nextPickOrderId != null && await CanBeUsedForDoppelspiel(nextPickOrder);
             string? pickNode = shouldPickNext ? action.Target.NodeId : null;
-            logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next {ShouldPick} and has low battery level {HasLowBatteryLevel}", actionGroup.AssignedAgv!.Value, action.Target.NodeId!, shouldPickNext, hasLowBatteryLevel);
+            logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next {ShouldPick} order {PickOrderCorrelationId} and has critical battery level {HasLowBatteryLevel}", actionGroup.AssignedAgv!.Value, action.Target.NodeId!, shouldPickNext, nextPickOrderId, agvHasCriticalBatteryLevel);
             await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId, nextPickOrderId, shouldPickNext, pickNode));
             return;
         }

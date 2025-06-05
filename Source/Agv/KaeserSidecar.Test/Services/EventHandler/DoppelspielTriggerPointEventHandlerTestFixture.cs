@@ -64,22 +64,21 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
         return this;
     }
 
-    public DoppelspielTriggerPointEventHandlerTestFixture WithHostOrders(HostOrder order, HostOrder? nextPickOrder = null)
+    public DoppelspielTriggerPointEventHandlerTestFixture WithHostOrder(HostOrder order)
     {
-        if (nextPickOrder == null)
-        {
-            _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
-            return this;
-        }
-        _hostOrderRepository.SetupSequence(x => x.GetByIdAsync(It.IsAny<Guid>()))
-            .ReturnsAsync(order)
-            .ReturnsAsync(nextPickOrder);
+        _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
         return this;
     }
 
-    public DoppelspielTriggerPointEventHandlerTestFixture WithAgvHasLowBatteryLevel(bool hasLowBatteryLevel)
+    public DoppelspielTriggerPointEventHandlerTestFixture WithNextPickOrder(HostOrder? order)
     {
-        _agvSettingsService.Setup(x => x.CheckAgvHasLowBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);
+        _hostOrderRepository.Setup(x => x.GetNextPickForSources(It.IsAny<ICollection<string>>())).ReturnsAsync(order);
+        return this;
+    }
+    
+    public DoppelspielTriggerPointEventHandlerTestFixture WithAgvHasCriticalBatteryLevel(bool hasLowBatteryLevel)
+    {
+        _agvSettingsService.Setup(x => x.CheckAgvHasCriticalBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);
         return this;
     }
 }

@@ -84,6 +84,16 @@ public class HostOrder
     public Guid? DoppelspielPartner { get; private set; }
 
     /// <summary>
+    /// True, if the order is registered for a Doppelspiel
+    /// </summary>
+    public bool IsRegisteredForDoppelspiel { get; private set; }
+
+    /// <summary>
+    /// True, if the orders Doppelspiel partner has been queued yet.
+    /// </summary>
+    public bool HasQueuedDoppelspielpartner => IsRegisteredForDoppelspiel && DoppelspielPartner != null;
+
+    /// <summary>
     /// The source of the host order.
     /// </summary>
     public string Source => Actions.First(a => a.ActionType == ActionType.Pick).Node;
@@ -136,12 +146,27 @@ public class HostOrder
     }
 
     /// <summary>
-    /// Set the Doppelspielpartner id.
+    /// Register order for Doppelspiel.
     /// </summary>
-    /// <param name="correlationId">The correlation id of the Doppelspiel partner.</param>
-    public void SetDoppelspielPartner(Guid? correlationId)
+    public void RegisterForDoppelspiel()
     {
-        DoppelspielPartner = correlationId;
+        IsRegisteredForDoppelspiel = true;
+    }
+
+    /// <summary>
+    /// Unregister order from Doppelspiel.
+    /// </summary>
+    public void UnRegisterFromDoppelspiel()
+    {
+        IsRegisteredForDoppelspiel = false;
+    }
+
+    /// <summary>
+    /// Register order as Doppelspiel partner.
+    /// </summary>
+    public void SetDoppelspielpartner(Guid partnerOrder)
+    {
+        DoppelspielPartner = partnerOrder;
     }
 
     /// <summary>

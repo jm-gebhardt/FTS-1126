@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
-using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
@@ -345,5 +346,30 @@ public class ActionCommandHelper
         }
 
         return notSkippedAction;
+    }
+
+    /// <summary>
+    /// Tries to queue a Doppelspielpartner.
+    /// </summary>
+    /// <param name="context">The context.</param>
+    /// <param name="actionGroup">The action group.</param>
+    /// <param name="action">The current action.</param>
+    /// <param name="agv">The current agv.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public async Task TryQueueDoppelspielPartner(ConsumeContext<CompleteActionOfActionGroup> context, Domain.Models.ActionGroup.ActionGroup actionGroup, AgvAction action,Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
+    {
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        if (agv.CheckMustCharge(agvSettings))
+        {
+            _logger.LogInformation("Not triggering late Doppelspiel, agv {AgvCorrelationId} must charge", agv.CorrelationId);
+            return;
+        }
+        IRequestClient<TriggerDoppelspielpartnerQueueing>? requestClient = context.CreateRequestClient<TriggerDoppelspielpartnerQueueing>(_bus);
+        Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielpartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.NodeId!), cancellationToken);
+        if (response.Message.CorrelationId == null)
+        {
+            return;
+        }
+        _logger.LogInformation("ActionGroup {ActionGroupCorrelationId} has been queued for agv {AgvCorrelationId}", response.Message.CorrelationId, actionGroup.AssignedAgv);
     }
 }

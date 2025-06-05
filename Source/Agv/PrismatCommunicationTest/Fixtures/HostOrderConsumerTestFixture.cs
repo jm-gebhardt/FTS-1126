@@ -89,7 +89,13 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrdersByHu(It.IsAny<string>(), It.IsAny<DateTime>())).ReturnsAsync(hostOrder== null ? [] : [hostOrder]);
         return this;
     }
-    
+
+    public HostOrderConsumerTestFixture<TConsumer> WithUnMatchedPickOrder(HostOrder? hostOrder)
+    {
+        HostOrderRepositoryMock.Setup(x => x.GetNextUnmatchedDoppelspielPick(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>(), It.IsAny<Guid>())).ReturnsAsync(hostOrder);
+        return this;
+    }
+
     public HostOrderConsumerTestFixture<TConsumer> WithValidationError((int ErrorCode, string ErrorInfo)? error)
     {
         _validationService.Setup(x => x.ValidateAsync(It.IsAny<HostOrder>())).ReturnsAsync(error);
@@ -99,6 +105,12 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     public HostOrderConsumerTestFixture<TConsumer> WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(Guid? correlationId)
     {
         HostOrderRepositoryMock.Setup(x => x.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(It.IsAny<string>())).ReturnsAsync(correlationId);
+        return this;
+    }
+
+    public HostOrderConsumerTestFixture<TConsumer> WithNextPickOrder(HostOrder? hostOrder)
+    {
+        HostOrderRepositoryMock.Setup(x => x.GetNextPickForSources(It.IsAny<ICollection<string>>())).ReturnsAsync(hostOrder);
         return this;
     }
 
