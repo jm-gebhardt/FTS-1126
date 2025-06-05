@@ -55,6 +55,7 @@ public class StateParser(ILogger logger, IMapper mapper)
         GetStatus(state);
         GetPosition(state);
         GetErrors(state);
+        GetInformation(state);
         ConvertFieldViolationToWarning(state);
     }
 
@@ -208,13 +209,40 @@ public class StateParser(ILogger logger, IMapper mapper)
             throw new ArgumentNullException(nameof(MqttError.ErrorType), "ErrorType must be set! This was the assumption at the time of implementation.");
         }
 
-        AgvErrors = errors?.Select(e =>
+        if (errors == null)
         {
-            var agvError = mapper.Map<AgvError>(e);
+            return;
+        }
+
+        AddErrors(errors);
+    }
+
+    private void GetInformation(MqttState state)
+    {
+        List<MqttInformation>? infos = state.Information;
+        if (infos == null)
+        {
+            return;
+        }
+        AddErrors(infos);
+    }
+
+    private void AddErrors<T>(ICollection<T> errors)
+    {
+        List<AgvError> errorInformation = errors.Select(i =>
+        {
+            var agvError = mapper.Map<AgvError>(i);
             // overwrite AgvCorrelationId in a 2. step, as we are mapping from two sources to one destination, which isn't supported by AutoMapper
             mapper.Map(CorrelationId, agvError);
             return agvError;
         }).ToList();
+
+        if (AgvErrors == null)
+        {
+            AgvErrors = errorInformation;
+            return;
+        }
+        AgvErrors.AddRange(errorInformation);
     }
 
     private void ConvertFieldViolationToWarning(MqttState state)

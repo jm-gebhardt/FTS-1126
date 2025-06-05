@@ -34,6 +34,7 @@ public static class LogCodes
     public const int AgvModeChanged = 314;
     public const int AgvReachedTrigger = 315;
     public const int AgvModeChangePending = 316;
+    public const int AgvInformation = 317;
 
     // Order
     public const int OrderCreated = 100;

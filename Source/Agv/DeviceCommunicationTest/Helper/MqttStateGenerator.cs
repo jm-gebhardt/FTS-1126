@@ -16,6 +16,7 @@ public class MqttStateGenerator
     /// <param name="orderId">The order id.</param>
     /// <param name="actionStates">The current action states.</param>
     /// <param name="errors">The agv errors.</param>
+    /// <param name="information">The agv information.</param>
     /// <param name="lastNodeId">The last node id.</param>
     /// <param name="loads">The agv loads.</param>
     /// <param name="mode">The agv operation mode.</param>
@@ -24,6 +25,7 @@ public class MqttStateGenerator
         string orderId,
         List<MqttActionState>? actionStates = null,
         List<MqttError>? errors = null,
+        List<MqttInformation>? information = null,
         string? lastNodeId = "a node",
         List<MqttLoad>? loads = null,
         MqttOperatingMode mode = MqttOperatingMode.Automatic,
@@ -54,6 +56,7 @@ public class MqttStateGenerator
                 Reach = 23
             },
             Errors = errors,
+            Information = information,
             LastNodeId = lastNodeId,
             Loads = loads,
             OperatingMode = mode,

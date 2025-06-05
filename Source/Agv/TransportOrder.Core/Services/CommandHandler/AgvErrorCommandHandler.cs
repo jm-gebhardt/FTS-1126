@@ -100,5 +100,16 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
                     { LogLabels.ErrorDescription, agvError.ErrorDescription }
                 });
         }
+
+        foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Information))
+        {
+            _logger.LogAgvInformation(LogCodes.AgvInformation, agv.CorrelationId,"AGV Information",
+                $"AGV {agv.SerialNumber} sent information {agvError.ErrorDescription}",
+                new Dictionary<string, object?>
+                {
+                    { LogLabels.AgvSerialNumber, agv.SerialNumber },
+                    { LogLabels.ErrorDescription, agvError.ErrorDescription }
+                });
+        }
     }
 }
