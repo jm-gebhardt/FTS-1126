@@ -717,13 +717,14 @@ public class AgvController : Controller
     /// Solve all ressource blocking errors for an agv: remove all node locks.
     /// </summary>
     /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="ignoreErrorState">If the error state should be ignored when removing resource locks.</param>
     /// <response code="200">Ok</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/solveRessourceErrors")]
-    public async Task<ActionResult> SolveRessourceErrors([FromRoute] Guid correlationId)
+    public async Task<ActionResult> SolveRessourceErrors([FromRoute] Guid correlationId, bool ignoreErrorState = false)
     {
-        await _ressourceBlockingClient.GetResponse<Success>(new SolveRessourceBlockingErrors(correlationId));
+        await _ressourceBlockingClient.GetResponse<Success>(new SolveRessourceBlockingErrors(correlationId, ignoreErrorState));
         return Ok();
     }
 }

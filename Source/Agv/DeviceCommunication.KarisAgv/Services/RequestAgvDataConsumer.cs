@@ -31,6 +31,6 @@ public class RequestAgvDataConsumer : IConsumer<RequestAgvData>
     {
         await context.PublishMqtt(new MqttRequestData(context.Message.SerialNumber, Guid.NewGuid()), context.CancellationToken);
 
-        _logger.LogInformation("{MessageType} from AGV {AgvId} / {CorrelationId} received", nameof(RequestAgvData), context.Message.SerialNumber, context.CorrelationId);
+        _logger.LogInformation("Request AgvData from AGV {AgvId} / {CorrelationId}", context.Message.SerialNumber, context.CorrelationId);
     }
 }

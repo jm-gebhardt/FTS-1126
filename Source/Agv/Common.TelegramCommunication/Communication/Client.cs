@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.Common.TelegramCommunication.Communication;
 public class Client : SocketBase
 {
     private const int TcpResendInterval = 1000;
-    
+
     private TelegramCommunicationConfiguration Configuration { get; }
 
     /// <inheritdoc cref="Client"/>>
@@ -19,14 +19,8 @@ public class Client : SocketBase
         Configuration = configuration;
     }
 
-    /// <inheritdoc cref="Client"/>>
-    public override bool IsConnected()
-    {
-        return Socket is { Connected: true };
-    }
-
     /// <inheritdoc cref="SocketBase"/>>
-    public override bool Initialize()
+    public override bool TryInitialize()
     {
         try
         {
@@ -58,9 +52,8 @@ public class Client : SocketBase
     }
 
     /// <inheritdoc cref="SocketBase"/>>
-    public override async Task<bool> InitializeAsync()
+    public override Task<bool> TryInitializeAsync()
     {
-        await Task.Delay(0);
-        return Initialize();
+        return Task.FromResult(TryInitialize());
     }
 }

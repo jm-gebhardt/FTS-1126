@@ -12,6 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Node;
 /// <summary>
 /// Abstract class to implement when choosing nodes.
 /// </summary>
+[PublicAPI]
 public abstract class BaseNodePicker
 {
     /// <summary>
@@ -62,6 +63,17 @@ public abstract class BaseNodePicker
         var node = await SelectBestNode(availableNodes, agv, agvData, startNodeId);
 
         return node;
+    }
+    
+    /// <summary>
+    /// Checks if the agv has a node of the given type reserved.
+    /// </summary>
+    /// <param name="agvCorrelationId">The Agv Correlation Id for which the node should be checked</param>
+    /// <param name="nodeType">The node type which should be checked</param>
+    /// <returns>>True if the graph of the agv has a node of the given type</returns>
+    protected Task<bool> HasAnyNodeOfTypeAsync(Guid agvCorrelationId, AgvGraph.NodeType nodeType)
+    {
+        return AgvDb.Graphs.HasAnyNodeOfTypeAsync(agvCorrelationId, nodeType);
     }
 
     private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Models.Agv.Agv agv)

@@ -27,6 +27,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -74,6 +75,7 @@ public static class CoreBusRegistrationExtensions
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<UpdateErrorStatus, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvStatus, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<LeaveQueue, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvGraphExist, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<GoOffline, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvData, AgvCommandHandler>(c);
@@ -91,7 +93,6 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<PrepareChargingOfAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvSettingsGroupReference, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SwitchMode, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<TryReachQueueHead, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<ReceiveAgvZones, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveAgvFromZones, AgvCommandHandler>(c);
         });
@@ -223,6 +224,8 @@ public static class CoreBusRegistrationExtensions
 
         RegisterMediatorSystemHandlers(configurator);
 
+        RegisterMediatorZoneHandlers(configurator);
+
         RegisterMediatorTriggerHandlers(configurator);
 
         RegisterMediatorRestrictedAreaHandlers(configurator);
@@ -259,6 +262,12 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TryUpdateDefaultConfigurationParameter>();
         configurator.AddRequestClient<TryUpdateLocationConfigurationParameter>();
         configurator.AddRequestClient<TryResetLocationConfigurationParameter>();
+    }
+
+    private static void RegisterMediatorZoneHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<ZoneRequestHandler>();
+        configurator.AddRequestClient<GetZones>();
     }
 
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)

@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
@@ -193,5 +194,13 @@ public class AgvPublisherTest
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
         await fixture.Publisher.SendAgvHasCargoChangedAsync(agvCorrelationId, hasCargo);
         fixture.HubContextMock.Verify(c => c.Clients.All.AgvHasCargoChanged(It.Is<AgvHasCargoDto>(dto => dto.CorrelationId == agvCorrelationId && dto.HasCargo == hasCargo)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task SendAgvZonesChanged_ValidData_SendAgvZonesChangedDto()
+    {
+        PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
+        await fixture.Publisher.SendAgvZonesChangedAsync("test".ToGuid(), ["test"]);
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvZonesChanged(It.Is<AgvZonesDto>(dto => dto.CorrelationId == "test".ToGuid() && dto.Zones.Contains("test"))));
     }
 }

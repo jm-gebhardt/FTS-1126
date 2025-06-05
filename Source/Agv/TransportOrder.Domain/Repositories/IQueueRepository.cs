@@ -15,6 +15,12 @@ public interface IQueueRepository
     Task AddQueue(Queue queue);
 
     /// <summary>
+    /// Update a queue.
+    /// </summary>
+    /// <param name="queue">The queue</param>
+    Task UpdateQueueAsync(Queue queue);
+
+    /// <summary>
     /// Update the queue size.
     /// </summary>
     /// <param name="queueId">The queue id</param>
@@ -41,6 +47,14 @@ public interface IQueueRepository
     /// <returns>The queue.</returns>
     /// <exception cref="QueueNotFoundException">When no queue with the given id exists.</exception>
     Task<Queue> GetQueueById(Guid id);
+
+    /// <summary>
+    /// Get a single queue by its name.
+    /// </summary>
+    /// <param name="name">The name of the queue.</param>
+    /// <returns>The queue.</returns>
+    /// <exception cref="QueueNotFoundException">When no queue with the given id exists.</exception>
+    Task<Queue> GetQueueByName(string name);
 
     /// <summary>
     /// Remove a queue.

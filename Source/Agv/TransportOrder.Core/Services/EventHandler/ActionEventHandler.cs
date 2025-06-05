@@ -29,50 +29,46 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     IConsumer<ActionGroupCreated>,
     IConsumer<ActionGroupQueued>
 {
-    /// <summary>
-    /// Handle <see cref="ActionCompleted"/> from DeviceCommunication
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionCompleted> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-
+        var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
+        if (action.CompletedDate != null)
+        {
+            logger.LogWarning("Action {ActionId} of group {ActionGroupCorrelationId} is in state {ActionStation}, not triggering completion ", actionCorrelationId, actionGroup.CorrelationId, action.State);
+            return;
+        }
+        
         await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="StartingActionForAgvFailed"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<StartingActionForAgvFailed> context)
     {
         await context.Publish(new HandleAgvActionStartFailure(context.Message.CorrelationId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="NonChargingActionCompleted"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<NonChargingActionCompleted> context)
     {
-        await context.Publish(new HandleActionCompletion(context.Message.CorrelationId));
+        await context.Publish(new HandleActionCompletion(context.Message.CorrelationId, context.Message.IsQueueing));
     }
 
-    /// <summary>
-    /// Handles the <see cref="NodesSelectedForAction"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<NodesSelectedForAction> context)
     {
         await context.Publish(new EstimateActionGroupDuration(context.Message.Action, context.Message.AssignedAgv, context.Message.Action.ParentId));
     }
 
-    /// <inheritdoc cref="ActionDurationEstimated" />
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionDurationEstimated> context)
     {
         await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, context.Message.AgvId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionAbortionCompleted"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionAbortionCompleted> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
@@ -85,9 +81,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionCanceled"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionCanceled> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
@@ -100,35 +94,30 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));
     }
 
-    /// <summary>
-    /// Handles the <see cref="AutomaticActionWithdrawn"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
         await context.Publish(new FreeNode(context.Message.TargetNodeId, context.Message.ReservedOnly));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionGroupResumed"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupResumed> context)
     {
         await context.Publish(new SetNormalMode(context.Message.AgvCorrelationId, context.Message.InitiatingUser));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionGroupCreated"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
         (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
+       
         if (agvCorrelationId != null)
         {
             await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));
             return;
         }
 
-        if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Pick))
+        if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Pick) && actionGroup.IsQueued)
         {
             await context.Publish(new TryUpdateIdleAction(actionGroupCorrelationId));
             return;
@@ -137,9 +126,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
         await context.Publish(new TryReactivateParkingAgvs());
     }
 
-    /// <summary>
-    /// Handles the <see cref="ActionGroupQueued"/> event.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupQueued> context)
     {
         (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;

@@ -50,4 +50,20 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// <param name="targets">The targets of the station group.</param>
     /// <returns>True, if there are running host orders to this station group.</returns>
     Task<bool> HasCurrentHostOrdersForStationGroup(ICollection<string> sources, ICollection<string> targets);
+
+    /// <summary>
+    /// Get the next order for the given source SAPs.
+    /// </summary>
+    /// <param name="sources">The source SAPs.</param>
+    /// <returns>A host order, if there is any.</returns>
+    Task<HostOrder?> GetNextPickForSources(ICollection<string> sources);
+
+    /// <summary>
+    /// Get the next pick order that was registered for Doppelspiel, but has no matching partner.
+    /// </summary>
+    /// <param name="sources">The source SAPs.</param>
+    /// <param name="targets">The target SAPs.</param>
+    /// <param name="correlationId">The current drop order correlation id.</param>
+    /// <returns>A host order, if there is any.</returns>
+    Task<HostOrder?> GetNextUnmatchedDoppelspielPick(ICollection<string> sources, ICollection<string> targets, Guid correlationId);
 }

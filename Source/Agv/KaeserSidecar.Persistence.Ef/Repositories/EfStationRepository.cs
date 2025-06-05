@@ -8,13 +8,13 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IStationRepository"/>>
-public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> contextFactory, KaeserGraphConfiguration configuration) : 
+public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> contextFactory, KaeserGraphConfiguration configuration) :
     EfRepository<StationOccupancy, KaeserSidecarDbContext, IDbContextFactory<KaeserSidecarDbContext>>(contextFactory), IStationRepository
 {
     /// <inheritdoc cref="IStationRepository"/>>
     public async Task OccupyStation(string station, Guid agv)
     {
-        await  using var context = await ContextFactory.CreateDbContextAsync();
+        await using var context = await ContextFactory.CreateDbContextAsync();
         var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.Station == station).SingleOrDefaultAsync();
         if (stationOccupancy != null)
         {
@@ -22,6 +22,7 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
             await context.SaveChangesAsync();
             return;
         }
+
         stationOccupancy = new StationOccupancy(station, 1, agv);
         await AddAsync(stationOccupancy);
     }
@@ -46,7 +47,7 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
         IEnumerable<string> missingStations = configuration.ConveyorStationMapping.Keys.Except(stations);
         foreach (string station in missingStations)
         {
-           occupancies.Add(new StationOccupancy(station, 0, null));
+            occupancies.Add(new StationOccupancy(station, 0, null));
         }
         return occupancies;
     }
@@ -55,6 +56,6 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
     public async Task<StationOccupancy?> GetOccupancyByAgvCorrelationId(Guid agvCorrelationId)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        return await context.Set<StationOccupancy>().FirstOrDefaultAsync(s => s.AgvCorrelationId == agvCorrelationId);
+        return await context.Set<StationOccupancy>().SingleOrDefaultAsync(s => s.AgvCorrelationId == agvCorrelationId);
     }
 }

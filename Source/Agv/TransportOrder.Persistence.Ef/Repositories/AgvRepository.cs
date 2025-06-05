@@ -80,7 +80,7 @@ public class AgvRepository : IAgvRepository
     /// <inheritdoc />
     public async Task<Agv?> GetAnyOnlineAgv()
     {
-        return await Agvs.FirstOrDefaultAsync(a => a.GraphExists && a.IsOnline);
+        return await Agvs.OrderBy(a => a.TimeOfStateTransition).FirstOrDefaultAsync(a => a.GraphExists && a.IsOnline);
     }
 
     /// <inheritdoc />
@@ -197,7 +197,7 @@ public class AgvRepository : IAgvRepository
         string? lastNodeId = await Agvs
             .Where(s => s.CorrelationId == agvCorrelationId && s.AgvStatus != null)
             .Select(s => s.AgvStatus!.LastNodeId)
-            .FirstOrDefaultAsync();
+            .SingleOrDefaultAsync();
 
         return lastNodeId;
     }

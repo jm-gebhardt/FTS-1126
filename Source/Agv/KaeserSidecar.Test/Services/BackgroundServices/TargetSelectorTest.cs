@@ -1,10 +1,9 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.BackgroundServices;
@@ -13,216 +12,249 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.BackgroundServices;
 public class TargetSelectorTest
 {
     [TestMethod]
-    public async Task ExecuteAsync_NoActionEnqueuedForTargetSelection_DoesNotPublish()
+    public async Task ExecuteAsync_NoActionEnqueuedForTargetSelection_DoesNotPublishSetTargetForAction()
     {
         var fixture = new TargetSelectorTestFixture();
-        var cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
+        await fixture.SelectTargetAsync();
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_Station1NotOccupiedOrLocked_OneLoop_PublishedSetTargetForActionWithStation1()
+    public async Task ExecuteAsync_OneLoop_PublishedSetTargetForActionWithStation1()
     {
-        const string targetStation = "1";
-        var dropActionGroupMessage = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
-        dropActionGroupMessage.AssignedAgv = Guid.NewGuid();
-        var dropActionGroup = TransportOrder.Test.Helper.AgvActionGenerator.ConvertFromMessage(dropActionGroupMessage);
-
         var fixture = new TargetSelectorTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
-            .AddActionGroup(dropActionGroup)
-            .WithStations([
-                new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
-                new Station("3", AgvGraph.NodeType.PickDrop, [])
-            ]);
+            .WithDefaultOccupancies()
+            .AddDropActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
-        var moveAction = dropActionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
-        await fixture.Selector.Enqueue(moveAction.CorrelationId, dropActionGroupMessage.AssignedAgv.Value);
-
-        var cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
+        await fixture.SelectTargetAsync();
 
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(targetStation);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_Station1NotOccupiedOrLocked_TwoLoopsActionDidNotCompleteInbetween_DoesNotPublishTwice()
+    public async Task ExecuteAsync_TargetSelected_UpdatesDecisionPointRegistry()
     {
-        const string targetStation = "1";
-        var dropActionGroupMessage = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
-        dropActionGroupMessage.AssignedAgv = Guid.NewGuid();
-        var dropActionGroup = TransportOrder.Test.Helper.AgvActionGenerator.ConvertFromMessage(dropActionGroupMessage);
-
         var fixture = new TargetSelectorTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
-            .AddActionGroup(dropActionGroup)
-            .WithStations([
-                new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
-                new Station("3", AgvGraph.NodeType.PickDrop, [])
-            ]);
+            .WithDefaultOccupancies()
+            .AddDropActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
-        var moveAction = dropActionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
-        await fixture.Selector.Enqueue(moveAction.CorrelationId, dropActionGroupMessage.AssignedAgv.Value);
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
+        await fixture.SelectTargetAsync();
 
-        // First run of loop
-        var cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        fixture.DecisionPointRepository.Verify(x => x.UpdateAsync(It.IsAny<DecisionPointAction>()), Times.Once);
+        var decisionPointAction = fixture.DecisionPointRepository.Invocations.First().Arguments[0] as DecisionPointAction;
+        decisionPointAction.ShouldNotBeNull();
+        decisionPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
+        decisionPointAction.Target.ShouldBe(fixture.Stations[0].Name);
+    }
 
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
+    [TestMethod]
+    public async Task ExecuteAsync_LockedStation_SelectsUnlockedStation()
+    {
+        var agv = Guid.NewGuid();
+        var fixture = new TargetSelectorTestFixture()
+            .WithOccupancies(occupiedCountAndAgv: (1, agv))
+            .AddDropActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
+
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
+        await fixture.SelectTargetAsync();
+
+        fixture.DecisionPointRepository.Verify(x => x.UpdateAsync(It.IsAny<DecisionPointAction>()), Times.Once);
+        var decisionPointAction = fixture.DecisionPointRepository.Invocations.First().Arguments[0] as DecisionPointAction;
+        decisionPointAction.ShouldNotBeNull();
+        decisionPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
+        decisionPointAction.Target.ShouldBe(fixture.Stations[1].Name);
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_TwoLoopsActionDidNotCompleteInBetween_DoesNotPublishTwice()
+    {
+        var fixture = new TargetSelectorTestFixture()
+            .WithDefaultOccupancies()
+            .AddDropActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
+
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
+        await fixture.SelectTargetAsync();
 
         // Second run of loop without dequeue
-        cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        await fixture.SelectTargetAsync();
 
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
-        
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(1);
-        
+
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(targetStation);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_Station1NotOccupiedOrLocked_TwoLoopsWithDifferentActions_PublishesTwice()
+    public async Task ExecuteAsync_TwoLoopsWithDifferentActions_PublishesTwice()
     {
-        const string targetStation = "1";
-        var dropActionGroupMessage = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
-        dropActionGroupMessage.AssignedAgv = Guid.NewGuid();
-        var dropActionGroup = TransportOrder.Test.Helper.AgvActionGenerator.ConvertFromMessage(dropActionGroupMessage);
-
-        var pickActionGroupMessage = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
-        pickActionGroupMessage.AssignedAgv = Guid.NewGuid();
-        var pickActionGroup = TransportOrder.Test.Helper.AgvActionGenerator.ConvertFromMessage(pickActionGroupMessage);
-
         var fixture = new TargetSelectorTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
-            .AddActionGroup(dropActionGroup)
-            .AddActionGroup(pickActionGroup)
-            .WithStations([
-                new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
-                new Station("3", AgvGraph.NodeType.PickDrop, [])
-            ]);
+            .WithDefaultOccupancies()
+            .AddDropActionGroup()
+            .AddPickActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
+        var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
 
-        var moveAction = dropActionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
-        await fixture.Selector.Enqueue(moveAction.CorrelationId, dropActionGroupMessage.AssignedAgv.Value);
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
+        await fixture.SelectTargetAsync();
 
-        // First run of loop
-        var cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, fixture.ActionGroups[1].AssignedAgv!.Value);
 
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
-
-        var moveActionOfPick = pickActionGroupMessage.Actions.Single(a => a.ActionType == ActionType.Move);
-        await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, pickActionGroupMessage.AssignedAgv.Value);
-       
         // Second run of loop without dequeue
-        cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
+        await fixture.SelectTargetAsync();
 
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(2);
 
-        var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
+        var setTargetForAction = await fixture.GetFirstPublishedMessageAsync<SetTargetForAction>();
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(targetStation);
+        Console.WriteLine($"CorrelationId: {setTargetForAction.CorrelationId}, MoveAction: {moveAction.CorrelationId}, MoveActionOfPick: {moveActionOfPick.CorrelationId}");
+        setTargetForAction.ActionId.ShouldBe(moveAction.CorrelationId);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
     }
 
     [TestMethod]
-    public async Task ExecuteAsync_Station1NotOccupiedOrLocked_TwoLoopsWithDifferentActionsFirstActionCompleted_PublishesTwice()
+    public async Task ExecuteAsync_TwoLoopsWithDifferentActionsFirstActionCompleted_PublishesTwice()
     {
-        const string targetStation = "1";
-        var dropActionGroupMessage = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
-        dropActionGroupMessage.AssignedAgv = Guid.NewGuid();
-        var dropActionGroup = TransportOrder.Test.Helper.AgvActionGenerator.ConvertFromMessage(dropActionGroupMessage);
-
-        var pickActionGroupMessage = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
-        pickActionGroupMessage.AssignedAgv = Guid.NewGuid();
-        var pickActionGroup = TransportOrder.Test.Helper.AgvActionGenerator.ConvertFromMessage(pickActionGroupMessage);
-
         var fixture = new TargetSelectorTestFixture()
-            .WithOccupancies([new StationOccupancy("1", 0, null), new StationOccupancy("2", 0, null), new StationOccupancy("3", 0, null)])
-            .AddActionGroup(dropActionGroup)
-            .AddActionGroup(pickActionGroup)
-            .WithStations([
-                new Station("1", AgvGraph.NodeType.PickDrop, []), new Station("2", AgvGraph.NodeType.PickDrop, []),
-                new Station("3", AgvGraph.NodeType.PickDrop, [])
-            ]);
+            .WithDefaultOccupancies()
+            .AddDropActionGroup()
+            .AddPickActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
-        var moveAction = dropActionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
-        await fixture.Selector.Enqueue(moveAction.CorrelationId, dropActionGroupMessage.AssignedAgv.Value);
-
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
         // First run of loop
-        var cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
+        await fixture.SelectTargetAsync();
 
         await fixture.Selector.Dequeue(moveAction.CorrelationId);
 
-        var moveActionOfPick = pickActionGroupMessage.Actions.Single(a => a.ActionType == ActionType.Move);
-        await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, pickActionGroupMessage.AssignedAgv.Value);
+        var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
+        await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, fixture.ActionGroups[1].AssignedAgv!.Value);
 
         await fixture.Selector.Dequeue(moveAction.CorrelationId);
-        
+
         // Second run of loop 
-        cancellationToken = new CancellationTokenSource();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        fixture.Selector.StartAsync(cancellationToken.Token);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
-        await Task.Delay(100, cancellationToken.Token);
-        cancellationToken.Cancel();
-        await fixture.Selector.StopAsync(CancellationToken.None);
+        await fixture.SelectTargetAsync();
 
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(2);
 
-        var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First( a => a.Context.Message.ActionId == moveAction.CorrelationId).Context.Message;
+        var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First(a => a.Context.Message.ActionId == moveAction.CorrelationId).Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(targetStation);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_OneStationWithTwoActions_SelectsOldestAction()
+    {
+        var fixture = new TargetSelectorTestFixture()
+            .WithDefaultOccupancies()
+            .WithStationCount(1)
+            .AddDropActionGroup()
+            .AddPickActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
+        var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
+
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
+        await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, fixture.ActionGroups[1].AssignedAgv!.Value);
+
+        await fixture.SelectTargetAsync();
+
+        var setTargetForAction = await fixture.GetFirstPublishedMessageAsync<SetTargetForAction>();
+        setTargetForAction.ShouldNotBeNull();
+        setTargetForAction.ActionId.ShouldBe(moveAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_ActionEnqueued_OccupiesStation1()
+    {
+        var fixture = new TargetSelectorTestFixture()
+            .WithDefaultOccupancies()
+            .AddDropActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
+        var assignedAgv = fixture.ActionGroups[0].AssignedAgv!.Value;
+
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, assignedAgv);
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 0);
+
+        await fixture.SelectTargetAsync();
+
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, assignedAgv);
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_TwoActionsEnqueued_FirstOccupiesStation1AndSetTargetForActionIsSent()
+    {
+        var dropAgv = Guid.NewGuid();
+        var originalAgvOnStation = Guid.NewGuid();
+        var fixture = new TargetSelectorTestFixture()
+            .WithStationCount(1)
+            .WithOccupancies(occupiedCountAndAgv: (1, originalAgvOnStation))
+            .AddDropActionGroup(dropAgv)
+            .AddPickActionGroup();
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
+        var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
+        var pickAgv = fixture.ActionGroups[1].AssignedAgv!.Value;
+
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, dropAgv);
+        await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, pickAgv);
+
+        await fixture.SelectTargetAsync();
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, originalAgvOnStation);
+        await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
+
+        await fixture.FreeStation(fixture.Stations[0].Name, originalAgvOnStation);
+        await fixture.SelectTargetAsync();
+
+        fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(1);
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, dropAgv);
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_ActionInRepository_UsedForTargetSelection()
+    {
+        var agv = Guid.NewGuid();
+        var dropActionGroupMessage = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionGroupState: ActionGroupState.Started, actionState: ActionState.Started);
+        dropActionGroupMessage.AssignedAgv = agv;
+        var actionGroup = TransportOrder.Test.Helper.AgvActionGenerator.ConvertFromMessage(dropActionGroupMessage);
+        var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+
+        var fixture = new TargetSelectorTestFixture()
+            .WithDefaultOccupancies()
+            .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now))
+            .AddActionGroup(actionGroup);
+
+        await fixture.SelectTargetAsync();
+
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
+        var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
+        setTargetForAction.ShouldNotBeNull();
+        setTargetForAction.ActionId.ShouldBe(moveAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_CompletedActionInRepository_NotUsedForTargetSelection()
+    {
+        var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now);
+        decisionPointAction.SetTarget("finished");
+        var fixture = new TargetSelectorTestFixture()
+            .WithDefaultOccupancies()
+            .WithDecisionPointAction(decisionPointAction);
+
+        await fixture.SelectTargetAsync();
+
+        await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
     }
 }
-
-
-

@@ -72,6 +72,11 @@ public class ActionGroup
     public bool IsChargingOrder => Actions.Any(a => a.ActionType == ActionType.Charge);
 
     /// <summary>
+    /// True, if the action group is a queueing order.
+    /// </summary>
+    public bool IsQueueingOrder => HasPriority && !IsManual && Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1;
+
+    /// <summary>
     /// True if any of the actions is incomplete, i.e. its target is undefined.
     /// </summary>
 
@@ -527,7 +532,7 @@ public class ActionGroup
     /// </summary>
     /// <param name="actionId">The action id to skip.</param>
     /// <param name="targetNodeId">The id of the new target node.</param>
-    /// <param name="route">The route if any.</param>
+    /// <param name="route">The route, if any.</param>
     public AgvAction SetTargetForActionWithUpdate(Guid actionId, string targetNodeId, Route? route = null)
     {
         if (Actions.All(a => a.CorrelationId != actionId))

@@ -73,6 +73,7 @@ public static class MockAgvDbExtensions
     public static void AddZones(this Mock<IAgvDb> repoMock, ICollection<Zone> zones)
     {
         repoMock.Setup(r => r.Zones.GetZones(It.IsAny<string[]>())).ReturnsAsync(zones);
+        repoMock.Setup(r => r.Zones.GetZones()).ReturnsAsync(zones);
     }
 
     public static void AddPosition(this Mock<IAgvDb> repoMock, AgvPositionStatus position)
@@ -91,14 +92,14 @@ public static class MockAgvDbExtensions
     {
         repoMock.Setup(x => x.Graphs.TryGetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
     }
-    
+
     public static void AddAgvData(this Mock<IAgvDb> repoMock, AgvData? agvData)
     {
         repoMock.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync([agvData!]);
         repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
         repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
     }
-    
+
     public static void AddAgvData(this Mock<IAgvDb> repoMock, Func<Guid, AgvData?> agvData)
     {
         repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
@@ -108,5 +109,11 @@ public static class MockAgvDbExtensions
     public static void AddActiveErrors(this Mock<IAgvDb> repoMock, IList<AgvError> errors)
     {
         repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors);
+        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(errors);
+    }
+
+    public static Task<Agv> GetAgvAsync(this Mock<IAgvDb> repoMock, Guid agvCorrelationId)
+    {
+        return repoMock.Object.Agvs.GetAgvAsync(agvCorrelationId);
     }
 }

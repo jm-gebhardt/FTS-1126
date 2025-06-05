@@ -22,7 +22,7 @@ public static class MockAgvRepositoryExtensions
                 throw new AgvNotFoundException(c);
             }
         });
-        repoMock.Setup(r => r.TryGetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => { return agvs.FirstOrDefault(a => a.CorrelationId == c); });
+        repoMock.Setup(r => r.TryGetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => { return agvs.SingleOrDefault(a => a.CorrelationId == c); });
 
         repoMock.Setup(r => r.Count).Returns(agvs.Count);
         repoMock.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));

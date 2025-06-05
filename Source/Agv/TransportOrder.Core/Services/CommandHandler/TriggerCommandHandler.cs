@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
@@ -33,12 +34,27 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
     {
         ICollection<ConfigurationParameter> configurationParameters = context.Message.ConfigurationParameters;
         var properties = context.Message.Properties;
-
+        Trigger? existingTrigger = null;
+        try
+        {
+            existingTrigger = await triggerRepository.GetById(properties.Id);
+        }
+        catch (TriggerNotFoundException)
+        {
+            // pass
+        }
         var trigger = new Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, configurationParameters);
 
         await triggerRepository.AddOrUpdate(trigger, false);
 
         logger.LogInformation("Trigger {Name} created or updated.", trigger.DisplayName);
+
+        if (!trigger.Equals(existingTrigger))
+        {
+            // get trigger with locations
+            trigger = await triggerRepository.GetById(properties.Id);
+            await context.Publish(new TriggerChanged(trigger));
+        }
     }
 
     /// <summary>
@@ -94,6 +110,8 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
                 await context.Publish(new TriggerAssignedToArea(triggerId, trigger.DisplayName, location.Id));
                 logger.LogDebug("Location {Location} with polygon: {Polygon}", location.Id, location.Polygon.OrderBy(p => p.Index).Select(p => $"({p.X}, {p.Y})"));
             }
+
+            await context.Publish(new TriggerChanged(trigger));
         }
     }
 
@@ -109,6 +127,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         trigger.RemoveLocation(locationId);
         await triggerRepository.Update(trigger, true);
         logger.LogDebug("Trigger {Name} removed from location {LocationId}", trigger.DisplayName, locationId);
+        await context.Publish(new TriggerChanged(trigger));
     }
 
     /// <summary>
@@ -127,6 +146,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
             await triggerRepository.Update(trigger, true);
             await context.Publish(new DefaultTriggerConfigurationUpdated(triggerId, [updatedParameter]));
             logger.LogInformation("Trigger {Name} default parameter {ParameterName} updated to value {Value}", trigger.DisplayName, parameterName, newValue);
+            await context.Publish(new TriggerChanged(trigger));
         }
     }
 
@@ -146,6 +166,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         {
             await triggerRepository.Update(trigger, true);
             logger.LogInformation("Trigger {Name} parameter {ParameterName} at location {LocationId} updated to value {Value}", trigger.DisplayName, locationId, parameterName, newValue);
+            await context.Publish(new TriggerChanged(trigger));
         }
     }
 
@@ -164,6 +185,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         {
             await triggerRepository.Update(trigger, true);
             logger.LogInformation("Trigger {Name} parameter {ParameterName} at location {LocationId} reset to default value {Value}", trigger.DisplayName, locationId, parameterName, updatedParameter.Value);
+            await context.Publish(new TriggerChanged(trigger));
         }
     }
 

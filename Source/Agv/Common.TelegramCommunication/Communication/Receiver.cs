@@ -15,46 +15,6 @@ public class Receiver<TTelegramType> : SocketCommunicator<TTelegramType>
     }
 
     /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
-    public override bool RestartMe
-    {
-        get => TelegramProcessor.ShouldRestart();
-
-        protected set
-        {
-            if (value != true)
-            {
-                return;
-            }
-            if (!TelegramProcessor.ShouldRestart())
-            {
-                TelegramProcessor.RestartConnection();
-            }
-            else
-            {
-                Logger.LogWarning("Already restarted");
-            }
-        }
-    }
-
-    /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
-    public override void BeginStop()
-    {
-        base.BeginStop();
-        TelegramProcessor.Cancel();
-    }
-
-    /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
-    protected override void Stop(bool reset = false)
-    {
-        base.Stop(reset);
-        Logger.LogDebug("Resetting counter");
-        if (reset)
-        {
-            TelegramProcessor.ResetCounter();
-        }
-    }
-
-    /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
     protected override bool ExchangeMessages()
     {
         try
@@ -80,9 +40,7 @@ public class Receiver<TTelegramType> : SocketCommunicator<TTelegramType>
                             Logger.LogError("No life telegram received");
                         }
                         Logger.LogDebug("Trigger restart");
-                        RestartMe = true;
-                        SetRun = false;
-                        SendRestartRequest("Failed to receive telegram");
+                        RequestSocketReconnect("Failed to receive telegram");
                     }
                 }
             }
@@ -97,20 +55,13 @@ public class Receiver<TTelegramType> : SocketCommunicator<TTelegramType>
                     if (!Socket.TrySend(acknowledgement, TelegramProcessor.GetEncoding()))
                     {
                         Logger.LogError("Failed sending acknowledgement {Acknowledgement}", acknowledgement);
-                        SetRun = false;
-                        RestartMe = true;
-                        SendRestartRequest("Failed to send acknowledgement");
+                        RequestSocketReconnect("Failed to send acknowledgement");
                     }
                     else
                     {
                         Logger.LogDebug("Acknowledgement {Acknowledgement} sent", acknowledgement);
                     }
                 }
-            }
-
-            if (TelegramProcessor.ShouldRestart())
-            {
-                SetRun = false;
             }
             return true;
         }

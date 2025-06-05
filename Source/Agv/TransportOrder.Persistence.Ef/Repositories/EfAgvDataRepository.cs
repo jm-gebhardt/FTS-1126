@@ -31,7 +31,7 @@ public class EfAgvDataRepository : IAgvDataRepository
     /// <inheritdoc/>
     public Task<AgvData?> GetAgvDataAsync(Guid correlationId)
     {
-        return AgvData.FirstOrDefaultAsync(q => q.CorrelationId == correlationId);
+        return AgvData.SingleOrDefaultAsync(q => q.CorrelationId == correlationId);
     }
 
     /// <inheritdoc/>

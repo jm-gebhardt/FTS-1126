@@ -91,4 +91,11 @@ public interface IAgvPublisher
     /// <param name="correlationId">The correlationId of the agv.</param>
     /// <param name="hasCargo">True if the agv is loaded with cargo.</param>
     Task SendAgvHasCargoChangedAsync(Guid correlationId, bool hasCargo);
+
+    /// <summary>
+    /// Publishes the new zones of an agv to all clients.
+    /// </summary>
+    /// <param name="correlationId">The correlationId of the agv.</param>
+    /// <param name="zones">The new zones of the agv.</param>
+    Task SendAgvZonesChangedAsync(Guid correlationId, ICollection<string> zones);
 }

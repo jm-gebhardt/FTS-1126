@@ -29,7 +29,6 @@ using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -40,6 +39,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Agv;
 public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCommandHandler>
 {
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
@@ -69,6 +69,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     {
         base.AddServices(collection);
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+        collection.AddSingleton<ISemaphoreProvider<IQueueingSemaphore>>(_ => _queueSemaphoreProvider);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _logger.Object);
         collection.AddTransient(_ => _mapRepository.Object);
@@ -84,6 +85,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _routeService.Object);
         _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
         AgvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
+        _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
         return this;
     }
 
@@ -222,6 +224,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
+    public AgvCommandHandlerTestFixture WithAgvIsOnCharger(bool isAgvOnCharger)
+    {
+        _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(isAgvOnCharger);
+        return this;
+    }
+
     public AgvCommandHandlerTestFixture WithActiveErrors(IList<AgvError> errors) 
     {
         AgvDb.AddActiveErrors(errors);
@@ -288,12 +296,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithAgvsGraph(bool withParkingNodes = true)
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        IEnumerable<GraphNode> nodes = withParkingNodes ? graph.Nodes : graph.Nodes.Where(n => !n.IsParker());
-        ParkerState.UpdateHasParkers(withParkingNodes);
+        ICollection<GraphNode> nodes = withParkingNodes ? graph.Nodes : graph.Nodes.Where(n => !n.IsParker()).ToList();
 
         // Expression "node => node.IsParker()"
         AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>()))
             .ReturnsAsync(nodes.Where(n => n.IsParker()));
+        _parkPointService.Setup(x => x.HasParkersAsync(It.IsAny<Guid>())).ReturnsAsync(nodes.Any(n => n.IsParker()));
         return this;
     }
 

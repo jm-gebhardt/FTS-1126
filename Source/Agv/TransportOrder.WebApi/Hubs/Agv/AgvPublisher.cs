@@ -132,4 +132,11 @@ public class AgvPublisher : IAgvPublisher
         var dto = new AgvHasCargoDto(correlationId, hasCargo);
         return _hubContext.Clients.All.AgvHasCargoChanged(dto);
     }
+
+    /// <inheritdoc/>
+    public Task SendAgvZonesChangedAsync(Guid correlationId, ICollection<string> zones)
+    {
+        var dto = new AgvZonesDto(correlationId, zones);
+        return _hubContext.Clients.All.AgvZonesChanged(dto);
+    }
 }

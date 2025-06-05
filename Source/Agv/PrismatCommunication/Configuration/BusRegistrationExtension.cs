@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
@@ -48,7 +49,12 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<TriggerEventHandler>();
         cfg.AddConsumer<QueueEventHandler>();
         cfg.AddConsumer<StationEventHandler>();
-        cfg.AddConsumer<StationCommandHandler>();
+        cfg.AddConsumer<StationCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(16);
+            partitioner.PartitionMessageById<RemoveAgvFromStation, StationCommandHandler>(c);
+            partitioner.PartitionMessageById<AddAgvToStation, StationCommandHandler>(c);
+        });
 
         cfg.AddRequestClient<AddOrUpdateStationGroup>();
         cfg.AddRequestClient<GetQueueFillQuantities>();

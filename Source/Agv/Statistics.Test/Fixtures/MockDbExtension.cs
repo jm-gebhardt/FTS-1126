@@ -59,10 +59,11 @@ public static class MockDbExtension
     /// </summary>
     /// <param name="dbMock"></param>
     /// <param name="count">The number of positions added.</param>
-    public static void VerifyAgvPositionsAdded(this Mock<IStatisticsDb> dbMock, int count)
+    /// <param name="verifySave">Whether to verify the save operation was called.</param>
+    public static void VerifyAgvPositionsAdded(this Mock<IStatisticsDb> dbMock, int count, bool verifySave = true)
     {
         dbMock.Verify(x => x.GridAgvPositions.Add(It.IsAny<GridAgvPosition>()), Times.Exactly(count));
-        if (count > 0)
+        if (count > 0 && verifySave)
         {
             dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
         }

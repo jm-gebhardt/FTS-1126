@@ -67,7 +67,10 @@ public class MqttGraphConsumer : IConsumer<MqttGraph>
             }
         }
 
-        var graphParser = new GraphParser(reversedYGraph, _graphRepository);
+        var graphParser = new GraphParser(reversedYGraph);
+        graphParser.Parse();
+        await _graphRepository.Add(graphParser.NodesById, graphParser.EdgesById);
+            
         var agvGraph = graphParser.Graph;
         FeedAgvRepository(correlationId, agvGraph);
 

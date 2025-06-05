@@ -10,25 +10,25 @@ public class AgvSettingsServiceTest
 {
     [DataTestMethod]
     [DataRow(-1, true)]
-    [DataRow(0, false)]
+    [DataRow(0, true)]
     [DataRow(1, false)]
-    public async Task CheckAgvHasLowBatteryLevel_BatteryLevelSmallerThanLevelLow_ReturnsExpectedValue(int increment, bool expectedResult)
+    public async Task CheckAgvHasCriticalBatteryLevel_BatteryLevelSmallerThanOrEqualLevelCritical_ReturnsExpectedValue(int increment, bool expectedResult)
     {
-        const int low = 30;
+        const int critical = 10;
 
         var agvSettings = new AgvSettingsReadModel(
             agvOfflineTimeoutMsWhileBusy: 12,
             agvOfflineTimeoutMsWhileIdle: 12,
             maxChargeUp: 100,
             minChargeUp: 20,
-            batteryLevelLow: low,
-            batteryLevelCritical: 1);
-        var agv = AgvGenerator.GenerateIdleAgv(1, null, low + increment);
+            batteryLevelLow: 40,
+            batteryLevelCritical: critical);
+        var agv = AgvGenerator.GenerateIdleAgv(1, null, critical + increment);
 
         var fixture = new AgvSettingsServiceTestFixture()
             .WithAgv(agv)
             .WithSettings(agvSettings);
 
-        (await fixture.Service.CheckAgvHasLowBatteryLevel(agv.CorrelationId)).ShouldBe(expectedResult);
+        (await fixture.Service.CheckAgvHasCriticalBatteryLevel(agv.CorrelationId)).ShouldBe(expectedResult);
     }
 }

@@ -56,7 +56,7 @@ public class ConveyorReportingEventHandler(
         }
         else
         {
-            logger.LogInformation("Reporting order {Order} of agv {AgvCorrelationId} for dropping at {DropStation}/{DropTarget} at {Time}", droppingHostOrder.OrderId, targetStation, dropTarget, agvCorrelationId, DateTime.UtcNow);
+            logger.LogInformation("Reporting order {Order} of agv {AgvCorrelationId} for dropping at {DropStation}/{DropTarget} at {Time}", droppingHostOrder.OrderId, agvCorrelationId, targetStation, dropTarget, DateTime.UtcNow);
         }
 
         conveyorCommunicator.ReportPalletPickDropStation(targetStation, pickTarget, dropTarget, droppingHostOrder.Hu);

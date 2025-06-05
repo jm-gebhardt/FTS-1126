@@ -44,13 +44,25 @@ public class AgvActionCommandHandler(
         }
 
         logger.LogInformation("Handling start of action {CorrelationId} for agv {AgvCorrelationId}", action.CorrelationId, agvCorrelationId);
+        var lastFinishedAction = await transportOrderDb.ActionGroups.GetLastCompletedActionAsync(agvCorrelationId);
         string[] nodes = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).Nodes;
         logger.LogInformation("Nodes of action: {Nodes}", string.Join(",", nodes));
-        string? station = nodes.FirstOrDefault();
-        if (station == null)
+        //start node of current order is assumed to be the target node of last completed action of this AGV
+        string? startNode = lastFinishedAction?.Target.NodeId;
+        if (startNode != null && !startNode.Equals(nodes.FirstOrDefault()))
         {
-            logger.LogWarning("Action {ActionCorrelationId} has no start node", action.CorrelationId);
-            return;
+            logger.LogWarning("Target node of last completed action and first node of started action for AGV {AgvCorrelationId} differ. Last {LastTargetNode} Started {StartNode}", agvCorrelationId, startNode, nodes.FirstOrDefault());
+        }
+        if (startNode == null)
+        {
+            logger.LogWarning("Cannot determine start node for action {ActionCorrelationId} has no start node. Trying to get via node list", action.CorrelationId);
+
+            startNode = nodes.FirstOrDefault();
+            if (startNode == null)
+            {
+                logger.LogWarning("Cannot finally determine start node for action {ActionCorrelationId}", action.CorrelationId);
+                return;
+            }
         }
         bool gotPickAssignedOnStation = nodes.First() == nodes.Last();
 
@@ -60,11 +72,13 @@ public class AgvActionCommandHandler(
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
             {
+                logger.LogInformation("Agv {AgvCorrelationId} started pick {ActionCorrelationId} at station {Station}", agvCorrelationId, action.CorrelationId, targetStation);
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
                 return;
             }
         }
-        await context.Publish(new FreeStation(station, agvCorrelationId));
+        logger.LogInformation("Agv {AgvCorrelationId} started action {ActionCorrelationId} at station {Station}", agvCorrelationId, action.CorrelationId, startNode);
+        await context.Publish(new FreeStation(startNode, agvCorrelationId));
     }
 
     /// <summary>
@@ -111,8 +125,8 @@ public class AgvActionCommandHandler(
 
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
 
-        string station = action.Target.NodeId!; 
-        await context.Publish(new OccupyStation(station, agvCorrelationId));
+        string targetNodeId = action.Target.NodeId!;
+        await context.Publish(new OccupyStation(targetNodeId, agvCorrelationId));
 
         if (actionGroup.IsManual)
         {
@@ -167,7 +181,7 @@ public class AgvActionCommandHandler(
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
 
         var action = actionGroup.Actions.OrderBy(a => a.CompletedDate).Last();
-        if (action is { ActionType: ActionType.Drop, ShouldSkip: false })
+        if (action is {ActionType: ActionType.Drop, ShouldSkip: false})
         {
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
             {
@@ -201,9 +215,21 @@ public class AgvActionCommandHandler(
     public async Task Consume(ConsumeContext<ActionAborted> context)
     {
         var action = context.Message.Action;
-        if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+        string targetNodeId = action.Target.NodeId!;
+        if (configuration.ConveyorStationMapping.TryGetValue(targetNodeId, out string? _))
         {
             await targetSelector.Dequeue(action.CorrelationId);
         }
+        var actionGroup = await transportOrderDb.ActionGroups.GetActionGroupAsync(action.ParentId);
+        Guid? agv = actionGroup?.AssignedAgv;
+
+        if (agv == null)
+        {
+            logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} to handle action completion", action.CorrelationId, action.ParentId);
+            return;
+        }
+
+        logger.LogInformation("Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it", action.CorrelationId, action.CorrelationId, targetNodeId);
+        await context.Publish(new FreeStation(targetNodeId, (Guid) agv));
     }
 }

@@ -50,17 +50,11 @@ public class GetAgvDataRequestHandler :
     /// <summary>
     /// Handles the <see cref="GetAgvsData"/> request.
     /// </summary>
-    /// <exception cref="AgvsDataBatchQueryException"></exception>
     public async Task Consume(ConsumeContext<GetAgvsData> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
         ICollection<Common.Domain.Models.AgvData> fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs);
-        if (fetchedData.Count != selectedAgvs.Count)
-        {
-            throw new AgvsDataBatchQueryException(selectedAgvs.Except(fetchedData.Select(p => p.CorrelationId)).ToList());
-        }
         var agvDataList = _mapper.Map<List<AgvData>>(fetchedData);
-
         await context.RespondAsync(new GotAgvsData(agvDataList));
     }
 }

@@ -26,6 +26,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList("", DateTimeOffset.UtcNow, Array.Empty<Station>()),
             new MqttGraph("", DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMissing);
@@ -40,6 +41,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<MqttNode>(), Array.Empty<MqttEdge>(), string.Empty));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidNodes);
@@ -60,6 +62,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, Array.Empty<MqttEdge>(), string.Empty));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
@@ -83,6 +86,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, Array.Empty<Station>()),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidStations);
@@ -110,6 +114,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -142,6 +147,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -180,6 +186,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, mapId, Guid.NewGuid()));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
@@ -209,6 +216,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
             new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+        parser.Parse();
         var graph = parser.Graph;
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.SerialNumberMismatch);
@@ -256,6 +264,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+        parser.Parse();
 
         var agvGraph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber1);
@@ -329,6 +338,7 @@ public class StationListParserTest
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
             new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
+        parser.Parse();
 
         var agvGraph = parser.Graph;
         parser.SerialNumber.ShouldBe(AgvSerialNumber1);

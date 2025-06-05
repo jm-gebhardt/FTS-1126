@@ -22,14 +22,8 @@ public class Server : SocketBase
         Configuration = configuration;
     }
 
-    /// <inheritdoc cref="Client"/>>
-    public override bool IsConnected()
-    {
-        return _serverSocket is { Connected: true };
-    }
-
     /// <inheritdoc cref="SocketBase"/>>
-    public override bool Initialize()
+    public override bool TryInitialize()
     {
         try
         {
@@ -53,7 +47,7 @@ public class Server : SocketBase
     /// <summary>
     /// Initialize
     /// </summary>
-    public override async Task<bool> InitializeAsync()
+    public override async Task<bool> TryInitializeAsync()
     {
         try
         {
@@ -136,11 +130,11 @@ public class Server : SocketBase
         }
         catch (SocketException socketException)
         {
-            Logger.LogError("Could not disconnect, got : {ErrorCode} / {ErrorMessage}", socketException.ErrorCode, socketException.Message);
+            Logger.LogError("Could not disconnect due to socket exception, got : {ErrorCode} / {ErrorMessage}", socketException.ErrorCode, socketException.Message);
         }
         catch (Exception ex)
         {
-            Logger.LogError("Could not disconnect, got : {ErrorMessage}", ex.Message);
+            Logger.LogError("Could not disconnect due to general exception, got : {ErrorMessage}", ex.Message);
         }
     }
 }

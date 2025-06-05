@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.Common.TelegramCommunication.Communication;
@@ -12,22 +11,36 @@ namespace Gebhardt.Acc.Common.TelegramCommunication.Communication;
 public abstract class SocketCommunicator<TTelegramType>
     where TTelegramType : TelegramBase
 {
-    private readonly object _runLock = new();
+    private const int ConnectionWaitingTime = 10000;
+    private const int MaxReconnectAttempts = 100;
 
-    private volatile bool _run;
-
-    private readonly object _restartMeLock = new();
-
+    private bool _isRunning;
+    private bool _shouldReconnectSocket;
     private CancellationTokenSource? _cts;
-
-    private const int ThreadWaitingTime = 10000;
-
-    private readonly TimeSpan _threadSleepingTime = TimeSpan.FromMilliseconds(100);
+    private Task? _communicationTask;
+    private readonly TimeSpan _taskSleepingTime = TimeSpan.FromMilliseconds(100);
+    private readonly SemaphoreSlim _startSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _reconnectSemaphore = new(1, 1);
 
     /// <summary>
-    /// Thread in which the communication is executed.
+    /// The name of the communication task
     /// </summary>
-    private Thread _thread = null!;
+    protected string Name { get; }
+
+    /// <summary>
+    /// The logger
+    /// </summary>
+    protected ILogger<SocketCommunicator<TTelegramType>> Logger { get; }
+
+    /// <summary>
+    /// The socket connection (<see cref="Server"/> or <see cref="Client"/>)
+    /// </summary>
+    protected SocketBase Socket { get; }
+
+    /// <summary>
+    /// The one who handles the telegrams
+    /// </summary>
+    protected TelegramProcessorBase<TTelegramType> TelegramProcessor { get; }
 
     /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
     protected SocketCommunicator(SocketBase socket, string name, TelegramProcessorBase<TTelegramType> telegramProcessor, ILogger<SocketCommunicator<TTelegramType>> logger)
@@ -38,236 +51,161 @@ public abstract class SocketCommunicator<TTelegramType>
         Name = name;
     }
 
-    /// <summary>
-    /// The name of the thread
-    /// </summary>
-    public readonly string Name;
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public bool SetRun
-    {
-        set
-        {
-            lock (_runLock)
-            {
-                _run = value;
-            }
-        }
-    }
-
-    /// <summary>
-    /// True, if the communication shall be restarted
-    /// </summary>
-    private bool _restartMe;
-
-    /// <summary>
-    /// True, if the communication shall be restarted
-    /// </summary>
-    public virtual bool RestartMe
-    {
-        get
-        {
-            lock (_restartMeLock)
-            {
-                return _restartMe;
-            }
-        }
-
-        protected set
-        {
-            lock (_restartMeLock)
-            {
-                _restartMe = value;
-            }
-        }
-    }
-
-    /// <summary>
-    /// The logger
-    /// </summary>
-    protected readonly ILogger<SocketCommunicator<TTelegramType>> Logger;
-
-    /// <summary>
-    /// The restart request
-    /// </summary>
-    public event EventHandler? RestartRequest;
-
-    /// <summary>
-    /// The socket connection (<see cref="Server"/>> or <see cref="Client"/>)
-    /// </summary>
-    protected SocketBase Socket { get; }
-
-    /// <summary>
-    ///  The processor for this telegram type.
-    /// </summary>
-    protected TelegramProcessorBase<TTelegramType> TelegramProcessor { get; }
-
-    /// <summary>
-    /// Called to trigger the restart event
-    /// </summary>
-    /// <param name="errorMessage">Error message</param>
-    [PublicAPI]
-    protected void SendRestartRequest(string errorMessage)
-    {
-        Logger.LogError(errorMessage);
-        SendRestartRequest();
-    }
-
-    /// <summary>
-    /// Called to trigger the restart event
-    /// </summary>
-    /// <param name="exception">Exception</param>
-    [PublicAPI]
-    protected void SendRestartRequest(Exception exception)
-    {
-        Logger.LogError(exception.Message);
-        SendRestartRequest();
-    }
-
-    private void SendRestartRequest()
-    {
-        var restartRequest = RestartRequest;
-        restartRequest?.Invoke(this, EventArgs.Empty);
-    }
-
-    /// <summary>
-    /// Stop communicating
-    /// </summary>
-    protected virtual void Stop(bool reset = false)
-    {
-        Socket.Disconnect();
-    }
-
-    /// <summary>
-    /// Start the communication
-    /// </summary>
-    /// <returns>True if starting the communication was successful</returns>
-    // ReSharper disable once UnusedMethodReturnValue.Global
-    public bool Start()
-    {
-        try
-        {
-            SetRun = true;
-            _cts = new CancellationTokenSource();
-            _thread = new Thread(_ => Communicate(_cts.Token));
-            _thread.Start();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("Could not start the communication, got : {ErrorMessage}", ex.Message);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Initiates stopping of the thread
-    /// </summary>
-    public virtual void BeginStop()
-    {
-        Logger.LogInformation("Thread {Name} should stop", Name);
-        SetRun = false;
-    }
-
-    /// <summary>
-    /// Stops the thread
-    /// </summary>
-    public void FinishStop(bool reset = false)
-    {
-        try
-        {
-            if (_thread != null! && _thread.IsAlive)
-            {
-                _cts?.Cancel();
-                Logger.LogDebug("Stopping by cancellation of token {CancellationRequested}, waiting {WaitingTime}ms for thread to finish", _cts?.Token.IsCancellationRequested, ThreadWaitingTime);
-                if (!_thread.Join(ThreadWaitingTime))
-                {
-                    Logger.LogWarning("Thread {Name} did not stop, aborting", Name);
-                    _thread = null!;
-                }
-            }
-            Stop(reset);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("Could not finish stopping, got : {ErrorMessage}", ex.Message);
-        }
-        finally
-        {
-            _cts?.Dispose();
-            _cts = null;
-        }
-    }
-
-    /// <summary>
-    /// Restart the communicator
-    /// </summary>
-    /// <returns></returns>
-    public void Restart()
-    {
-        if (!RestartMe)
-        {
-            Logger.LogWarning("Already restarted via different branch");
-            return;
-        }
-        RestartMe = false;
-        BeginStop();
-        FinishStop();
-        bool connected = Socket.IsConnected();
-        while (!connected)
-        {
-            Thread.Sleep(ThreadWaitingTime);
-            Logger.LogDebug("Trying to connect to socket");
-            connected = Socket.Initialize();
-        }
-        Start();
-    }
-
-    /// <summary>
-    /// Restart the communicator
-    /// </summary>
-    public async Task RestartAsync()
-    {
-        if (!RestartMe)
-        {
-            Logger.LogWarning("Already restarted via different branch");
-            return;
-        }
-        RestartMe = false;
-        BeginStop();
-        FinishStop();
-        bool connected = Socket.IsConnected();
-        while (!connected)
-        {
-            await Task.Delay(ThreadWaitingTime);
-            Logger.LogDebug("Trying to connect to socket");
-            connected = await Socket.InitializeAsync();
-        }
-        Start();
-    }
-
-    private void RestartWorker()
-    {
-        SetRun = true;
-        Start();
-    }
+    private void DisconnectSocket() => Socket.Disconnect();
 
     /// <summary>
     /// Exchange messages
     /// </summary>
     protected abstract bool ExchangeMessages();
 
-    private void Communicate(CancellationToken cancellationToken)
+    private void RequestSocketReconnect(Exception exception)
+    {
+        Logger.LogError("Socket reconnection requested due to exception: {ErrorMessage}", exception.Message);
+        RequestSocketReconnect($"Failed to communicate: {exception.Message}");
+    }
+
+    /// <summary>
+    /// Call to request a socket reconnection
+    /// </summary>
+    /// <param name="reason">Error message describing the reason for reconnection</param>
+    protected void RequestSocketReconnect(string reason)
+    {
+        Logger.LogInformation("Socket reconnection requested due to: {Reason}", reason);
+        _shouldReconnectSocket = true;
+    }
+
+    /// <summary>
+    /// Start the communication
+    /// </summary>
+    /// <returns>True if starting the communication was successful</returns>
+    public void Start()
+    {
+        if (!_startSemaphore.Wait(0))
+        {
+            Logger.LogDebug("Start called while already starting/running, skipping for {Name}", Name);
+            return;
+        }
+
+        try
+        {
+            if (_isRunning && _communicationTask is { IsCompleted: false })
+            {
+                Logger.LogInformation("Communication for {Name} is already running", Name);
+                return;
+            }
+
+            TelegramProcessor.Init();
+            _isRunning = true;
+            _cts = new CancellationTokenSource();
+            _communicationTask = CommunicateAsync(_cts.Token);
+        }
+        finally
+        {
+            _startSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Stops the communication task and disconnects the socket
+    /// </summary>
+    public async Task StopAsync()
     {
         try
         {
-            Thread.CurrentThread.Name ??= Name;
+            Logger.LogInformation("Stopping task {Name}", Name);
+            _isRunning = false;
 
-            Logger.LogDebug("Started thread for {Name}, cancellation requested {IsCancellationRequested}", Name, cancellationToken.IsCancellationRequested);
+            if (_communicationTask is { IsCompleted: false })
+            {
+                if (_cts != null)
+                {
+                    await _cts.CancelAsync();
+                    Logger.BeginScope("Stopping by cancellation of token {CancellationRequested}", _cts.Token.IsCancellationRequested);
+                }
 
-            while (_run && !cancellationToken.IsCancellationRequested)
+                // Wait for task to complete within timeout
+                var completedTask = await Task.WhenAny(_communicationTask, Task.Delay(ConnectionWaitingTime));
+
+                if (completedTask != _communicationTask)
+                {
+                    Logger.LogWarning("Task {Name} did not stop within timeout", Name);
+                }
+            }
+
+            DisconnectSocket();
+            TelegramProcessor.ResetCounter();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Could not stop the communication, got : {ErrorMessage}", ex.Message);
+        }
+        finally
+        {
+            _cts?.Dispose();
+            _cts = null;
+            _communicationTask = null;
+        }
+    }
+
+    private async Task ReconnectSocketAsync()
+    {
+        if (!await _reconnectSemaphore.WaitAsync(0))
+        {
+            Logger.LogWarning("Already reconnecting socket for {Name}", Name);
+            return;
+        }
+
+        try
+        {
+            Logger.LogInformation("Initiating socket reconnection for {Name}", Name);
+            _shouldReconnectSocket = false;
+
+            DisconnectSocket();
+
+            bool connected = false;
+            int attempts = 0;
+
+            while (!connected && attempts < MaxReconnectAttempts)
+            {
+                attempts++;
+                Logger.LogInformation("Trying to connect socket for {Name} (attempt {Attempt}/{MaxAttempts})", Name, attempts, MaxReconnectAttempts);
+                connected = await Socket.TryInitializeAsync();
+
+                if (!connected && attempts < MaxReconnectAttempts)
+                {
+                    await Task.Delay(ConnectionWaitingTime);
+                }
+            }
+
+            if (connected)
+            {
+                Logger.LogInformation("Successfully connected socket for {Name}", Name);
+            }
+            else
+            {
+                Logger.LogError("Failed to connect socket for {Name} after {MaxAttempts} attempts", Name, MaxReconnectAttempts);
+
+                if (_isRunning)
+                {
+                    // if task is still supposed to be running, but we failed to connect, throw.
+                    throw new Exception($"Failed to connect socket for {Name} after {MaxReconnectAttempts} attempts");
+                }
+            }
+        }
+        finally
+        {
+            _reconnectSemaphore.Release();
+        }
+    }
+
+    private async Task CommunicateAsync(CancellationToken cancellationToken)
+    {
+        Thread.CurrentThread.Name ??= Name;
+        Logger.LogInformation("Started communication-task for {Name}", Name);
+
+        while (_isRunning && !cancellationToken.IsCancellationRequested)
+        {
+            try
             {
                 try
                 {
@@ -275,30 +213,38 @@ public abstract class SocketCommunicator<TTelegramType>
                     {
                         Logger.LogDebug("Exchange was successful");
                     }
-                    Thread.Sleep(_threadSleepingTime);
+
+                    if (TelegramProcessor.ShouldRestart())
+                    {
+                        RequestSocketReconnect("TelegramProcessor requested reconnection");
+                    }
+
+                    await Task.Delay(_taskSleepingTime, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    if (_run)
+                    if (_isRunning)
                     {
-                        Logger.LogError("Could not communicate, got : {ErrorMessage}", ex.Message);
-                        SetRun = false;
-                        RestartMe = true;
-                        SendRestartRequest("Failed to communicate");
+                        Logger.LogError("Communication error: {ErrorMessage}", ex.Message);
+                        RequestSocketReconnect(ex);
                     }
                 }
+
+                if (_shouldReconnectSocket)
+                {
+                    await ReconnectSocketAsync();
+                }
             }
-            Logger.LogDebug("Stopped communicating in thread for {Name}", Name);
-            if (!cancellationToken.IsCancellationRequested)
+            catch (Exception ex)
             {
-                Logger.LogDebug("Restarting worker");
-                RestartWorker();
+                Logger.LogError("Fatal error in communication-task: {ErrorMessage}", ex.Message);
             }
         }
-        catch (Exception ex)
-        {
-            Logger.LogError("Could not communicate, got : {ErrorMessage} - restarting worker", ex.Message);
-            RestartWorker();
-        }
+
+        Logger.LogInformation("Stopped communication-task for {Name}", Name);
     }
 }

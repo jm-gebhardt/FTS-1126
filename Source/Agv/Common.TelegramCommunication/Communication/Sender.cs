@@ -15,47 +15,6 @@ public class Sender<TTelegramType> : SocketCommunicator<TTelegramType>
     }
 
     /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
-    public override bool RestartMe
-    {
-        get => TelegramProcessor.ShouldRestart();
-
-        protected set
-        {
-            if (value != true)
-            {
-                return;
-            }
-            if (!TelegramProcessor.ShouldRestart())
-            {
-                TelegramProcessor.RestartConnection();
-            }
-            else
-            {
-                Logger.LogWarning("Already restarted");
-            }
-        }
-    }
-
-    /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
-    public override void BeginStop()
-    {
-        base.BeginStop();
-
-        TelegramProcessor.Cancel();
-    }
-
-    /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
-    protected override void Stop(bool reset = false)
-    {
-        base.Stop(reset);
-        Logger.LogDebug("Resetting counter");
-        if (reset)
-        {
-            TelegramProcessor.ResetCounter();
-        }
-    }
-
-    /// <inheritdoc cref="SocketCommunicator{TTelegramType}"/>>
     protected override bool ExchangeMessages()
     {
         try
@@ -70,9 +29,7 @@ public class Sender<TTelegramType> : SocketCommunicator<TTelegramType>
                     if (!Socket.TrySend(telegram, TelegramProcessor.GetEncoding()))
                     {
                         Logger.LogError("Failed sending telegram {Telegram}", telegram);
-                        RestartMe = true;
-                        SetRun = false;
-                        SendRestartRequest("Failed to send telegram");
+                        RequestSocketReconnect("Failed to send telegram");
                     }
                     else
                     {
@@ -81,7 +38,7 @@ public class Sender<TTelegramType> : SocketCommunicator<TTelegramType>
                 }
                 else
                 {
-                   Logger.LogDebug("No telegram for sending available");
+                    Logger.LogDebug("No telegram for sending available");
                 }
             }
 
@@ -99,16 +56,9 @@ public class Sender<TTelegramType> : SocketCommunicator<TTelegramType>
                     Logger.LogWarning("No acknowledgement or timeout {Acknowledgement} received", acknowledgement);
                     if (acknowledgement != SocketBase.TimeoutTelegram)
                     {
-                        SetRun = false;
-                        RestartMe = true;
-                        SendRestartRequest("Failed to receive telegram");
+                        RequestSocketReconnect("Failed to receive telegram");
                     }
                 }
-            }
-
-            if (TelegramProcessor.ShouldRestart())
-            {
-                SetRun = false;
             }
 
             return true;

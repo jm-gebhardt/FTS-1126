@@ -39,4 +39,13 @@ public class EfZoneRepository(IDbContextFactory<TransportOrderDbContext> context
             .Include(z => z.Polygon.OrderBy(p => p.Index))
             .Where(z => zoneIds.Contains(z.ZoneId)).ToListAsync();
     }
+
+    /// <inheritdoc cref="IZoneRepository"/>>
+    public async Task<ICollection<Zone>> GetZones()
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+        return await context.Set<Zone>()
+            .Include(z => z.Polygon.OrderBy(p => p.Index))
+            .ToListAsync();
+    }
 }

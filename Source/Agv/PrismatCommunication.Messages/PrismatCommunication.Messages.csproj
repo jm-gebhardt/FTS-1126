@@ -12,7 +12,4 @@
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\PrismatCommunication.Domain\PrismatCommunication.Domain.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Events\" />
-    </ItemGroup>
 </Project>

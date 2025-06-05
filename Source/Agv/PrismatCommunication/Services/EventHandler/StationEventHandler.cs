@@ -1,7 +1,9 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using JetBrains.Annotations;
 using MassTransit;
@@ -10,13 +12,19 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 
 /// <summary>
-/// Handles station related events.
+/// Handles station-related events.
 /// </summary>
 [UsedImplicitly]
-public class StationEventHandler(KaeserGraphConfiguration configuration, IShortLoopWeTargetStationRepository targetStationRepository,  ILogger<StationEventHandler> logger) :
+public class StationEventHandler(
+    KaeserGraphConfiguration configuration,
+    IShortLoopWeTargetStationRepository targetStationRepository,
+    IStationRepository stationRepository,
+    ILogger<StationEventHandler> logger) :
     IConsumer<StationLocked>,
     IConsumer<StationUnlocked>,
-    IConsumer<AgvLeftStation>
+    IConsumer<AgvLeftStation>,
+    IConsumer<FreeStation>,
+    IConsumer<OccupyStation>
 {
     /// <summary>
     /// Handles the <see cref="StationLocked"/> event.
@@ -55,6 +63,51 @@ public class StationEventHandler(KaeserGraphConfiguration configuration, IShortL
     /// </summary>
     public async Task Consume(ConsumeContext<AgvLeftStation> context)
     {
+        logger.LogInformation("Reporting station free with {Source} and target {Target}", context.Message.Source, context.Message.Target);
         await context.Publish(new TryQueueDelayedOrder(context.Message.Source, context.Message.Target));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="FreeStation"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<FreeStation> context)
+    {
+        var agvCorrelationId = context.Message.AgvCorrelationId;
+        var station = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
+        if (station?.Node != context.Message.Station)
+        {
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station: {Station}", agvCorrelationId, station?.Node);
+            return;
+        }
+
+        await context.Publish(new RemoveAgvFromStation(station.Id, agvCorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="OccupyStation"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<OccupyStation> context)
+    {
+        (string nodeId, var agvCorrelationId) = context.Message;
+        var occupiedStation = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
+
+        if (occupiedStation != null && occupiedStation.Node == nodeId)
+        {
+            logger.LogWarning("Agv {AgvCorrelationId} already occupies station {NodeId}", agvCorrelationId, nodeId);
+            return;
+        }
+        if (occupiedStation != null)
+        {
+            logger.LogWarning("Agv {AgvCorrelationId} still occupies another station {Station}, removing it before occupying {NodeId}", agvCorrelationId, occupiedStation.Node, nodeId);
+            await context.Publish(new RemoveAgvFromStation(occupiedStation.Id, agvCorrelationId));
+        }
+
+        var station = await stationRepository.GetStationByNode(nodeId);
+        if (station != null)
+        {
+            await context.Publish(new AddAgvToStation(station.Id, agvCorrelationId));
+            return;
+        }
+        logger.LogError("Station {NodeId} not found, cannot occupy", nodeId);
     }
 }

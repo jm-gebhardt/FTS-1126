@@ -6,8 +6,8 @@
 public interface IAgvSettingsService
 {
     /// <summary>
-    /// True, if the agvs battery level is low or less.
+    /// True, if the agvs battery level is critical or less.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv</param>
-    Task<bool> CheckAgvHasLowBatteryLevel(Guid agvCorrelationId);
+    Task<bool> CheckAgvHasCriticalBatteryLevel(Guid agvCorrelationId);
 }

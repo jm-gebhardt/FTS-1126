@@ -31,7 +31,7 @@ public class ToWePlcCommunicationManager(
             await Task.Delay(1000, stoppingToken);
         }
 
-        Stop();
+        await StopAsync();
     }
 
     private async Task Connect(CancellationToken stoppingToken)
@@ -40,11 +40,9 @@ public class ToWePlcCommunicationManager(
         while (!initialized)
         {
             logger.LogInformation("Trying to connect to {Server} telegram server", ServiceKeyProvider.AplWeStation);
-            initialized =  await client.InitializeAsync();
+            initialized = await client.TryInitializeAsync();
             await Task.Delay(ConnectionDelayMs, stoppingToken);
         }
-       
-        sender.RestartRequest += OnRestartRequest!;
     }
 
     private void Start()
@@ -53,36 +51,10 @@ public class ToWePlcCommunicationManager(
         sender.Start();
     }
 
-    private void Stop()
+    private async Task StopAsync()
     {
         logger.LogInformation("Stopping sender for conveyor communication for {Server}", ServiceKeyProvider.AplWeStation);
-        sender.BeginStop();
-        sender.FinishStop();
+        await sender.StopAsync();
         client.Disconnect();
-    }
-
-    /// <summary>
-    /// Handle restart request
-    /// </summary>
-    /// <param name="issuer">The issuer of the event</param>
-    /// <param name="eventArgs">The arguments of the event</param>
-    private void OnRestartRequest(object issuer, EventArgs eventArgs)
-    {
-        try
-        {
-            if (issuer is not SocketCommunicator<ConveyorTelegram> communicator)
-            {
-                return;
-            }
-            logger.LogInformation("Restart requested from {Name}", communicator.Name);
-            if (communicator.RestartMe)
-            {
-                communicator.Restart();
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Restarting failed: {Message}", ex.Message);
-        }
     }
 }

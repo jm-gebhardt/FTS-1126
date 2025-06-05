@@ -60,6 +60,8 @@ try
 
                     services.AddDbContextFactory<DeviceCommunicationDbContext>(ConfigureDbContextOptions);
 
+                    services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+
                     services.AddTransient<Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories.IAgvRepository, EfAgvRepository>();
                     services.AddSingleton<IAgvCacheProvider, AgvCache>();
                     services.AddSingleton<IMqttEdgeMappingCacheProvider, MqttEdgeMappingCache>();

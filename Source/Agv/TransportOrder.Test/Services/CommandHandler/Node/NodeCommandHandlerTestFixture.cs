@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -42,7 +41,7 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         return this;
     }
 
-    public NodeCommandHandlerTestFixture WithQueue(Queue? queue)
+    public NodeCommandHandlerTestFixture WithQueue(TransportOrder.Domain.Models.Queue.Queue? queue)
     {
         _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
         return this;

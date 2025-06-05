@@ -39,13 +39,15 @@ public class GetAgvDataRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_GetAgvData_UnknownCorrelationId_ThrowsException()
+    public async Task Consume_GetAgvData_UnknownCorrelationId_CorrelationIdOmitted()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         AgvRequestsHandlerTestFixture<GetAgvsData, GetAgvDataRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsData, GetAgvDataRequestHandler>()
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .Build();
+        var unknown = "Unknown".ToGuid();
+        Response<GotAgvsData> response = await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> { agv.CorrelationId,  unknown}));
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvsDataBatchQueryException>(async () => await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> { agv.CorrelationId, "Unknown".ToGuid() })));
+        response.Message.AgvData.FirstOrDefault(d => d.CorrelationId == unknown ).ShouldBeNull();
     }
 }

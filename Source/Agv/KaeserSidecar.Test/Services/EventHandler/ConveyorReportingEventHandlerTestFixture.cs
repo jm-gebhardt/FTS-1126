@@ -56,7 +56,7 @@ public class ConveyorReportingEventHandlerTestFixture : MassTransitConsumerTestF
 
     public ConveyorReportingEventHandlerTestFixture WithAgvHasLowBatteryLevel(bool hasLowBatteryLevel)
     {
-        _agvSettingsService.Setup(x => x.CheckAgvHasLowBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);
+        _agvSettingsService.Setup(x => x.CheckAgvHasCriticalBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);
         return this;
     }
 

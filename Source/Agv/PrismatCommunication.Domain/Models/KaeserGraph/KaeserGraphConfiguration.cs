@@ -118,18 +118,26 @@ public class KaeserGraphConfiguration
         };
 
     /// <summary>
-    /// Pick targets by drop targets for Doppelspiel (bijective)
+    /// Pick targets by drop targets for Doppelspiel
     /// </summary>
     public Dictionary<string, List<string>> DoppelspielPickTargets { get; private set; } =
         new()
         {
             {"1050", ["1040", "1020"]},
             {"1060", ["1020", "1040"]},
-            {"2110", ["2130"]},
-            {"2210", ["2230"]},
-            {"2310", ["2330"]},
-            {"2410", ["2430"]},
             {"9070", ["9060"]}
+        };
+
+    /// <summary>
+    /// Pick targets by drop targets for Doppelspiel at akl stations.
+    /// </summary>
+    public Dictionary<string, string> AklDoppelspielPickTargets { get; private set; } =
+        new()
+        {
+            {"2110", "2130"},
+            {"2210", "2230"},
+            {"2310", "2330"},
+            {"2410", "2430"}
         };
 
     /// <summary>
@@ -147,17 +155,14 @@ public class KaeserGraphConfiguration
     /// </summary>
     /// <param name="pickTarget"></param>
     /// <returns></returns>
-    public string GetDoppelspielDropTargetForPick(string pickTarget)
-    {
-        foreach ((string drop, List<string> picks) in DoppelspielPickTargets)
-        {
-            if (picks.Contains(pickTarget))
-            {
-                return drop;
-            }
-        }
-        return string.Empty;
-    }
+   public string GetDoppelspielDropTargetForPick(string pickTarget) => DoppelspielPickTargets.FirstOrDefault(kv => kv.Value.Contains(pickTarget)).Key ?? string.Empty;
+
+    /// <summary>
+    /// Get the pick target corresponding to the given drop target.
+    /// </summary>
+    /// <param name="dropTarget"></param>
+    /// <returns></returns>
+    public string? GetDoppelspielPickTargetForDrop(string dropTarget) => AklDoppelspielPickTargets.GetValueOrDefault(dropTarget);
 
     /// <summary>
     /// Provides a mapping of trigger points to nodes.
@@ -267,6 +272,11 @@ public class KaeserGraphConfiguration
         if (!yamlData.DoppelspielPickTargets.IsNullOrEmpty())
         {
             UpdateDoppelspielPickTargets(yamlData.DoppelspielPickTargets);
+        }
+
+        if (!yamlData.AklDoppelspielPickTargets.IsNullOrEmpty())
+        {
+            UpdateAklDoppelspielDropTargets(yamlData.AklDoppelspielPickTargets);
         }
 
         if (!yamlData.OrderValidationErrors.IsNullOrEmpty())
@@ -414,6 +424,18 @@ public class KaeserGraphConfiguration
     }
 
     /// <summary>
+    /// Update drop targets for akl short loop Doppelspiel.
+    /// </summary>
+    /// <param name="updatedDropTargets">The new drop targets.</param>
+    public void UpdateAklDoppelspielDropTargets(Dictionary<string, string> updatedDropTargets)
+    {
+        foreach ((string pickTarget, string dropTarget) in updatedDropTargets)
+        {
+            AklDoppelspielPickTargets[pickTarget] = dropTarget;
+        }
+    }
+
+    /// <summary>
     /// Get the lift height for target station.
     /// </summary>
     /// <param name="target">Target station for pick or drop.</param>
@@ -447,6 +469,16 @@ public class KaeserGraphConfiguration
     /// <returns>True, if the target is an AKL drop station.</returns>
     public bool IsDropAtAkl(string target)
     {
-        return PrismatKnownTargets.Contains(target) && !PrismatOutputLanes.Contains(target) && target != PrismatAplTarget && DoppelspielPickTargets.ContainsKey(target);
+        return  AklDoppelspielPickTargets.ContainsKey(target);
+    }
+
+    /// <summary>
+    /// Checks if the given target is a pick at AKL
+    /// </summary>
+    /// <param name="target">Target station.</param>
+    /// <returns>True, if the target is an AKL pick station.</returns>
+    public bool IsPickAtAkl(string target)
+    {
+        return AklDoppelspielPickTargets.ContainsValue(target);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Common.Helpers;
-using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
@@ -18,14 +17,14 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 public class GraphParser
 {
     private readonly MqttGraph _graph;
-    private readonly IGraphRepository? _graphRepository;
-
-    private string? _serialNumber;
     private readonly HashSet<GraphNode> _nodes;
     private readonly HashSet<GraphEdge> _edges;
 
+    private bool _isParsed;
+    
+    private string? _serialNumber;
     private bool _checkedVelocity;
-    private bool _considerVelocity;
+    private bool _isVelocityDataValid;
     private float _overallDistance;
     private float _overallDuration;
 
@@ -47,17 +46,14 @@ public class GraphParser
     public Guid RelatedMapId { get; private set; }
 
     /// <summary>
-    /// Constructor.
+    /// Dictionary of MqttEdges by their Id.
     /// </summary>
-    /// <param name="graph"><see cref="MqttGraph"/> message.</param>
-    /// <param name="graphRepository">The graphNode/Edge - MqttNode/Edge mapping.</param>
-    public GraphParser(MqttGraph graph, IGraphRepository graphRepository)
-    {
-        _graph = graph;
-        _graphRepository = graphRepository;
-        _nodes = new HashSet<GraphNode>(new GraphNodeComparer());
-        _edges = new HashSet<GraphEdge>(new GraphEdgeComparer());
-    }
+    public Dictionary<Guid, MqttEdge> EdgesById { get; } = new();
+
+    /// <summary>
+    /// Dictionary of MqttNodes by their Id.
+    /// </summary>
+    public Dictionary<string, MqttNode> NodesById { get; } = new();
 
     /// <summary>
     /// Constructor.
@@ -105,6 +101,23 @@ public class GraphParser
         return length;
     }
 
+    private void VerifyGraphParsed()
+    {
+        if (!_isParsed)
+        {
+            throw new InvalidOperationException("Graph is not parsed yet. Call Parse() first.");
+        }
+    }
+
+    private void VerifyGraphValid()
+    {
+        VerifyGraphParsed();
+        if (_usability != AgvGraph.GraphUsability.Valid)
+        {
+            throw new InvalidOperationException("Graph is invalid.");
+        }
+    }
+
     /// <summary>
     /// Parse velocity from edges.
     /// </summary>
@@ -115,7 +128,7 @@ public class GraphParser
             return;
         }
         _checkedVelocity = true;
-        _considerVelocity = _graph.Edges!.All(x => x.MaxVelocity > Mathematics.FloatComparator); // Precision of single is about 6 to 9 digits.
+        _isVelocityDataValid = _graph.Edges!.All(x => x.MaxVelocity > Mathematics.FloatComparator); // Precision of single is about 6 to 9 digits.
     }
 
     /// <summary>
@@ -127,28 +140,23 @@ public class GraphParser
         var (fromNode, toNode) = GetFromToNodes(mqttEdge);
         string fromNodeId = swap ? toNode.Id : fromNode.Id;
         string toNodeId = swap ? fromNode.Id : toNode.Id;
-       
-        var edge = GetGraphEdgeForCurveType(mqttEdge, metric, (float)length, swap, fromNodeId, toNodeId);
-        bool added = _edges.Add(edge);
-        if (added && _considerVelocity)
+
+        var edge = GetGraphEdgeForCurveType(mqttEdge, metric, (float) length, swap, fromNodeId, toNodeId);
+        bool allAdded = _edges.Add(edge);
+        if (allAdded && _isVelocityDataValid)
         {
-            _overallDistance += (float)length;
+            _overallDistance += (float) length;
             // No division by zero due to _considerVelocity.
-            _overallDuration += (float)length / mqttEdge.MaxVelocity;
+            _overallDuration += (float) length / mqttEdge.MaxVelocity;
         }
 
-        _= StoreEdge(edge.Id, mqttEdge);
-
-        return added;
-    }
-
-    private async Task StoreEdge(Guid edgeId, MqttEdge edge)
-    {
-        if (_graphRepository == null)
+        if (allAdded)
         {
-            return;
+            EdgesById.Add(edge.Id, mqttEdge);
+            // this would throw as the edge is not unique. Usability will be set to invalid outside.
         }
-        await _graphRepository.Add(edgeId, edge);
+
+        return allAdded;
     }
 
     private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeId, string toNodeId)
@@ -224,16 +232,16 @@ public class GraphParser
         {
             double length = CalculateEdgeLength(edge, _graph.Nodes!);
             float metric;
-            if (_considerVelocity)
+            if (_isVelocityDataValid)
             {
                 // Calculate time based costs by distance divided by velocity
                 // (no division by zero due to _considerVelocity).
-                metric = (float)length / edge.MaxVelocity;
+                metric = (float) length / edge.MaxVelocity;
             }
             else
             {
                 // Calculate costs based on distance.
-                metric = (float)length;
+                metric = (float) length;
             }
 
             allAdded &= BuildEdge(edge, metric, length);
@@ -265,19 +273,14 @@ public class GraphParser
                 Z = mqttNode.Z ?? 0f
             };
             allAdded &= _nodes.Add(newNode);
-            _ = StoreNode(newNode.Id, mqttNode);
+            if (allAdded)
+            {
+                NodesById.Add(newNode.Id, mqttNode);
+                // this would throw as the edge is not unique. Usability will be set to invalid outside.
+            }
         }
 
         return allAdded;
-    }
-
-    private async Task StoreNode(string nodeId, MqttNode node)
-    {
-        if (_graphRepository == null)
-        {
-            return;
-        }
-        await _graphRepository.Add(nodeId, node);
     }
 
     /// <summary>
@@ -287,12 +290,11 @@ public class GraphParser
     /// This method is called by each public member.
     /// For diagnostic purpose the graph is built even when the graph is invalid.
     /// </remarks>
-    private void Parse()
+    public void Parse()
     {
-        if (_agvGraph != null)
-        {
-            return;
-        }
+        _isParsed = false;
+        EdgesById.Clear();
+        NodesById.Clear();
         if (!string.IsNullOrEmpty(_graph.SerialNumber))
         {
             _serialNumber = _graph.SerialNumber;
@@ -324,6 +326,7 @@ public class GraphParser
 
         RelatedMapName = _graph.RelatedMapId;
         RelatedMapId = _graph.RelatedMapId.ToGuid();
+        _isParsed = true;
     }
 
     /// <summary>
@@ -335,15 +338,7 @@ public class GraphParser
     {
         get
         {
-            if (_agvGraph == null)
-            {
-                Parse();
-            }
-            if (_usability != AgvGraph.GraphUsability.Valid)
-            {
-                throw new InvalidOperationException("Graph is invalid.");
-            }
-
+            VerifyGraphValid();
             return _serialNumber!;
         }
     }
@@ -353,20 +348,12 @@ public class GraphParser
     /// </summary>
     /// <exception cref="InvalidOperationException">Graph is invalid.</exception>
     [PublicAPI]
-    public bool ConsiderVelocity
+    public bool IsVelocityDataValid
     {
         get
         {
-            if (_agvGraph == null)
-            {
-                Parse();
-            }
-            if (_usability != AgvGraph.GraphUsability.Valid)
-            {
-                throw new InvalidOperationException("Graph is invalid.");
-            }
-
-            return _considerVelocity;
+            VerifyGraphValid();
+            return _isVelocityDataValid;
         }
     }
 
@@ -379,19 +366,11 @@ public class GraphParser
     {
         get
         {
-            if (_agvGraph == null)
-            {
-                Parse();
-            }
-            if (_usability != AgvGraph.GraphUsability.Valid)
-            {
-                throw new InvalidOperationException("Graph is invalid.");
-            }
-            if (!_considerVelocity)
+            VerifyGraphValid();
+            if (!_isVelocityDataValid)
             {
                 throw new InvalidOperationException("Velocity information missing.");
             }
-
             // No division by zero due to _considerVelocity.
             return _overallDistance / _overallDuration;
         }
@@ -405,11 +384,7 @@ public class GraphParser
     {
         get
         {
-            if (_agvGraph == null)
-            {
-                Parse();
-            }
-
+            VerifyGraphParsed();
             return _agvGraph!;
         }
     }

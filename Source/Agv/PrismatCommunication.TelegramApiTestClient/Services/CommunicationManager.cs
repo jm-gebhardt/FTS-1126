@@ -35,53 +35,24 @@ public class CommunicationManager : BackgroundService
         bool connected = false;
         while (!connected)
         {
-            connected = await _toFtsClient.InitializeAsync();
+            connected = await _toFtsClient.TryInitializeAsync();
             await Task.Delay(1000, stoppingToken);
         }
         connected = false;
         while (!connected)
         {
-            connected = await _fromFtsClient.InitializeAsync();
+            connected = await _fromFtsClient.TryInitializeAsync();
             await Task.Delay(1000, stoppingToken);
         }
-        _receiver.RestartRequest += OnRestartRequest!;
         _receiver.Start();
         _sender.Start();
-        _sender.RestartRequest += OnRestartRequest!;
 
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
         }
         _logger.LogInformation("Stopping sender and receiver for prismat communication");
-        _receiver.BeginStop();
-        _sender.BeginStop();
-        _receiver.FinishStop();
-        _sender.FinishStop();
-    }
-
-    /// <summary>
-    /// Handle restart request
-    /// </summary>
-    /// <param name="sender">The sender of the event</param>
-    /// <param name="eventArgs">The arguments of the event</param>
-    private void OnRestartRequest(object sender, EventArgs eventArgs)
-    {
-        try
-        {
-            if (sender is not SocketCommunicator<PrismatTelegram> communicator)
-            {
-                return;
-            }
-            _logger.LogInformation("Restart requested from {Name}", communicator.Name);
-            if (communicator.RestartMe)
-            {
-                communicator.Restart();
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Restarting failed: {Message}", ex.Message);
-        }
+        await _receiver.StopAsync();
+        await _sender.StopAsync();
     }
 }

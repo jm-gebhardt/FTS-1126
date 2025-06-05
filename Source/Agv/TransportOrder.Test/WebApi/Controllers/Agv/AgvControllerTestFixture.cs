@@ -55,6 +55,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequestHandler : class, IConsumer
 {
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new();
 
     private readonly Mock<IMapRepository> _mapRepository = new();
     
@@ -334,6 +335,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
             sc.AddTransient(_ => ChargingPointManager.Object);
             sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
+            sc.AddSingleton<ISemaphoreProvider<IQueueingSemaphore>>(_ => _queueSemaphoreProvider);
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _queueManager.Object);
             sc.AddTransient(_ => _productionOptions);

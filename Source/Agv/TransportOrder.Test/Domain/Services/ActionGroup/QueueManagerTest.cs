@@ -32,7 +32,6 @@ public class QueueManagerTest
        
         (await fixture.QueueManager.TryEnterQueue(agv)).ShouldBe(entryNode);
         fixture.VerifyQueueWasUpdated();
-        fixture.VerifyAgvWasUpdated();
         queue.AgvFillQuantity.ShouldBe(1);
     }
 
@@ -54,7 +53,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
-        (await fixture.QueueManager.TryEnqueueAgv(entryNode.State!.AgvCorrelationId.GetValueOrDefault(), entryNode.NodeId)).ShouldBeNull();
+        (await fixture.QueueManager.TryEnqueueAgv(entryNode.GetCurrentAgv()!.Value, entryNode.NodeId)).ShouldBeNull();
     }
 
     [TestMethod]
@@ -81,7 +80,7 @@ public class QueueManagerTest
 
         (await fixture.QueueManager.TryEnqueueAgv(agv, entryNode.NodeId)).ShouldBe(entryNode.NodeId);
 
-        fixture.VerifyNodeWasOccupied(entryNode.NodeId, agv, true);
+        queue.Nodes.Single(n => n.NodeId == entryNode.NodeId).OccupiedAgv.ShouldBe(agv);
     }
 
     [TestMethod]
@@ -90,7 +89,7 @@ public class QueueManagerTest
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Occupied, NodeLockState.Free, NodeLockState.Free], size: 3);
         var entryNode = queue.Nodes.MaxBy(n => n.Position)!;
         var agv = Guid.NewGuid();
-        var nodeToEnqueueTo = queue.Nodes.OrderBy(n => n.Position).First(n => n.State?.NodeState == NodeLockState.Free);
+        var nodeToEnqueueTo = queue.Nodes.OrderBy(n => n.Position).First(n => n.GetCurrentAgv() == null);
 
         var fixture = new QueueManagerTestFixture()
             .WithQueue(null)
@@ -98,7 +97,7 @@ public class QueueManagerTest
 
         (await fixture.QueueManager.TryEnqueueAgv(agv, entryNode.NodeId)).ShouldBe(nodeToEnqueueTo.NodeId);
 
-        fixture.VerifyNodeWasReserved(nodeToEnqueueTo.NodeId, agv, force: true);
+        queue.Nodes.Single(n => n.NodeId == nodeToEnqueueTo.NodeId).ReservedAgv.ShouldBe(agv);
     }
 
     [TestMethod]
@@ -115,7 +114,7 @@ public class QueueManagerTest
     public async Task TryDequeueAgv_AgvNotAtQueueHead_ReturnsNull()
     {
         var queue = QueueGenerator.GenerateFullQueue(nodes: 2);
-        var agv = queue.Nodes.OrderBy(n => n.Position).Last().State!.AgvCorrelationId!.Value;
+        var agv = queue.Nodes.OrderBy(n => n.Position).Last().OccupiedAgv!.Value;
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
@@ -131,9 +130,12 @@ public class QueueManagerTest
         var queue = QueueGenerator.GenerateFullQueue(nodes: queueSize);
         queue.AgvFillQuantity.ShouldBe(queueSize);
         var head = queue.Head!;
-        head.State!.AgvCorrelationId = agv;
-        var agvToMove = queue.Nodes.Single(n => n.NodeId != head.NodeId).State!.AgvCorrelationId!.Value;
+        head.Occupy(agv);
+        var agvToMove = queue.Nodes.Single(n => n.NodeId != head.NodeId).GetCurrentAgv()!.Value;
+        var agvInQueue = AgvGenerator.GenerateRawAgv(agvToMove, "serial number");
+        agvInQueue.IsQueueing = true;
         var fixture = new QueueManagerTestFixture()
+            .WithAgv(agvInQueue)
             .WithQueue(queue);
 
         Dictionary<Guid, string>? agvsToMove = await fixture.QueueManager.TryDequeueAgv(agv);
@@ -172,9 +174,12 @@ public class QueueManagerTest
         var queue = QueueGenerator.GenerateFullQueue(nodes: queueSize);
         queue.AgvFillQuantity.ShouldBe(queueSize);
         var nodeToEscape = queue.Nodes.OrderBy(n => n.Position).Skip(1).Take(1).Single();
-        var agv = nodeToEscape.State!.AgvCorrelationId!.Value;
-        var agvToMove = queue.Nodes.Single(n => n.Position > nodeToEscape.Position).State!.AgvCorrelationId!.Value;
+        var agv = nodeToEscape.OccupiedAgv!.Value;
+        var agvToMove = queue.Nodes.Single(n => n.Position > nodeToEscape.Position).GetCurrentAgv()!.Value;
+        var agvInQueue = AgvGenerator.GenerateRawAgv(agvToMove, "serial number");
+        agvInQueue.IsQueueing = true;
         var fixture = new QueueManagerTestFixture()
+            .WithAgv(agvInQueue)
             .WithQueue(queue);
 
         (Dictionary<Guid, string>? agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv, nodeToEscape.NodeId);
@@ -183,7 +188,7 @@ public class QueueManagerTest
         agvsToMove[agvToMove].ShouldBe(nodeToEscape.NodeId);
         fixture.VerifyQueueWasUpdated();
         queueSizeAfterEscaping.ShouldBe(queueSize - 1);
-        fixture.VerifyNodeWasReserved(nodeToEscape.NodeId, agvToMove, true);
+        nodeToEscape.ReservedAgv.ShouldBe(agvToMove);
     }
 
     [TestMethod]
@@ -206,45 +211,45 @@ public class QueueManagerTest
     }
 
     [TestMethod]
-    public async Task TryReachQueueHead_NoQueueForAgv_AgvNotUpdated()
+    public async Task TryReachQueueNode_NoQueueForAgv_AgvNotUpdated()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new QueueManagerTestFixture()
             .WithQueue(null);
 
-        await fixture.QueueManager.TryReachQueueHead(agv, "head node");
+        await fixture.QueueManager.TryReachQueueNode(agv, "head node");
         fixture.VerifyAgvWasUpdated(false);
     }
 
     [TestMethod]
-    public async Task TryReachQueueHead_AgvIsNotAtHead_AgvNotUpdated()
+    public async Task TryReachQueueNode_AgvIsNotAtHead_AgvNotUpdatedQueueUpdated()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.IsQueueing = true;
         var queue = QueueGenerator.GenerateFullQueue(nodes: 2);
-        queue.Nodes.OrderBy(n => n.Position).Last().State!.AgvCorrelationId = agv.CorrelationId;
+        queue.Nodes.OrderBy(n => n.Position).Last().Reserve(agv.CorrelationId);
 
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
-        await fixture.QueueManager.TryReachQueueHead(agv, queue.Head!.NodeId);
+        await fixture.QueueManager.TryReachQueueNode(agv, queue.EntryNode!);
         fixture.VerifyAgvWasUpdated(false);
+        queue.Nodes.OrderBy(n => n.Position).Last().OccupiedAgv.ShouldBe(agv.CorrelationId);
+        agv.IsQueueing.ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task TryReachQueueHead_ValidData_AgvUpdated()
+    public async Task TryReachQueueNode_ValidData_AgvUpdated()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.IsQueueing = true;
         var queue = QueueGenerator.GenerateFullQueue(nodes: 2);
-        queue.Nodes.OrderBy(n => n.Position).First().State!.AgvCorrelationId = agv.CorrelationId;
+        queue.Nodes.OrderBy(n => n.Position).First().Occupy(agv.CorrelationId);
 
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
-        await fixture.QueueManager.TryReachQueueHead(agv, queue.Head!.NodeId);
-        fixture.VerifyAgvWasUpdated();
-        agv.IsQueueing.ShouldBeFalse();
+        (await fixture.QueueManager.TryReachQueueNode(agv, queue.Head!.NodeId)).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -257,7 +262,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueues([emptyQueue, fullQueue, queueWithCapacity]);
 
-        var expectedAgvs = new List<Guid> { fullQueue.Head!.State!.AgvCorrelationId!.Value, queueWithCapacity.Head!.State!.AgvCorrelationId!.Value };
+        var expectedAgvs = new List<Guid> { fullQueue.Head!.OccupiedAgv!.Value, queueWithCapacity.Head!.OccupiedAgv!.Value };
 
         (await fixture.QueueManager.GetAgvsAtQueueHeads()).ShouldBeEquivalentTo(expectedAgvs);
     }
@@ -280,9 +285,13 @@ public class QueueManagerTest
     {
         var agv = Guid.NewGuid();
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [lockState, NodeLockState.Reserved, NodeLockState.Free]);
-        if (lockState != NodeLockState.Free)
+        if (lockState == NodeLockState.Reserved)
         {
-            queue.Nodes.OrderBy(n => n.Position).First().State!.AgvCorrelationId = agv;
+            queue.Nodes.OrderBy(n => n.Position).First().Reserve(agv);
+        }
+        if (lockState == NodeLockState.Occupied)
+        {
+            queue.Nodes.OrderBy(n => n.Position).First().Occupy(agv);
         }
 
         var fixture = new QueueManagerTestFixture()

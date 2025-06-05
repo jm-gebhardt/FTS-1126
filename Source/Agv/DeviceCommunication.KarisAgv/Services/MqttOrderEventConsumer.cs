@@ -34,14 +34,15 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
     public async Task Consume(ConsumeContext<MqttOrderEvent> context)
     {
         var message = context.Message;
-        _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, message.OrderId);
-
         var actionId = message.OrderId.ToGuid();
-        
+
+        _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, actionId);
+
         // Only applicable if the internal order id and the one sent to the vehicle differ.
         Guid? internalOrderId = await _actionRepository.GetInternalOrderId(actionId);
         if (internalOrderId != null)
         {
+            _logger.LogInformation("Replacing {OrderId} by internally used {InternalOrderId}", actionId, internalOrderId);
             actionId = internalOrderId.Value;
         }
 
@@ -74,7 +75,6 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
 
             case OrderEventType.Updated:
                 await context.Publish(new ActionUpdated(actionId, agvCorrelationId));
-                await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             default:

@@ -34,7 +34,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
-using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.IdentityModel.Tokens;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
@@ -81,9 +80,9 @@ public class AgvCommandHandler :
     IConsumer<TryReactivateParkingAgvs>,
     IConsumer<SwitchMode>,
     IConsumer<TryEnqueueAgv>,
-    IConsumer<TryReachQueueHead>,
     IConsumer<ReceiveAgvZones>,
-    IConsumer<RemoveAgvFromZones>
+    IConsumer<RemoveAgvFromZones>,
+    IConsumer<LeaveQueue>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -97,6 +96,7 @@ public class AgvCommandHandler :
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IMetricCollectionService _metricCollectionService;
     private readonly IStationRepository _stationRepository;
+    private readonly ISemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
@@ -110,6 +110,7 @@ public class AgvCommandHandler :
         IMapper mapper,
         ProductionOptions productionOptions,
         IStationRepository stationRepository,
+        ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider,
         ILogger<AgvCommandHandler> logger
     )
     {
@@ -125,6 +126,7 @@ public class AgvCommandHandler :
         _productionOptions = productionOptions;
         _chargingPointManager = chargingPointManager;
         _stationRepository = stationRepository;
+        _queueSemaphoreProvider = queueSemaphoreProvider;
     }
 
     /// <summary>
@@ -172,6 +174,13 @@ public class AgvCommandHandler :
             return;
         }
 
+        if (await _chargingPointManager.IsOnAChargingNodeAsync(agv))
+        {
+            _logger.LogInformation("Agv {AgvCorrelationId} is already on charger {NodeId}, no need to reserve one", agv.CorrelationId, agv.AgvStatus?.LastNodeId);
+            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, agv.AgvStatus!.LastNodeId!, initiator));
+            return;
+        }
+
         var reservedChargingNode = await _chargingPointManager.GetReservedChargerForAgvAsync(agvCorrelationId);
         string nodeIdToPublish = reservedChargingNode?.NodeId ?? (await _chargingPointManager.ReserveChargerAsync(agv)).Id;
 
@@ -196,42 +205,44 @@ public class AgvCommandHandler :
 
         if (await _actionGroupRepository.HasCurrentAssignedActionGroupAsync(agvCorrelationId))
         {
-            _logger.LogDebug("No need for a park / queue action because the agv {AgvCorrelationId} is already assigned to an action group", agv.CorrelationId);
-            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+            _logger.LogDebug("No need for a park / queue action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
+            await context.Publish(new AgvBecameIdle(agvCorrelationId));
             return;
         }
 
-        if (ParkerState.HasParkers && (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agvCorrelationId)))
+        bool hasParkers = await  _parkPointService.HasParkersAsync(agvCorrelationId);
+        if (hasParkers && (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agvCorrelationId)))
         {
-            _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}", agvCorrelationId);
             return;
         }
 
         if (agv.IsQueueing || await _queueManager.IsOnAQueueNode(agvCorrelationId))
         {
-            _logger.LogDebug("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogDebug("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}", agvCorrelationId);
             return;
         }
 
         string? targetNode = await _queueManager.TryEnterQueue(agv);
         if (targetNode != null)
         {
-            _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
-            await PublishNodeStateChange(context, targetNode);
-            await context.Publish(new QueueNodeSelectedForAgv(agv.CorrelationId, targetNode));
+            agv.IsQueueing = true;
+            await _agvDb.Agvs.UpdateAgvAsync(agv);
+            _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}.", agvCorrelationId);
+            await context.Publish(new QueueNodeSelectedForAgv(agvCorrelationId, targetNode));
             return;
         }
 
-        if (ParkerState.HasParkers)
+        if (hasParkers)
         {
-            _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}", agvCorrelationId);
             var parkNode = await _parkPointService.ReserveParkAsync(agv);
             await PublishNodeStateChange(context, parkNode.Id);
-            await context.Publish(new ParkingNodeSelectedForAgv(agv.CorrelationId, parkNode.Id));
+            await context.Publish(new ParkingNodeSelectedForAgv(agvCorrelationId, parkNode.Id));
         }
         else
         {
-            _logger.LogDebug("No parking stations defined");
+            _logger.LogInformation("No parking stations defined");
         }
     }
 
@@ -390,9 +401,14 @@ public class AgvCommandHandler :
             await UpdateOfflineErrors(context, agv);
         }
 
-        if (zoneIdsChanged && agv.IsOnline == wasOnline)
+        if (zoneIdsChanged)
         {
-            await UpdateOfflineErrors(context, agv, handleRessourceErrors:false);
+            await PublishAgvZonesChanged(context, agv.CorrelationId, agvStatus.ZoneIds);
+
+            if (agv.IsOnline == wasOnline)
+            {
+                await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
+            }
         }
 
         if (zoneIdsChanged || batteryChargeChanged || lastNodeIdChanged || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
@@ -414,6 +430,11 @@ public class AgvCommandHandler :
         await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, agvSettings);
 
         await TryAutoAccept(context, agv, context.CancellationToken);
+    }
+
+    private static async Task PublishAgvZonesChanged(IPublishEndpoint context, Guid agvId, ICollection<string>? zones)
+    {
+        await context.Publish(new AgvZonesChanged(agvId, zones ?? []));
     }
 
     private async Task PublishAgvStatusUpdateEvents(IPublishEndpoint context,
@@ -496,6 +517,7 @@ public class AgvCommandHandler :
         _logger.LogDebug("Setting Agv with CorrelationId: {AgvCorrelationId} to idle, because action has been completed and type is not charge", correlationId);
 
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        agv.IsQueueing = context.Message.IsQueueing;
         await TransitionToIdleAsync(context, agv, context.CancellationToken);
     }
 
@@ -550,7 +572,7 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors=true, bool handleRessourceErrors=true)
+    private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors = true, bool handleRessourceErrors = true)
     {
         List<AgvError> agvErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId)).ToList();
         var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
@@ -586,7 +608,7 @@ public class AgvCommandHandler :
             _logger.LogInformation("Adding ressource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
             foreach (var nodeLock in nodeLocks)
             {
-               agvErrors.Add(new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, nodeLock.NodeId));
+                agvErrors.Add(new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, nodeLock.NodeId));
             }
             await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
         }
@@ -604,7 +626,7 @@ public class AgvCommandHandler :
             ICollection<Zone> zones = await _agvDb.Zones.GetZones(agv.AgvStatus!.ZoneIds!.ToArray());
             foreach (var zone in zones)
             {
-               agvErrors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId));
+                agvErrors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId));
             }
             await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
             return;
@@ -944,19 +966,22 @@ public class AgvCommandHandler :
 
         if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Charge) || actionGroup.IsManual)
         {
-            if (await TryEscapeQueue(context, agv.CorrelationId, agv.AgvStatus?.LastNodeId))
+            await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
             {
-                agv.IsQueueing = false;
-            }
+                if (await TryEscapeQueue(context, agv.CorrelationId, agv.AgvStatus?.LastNodeId))
+                {
+                    agv.IsQueueing = false;
+                }
 
-            if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
-            {
-                _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
-                return;
-            }
-            _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
-            await PublishStateChange(context, agv);
-            await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
+                if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+                {
+                    _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+                    return;
+                }
+                _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
+                await PublishStateChange(context, agv);
+                await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
+            });
             return;
         }
 
@@ -965,11 +990,13 @@ public class AgvCommandHandler :
             _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
             return;
         }
-
-        await TryDequeueAgv(context, agv.CorrelationId);
-        _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
-        await PublishStateChange(context, agv);
-        await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
+        await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            await TryDequeueAgv(context, agv.CorrelationId);
+            _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
+            await PublishStateChange(context, agv);
+            await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
+        });
     }
 
     /// <summary>
@@ -1011,8 +1038,12 @@ public class AgvCommandHandler :
         }
         foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
         {
-            _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
-            await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMove.Key, agvToMove.Value));
+            var agv = await _agvDb.Agvs.GetAgvAsync(agvToMove.Key);
+            if (agv.IsQueueing)
+            {
+                _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
+                await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMove.Key, agvToMove.Value));
+            }
         }
         //Trigger refilling of queue
         await context.Publish(new TryReactivateParkingAgvs());
@@ -1025,31 +1056,20 @@ public class AgvCommandHandler :
     {
         (var agvCorrelationId, string entryNode) = context.Message;
 
-        string? targetNode = await _queueManager.TryEnqueueAgv(agvCorrelationId, entryNode);
-        if (targetNode != null && targetNode != entryNode)
+        await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvCorrelationId, targetNode));
-            await context.Publish(new QueueEntered());
-        }
+            string? targetNode = await _queueManager.TryEnqueueAgv(agvCorrelationId, entryNode);
+            if (targetNode != null && targetNode != entryNode)
+            {
+                await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvCorrelationId, targetNode));
+                await context.Publish(new QueueEntered());
+            }
 
-        if (targetNode == entryNode)
-        {
-            await context.Publish(new QueueEntered());
-        }
-    }
-
-    /// <summary>
-    /// Handles the <see cref="TryReachQueueHead"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<TryReachQueueHead> context)
-    {
-        (var agvCorrelationId, string? targetNode) = context.Message;
-
-        if (targetNode != null)
-        {
-            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-            await _queueManager.TryReachQueueHead(agv, targetNode);
-        }
+            if (targetNode == entryNode)
+            {
+                await context.Publish(new QueueEntered());
+            }
+        });
     }
 
     private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Guid agvCorrelationId, string? agvLastNodeId)
@@ -1065,8 +1085,12 @@ public class AgvCommandHandler :
         }
         foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
         {
-            _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
-            await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMove.Key, agvToMove.Value));
+            var agv = await _agvDb.Agvs.GetAgvAsync(agvToMove.Key);
+            if (agv.IsQueueing)
+            {
+                _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
+                await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMove.Key, agvToMove.Value));
+            }
         }
         //Trigger refilling of queue
         await context.Publish(new TryReactivateParkingAgvs());
@@ -1115,7 +1139,7 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         agv.AgvStatus!.ResetZones();
-        await UpdateOfflineErrors(context, agv, handleRessourceErrors:false);
+        await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
@@ -1321,13 +1345,15 @@ public class AgvCommandHandler :
 
     private async Task PrepareNodes(IPublishEndpoint context, AgvStatus agvStatus, Agv agv)
     {
+        _logger.LogInformation("Preparing nodes for AGV {AgvCorrelationId}. Last node id of AGV is {LastNodeId}", agv.CorrelationId, agvStatus.LastNodeId);
+
         IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agv.CorrelationId);
         if (actionGroups.Count < 1 && agvStatus.LastNodeId == null)
         {
             return;
         }
         List<string> lockedNodes = (await _nodeStateRepository.GetNodeLocksForAgv(agv.CorrelationId)).Select(n => n.NodeId).ToList();
-        
+
         List<string> currentNodeIds = actionGroups.SelectMany(a => a.Actions).Select(a => a.Target.NodeId).Where(t => t != null).Select(t => t!).ToList();
         if (agvStatus.LastNodeId != null)
         {
@@ -1340,7 +1366,7 @@ public class AgvCommandHandler :
         foreach (var node in currentNodes.Where(n => n.NeedsReservation() && !lockedNodes.Contains(n.Id)))
         {
             var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.Target.NodeId == node.Id));
-            if(actionGroup != null && actionGroup.IsOutdated(Agv.OfflineTolerance, now))
+            if (actionGroup != null && actionGroup.IsOutdated(Agv.OfflineTolerance, now))
             {
                 _logger.LogWarning("Action group {ActionGroupCorrelationId} outdated after agv {AgvCorrelationId} went back online", actionGroup.CorrelationId, agv.CorrelationId);
                 await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
@@ -1349,6 +1375,8 @@ public class AgvCommandHandler :
 
             if (string.Equals(node.Id, agvStatus.LastNodeId))
             {
+                _logger.LogInformation("Preparing nodes for AGV {AgvCorrelationId}. Occupy node {NodeId}", agv.CorrelationId, node.Id);
+
                 await _nodeStateRepository.ForceOccupyNodeAsync(node.Id, agv.CorrelationId);
                 await PublishNodeStateChange(context, node.Id);
                 continue;
@@ -1366,18 +1394,24 @@ public class AgvCommandHandler :
             }
         }
 
-        foreach(var moveToQueue in actionGroups.Where(a => !parkers.Contains(a.Actions.First().Target.NodeId) && a is { IsMovingCargo: false, IsChargingOrder: false, IsManual:false }))
+        foreach (var moveToQueue in actionGroups.Where(a => !parkers.Contains(a.Actions.First().Target.NodeId) && a is { IsMovingCargo: false, IsChargingOrder: false, IsManual: false }))
         {
-            if (moveToQueue.IsOutdated(Agv.OfflineTolerance, now))
+            if (!moveToQueue.IsOutdated(Agv.OfflineTolerance, now))
             {
-                _logger.LogWarning("Queuing action group {ActionGroupCorrelationId} outdated after agv {AgvCorrelationId} went back online", moveToQueue.CorrelationId, agv.CorrelationId);
-                await context.Publish(new CancelOrAbortActionGroup(moveToQueue.CorrelationId));
                 continue;
             }
-            string nodeId = moveToQueue.Actions.Single().Target.NodeId!;
-            _logger.LogInformation("Restoring queue node reservation");
-            await _nodeStateRepository.ForceReserveNodeAsync(nodeId, agv.CorrelationId);
-            await PublishNodeStateChange(context, nodeId);
+            _logger.LogWarning("Queuing action group {ActionGroupCorrelationId} outdated after agv {AgvCorrelationId} went back online", moveToQueue.CorrelationId, agv.CorrelationId);
+            await context.Publish(new CancelOrAbortActionGroup(moveToQueue.CorrelationId));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="LeaveQueue"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<LeaveQueue> context)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        agv.IsQueueing = false;
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 }

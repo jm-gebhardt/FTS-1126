@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -23,10 +24,10 @@ public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus
     /// </summary>
     public async Task Consume(ConsumeContext<SolveRessourceBlockingErrors> context)
     {
-        var agvCorrelationId = context.Message.CorrelationId;
+        (var agvCorrelationId, bool ignoreErrorState) = context.Message;
         ICollection<NodeLock> nodeLocks = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
         IList<AgvError> agvErrors = await agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
-        bool hasRessourceErrors = agvErrors.Any(e => e.IsRessourceError());
+        bool hasRessourceErrors = ignoreErrorState || agvErrors.Any(e => e.IsRessourceError());
         var position = agvDb.Positions.GetPosition(agvCorrelationId);
 
         if (hasRessourceErrors && nodeLocks.Count > 0)
@@ -38,8 +39,13 @@ public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus
             }
         }
 
-        agvErrors = agvErrors.Where(e => !e.IsRessourceError()).ToList();
-        await bus.Publish(new UpdateErrorStatus(agvCorrelationId, agvErrors.ToList(), position!.AgvPosition));
+        if (!ignoreErrorState)
+        {
+            agvErrors = agvErrors.Where(e => !e.IsRessourceError()).ToList();
+            await bus.Publish(new UpdateErrorStatus(agvCorrelationId, agvErrors.ToList(), position!.AgvPosition));
+        }
+
+        await bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));
 
         await context.RespondAsync(new Success());
     }

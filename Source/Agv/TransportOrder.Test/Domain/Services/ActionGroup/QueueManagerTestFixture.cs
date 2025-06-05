@@ -7,7 +7,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,7 +23,8 @@ public class QueueManagerTestFixture: FixtureBase
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly SemaphoreProvider<IQueueingSemaphore> _semaphore = new();
-    private readonly Mock<ILogger<BaseNodeReservationManager>> _logger = new();
+    private readonly Mock<ILogger<QueueManager>> _logger = new();
+    private readonly Mock<IGraphRepository> _graphRepository = new();
     public readonly QueueManager QueueManager;
 
     public QueueManagerTestFixture()
@@ -34,6 +34,7 @@ public class QueueManagerTestFixture: FixtureBase
             s.AddTransient(_ => _queueRepository.Object);
             s.AddTransient(_ => _nodeStateRepository.Object);
             s.AddTransient(_ => _routeService.Object);
+            s.AddTransient(_ => _graphRepository.Object);
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient<ISemaphoreProvider<IQueueingSemaphore>>(_ => _semaphore);
             s.AddTransient(_ => _logger.Object);
@@ -48,6 +49,7 @@ public class QueueManagerTestFixture: FixtureBase
         _nodeStateRepository.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
         _nodeStateRepository.Setup(x => x.ForceReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
         _queueRepository.Setup(x => x.UpdateQueueSize(It.IsAny<Guid>(), It.IsAny<int>())).Verifiable();
+        _queueRepository.Setup(x => x.UpdateQueueAsync(It.IsAny<Queue>())).Verifiable();
     }
 
     public QueueManagerTestFixture WithQueues(ICollection<Queue> queues)
@@ -73,33 +75,14 @@ public class QueueManagerTestFixture: FixtureBase
     {
         var agvData = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         _agvDb.Setup(x => x.Data.GetAgvDataAsync(agv.CorrelationId)).ReturnsAsync(agvData);
+        _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
         _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>())).ReturnsAsync(true);
         return this;
     }
 
-    public void VerifyNodeWasReserved(string nodeId, Guid agvCorrelationId, bool force=false)
-    {
-        if (force)
-        {
-            _nodeStateRepository.Verify(x => x.ForceReserveNodeAsync(nodeId, agvCorrelationId), Times.Once);
-            return;
-        }
-        _nodeStateRepository.Verify(x => x.ReserveNodeAsync(nodeId, agvCorrelationId), Times.Once);
-    }
-
-    public void VerifyNodeWasOccupied(string nodeId, Guid agvCorrelationId, bool force = false)
-    {
-        if (force)
-        {
-            _nodeStateRepository.Verify(x => x.ForceOccupyNodeAsync(nodeId, agvCorrelationId), Times.Once);
-            return;
-        }
-        _nodeStateRepository.Verify(x => x.OccupyNodeAsync(nodeId, agvCorrelationId), Times.Once);
-    }
-
     public void VerifyQueueWasUpdated(bool updated=true)
     {
-        _queueRepository.Verify(x => x.UpdateQueueSize(It.IsAny<Guid>(), It.IsAny<int>()), updated ? Times.Once() : Times.Never());
+        _queueRepository.Verify(x => x.UpdateQueueAsync(It.IsAny<Queue>()), updated ? Times.Once() : Times.Never());
     }
 
     public void VerifyAgvWasUpdated(bool updated = true)

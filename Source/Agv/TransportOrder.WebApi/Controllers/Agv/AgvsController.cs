@@ -130,7 +130,7 @@ public class AgvsController : Controller
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <response code="200">Ok</response>
-    /// <response code="400">One or more of given correlation ids is unknown.</response>
+    /// <response code="400">One or more of given correlation ids does not belong to a known agv.</response>
     [HttpPost]
     [Route("/agvs/graph")]
     public async Task<ActionResult<IEnumerable<GraphDto>>> GetAgvGraphs([FromQuery] ICollection<Guid> correlationIds)
@@ -149,7 +149,6 @@ public class AgvsController : Controller
     /// </summary>
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <response code="200">Ok</response>
-    /// <response code="400">One or more of given correlation ids is unknown.</response>
     [HttpPost]
     [Route("/agvs/data")]
     public async Task<ActionResult<IEnumerable<AgvDataDto>>> GetAgvsData([FromQuery] ICollection<Guid> correlationIds)

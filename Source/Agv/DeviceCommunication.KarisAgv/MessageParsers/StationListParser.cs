@@ -15,7 +15,9 @@ public class StationListParser
 {
     private readonly MqttStationList _stationList;
     private readonly MqttGraph _graph;
- 
+    
+    private bool _isParsed;
+
     private string? _serialNumber;
 
     /// <summary>Indicator for graph usability (valid or not).</summary>
@@ -42,7 +44,7 @@ public class StationListParser
     {
         _stationList = stationList;
         _graph = graph;
-   }
+    }
 
     /// <summary>
     /// Calculate distance between <paramref name="station"/> and <paramref name="node"/>.
@@ -65,125 +67,125 @@ public class StationListParser
     /// This method is called by each public member.
     /// For diagnostic purpose the graph is build even when the graph is invalid.
     /// </remarks>
-    private void Parse()
+    public void Parse()
     {
-        if (_agvGraph == null)
+        _isParsed = false;
+        var graphParser = new GraphParser(_graph);
+        graphParser.Parse();
+        _agvGraph = graphParser.Graph;
+        _usability = _agvGraph.Usability;
+        _serialNumber = _stationList.SerialNumber;
+
+        if (_usability == AgvGraph.GraphUsability.Valid &&
+            graphParser.SerialNumber != _serialNumber)
         {
-            var graphParser = new GraphParser(_graph);
-            var agvGraph = graphParser.Graph;
-            _usability = agvGraph.Usability;
-            _serialNumber = _stationList.SerialNumber;
+            _usability = AgvGraph.GraphUsability.SerialNumberMismatch;
+        }
 
-            if (_usability == AgvGraph.GraphUsability.Valid &&
-                graphParser.SerialNumber != _serialNumber)
+        if (_usability == AgvGraph.GraphUsability.Valid &&
+            _stationList.Stations.Length == 0)
+        {
+            _usability = AgvGraph.GraphUsability.InvalidStations;
+        }
+
+        if (_usability == AgvGraph.GraphUsability.Valid)
+        {
+            bool allAdded = true;
+            HashSet<GraphNode> additionalNodes = new(new GraphNodeComparer());
+            HashSet<GraphEdge> additionalEdges = new(new GraphEdgeComparer());
+
+            foreach (var station in _stationList.Stations)
             {
-                _usability = AgvGraph.GraphUsability.SerialNumberMismatch;
+                // Search node from graph closest to this station.
+                GraphNode? nodeNearby = null;
+                float nearbyDistance = 0f;
+                foreach (var node in _agvGraph.Nodes)
+                {
+                    float distance = GetDistance(station, node);
+                    if (nodeNearby == null ||
+                        distance < nearbyDistance)
+                    {
+                        nodeNearby = node;
+                        nearbyDistance = distance;
+                    }
+                }
+
+                if (nodeNearby == null)
+                {
+                    throw new ArgumentException("No node nearby found");
+                }
+
+                // Add node and bidirectional edges.
+                var graphNode = _agvGraph.Nodes.SingleOrDefault(n => n.Id == station.Identifier);
+                bool added;
+                if (graphNode == null)
+                {
+                    graphNode = new GraphNode(station.Identifier)
+                    {
+                        X = station.Position.X,
+                        Y = station.Position.Y,
+                        Z = 0f
+                    };
+                    graphNode.UpdateOrientation(station.Position.Theta);
+                    graphNode.UpdateType(GetNodeType(station.Function));
+                    added = additionalNodes.Add(graphNode);
+                    if (added)
+                    {
+                        float metric = graphParser.IsVelocityDataValid ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
+                        string graphNodeId = graphNode.Id;
+                        string nodeNearbyId = nodeNearby.Id;
+                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId)));
+                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId)));
+                    }
+                }
+                else
+                {
+                    graphNode.UpdateOrientation(station.Position.Theta);
+                    graphNode.UpdateType(GetNodeType(station.Function));
+                    added = true;
+                }
+                allAdded &= added;
             }
-
-            if (_usability == AgvGraph.GraphUsability.Valid &&
-                _stationList.Stations.Length == 0)
+            if (!allAdded)
             {
+                // Station names not unique
                 _usability = AgvGraph.GraphUsability.InvalidStations;
             }
 
-            if (_usability == AgvGraph.GraphUsability.Valid)
+            if (allAdded)
             {
-                bool allAdded = true;
-                HashSet<GraphNode> additionalNodes = new(new GraphNodeComparer());
-                HashSet<GraphEdge> additionalEdges = new(new GraphEdgeComparer());
-
-                foreach (var station in _stationList.Stations)
-                {
-                    // Search node from graph closest to this station.
-                    GraphNode? nodeNearby = null;
-                    float nearbyDistance = 0f;
-                    foreach (var node in agvGraph.Nodes)
-                    {
-                        float distance = GetDistance(station, node);
-                        if (nodeNearby == null ||
-                            distance < nearbyDistance)
-                        {
-                            nodeNearby = node;
-                            nearbyDistance = distance;
-                        }
-                    }
-
-                    if (nodeNearby == null)
-                    {
-                        throw new ArgumentException("No node nearby found");
-                    }
-
-                    // Add node and bidirectional edges.
-                    var graphNode = agvGraph.Nodes.SingleOrDefault(n => n.Id == station.Identifier);
-                    bool added;
-                    if (graphNode == null)
-                    {
-                        graphNode = new GraphNode(station.Identifier)
-                        {
-                            X = station.Position.X,
-                            Y = station.Position.Y,
-                            Z = 0f
-                        };
-                        graphNode.UpdateOrientation(station.Position.Theta);
-                        graphNode.UpdateType(GetNodeType(station.Function));
-                        added = additionalNodes.Add(graphNode);
-                        if (added)
-                        {
-                            float metric = graphParser.ConsiderVelocity ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
-                            string graphNodeId = graphNode.Id;
-                            string nodeNearbyId = nodeNearby.Id;
-                            additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId)));
-                            additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId)));
-                        }
-                    }
-                    else
-                    {
-                        graphNode.UpdateOrientation(station.Position.Theta);
-                        graphNode.UpdateType(GetNodeType(station.Function));
-                        added = true;
-                    }
-                    allAdded &= added;
-                }
+                allAdded &= additionalNodes.AddRange(_agvGraph.Nodes);
                 if (!allAdded)
                 {
-                    // Station names not unique
-                    _usability = AgvGraph.GraphUsability.InvalidStations;
+                    // Ambiguous station name compared to node names
+                    _usability = AgvGraph.GraphUsability.AmbiguousStationNames;
                 }
-
-                if (allAdded)
-                {
-                    allAdded &= additionalNodes.AddRange(agvGraph.Nodes);
-                    if (!allAdded)
-                    {
-                        // Ambiguous station name compared to node names
-                        _usability = AgvGraph.GraphUsability.AmbiguousStationNames;
-                    }
-                }
-
-                if (allAdded)
-                {
-                    allAdded &= additionalEdges.AddRange(agvGraph.Edges);
-                    if (!allAdded)
-                    {
-                        // Edges not unique
-                        _usability = AgvGraph.GraphUsability.StationEdgeMismatch;
-                    }
-                }
-
-                _agvGraph = new AgvGraph(agvGraph.CorrelationId,
-                    additionalNodes.ToArray(),
-                    additionalEdges.ToArray(),
-                    _usability);
-
-                RelatedMapName = graphParser.RelatedMapName;
-                RelatedMapId = graphParser.RelatedMapId;
             }
-            else
+
+            if (allAdded)
             {
-                _agvGraph = agvGraph;
-                _agvGraph.Usability = _usability;
+                allAdded &= additionalEdges.AddRange(_agvGraph.Edges);
+                if (!allAdded)
+                {
+                    // Edges not unique
+                    _usability = AgvGraph.GraphUsability.StationEdgeMismatch;
+                }
             }
+
+            _agvGraph = new AgvGraph(_agvGraph.CorrelationId,
+                additionalNodes.ToArray(),
+                additionalEdges.ToArray(),
+                _usability);
+
+            RelatedMapName = graphParser.RelatedMapName;
+            RelatedMapId = graphParser.RelatedMapId;
         }
+        else
+        {
+            _agvGraph.Usability = _usability;
+        }
+
+        _isParsed = true;
     }
 
     /// <summary>
@@ -196,9 +198,9 @@ public class StationListParser
         bool isFunction = function is Function;
         if (isFunction)
         {
-            return ParseNodeType((Function)function);
+            return ParseNodeType((Function) function);
         }
-        return ((List<Function>)function).Select(ParseNodeType).ToList();
+        return ((List<Function>) function).Select(ParseNodeType).ToList();
     }
 
     /// <summary>
@@ -220,6 +222,14 @@ public class StationListParser
         };
     }
 
+    private void VerifyGraphParsed()
+    {
+        if (!_isParsed)
+        {
+            throw new InvalidOperationException("Graph is not parsed yet. Call Parse() first.");
+        }
+    }
+
     /// <summary>
     /// Returns the serial number of the AGV.
     /// </summary>
@@ -229,10 +239,7 @@ public class StationListParser
     {
         get
         {
-            if (_agvGraph == null)
-            {
-                Parse();
-            }
+            VerifyGraphParsed();
             if (_agvGraph!.Usability != AgvGraph.GraphUsability.Valid)
             {
                 throw new InvalidOperationException("Graph is invalid.");
@@ -250,11 +257,7 @@ public class StationListParser
     {
         get
         {
-            if (_agvGraph == null)
-            {
-                Parse();
-            }
-
+            VerifyGraphParsed();
             return _agvGraph!;
         }
     }

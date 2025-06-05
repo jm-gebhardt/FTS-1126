@@ -266,6 +266,13 @@ public interface IActionGroupRepository
     Task<(bool? dockfront, bool isAutomaticChargeOrPark)> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId);
 
     /// <summary>
+    /// Gets the last completed action of an AGV. This is independent of the action group.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <returns>The last completed action.</returns>
+    Task<AgvAction?> GetLastCompletedActionAsync(Guid agvCorrelationId);
+
+    /// <summary>
     /// Returns boolean specifying that an AGV already has a charging group in created state.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
@@ -308,7 +315,14 @@ public interface IActionGroupRepository
     /// <summary>
     /// Returns agvs that have priority action groups.
     /// </summary>
-    /// <param name="agvs">The gav correlation ids.</param>
+    /// <param name="agvs">The agv correlation ids.</param>
     /// <returns>Collection of agv correlation id that have priority action groups. </returns>
     Task<ICollection<Guid>> FilterAgvsWithPriorityActionGroups(ICollection<Guid> agvs);
+
+    /// <summary>
+    /// Gets list of running or pending action groups that are heading towards the given target.
+    /// </summary>
+    /// <param name="target">The target node.</param>
+    /// <returns>Action groups.</returns>
+    Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(string target);
 }

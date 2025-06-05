@@ -61,6 +61,11 @@ public record AgvDto : DatedMessage
     public GraphNodeDto? LastNode { get; init; }
 
     /// <summary>
+    /// List of the zones that the agv is in.
+    /// </summary>
+    public List<string> Zones { get; init; }
+
+    /// <summary>
     /// The mode of the agv.
     /// </summary>
     public AgvModeDto AgvMode { get; init; }
@@ -81,6 +86,7 @@ public record AgvDto : DatedMessage
     /// <param name="agvErrorDto">List of agv errors.</param>
     /// <param name="lastNode">Last node.</param>
     /// <param name="mode">The agv mode.</param>
+    /// <param name="zones">The zones that the agv is in .</param>
     [PublicAPI]
     public AgvDto(Guid correlationId,
         string serialNumber,
@@ -97,7 +103,8 @@ public record AgvDto : DatedMessage
         ActionGroupDto? currentActionGroup,
         List<AgvErrorDto> agvErrorDto,
         GraphNodeDto? lastNode,
-        AgvModeDto mode)
+        AgvModeDto mode,
+        List<string> zones)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -115,6 +122,7 @@ public record AgvDto : DatedMessage
         Errors = agvErrorDto;
         LastNode = lastNode;
         AgvMode = mode;
+        Zones = zones;
     }
 
     /// <summary>
@@ -125,5 +133,6 @@ public record AgvDto : DatedMessage
         SerialNumber = null!;
         Name = null!;
         AgvMode = null!;
+        Zones = null!;
     }
 }

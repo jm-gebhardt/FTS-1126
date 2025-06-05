@@ -21,7 +21,7 @@ public class FromPrismatTelegramProcessor : InboundTelegramProcessorBase<Prismat
     {
         _processorFactory = processorFactory;
         _logger = logger;
-        TriggerRestart = false;
+        RestartRequested = false;
     }
 
     private bool SendAcknowledgement { get; set; }
@@ -130,6 +130,6 @@ public class FromPrismatTelegramProcessor : InboundTelegramProcessorBase<Prismat
         CurrentTelegram = null;
         CurrentProcessor = null;
         SendAcknowledgement = false;
-        TriggerRestart = true;
+        RestartRequested = true;
     }
 }

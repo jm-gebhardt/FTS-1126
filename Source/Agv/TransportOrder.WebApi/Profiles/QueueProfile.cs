@@ -13,10 +13,16 @@ public class QueueProfile : WebApiProfile
     {
         CreateMap<QueueNode, QueueNodeDto>()
             .ForSourceMember(s => s.Node, opt => opt.DoNotValidate())
-            .ForSourceMember(s => s.State, opt => opt.DoNotValidate());
+            .ForSourceMember(s => s.LastReservedDate, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.LastOccupiedDate, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.ReservedAgv, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.OccupiedAgv, opt => opt.DoNotValidate());
         CreateMap<QueueNodeDto, QueueNode>()
             .ForMember(m => m.Node, opt => opt.Ignore())
-            .ForMember(m => m.State, opt => opt.Ignore());
+            .ForMember(m => m.LastReservedDate, opt => opt.Ignore())
+            .ForMember(m => m.LastOccupiedDate, opt => opt.Ignore())
+            .ForMember(m => m.ReservedAgv, opt => opt.Ignore())
+            .ForMember(m => m.OccupiedAgv, opt => opt.Ignore());
         CreateMap<QueueNodeDto, Common.Messages.Queue.QueueNode>();
         CreateMap<List<QueueNodeDto>, List<Common.Messages.Queue.QueueNode>>().ConvertUsing((src, _, context) =>
             {

@@ -24,15 +24,13 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// </summary>
     private int MaxRetryAttempts => 3;
 
-    private bool TriggerRestart { get; set; }
-
     /// <inheritdoc cref="PrismatTelegramProcessor"/>
     public PrismatTelegramProcessor(ILogger<PrismatTelegramProcessor> logger, bool startWithReceiving, TelegramCommunicationConfiguration configuration)
     {
         _logger = logger;
         ReceiveAcknowledgement = startWithReceiving;
         _isSender = !startWithReceiving;
-        TriggerRestart = false;
+        RestartRequested = false;
         _configuration = configuration;
     }
 
@@ -68,7 +66,7 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
 
         if (CurrentTelegram != null && CurrentTelegram.Seq == SequenceCounter.Current && RemainingAttempts <= 0)
         {
-            TriggerRestart = true;
+            RestartRequested = true;
             ReceiveAcknowledgement = false;
         }
 
@@ -142,18 +140,6 @@ public class PrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     public override int GetWaitingTime()
     {
         return _configuration.TelegramWaitingTime;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
-    public override bool ShouldRestart()
-    {
-        return TriggerRestart;
-    }
-
-    /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
-    public override void RestartConnection()
-    {
-        TriggerRestart = true;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>

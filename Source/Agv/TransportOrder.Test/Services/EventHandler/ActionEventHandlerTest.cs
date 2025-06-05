@@ -29,6 +29,36 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionCompletedEvent_ActionAborted_DoesNotPublishCompleteActionOfActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var action = actionGroup.Actions.First();
+        actionGroup.AbortAction(action.CorrelationId, []);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var actionCompletedEvent = new ActionCompleted(action.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
+
+        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionCompletedEvent_ActionCompleted_DoesNotPublishCompleteActionOfActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var action = actionGroup.Actions.First();
+        actionGroup.CompleteAction(action.CorrelationId);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var actionCompletedEvent = new ActionCompleted(action.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
+
+        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
+    }
+
+    [TestMethod]
     public async Task Consume_StartingActionForAgvFailed_ValidData_PublishesHandleAgvActionStartFailure()
     {
         var fixture = new ActionEventHandlerTestFixture();
@@ -158,6 +188,29 @@ public class ActionEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCreated_NotQueuedPickDropActionGroup_PublishesTryReactivateParkingAgvs()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        var actionGroup = Common.Testing.Helpers.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
+        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(actionGroup, Guid.NewGuid(), null));
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
+        await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCreated_QueuedPickDropActionGroup_PublishesTryUpdateIdleAction()
+    {
+        var fixture = new ActionEventHandlerTestFixture();
+        var actionGroup = Common.Testing.Helpers.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
+        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(actionGroup, Guid.NewGuid(), null));
+
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<TryUpdateIdleAction>();
     }
 
     [TestMethod]

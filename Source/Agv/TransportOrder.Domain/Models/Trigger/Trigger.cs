@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 /// <summary>
 /// A trigger
 /// </summary>
-public class Trigger
+public class Trigger: IEquatable<Trigger>
 {
     /// <inheritdoc cref="Trigger"/>>
     public Trigger(Guid id, string urn, string displayName, string version, string description, int? instanceMaximum, ICollection<ConfigurationParameter> configurationParameters)
@@ -261,5 +261,82 @@ public class Trigger
         }
 
         return true;
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public bool Equals(Trigger? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+        if (!Id.Equals(other.Id))
+        {
+            return false;
+        }
+
+        if (!string.Equals(Urn, other.Urn, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!string.Equals(DisplayName, other.DisplayName, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!string.Equals(Version, other.Version, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!string.Equals(Description, other.Description, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return false;
+        }
+
+        if (InstanceMaximum != other.InstanceMaximum)
+        {
+            return false;
+        }
+
+        foreach (var parameter in ConfigurationParameters)
+        {
+            var otherParameter = other.ConfigurationParameters.SingleOrDefault(p => p.Name == parameter.Name);
+            if (!parameter.Equals(otherParameter))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+        return Equals((Trigger)obj);
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
     }
 }

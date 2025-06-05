@@ -2,9 +2,12 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 
@@ -12,7 +15,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 /// Provides handlers for action group related events.
 /// </summary>
 [UsedImplicitly]
-public class ActionGroupEventHandler :
+public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, ILogger<ActionGroupEventHandler> logger, KaeserGraphConfiguration configuration) :
     IConsumer<ActionGroupCompleted>,
     IConsumer<ActionGroupStarted>,
     IConsumer<ActionGroupInvalid>,
@@ -51,6 +54,24 @@ public class ActionGroupEventHandler :
     public async Task Consume(ConsumeContext<PickActionCompleted> context)
     {
         var (correlationId, actionCorrelationId, timestamp) = context.Message;
+        try
+        {
+            var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+            if (configuration.IsDropAtAkl(hostOrder.Target))
+            {
+                string? pickTarget = configuration.GetDoppelspielPickTargetForDrop(hostOrder.Target);
+                if (pickTarget != null && hostOrder.AssignedAgv != null)
+                {
+                    logger.LogInformation("Pick action of drop at akl target {Target} run by agv {AgvCorrelationId} finished, try queuing next pick for {PickTarget}", hostOrder.Target, hostOrder.AssignedAgv, pickTarget);
+                    await context.Publish(new TryQueueNextAklPick(pickTarget, hostOrder.AssignedAgv.Value));
+                }
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            logger.LogDebug("Order {CorrelationId} not created by prismat", correlationId);
+        }
+
         await context.Publish(new FinishPick(correlationId, actionCorrelationId, timestamp));
     }
 

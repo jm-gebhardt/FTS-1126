@@ -17,8 +17,9 @@ public class OldestActionGroupChooser: BaseChooseAgvActionGroupService
         IActionGroupRepository actionGroupRepository,
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
+        IQueueManager queueManager,
         ILogger<OldestActionGroupChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, routeService, logger)
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository,queueManager, routeService, logger)
     {
     }
 

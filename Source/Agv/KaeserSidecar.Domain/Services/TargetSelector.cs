@@ -25,7 +25,11 @@ public class TargetSelector(
     private readonly List<Guid> _lastEvaluatedActions = [];
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
     private int _consideredStations = 3;
-    private readonly TimeSpan _waitingTime = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    /// The time to wait between two target selection attempts.
+    /// </summary>
+    public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
 
     /// <inheritdoc cref="BackgroundService"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,57 +37,72 @@ public class TargetSelector(
         await Initialize();
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (_actionsToSelectTarget.IsEmpty)
+            try
             {
-                logger.LogDebug("No action listed for target selection ");
-                await Task.Delay(_waitingTime, stoppingToken);
-                continue;
+                await RunAsync(stoppingToken);
             }
-            await semaphoreProvider.ExecuteLockedAsync(async () =>
+            catch (Exception e)
             {
-                Guid? action = null;
-                if (_consideredStations == 1 && !_actionsToSelectTarget.IsEmpty)
-                {
-                    action = _actionsToSelectTarget.MinBy(a => a.Value).Key; // take the one that entered first
-                }
-                if (_consideredStations > 1)
-                {
-                    var lastEvaluatedSet = new HashSet<Guid>(_lastEvaluatedActions);
-                    action = _actionsToSelectTarget
-                        .Where(kvp => !lastEvaluatedSet.Contains(kvp.Key))
-                        .OrderBy(kvp => kvp.Value) // order by entry time 
-                        .Select(kvp => (Guid?) kvp.Key) // use the action correlation id
-                        .FirstOrDefault();
-                }
-                if (action == null)
-                {
-                    logger.LogDebug("No action found for target selection ");
-                    return;
-                }
-
-                var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(action.Value);
-                if (!_lastEvaluatedActions.Contains(action.Value))
-                {
-                    var agvCorrelationId = actionGroup.AssignedAgv!.Value;
-                    logger.LogInformation("Trigger target selection for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
-
-                    string? target = await SelectTarget(_consideredStations);
-                    if (target != null)
-                    {
-                        logger.LogInformation("Selecting target {Target} for agv {Agv} running action group {ActionGroup}", target, agvCorrelationId, actionGroup.CorrelationId);
-                        
-                        // occupy station when target is selected already, so that we can use the occupancy status to select future targets
-                        await stationRepository.OccupyStation(target, agvCorrelationId);
-                        _lastEvaluatedActions.Add(action.Value);
-                        await bus.Publish(new SetTargetForAction(action.Value, actionGroup.CorrelationId, agvCorrelationId, target), stoppingToken);
-                        var decisionPointAction = await decisionPointActionRepository.GetByIdAsync(action.Value);
-                        decisionPointAction.SetTarget(target);
-                        await decisionPointActionRepository.UpdateAsync(decisionPointAction);
-                    }
-                }
-            }, stoppingToken);
-            await Task.Delay(_waitingTime, stoppingToken);
+                logger.LogError(e, "Error during target selection");
+            }
+            finally
+            {
+                await Task.Delay(WaitingTime, stoppingToken);
+            }
         }
+    }
+
+    private async Task RunAsync(CancellationToken stoppingToken)
+    {
+        if (_actionsToSelectTarget.IsEmpty)
+        {
+            logger.LogDebug("No action listed for target selection ");
+            return;
+        }
+
+        await semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            Guid? action = null;
+            if (_consideredStations == 1 && !_actionsToSelectTarget.IsEmpty)
+            {
+                action = _actionsToSelectTarget.MinBy(a => a.Value).Key; // take the one that entered first
+            }
+            if (_consideredStations > 1)
+            {
+                var lastEvaluatedSet = new HashSet<Guid>(_lastEvaluatedActions);
+                action = _actionsToSelectTarget
+                    .Where(kvp => !lastEvaluatedSet.Contains(kvp.Key))
+                    .OrderBy(kvp => kvp.Value) // order by entry time 
+                    .Select(kvp => (Guid?) kvp.Key) // use the action correlation id
+                    .FirstOrDefault();
+            }
+            if (action == null)
+            {
+                logger.LogDebug("No action found for target selection ");
+                return;
+            }
+
+            var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(action.Value);
+            if (!_lastEvaluatedActions.Contains(action.Value))
+            {
+                var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+                logger.LogInformation("Trigger target selection for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
+
+                string? target = await SelectTarget(_consideredStations);
+                if (target != null)
+                {
+                    logger.LogInformation("Selecting target {Target} for agv {Agv} running action group {ActionGroup}", target, agvCorrelationId, actionGroup.CorrelationId);
+
+                    // occupy station when target is selected already, so that we can use the occupancy status to select future targets
+                    await stationRepository.OccupyStation(target, agvCorrelationId);
+                    _lastEvaluatedActions.Add(action.Value);
+                    await bus.Publish(new SetTargetForAction(action.Value, actionGroup.CorrelationId, agvCorrelationId, target), stoppingToken);
+                    var decisionPointAction = await decisionPointActionRepository.GetByIdAsync(action.Value);
+                    decisionPointAction.SetTarget(target);
+                    await decisionPointActionRepository.UpdateAsync(decisionPointAction);
+                }
+            }
+        }, stoppingToken);
     }
 
     /// <inheritdoc cref="TargetSelector"/>>
@@ -104,7 +123,7 @@ public class TargetSelector(
         {
             if (!occupancy.IsEmpty)
             {
-                logger.LogInformation("Station: {Station} is not free, as it's occupied by {occupancy.Count}, StationCount set to {StationCount}", occupancy.Station, occupancy.Count, consideredStations);
+                logger.LogInformation("Station: {Station} is not free, as it's occupied by {occupancy.Count} agv, StationCount set to {StationCount}", occupancy.Station, occupancy.Count, consideredStations);
                 continue;
             }
             selectedTarget = occupancy.Station;
@@ -133,38 +152,43 @@ public class TargetSelector(
     }
 
     /// <inheritdoc cref="ITargetSelector"/>>
-    public async Task Enqueue(Guid actionCorrelationId, Guid agvCorrelationId)
+    public Task Enqueue(Guid actionCorrelationId, Guid agvCorrelationId)
     {
-        var now = DateTime.UtcNow;
-        logger.LogInformation("Listing action {ActionCorrelationId} for target selection", actionCorrelationId);
-        _actionsToSelectTarget.TryAdd(actionCorrelationId, now);
-        var decisionPointAction = new DecisionPointAction(actionCorrelationId, agvCorrelationId, now);
-        await decisionPointActionRepository.AddAsync(decisionPointAction);
-        await decisionPointActionRepository.SaveAsync();
+        return semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            var now = DateTime.UtcNow;
+            logger.LogInformation("Listing action {ActionCorrelationId} for target selection", actionCorrelationId);
+            _actionsToSelectTarget.TryAdd(actionCorrelationId, now);
+            var decisionPointAction = new DecisionPointAction(actionCorrelationId, agvCorrelationId, now);
+            await decisionPointActionRepository.AddAsync(decisionPointAction);
+        });
     }
 
     /// <inheritdoc cref="ITargetSelector"/>>
-    public async Task Dequeue(Guid actionCorrelationId)
+    public Task Dequeue(Guid actionCorrelationId)
     {
-        // Try to dequeue directly this action first. This happens if it was a directly created action that did not have its type changed on the way (e.g. move to pick)
-        if (_actionsToSelectTarget.ContainsKey(actionCorrelationId))
+        return semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await RemoveAction(actionCorrelationId);
-            return;
-        }
+            // Try to dequeue directly this action first. This happens if it was a directly created action that did not have its type changed on the way (e.g. move to pick)
+            if (_actionsToSelectTarget.ContainsKey(actionCorrelationId))
+            {
+                await RemoveAction(actionCorrelationId);
+                return;
+            }
 
-        // If not found, search in action groups for the original (skipped) action
-        logger.LogInformation("Trying to dequeue original action {ActionCorrelationId}", actionCorrelationId);
-        var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
-        var skippedAction = actionGroup.Actions.SingleOrDefault(a => a.ShouldSkip);
+            // If not found, search in action groups for the original (skipped) action
+            logger.LogInformation("Trying to dequeue action {ActionCorrelationId}", actionCorrelationId);
+            var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
+            var skippedAction = actionGroup.Actions.SingleOrDefault(a => a.ShouldSkip);
 
-        if (skippedAction == null || !_actionsToSelectTarget.ContainsKey(skippedAction.CorrelationId))
-        {
-            logger.LogWarning("Could not find action {ActionCorrelationId} or original to dequeue", actionCorrelationId);
-            return;
-        }
+            if (skippedAction == null || !_actionsToSelectTarget.ContainsKey(skippedAction.CorrelationId))
+            {
+                logger.LogWarning("Could not find action {ActionCorrelationId} or skipped action on action group {ActionGroupCorrelationId}", actionCorrelationId, actionGroup.CorrelationId);
+                return;
+            }
 
-        await RemoveAction(skippedAction.CorrelationId);
+            await RemoveAction(skippedAction.CorrelationId);
+        });
     }
 
     private async Task RemoveAction(Guid correlationId)
@@ -179,19 +203,21 @@ public class TargetSelector(
 
     private async Task Initialize()
     {
-        ICollection<DecisionPointAction> actions = await decisionPointActionRepository.GetAll();
+        ICollection<DecisionPointAction> decisionPointAction = await decisionPointActionRepository.GetAll();
 
-        foreach (var action in actions.Where(a => a.Target == null))
+        foreach (var action in decisionPointAction)
         {
-            _actionsToSelectTarget.TryAdd(action.CorrelationId, action.EntryTime);
-        }
-
-        foreach (var action in actions.Where(a => a.Target != null))
-        {
-            var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
-            if (actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).CompletedDate != null)
+            if (action.Target == null)
             {
-                _lastEvaluatedActions.Add(action.CorrelationId);
+                _actionsToSelectTarget.TryAdd(action.CorrelationId, action.EntryTime);
+            }
+            else
+            {
+                var actionGroup = await transportOrderDb.ActionGroups.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
+                if (actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).CompletedDate != null)
+                {
+                    _lastEvaluatedActions.Add(action.CorrelationId);
+                }
             }
         }
     }

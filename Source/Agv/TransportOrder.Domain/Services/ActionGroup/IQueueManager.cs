@@ -41,16 +41,24 @@ public interface IQueueManager
     Task<bool> IsOnAQueueNode(Guid agvCorrelationId);
 
     /// <summary>
-    /// Try to reach the queue head.
+    /// Try to reach the queue node.
     /// </summary>
     /// <param name="agv">The agv.</param>
     /// <param name="nodeId">The node id.</param>
-    /// <returns></returns>
-    Task TryReachQueueHead(Agv agv, string nodeId);
+    /// <returns>True, if the agv is now at queue head.</returns>
+    Task<bool> TryReachQueueNode(Agv agv, string nodeId);
 
     /// <summary>
     /// Get all agvs at queue heads.
     /// </summary>
     /// <returns>The agvs at queue heads.</returns>
     Task<ICollection<Guid>> GetAgvsAtQueueHeads();
+
+    /// <summary>
+    /// Remove an agv from its queue.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="targetNode">The target node of the queue.</param>
+    /// <returns>True, if the agv was removed from the queue.</returns>
+    Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode);
 }

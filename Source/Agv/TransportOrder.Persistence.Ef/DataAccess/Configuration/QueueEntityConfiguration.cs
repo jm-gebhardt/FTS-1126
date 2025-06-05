@@ -19,12 +19,18 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
 
         builder.Ignore(e => e.Head);
         builder.Ignore(e => e.Tail);
+        builder.Ignore(e => e.Agvs);
 
         builder.OwnsMany(q => q.Nodes, nodeBuilder =>
         {
             nodeBuilder.WithOwner().HasForeignKey("QueueId");
+            nodeBuilder.HasKey(n => n.NodeId);
             nodeBuilder.Property(n => n.NodeId).IsRequired().HasMaxLength(DbStringLimits.NodeId);
             nodeBuilder.Property(n => n.Position).IsRequired();
+            nodeBuilder.Property(n => n.OccupiedAgv);
+            nodeBuilder.Property(n => n.LastOccupiedDate);
+            nodeBuilder.Property(n => n.LastReservedDate);
+            nodeBuilder.Property(n => n.ReservedAgv);
 
             nodeBuilder.HasOne(n => n.Node)
                 .WithMany()
@@ -32,15 +38,6 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
                 .OnDelete(DeleteBehavior.Restrict);
 
             nodeBuilder.Navigation(n => n.Node)
-                .AutoInclude();
-
-            nodeBuilder.HasOne(n => n.State)
-                .WithMany()
-                .HasForeignKey(n => n.NodeId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-
-            nodeBuilder.Navigation(n => n.State)
                 .AutoInclude();
         });
 

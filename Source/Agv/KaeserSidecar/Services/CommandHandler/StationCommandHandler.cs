@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
@@ -13,7 +14,8 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 [UsedImplicitly]
 public class StationCommandHandler(IStationRepository stationRepository, ILogger<StationCommandHandler> logger, KaeserGraphConfiguration configuration) :
     IConsumer<OccupyStation>,
-    IConsumer<FreeStation>
+    IConsumer<FreeStation>,
+    IConsumer<SolveResourceErrorsReceived>
 {
     /// <summary>
     /// Handles the <see cref="OccupyStation"/> command.
@@ -36,13 +38,31 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     public async Task Consume(ConsumeContext<FreeStation> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
-        logger.LogInformation("Removing agv {Agv} from station", agvCorrelationId);
+        string station = context.Message.Station;
         var occupancy = await stationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
-        if (occupancy == null)
+        if (occupancy?.Station != station)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} does not occupy any station", agvCorrelationId);
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station {Station} at all, ignoring FreeStation command", agvCorrelationId, station);
             return;
         }
+        logger.LogInformation("Removing agv {Agv} from station: {Station}", agvCorrelationId, station);
+
         await stationRepository.FreeStation(occupancy.Station, agvCorrelationId);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SolveResourceErrorsReceived"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SolveResourceErrorsReceived> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+
+        var occupancy = await stationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
+
+        if (occupancy == null)
+        {
+            return;
+        }
+        await context.Publish(new FreeStation(occupancy.Station, agvCorrelationId));
     }
 }

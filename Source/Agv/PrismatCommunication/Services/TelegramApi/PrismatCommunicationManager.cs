@@ -51,21 +51,19 @@ public class PrismatCommunicationManager : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
 
-        Stop();
+        await StopAsync();
     }
 
     private async Task StartAndConnectReceivingChannel()
     {
-        _receiver.RestartRequest += OnRestartRequest!;
-        await _fromPrismatServer.InitializeAsync();
+        await _fromPrismatServer.TryInitializeAsync();
         _logger.LogInformation("Starting receiver for prismat communication");
         _receiver.Start();
     }
 
     private async Task StartAndConnectSendingChannel()
     {
-        _sender.RestartRequest += OnRestartRequest!;
-        await _toPrismatServer.InitializeAsync();
+        await _toPrismatServer.TryInitializeAsync();
         _logger.LogInformation("Starting sender for prismat communication");
         _sender.Start();
         _prismatQueue.ItemDequeued += _queuePersistenceService.OnItemDequeued;
@@ -73,45 +71,10 @@ public class PrismatCommunicationManager : BackgroundService
         await _queuePersistenceService.ReloadQueue();
     }
 
-    private void Stop()
+    private async Task StopAsync()
     {
         _logger.LogInformation("Stopping sender and receiver for prismat communication");
-        _receiver.BeginStop();
-        _sender.BeginStop();
-        _receiver.FinishStop();
-        _sender.FinishStop();
-    }
-
-    /// <summary>
-    /// Handle restart request
-    /// </summary>
-    /// <param name="sender">The sender of the event</param>
-    /// <param name="eventArgs">The arguments of the event</param>
-    private void OnRestartRequest(object sender, EventArgs eventArgs)
-    {
-        _ = HandleRestartRequestAsync(sender, eventArgs);
-    }
-
-    private async Task HandleRestartRequestAsync(object sender, EventArgs _)
-    {
-        try
-        {
-            if (sender is not SocketCommunicator<PrismatTelegram> communicator)
-            {
-                return;
-            }
-
-            _logger.LogInformation("Restart requested from {Name}", communicator.Name);
-
-            if (communicator.RestartMe)
-            {
-                _logger.LogInformation("Restarting {Name}", communicator.Name);
-                await communicator.RestartAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("Restarting failed: {Message}", ex.Message);
-        }
+        await _receiver.StopAsync();
+        await _sender.StopAsync();
     }
 }

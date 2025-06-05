@@ -104,7 +104,6 @@ public class AgvDataConsumerTest
 
 public class AgvDataConsumerMqttFixture : MqttConsumerTestFixture<AgvDataConsumer>
 {
-    private static StringReader _instantActionsDefinitions = null!;
     private readonly StringBuilder _configBuilder = new();
 
     public AgvDataConsumerMqttFixture()
@@ -112,11 +111,11 @@ public class AgvDataConsumerMqttFixture : MqttConsumerTestFixture<AgvDataConsume
         _configBuilder.AppendLine("InstantActions:");
     }
 
-    private class ConfigReader : IConfigurationReader
+    private class ConfigReader(StringReader stringReader) : IConfigurationReader
     {
         public TextReader Read()
         {
-            return _instantActionsDefinitions;
+            return stringReader;
         }
     }
 
@@ -137,8 +136,7 @@ public class AgvDataConsumerMqttFixture : MqttConsumerTestFixture<AgvDataConsume
     public new AgvDataConsumerMqttFixture Build()
     {
         string config = _configBuilder.ToString();
-        _instantActionsDefinitions = new StringReader(config);
-        AddServices(sc => sc.AddSingleton<IConfigurationReader, ConfigReader>());
+        AddServices(sc => sc.AddSingleton<IConfigurationReader, ConfigReader>(_ => new ConfigReader(new StringReader(config))));
         base.Build();
         return this;
     }

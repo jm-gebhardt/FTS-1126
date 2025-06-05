@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
-using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -78,7 +77,6 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Once);
     }
 
@@ -102,7 +100,6 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync("different".ToGuid()), Times.Never);
     }
@@ -122,7 +119,6 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
     }
 
@@ -144,7 +140,6 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, AgvSerialNumber.ToGuid()), Times.Once);
     }
 
@@ -168,7 +163,6 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<TryReachQueueHead>();
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, "different".ToGuid()), Times.Never);
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, AgvSerialNumber.ToGuid()), Times.Never);
     }

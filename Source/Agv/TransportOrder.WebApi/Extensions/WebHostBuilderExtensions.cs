@@ -17,6 +17,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
@@ -53,6 +54,7 @@ public static class WebHostBuilderExtensions
         {
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+            services.AddTransient<ITriggerPublisher, TriggerPublisher>();
             services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();
             services.AddTransient<IAgvPublisher, AgvPublisher>();
             services.AddTransient<IMapPublisher, MapPublisher>();
@@ -205,6 +207,7 @@ public static class WebHostBuilderExtensions
             endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
             endpoints.MapHub<MapHub>(MapHub.UrlPath);
+            endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath);
         });
 
         app.UseSwagger(c =>

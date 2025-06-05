@@ -365,6 +365,18 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetRequiredActionGroupByIdAsync_ValidData_ReturnsActionGroup()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.Queue();
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ShouldBeEquivalentTo(actionGroup);
+    }
+
+    [TestMethod]
     public async Task GetRequiredActionGroupByIdAsync_WhenThereIsNoActionForCorrelationIdProvided_ThrowActionGroupNotFoundException()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();

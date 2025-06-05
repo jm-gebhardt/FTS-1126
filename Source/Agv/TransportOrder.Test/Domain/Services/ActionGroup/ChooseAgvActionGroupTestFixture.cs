@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
@@ -11,8 +12,8 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
-public class ChooseAgvActionGroupTestFixture<TChooser>: FixtureBase
-where TChooser : class, IChooseAgvActionGroupService
+public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
+    where TChooser : class, IChooseAgvActionGroupService
 {
     public TChooser Service = null!;
 
@@ -26,7 +27,9 @@ where TChooser : class, IChooseAgvActionGroupService
 
     private Mock<INodeStateRepository> NodeStateRepository { get; } = new();
 
-    private Mock<IQueueRepository> QueueRepository{ get; } = new();
+    private Mock<IQueueRepository> QueueRepository { get; } = new();
+
+    private Mock<IQueueManager> QueueManager { get; } = new();
 
     public ChooseAgvActionGroupTestFixture(bool realRouteService = false)
     {
@@ -44,6 +47,7 @@ where TChooser : class, IChooseAgvActionGroupService
             }
             s.AddTransient(_ => AgvActionRepository.Object);
             s.AddTransient(_ => QueueRepository.Object);
+            s.AddTransient(_ => QueueManager.Object);
             s.AddTransient(_ => NodeStateRepository.Object);
             s.AddSingleton<IChooseAgvActionGroupService, TChooser>();
             RegisterLoggerMock<TChooser>(s);
@@ -56,10 +60,10 @@ where TChooser : class, IChooseAgvActionGroupService
         services.AddTransient<ILogger<T>>(_ => new Mock<ILogger<T>>().Object);
     }
 
-    public new ChooseAgvActionGroupTestFixture<TChooser>  Build()
+    public new ChooseAgvActionGroupTestFixture<TChooser> Build()
     {
-      base.Build();
-      Service = (TChooser)Provider.GetRequiredService<IChooseAgvActionGroupService>();
+        base.Build();
+        Service = (TChooser)Provider.GetRequiredService<IChooseAgvActionGroupService>();
         return this;
     }
 
@@ -109,6 +113,18 @@ where TChooser : class, IChooseAgvActionGroupService
     public ChooseAgvActionGroupTestFixture<TChooser> GetCreatedChargingActionGroupForAgvAsync(TransportOrder.Domain.Models.ActionGroup.ActionGroup chargingActionGroup)
     {
         AgvActionRepository.Setup(x => x.GetCreatedChargingActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(chargingActionGroup);
+        return this;
+    }
+
+    public ChooseAgvActionGroupTestFixture<TChooser> WithAgvAtQueueHead(List<Guid> agvsAtQueueHead)
+    {
+        QueueManager.Setup(x => x.GetAgvsAtQueueHeads()).ReturnsAsync(agvsAtQueueHead);
+        return this;
+    }
+
+    public ChooseAgvActionGroupTestFixture<TChooser> WithQueue(Queue queue)
+    {
+        QueueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
         return this;
     }
 }

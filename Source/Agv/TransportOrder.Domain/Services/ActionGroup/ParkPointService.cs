@@ -41,6 +41,12 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     }
 
     /// <inheritdoc />
+    public Task<bool> HasParkersAsync(Guid agvCorrelationId)
+    {
+        return AgvDb.Graphs.HasAnyNodeOfTypeAsync(agvCorrelationId, AgvGraph.NodeType.Park);
+    }
+
+    /// <inheritdoc />
     public async Task ReserveParkAsync(string parkNodeId, Guid agvCorrelationId)
     {
         try

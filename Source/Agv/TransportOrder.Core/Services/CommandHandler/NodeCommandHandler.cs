@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
-using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
@@ -20,8 +19,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// </summary>
 [UsedImplicitly]
 public class NodeCommandHandler(
-    INodeStateRepository nodeStateRepository, 
-    IQueueRepository queueRepository,
+    INodeStateRepository nodeStateRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository, 
     IGraphRepository graphRepository,
@@ -100,8 +98,8 @@ public class NodeCommandHandler(
 
         if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
         {
+            logger.LogWarning("Setting {nodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
             await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
-            await context.Publish(new TryReachQueueHead(agvCorrelationId, newLastNodeId));
             await PublishNodeStateChange(context, newLastNodeId!);
             nodeLocksForAgv.Remove(newLastNode);
         }
@@ -116,11 +114,6 @@ public class NodeCommandHandler(
 
     private async Task FreeUnusedNodes(IPublishEndpoint context, ICollection<NodeLock> nodeLocks, Guid agvCorrelationId)
     {
-        var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
-        if (queue != null)
-        {
-            nodeLocks = nodeLocks.Except(queue.Nodes.Where(n => n.State?.AgvCorrelationId == agvCorrelationId).Select(q => q.State!).ToList()).ToList();
-        }
         ICollection<ActionGroup> agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
         ICollection<Task<bool>> freeNodeTasks = [];
         ICollection<Task> publishTasks = [];
@@ -151,7 +144,7 @@ public class NodeCommandHandler(
             stationId = station.Id;
             user = station.LockedBy;
             lockReason = station.LockReason;
-            lockDescription = station.LockDescription;      
+            lockDescription = station.LockDescription;
         }
         catch (NodeNotFoundException)
         {
@@ -160,7 +153,7 @@ public class NodeCommandHandler(
             lockReason = null;
             lockDescription = null;
         }
-       
+
         if (nodeState != null)
         {
             await context.Publish(new NodeStateChanged(nodeState, stationId, user, lockReason, lockDescription));

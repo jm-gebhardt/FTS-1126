@@ -58,7 +58,7 @@ public class EfMapRepository : IMapRepository
         // Add or update entities
         foreach (var newEntity in newEntities)
         {
-            var existingEntity = existingEntities.FirstOrDefault(e => Equals(getId(e), getId(newEntity)));
+            var existingEntity = existingEntities.SingleOrDefault(e => Equals(getId(e), getId(newEntity)));
             if (existingEntity == null)
             {
                 if (attachBeforeAdd)
@@ -96,14 +96,14 @@ public class EfMapRepository : IMapRepository
     /// <inheritdoc/>
     public byte[]? GetMapImage(Guid correlationId)
     {
-        return Maps.FirstOrDefault(q => q.CorrelationId == correlationId)?.MapValue;
+        return Maps.SingleOrDefault(q => q.CorrelationId == correlationId)?.MapValue;
     }
 
     /// <inheritdoc/>
     public async Task<Map> GetMapAsync(Guid correlationId)
     {
         var map = await Maps.Include(m => m.MapAgvs)
-            .FirstOrDefaultAsync(q => q.CorrelationId == correlationId);
+            .SingleOrDefaultAsync(q => q.CorrelationId == correlationId);
         if (map == null)
         {
             throw new MapNotFoundException(correlationId);
@@ -114,7 +114,7 @@ public class EfMapRepository : IMapRepository
     /// <inheritdoc/>
     public bool Exists(Guid correlationId)
     {
-        return Maps.FirstOrDefault(q => q.CorrelationId == correlationId) != null;
+        return Maps.SingleOrDefault(q => q.CorrelationId == correlationId) != null;
     }
 
     /// <inheritdoc/>
@@ -132,7 +132,7 @@ public class EfMapRepository : IMapRepository
 
                 var agvGraph = await context.Set<EfAgvGraph>()
                     .Include(ag => ag.Nodes)
-                    .FirstOrDefaultAsync(ag => ag.CorrelationId == agvId);
+                    .SingleOrDefaultAsync(ag => ag.CorrelationId == agvId);
 
                 if (agvGraph == null)
                 {

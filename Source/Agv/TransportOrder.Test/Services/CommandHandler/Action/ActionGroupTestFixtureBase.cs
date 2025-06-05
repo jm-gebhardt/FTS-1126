@@ -138,6 +138,11 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public Task<TransportOrder.Domain.Models.Agv.Agv> GetAgvAsync(Guid agvCorrelationId)
+    {
+        return _agvDb.GetAgvAsync(agvCorrelationId);
+    }
+
     public ActionGroupTestFixtureBase<T> AddAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
         _queueManager.Setup(x => x.GetAgvsAtQueueHeads()).ReturnsAsync(agvs.Select(a => a.CorrelationId).ToList());
@@ -227,6 +232,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public ActionGroupTestFixtureBase<T> WithLockedStations()
     {
         _stationRepository.Setup(a => a.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station("", AgvGraph.NodeType.Charge, []) { LockedBy = "lock" });
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithErrors(IList<AgvError> errors)
+    {
+        _agvDb.AddActiveErrors(errors);
         return this;
     }
 

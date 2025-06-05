@@ -28,6 +28,7 @@ public class FastestRouteOfXOldestActionGroupsChooserTest
             .WithAgvHasRouteToDestination(agv, oldFastActionGroup.Actions.First().Target.NodeId!, oldFastActionGroup.Actions.Last().Target.NodeId!, oldFastActionGroup, 1f)
             .WithAgvHasRouteToDestination(agv, newerSlowActionGroup.Actions.First().Target.NodeId!, newerSlowActionGroup.Actions.Last().Target.NodeId!, newerSlowActionGroup, 10f)
             .WithAgvHasRouteToDestination(agv, newerFastActionGroup.Actions.First().Target.NodeId!, newerFastActionGroup.Actions.Last().Target.NodeId!, newerFastActionGroup, 1f)
+            .WithAgvAtQueueHead([])
             .Build();
 
         var chosenGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);

@@ -122,7 +122,8 @@ public static class AgvActionGenerator
         string? destination = null,
         Guid? assignedAgv = null,
         string? hu = null,
-        string? additionalPickInfo = null)
+        string? additionalPickInfo = null,
+        bool isQueued = true)
     {
         const string orderId = "orderId-pick-drop";
         groupId ??= Guid.NewGuid();
@@ -144,7 +145,8 @@ public static class AgvActionGenerator
         {
             State = actionGroupState,
             AssignedAgv = assignedAgv,
-            HandlingUnit = hu
+            HandlingUnit = hu,
+            IsQueued = isQueued
         };
 
         return actionGroup;

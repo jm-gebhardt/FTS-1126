@@ -100,4 +100,11 @@ public interface IAgvClient
     /// <param name="hasCargoStatus">The agv cargo status.</param>
     [SignalRMethod("AgvHasCargoChanged")]
     Task AgvHasCargoChanged(AgvHasCargoDto hasCargoStatus);
+
+    /// <summary>
+    /// Agv zones changed.
+    /// </summary>
+    /// <param name="agvZones">The agv zones.</param>
+    [SignalRMethod("AgvZonesChanged")]
+    Task AgvZonesChanged(AgvZonesDto agvZones);
 }

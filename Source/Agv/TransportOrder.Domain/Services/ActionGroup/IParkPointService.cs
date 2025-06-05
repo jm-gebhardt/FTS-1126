@@ -35,4 +35,11 @@ public interface IParkPointService
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     /// <returns>True if a parking node has been reserved previously for this agv.</returns>
     Task<bool> AgvHasReservedParkingNodeAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Checks if there are any parkers available for the given agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The Agv correlation Id to check.</param>
+    /// <returns>True if there are basically any parkers</returns>
+    Task<bool> HasParkersAsync(Guid agvCorrelationId);
 }

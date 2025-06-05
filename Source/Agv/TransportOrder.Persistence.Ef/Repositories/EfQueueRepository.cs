@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
@@ -18,7 +17,6 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
 
         List<string> nodeIds = queue.Nodes.Select(n => n.NodeId).ToList();
         Dictionary<string, EfNode> efNodes = await context.Set<EfNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id);
-        Dictionary<string, NodeLock> nodeLocks = await context.Set<NodeLock>().Where(n => nodeIds.Contains(n.NodeId)).ToDictionaryAsync(n => n.NodeId);
 
         foreach (var node in queue.Nodes)
         {
@@ -26,20 +24,18 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
             {
                 node.Node = efNode;
             }
-
-            if (nodeLocks.TryGetValue(node.NodeId, out var nodeLock))
-            {
-                node.State = nodeLock;
-            }
-            else
-            {
-                node.State = new NodeLock(node.NodeId, NodeLockState.Free, false, null, DateTime.UtcNow);
-                context.Add(node.State);
-            }
         }
 
         context.Add(queue);
         await context.AddAsync(queue);
+        await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc cref="IQueueRepository"/>>
+    public async Task UpdateQueueAsync(Queue queue)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        context.Set<Queue>().Update(queue);
         await context.SaveChangesAsync();
     }
 
@@ -53,7 +49,6 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
         {
             throw new QueueNotFoundException(queueId);
         }
-
         context.Entry(queue).Property(q => q.AgvFillQuantity).CurrentValue = newSize;
         await context.SaveChangesAsync();
     }
@@ -74,6 +69,17 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
             .AsSplitQuery()
             .Where(q => q.Id == id).SingleOrDefaultAsync();
         return queue ?? throw new QueueNotFoundException(id);
+    }
+
+    /// <inheritdoc cref="IQueueRepository"/>>
+    public async Task<Queue> GetQueueByName(string name)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        var queue = await context.Set<Queue>()
+            .AsSplitQuery()
+            .Where(q => q.Name == name)
+            .SingleOrDefaultAsync();
+        return queue ?? throw new QueueNotFoundException(name);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
@@ -108,7 +114,7 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
         return (await context.Set<Queue>()
                 .AsSplitQuery().ToListAsync())
             .Where(q => q.AgvFillQuantity > 0 )
-            .SelectMany(q => q.Nodes.Where(n => n.State?.NodeState != NodeLockState.Free).Select(n => n.NodeId))
+            .SelectMany(q => q.Nodes.Where(n => n.GetCurrentAgv() != null).Select(n => n.NodeId))
             .Distinct().ToList();
     }
 
@@ -116,7 +122,9 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     public async Task<Queue?> GetQueueByEntryNode(string entryNode)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Queue>().AsSplitQuery().Where(q => q.Nodes.OrderBy(p => p.Position).Last().NodeId == entryNode).FirstOrDefaultAsync();
+        return await context.Set<Queue>().AsSplitQuery()
+            .Where(q => q.Nodes.OrderBy(p => p.Position).Last().NodeId == entryNode)
+            .SingleOrDefaultAsync();
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
@@ -125,7 +133,7 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return (await context.Set<Queue>()
                 .AsSplitQuery().ToListAsync())
-            .Where(q => q.Nodes.OrderBy(p => p.Position).First().State?.AgvCorrelationId != null).ToList();
+            .Where(q => q.Nodes.OrderBy(p => p.Position).First().GetCurrentAgv() != null).ToList();
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
@@ -133,6 +141,6 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return (await context.Set<Queue>()
-            .AsSplitQuery().ToListAsync()).SingleOrDefault(q => q.Nodes.Any(n => n.State?.AgvCorrelationId == agvCorrelationId));
+            .AsSplitQuery().ToListAsync()).SingleOrDefault(q => q.Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId)));
     }
 }

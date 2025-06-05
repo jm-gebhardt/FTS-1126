@@ -27,13 +27,12 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = actionState;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
-        nextPickOrder.SetDoppelspielPartner(dropHostOrder.CorrelationId);
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(false)
+                .WithAgvHasCriticalBatteryLevel(false)
                 .WithStationGroup(false, false)
                 .WithSystemStatus(systemStatus)
-                .WithHostOrders(dropHostOrder, nextPickOrder);
+                .WithHostOrder(dropHostOrder)
+                .WithNextPickOrder(nextPickOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
 
@@ -63,49 +62,12 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
-        nextPickOrder.SetDoppelspielPartner(dropHostOrder.CorrelationId);
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(false)
+                .WithAgvHasCriticalBatteryLevel(false)
                 .WithStationGroup(true, false)
                 .WithSystemStatus(systemStatus)
-                .WithHostOrders(dropHostOrder, nextPickOrder);
-
-        var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
-
-        await fixture.TestHarness.Bus.Publish(agvPassedDoppelspielTriggerPoint);
-
-        await fixture.ShouldHaveConsumedAsync<AgvPassedDoppelspielTriggerPoint>();
-
-        await fixture.ShouldHavePublishedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
-        var droppingAgvPassedDoppelspielTriggerPoint = fixture.TestHarness.Published.Select<DroppingAgvPassedDoppelspielTriggerPoint>().First().Context.Message;
-        droppingAgvPassedDoppelspielTriggerPoint.ShouldPickNext.ShouldBeTrue();
-        droppingAgvPassedDoppelspielTriggerPoint.AgvCorrelationId.ShouldBe(agvData.CorrelationId);
-        droppingAgvPassedDoppelspielTriggerPoint.DropActionTarget.ShouldBe(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
-        droppingAgvPassedDoppelspielTriggerPoint.PickNode.ShouldBe(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
-        await fixture.ShouldNotHavePublishedAsync<PickingAgvPassedDoppelspielTriggerPoint>();
-    }
-
-    [TestMethod]
-    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DroppingDoppelspielPartner_StationGroupWillBeOccupied_AklAgvLimitNotUsed_PublishesDroppingAgvPassedDoppelspielTriggerPoint()
-    {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(false);
-        var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
-        var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
-        var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
-        actionGroup.AssignedAgv = agvData.CorrelationId;
-        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
-        nextPickOrder.SetDoppelspielPartner(dropHostOrder.CorrelationId);
-        var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(false)
-                .WithStationGroup(false, true)
-                .WithSystemStatus(systemStatus)
-                .WithHostOrders(dropHostOrder, nextPickOrder);
+                .WithHostOrder(dropHostOrder)
+                .WithNextPickOrder(nextPickOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
 
@@ -135,13 +97,12 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
-        nextPickOrder.SetDoppelspielPartner(dropHostOrder.CorrelationId);
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(false)
+                .WithAgvHasCriticalBatteryLevel(false)
                 .WithStationGroup(true, false)
                 .WithSystemStatus(systemStatus)
-                .WithHostOrders(dropHostOrder, nextPickOrder);
+                .WithHostOrder(dropHostOrder)
+                .WithNextPickOrder(nextPickOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
 
@@ -171,13 +132,12 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
-        nextPickOrder.SetDoppelspielPartner(dropHostOrder.CorrelationId);
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(false)
+                .WithAgvHasCriticalBatteryLevel(false)
                 .WithStationGroup(false, true)
                 .WithSystemStatus(systemStatus)
-                .WithHostOrders(dropHostOrder, nextPickOrder);
+                .WithHostOrder(dropHostOrder)
+                .WithNextPickOrder(nextPickOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
 
@@ -207,14 +167,15 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var previousPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.SetDoppelspielPartner(previousPickOrder.CorrelationId);
-        previousPickOrder.SetDoppelspielPartner(dropHostOrder.CorrelationId);
+        dropHostOrder.RegisterForDoppelspiel();
+        previousPickOrder.RegisterForDoppelspiel();
         previousPickOrder.IsQueued = true;
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(false)
+                .WithAgvHasCriticalBatteryLevel(false)
                 .WithStationGroup(false, false)
                 .WithSystemStatus(systemStatus)
-                .WithHostOrders(dropHostOrder, previousPickOrder);
+                .WithHostOrder(dropHostOrder)
+                .WithNextPickOrder(previousPickOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
 
@@ -232,7 +193,7 @@ public class DoppelspielTriggerPointEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DroppingDoppelspielPartnerLowBattery_PublishesDroppingAgvPassedDoppelspielTriggerPoint()
+    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DroppingDoppelspielPartnerCriticalBattery_PublishesDroppingAgvPassedDoppelspielTriggerPoint()
     {
         var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
         systemStatus.SetUseAklAgvLimit(true);
@@ -244,13 +205,12 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.SetDoppelspielPartner(nextPickOrder.CorrelationId);
-        nextPickOrder.SetDoppelspielPartner(dropHostOrder.CorrelationId);
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(true)
+                .WithAgvHasCriticalBatteryLevel(true)
                 .WithStationGroup(false, false)
                 .WithSystemStatus(systemStatus)
-                .WithHostOrders(dropHostOrder, nextPickOrder);
+                .WithHostOrder(dropHostOrder)
+                .WithNextPickOrder(nextPickOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!);
 
@@ -279,8 +239,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup.AssignedAgv = agvData.CorrelationId;
        
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-                .WithAgvHasLowBatteryLevel(false)
-                .WithHostOrders(pickHostOrder);
+                .WithAgvHasCriticalBatteryLevel(false)
+                .WithHostOrder(pickHostOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).Target.NodeId!);
 
@@ -327,8 +287,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         actionGroup.AssignedAgv = agvData.CorrelationId;
 
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
-            .WithAgvHasLowBatteryLevel(false)
-            .WithHostOrders(pickHostOrder);
+            .WithAgvHasCriticalBatteryLevel(false)
+            .WithHostOrder(pickHostOrder);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, actionGroup, [], [], "different station with Doppelspiel");
 
