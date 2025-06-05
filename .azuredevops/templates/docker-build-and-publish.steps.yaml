@@ -67,4 +67,4 @@ steps:
           tags: |
             $(GitVersion.SemVer)
             latest
-        condition: and(succeeded(), in(variables['componentsToBuild'], ${{projectName}} ))
+        condition: and(succeeded(), containsValue(variables['componentsToBuild'], ${{projectName}} ))
