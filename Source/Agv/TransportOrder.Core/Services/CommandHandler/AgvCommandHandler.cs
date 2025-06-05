@@ -401,9 +401,14 @@ public class AgvCommandHandler :
             await UpdateOfflineErrors(context, agv);
         }
 
-        if (zoneIdsChanged && agv.IsOnline == wasOnline)
+        if (zoneIdsChanged)
         {
-            await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
+            await PublishAgvZonesChanged(context, agv.CorrelationId, agvStatus.ZoneIds);
+
+            if (agv.IsOnline == wasOnline)
+            {
+                await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
+            }
         }
 
         if (zoneIdsChanged || batteryChargeChanged || lastNodeIdChanged || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
@@ -425,6 +430,11 @@ public class AgvCommandHandler :
         await PublishAgvStatusUpdateEvents(context, agv, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, agvSettings);
 
         await TryAutoAccept(context, agv, context.CancellationToken);
+    }
+
+    private static async Task PublishAgvZonesChanged(IPublishEndpoint context, Guid agvId, ICollection<string>? zones)
+    {
+        await context.Publish(new AgvZonesChanged(agvId, zones ?? []));
     }
 
     private async Task PublishAgvStatusUpdateEvents(IPublishEndpoint context,

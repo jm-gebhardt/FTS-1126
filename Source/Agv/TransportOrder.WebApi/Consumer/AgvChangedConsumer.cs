@@ -23,7 +23,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<CargoChanged>,
     IConsumer<HasCargoChanged>,
     IConsumer<AgvModeChanged>,
-    IConsumer<AgvModeChangePending>
+    IConsumer<AgvModeChangePending>,
+    IConsumer<AgvZonesChanged>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -147,5 +148,14 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     {
         var agvModeDto = _mapper.Map<AgvModeDto>(context.Message.Mode);
         await _agvPublisher.SendAgvModeChangedAsync(context.Message.CorrelationId, agvModeDto);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvZonesChanged"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvZonesChanged> context)
+    {
+        var (correlationId, zones) = context.Message;
+        await _agvPublisher.SendAgvZonesChangedAsync(correlationId, zones);
     }
 }
