@@ -27,6 +27,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -223,6 +224,8 @@ public static class CoreBusRegistrationExtensions
 
         RegisterMediatorSystemHandlers(configurator);
 
+        RegisterMediatorZoneHandlers(configurator);
+
         RegisterMediatorTriggerHandlers(configurator);
 
         RegisterMediatorRestrictedAreaHandlers(configurator);
@@ -259,6 +262,12 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TryUpdateDefaultConfigurationParameter>();
         configurator.AddRequestClient<TryUpdateLocationConfigurationParameter>();
         configurator.AddRequestClient<TryResetLocationConfigurationParameter>();
+    }
+
+    private static void RegisterMediatorZoneHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<ZoneRequestHandler>();
+        configurator.AddRequestClient<GetZones>();
     }
 
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)

@@ -73,6 +73,7 @@ public static class MockAgvDbExtensions
     public static void AddZones(this Mock<IAgvDb> repoMock, ICollection<Zone> zones)
     {
         repoMock.Setup(r => r.Zones.GetZones(It.IsAny<string[]>())).ReturnsAsync(zones);
+        repoMock.Setup(r => r.Zones.GetZones()).ReturnsAsync(zones);
     }
 
     public static void AddPosition(this Mock<IAgvDb> repoMock, AgvPositionStatus position)

@@ -19,4 +19,10 @@ public interface IZoneRepository
     /// <param name="zoneIds">The zone ids.</param>
     /// <returns>A collection of zones.</returns>
     Task<ICollection<Zone>> GetZones(string[] zoneIds);
+
+    /// <summary>
+    /// Get all zones.
+    /// </summary>
+    /// <returns>A collection of zones.</returns>
+    Task<ICollection<Zone>> GetZones();
 }
