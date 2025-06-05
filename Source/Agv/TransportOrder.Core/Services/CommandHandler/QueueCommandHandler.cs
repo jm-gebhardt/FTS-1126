@@ -139,7 +139,7 @@ public class QueueCommandHandler(
                 return;
             }
 
-            Guid? agv = queue.Head?.GetCurrentAgv();
+            Guid? agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
             if (agv == null)
             {
                 logger.LogInformation("No agv at head of queue {Queue}", queue.Name);

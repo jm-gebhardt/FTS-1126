@@ -130,4 +130,27 @@ public class QueueCommandHandlerTest
         message.ActionGroup.Actions.Count.ShouldBe(1);
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(command.EvacuationTarget);
     }
+
+    [TestMethod]
+    public async Task Consume_EvacuateQueueHead_HeadNodeReserved_PublishesQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue);
+
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        queueActionGroupMessages.Count.ShouldBe(1);
+
+        queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv().ShouldNotBeNull();
+
+        Guid? agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
+        var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
+        message.ShouldNotBeNull();
+        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.Actions.Count.ShouldBe(1);
+        message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(command.EvacuationTarget);
+    }
 }
