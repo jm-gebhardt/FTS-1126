@@ -145,7 +145,7 @@ public class QueueCommandHandler(
                 logger.LogInformation("No agv at head of queue {Queue}", queue.Name);
                 return;
             }
-            ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(queue.Nodes.MinBy(n => n.Position)!.NodeId);
+            ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTarget);
             if (queueActionGroups.Any(q => q.AssignedAgv == agv))
             {
                 logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists", agv );
