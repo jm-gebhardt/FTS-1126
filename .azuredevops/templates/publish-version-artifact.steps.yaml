@@ -1,6 +1,3 @@
-parameters:
-  - name: 'components'
-    type: object
 
 steps:
   - bash: |
