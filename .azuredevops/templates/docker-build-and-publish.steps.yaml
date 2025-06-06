@@ -62,8 +62,10 @@ steps:
       echo "##vso[task.setvariable variable=componentsToBuild;]$componentsToBuildStr"
     displayName: Collecting Projects To Build
 
-  - bash: |
-      echo "$(componentsToBuild)"
+  - ${{ each projectName in parameters.components }}:
+      - bash: |
+          docker pull gebhardt/fleet-management/${{projectName}}:latest
+        condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
   - ${{ each projectName in parameters.components }}:
       - task: Docker@2
