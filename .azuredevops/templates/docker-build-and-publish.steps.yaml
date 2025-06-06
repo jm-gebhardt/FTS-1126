@@ -26,7 +26,7 @@ steps:
     displayName: Get Affected Projects
 
   - bash: |
-      components=$(echo '${{ parameters.components }}' | jq)
+      components=$(echo '[${{ join(',', parameters.components) }}]' | jq)
       componentsToBuild=''
       
       for i in $(echo "$p" | jq -r '.[]')
