@@ -64,7 +64,7 @@ steps:
 
   - ${{ each projectName in parameters.components }}:
       - bash: |
-          docker pull gebhardt/fleet-management/${{lower(projectName)}}:latest
+          docker pull crffcpocarch.azurecr.io/gebhardt/fleet-management/${{lower(projectName)}}:latest
         condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
   - ${{ each projectName in parameters.components }}:
