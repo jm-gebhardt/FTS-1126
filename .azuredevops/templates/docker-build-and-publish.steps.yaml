@@ -31,6 +31,7 @@ steps:
   - bash: |
       git pull origin master
     displayName: Rebase with Master
+    condition: not(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - bash: |
       dotnet tool install --global dotnet-affected
