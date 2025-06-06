@@ -59,7 +59,6 @@ steps:
 
   - bash: |
       echo "$(componentsToBuild)"
-      echo "${{ split(variables['componentsToBuild'], ',') }}"
 
   - ${{ each projectName in parameters.components }}:
       - task: Docker@2
