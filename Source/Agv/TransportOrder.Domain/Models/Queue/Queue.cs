@@ -254,6 +254,11 @@ public class Queue
         }
         ShiftDown(ref agvsToMove, node.Position);
         node.RemoveAgv(agvCorrelationId);
+        //Remove agv from all queue nodes
+        foreach(var reservedNode in Nodes.Where(n => n.GetCurrentAgv() == agvCorrelationId))
+        {
+            reservedNode.RemoveAgv(agvCorrelationId);
+        }
         AgvFillQuantity -= 1;
         AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
         return node.NodeId;

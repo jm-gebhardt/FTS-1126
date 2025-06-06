@@ -108,6 +108,6 @@ public class StationEventHandler(
             await context.Publish(new AddAgvToStation(station.Id, agvCorrelationId));
             return;
         }
-        logger.LogError("Station {NodeId} not found, cannot occupy", nodeId);
+        logger.LogDebug("Station {NodeId} not found, cannot occupy", nodeId);
     }
 }

@@ -82,6 +82,7 @@ public class AgvCommandHandler :
     IConsumer<TryEnqueueAgv>,
     IConsumer<ReceiveAgvZones>,
     IConsumer<RemoveAgvFromZones>,
+    IConsumer<RemoveAgvFromZone>,
     IConsumer<LeaveQueue>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
@@ -1138,9 +1139,39 @@ public class AgvCommandHandler :
         var agvCorrelationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
+        if (agv.IsOnline)
+        {
+            return;
+        }
+
         agv.AgvStatus!.ResetZones();
         await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="RemoveAgvFromZone"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RemoveAgvFromZone> context)
+    {
+        (var agvCorrelationId, string zoneId) = context.Message;
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        if (agv.IsOnline)
+        {
+            return;
+        }
+
+        bool wasRemoved = agv.AgvStatus!.RemoveZone(zoneId);
+
+        if (!wasRemoved)
+        {
+            return;
+        }
+        
+        await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
+        await context.Publish(new AgvZonesChanged(agv.CorrelationId, agv.AgvStatus?.ZoneIds ?? []));
     }
 
     private async Task<Agv?> TryGetAgv(Guid agvCorrelationId)

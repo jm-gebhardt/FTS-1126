@@ -34,6 +34,8 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             NoNodesAvailableException => HttpStatusCode.Conflict,
             ResetAgvErrorFailedException => HttpStatusCode.InternalServerError,
             NotFoundException => HttpStatusCode.NotFound,
+            AllAgvsOfflineException => HttpStatusCode.Conflict,
+            AgvNotInZoneException => HttpStatusCode.Conflict,
             _ => HttpStatusCode.InternalServerError
         };
 

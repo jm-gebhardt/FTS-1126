@@ -113,6 +113,22 @@ public class StateParserTest
     }
 
     [TestMethod]
+    public void Parse_WithInformation_AgvErrorsSet()
+    {
+        var mqttInformation = new MqttInformation() { InfoDescription = "description", InfoLevel = MqttInfoLevel.Info, InfoType = "a type" };
+        var mqttState = MqttStateGenerator.GenerateState("Agv-01", "order-01", information: [mqttInformation]);
+        var stateParser = new StateParser(_logger.Object, _mapper);
+
+        stateParser.Parse(mqttState);
+        stateParser.AgvStatus.Disturbed.ShouldBeFalse();
+        stateParser.AgvErrors.ShouldNotBeNull();
+        stateParser.AgvErrors.Single().AgvCorrelationId.ShouldBe(mqttState.SerialNumber.ToGuid());
+        stateParser.AgvErrors.Single().ErrorLevel.ShouldBe(ErrorLevel.Information);
+        stateParser.AgvErrors.Single().ErrorType.ShouldBe(mqttInformation.InfoType);
+        stateParser.AgvErrors.Single().ErrorDescription.ShouldBe(mqttInformation.InfoDescription);
+    }
+
+    [TestMethod]
     public void Parse_WithLoad_AgvCargosSet()
     {
         var mqttLoad = new MqttLoad() { LoadId = "loadId" };

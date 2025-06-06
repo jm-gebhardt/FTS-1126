@@ -155,7 +155,7 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     /// </summary>
     public async Task Consume(ConsumeContext<AgvZonesChanged> context)
     {
-        var (correlationId, zones) = context.Message;
+        (var correlationId, ICollection<string> zones) = context.Message;
         await _agvPublisher.SendAgvZonesChangedAsync(correlationId, zones);
     }
 }

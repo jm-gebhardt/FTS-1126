@@ -1533,4 +1533,24 @@ public class AgvCommandHandlerTest
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
         fixture.VerifyAgvUpdated(Times.Once());
     }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromZone_ValidData_PublishesUpdateErrorStatus()
+    {
+        var position = AgvPositionStatusGenerator.Generate();
+        var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        agv.AgvStatus!.ZoneIds!.Count.ShouldBe(1);
+        agv.GoOffline();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithPostion(position)
+            .WithZones([zone])
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
+
+        await fixture.PublishMessageAsync(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId));
+        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
+        fixture.VerifyAgvUpdated(Times.Once());
+    }
 }

@@ -73,7 +73,7 @@ public class HostOrderCommandHandler(
 
         if (configuration.IsPickAtAkl(hostOrder.Source))
         {
-            logger.LogDebug("Order {OrderCorrelationId}, is pick at akl: delay queueing it", hostOrder.CorrelationId);
+            logger.LogDebug("Order {OrderCorrelationId}, is pick at AKL: delay queueing it", hostOrder.CorrelationId);
             await CreateHostOrder(context, hostOrder, orderDetails.CreationDate);
             return;
         }
@@ -569,11 +569,11 @@ public class HostOrderCommandHandler(
         var hostOrder = await hostOrderRepository.GetNextHostOrderForStationGroup([pickTarget], []);
         if (hostOrder == null)
         {
-            logger.LogInformation("No delayed next akl pick at {Target}", pickTarget);
+            logger.LogInformation("No delayed next AKL pick at {Target}", pickTarget);
             return;
         }
 
-        logger.LogInformation("Queueing next alk pick order {CorrelationId} at {Target} for agv {AgvCorrelationId}", hostOrder.CorrelationId, pickTarget, agvCorrelationId);
+        logger.LogInformation("Queueing next AKL pick order {CorrelationId} at {Target} for agv {AgvCorrelationId}", hostOrder.CorrelationId, pickTarget, agvCorrelationId);
         await QueueHostOrder(context, hostOrder, DateTime.UtcNow, agvCorrelationId);
     }
 }
