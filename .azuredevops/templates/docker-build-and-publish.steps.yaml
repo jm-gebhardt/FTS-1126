@@ -36,9 +36,15 @@ steps:
       dotnet tool install --global dotnet-affected
     displayName: Install dotnet-affected tool
 
-  - bash: |
-      dotnet-affected -p ./ --to origin/master --from $(Build.SourceBranch) --format text -v
-    displayName: Get Affected Projects
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+      - bash: |
+          previousCommit=$(git rev-parse HEAD^)
+          dotnet-affected -p ./ --to $previousCommit --from $(Build.SourceBranch) --format text -v
+        displayName: Get Affected Projects
+  - ${{ else }}:
+      - bash: |
+          dotnet-affected -p ./ --to origin/master --from $(Build.SourceBranch) --format text -v
+        displayName: Get Affected Projects
 
   - bash: |
       components=$(echo '["${{ join('","', parameters.components) }}"]' | jq)
