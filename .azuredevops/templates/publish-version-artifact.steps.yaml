@@ -8,11 +8,6 @@ steps:
     displayName: Create VersionFile
     condition: succeeded()
 
-  - bash: |
-      echo "${{ variables['componentsToBuild'] }}" >> $(Build.ArtifactStagingDirectory)/Components
-      echo $(cat $(Build.ArtifactStagingDirectory)/Components)
-    displayName: Create Components Artifact
-
   - task: PublishPipelineArtifact@1
     displayName: Publish Artifact VersionFile
     inputs:
