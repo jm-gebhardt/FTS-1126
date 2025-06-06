@@ -91,3 +91,8 @@ steps:
             $(GitVersion.SemVer)
             latest
         condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
+
+  - bash: |
+      echo "$(componentsToBuild)" >> $(Build.ArtifactStagingDirectory)/Components
+      echo $(cat $(Build.ArtifactStagingDirectory)/Components)
+    displayName: Create Components Artifact
