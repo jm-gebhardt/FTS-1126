@@ -13,6 +13,20 @@ steps:
       command: login
       containerRegistry: ${{ parameters.containerRegistryConnectionName }}
 
+
+  - bash: |
+      git config --global user.email "ffc@gebhardt-group.com"
+      git config --global user.name "FFC Deployment"
+
+      # Extract the correct branch name (remove 'refs/heads/' prefix)
+      FULLSOURCEBRANCHNAME="${BUILD_SOURCEBRANCH#refs/heads/}"
+      echo "##vso[task.setvariable variable=FullSourceBranchName]$FULLSOURCEBRANCHNAME"
+
+      echo "Checking out branch: $FULLSOURCEBRANCHNAME"
+      git checkout "$FULLSOURCEBRANCHNAME"
+      git pull origin "$FULLSOURCEBRANCHNAME"
+    displayName: 'Configure Git and checkout branch'
+
   - bash: |
       git pull origin master
     displayName: Rebase with Master
