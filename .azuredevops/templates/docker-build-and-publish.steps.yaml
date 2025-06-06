@@ -48,9 +48,7 @@ steps:
       
       for i in $(echo "$components" | jq -r '.[]')
       do
-        echo "$i"
         project=$(cat affected.txt | grep -i "/Source/Agv/$i/$i.csproj")
-        echo "$project"
         if [[ ! -z $project ]]; then
           componentsToBuild+=("$i")
         fi
@@ -65,6 +63,7 @@ steps:
   - ${{ each projectName in parameters.components }}:
       - bash: |
           docker pull crffcpocarch.azurecr.io/gebhardt/fleet-management/${{lower(projectName)}}:latest
+        displayName: Pulling image ${{ projectName }}
         condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
   - ${{ each projectName in parameters.components }}:
