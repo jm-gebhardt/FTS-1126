@@ -41,7 +41,6 @@ steps:
     displayName: Get Affected Projects
 
   - bash: |
-      echo '["${{ join('","', parameters.components) }}"]'
       components=$(echo '["${{ join('","', parameters.components) }}"]' | jq)
       componentsToBuild=''
       
@@ -57,7 +56,7 @@ steps:
     displayName: Collecting Projects To Build
 
   - bash: |
-      echo $(componentsToBuild)
+      echo "$(componentsToBuild)"
 
   - ${{ each projectName in parameters.components }}:
       - task: Docker@2
