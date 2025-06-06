@@ -37,10 +37,11 @@ steps:
     displayName: Install dotnet-affected tool
 
   - bash: |
-      dotnet-affected -p ./ --to origin/master --from $(Build.SourceBranch) --format text
+      dotnet-affected -p ./ --to origin/master --from $(Build.SourceBranch) --format text -v
     displayName: Get Affected Projects
 
   - bash: |
+      echo '[${{ join(',', parameters.components) }}]'
       components=$(echo '[${{ join(',', parameters.components) }}]' | jq)
       componentsToBuild=''
       
