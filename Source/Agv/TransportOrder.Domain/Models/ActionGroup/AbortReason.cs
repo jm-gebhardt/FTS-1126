@@ -31,7 +31,12 @@ public enum AbortReason : byte
     /// <summary>
     /// The Agv was reactivated from parking.
     /// </summary>
-    ReactivatedFromParking = 4
+    ReactivatedFromParking = 4,
+    
+    /// <summary>
+    /// Test changes for release.
+    /// </summary>
+    TestNewProperty = 5
 }
 
 /// <summary>
