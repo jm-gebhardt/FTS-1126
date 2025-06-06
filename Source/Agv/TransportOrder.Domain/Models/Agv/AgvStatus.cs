@@ -194,4 +194,13 @@ public record AgvStatus
     {
         ZoneIds = [];
     }
+
+    /// <summary>
+    /// Removes the provided zone.
+    /// </summary>
+    /// <param name="zoneId">The zone to remove.</param>
+    public bool RemoveZone(string zoneId)
+    {
+        return ZoneIds?.Remove(zoneId) ?? false;
+    }
 }

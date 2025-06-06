@@ -472,4 +472,36 @@ public class AgvTest
         agv.TimeOfStateTransition.ShouldNotBe(transitionTime);
         agv.CurrentAgvState.ShouldBe(AgvState.Busy);
     }
+
+    [TestMethod]
+    public void ResetZones_ValidData_ZonesReset()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: ["z1", "z2"]);
+        agv.AgvStatus!.ResetZones();
+
+        agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public void RemoveZone_ValidData_ZoneRemoved()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: ["z1", "z2"]);
+        bool res = agv.AgvStatus!.RemoveZone("z1");
+
+        res.ShouldBeTrue();
+        agv.AgvStatus!.ZoneIds!.Count.ShouldBe(1);
+        agv.AgvStatus!.ZoneIds!.First().ShouldBe("z2");
+    }
+
+    [TestMethod]
+    public void RemoveZone_ZoneDoesNotExist_NoZoneRemoved()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: ["z1", "z2"]);
+        bool res = agv.AgvStatus!.RemoveZone("z3");
+
+        res.ShouldBeFalse();
+        agv.AgvStatus!.ZoneIds!.Count.ShouldBe(2);
+        agv.AgvStatus!.ZoneIds!.ShouldContain("z1");
+        agv.AgvStatus!.ZoneIds!.ShouldContain("z2");
+    }
 }

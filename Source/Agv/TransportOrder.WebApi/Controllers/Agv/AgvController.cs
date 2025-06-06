@@ -70,6 +70,7 @@ public class AgvController : Controller
     private readonly IRequestClient<ResendAction> _resendActionClient;
     private readonly IRequestClient<RemoveAgvFromZones> _removeAgvFromZonesClient;
     private readonly IRequestClient<SolveRessourceBlockingErrors> _ressourceBlockingClient;
+    private readonly IRequestClient<RemoveAgvFromZone> _removeAgvFromZoneClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -109,7 +110,8 @@ public class AgvController : Controller
         IRequestClient<StartInstantAction> startInstantActionsClient,
         IRequestClient<ResendAction> resendActionClient,
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient,
-        IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient
+        IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient,
+        IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -145,6 +147,7 @@ public class AgvController : Controller
         _startInstantActionsClient = startInstantActionsClient;
         _resendActionClient = resendActionClient;
         _removeAgvFromZonesClient = removeAgvFromZonesClient;
+        _removeAgvFromZoneClient = removeAgvFromZoneClient;
         _ressourceBlockingClient = ressourceBlockingClient;
     }
 
@@ -725,6 +728,22 @@ public class AgvController : Controller
     public async Task<ActionResult> SolveRessourceErrors([FromRoute] Guid correlationId, bool ignoreErrorState = false)
     {
         await _ressourceBlockingClient.GetResponse<Success>(new SolveRessourceBlockingErrors(correlationId, ignoreErrorState));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Removes the agv from the provided zone
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <param name="zoneId">The id of the zone.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlation id not found.</response>
+    /// <response code="409">Agv is not in the provided zone or all agvs are offline.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/requestRemovalFromZone")]
+    public async Task<ActionResult> RemoveFromZone([FromRoute] Guid correlationId, string zoneId)
+    {
+        await _removeAgvFromZoneClient.GetResponse<Success>(new RemoveAgvFromZone(correlationId, zoneId));
         return Ok();
     }
 }

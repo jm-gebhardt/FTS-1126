@@ -95,6 +95,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<SwitchMode, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<ReceiveAgvZones, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveAgvFromZones, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<RemoveAgvFromZone, AgvCommandHandler>(c);
         });
 
         busRegistrationConfigurator.AddConsumer<ZoneCommandHandler>(c =>
@@ -304,6 +305,7 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddConsumer<AgvZonesRequestHandler>();
         configurator.AddRequestClient<RemoveAgvFromZones>();
+        configurator.AddRequestClient<RemoveAgvFromZone>();
 
         configurator.AddConsumer<AgvErrorRequestHandler>();
         configurator.AddRequestClient<SolveRessourceBlockingErrors>();
