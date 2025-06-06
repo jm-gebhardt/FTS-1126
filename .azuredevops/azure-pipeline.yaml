@@ -13,7 +13,7 @@ variables:
     value: 'CompileAgv.sln'
   - name: 'Build.Configuration'
     value: 'Release'
-  - name:  System.Debug
+  - name: System.Debug
     value: false
 
 
@@ -36,44 +36,42 @@ parameters:
       - TriggerDoppelspiel
 
 stages:
-  #- stage: codeAnalysis
-  #  jobs:
-  #    - job: codeAnalysis
-  #      displayName: 'Code analysis'
-#       pool:
-#          vmImage: windows-latest
-#        steps:
-#          - script: git config --system core.longpaths true
-#          - checkout: self
-#          - template: ./templates/restore-and-build.steps.yaml
-#          - template: ./templates/code-analysis.steps.yaml
-#
-#  - stage: unitTest
-#    dependsOn: []
-#    jobs:
-#      - job: unitTest
-#        displayName: 'Unit tests'
-#        pool:
-#          vmImage: ubuntu-latest
-#        steps:
-#          - template: ./templates/restore-and-build.steps.yaml
-#          - template: ./templates/unit-tests.steps.yaml
-#
-#      - job: coverageReport
-#        dependsOn:
-#          - unitTest
-#        pool:
-#          vmImage: ubuntu-latest
-#        steps:
-#          - template: ./templates/build-quality.steps.yaml
+  - stage: codeAnalysis
+    jobs:
+      - job: codeAnalysis
+        displayName: 'Code analysis'
+        pool:
+          vmImage: windows-latest
+          steps:
+            - script: git config --system core.longpaths true
+            - checkout: self
+            - template: ./templates/restore-and-build.steps.yaml
+            - template: ./templates/code-analysis.steps.yaml
 
+  - stage: unitTest
+    dependsOn: [ ]
+    jobs:
+      - job: unitTest
+        displayName: 'Unit tests'
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: ./templates/restore-and-build.steps.yaml
+          - template: ./templates/unit-tests.steps.yaml
+
+      - job: coverageReport
+        dependsOn:
+          - unitTest
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - template: ./templates/build-quality.steps.yaml
 
   - stage: buildAndPublish
-    #dependsOn:
-    #  - codeAnalysis
-    #  - unitTest
-    #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-   # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/feature/20207_new_release_strategy'))
+    dependsOn:
+      - codeAnalysis
+      - unitTest
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     jobs:
       - job: buildAndPublish
         displayName: 'Build and Publish'
