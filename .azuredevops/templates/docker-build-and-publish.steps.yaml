@@ -17,6 +17,7 @@ steps:
   - bash: |
       git config --global user.email "ffc@gebhardt-group.com"
       git config --global user.name "FFC Deployment"
+      git config pull.rebase false
 
       # Extract the correct branch name (remove 'refs/heads/' prefix)
       FULLSOURCEBRANCHNAME="${BUILD_SOURCEBRANCH#refs/heads/}"
