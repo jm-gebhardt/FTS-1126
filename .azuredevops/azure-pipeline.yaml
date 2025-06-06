@@ -85,8 +85,6 @@ stages:
             fetchDepth: '0'
             persistCredentials: true
           - template: ./templates/setup-version.steps.yaml
-            parameters:
-              components: ${{ parameters.components }}
           - template: ./templates/docker-build-and-publish.steps.yaml
             parameters:
               components: ${{ parameters.components }}
