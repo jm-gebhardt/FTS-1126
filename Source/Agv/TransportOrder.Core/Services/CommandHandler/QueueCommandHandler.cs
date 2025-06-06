@@ -151,7 +151,8 @@ public class QueueCommandHandler(
                 logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists", agv );
                 return;
             }
-{            logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTarget, agv);}
+
+            logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTarget, agv);
             var actionGroupId = Guid.NewGuid();
             await QueueNewActionGroup(context,
                 [
