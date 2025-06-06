@@ -44,9 +44,13 @@ steps:
       components=$(echo '["${{ join('","', parameters.components) }}"]' | jq)
       componentsToBuild=''
       
-      for i in $(echo "$p" | jq -r '.[]')
+      echo "$components"
+      
+      for i in $(echo "$components" | jq -r '.[]')
       do
+        echo "$i"
         project=$(cat affected.txt | grep -i "/Source/Agv/$i/$i.csproj")
+        echo "$project"
         if [[ ! -z $project ]]; then
           componentsToBuild+=",$i"
         fi
