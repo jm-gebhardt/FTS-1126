@@ -41,8 +41,8 @@ steps:
     displayName: Get Affected Projects
 
   - bash: |
-      echo '[${{ join(',', parameters.components) }}]'
-      components=$(echo '[${{ join(',', parameters.components) }}]' | jq)
+      echo '["${{ join('","', parameters.components) }}"]'
+      components=$(echo '["${{ join('","', parameters.components) }}"]' | jq)
       componentsToBuild=''
       
       for i in $(echo "$p" | jq -r '.[]')
