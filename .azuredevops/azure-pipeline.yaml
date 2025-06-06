@@ -73,7 +73,7 @@ stages:
     #  - codeAnalysis
     #  - unitTest
     #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/feature/20207_new_release_strategy'))
+   # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/feature/20207_new_release_strategy'))
     jobs:
       - job: buildAndPublish
         displayName: 'Build and Publish'
