@@ -25,7 +25,7 @@ public class ResendActionRequestHandler(IMapper mapper, IAgvDb agvDb, IActionGro
         var agv = await agvDb.Agvs.GetAgvAsync(agvId);
         var actionGroup = await actionGroupRepository.GetCurrentAssignedActionGroupAsync(agvId);
 
-        if (actionGroup == null || actionGroup.State == ActionGroupState.Created)
+        if (actionGroup == null)
         {
             await context.RespondAsync(new ActionNotFound());
             return;

@@ -228,7 +228,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
         var actionGroup = await queryable.OrderByDescending(g => g.StartedDate)
-            .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId);
+            .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId && a.State == ActionGroupState.Started);
 
         return actionGroup;
     }

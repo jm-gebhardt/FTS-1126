@@ -345,7 +345,7 @@ public class ActionCommandHandler :
 
             if (chosenActionGroup == null)
             {
-                _logger.LogDebug("There is no next action available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
+                _logger.LogDebug("There is no next action available for agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
                 await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
                 return;
             }

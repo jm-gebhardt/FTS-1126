@@ -229,7 +229,7 @@ public class AgvCommandHandler :
         {
             agv.IsQueueing = true;
             await _agvDb.Agvs.UpdateAgvAsync(agv);
-            _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}.", agvCorrelationId);
+            _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}", agvCorrelationId);
             await context.Publish(new QueueNodeSelectedForAgv(agvCorrelationId, targetNode));
             return;
         }

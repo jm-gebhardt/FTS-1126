@@ -541,7 +541,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetCurrentAssignedActionGroupAsync_WhenAgvProvidedHaveCurrentAssignedActionGroup_ReturnTupleWithCurrentAssignedActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
@@ -589,7 +589,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetCurrentAssignedActionGroupsAsync_WhenRepositoryHasActionOfAgv_ReturnActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
@@ -608,7 +608,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetCurrentAssignedActionGroupAsync_WhenRepositoryHasActionOfAgv_ReturnActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
@@ -622,13 +622,34 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetCurrentAssignedActionGroupAsync_WithCompletedActionGroup_ReturnActionGroup()
+    {
+        var startedDate1 = DateTime.UtcNow.AddSeconds(-10);
+        var startedDate2 = DateTime.UtcNow;
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: startedDate1, assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Started);
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: startedDate2, assignedAgv: agv.CorrelationId, 
+            pickActionState: ActionState.Completed, 
+            dropActionState: ActionState.Completed);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup1)
+            .WithActionGroup(actionGroup2)
+            .BuildAsync();
+
+        var fetchedActionGroup = await fixture.ActionGroupRepository.GetCurrentAssignedActionGroupAsync(agv.CorrelationId);
+        fetchedActionGroup.ShouldNotBeNull();
+        fetchedActionGroup.CorrelationId.ShouldBe(actionGroup1.CorrelationId);
+    }
+
+    [TestMethod]
     public async Task GetCurrentAgvActionAsync_WhenAgvHasCurrentAction_ReturnsCurrentAction()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
         var currentAction = actionGroup.Actions.First();
-        currentAction.UpdateActionState(ActionState.Started);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
