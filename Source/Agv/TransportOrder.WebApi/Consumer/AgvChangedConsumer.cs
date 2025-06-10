@@ -24,7 +24,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<HasCargoChanged>,
     IConsumer<AgvModeChanged>,
     IConsumer<AgvModeChangePending>,
-    IConsumer<AgvZonesChanged>
+    IConsumer<AgvZonesChanged>,
+    IConsumer<AgvStationsChanged>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -157,5 +158,14 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     {
         (var correlationId, ICollection<string> zones) = context.Message;
         await _agvPublisher.SendAgvZonesChangedAsync(correlationId, zones);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvStationsChanged"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvStationsChanged> context)
+    {
+        (var correlationId, ICollection<string> stations) = context.Message;
+        await _agvPublisher.SendAgvStationsChangedAsync(correlationId, stations);
     }
 }

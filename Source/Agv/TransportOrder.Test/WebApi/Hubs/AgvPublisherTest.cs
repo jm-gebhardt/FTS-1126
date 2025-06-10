@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
@@ -199,8 +198,19 @@ public class AgvPublisherTest
     [TestMethod]
     public async Task SendAgvZonesChanged_ValidData_SendAgvZonesChangedDto()
     {
+        var agvCorrelationId = Guid.NewGuid();
         PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
-        await fixture.Publisher.SendAgvZonesChangedAsync("test".ToGuid(), ["test"]);
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvZonesChanged(It.Is<AgvZonesDto>(dto => dto.CorrelationId == "test".ToGuid() && dto.Zones.Contains("test"))));
+        await fixture.Publisher.SendAgvZonesChangedAsync(agvCorrelationId, ["test"]);
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvZonesChanged(It.Is<AgvZonesDto>(dto => dto.CorrelationId == agvCorrelationId && dto.Zones.Contains("test"))));
+    }
+
+    [TestMethod]
+    public async Task SendAgvStationsChanged_ValidData_SendAgvStationsChangedDto()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        ICollection<string> stations = ["station"];
+        PublisherFixture<AgvPublisher, AgvHub, IAgvClient> fixture = new PublisherFixture<AgvPublisher, AgvHub, IAgvClient>().Build();
+        await fixture.Publisher.SendAgvStationsChangedAsync(agvCorrelationId, stations);
+        fixture.HubContextMock.Verify(c => c.Clients.All.AgvStationsChanged(It.Is<AgvStationsDto>(dto => dto.CorrelationId == agvCorrelationId && dto.Stations.Contains(stations.Single()))));
     }
 }

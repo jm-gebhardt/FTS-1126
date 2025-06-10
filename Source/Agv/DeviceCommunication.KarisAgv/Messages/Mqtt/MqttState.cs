@@ -170,6 +170,11 @@ public record MqttState
     public List<string>? ZoneIds { get; set; }
 
     /// <summary>
+    /// The stations that the agv reserves if any.
+    /// </summary>
+    public List<string>? StationIds { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of <see cref="MqttState"/>.
     /// </summary>
     public MqttState(string serialNumber, string orderId)

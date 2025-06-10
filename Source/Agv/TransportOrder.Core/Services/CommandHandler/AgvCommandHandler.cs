@@ -350,6 +350,16 @@ public class AgvCommandHandler :
             zoneIdsChanged = !Equals(oldStatus?.ZoneIds, agvStatus.ZoneIds);
         }
 
+        bool stationIdsChanged;
+        if ((oldStatus == null || oldStatus.StationIds.IsNullOrEmpty()) && agvStatus.StationIds.IsNullOrEmpty())
+        {
+            stationIdsChanged = false;
+        }
+        else
+        {
+            stationIdsChanged = !Equals(oldStatus?.StationIds, agvStatus.StationIds);
+        }
+
         if (oldStatus != null && agv.GraphExists)
         {
             await ResetLastNodeId(oldStatus, agvStatus);
@@ -412,7 +422,12 @@ public class AgvCommandHandler :
             }
         }
 
-        if (zoneIdsChanged || batteryChargeChanged || lastNodeIdChanged || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
+        if (stationIdsChanged)
+        {
+            await context.Publish(new AgvStationsChanged(agv.CorrelationId, agvStatus.StationIds!));
+        }
+
+        if (stationIdsChanged || zoneIdsChanged || batteryChargeChanged || lastNodeIdChanged || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
         {
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {

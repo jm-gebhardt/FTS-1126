@@ -109,6 +109,11 @@ public record AgvStatus
     public ICollection<string>? ZoneIds { get; private set; }
 
     /// <summary>
+    /// The stations that the agv reserved device-internally, if any.
+    /// </summary>
+    public ICollection<string>? StationIds { get; private set; }
+
+    /// <summary>
     /// Constructor of AgvStatus
     /// </summary>
     /// <param name="correlationId">AGV correlation ID</param>
@@ -125,6 +130,7 @@ public record AgvStatus
     /// <param name="estimatedFullyChargedTime">Time when the Agv is fully charged.</param>
     /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
     /// <param name="zoneIds">The ids of the zones the agv is in, if any.</param>
+    /// <param name="stationIds">The ids of the stations the agv reserved, if any.</param>
     [JsonConstructor]
     public AgvStatus(Guid correlationId,
         string? orderId,
@@ -139,7 +145,8 @@ public record AgvStatus
         double batteryTemperature = double.MaxValue,
         DateTime? estimatedFullyChargedTime = null,
         DateTime? lastBatteryReplacement = null,
-        ICollection<string>? zoneIds = null
+        ICollection<string>? zoneIds = null,
+        ICollection<string>? stationIds = null
     ) : this()
     {
         CorrelationId = correlationId;
@@ -160,6 +167,7 @@ public record AgvStatus
             LastBatteryReplacement = lastBatteryReplacement;
         }
         ZoneIds = zoneIds;
+        StationIds = stationIds;
     }
 
     /// <summary>

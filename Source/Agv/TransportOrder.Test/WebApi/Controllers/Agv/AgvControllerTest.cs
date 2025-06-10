@@ -71,6 +71,7 @@ public class AgvControllerTest
                 Theta = 0.0f
             }, 
             new AgvModeDto(ModeType.Normal, correlationId),
+            [],
             []);
 
         agvDto.ShouldNotBeNull();

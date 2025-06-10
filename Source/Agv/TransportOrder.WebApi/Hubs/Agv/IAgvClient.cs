@@ -107,4 +107,11 @@ public interface IAgvClient
     /// <param name="agvZones">The agv zones.</param>
     [SignalRMethod("AgvZonesChanged")]
     Task AgvZonesChanged(AgvZonesDto agvZones);
+
+    /// <summary>
+    /// Agv device internally reserved stations changed.
+    /// </summary>
+    /// <param name="agvStations">The agv stations.</param>
+    [SignalRMethod("AgvStationsChanged")]
+    Task AgvStationsChanged(AgvStationsDto agvStations);
 }

@@ -103,6 +103,19 @@ public class AgvChangedConsumerTest
             Times.Once);
     }
 
+    [TestMethod]
+    public async Task Consume_AgvStationsChanged_ValidData_SendAgvStationsChangedAsync()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        ICollection<string> stations = ["station"];
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+
+        await fixture.TestHarness.Bus.Publish(new AgvStationsChanged(agvCorrelationId, stations));
+        (await fixture.ConsumerHarness.Consumed.Any<AgvStationsChanged>()).ShouldBeTrue();
+        fixture.PublisherMock.Verify(h => h.SendAgvStationsChangedAsync(agvCorrelationId, stations),
+            Times.Once);
+    }
+
     private static Mapper GetMapper()
     {
         return MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.AgvModeProfile());

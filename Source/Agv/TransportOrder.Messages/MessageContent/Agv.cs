@@ -71,7 +71,12 @@ public record Agv : IAgv
     /// <summary>
     /// The zones that this agv i sin.
     /// </summary>
-    public List<string> Zones { get; init; } = null!;
+    public List<string> Zones { get; init; } = [];
+
+    /// <summary>
+    /// The stations that the agv reserved device-internally.
+    /// </summary>
+    public List<string> Stations { get; init; } = [];
 
     /// <param name="correlationId">CorrelationId</param>
     /// <param name="serialNumber">The serial number of the agv.</param>
@@ -91,6 +96,7 @@ public record Agv : IAgv
     /// <param name="lastNode">Last node for agv.</param>
     /// <param name="mode">The agv mode.</param>
     /// <param name="zones">the zones that this agv is in.</param>
+    /// <param name="stations">the zones that this agv is in.</param>
     [PublicAPI]
     public Agv(
         Guid correlationId,
@@ -110,8 +116,8 @@ public record Agv : IAgv
         string? lastNodeId,
         GraphNode? lastNode,
         AgvMode mode,
-        List <string> zones
-    )
+        List <string> zones, 
+        List<string> stations) 
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -131,6 +137,7 @@ public record Agv : IAgv
         LastNode = lastNode;
         AgvMode = mode;
         Zones = zones;
+        Stations = stations;
     }
 
     /// <summary>

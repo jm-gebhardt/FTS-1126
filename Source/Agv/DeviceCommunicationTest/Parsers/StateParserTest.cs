@@ -40,7 +40,7 @@ public class StateParserTest
     [TestMethod]
     public void Parse_ValidData_PropertiesSet()
     {
-        var mqttState = MqttStateGenerator.GenerateState("Agv-01", "order-01");
+        var mqttState = MqttStateGenerator.GenerateState("Agv-01", "order-01", stationIds: ["station"]);
         var stateParser = new StateParser(_logger.Object, _mapper);
 
         stateParser.Parse(mqttState);
@@ -50,6 +50,7 @@ public class StateParserTest
         stateParser.AgvErrors.ShouldBeNull();
         stateParser.Cargos.ShouldBeEmpty();
         stateParser.AgvStatus.Disturbed.ShouldBeFalse();
+        stateParser.AgvStatus.StationIds?.FirstOrDefault().ShouldBe(mqttState.StationIds?.FirstOrDefault());
         ValidatePosition(mqttState, stateParser.AgvPosition);
         ValidDataAgvStatus(mqttState, stateParser.AgvStatus);
     }

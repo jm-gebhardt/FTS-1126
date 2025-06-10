@@ -512,6 +512,27 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateAgvStatus_StationIdsChanged_StatusStoredPublishesAgvStationsChanged()
+    {
+        var agv = AgvGenerator.GenerateChargingAgv();
+        agv.SetOnline();
+        var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
+        var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithZones([zone])
+            .WithPostion(position)
+            .WithGraphExists(true);
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, agv.AgvStatus.LastNodeId, agv.AgvStatus.EstimatedFullyChargedTime, agv.AgvStatus.LastBatteryReplacement, [zone.ZoneId], ["station"]);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldHavePublishedAsync<AgvStationsChanged>();
+        fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgv_PublishesAgvOnlineChangedAndBecameIdle()
     {
         var agv = AgvGenerator.GenerateIdleAgv();

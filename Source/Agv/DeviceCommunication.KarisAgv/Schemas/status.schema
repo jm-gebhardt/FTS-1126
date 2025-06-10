@@ -587,7 +587,16 @@
             "description": "The unique IDs of the zones that this agv is in. Not required.",
             "items": [
                 {
-                    "type": "number"
+                    "type": "string"
+                }
+            ]
+        },
+        "stationIds": {
+            "type": "array",
+            "description": "The unique IDs of the stations that this agv is in. Not required.",
+            "items": [
+                {
+                    "type": "string"
                 }
             ]
         }

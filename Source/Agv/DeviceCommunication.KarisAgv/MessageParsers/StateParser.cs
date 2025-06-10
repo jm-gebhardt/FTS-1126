@@ -127,7 +127,8 @@ public class StateParser(ILogger logger, IMapper mapper)
             !string.IsNullOrEmpty(state.LastNodeId) ? state.LastNodeId : null,
             null,
             null,
-            state.ZoneIds
+            state.ZoneIds,
+            state.StationIds
         );
     }
 

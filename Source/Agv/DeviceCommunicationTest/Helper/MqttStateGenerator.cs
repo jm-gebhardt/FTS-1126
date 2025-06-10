@@ -21,6 +21,7 @@ public class MqttStateGenerator
     /// <param name="loads">The agv loads.</param>
     /// <param name="mode">The agv operation mode.</param>
     /// <param name="safetyState">The agv safety state.</param>
+    /// <param name="stationIds">The agv station ids.</param>
     public static MqttState GenerateState(string serialNumber,
         string orderId,
         List<MqttActionState>? actionStates = null,
@@ -29,7 +30,8 @@ public class MqttStateGenerator
         string? lastNodeId = "a node",
         List<MqttLoad>? loads = null,
         MqttOperatingMode mode = MqttOperatingMode.Automatic,
-        MqttSafetyState? safetyState = null)
+        MqttSafetyState? safetyState = null,
+        List<string>? stationIds = null)
     {
         return new MqttState(serialNumber, orderId)
         {
@@ -60,7 +62,8 @@ public class MqttStateGenerator
             LastNodeId = lastNodeId,
             Loads = loads,
             OperatingMode = mode,
-            SafetyState = safetyState
+            SafetyState = safetyState,
+            StationIds = stationIds
         };
     }
 }

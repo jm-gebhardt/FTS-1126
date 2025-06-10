@@ -19,14 +19,16 @@ public class AgvProfile : Profile
             .ForMember(nameof(MessageContent.Agv.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
             .ForMember(nameof(MessageContent.Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
             .ForMember(nameof(MessageContent.Agv.LastNodeId), opt => opt.MapFrom(src => src.LastNodeId))
-            .ForMember(nameof(MessageContent.Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds));
+            .ForMember(nameof(MessageContent.Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds))
+            .ForMember(nameof(MessageContent.Agv.Stations), opt => opt.MapFrom(src => src.StationIds));
 
         CreateMap<Domain.Models.Agv.AgvStatus, MessageContent.Agv>(MemberList.None)
             .ForMember(nameof(MessageContent.Agv.IsDisturbed), opt => opt.MapFrom(src => src.Disturbed))
             .ForMember(nameof(MessageContent.Agv.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
             .ForMember(nameof(MessageContent.Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
             .ForMember(nameof(MessageContent.Agv.LastNodeId), opt => opt.MapFrom(src => src.LastNodeId))
-            .ForMember(nameof(MessageContent.Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds));
+            .ForMember(nameof(MessageContent.Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds))
+            .ForMember(nameof(MessageContent.Agv.Stations), opt => opt.MapFrom(src => src.StationIds));
 
         CreateMap<Guid, AgvSettings>(MemberList.None)
             .ForMember(d => d.CorrelationId, opt => opt.MapFrom(s => s));

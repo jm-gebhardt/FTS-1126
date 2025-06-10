@@ -2,8 +2,6 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Text.Json;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
@@ -52,16 +50,14 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
 
                     case nameof(AgvStatus.ZoneIds):
                         o.Property(s => s.ZoneIds)
-                            .HasConversion(
-                                v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                                v => JsonSerializer.Deserialize<ICollection<string>>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                            )
-                            .Metadata.SetValueComparer(
-                                new ValueComparer<ICollection<string>>(
-                                    (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
-                                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                                    c => new List<string>(c)
-                                ));
+                            .HasConversion(EfValueConverters.CreateJsonConverter<ICollection<string>?>())
+                            .Metadata.SetValueComparer(EfValueConverters.CreateListComparer<string>());
+                        break;
+
+                    case nameof(AgvStatus.StationIds):
+                        o.Property(s => s.StationIds)
+                            .HasConversion(EfValueConverters.CreateJsonConverter<ICollection<string>?>())
+                            .Metadata.SetValueComparer(EfValueConverters.CreateListComparer<string>());
                         break;
 
                     default:

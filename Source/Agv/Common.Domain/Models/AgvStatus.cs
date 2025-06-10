@@ -111,6 +111,11 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// </summary>
     public ICollection<string>? ZoneIds { get; }
 
+    /// <summary>
+    /// The stations that the agv reserved device-internally, if any.
+    /// </summary>
+    public ICollection<string>? StationIds { get; }
+
     /// <inheritdoc cref="AgvStatus"/>
     /// <param name="correlationId">AGV correlation id.</param>
     /// <param name="orderId">Internally we are using the ActionCorrelationId</param>
@@ -126,6 +131,7 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// <param name="estimatedFullyChargedTime">Time when the Agv is fully charged.</param>
     /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
     /// <param name="zoneIds">The ids of the zones the agv is in, if any.</param>
+    /// <param name="stationIds">The ids of the station the agv reserved, if any.</param>
     [JsonConstructor]
     public AgvStatus(Guid correlationId,
         string? orderId,
@@ -140,7 +146,8 @@ public record AgvStatus : CorrelatedBy<Guid>
         string? lastNodeId = null,
         DateTime? estimatedFullyChargedTime = null,
         DateTime? lastBatteryReplacement = null,
-        ICollection<string>? zoneIds = null
+        ICollection<string>? zoneIds = null,
+        ICollection<string>? stationIds = null
     )
     {
         CorrelationId = correlationId;
@@ -157,6 +164,7 @@ public record AgvStatus : CorrelatedBy<Guid>
         EstimatedFullyChargedTime = estimatedFullyChargedTime;
         LastBatteryReplacement = lastBatteryReplacement;
         ZoneIds = zoneIds;
+        StationIds = stationIds;
     }
 
     /// <summary>

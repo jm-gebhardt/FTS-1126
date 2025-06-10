@@ -66,6 +66,11 @@ public record AgvDto : DatedMessage
     public List<string> Zones { get; init; }
 
     /// <summary>
+    /// List of the stations that the agv reserved device-internally.
+    /// </summary>
+    public List<string> Stations { get; init; }
+
+    /// <summary>
     /// The mode of the agv.
     /// </summary>
     public AgvModeDto AgvMode { get; init; }
@@ -87,6 +92,7 @@ public record AgvDto : DatedMessage
     /// <param name="lastNode">Last node.</param>
     /// <param name="mode">The agv mode.</param>
     /// <param name="zones">The zones that the agv is in .</param>
+    /// <param name="stations">The stations that the agv reserved.</param>
     [PublicAPI]
     public AgvDto(Guid correlationId,
         string serialNumber,
@@ -104,7 +110,8 @@ public record AgvDto : DatedMessage
         List<AgvErrorDto> agvErrorDto,
         GraphNodeDto? lastNode,
         AgvModeDto mode,
-        List<string> zones)
+        List<string> zones,
+        List<string> stations)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -123,6 +130,7 @@ public record AgvDto : DatedMessage
         LastNode = lastNode;
         AgvMode = mode;
         Zones = zones;
+        Stations = stations;
     }
 
     /// <summary>
@@ -133,6 +141,7 @@ public record AgvDto : DatedMessage
         SerialNumber = null!;
         Name = null!;
         AgvMode = null!;
-        Zones = null!;
+        Zones = [];
+        Stations = [];
     }
 }
