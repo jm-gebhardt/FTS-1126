@@ -482,7 +482,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         return await actionGroups.AnyAsync(a =>
             (a.AssignedAgv == agvCorrelationId && a.IsQueued &&
              (a.State == ActionGroupState.Created || (a.State == ActionGroupState.Started && a.Actions.Any(aa => aa.State == ActionState.Created)))) ||
-            (a.AssignedAgv == null && a.State == ActionGroupState.Created)
+            (a.AssignedAgv == null && a.State == ActionGroupState.Created && a.IsQueued)
         );
     }
 

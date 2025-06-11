@@ -1237,16 +1237,18 @@ public class ActionGroupRepositoryTest
         (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ShouldBeEquivalentTo(new List<ActionGroup>{runningParkingActionGroup, runningChargeActionGroup});
     }
 
-    [TestMethod]
-    public async Task AgvHasPendingActions_CreatedActionGroupWithoutAssignedAgv_ReturnsTrue()
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public async Task AgvHasPendingActions_CreatedActionGroupWithoutAssignedAgv_ReturnsExpectedValue(bool isQueued)
     {
         var agv = Guid.NewGuid();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null, isQueued:isQueued);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([actionGroup]).BuildAsync();
 
-        (await fixture.ActionGroupRepository.AgvHasPendingActions(agv)).ShouldBeTrue();
+        (await fixture.ActionGroupRepository.AgvHasPendingActions(agv)).ShouldBe(isQueued);
     }
 
     [TestMethod]
