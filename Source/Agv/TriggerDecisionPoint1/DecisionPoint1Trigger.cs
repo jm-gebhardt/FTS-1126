@@ -50,4 +50,12 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
 
         await bus.Publish(new AgvPassedDecisionPoint1(agvData, agvStatus, actionGroup, cargo, errors, stationCount));
     }
+
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public async Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        logger.LogInformation("Action group changed invoked for {name}; redirecting to default trigger invocation", nameof(DecisionPoint1Trigger));
+
+        await Invoke(parameters, agvData, agvStatus, actionGroup, cargo, errors);
+    }
 }

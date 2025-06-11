@@ -75,6 +75,12 @@ public class QueueHeadEvacuationTrigger(IBus bus, ILogger<QueueHeadEvacuationTri
         await bus.Publish(new EvacuateQueueHead(queueName, evacuationNode));
     }
 
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        return Task.CompletedTask;
+    }
+
     private bool ShouldEvacuate(Dictionary<string, ConfigurationParameter> parameters)
     {
         var enable = parameters.GetValueOrDefault(_enableParameter.Name) ??

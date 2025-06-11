@@ -28,6 +28,18 @@ public interface ITriggerManager
     Task InvokeTrigger(Guid triggerId, Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
 
     /// <summary>
+    /// Invoke the action group changed method on the trigger
+    /// </summary>
+    /// <param name="triggerId">The id of the trigger.</param>
+    /// <param name="parameters">The parameters of the trigger at the location of invocation.</param>
+    /// <param name="agvData">The agv data.</param>
+    /// <param name="agvStatus">The agv status.</param>
+    /// <param name="actionGroup">The current action group.</param>
+    /// <param name="cargo">The current cargo.</param>
+    /// <param name="errors">Agv errors.</param>
+    Task InvokeActionGroupChangedOnTrigger(Guid triggerId, Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
+
+    /// <summary>
     /// Update default configuration parameters of a trigger.
     /// </summary>
     /// <param name="triggerId">The id of the trigger.</param>

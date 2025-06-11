@@ -39,6 +39,11 @@ public static class TriggerGenerator
         {
             return Task.CompletedTask;
         }
+
+        public Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     public static Trigger GenerateTrigger()

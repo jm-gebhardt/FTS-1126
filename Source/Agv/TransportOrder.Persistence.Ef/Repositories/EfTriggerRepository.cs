@@ -263,4 +263,12 @@ public class EfTriggerRepository : ITriggerRepository
             }
         }
     }
+
+    /// <inheritdoc cref="ITriggerRepository"/>
+    public ICollection<Location> GetPolygonTriggerLocations(AgvPosition agvPosition)
+    {
+        return _triggerLocationDictionaryProvider.ConcurrentDict.Values
+            .Where(l => l.Polygon.Count > 0)
+            .Where(l => l.Polygon.PointIsInPolygon(agvPosition.X, agvPosition.Y)).ToList();
+    }
 }

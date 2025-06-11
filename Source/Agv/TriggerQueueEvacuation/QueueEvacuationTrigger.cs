@@ -95,4 +95,10 @@ public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> lo
                         GetDefaultConfigurationParameters().GetValueOrDefault(_evacuationNodeParameter.Name);
         return node?.Value ?? string.Empty;
     }
+
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        return Task.CompletedTask;
+    }
 }

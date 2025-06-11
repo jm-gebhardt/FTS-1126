@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.Common.TriggerDefinition;
 using ConfigurationParameters = ConcurrentDictionary<string, ConfigurationParameter>;
 
 /// <summary>
-/// Provides an interface for fusion flow control trigger implementations
+/// Provides an interface for fusion flow control trigger implementations.
 /// </summary>
 [PublicAPI]
 public interface IFfcTrigger
@@ -21,20 +21,24 @@ public interface IFfcTrigger
     ConfigurationParameters GetDefaultConfigurationParameters();
 
     /// <summary>
-    /// Updates a default configuration parameter of the trigger
+    /// Updates a default configuration parameter of the trigger.
     /// </summary>
     /// <param name="name">The parameter name. </param>
     /// <param name="value">The parameter value.</param>
     void UpdateDefaultConfigurationParameter(string name, string value);
 
     /// <summary>
-    /// Get trigger properties
+    /// Get trigger properties.
     /// </summary>
-    /// <returns></returns>
     TriggerProperties GetProperties();
 
     /// <summary>
     /// Invoke trigger.
     /// </summary>
     Task Invoke(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
+
+    /// <summary>
+    /// Invoke trigger on action group change.
+    /// </summary>
+    Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
 }

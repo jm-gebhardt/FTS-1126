@@ -39,4 +39,10 @@ public class CargoCheckTrigger(IBus bus) : IFfcTrigger
     {
         await bus.Publish(new AgvPassedCargoTriggerPoint(agvStatus.CorrelationId, actionGroup?.CorrelationId, cargo.Count > 0));
     }
+
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        return Task.CompletedTask;
+    }
 }

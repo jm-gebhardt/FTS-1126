@@ -51,4 +51,10 @@ public class TestTrigger(IBus bus) : IFfcTrigger
         Console.WriteLine(agvStatus.CorrelationId.ToString());
         await bus.Publish(new Success());
     }
+
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        return Task.CompletedTask;
+    }
 }

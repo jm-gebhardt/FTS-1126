@@ -56,4 +56,10 @@ public interface ITriggerRepository
     /// <param name="agvPosition">The position of the AGV.</param>
     /// <returns></returns>
     Task<ICollection<Location>> GetPolygonTriggerLocations(Guid agvId, AgvPosition agvPosition);
+
+    /// <summary>
+    /// Get polygon trigger locations with triggers to call where the agv is located ignoring if it was already in the polygon.
+    /// </summary>
+    /// <param name="agvPosition">The position of the AGV.</param>
+    ICollection<Location> GetPolygonTriggerLocations(AgvPosition agvPosition);
 }

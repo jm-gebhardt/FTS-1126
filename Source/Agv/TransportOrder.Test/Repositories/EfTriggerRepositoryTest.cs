@@ -529,4 +529,73 @@ public class EfTriggerRepositoryTest
         ICollection<Location> locations = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
         locations.Count.ShouldBe(0);
     }
+
+    [TestMethod]
+    public async Task GetPolygonLocationsWithTriggerToCallIgnoringMultiTrigger_AgvOutsidePolygonLocation_NoTriggersReturned()
+    {
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
+        var triggers = new List<Trigger>()
+        {
+            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
+            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
+            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter])
+        };
+
+        ICollection<PolygonPoint> polygon =
+        [
+            new(1, 1, 0),
+            new(1, 2, 1),
+            new(2, 1, 2),
+            new(2, 2, 3)
+        ];
+
+        triggers[2].AddLocation(polygon, null, []);
+
+        ITriggerRepository repo = fixture.Repository;
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
+
+        var agvPosition = new AgvPosition(true, 3f, 3f, 0, 0);
+
+        ICollection<Location> locations = fixture.Repository.GetPolygonTriggerLocations(agvPosition);
+        locations.Count.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task GetPolygonLocationsWithTriggerToCallIgnoringMultiTrigger_AgvInsidePolygonLocation_TriggersReturned()
+    {
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+
+        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
+        var triggers = new List<Trigger>()
+        {
+            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
+            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
+            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter])
+        };
+
+        ICollection<PolygonPoint> polygon =
+        [
+            new(1, 1, 0),
+            new(1, 2, 1),
+            new(2, 1, 2),
+            new(2, 2, 3)
+        ];
+
+        triggers[2].AddLocation(polygon, null, []);
+
+        ITriggerRepository repo = fixture.Repository;
+        await repo.AddOrUpdate(triggers[0]);
+        await repo.AddOrUpdate(triggers[1]);
+        await repo.AddOrUpdate(triggers[2]);
+
+        var agvPosition = new AgvPosition(true, 1.5f, 1.5f, 0, 0);
+
+        ICollection<Location> locations = fixture.Repository.GetPolygonTriggerLocations(agvPosition);
+        locations.Count.ShouldBe(1);
+        locations.First().TriggerId.ShouldBe(triggers[2].Id);
+    }
 }
