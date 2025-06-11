@@ -52,7 +52,7 @@ public class GetAgvPositionsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_GetAgvPositions_WrongCorrelationId_ThrowsAgvsNotFoundException()
+    public async Task Consume_GetAgvPositions_NonExistingCorrelationId_SkipsItem()
     {
         var positions = new List<AgvPositionStatus> { new(Guid.NewGuid(), "SerialNumber", new AgvPosition(true, 1, 1, 1, 1)) };
         GetAgvPositionsRequestHandlerTestFixture<GetAgvPositions, GetAgvPositionsRequestHandler> fixture = new GetAgvPositionsRequestHandlerTestFixture<GetAgvPositions, GetAgvPositionsRequestHandler>()
@@ -61,7 +61,10 @@ public class GetAgvPositionsRequestHandlerTest
 
         List<Guid> requestedAgvs = positions.Select(p => p.CorrelationId).ToList();
         requestedAgvs.Add("INVALID".ToGuid());
-        await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotAgvPositions>(new GetAgvPositions(requestedAgvs)));
+        Response<GotAgvPositions> response = await fixture.GetResponseAsync<GotAgvPositions>(new GetAgvPositions(requestedAgvs));
+        response.Message.AgvPositions.ShouldNotBeNull();
+        response.Message.AgvPositions.Count.ShouldBe(1);
+        response.Message.AgvPositions.First().CorrelationId.ShouldBe(positions.First().CorrelationId);
     }
 
     [TestMethod]

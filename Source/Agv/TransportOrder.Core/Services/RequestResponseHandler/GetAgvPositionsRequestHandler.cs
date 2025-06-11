@@ -35,10 +35,6 @@ public class GetAgvPositionsRequestHandler :
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
 
         ICollection<AgvPositionStatus> fetchedPositions = _agvPositionRepository.GetSelectedAgvsPositions(selectedAgvs);
-        if (fetchedPositions.Count != selectedAgvs.Count)
-        {
-            throw new AgvsNotFoundException(selectedAgvs.Except(fetchedPositions.Select(p => p.CorrelationId)).ToList());
-        }
         List<Messages.MessageContent.AgvPositionStatus> agvPositions = fetchedPositions.Select(p => new Messages.MessageContent.AgvPositionStatus(p.CorrelationId, p.SerialNumber, p.AgvPosition)).ToList();
         await context.RespondAsync(new GotAgvPositions(agvPositions));
     }

@@ -113,8 +113,8 @@ public class AgvsController : Controller
     /// <summary>
     /// Get list of selected agvs positions.
     /// </summary>
-    /// <response code="200">Ok</response>
-    /// <response code="400">One or more of given correlation ids is unknown.</response>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <response code="200">Returns a list of AGV positions containing only entries which have a position</response>
     [HttpPost]
     [Route("/agvs/position")]
     public async Task<ActionResult<IEnumerable<AgvPositionStatusDto>>> GetAgvPositions([FromQuery] ICollection<Guid> correlationIds)
