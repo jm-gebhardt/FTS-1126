@@ -142,7 +142,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         }
 
         _logger.LogInformation("Triggering completion of action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", correlationId, actionCorrelationId);
-        await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId));
+        await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId, ActionGroupCreator.TransportOrderWebApi));
         await context.RespondAsync(new Success());
     }
 

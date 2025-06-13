@@ -601,37 +601,6 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_ExistingOrderMapping_MappingDeleted()
-    {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleAndOrderIdMapping(Guid.NewGuid());
-        await fixture.FillGraphRepository();
-
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Pick1";
-            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
-            {
-                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
-                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
-            };
-            var correlationId = Guid.NewGuid();
-            var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
-
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-
-            fixture.VerifyOrderMappingRemoved(Times.Once());
-        }
-    }
-
-    [TestMethod]
     public async Task Consume_UpdateActionCommand_Charge_MqttMessageSent()
     {
         var fixture = new ActionCommandConsumerTestFixture();

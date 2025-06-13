@@ -182,8 +182,21 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartNewActionGroup>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
-
+          
             var actionPartitioner = c.CreatePartitioner(PartitionCount);
+            c.Message<CompleteActionOfActionGroup>(x =>
+                {
+                    x.UsePartitioner(actionPartitioner, p => p.Message.CorrelationId);
+                   
+                    x.UseMessageRetry(r =>
+                    {
+                        // Retry once of the cargo has not been updated yet
+                        // Used to compensate race conditions on events of updated messages 
+                        r.Interval(1, TimeSpan.FromSeconds(5));
+                        r.Handle<CargoStateMismatchException>();
+                    });
+                }
+               );
             actionPartitioner.PartitionMessageById<CreateChargingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<AbortActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResetActionGroup, ActionCommandHandler>(c);
@@ -192,7 +205,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<ForceQueueActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<EstimateActionGroupDuration, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<StartActionOfActionGroup, ActionCommandHandler>(c);
-            actionPartitioner.PartitionMessageById<CompleteActionOfActionGroup, ActionCommandHandler>(c);
+            
             actionPartitioner.PartitionMessageById<CreateQueueingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CreateParkingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<SetTargetForAction, ActionCommandHandler>(c);

@@ -222,6 +222,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public ActionGroupTestFixtureBase<T> WithHasCargo(bool hasCargo)
+    {
+        _agvDb.Setup(x => x.Cargos.HasAgvCargoAsync(It.IsAny<Guid>())).ReturnsAsync(hasCargo);
+        return this;
+    }
+
     public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes, Guid[] edges)
     {
         _agvDb.AddAgvData((AgvData?)null);

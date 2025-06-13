@@ -692,7 +692,17 @@ public class ActionCommandHandler :
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         var action = actionGroup.Actions.Single(a => a.CorrelationId == correlationId);
-
+        if (action.ActionType is ActionType.Pick or ActionType.Drop && context.Message.Creator == ActionGroupCreator.TransportOrder)
+        {
+            // Avoid completion of a pick or drop message due to 'completed' event race conditions during order update,
+            // i.e., the agv sending a completed event of a move (to charger or node) that has already been updated to a pick or drop
+            bool hasCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
+            if ((hasCargo && action.ActionType == ActionType.Drop) || (!hasCargo && action.ActionType == ActionType.Pick))
+            {
+                _logger.LogWarning("Agv {AgvCorrelationId} has cargo {HasCargo}, not completing action {ActionCorrelationId} of type {ActionType} yet", agvCorrelationId, hasCargo, action.CorrelationId, action.ActionType);
+                throw new CargoStateMismatchException(action.CorrelationId, hasCargo);
+            }
+        }
         actionGroup.CompleteAction(correlationId);
         await _actionService.TryUpdateActionGroup(actionGroup);
 
