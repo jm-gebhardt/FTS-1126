@@ -76,6 +76,11 @@ public record AgvActionDto
     public TimeSpan PausedDuration { get; init; }
 
     /// <summary>
+    /// Indicates whether the action group is marked as skipped.
+    /// </summary>
+    public bool IsSkipped { get; set; }
+
+    /// <summary>
     /// Information that will be passed to the agv.
     /// </summary>
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; init; }

@@ -79,6 +79,11 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public TimeSpan PausedDuration { get; set; }
 
     /// <summary>
+    /// Indicates whether the action group is marked as skipped.
+    /// </summary>
+    public bool IsSkipped { get; set; }
+
+    /// <summary>
     /// Information that will be sent to the agv.
     /// </summary>
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; set; }

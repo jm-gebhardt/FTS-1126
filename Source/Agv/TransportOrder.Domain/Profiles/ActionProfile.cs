@@ -12,6 +12,8 @@ public class ActionProfile : Profile
     public ActionProfile()
     {
         CreateMap<ActionGroup, Models.ActionGroup.ActionGroup>().ReverseMap();
-        CreateMap<Models.ActionGroup.AgvAction, AgvAction>().ReverseMap().ForMember(p => p.ShouldSkip, p => p.Ignore());
+        CreateMap<Models.ActionGroup.AgvAction, AgvAction>()
+            .ForMember(p => p.IsSkipped, p => p.MapFrom(src => src.ShouldSkip))
+            .ReverseMap();
     }
 }
