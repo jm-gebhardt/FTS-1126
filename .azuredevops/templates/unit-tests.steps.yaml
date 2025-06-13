@@ -1,0 +1,18 @@
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'Run All tests'
+    inputs:
+      command: 'test'
+      projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
+      publishTestResults: true
+      arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
+  - task: CopyFiles@2
+    displayName: 'Copy coverage report'
+    inputs:
+      SourceFolder: '$(Agent.TempDirectory)'
+      contents: '**/coverage.cobertura.xml'
+      targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+  - publish: '$(Build.ArtifactStagingDirectory)'
+    displayName: 'Publish coverage report'
+    artifact: coverageReports

@@ -1,0 +1,35 @@
+parameters:
+  - name: workingDirectory
+    type: string
+    default: '$(System.DefaultWorkingDirectory)'
+
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET 8 SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '8.0.x'
+      performMultiLevelLookup: true
+
+  - task: gitversion/setup@3.0.3
+    displayName: Install GitVersion
+    inputs:
+      versionSpec: '5.12.0'
+
+  - task: gitversion/execute@3.0.3
+    displayName: Determine Semantic Version
+    inputs:
+      # When squashing PRs on main, patch does not get incremented by default.
+      # Thus, bump patch version if commit message starts with 'Merged PR'.
+      overrideConfig: |
+        patch-version-bump-message="(\+semver:\s?(fix|patch))|(^Merged?\sPR)"
+        mode=Mainline
+      targetPath: '${{ parameters.workingDirectory }}'
+
+  - script: |
+      echo "SemVer Version"
+      echo "$(GitVersion.SemVer)"
+    displayName: 'Display Semantic Version'
+    continueOnError: false
+    workingDirectory: ${{ parameters.workingDirectory }}
