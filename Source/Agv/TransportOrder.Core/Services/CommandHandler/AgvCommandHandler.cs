@@ -347,7 +347,7 @@ public class AgvCommandHandler :
         }
         else
         {
-            zoneIdsChanged = !Equals(oldStatus?.ZoneIds, agvStatus.ZoneIds);
+            zoneIdsChanged = !(oldStatus?.ZoneIds?.SequenceEqual(agvStatus.ZoneIds!) ?? agvStatus.ZoneIds == null);
         }
 
         bool stationIdsChanged;
@@ -357,7 +357,7 @@ public class AgvCommandHandler :
         }
         else
         {
-            stationIdsChanged = !Equals(oldStatus?.StationIds, agvStatus.StationIds);
+            stationIdsChanged = !(oldStatus?.StationIds?.SequenceEqual(agvStatus.StationIds!) ?? agvStatus.StationIds == null);
         }
 
         if (oldStatus != null && agv.GraphExists)

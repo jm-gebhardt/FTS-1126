@@ -35,7 +35,6 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
         if (AllTriggerAreLocalized())
         {
             (List<string> sources, List<string> destinations) = SourceDestinationPools[_random.Next(SourceDestinationPools.Count)];
-            List<double> rotationValues = [0, 1];
 
             _source = sources[_random.Next(sources.Count)];
             string destination = destinations[_random.Next(destinations.Count)];
@@ -43,9 +42,8 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
             var createdDate = DateTime.UtcNow;
             var correlationId = Guid.NewGuid();
             string leNo = HostOrder.GetTransportOrderId(orderId);
-            double leRotation = rotationValues[_random.Next(rotationValues.Count)];
 
-            var orderDetails = new OrderDetails(correlationId, orderId, _source, destination, leNo, HostOrderCreator.Simulation, createdDate, leRotation);
+            var orderDetails = new OrderDetails(correlationId, orderId, _source, destination, leNo, HostOrderCreator.Simulation, createdDate, 0);
 
             await bus.Publish(new CreateHostOrder(orderDetails.OrderId, orderDetails), token);
             logger.LogInformation("Creating new host order, {orderId}", orderId);
