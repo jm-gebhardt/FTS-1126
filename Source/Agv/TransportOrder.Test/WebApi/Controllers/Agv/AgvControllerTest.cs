@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.Stations.Commands;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -564,5 +565,38 @@ public class AgvControllerTest
         var actionResult = await fixture.Controller.ResendAction(fixture.AgvSerialNumbers[2].ToGuid());
         var result = actionResult as ConflictObjectResult;
         result.ShouldBeAssignableTo<ConflictObjectResult>();
+    }
+
+    [TestMethod]
+    public async Task RequestAgvRemoval_ValidData_RemoveAgvFromStation()
+    {
+        AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        await fixture.GetControllerResultAsync<ActionResult>(c => c.RequestAgvRemoval(fixture.AgvSerialNumbers[0].ToGuid(), "station"));
+
+        (await fixture.MediatorTestHarness.Consumed.Any<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<RemoveAgvFromStation>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task RequestAgvRemoval_NoAgv_ThrowsAgvNotFound()
+    {
+        AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
+            .SetupAgvDbWithDefaultData()
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetControllerResultAsync<ActionResult>(c => c.RequestAgvRemoval(Guid.Empty, "station")));
+    }
+
+    [TestMethod]
+    public async Task RequestAgvRemoval_NoOnlineAgv_ThrowsAllAgvOfflineException()
+    {
+        AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
+            .SetupAgvDbWithDefaultData(allAgvsOffline: true)
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AllAgvsOfflineException>(async () => await fixture.GetControllerResultAsync<ActionResult>(c => c.RequestAgvRemoval(fixture.AgvSerialNumbers[0].ToGuid(), "station")));
     }
 }
