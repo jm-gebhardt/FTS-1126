@@ -965,7 +965,7 @@ public class AgvCommandHandler :
     {
         var (action, agvCorrelationId) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        bool isAvailable = agv.TryTransitionToBusy(false);
+        bool isAvailable = agv.TryTransitionToBusy(false, ignoreError: true);
 
         if (!isAvailable)
         {
@@ -977,6 +977,12 @@ public class AgvCommandHandler :
         if (actionGroup == null)
         {
             _logger.LogError("ActionGroup {ActionGroupCorrelationId} not found during preparation of agv {AgvCorrelationId} for starting", action.ParentId, agv.CorrelationId);
+            return;
+        }
+
+        if (agv.HasError && !actionGroup.IsManual)
+        {
+            _logger.LogError("Agv {Agv} can not start automatic action {Action} of group {ActionGroup} while it has errors", agv.CorrelationId, action.CorrelationId, actionGroup.CorrelationId);
             return;
         }
 

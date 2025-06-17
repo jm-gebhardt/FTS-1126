@@ -172,7 +172,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
-    public virtual ActionGroupTestFixtureBase<T> AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true)
+    public virtual ActionGroupTestFixtureBase<T> AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true, bool isManual = false)
     {
         ActionGroupRepository.Setup(x => x.UpdateAsync(It.IsAny<ActionGroup>())).Verifiable();
         ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
@@ -200,7 +200,16 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         ActionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
         ActionGroupRepository.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
         ActionGroupRepository.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
-        
+
+        if (isManual)
+        {
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>())).ReturnsAsync(actionGroup);
+        }
+        else
+        {
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>())).ReturnsAsync((ActionGroup?)null);
+        }
+
         return this;
     }
 

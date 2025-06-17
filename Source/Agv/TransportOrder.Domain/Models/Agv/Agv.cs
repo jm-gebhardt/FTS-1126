@@ -446,9 +446,9 @@ public class Agv : IAgv
     /// Try to become busy.
     /// </summary>
     /// <returns></returns>
-    public bool TryTransitionToBusy(bool ignoreLocked)
+    public bool TryTransitionToBusy(bool ignoreLocked, bool ignoreError = false)
     {
-        bool isAvailable = IsAvailable(ignoreLocked: ignoreLocked);
+        bool isAvailable = IsAvailable(ignoreLocked: ignoreLocked, ignoreError: ignoreError);
         if (!isAvailable)
         {
             return isAvailable;
@@ -461,11 +461,12 @@ public class Agv : IAgv
     /// Checks if the agv is available.
     /// </summary>
     /// <param name="ignoreLocked">If locked should be ignored.</param>
-    public bool IsAvailable(bool ignoreLocked = false)
+    /// <param name="ignoreError">If error should be ignored.</param>
+    public bool IsAvailable(bool ignoreLocked = false, bool ignoreError = false)
     {
         bool unlocked = !IsLocked || ignoreLocked;
         bool idle = CurrentAgvState == AgvState.Idle && !AgvStatus!.Busy;
-        return IsReady && idle && unlocked;
+        return (IsReady || (ignoreError && IsReadyIgnoringError)) && idle && unlocked;
     }
 
     /// <summary>
@@ -630,4 +631,9 @@ public class Agv : IAgv
                 agv.IsOnline;
         }
     }
+
+    /// <summary>
+    /// If the agv is ready ignoring if it has an error.
+    /// </summary>
+    public bool IsReadyIgnoringError => AgvStatus is { LastNodeId: not null } && IsOnline;
 }

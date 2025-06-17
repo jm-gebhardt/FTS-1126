@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Agv;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -56,11 +57,12 @@ public class ActionCommandHelper
     /// </summary>
     /// <param name="action">The action.</param>
     /// <param name="assignedAgv">The assigned agv.</param>
-    /// <param name="ignoreLocked">Ignore of the assigned agv is locked.</param>
+    /// <param name="ignoreLocked">Ignore if the assigned agv is locked.</param>
+    /// <param name="ignoreError">Ignore if the assigned agv has an error.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    public async Task<bool> SelectNodesForAgvAction(AgvAction action, Domain.Models.Agv.Agv assignedAgv, bool ignoreLocked, CancellationToken cancellationToken)
+    public async Task<bool> SelectNodesForAgvAction(AgvAction action, Domain.Models.Agv.Agv assignedAgv, bool ignoreLocked, bool ignoreError, CancellationToken cancellationToken)
     {
-        if (!assignedAgv.TryTransitionToBusy(ignoreLocked: ignoreLocked))
+        if (!assignedAgv.TryTransitionToBusy(ignoreLocked: ignoreLocked, ignoreError: ignoreError))
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy.", assignedAgv.CorrelationId);
             return false;
@@ -117,7 +119,7 @@ public class ActionCommandHelper
     /// <param name="action">The action.</param>
     /// <param name="actionGroup">The action group.</param>
     /// <returns></returns>
-    public async Task LogStationUpdate(Domain.Models.Agv.Agv agv, AgvAction action, Domain.Models.ActionGroup.ActionGroup actionGroup)
+    public async Task LogStationUpdate(Domain.Models.Agv.Agv agv, AgvAction action, ActionGroup actionGroup)
     {
         if (action.Target.NodeId == null)
         {
@@ -180,7 +182,7 @@ public class ActionCommandHelper
     /// Try update action group.
     /// </summary>
     /// <param name="actionGroup">The action group.</param>
-    public async Task TryUpdateActionGroup(Domain.Models.ActionGroup.ActionGroup actionGroup)
+    public async Task TryUpdateActionGroup(ActionGroup actionGroup)
     {
         try
         {
@@ -202,7 +204,7 @@ public class ActionCommandHelper
     /// <param name="assignedAgv">The assigned agv.</param>
     /// <param name="actionGroup">The action group.</param>
     /// <returns></returns>
-    public async Task<bool> CheckAgvActionCanBeStarted(IPublishEndpoint context, AgvAction action, Domain.Models.Agv.Agv assignedAgv, Domain.Models.ActionGroup.ActionGroup actionGroup)
+    public async Task<bool> CheckAgvActionCanBeStarted(IPublishEndpoint context, AgvAction action, Domain.Models.Agv.Agv assignedAgv, ActionGroup actionGroup)
     {
         if (actionGroup.State == ActionGroupState.Paused)
         {
@@ -333,11 +335,10 @@ public class ActionCommandHelper
     /// <param name="context">Publish endpoint.</param>
     /// <param name="action">The action to be skipped.</param>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="actionGroup">The action group.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task<AgvAction?> HandleSkippedActions(IPublishEndpoint context, AgvAction action, Guid agvCorrelationId, CancellationToken cancellationToken)
+    public static async Task<AgvAction?> HandleSkippedActions(IPublishEndpoint context, AgvAction action, Guid agvCorrelationId, ActionGroup actionGroup, CancellationToken cancellationToken)
     {
-        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
-
         var notSkippedAction = actionGroup.GetNextNotSkippedAction(action.CorrelationId);
 
         if (notSkippedAction == null)
@@ -356,7 +357,7 @@ public class ActionCommandHelper
     /// <param name="action">The current action.</param>
     /// <param name="agv">The current agv.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task TryQueueDoppelspielPartner(ConsumeContext<CompleteActionOfActionGroup> context, Domain.Models.ActionGroup.ActionGroup actionGroup, AgvAction action,Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
+    public async Task TryQueueDoppelspielPartner(ConsumeContext<CompleteActionOfActionGroup> context, ActionGroup actionGroup, AgvAction action,Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         if (agv.CheckMustCharge(agvSettings))

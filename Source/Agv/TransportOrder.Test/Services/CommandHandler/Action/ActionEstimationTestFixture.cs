@@ -20,9 +20,9 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
         AddAgv(Agv);
     }
 
-    public override ActionGroupEstimationTestFixture AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true)
+    public override ActionGroupEstimationTestFixture AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true, bool isManual = false)
     {
-        base.AddActionGroup(actionGroup, hasUnfinishedAction, hasNotStartedAction, existsPriorToTest);
+        base.AddActionGroup(actionGroup, hasUnfinishedAction, hasNotStartedAction, existsPriorToTest, isManual);
         ActionGroup = actionGroup;
 
         ActionGroupRepository.Setup(a => a.UpdateAsync(It.IsAny<ActionGroup>()))
