@@ -32,7 +32,7 @@ public class AgvRouteServiceTestFixture : TransportOrderDbFixture
             {
                 var result = new Dictionary<Guid, string?>();
 
-                if (!agvCorrelationIds.Any())
+                if (agvCorrelationIds.Count == 0)
                 {
                     // if no agvCorrelationIds are given we want to use all agvs
                     agvCorrelationIds = _agvs.Select(a => a.CorrelationId).ToList();

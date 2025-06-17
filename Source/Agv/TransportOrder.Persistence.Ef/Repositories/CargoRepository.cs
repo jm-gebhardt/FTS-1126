@@ -32,7 +32,7 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
     {
         Dictionary<Guid, bool> hasCargoByAgvCorrelationId = agvCargos.ConcurrentDict
             .Where(kvp => correlationIds.Contains(kvp.Key))
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Any());
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count != 0);
 
         List<Guid> missingCorrelationIds = correlationIds.Except(hasCargoByAgvCorrelationId.Keys).ToList();
 

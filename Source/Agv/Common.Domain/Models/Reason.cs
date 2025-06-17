@@ -62,7 +62,7 @@ public class Reason
             throw new ArgumentException("The number of dynamic values must not be greater than the number of placeholders in the template.");
         }
 
-        if (!placeholders.Any())
+        if (placeholders.Count == 0)
         {
             return;
         }

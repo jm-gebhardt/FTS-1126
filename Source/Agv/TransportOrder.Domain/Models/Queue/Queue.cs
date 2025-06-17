@@ -147,7 +147,7 @@ public class Queue
     /// <param name="targetNode">The id of the target node to enqueue to.</param>
     public bool TryEnqueue(Guid agvCorrelationId, [MaybeNullWhen(false)] out string targetNode)
     {
-        if (AgvFillQuantity==0 )
+        if (AgvFillQuantity == 0 )
         { 
             targetNode = null;
             return false;

@@ -21,7 +21,7 @@ public class ExportedGraphMapGenerator(KarisExportConfiguration configuration) :
         string[] files = Directory.GetFiles(directory, searchPattern);
         IMapGenerator generator = new GeneratedMapGenerator();
 
-        if (files.Any())
+        if (files.Length != 0)
         {
             generator =  new MapFromFileGenerator(directory);
         }

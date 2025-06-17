@@ -39,7 +39,7 @@ public class InitialGridProvider : BackgroundService
         _logger.LogInformation("InitialGridProvider started");
         bool gridCreated = false;
         ICollection<Grid> grids = await _db.Grids.GetAll();
-        if (grids.Any())
+        if (grids.Count != 0)
         {
             // A grid was created previously.
             gridCreated = true;

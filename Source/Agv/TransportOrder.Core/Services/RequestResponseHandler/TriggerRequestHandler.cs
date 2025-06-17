@@ -113,7 +113,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             count++;
         }
 
-        if (polygon.Any())
+        if (polygon.Count != 0)
         {
             count++;
         }

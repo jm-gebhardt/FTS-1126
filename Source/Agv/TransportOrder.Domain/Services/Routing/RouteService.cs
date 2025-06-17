@@ -172,7 +172,7 @@ public class RouteService : IRouteService
 
         List<Task<double?>> hasRouteTasks = agvs.Select(agv => GetCostsForFirstActionAsync(agv, actionGroup, null, cts.Token)).ToList();
 
-        while (hasRouteTasks.Any())
+        while (hasRouteTasks.Count != 0)
         {
             Task<double?> finishedTask = await Task.WhenAny(hasRouteTasks);
 
@@ -232,7 +232,7 @@ public class RouteService : IRouteService
             .ContinueWith(x => x.Result.Where(route => route != null)
                 .Cast<Route>().ToList(), TaskContinuationOptions.NotOnFaulted);
 
-        if (!routes.Any())
+        if (routes.Count == 0)
         {
             throw new RouteNotFoundException(agv.CorrelationId, availableNodes);
         }
@@ -255,7 +255,7 @@ public class RouteService : IRouteService
                 .Select(result => (result.CorrelationId, result.route))
                 .ToList(), TaskContinuationOptions.NotOnFaulted);
 
-        if (!routesWithIds.Any())
+        if (routesWithIds.Count == 0)
         {
             return (null, null);
         }

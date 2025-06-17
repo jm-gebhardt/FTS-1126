@@ -2,8 +2,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -36,8 +34,8 @@ public class SimulatedAgvProviderTest
             .WithSimulateOptions(options)
             .Build();
 
-        var services = fixture.Provider.GetRequiredService<IEnumerable<IHostedService>>();
-        services.Any(s => s is SimulatedAgvProvider).ShouldBeTrue();
+        await fixture.RunBackgroundService();
+
         bool result = await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>();
         result.ShouldBeTrue();
     }
@@ -50,9 +48,8 @@ public class SimulatedAgvProviderTest
         var fixture = new SimulatedAgvProviderTestFixture()
             .WithSimulateOptions(options)
             .Build();
-        
-        var services = fixture.Provider.GetRequiredService<IEnumerable<IHostedService>>();
-        services.Any(s => s is SimulatedAgvProvider).ShouldBeTrue();
+
+        await fixture.RunBackgroundService();
 
         (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.CreateAgv>()).ShouldBeTrue();
 

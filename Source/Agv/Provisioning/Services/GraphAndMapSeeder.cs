@@ -31,13 +31,13 @@ internal class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
         }
 
         List<Models.Map> notSetIds = data.Maps.Where(m => m.CorrelationId == Guid.Empty).ToList();
-        if (notSetIds.Any())
+        if (notSetIds.Count != 0)
         {
             throw new InvalidOperationException($"CorrelationId of map(s): {string.Join(", ", notSetIds.Select(m => m.Name))} is not set.");
         }
 
         List<Models.Map> notSetNames = data.Maps.Where(m => string.IsNullOrEmpty(m.Name)).ToList();
-        if (notSetNames.Any())
+        if (notSetNames.Count != 0)
         {
             throw new InvalidOperationException($"Name of map(s): {string.Join(", ", notSetNames.Select(m => m.CorrelationId))} is not set.");
         }

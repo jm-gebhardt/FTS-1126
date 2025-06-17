@@ -93,7 +93,7 @@ public class ActionCommandHelper
 
         try
         {
-            if ((action.Nodes == null || !action.Nodes.Any()) && assignedAgv.AgvStatus!.LastNodeId != action.Target.NodeId! && !action.IsMoveToCoordinate)
+            if ((action.Nodes == null || action.Nodes.Length == 0) && assignedAgv.AgvStatus!.LastNodeId != action.Target.NodeId! && !action.IsMoveToCoordinate)
             {
                 throw new ArgumentNullException(nameof(action.Nodes));
             }

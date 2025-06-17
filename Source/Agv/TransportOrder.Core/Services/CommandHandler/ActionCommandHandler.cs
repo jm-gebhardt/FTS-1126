@@ -1159,7 +1159,7 @@ public class ActionCommandHandler :
                 _logger.LogInformation("There are AGVs {ListOfAgvs} at queue heads, adding them", string.Join(',', agvsAtQueueHeads));
 
                 List<Guid> missingAgvsFromQueueHead = agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList();
-                if (missingAgvsFromQueueHead.Any())
+                if (missingAgvsFromQueueHead.Count != 0)
                 {
                     List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(missingAgvsFromQueueHead)).ToList();
                     //add those AGV to the list of ready AGV

@@ -79,7 +79,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
         IQueryable<ActionGroup> queryable = context.Set<ActionGroup>()
             .Where(a => a.State == ActionGroupState.Started);
 
-        if (agvCorrelationIds.Any())
+        if (agvCorrelationIds.Count != 0)
         {
             queryable = queryable.Where(a => a.AssignedAgv != null && agvCorrelationIds.Contains((Guid)a.AssignedAgv));
         }

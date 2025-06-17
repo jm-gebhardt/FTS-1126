@@ -40,7 +40,7 @@ public class FixtureBase
     {
         Profile[] profiles = GetProfiles().ToArray();
 
-        if (profiles.Any())
+        if (profiles.Length != 0)
         {
             Mapper = MappingHelper.GetMapper(profiles);
             serviceCollection.AddTransient(_ => Mapper);
