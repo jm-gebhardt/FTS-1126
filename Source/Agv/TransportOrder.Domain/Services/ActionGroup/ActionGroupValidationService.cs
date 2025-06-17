@@ -25,7 +25,7 @@ public class ActionGroupValidationService : IActionGroupValidationService
         _logger.LogDebug("Validating action group for order {OrderId}", actionGroup.OrderId);
         var validationResult = await _actionGroupValidator.ValidateAsync(actionGroup);
 
-        if (!validationResult.IsValid && validationResult.Errors.Any())
+        if (!validationResult.IsValid && validationResult.Errors.Count != 0)
         {
             _logger.LogWarning("Action group for order {OrderId} is invalid", actionGroup.OrderId);
             foreach (var error in validationResult.Errors)

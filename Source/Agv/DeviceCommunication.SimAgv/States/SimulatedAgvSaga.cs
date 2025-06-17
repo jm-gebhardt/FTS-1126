@@ -191,9 +191,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             throw new ArgumentException($"Option '--SpawnAt' contains unknown node id(s). Check [{nodeIdsString}].");
         }
         // if we have no stations, we just pick a random node
-        var stationNode = stations.Count==0 ? graphNodes.ElementAt(Random.Shared.Next(0, graphNodes.Count)) : stations[Random.Shared.Next(0, stations.Count)];
+        var stationNode = stations.Count == 0 ? graphNodes.ElementAt(Random.Shared.Next(0, graphNodes.Count)) : stations[Random.Shared.Next(0, stations.Count)];
         // but we prefer spawnGraphNodes if available
-        var node = spawnGraphNodes.Count==0 ? stationNode : spawnGraphNodes[Random.Shared.Next(0, spawnGraphNodes.Count)];
+        var node = spawnGraphNodes.Count == 0 ? stationNode : spawnGraphNodes[Random.Shared.Next(0, spawnGraphNodes.Count)];
 
         SetPosition(node);
     }

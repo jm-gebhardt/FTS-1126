@@ -231,11 +231,11 @@ public class ActionCommandHandler :
 
         if (!await _actionGroupRepository.HasNotStartedActionsAsync(agvCorrelationId))
         {
-            _logger.LogWarning("No succeeding action  for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogWarning("No succeeding action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
             return;
         }
 
-        if (agv.CanNotStartNewAction)
+        if (agv is { CanNotStartNewAction: true, HasError: false })
         {
             _logger.LogWarning("Can not start next action in group: Agv is pending mode switch with current action group policy {Policy}", agv.Mode.CurrentActionGroupPolicy);
             return;
@@ -247,9 +247,21 @@ public class ActionCommandHandler :
 
             var actionGroupId = action.ParentId;
 
+            var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionGroupId);
+
+            if (agv.HasError && !(actionGroup?.IsManual ?? false))
+            {
+                _logger.LogWarning("Cannot start automatic action {Action} of group {ActionGroup} while agv {Agv} has an error", action.CorrelationId, actionGroupId, agv.CorrelationId);
+                return;
+            }
+
             if (action.ShouldSkip)
             {
-                action = await _actionService.HandleSkippedActions(context, action, agv.CorrelationId, cancellationToken);
+                if (actionGroup == null)
+                {
+                    throw new ActionGroupNotFoundException(actionGroupId);
+                }
+                action = await ActionCommandHelper.HandleSkippedActions(context, action, agv.CorrelationId, actionGroup, cancellationToken);
             }
 
             if (action == null)
@@ -272,7 +284,7 @@ public class ActionCommandHandler :
                 return;
             }
 
-            if (!await _actionService.SelectNodesForAgvAction(action, agv, true, cancellationToken))
+            if (!await _actionService.SelectNodesForAgvAction(action, agv, true, agv.HasError, cancellationToken))
             {
                 await context.Publish(new StartingActionForAgvFailed(agvCorrelationId), cancellationToken);
                 return;
@@ -300,7 +312,7 @@ public class ActionCommandHandler :
             return;
         }
 
-        if (agv.ShouldStartManualAction)
+        if (agv.ShouldStartManualAction || agv.HasError)
         {
             var manualAction = await _actionService.GetManualAction(agv);
             if (manualAction == null)
@@ -308,7 +320,7 @@ public class ActionCommandHandler :
                 _logger.LogDebug("There is no un-started manual action available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
                 return;
             }
-            if (await _actionService.SelectNodesForAgvAction(manualAction, agv, false, context.CancellationToken))
+            if (await _actionService.SelectNodesForAgvAction(manualAction, agv, false, true, context.CancellationToken))
             {
                 await context.Publish(new NodesSelectedForAction(manualAction, agv.CorrelationId), context.CancellationToken);
             }
@@ -353,7 +365,7 @@ public class ActionCommandHandler :
             var action = chosenActionGroup.FirstNotStartedAction!;
             _logger.LogDebug("Trying to start action {ActionId} of group {ActionGroupCorrelationId} with type {ActionType}", action.CorrelationId, action.ParentId, Enum.GetName(action.ActionType));
 
-            if (await _actionService.SelectNodesForAgvAction(action, agv, false, context.CancellationToken))
+            if (await _actionService.SelectNodesForAgvAction(action, agv, false, false, context.CancellationToken))
             {
                 var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(chosenActionGroup.CorrelationId);
                 if (actionGroup.AssignedAgv == null)
@@ -1147,7 +1159,7 @@ public class ActionCommandHandler :
                 _logger.LogInformation("There are AGVs {ListOfAgvs} at queue heads, adding them", string.Join(',', agvsAtQueueHeads));
 
                 List<Guid> missingAgvsFromQueueHead = agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList();
-                if (missingAgvsFromQueueHead.Any())
+                if (missingAgvsFromQueueHead.Count != 0)
                 {
                     List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(missingAgvsFromQueueHead)).ToList();
                     //add those AGV to the list of ready AGV

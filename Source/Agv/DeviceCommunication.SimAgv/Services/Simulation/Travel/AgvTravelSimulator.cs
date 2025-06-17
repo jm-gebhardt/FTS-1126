@@ -144,7 +144,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         CurrentEdge = FollowingEdges.FirstOrDefault();
         CurrentNode = CurrentEdge?.SourceNode;
 
-        if (FollowingEdges.Any())
+        if (FollowingEdges.Count != 0)
         {
             TravelDuration = FollowingEdges.Last().EstimatedExitTime - CurrentEdge!.EntryTime;
         }
@@ -173,7 +173,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         FollowingEdges.Add(followingEdge);
         CurrentEdge = FollowingEdges.FirstOrDefault();
         CurrentNode = CurrentEdge?.SourceNode;
-        if (FollowingEdges.Any())
+        if (FollowingEdges.Count != 0)
         {
             TravelDuration = FollowingEdges.Last().EstimatedExitTime - CurrentEdge!.EntryTime;
         }
@@ -202,7 +202,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         CurrentEdge = FollowingEdges.FirstOrDefault();
         CurrentNode = CurrentEdge?.SourceNode;
         
-        if (FollowingEdges.Any())
+        if (FollowingEdges.Count != 0)
         {
             TravelDuration = FollowingEdges.Last().EstimatedExitTime - CurrentEdge!.EntryTime;
         }
@@ -215,7 +215,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         // deduct pause time from currentTime, so simulate the time as if the agv was not paused
         currentTime -= PauseTime;
 
-        if (!FollowingEdges.Any())
+        if (FollowingEdges.Count == 0)
         {
             return;
         }
@@ -277,11 +277,11 @@ public class AgvTravelSimulator : IAgvTravelSimulator
 
     private void ResetAddedVirtualNodes(string nodeToKeep = "")
     {
-        foreach (string node in AddedVirtualNodes.Where(n => n!=nodeToKeep))
+        foreach (string node in AddedVirtualNodes.Where(n => n != nodeToKeep))
         {
             _nodes.Remove(_nodes.Single(n => n.Id == node));
         }
-        AddedVirtualNodes = AddedVirtualNodes.Except(AddedVirtualNodes.Where(n => n!=nodeToKeep)).ToList();
+        AddedVirtualNodes = AddedVirtualNodes.Except(AddedVirtualNodes.Where(n => n != nodeToKeep)).ToList();
     }
 
     private void Reset()

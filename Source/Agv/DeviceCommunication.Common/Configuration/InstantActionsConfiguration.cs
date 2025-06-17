@@ -58,7 +58,7 @@ public class InstantActionsConfiguration
         return InstantActions.Where(ia =>
                 (ia.AgvSerialNumbers == null && ia.AgvTypes == null) ||
                 (ia.AgvSerialNumbers?.Contains(agvSerialNumber)??false) ||
-                (ia.AgvTypes!=null && ia.AgvTypes.Any(at => at.Type == agvData.Type && at.Model == agvData.Model && !(at.ExcludedAgvSerialNumbers?.Contains(agvSerialNumber)??false))))
+                (ia.AgvTypes != null && ia.AgvTypes.Any(at => at.Type == agvData.Type && at.Model == agvData.Model && !(at.ExcludedAgvSerialNumbers?.Contains(agvSerialNumber)??false))))
             .Select(ia => new AgvInstantAction()
             {
                 Description = ia.Description,

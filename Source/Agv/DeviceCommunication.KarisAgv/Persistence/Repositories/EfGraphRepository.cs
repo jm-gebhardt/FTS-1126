@@ -70,7 +70,7 @@ public class EfGraphRepository(
 
     private Task Add(params (string graphNodeId, MqttNode mqttNode)[] nodes)
     {
-        if (!nodes.Any())
+        if (nodes.Length == 0)
         {
             throw new ArgumentException("Nodes cannot be empty.", nameof(nodes));
         }
@@ -82,7 +82,7 @@ public class EfGraphRepository(
             List<MqttNode> nodesToAdd = nodes.Where(n => !nodeCache.ConcurrentDict.ContainsKey(n.graphNodeId))
                 .Select(n => n.mqttNode).ToList();
 
-            if (!nodesToAdd.Any())
+            if (nodesToAdd.Count == 0)
             {
                 return;
             }
@@ -103,7 +103,7 @@ public class EfGraphRepository(
     /// <inheritdoc />
     public Task Add(params (Guid GraphEdgeId, MqttEdge MqttEdge)[] edges)
     {
-        if (!edges.Any())
+        if (edges.Length == 0)
         {
             throw new ArgumentException("Edges cannot be empty.", nameof(edges));
         }
@@ -127,7 +127,7 @@ public class EfGraphRepository(
                     StartId = e.MqttEdge.StartId
                 })).ToList();
 
-            if (!edgesToAdd.Any())
+            if (edgesToAdd.Count == 0)
             {
                 return;
             }

@@ -45,12 +45,12 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
     {
         List<AgvError> unresolvedErrors =
             // all errors must be resolved
-            !errorIdsToReset.Any() ?
+            errorIdsToReset.Count == 0 ?
                 errorChange.Errors :
                 // or only the specified errors
                 errorChange.Errors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).ToList();
 
-        bool allErrorsResolved = !unresolvedErrors.Any();
+        bool allErrorsResolved = unresolvedErrors.Count == 0;
         if (!allErrorsResolved)
         {
             _logger.LogWarning("Following Agv errors were not resolved: {Errors}", unresolvedErrors);
@@ -76,11 +76,11 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
         }
 
         // errors to reset are specified
-        if (errorIdsToReset.Any())
+        if (errorIdsToReset.Count != 0)
         {
             // but only try to reset active ones
             errorIdsToReset = activeErrors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).Select(e => e.CorrelationId).ToList();
-            if (!errorIdsToReset.Any())
+            if (errorIdsToReset.Count == 0)
             {
                 await context.RespondAsync(new ResetAgvErrorsResult("None of the specified errors are active. So all good already."));
                 return;

@@ -33,7 +33,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
 
         fixture.VerifyReportingToConveyors("PS03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, dropHostOrder.Hu, Times.Once());
-        (await fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId)).ShouldBe(pickStation!=null);
+        (await fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId)).ShouldBe(pickStation != null);
         (await fixture.OrderRepository.HasOrderBeenReported(dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, dropHostOrder.CorrelationId)).ShouldBeTrue();
     }
 

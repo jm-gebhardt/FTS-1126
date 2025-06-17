@@ -46,7 +46,7 @@ public class GetAgvsRequestHandler :
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
         ICollection<Domain.Models.Agv.Agv> agvs;
-        if (!selectedAgvs.Any())
+        if (selectedAgvs.Count == 0)
         {
             agvs = await _agvDb.Agvs.GetAllAgvsAsync();
         }
@@ -56,7 +56,7 @@ public class GetAgvsRequestHandler :
         }
 
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
-        if (agvCorrelationIds.Count != selectedAgvs.Count && selectedAgvs.Any())
+        if (agvCorrelationIds.Count != selectedAgvs.Count && selectedAgvs.Count != 0)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());
         }
@@ -78,7 +78,7 @@ public class GetAgvsRequestHandler :
             var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
             _mapper.Map(actionGroupsTask.Result[agv.CorrelationId], agvMessageContent);
 
-            if (allAgvErrors.TryGetValue(agv.CorrelationId, out List<AgvError>? agvErrors) && agvErrors.Any())
+            if (allAgvErrors.TryGetValue(agv.CorrelationId, out List<AgvError>? agvErrors) && agvErrors.Count != 0)
             {
                 _mapper.Map(agvErrors, agvMessageContent);
             }

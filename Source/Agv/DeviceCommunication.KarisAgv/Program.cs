@@ -108,6 +108,7 @@ try
                             configurator.AddConsumer<RequestAgvDataConsumer>();
                             configurator.AddConsumer<ActionAbortedConsumer>();
                             configurator.AddConsumer<GraphMerger>();
+                            configurator.AddConsumer<AgvStationConsumer>();
                         },
 
                         // ReSharper disable once UnusedParameter.Local

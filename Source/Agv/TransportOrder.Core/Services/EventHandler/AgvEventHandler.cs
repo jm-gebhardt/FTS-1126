@@ -117,13 +117,14 @@ public class AgvEventHandler :
         var agvCorrelationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
-        if (!agv.IsAvailable(ignoreLocked: true))
+        if (!agv.IsAvailable(ignoreLocked: true, ignoreError: true))
         {
             _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} is not available", agvCorrelationId);
             return;
         }
 
         bool hasUnfinishedActionGroup = await _actionGroupRepository.HasUnfinishedActionGroupAsync(agv.CorrelationId);
+
         bool agvModeAllowsStartingNextAction = !agv.HasPendingModeSwitch || agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.FinishActionGroup };
         if (hasUnfinishedActionGroup && agvModeAllowsStartingNextAction)
         {

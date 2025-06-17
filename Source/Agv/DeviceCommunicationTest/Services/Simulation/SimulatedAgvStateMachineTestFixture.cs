@@ -42,10 +42,9 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
         return this;
     }
 
-    public SimulatedAgvStateMachineTestFixture WithSimulateOptions(Options options)
+    protected void WithSimulateOptions(Options options)
     {
         _options = options;
-        return this;
     }
 
     public async Task WaitUntilAgvIdle(SimulatedAgvSaga agvSaga, int timeoutInMs = 5000)

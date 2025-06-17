@@ -13,6 +13,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Routing;
@@ -71,6 +72,7 @@ public class AgvController : Controller
     private readonly IRequestClient<RemoveAgvFromZones> _removeAgvFromZonesClient;
     private readonly IRequestClient<SolveRessourceBlockingErrors> _ressourceBlockingClient;
     private readonly IRequestClient<RemoveAgvFromZone> _removeAgvFromZoneClient;
+    private readonly IRequestClient<RemoveAgvFromStation> _requestAgvRemovalClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -111,7 +113,8 @@ public class AgvController : Controller
         IRequestClient<ResendAction> resendActionClient,
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient,
         IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient,
-        IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient
+        IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient,
+        IRequestClient<RemoveAgvFromStation> requestAgvRemovalClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -149,6 +152,7 @@ public class AgvController : Controller
         _removeAgvFromZonesClient = removeAgvFromZonesClient;
         _removeAgvFromZoneClient = removeAgvFromZoneClient;
         _ressourceBlockingClient = ressourceBlockingClient;
+        _requestAgvRemovalClient = requestAgvRemovalClient;
     }
 
     /// <summary>
@@ -744,6 +748,23 @@ public class AgvController : Controller
     public async Task<ActionResult> RemoveFromZone([FromRoute] Guid correlationId, string zoneId)
     {
         await _removeAgvFromZoneClient.GetResponse<Success>(new RemoveAgvFromZone(correlationId, zoneId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Request to remove an agv from a station.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv id.</param>
+    /// <param name="stationName">The station name.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Station/Agv with given id not found.</response>
+    /// <response code="409">All agvs are offline.</response>
+    [HttpPatch]
+    [Route("/agv/{agvCorrelationId:guid}/removeFromStation")]
+    public async Task<ActionResult> RequestAgvRemoval([FromRoute] Guid agvCorrelationId, string stationName)
+    {
+        await _requestAgvRemovalClient.GetResponse<Success>(new RemoveAgvFromStation(stationName, agvCorrelationId));
+
         return Ok();
     }
 }

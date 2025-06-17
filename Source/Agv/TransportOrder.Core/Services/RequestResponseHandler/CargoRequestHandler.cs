@@ -47,7 +47,7 @@ public class CargoRequestHandler :
         IReadOnlyDictionary<Guid, bool> hasCargoByAgv = await _agvDb.Cargos.HaveAgvsCargoAsync(agvCorrelationIds);
         IEnumerable<Guid> empty = hasCargoByAgv.Where(kvp => !kvp.Value).Select(kvp => kvp.Key);
         List<Guid> agvsWithoutCargo = agvCorrelationIds.Except(empty).ToList();
-        if (agvsWithoutCargo.Any())
+        if (agvsWithoutCargo.Count != 0)
         {
             await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvsWithoutCargo);
         }
@@ -59,7 +59,7 @@ public class CargoRequestHandler :
     {
         var agvCorrelationId = context.Message.CorrelationId;
         IReadOnlyCollection<Cargo> cargos = await _agvDb.Cargos.GetCargosAsync(agvCorrelationId);
-        if (!cargos.Any())
+        if (cargos.Count == 0)
         {
             await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(agvCorrelationId);
         }
@@ -72,9 +72,9 @@ public class CargoRequestHandler :
     {
         ICollection<Guid> agvCorrelationIds = context.Message.CorrelationIds;
         IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>> cargosByAgvCorrelationId = await _agvDb.Cargos.GetCargosAsync(agvCorrelationIds);
-        IEnumerable<Guid> empty = cargosByAgvCorrelationId.Where(kvp => !kvp.Value.Any()).Select(kvp => kvp.Key);
+        IEnumerable<Guid> empty = cargosByAgvCorrelationId.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key);
         List<Guid> agvsWithoutCargo = agvCorrelationIds.Except(empty).ToList();
-        if (agvsWithoutCargo.Any())
+        if (agvsWithoutCargo.Count != 0)
         {
             await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvsWithoutCargo);
         }

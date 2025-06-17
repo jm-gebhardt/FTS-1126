@@ -11,6 +11,7 @@ using Moq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Station;
 
@@ -25,6 +26,8 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
+
+    private readonly Mock<IAgvDb> _agvDb = new();
 
     [UsedImplicitly]
     private readonly Mock<IMapRepository> _mapRepository = new();
@@ -52,6 +55,7 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
             sc.AddTransient(_ => _stationRepository.Object);
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _actionGroupRepository.Object);
+            sc.AddTransient(_ => _agvDb.Object);
         });
 
         base.Build();

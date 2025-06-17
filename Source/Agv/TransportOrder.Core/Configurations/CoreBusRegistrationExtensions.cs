@@ -407,6 +407,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TryLockStation>();
         configurator.AddRequestClient<TryUnlockStation>();
 
+        configurator.AddConsumer<AgvStationRequestHandler>();
+        configurator.AddRequestClient<RemoveAgvFromStation>();
+
         configurator.AddConsumer<QueueRequestHandler>();
         configurator.AddRequestClient<GetQueues>();
         configurator.AddRequestClient<GetQueue>();

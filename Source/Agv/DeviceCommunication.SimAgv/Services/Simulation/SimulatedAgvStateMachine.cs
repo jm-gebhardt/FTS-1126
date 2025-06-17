@@ -522,7 +522,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 _logger.LogTrace("Existing errorIds: {ErrorIds}. To be reset: {ErrorIdsToReset}", c.Saga.Errors.Select(e => e.CorrelationId).ToList(), c.Message.ErrorIds);
 
                 // reset all errors if no errorIds are given
-                bool resetAllErrors = !c.Message.ErrorIds.Any();
+                bool resetAllErrors = c.Message.ErrorIds.Count == 0;
                 ResetErrors(c, resetAllErrors ? [] : c.Saga.Errors.Where(error => !c.Message.ErrorIds.Contains(error.CorrelationId)).ToList());
             })
             .ThenAsync(PublishAgvError);
@@ -660,7 +660,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             throw new ArgumentException("Action data missing.");
         }
-        if (!context.Message.Action.Nodes.Any() && !context.Message.Action.IsMoveToCoordinate)
+        if (context.Message.Action.Nodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
         {
             throw new ArgumentException("Nodes missing.");
         }
@@ -672,7 +672,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             throw new ArgumentException("Action data missing.");
         }
-        if (!context.Message.Action.Nodes.Any() && !context.Message.Action.IsMoveToCoordinate)
+        if (context.Message.Action.Nodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
         {
             throw new ArgumentException("Nodes missing.");
         }
@@ -684,7 +684,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             throw new ArgumentException("Action data missing.");
         }
-        if (!context.Message.Action.Nodes.Any() && !context.Message.Action.IsMoveToCoordinate)
+        if (context.Message.Action.Nodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
         {
             throw new ArgumentException("Nodes missing.");
         }

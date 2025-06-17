@@ -151,13 +151,13 @@ public static class ServiceCollectionExtension
         string? current = Path.Join(Directory.GetCurrentDirectory(), configDirectory);
 
         // Traverse the directory tree upwards to find a config file.
-        while (!files.Any() && current != null)
+        while (files.Length == 0 && current != null)
         {
             files = Directory.GetFiles(current, configFile);
             current = Directory.GetParent(current)?.FullName ?? null;
         }
 
-        if (!files.Any())
+        if (files.Length == 0)
         {
             throw new FileNotFoundException($"{configFile} could not be found.");
         }

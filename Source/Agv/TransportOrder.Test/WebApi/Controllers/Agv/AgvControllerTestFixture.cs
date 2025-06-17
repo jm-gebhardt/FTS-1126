@@ -25,6 +25,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Agv;
@@ -127,7 +128,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     }
 
     [UsedImplicitly]
-    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWithDefaultData(bool setUserMode=false)
+    public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWithDefaultData(bool setUserMode = false, bool allAgvsOffline = false)
     {
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv>();
         var data = new Dictionary<Guid, AgvData>();
@@ -162,6 +163,16 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
         AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
             .Callback((AgvData agvData) => { data[agvData.CorrelationId] = agvData; });
+
+        if (allAgvsOffline)
+        {
+            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv()).ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv?)null);
+        }
+        else
+        {
+            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv()).ReturnsAsync(agvs.First());
+        }
+
         return this;
     }
 
@@ -248,6 +259,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient = GetRequestClient<RemoveAgvFromZones>();
         IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient = GetRequestClient<SolveRessourceBlockingErrors>();
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient = GetRequestClient<RemoveAgvFromZone>();
+        IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient = GetRequestClient<RemoveAgvFromStation>();
 
         var controller = new AgvController(Mapper,
             getAgvRequestClient,
@@ -283,7 +295,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             resendActionClient,
             removeAgvFromZonesClient,
             ressourceBlockingClient,
-            removeAgvFromZoneClient
+            removeAgvFromZoneClient,
+            removeAgvFromStationClient
         )
         {
             ControllerContext = new ControllerContext(

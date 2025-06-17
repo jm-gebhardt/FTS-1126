@@ -37,7 +37,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
         AgvDb.Setup(x => x.Cargos.HaveAgvsCargoAsync(It.IsAny<ICollection<Guid>>()))
             .ReturnsAsync((ICollection<Guid> correlationIds) =>
                 _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key))
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Any()));
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count != 0));
     }
 
     private void SetupAgvRepositoryMock()
@@ -74,7 +74,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     private void SetupIsAgvLoaded(Guid agvCorrelationId, ICollection<Cargo> cargos)
     {
-        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId)).ReturnsAsync(cargos.Any());
+        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId)).ReturnsAsync(cargos.Count != 0);
     }
 
     public override CargoRequestHandlerTestFixture<TRequest, TConsumer> Build()

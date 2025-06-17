@@ -29,7 +29,7 @@ public static class MockAgvRepositoryExtensions
         repoMock.Setup(r => r.GetAllAgvsWithGraphAsync()).ReturnsAsync(agvs.Where(a => a.GraphExists).ToList());
         repoMock.Setup(r => r.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync( agvs);
         repoMock.Setup(r => r.GetIdleAgvsAsync()).ReturnsAsync(agvs.Where(a => a.CurrentAgvState == AgvState.Idle).ToList());
-        repoMock.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => !cs.Any() || cs.Contains(a.CorrelationId)).ToList());
+        repoMock.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => cs.Count == 0 || cs.Contains(a.CorrelationId)).ToList());
         AddNonExistingAgvs(repoMock, agvs.Select(a => a.CorrelationId).ToArray());
     }
     
@@ -45,7 +45,7 @@ public static class MockAgvRepositoryExtensions
         repoMock.Setup(r => r.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback((ICollection<Guid> correlationIds) =>
         {
             List<Guid> notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
-            if (notExistingAgvs.Any())
+            if (notExistingAgvs.Count != 0)
             {
                 throw new AgvsNotFoundException(notExistingAgvs);
             }

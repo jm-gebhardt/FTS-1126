@@ -13,13 +13,13 @@ public static class GraphExtensions
     public static void Validate(this IGraph graph)
     {
         List<IGrouping<Guid, GraphEdge>> duplicateEdges = graph.Edges.GroupBy(e => e.Id).Where(g => g.Count() > 1).ToList();
-        if (duplicateEdges.Any())
+        if (duplicateEdges.Count != 0)
         {
             throw new ArgumentException("Duplicate Edges. Edge Ids must be unique.");
         }
 
         List<IGrouping<string, GraphNode>> duplicateNodes = graph.Nodes.GroupBy(n => n.Id).Where(g => g.Count() > 1).ToList();
-        if (duplicateNodes.Any())
+        if (duplicateNodes.Count != 0)
         {
             throw new ArgumentException("Duplicate Nodes. Node Ids must be unique.");
         }

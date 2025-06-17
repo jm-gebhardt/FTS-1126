@@ -53,7 +53,7 @@ public class GetAgvBatteryRequestHandler :
         ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
 
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
-        if (agvCorrelationIds.Count != selectedAgvs.Count && selectedAgvs.Any())
+        if (agvCorrelationIds.Count != selectedAgvs.Count && selectedAgvs.Count != 0)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());
         }

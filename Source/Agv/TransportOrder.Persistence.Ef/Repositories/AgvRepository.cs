@@ -116,7 +116,7 @@ public class AgvRepository : IAgvRepository
     {
         ICollection<Guid> existingAgvs = await CheckIfAgvExistAsync(correlationIds);
         List<Guid> notExistingAgvs = correlationIds.Except(existingAgvs).ToList();
-        if (notExistingAgvs.Any())
+        if (notExistingAgvs.Count != 0)
         {
             throw new AgvsNotFoundException(notExistingAgvs);
         }
@@ -125,13 +125,13 @@ public class AgvRepository : IAgvRepository
     /// <inheritdoc />
     public async Task<ICollection<Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds)
     {
-        return await Agvs.Where(a => !agvCorrelationIds.Any() || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.SerialNumber).ToListAsync();
+        return await Agvs.Where(a => agvCorrelationIds.Count == 0 || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.SerialNumber).ToListAsync();
     }
 
     /// <inheritdoc />
     public async Task<ICollection<Agv>> SelectAgvsWithAboveCriticalBatteryLevel(ICollection<Guid> agvCorrelationIds)
     {
-        if (!agvCorrelationIds.Any())
+        if (agvCorrelationIds.Count == 0)
         {
             return [];
         }
@@ -208,7 +208,7 @@ public class AgvRepository : IAgvRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         IQueryable<Agv> queryable = Agvs;
-        if (agvCorrelationIds.Any())
+        if (agvCorrelationIds.Count != 0)
         {
             queryable = queryable.Where(s => agvCorrelationIds.Contains(s.CorrelationId));
         }
