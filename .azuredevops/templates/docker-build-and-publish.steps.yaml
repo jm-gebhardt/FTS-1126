@@ -42,10 +42,12 @@ steps:
           previousCommit=$(git rev-parse HEAD^)
           dotnet-affected -p ./ --to $previousCommit --from $(Build.SourceBranch) --format text -v
         displayName: Get Affected Projects
+        continueOnError: true
   - ${{ else }}:
       - bash: |
           dotnet-affected -p ./ --to origin/master --from $(Build.SourceBranch) --format text -v
         displayName: Get Affected Projects
+        continueOnError: true
 
   - bash: |
       components=$(echo '["${{ join('","', parameters.components) }}"]' | jq)
