@@ -26,6 +26,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
@@ -264,6 +265,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<FactoryTimeRequestHandler>();
         configurator.AddRequestClient<GetFactoryTimeZone>();
         configurator.AddRequestClient<UpdateFactoryTimeZone>();
+        
+        configurator.AddRequestClient<GetCertificateExpirations>();
+        configurator.AddConsumer<CertificateExpirationRequestHandler>();
     }
 
     private static void RegisterMediatorTriggerHandlers(IMediatorRegistrationConfigurator configurator)

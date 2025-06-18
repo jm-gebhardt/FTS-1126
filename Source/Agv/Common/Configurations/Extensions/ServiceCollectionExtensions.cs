@@ -38,6 +38,8 @@ public static class ServiceCollectionExtensions
             throw new NullReferenceException("MassTransit config was not found");
         }
 
+        services.AddSingleton(_ => massTransitConfig);
+
         services.AddMassTransit(x =>
         {
             x.DisableUsageTelemetry();
