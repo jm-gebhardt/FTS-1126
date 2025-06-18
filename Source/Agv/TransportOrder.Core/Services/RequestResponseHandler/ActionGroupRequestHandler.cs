@@ -141,7 +141,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionCorrelationId);
         }
 
-        _logger.LogInformation("Triggering completion of action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", correlationId, actionCorrelationId);
+        _logger.LogInformation("Triggering completion of action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", actionCorrelationId, correlationId);
         await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId, ActionGroupCreator.TransportOrderWebApi));
         await context.RespondAsync(new Success());
     }

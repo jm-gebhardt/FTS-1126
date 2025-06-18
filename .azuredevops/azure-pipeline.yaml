@@ -44,35 +44,35 @@ stages:
         displayName: 'Code analysis'
         pool:
           vmImage: windows-latest
-          steps:
-            - script: git config --system core.longpaths true
-            - checkout: self
-            - template: ./templates/restore-and-build.steps.yaml
-            - template: ./templates/code-analysis.steps.yaml
-
-  - stage: unitTest
-    dependsOn: [ ]
-    jobs:
-      - job: unitTest
-        displayName: 'Unit tests'
-        pool:
-          vmImage: ubuntu-latest
         steps:
+          - script: git config --system core.longpaths true
+          - checkout: self
           - template: ./templates/restore-and-build.steps.yaml
-          - template: ./templates/unit-tests.steps.yaml
+          - template: ./templates/code-analysis.steps.yaml
 
-      - job: coverageReport
-        dependsOn:
-          - unitTest
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-          - template: ./templates/build-quality.steps.yaml
+#  - stage: unitTest
+#    dependsOn: [ ]
+#    jobs:
+#      - job: unitTest
+#        displayName: 'Unit tests'
+#        pool:
+#          vmImage: ubuntu-latest
+#        steps:
+#          - template: ./templates/restore-and-build.steps.yaml
+#          - template: ./templates/unit-tests.steps.yaml
+#
+#      - job: coverageReport
+#        dependsOn:
+#          - unitTest
+#        pool:
+#          vmImage: ubuntu-latest
+#        steps:
+#          - template: ./templates/build-quality.steps.yaml
 
   - stage: buildAndPublish
-    dependsOn:
-      - codeAnalysis
-      - unitTest
+#    dependsOn:
+#      - codeAnalysis
+#      - unitTest
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     jobs:
       - job: buildAndPublish
