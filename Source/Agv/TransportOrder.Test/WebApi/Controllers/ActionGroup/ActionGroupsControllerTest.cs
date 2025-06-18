@@ -40,7 +40,7 @@ public class ActionGroupsControllerTest
                         null,
                         null,
                         null,
-                        TimeSpan.Zero,
+                        0L,
                         false)
                 ], false, false, true, [])
         };
