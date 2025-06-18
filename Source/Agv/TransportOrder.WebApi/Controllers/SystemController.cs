@@ -4,6 +4,8 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.System.Monitoring;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers;
@@ -18,7 +20,9 @@ public class SystemController(
     IMapper mapper,
     IRequestClient<GetSystemTime> getSystemTimeClient,
     IRequestClient<GetFactoryTimeZone> getFactoryTimeClient,
-    IRequestClient<UpdateFactoryTimeZone> updateFactoryTimeClient) : Controller
+    IRequestClient<UpdateFactoryTimeZone> updateFactoryTimeClient,
+    IRequestClient<GetCertificateExpirations> getCertificateExpirationClient
+    ) : Controller
 {
     /// <summary>
     /// Get system time in ISO 8601 format.
@@ -78,5 +82,19 @@ public class SystemController(
     {
         Response<GotFactoryTimeZone> response = await getFactoryTimeClient.GetResponse<GotFactoryTimeZone>(new GetFactoryTimeZone());
         return response.Message.Dirty ? StatusCode(203, response.Message.FactoryTime) : Ok(response.Message.FactoryTime);
+    }
+    
+    /// <summary>
+    /// Get certificate expiration information.
+    /// </summary>
+    /// <response code="200">Returns a list of known certificates with it's expiration dates</response>
+    [HttpGet]
+    [Route("/system/monitoring/certificates")]
+    public async Task<ActionResult<IEnumerable<CertificateExpirationDto>>> GetCertificateExpirations()
+    {
+        Response<GotCertificateExpirations> response = await getCertificateExpirationClient.GetResponse<GotCertificateExpirations>(new GetCertificateExpirations());
+
+        var dto = mapper.Map<IEnumerable<CertificateExpirationDto>>(response.Message.Certificates);
+        return Ok(dto);
     }
 }
