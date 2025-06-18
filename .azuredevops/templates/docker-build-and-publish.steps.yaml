@@ -79,6 +79,7 @@ steps:
       - bash: |
           docker pull crffcpocarch.azurecr.io/gebhardt/fleet-management/${{lower(projectName)}}:latest
         displayName: Pulling image ${{ projectName }}
+        continueOnError: true
         condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
 #  - ${{ each projectName in parameters.components }}:
