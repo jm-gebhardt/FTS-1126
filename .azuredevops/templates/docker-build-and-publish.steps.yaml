@@ -51,6 +51,7 @@ steps:
       components=$(echo '["${{ join('","', parameters.components) }}"]' | jq)
       componentsToBuild=()
       
+      echo "Components"
       echo "$components"
       
       for i in $(echo "$components" | jq -r '.[]')
@@ -61,10 +62,15 @@ steps:
         fi
       done
       
+      
+      echo "Components to build"
       echo  "$componentsToBuild"
       componentsToBuildStr=$(IFS=,; echo "${componentsToBuild[*]}")
       
-      echo "##vso[task.setvariable variable=componentsToBuild;]$componentsToBuildStr"
+      echo "Components To Build Str"
+      echo "$componentsToBuildStr"
+      
+      echo "##vso[task.setvariable variable=componentsToBuild]$componentsToBuildStr"
     displayName: Collecting Projects To Build
 
   - ${{ each projectName in parameters.components }}:
@@ -73,31 +79,31 @@ steps:
         displayName: Pulling image ${{ projectName }}
         condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
-  - ${{ each projectName in parameters.components }}:
-      - task: Docker@2
-        displayName: Building image ${{ projectName }}
-        inputs:
-          command: 'build'
-          Dockerfile: $(SourceDirectory)/Dockerfile
-          repository: 'gebhardt/fleet-management/${{projectName}}'
-          arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
-          tags: |
-            $(GitVersion.SemVer)
-            latest
-        condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
-
-
-  - ${{ each projectName in parameters.components }}:
-      - task: Docker@2
-        displayName: Push docker images ${{ projectName }}
-        inputs:
-          containerRegistry: ${{ parameters.containerRegistryConnectionName }}
-          repository: 'gebhardt/fleet-management/${{projectName}}'
-          command: 'push'
-          tags: |
-            $(GitVersion.SemVer)
-            latest
-        condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
+#  - ${{ each projectName in parameters.components }}:
+#      - task: Docker@2
+#        displayName: Building image ${{ projectName }}
+#        inputs:
+#          command: 'build'
+#          Dockerfile: $(SourceDirectory)/Dockerfile
+#          repository: 'gebhardt/fleet-management/${{projectName}}'
+#          arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
+#          tags: |
+#            $(GitVersion.SemVer)
+#            latest
+#        condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
+#
+#
+#  - ${{ each projectName in parameters.components }}:
+#      - task: Docker@2
+#        displayName: Push docker images ${{ projectName }}
+#        inputs:
+#          containerRegistry: ${{ parameters.containerRegistryConnectionName }}
+#          repository: 'gebhardt/fleet-management/${{projectName}}'
+#          command: 'push'
+#          tags: |
+#            $(GitVersion.SemVer)
+#            latest
+#        condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
   - bash: |
       echo "$(componentsToBuild)" >> $(Build.ArtifactStagingDirectory)/Components
