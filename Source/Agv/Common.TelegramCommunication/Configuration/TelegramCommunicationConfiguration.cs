@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 public class TelegramCommunicationConfiguration
 {
     /// <inheritdoc cref="TelegramCommunicationConfiguration"/>>
-    public TelegramCommunicationConfiguration(string ipAddress, int port, int tcpKeepAliveInterval, bool useTcpKeepAlive, int tcpKeepAliveRetryCount, int waitingTime, int lifeTelegramInterval)
+    public TelegramCommunicationConfiguration(string ipAddress, int port, int tcpKeepAliveInterval, bool useTcpKeepAlive, int tcpKeepAliveRetryCount, int waitingTime, int lifeTelegramInterval, bool useConnection)
     {
         IpAddress = ipAddress;
         Port = port;
@@ -18,6 +18,7 @@ public class TelegramCommunicationConfiguration
         UseTcpKeepAlive = useTcpKeepAlive;
         TelegramWaitingTime = waitingTime;
         LifeTelegramInterval = lifeTelegramInterval;
+        UseConnection = useConnection;
     }
 
     /// <inheritdoc cref="TelegramCommunicationConfiguration"/>>
@@ -65,4 +66,9 @@ public class TelegramCommunicationConfiguration
     /// Use life telegrams
     /// </summary>
     public bool UseLifeTelegrams { get; set; }
+
+    /// <summary>
+    /// Use this connection.
+    /// </summary>
+    public bool UseConnection { get; set; } = true;
 }

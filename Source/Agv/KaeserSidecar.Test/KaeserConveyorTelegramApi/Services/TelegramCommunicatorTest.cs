@@ -3,7 +3,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi;
+namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi.Services;
 
 [TestClass]
 public class TelegramCommunicatorTest
@@ -32,5 +32,23 @@ public class TelegramCommunicatorTest
         agvWeStation.Station.ShouldBe(targetStation);
         agvWeStation.Pick.ShouldBe(pickStation);
         agvWeStation.Hu.ShouldBe(hu);
+    }
+
+    [TestMethod]
+    public void RequestStationState_ValidData_PosStateReqEnqueued()
+    {
+        const string station = "PS01";
+
+        var fixture = new TelegramConveyorCommunicatorTestFixture().Build(ServiceKeyProvider.AplWeStation);
+        fixture.ToWePlcTelegramProcessor.HasSendDemand().ShouldBeFalse();
+
+        fixture.Communicator.RequestStationState(station);
+
+        fixture.ToWePlcTelegramProcessor.HasSendDemand().ShouldBeTrue();
+        fixture.ToWePlcTelegramProcessor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
+
+        var postStateReq = new PosStateReq();
+        postStateReq.Load(nextTelegram);
+        postStateReq.Pos.ShouldBe(station);
     }
 }

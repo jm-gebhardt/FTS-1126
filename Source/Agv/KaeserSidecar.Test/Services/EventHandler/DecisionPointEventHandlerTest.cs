@@ -17,15 +17,17 @@ public class DecisionPointEventHandlerTest
         var dropActionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(
             actionGroupState: ActionGroupState.Started, actionState: ActionState.Started, assignedAgv: Guid.NewGuid(), 
             moveDestination:OrderGenerator.KaeserConfiguration.LongLoopMoveTargetNode);
+        const bool useJamState = true;
         var fixture = new DecisionPointEventHandlerTestFixture();
         var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
-            new AgvStatus(){CorrelationId = dropActionGroup.AssignedAgv!.Value }, dropActionGroup, [], [], 3);
+            new AgvStatus(){CorrelationId = dropActionGroup.AssignedAgv!.Value }, dropActionGroup, [], [], 3, useJamState);
 
         await fixture.TestHarness.Bus.Publish(agvPassedDecisionPoint1);
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedDecisionPoint1>();
         fixture.VerifyActionEnqueued(dropActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, dropActionGroup.AssignedAgv!.Value, Times.Once());
         fixture.VerifyStationCountSet(3, Times.Once());
+        fixture.VerifyUseJamStateSet(useJamState, Times.Once());
     }
 
     [TestMethod]
@@ -36,7 +38,7 @@ public class DecisionPointEventHandlerTest
        
         var fixture = new DecisionPointEventHandlerTestFixture();
         var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
-            new AgvStatus() { CorrelationId = actionGroup.AssignedAgv!.Value }, actionGroup, [], [], 3);
+            new AgvStatus() { CorrelationId = actionGroup.AssignedAgv!.Value }, actionGroup, [], [], 3, false);
         
         await fixture.TestHarness.Bus.Publish(agvPassedDecisionPoint1);
 
@@ -52,7 +54,7 @@ public class DecisionPointEventHandlerTest
 
         var fixture = new DecisionPointEventHandlerTestFixture();
         var agvPassedDecisionPoint1 = new AgvPassedDecisionPoint1(AgvDataGenerator.GenerateAgvData(Guid.NewGuid()),
-            new AgvStatus() { CorrelationId = actionGroup.AssignedAgv!.Value }, actionGroup, [], [], 3);
+            new AgvStatus() { CorrelationId = actionGroup.AssignedAgv!.Value }, actionGroup, [], [], 3, false);
         await fixture.TestHarness.Bus.Publish(agvPassedDecisionPoint1);
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedDecisionPoint1>();

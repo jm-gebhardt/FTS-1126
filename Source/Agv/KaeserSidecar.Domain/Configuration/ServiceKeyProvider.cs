@@ -16,4 +16,10 @@ public static class ServiceKeyProvider
     /// understands 'AplWeStation'
     /// </summary>
     public const string AplWeStation = "APLWESTATION";
+
+    /// <summary>
+    /// Key for services receiving telegrams from the PLC that
+    /// sends 'JamState'
+    /// </summary>
+    public const string FromWeStation = "FROMWESTATION";
 }

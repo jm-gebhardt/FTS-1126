@@ -3,7 +3,7 @@ using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
-namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi;
+namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi.Telegrams;
 
 [TestClass]
 public class AgvWeStationTest

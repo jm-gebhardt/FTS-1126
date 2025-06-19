@@ -13,6 +13,6 @@ public static class TestConfigurationProvider
     /// <returns></returns>
     public static TelegramCommunicationConfiguration GetConfiguration()
     {
-        return new TelegramCommunicationConfiguration("ip", 5000, 1000, true, 2, 180000, 60);
+        return new TelegramCommunicationConfiguration("ip", 5000, 1000, true, 2, 180000, 60, true);
     }
 }

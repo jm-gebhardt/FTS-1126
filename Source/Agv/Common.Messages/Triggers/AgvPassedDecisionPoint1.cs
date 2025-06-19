@@ -13,5 +13,6 @@ namespace Gebhardt.Acc.Common.Messages.Triggers;
 /// <param name="Cargo">The current cargo.</param>
 /// <param name="Errors">The errors of the agv.</param>
 /// <param name="StationCount">The number of available stations.</param>
+/// <param name="UseJamState">True, if the jam state should be considered during target selection.</param>
 [PublicAPI]
-public record AgvPassedDecisionPoint1(AgvData AgvData, AgvStatus AgvStatus, ActionGroup? ActionGroup, ICollection<Cargo> Cargo, ICollection<AgvError> Errors, int StationCount);
+public record AgvPassedDecisionPoint1(AgvData AgvData, AgvStatus AgvStatus, ActionGroup? ActionGroup, ICollection<Cargo> Cargo, ICollection<AgvError> Errors, int StationCount, bool UseJamState);

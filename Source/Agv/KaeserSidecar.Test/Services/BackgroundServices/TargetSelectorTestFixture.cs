@@ -6,10 +6,12 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
-using Gebhardt.Acc.KaeserSidecar.Domain.Services;
+using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
+using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shouldly;
@@ -32,8 +34,11 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
 
     public List<ActionGroup> ActionGroups { get; } = new();
 
-    public TargetSelectorTestFixture()
+    private readonly bool _hasJam;
+
+    public TargetSelectorTestFixture(bool hasJam = false)
     {
+        _hasJam = hasJam;
         AddServices(collection =>
         {
             collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
@@ -54,6 +59,12 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
         _stationRepository = (Provider.GetRequiredService<IStationRepository>() as StationRepository)!;
         Selector = (Provider.GetRequiredService<ITargetSelector>() as TargetSelector)!;
         _transportOrderDb.Setup(x => x.ActionGroups.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => { return ActionGroups.Single(a => a.Actions.Any(ac => ac.CorrelationId == c)); });
+    }
+
+    protected override void ConfigureMassTransitTestHarness(IBusRegistrationConfigurator busRegistrationConfigurator)
+    {
+        base.ConfigureMassTransitTestHarness(busRegistrationConfigurator);
+        busRegistrationConfigurator.AddSingleton(RequestClientGenerator<GetJamState>.CreateDummyRequestClient(() => new GotJamState(_hasJam)));
     }
 
     public TargetSelectorTestFixture WithDecisionPointAction(params DecisionPointAction[] actions)
@@ -79,7 +90,7 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
 
     public TargetSelectorTestFixture WithOccupancies(params (int Count, Guid? AgvId)[] occupiedCountAndAgv)
     {
-        string[] stationIds = new[] {"1", "2", "3"};
+        string[] stationIds = new[] { "1", "2", "3" };
 
         List<StationOccupancy> occupancyList = stationIds
             .Select((id, index) =>

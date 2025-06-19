@@ -13,15 +13,17 @@ public class ConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
 {
     private readonly ILogger<ConveyorTelegramProcessor> _logger;
     private readonly TelegramCommunicationConfiguration _configuration;
+    private readonly JamStateProcessor _jamStateProcessor;
 
     /// <summary>
     /// Provides a processor for incoming conveyor telegrams.
     /// </summary>
-    public ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger, TelegramCommunicationConfiguration configuration)
+    public ConveyorTelegramProcessor(ILogger<ConveyorTelegramProcessor> logger, TelegramCommunicationConfiguration configuration, JamStateProcessor jamStateProcessor)
     {
         _logger = logger;
         RestartRequested = false;
         _configuration = configuration;
+        _jamStateProcessor = jamStateProcessor;
     }
 
     private ConveyorTelegram? CurrentTelegram { get; set; }
@@ -56,13 +58,24 @@ public class ConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
         return !SendAcknowledgement;
     }
 
+    private readonly Random _random = new(0);
+    private readonly List<int> _stateValues = [0, 1];
+
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override void ProcessReceivedTelegram(string telegram)
     {
         var conveyorTelegram = new ConveyorTelegram();
         conveyorTelegram.Load(telegram);
         _logger.LogInformation("Processing telegram {Telegram}", telegram);
-
+        
+        if (conveyorTelegram.Func == nameof(PosStateReq))
+        {
+            var posStateReq = new PosStateReq();
+            posStateReq.Load(telegram);
+            int state = _stateValues[_random.Next(_stateValues.Count)];
+            var jamState = new JamState(posStateReq.Pos, state);
+            _jamStateProcessor.EnqueueTelegram(jamState);
+        }
         CurrentTelegram = conveyorTelegram;
         SendAcknowledgement = true;
     }

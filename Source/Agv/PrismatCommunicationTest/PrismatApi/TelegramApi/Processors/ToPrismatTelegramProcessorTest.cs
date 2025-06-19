@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
+﻿using Gebhardt.Acc.PrismatCommunication.TelegramApi;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,7 +13,7 @@ public class ToPrismatTelegramProcessorTest
     [TestMethod]
     public void TrySendLifeTelegram_NoTelegramToSend_LifeTelegramQueued()
     {
-        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(true)
+        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(ServiceKeyProvider.ToPrismat, true)
             .Build();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.TrySendLifeTelegram();
@@ -25,7 +26,7 @@ public class ToPrismatTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoDemandLifeTelegramDue_ReturnsLifeTelegram()
     {
-        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(true)
+        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(ServiceKeyProvider.ToPrismat, true)
             .Build();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeTrue();
@@ -39,7 +40,7 @@ public class ToPrismatTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_HasSendDemand_ReturnsTelegramFromQueue()
     {
-        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(true)
+        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(ServiceKeyProvider.ToPrismat, true)
             .Build();
         var now = DateTime.UtcNow;
         var telegram = new Arrival(DateTime.UtcNow, "position", "hu");
@@ -58,7 +59,7 @@ public class ToPrismatTelegramProcessorTest
     [TestMethod]
     public void ProcessReceivedTelegram_FullSendReceiveCycle_AcknowledgementHandled()
     {
-        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(true)
+        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(ServiceKeyProvider.ToPrismat, true)
             .Build();
         var telegram = new Arrival(DateTime.UtcNow, "position", "hu");
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
@@ -74,7 +75,7 @@ public class ToPrismatTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoAcknowledgementReceived_ResendUntilMaxRetryIsReached()
     {
-        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(true)
+        TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(ServiceKeyProvider.ToPrismat, true)
             .Build();
 
         var now = DateTime.UtcNow;

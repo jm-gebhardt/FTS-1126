@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.KaeserSidecar.Domain.Services;
+﻿namespace Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 
 /// <summary>
 /// A selector for the next target
@@ -22,4 +22,10 @@ public interface ITargetSelector
     /// Dequeue an agv.
     /// </summary>
     Task Dequeue(Guid actionCorrelationId);
+
+    /// <summary>
+    /// Switch on or off usage of the station jam state.
+    /// </summary>
+    /// <param name="useJamState">True, if the jam state should be used.</param>
+    void SetUseJamState(bool useJamState);
 }

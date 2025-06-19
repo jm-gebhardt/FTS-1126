@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
@@ -15,7 +16,7 @@ public class TordProcessorTest
     [TestMethod]
     public async Task ProcessReceivedTelegram_Tord_PublishesCreateHostOrder()
     {
-        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>()
+        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var tord = new Tord();
@@ -39,7 +40,7 @@ public class TordProcessorTest
     [TestMethod]
     public async Task ProcessReceivedTelegram_NotTordTelegram_DoesNotPublishCreateHostOrderDoesNotSwapToSendingMode()
     {
-        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>()
+        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         fixture.Processor.ProcessReceivedTelegram(TestTelegram.Arrival);
@@ -51,7 +52,7 @@ public class TordProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoCurrentTelegram_ReturnsFalse()
     {
-        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>()
+        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeFalse();
@@ -61,7 +62,7 @@ public class TordProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_CurrentTelegram_ReturnsTrueAndAcknowledgement()
     {
-        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>()
+        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var tord = new Tord();
@@ -75,7 +76,7 @@ public class TordProcessorTest
     [TestMethod]
     public void Cancel_CurrentTelegram_ResetsCurrentTelegram()
     {
-        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>()
+        TelegramProcessorTestFixture<TordProcessor, Tord> fixture = new TelegramProcessorTestFixture<TordProcessor, Tord>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var tord = new Tord();

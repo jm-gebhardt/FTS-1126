@@ -15,7 +15,7 @@ public class FromPrismatTelegramProcessorTestFixture : TelegramProcessorTestFixt
     private readonly Mock<TelegramProcessorFactory> _processorFactory;
     private readonly Mock<TelegramProcessorBase<PrismatTelegram>> _processorMock = new();
 
-    public FromPrismatTelegramProcessorTestFixture()
+    public FromPrismatTelegramProcessorTestFixture() : base(ServiceKeyProvider.FromPrismat)
     {
         var serviceProvider = new Mock<IServiceProvider>();
         var factoryProcessorLogger = new Mock<ILogger<TelegramProcessorFactory>>();

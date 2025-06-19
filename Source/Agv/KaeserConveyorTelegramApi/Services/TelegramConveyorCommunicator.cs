@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
+﻿using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
+using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
@@ -10,7 +11,13 @@ namespace Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 
 /// <inheritdoc cref="IConveyorCommunicator"/>>
 [PublicAPI]
-public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> logger, [FromKeyedServices(ServiceKeyProvider.AplWeStation)] ToWePlcTelegramProcessor toWePlcTelegramProcessor, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] AgvAplCargoStateProcessor agvCargoStateTelegramProcessor) : IConveyorCommunicator
+public class TelegramConveyorCommunicator(
+    ILogger<TelegramConveyorCommunicator> logger,
+    [FromKeyedServices(ServiceKeyProvider.AplWeStation)]
+    ToWePlcTelegramProcessor toWePlcTelegramProcessor,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    AgvAplCargoStateProcessor agvCargoStateTelegramProcessor,
+    [FromKeyedServices(ServiceKeyProvider.FromWeStation)] TelegramCommunicationConfiguration configuration) : IConveyorCommunicator
 {
     /// <inheritdoc cref="IConveyorCommunicator"/>>
     public void ReportAplCargoState(bool cargo)
@@ -34,5 +41,19 @@ public class TelegramConveyorCommunicator(ILogger<TelegramConveyorCommunicator> 
         var tord = new Tord(source, destination, hu, DateTime.UtcNow);
         toWePlcTelegramProcessor.EnqueueTelegram(tord);
         logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", tord.ToString(), ServiceKeyProvider.AplWeStation);
+    }
+
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void RequestStationState(string station)
+    {
+        var posStateReq = new PosStateReq(station, DateTime.UtcNow);
+        if (!configuration.UseConnection)
+        {
+            logger.LogDebug("Not queuing telegram '{Telegram}' for sending to conveyor, connection disabled", posStateReq.ToString());
+            return;
+        }
+       
+        toWePlcTelegramProcessor.EnqueueTelegram(posStateReq);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor", posStateReq.ToString());
     }
 }

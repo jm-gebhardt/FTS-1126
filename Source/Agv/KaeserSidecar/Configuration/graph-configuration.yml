@@ -2,23 +2,27 @@ DecisionPoint1TriggerName: DP1
 CheckCargoTriggerName: DP2
 DoppelspielTriggerName: DP3
 LongLoopMoveTargetNode: "map/NODE-9"
+LeftShortLoopWaitingNode: "map/NODE-32"
+RightShortLoopWaitingNode: "map/NODE-27"
 StationMapping:
-  "1020": "PS03"
-  "1050": "PS03"
-  "2110": "AP01"
-  "2130": "AP01"
-  "2210": "AP02"
-  "2230": "AP02"
-  "2310": "AP03"
-  "2330": "AP03"
-  "2410": "AP04"
-  "2430": "AP04"
+  "1020": "PS3"
+  "1050": "PS3"
+  "1040": "PS3"
+  "1060": "PS3"
+  "2110": "AP1"
+  "2130": "AP1"
+  "2210": "AP2"
+  "2230": "AP2"
+  "2310": "AP3"
+  "2330": "AP3"
+  "2410": "AP4"
+  "2430": "AP4"
   "9060": "APL1"
   "9070": "APL1"
 ConveyorStationMapping:
-  "PS01": "WE01"
-  "PS02": "WE02"
-  "PS03": "WE03"
+  "PS1": "PS01"
+  "PS2": "PS02"
+  "PS3": "PS03"
 TargetLiftHeight:
   "2110": 1.0
   "2130": 1.5
@@ -28,18 +32,8 @@ TargetLiftHeight:
   "2330": 1.5
   "2410": 1.0
   "2430": 1.5
+UseAklAgvLimit: false
 OrderValidationErrors:
     1000: "Quell-Station nicht bekannt"
     2000: "Ziel-Station nicht bekannt"
     3000: "Route von Quelle zu Ziel nicht bekannt"
-StationGroups:
-  AP01-AP02:
-    - Source: "2130"
-      Target: "2110"
-    - Source: "2230"
-      Target: "2210"
-  AP03-AP04:
-    - Source: "2330"
-      Target: "2310"
-    - Source: "2430"
-      Target: "2410"

@@ -27,4 +27,11 @@ public class SimulationConveyorCommunicator(ILogger<SimulationConveyorCommunicat
         var tord = new Tord(source, destination, hu, DateTime.UtcNow);
         logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor", tord.ToString());
     }
+
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void RequestStationState(string station)
+    {
+        var posStateReq = new PosStateReq(station, DateTime.UtcNow);
+        logger.LogInformation("Queuing telegram '{Telegram}' for sending to conveyor", posStateReq.ToString());
+    }
 }

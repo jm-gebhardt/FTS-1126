@@ -20,4 +20,9 @@ public interface IConveyorCommunicator
     /// Report the drop of a pallet at PS01/PS02/PS03 to the conveyor.
     /// </summary>
     void ReportPalletDrop(string source, string destination, string hu);
+
+    /// <summary>
+    /// Request the state of a station at the conveyor.
+    /// </summary>
+    void RequestStationState(string station);
 }

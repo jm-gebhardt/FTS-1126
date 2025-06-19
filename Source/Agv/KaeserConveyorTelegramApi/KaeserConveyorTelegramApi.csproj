@@ -6,7 +6,8 @@
         <PackageReference Include="JetBrains.Annotations" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
+        <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
+      <ProjectReference Include="..\KaeserSidecar.Messages\KaeserSidecar.Messages.csproj" />
     </ItemGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
 </Project>

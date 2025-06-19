@@ -99,7 +99,7 @@ public class WaitingHandler(
         });
     }
 
-    /// <inheritdoc cref="ITargetSelector"/>>
+    /// <inheritdoc cref="IWaitingHandler"/>>
     public Task StopHandling(Guid actionCorrelationId)
     {
         return semaphoreProvider.ExecuteLockedAsync(async () =>

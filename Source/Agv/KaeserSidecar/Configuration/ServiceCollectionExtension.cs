@@ -28,6 +28,7 @@ public static class ServiceCollectionExtension
     public static IServiceCollection AddConveyorApi(this IServiceCollection serviceCollection, IConfiguration configuration)
     {
         serviceCollection.AddWePlcConnection<ToWePlcCommunicationManager>(configuration, ServiceKeyProvider.AplWeStation);
+        serviceCollection.AddFromWePlcConnection<FromWePlcCommunicationManager>(configuration, ServiceKeyProvider.FromWeStation);
         serviceCollection.AddAplPlcConnection<AgvCargoStateCommunicationManager>(configuration, ServiceKeyProvider.AgvCargoState);
         return serviceCollection;
     }
@@ -42,12 +43,12 @@ public static class ServiceCollectionExtension
     // ReSharper disable once UnusedMethodReturnValue.Global
     // ReSharper disable once UnusedMethodReturnValue.Local
     private static IServiceCollection AddWePlcConnection<TCommunicationManager>(this IServiceCollection serviceCollection, IConfiguration configuration, string plc)
-    where TCommunicationManager: BackgroundService
+    where TCommunicationManager : BackgroundService
     {
         var config = new TelegramCommunicationConfiguration();
         config.LoadFromConfig(configuration.GetRequiredSection(plc));
         serviceCollection.AddKeyedSingleton(plc, (_, _) => config);
-
+       
         // Connection
         serviceCollection.AddKeyedSingleton<Client>(plc, (serviceProvider, _) =>
         {
@@ -74,6 +75,48 @@ public static class ServiceCollectionExtension
                 var socket = serviceProvider.GetKeyedService<Client>(plc);
                 var processor = serviceProvider.GetKeyedService<ToWePlcTelegramProcessor>(plc);
                 return new Sender<ConveyorTelegram>(socket!, plc, processor!, logger);
+            });
+
+        serviceCollection.AddHostedService<TCommunicationManager>();
+        return serviceCollection;
+    }
+
+    /// <summary>
+    /// Adds services required for connecting a receiving channel to the conveyor plc.
+    /// </summary>
+    /// <param name="serviceCollection">The service collection.</param>
+    /// <param name="configuration">The configuration</param>
+    /// <param name="plc">The plc identifier.</param>
+    /// <returns></returns>
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    // ReSharper disable once UnusedMethodReturnValue.Local
+    private static IServiceCollection AddFromWePlcConnection<TCommunicationManager>(this IServiceCollection serviceCollection, IConfiguration configuration, string plc)
+    where TCommunicationManager : BackgroundService
+    {
+        var config = new TelegramCommunicationConfiguration();
+        config.LoadFromConfig(configuration.GetRequiredSection(plc));
+        serviceCollection.AddKeyedSingleton(plc, (_, _) => config);
+        serviceCollection.AddTransient<TelegramProcessorFactory>();
+        serviceCollection.AddSingleton<JamStateProcessor>();
+        serviceCollection.AddSingleton<LifeProcessor>();
+        serviceCollection.AddSingleton<FromWePlcTelegramProcessor>();
+        // Connection
+        serviceCollection.AddKeyedSingleton<Client>(plc, (serviceProvider, _) =>
+        {
+            var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+            return new Client(logger, config);
+        });
+
+        // Queue
+        serviceCollection.AddKeyedSingleton<ConcurrentQueue<ConveyorTelegram>>(plc);
+
+        serviceCollection.AddKeyedSingleton<Receiver<ConveyorTelegram>>(plc,
+            (serviceProvider, _) =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<ConveyorTelegram>>>();
+                var socket = serviceProvider.GetKeyedService<Client>(plc);
+                var processor = serviceProvider.GetRequiredService<FromWePlcTelegramProcessor>();
+                return new Receiver<ConveyorTelegram>(socket!, plc, processor, logger);
             });
 
         serviceCollection.AddHostedService<TCommunicationManager>();

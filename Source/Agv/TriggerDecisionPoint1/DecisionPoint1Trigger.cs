@@ -15,6 +15,7 @@ namespace Gebhardt.Acc.TriggerDecisionPoint1;
 [UsedImplicitly]
 public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logger) : IFfcTrigger
 {
+    private readonly ConfigurationParameter _useJamStateParameter = new("UseJamState", "Flag for switching on jam state consideration", false.ToString().ToLower(), "^(true|false)$");
     private const string PropertyName = "StationCount";
     private const string PropertyDescription = "Anzahl der Stationen, die als Ziel für APL 1060 verwendet werden können, d.h. wenn 3 : WE01, WE02, WE03, wenn 2: WE01, WE02, wenn 1: WE01";
     private int _propertyValue = 3;
@@ -24,13 +25,21 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
     {
         var config = new ConcurrentDictionary<string, ConfigurationParameter>();
         config.TryAdd(PropertyName, new ConfigurationParameter(PropertyName, PropertyDescription, _propertyValue.ToString(), @"^\d+$"));
+        config.TryAdd(_useJamStateParameter.Name, _useJamStateParameter);
         return config;
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
     public void UpdateDefaultConfigurationParameter(string name, string value)
     {
-        _propertyValue = int.Parse(value);
+        if (name == PropertyName)
+        {
+            _propertyValue = int.Parse(value);
+        }
+        if (name == _useJamStateParameter.Name)
+        {
+            _useJamStateParameter.Value = value;
+        }
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
@@ -48,7 +57,7 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
         int stationCount = int.Parse(stationCountParameter!.Value);
         logger.LogInformation("Current StationCount set to {stationCount}", stationCount);
 
-        await bus.Publish(new AgvPassedDecisionPoint1(agvData, agvStatus, actionGroup, cargo, errors, stationCount));
+        await bus.Publish(new AgvPassedDecisionPoint1(agvData, agvStatus, actionGroup, cargo, errors, stationCount, ShouldUseJamState(parameters)));
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
@@ -63,5 +72,12 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
     public Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
         return Task.CompletedTask;
+    }
+    
+    private bool ShouldUseJamState(Dictionary<string, ConfigurationParameter> parameters)
+    {
+        var enable = parameters.GetValueOrDefault(_useJamStateParameter.Name) ??
+                     GetDefaultConfigurationParameters().GetValueOrDefault(_useJamStateParameter.Name);
+        return bool.Parse(enable!.Value);
     }
 }

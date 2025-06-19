@@ -1,15 +1,17 @@
 ﻿using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.Acc.KaeserSidecar.Domain.Services;
+namespace Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 
 /// <inheritdoc cref="TargetSelector"/>>
 [UsedImplicitly]
@@ -20,11 +22,14 @@ public class TargetSelector(
     ITransportOrderDb transportOrderDb,
     IDecisionPointActionRepository decisionPointActionRepository,
     ISemaphoreProvider<ITargetSelectionSemaphore> semaphoreProvider,
-    IBus bus) : BackgroundService, ITargetSelector
+    IBus bus,
+    IRequestClient<GetJamState> jamStateRequestClient) : BackgroundService, ITargetSelector
+    
 {
     private readonly List<Guid> _lastEvaluatedActions = [];
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
     private int _consideredStations = 3;
+    private bool _useJamState;
 
     /// <summary>
     /// The time to wait between two target selection attempts.
@@ -118,6 +123,7 @@ public class TargetSelector(
         ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
 
         //Try to take the station that is not occupied, is not locked, and was not chosen last (to compensate for the delay between setting target and starting action)
+        // If jam state is used, the station is only considered available without a jam
         ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
         foreach (var occupancy in availableStations)
         {
@@ -125,6 +131,18 @@ public class TargetSelector(
             {
                 logger.LogInformation("Station: {Station} is not free, as it's occupied by {occupancy.Count} agv, StationCount set to {StationCount}", occupancy.Station, occupancy.Count, consideredStations);
                 continue;
+            }
+            if (_useJamState)
+            {
+                string jamStateStation = configuration.ConveyorStationMapping[occupancy.Station];
+                logger.LogInformation("Considering jam state for station {Target}", occupancy.Station);
+                var getJamState = new GetJamState(jamStateStation, DateTime.UtcNow);
+                Response<GotJamState> response = await jamStateRequestClient.GetResponse<GotJamState>(getJamState, timeout: TimeSpan.FromSeconds(2.5 * getJamState.JamStateWaitingTimeSec));
+                if (response.Message.HasJam)
+                {
+                    logger.LogInformation("Station {Target} not available due to pallet jam ", occupancy.Station);
+                    continue;
+                }
             }
             selectedTarget = occupancy.Station;
             break;
@@ -189,6 +207,12 @@ public class TargetSelector(
 
             await RemoveAction(skippedAction.CorrelationId);
         });
+    }
+
+    /// <inheritdoc cref="ITargetSelector"/>>
+    public void SetUseJamState(bool useJamState)
+    {
+        _useJamState = useJamState;
     }
 
     private async Task RemoveAction(Guid correlationId)

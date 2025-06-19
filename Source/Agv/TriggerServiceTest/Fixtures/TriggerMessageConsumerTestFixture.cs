@@ -56,7 +56,6 @@ public class TriggerMessageConsumerTestFixture<TConsumer> : MassTransitConsumerT
 
     public void VerifyConfigurationParametersUpdated(Guid triggerId, ICollection<ConfigurationParameter> parameters)
     {
-        _triggerManagerMock.Verify(x => x.UpdateDefaultConfigurationParameters(triggerId, 
-            It.Is<ICollection<ConfigurationParameter>>( c=> c.All(p => parameters.Any(a => a.Value == p.Value && a.Name == p.Name && a.Validation == p.Validation)))), Times.Once());
+        _triggerManagerMock.Verify(x => x.UpdateDefaultConfigurationParameters(triggerId, It.Is<ICollection<ConfigurationParameter>>( c=> c.All(p => parameters.Any(a => a.Value == p.Value && a.Name == p.Name && a.Validation == p.Validation)))), Times.Once());
     }
 }

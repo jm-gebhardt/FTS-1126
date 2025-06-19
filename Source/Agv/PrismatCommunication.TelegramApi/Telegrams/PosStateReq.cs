@@ -12,7 +12,7 @@ public class PosStateReq : PrismatTelegram
     /// </summary>
     public string Pos { get; private set; } = null!;
 
-    /// <inheritdoc cref="Status"/>>
+    /// <inheritdoc cref="PosStateReq"/>>
     public PosStateReq(string pos, DateTime time)
     {
         Length = 216;
@@ -23,7 +23,7 @@ public class PosStateReq : PrismatTelegram
         Pos = pos;
     }
 
-    /// <inheritdoc cref="Status"/>>
+    /// <inheritdoc cref="PosStateReq"/>>
     public PosStateReq()
     {
         Func = nameof(PosStateReq);

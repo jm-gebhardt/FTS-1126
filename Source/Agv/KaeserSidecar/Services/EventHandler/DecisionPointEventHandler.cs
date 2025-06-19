@@ -1,8 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
-using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -24,7 +24,7 @@ public class DecisionPointEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<AgvPassedDecisionPoint1> context)
     {
-        (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _, int consideredStations) = context.Message;
+        (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _, int consideredStations, bool useJamState) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) || actionGroup.Actions.All(a => a.Target.NodeId != string.Empty))
         {
             logger.LogWarning("Skip target selection: Agv {AgvCorrelationId} passed decision point without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
@@ -44,6 +44,7 @@ public class DecisionPointEventHandler(
 
             return;
         }
+        selector.SetUseJamState(useJamState);
         selector.SetStationCount(consideredStations);
         await selector.Enqueue(action.CorrelationId, agvStatus.CorrelationId);
     }

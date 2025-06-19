@@ -23,6 +23,8 @@ public static class TestTelegram
 
     public const string Status = "/Seq:001/Send:FTS01.../Rec:EWM...../Time:2021:11:02:08:12:09:122/Func:Status............../Pos:FTS001..../State:AUTO/ERR:5000/Info:AAA.............................................../$$:";
     public const string PosStateReq = "/Seq:001/Send:EWM...../Rec:FTS01.../Time:2021:11:02:08:12:09:122/Func:PosStateReq........./Pos:FTS001/$$:";
+    public const string WePosStateReq = "/Seq:001/Send:FTS01.../Rec:UST...../Time:2021:11:02:08:12:09:122/Func:PosStateReq........./Pos:PS01../$$:";
+    public const string JamState = "/Seq:001/Send:UST...../Rec:FTS01.../Time:2021:11:02:08:12:09:122/Func:JamState............/Pos:PS01../State:1/$$:";
     
     [PublicAPI]
     public const string ResetCounter = "/Seq:000/Send:EWM...../Rec:FTS01.../Time:2020:12:13:20:12:09:122/Func:..................../$$:";

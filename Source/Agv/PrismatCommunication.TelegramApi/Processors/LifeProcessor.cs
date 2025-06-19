@@ -15,7 +15,7 @@ public class LifeProcessor(ILogger<LifeProcessor> logger, [FromKeyedServices(Ser
     /// </summary>
     public Life? CurrentTelegram { get; private set; }
 
-    /// <inheritdoc cref="InboundTelegramProcessorBase{Tord}"/>>
+    /// <inheritdoc cref="InboundTelegramProcessorBase{Life}"/>>
     public override bool GetNextTelegramToSend(out string telegram)
     {
         if (CurrentTelegram == null)
@@ -29,7 +29,7 @@ public class LifeProcessor(ILogger<LifeProcessor> logger, [FromKeyedServices(Ser
         return true;
     }
 
-    /// <inheritdoc cref="InboundTelegramProcessorBase{Tord}"/>>
+    /// <inheritdoc cref="InboundTelegramProcessorBase{Life}"/>>
     public override void ProcessReceivedTelegram(string telegram)
     {
         var life = new Life(DateTime.UtcNow);
@@ -42,7 +42,7 @@ public class LifeProcessor(ILogger<LifeProcessor> logger, [FromKeyedServices(Ser
         ShouldReceive = false;
     }
 
-    /// <inheritdoc cref="InboundTelegramProcessorBase{Tord}"/>>
+    /// <inheritdoc cref="InboundTelegramProcessorBase{Life}"/>>
     public override void Cancel()
     {
         CurrentTelegram = null;

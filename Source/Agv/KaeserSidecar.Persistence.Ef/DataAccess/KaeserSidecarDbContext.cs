@@ -27,6 +27,7 @@ public class KaeserSidecarDbContext: DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new StationOccupancyEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new JamStateEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OrderReportEntityConfiguration());
         modelBuilder.ApplyConfiguration(new DecisionPointActionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new WaitingPointActionEntityConfiguration());
