@@ -199,8 +199,7 @@ public class AgvActionCommandHandlerTest
     {
         var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
-        var actionGroupMessageContent = order.CreateMovePickDropActionGroup(OrderGenerator.KaeserConfiguration, DateTime.UtcNow);
-        actionGroupMessageContent.AssignedAgv = Guid.NewGuid();
+        var actionGroupMessageContent = order.CreateActionGroup(OrderGenerator.KaeserConfiguration, Guid.NewGuid());
         string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
         var actionGroup = AgvActionGenerator.ConvertFromMessage(actionGroupMessageContent);
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);

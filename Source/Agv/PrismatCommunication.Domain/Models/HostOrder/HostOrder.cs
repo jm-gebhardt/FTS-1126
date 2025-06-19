@@ -128,7 +128,7 @@ public class HostOrder
     /// Get the id of a transport order corresponding to the host order.
     /// </summary>
     /// <param name="hu">The handling unit.</param>
-    public static string  GetTransportOrderId(string hu)
+    public static string GetTransportOrderId(string hu)
     {
         return $"HU({hu})";
     }
@@ -217,8 +217,8 @@ public class HostOrder
     /// <param name="type">The type of the action.</param>
     public void FinishAction(DateTime timestamp, ActionType type)
     {
-       var action = Actions.Single(a => a.ActionType == type);
-       action.Finish(timestamp);
+        var action = Actions.Single(a => a.ActionType == type);
+        action.Finish(timestamp);
     }
 
     /// <summary>
@@ -250,46 +250,70 @@ public class HostOrder
     {
         return Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node));
     }
-    
+
     /// <summary>
-    /// Try to create an action group with a pick and a drop action from the host order.
+    /// Create an action group from the host order.
     /// </summary>
     /// <param name="configuration">The graph configuration.</param>
-    /// <param name="creationDate">The creation date of the order.</param>
-    /// <returns>Action group with pick and drop actions.</returns>
-    public ActionGroup? TryCreatePickDropActionGroup(KaeserGraphConfiguration configuration, DateTime creationDate)
+    /// <param name="assignedAgv">The assigned agv, if any.</param>
+    /// <param name="pickNode">The pick node, if given after Doppelspiel.</param>
+    /// <returns>The action group.</returns>
+    public ActionGroup CreateActionGroup(KaeserGraphConfiguration configuration, Guid? assignedAgv = null, string? pickNode = null)
     {
-        bool canCreatePickDropActionGroup = Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node));
-        if (canCreatePickDropActionGroup)
+        if (pickNode != null && HasUnknownPickTarget(configuration))
         {
-            return new ActionGroup(CorrelationId,
-                TransportOrderId,
-                Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv)
-                    { Sequence = a.SequenceNumber }).ToList(),
-                ActionGroupCreator.Wms,
-                creationDate);
+            // Doppelspiel at APL
+            return CreatePickDropActionGroupForAgv(pickNode, assignedAgv, configuration);
         }
-        return null;
+
+        if (pickNode != null && IsShortCircuitOrder(configuration) && !configuration.IsPickAtAkl(Source))
+        {
+            // Doppelspiel at PSX for AKL drop
+            return CreatePickDropActionGroupForAgv(pickNode, assignedAgv, configuration);
+        }
+
+        if (HasUnknownPickTarget(configuration))
+        {
+            // PSX-> APL
+            return CreateMovePickDropActionGroup(configuration, configuration.LongLoopMoveTargetNode, assignedAgv: assignedAgv);
+        }
+
+        if (HasUnknownDropTarget(configuration))
+        {
+            // APL-> PSX
+            return CreatePickMoveDropActionGroup(configuration, configuration.LongLoopMoveTargetNode, assignedAgv: assignedAgv);
+        }
+
+        if (IsShortCircuitOrder(configuration) && configuration.IsPickAtAkl(Source))
+        {
+            // AKL -> PSX
+            return CreatePickMoveDropActionGroup(configuration, configuration.WaitingPositionByAklSource[Source], assignedAgv: assignedAgv);
+        }
+
+        // PSX-> AKL
+        return CreateMovePickDropActionGroup(configuration, configuration.WaitingPositionByAklTarget[Target], assignedAgv: assignedAgv);
     }
 
     /// <summary>
     /// Try to create an action group with a move, pick, and a drop action from the host order.
     /// </summary>
     /// <param name="configuration">The graph configuration.</param>
-    /// <param name="creationDate">The creation date of the host order.</param>
+    /// <param name="moveTarget">The target of the move action.</param>
+    /// <param name="assignedAgv">The agv that should run the order.</param>
     /// <returns>Action group with move, pick, drop actions, whereby the pick action has no target.</returns>
-    public ActionGroup CreateMovePickDropActionGroup(KaeserGraphConfiguration configuration, DateTime creationDate)
+    private ActionGroup CreateMovePickDropActionGroup(KaeserGraphConfiguration configuration, string moveTarget, Guid? assignedAgv = null)
     {
         return new ActionGroup(
-                CorrelationId, 
-                TransportOrderId,
-                [
-                    new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId),
-                    Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 1} ).First(),
-                    Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 2} ).First()
-                ], 
-                ActionGroupCreator.Wms, 
-                creationDate);
+            CorrelationId,
+            TransportOrderId,
+            [
+                new AgvAction(Guid.NewGuid(), ActionType.Move, moveTarget, CorrelationId),
+                Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv) { Sequence = 1 }).First(),
+                Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv) { Sequence = 2 }).First()
+            ],
+            ActionGroupCreator.Wms,
+            CreatedDate,
+            assignedAgv) { HandlingUnit = Hu };
     }
 
     /// <summary>
@@ -297,33 +321,20 @@ public class HostOrder
     /// </summary>
     /// <param name="configuration">The graph configuration.</param>
     /// <param name="assignedAgv">The assigned agv.</param>
+    /// <param name="moveTarget">The target of the move action.</param>
     /// <returns>Action group with move, pick, drop actions, whereby the drop action has no target.</returns>
-    public ActionGroup CreatePickMoveDropActionGroup(KaeserGraphConfiguration configuration, Guid? assignedAgv = null)
+    private ActionGroup CreatePickMoveDropActionGroup(KaeserGraphConfiguration configuration, string moveTarget, Guid? assignedAgv = null)
     {
-        if (assignedAgv != null)
-        {
-            AssignedAgv = assignedAgv;
-            return new ActionGroup(
-                CorrelationId,
-                TransportOrderId,
-                [
-                    Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
-                    new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId){Sequence = 1},
-                    Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 2} ).First()
-                ],
-                ActionGroupCreator.Wms,
-                CreatedDate){AssignedAgv = assignedAgv};
-        }
         return new ActionGroup(
             CorrelationId,
             TransportOrderId,
             [
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node] , CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
-                new AgvAction(Guid.NewGuid(), ActionType.Move, configuration.LongLoopMoveTargetNode, CorrelationId){Sequence = 1},
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv){Sequence = 2} ).First()
+                Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv) { Sequence = 0 }).First(),
+                new AgvAction(Guid.NewGuid(), ActionType.Move, moveTarget, CorrelationId) { Sequence = 1 },
+                Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, "", CorrelationId, a.InfoToAgv) { Sequence = 2 }).First()
             ],
             ActionGroupCreator.Wms,
-            CreatedDate);
+            CreatedDate) { AssignedAgv = assignedAgv, HandlingUnit = Hu };
     }
 
     /// <summary>
@@ -334,18 +345,17 @@ public class HostOrder
     /// <param name="agv">Optional correlation id of the agv.</param>
     /// <param name="configuration">The graph configuration</param>
     /// <returns>ActionGroup with pick and drop actions, assigned to the given agv.</returns>
-    [PublicAPI]
-    public ActionGroup CreatePickDropActionGroupForAgv(string pickNode, Guid? agv, KaeserGraphConfiguration configuration)
+    private ActionGroup CreatePickDropActionGroupForAgv(string pickNode, Guid? agv, KaeserGraphConfiguration configuration)
     {
         AssignedAgv = agv;
         return new ActionGroup(CorrelationId,
             TransportOrderId,
             [
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select( a => new AgvAction(a.CorrelationId, a.ActionType,  pickNode, CorrelationId, a.InfoToAgv){Sequence = 0} ).First(),
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select( a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv){Sequence = 1} ).First()
+                Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, pickNode, CorrelationId, a.InfoToAgv) { Sequence = 0 }).First(),
+                Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node], CorrelationId, a.InfoToAgv) { Sequence = 1 }).First()
             ],
             ActionGroupCreator.Wms,
-            DateTime.UtcNow){AssignedAgv = agv};
+            CreatedDate) { AssignedAgv = agv, HandlingUnit = Hu };
     }
 
     /// <summary>

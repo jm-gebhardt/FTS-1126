@@ -36,6 +36,7 @@ parameters:
       - TriggerDoppelspiel
       - TriggerQueueEvacuation
       - TriggerQueueHeadEvacuation
+      - TriggerShortLoopWaitingPoint
 
 stages:
   - stage: codeAnalysis

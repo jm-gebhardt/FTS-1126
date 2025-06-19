@@ -74,7 +74,7 @@ public class HostOrderCommandHandler(
         if (configuration.IsPickAtAkl(hostOrder.Source))
         {
             logger.LogDebug("Order {OrderCorrelationId}, is pick at AKL: delay queueing it", hostOrder.CorrelationId);
-            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate);
+            await CreateHostOrder(context, hostOrder);
             return;
         }
 
@@ -92,18 +92,18 @@ public class HostOrderCommandHandler(
             await hostOrderRepository.UpdateAsync(hostOrder);
             await hostOrderRepository.SaveAsync();
             logger.LogInformation("Doppelspiel expected for order {OrderCorrelationId}", hostOrder.CorrelationId);
-            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, dropOrder.AssignedAgv);
+            await CreateHostOrder(context, hostOrder, dropOrder.AssignedAgv);
             return;
         }
 
         if (await ViolatesAklAgvLimitation(hostOrder))
         {
-            await CreateHostOrder(context, hostOrder, orderDetails.CreationDate, hostOrder.AssignedAgv);
+            await CreateHostOrder(context, hostOrder, hostOrder.AssignedAgv);
             return;
         }
 
         // Call for any idle agv to handle this order
-        await QueueHostOrder(context, hostOrder, orderDetails.CreationDate);
+        await QueueHostOrder(context, hostOrder);
     }
 
     private async Task CancelUnfinishedOrdersOfHu(IPublishEndpoint context, string hu, DateTime creationDate)
@@ -141,47 +141,20 @@ public class HostOrderCommandHandler(
 
         if (unmatchedPick is { IsQueued: false })
         {
-            await QueueHostOrder(context, unmatchedPick, unmatchedPick.CreatedDate);
+            await QueueHostOrder(context, unmatchedPick);
             unmatchedPick.UnRegisterFromDoppelspiel();
         }
     }
 
-    private async Task CreateHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null)
+    private async Task CreateHostOrder(IPublishEndpoint context, HostOrder hostOrder, Guid? assignedAgv = null)
     {
-        // Short circuit
-        var actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
-        if (actionGroup != null)
-        {
-            actionGroup.AssignedAgv = assignedAgv;
-            await context.Publish(new CreateActionGroup(actionGroup));
-            hostOrder.IsQueued = false;
-            await hostOrderRepository.SaveAsync();
-            return;
-        }
-
-        // Long circuit
-
-        if (hostOrder.HasUnknownPickTarget(configuration))
-        {
-            actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
-            actionGroup.AssignedAgv = assignedAgv;
-            await context.Publish(new CreateActionGroup(actionGroup));
-            hostOrder.IsQueued = false;
-            await hostOrderRepository.SaveAsync();
-            return;
-        }
-
-        if (hostOrder.HasUnknownDropTarget(configuration))
-        {
-            actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
-            actionGroup.AssignedAgv = assignedAgv;
-            await context.Publish(new CreateActionGroup(actionGroup));
-            hostOrder.IsQueued = false;
-            await hostOrderRepository.SaveAsync();
-        }
+        var actionGroup = hostOrder.CreateActionGroup(configuration, assignedAgv);
+        await context.Publish(new CreateActionGroup(actionGroup));
+        hostOrder.IsQueued = false;
+        await hostOrderRepository.SaveAsync();
     }
 
-    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, DateTime creationDate, Guid? assignedAgv = null, string? pickNode = null)
+    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, Guid? assignedAgv = null, string? pickNode = null)
     {
         if (!configuration.IsPickAtAkl(hostOrder.Source) && await ViolatesAklAgvLimitation(hostOrder))
         {
@@ -189,59 +162,10 @@ public class HostOrderCommandHandler(
             return;
         }
 
-        ActionGroup? actionGroup;
-        if (pickNode != null && !hostOrder.HasUnknownDropTarget(configuration))
-        {
-            // Doppelspiel short loop or pickNode -> APL1
-            actionGroup = hostOrder.CreatePickDropActionGroupForAgv(pickNode, assignedAgv, configuration);
-            await context.Publish(new QueueActionGroup(actionGroup, false));
-            hostOrder.IsQueued = true;
-            await hostOrderRepository.SaveAsync();
-            return;
-        }
-
-        if (pickNode != null && hostOrder.HasUnknownDropTarget(configuration))
-        {
-            // Doppelspiel APL1->PS01/02/03
-            actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
-            actionGroup.AssignedAgv = assignedAgv;
-            await context.Publish(new QueueActionGroup(actionGroup, false));
-            hostOrder.IsQueued = true;
-            await hostOrderRepository.SaveAsync();
-            return;
-        }
-
-        // Short circuit
-        actionGroup = hostOrder.TryCreatePickDropActionGroup(configuration, creationDate);
-        if (actionGroup != null)
-        {
-            actionGroup.AssignedAgv = assignedAgv;
-            await context.Publish(new QueueActionGroup(actionGroup, false));
-            hostOrder.IsQueued = true;
-            await hostOrderRepository.SaveAsync();
-            return;
-        }
-
-        // Long circuit
-
-        if (hostOrder.HasUnknownPickTarget(configuration))
-        {
-            actionGroup = hostOrder.CreateMovePickDropActionGroup(configuration, creationDate);
-            actionGroup.AssignedAgv = assignedAgv;
-            await context.Publish(new QueueActionGroup(actionGroup, false));
-            hostOrder.IsQueued = true;
-            await hostOrderRepository.SaveAsync();
-            return;
-        }
-
-        if (hostOrder.HasUnknownDropTarget(configuration))
-        {
-            actionGroup = hostOrder.CreatePickMoveDropActionGroup(configuration);
-            actionGroup.AssignedAgv = assignedAgv;
-            await context.Publish(new QueueActionGroup(actionGroup, false));
-            hostOrder.IsQueued = true;
-            await hostOrderRepository.SaveAsync();
-        }
+        var actionGroup = hostOrder.CreateActionGroup(configuration, assignedAgv, pickNode);
+        await context.Publish(new QueueActionGroup(actionGroup, false));
+        hostOrder.IsQueued = true;
+        await hostOrderRepository.SaveAsync();
     }
 
     private async Task<bool> ViolatesAklAgvLimitation(HostOrder hostOrder)
@@ -435,7 +359,7 @@ public class HostOrderCommandHandler(
             var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
             pickingHostOrder.SetDoppelspielpartner(droppingHostOrderCorrelationId);
             logger.LogInformation("Queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
-            await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
+            await QueueHostOrder(context, pickingHostOrder, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
 
             droppingHostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
             await hostOrderRepository.UpdateAsync(droppingHostOrder);
@@ -503,7 +427,7 @@ public class HostOrderCommandHandler(
         }
 
         logger.LogInformation("Station group AKL changed. Queuing order {OrderId} / {CorrelationId} that was kept back because of AKL station limitation.", hostOrder.Hu, hostOrder.CorrelationId);
-        await QueueHostOrder(context, hostOrder, DateTime.UtcNow);
+        await QueueHostOrder(context, hostOrder);
     }
 
     /// <summary>
@@ -553,7 +477,7 @@ public class HostOrderCommandHandler(
         hostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
 
         logger.LogInformation("Queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
-        await QueueHostOrder(context, pickingHostOrder, DateTime.UtcNow, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
+        await QueueHostOrder(context, pickingHostOrder, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
         await hostOrderRepository.UpdateAsync(pickingHostOrder);
         await hostOrderRepository.UpdateAsync(hostOrder);
         await hostOrderRepository.SaveAsync();
@@ -574,6 +498,6 @@ public class HostOrderCommandHandler(
         }
 
         logger.LogInformation("Queueing next AKL pick order {CorrelationId} at {Target} for agv {AgvCorrelationId}", hostOrder.CorrelationId, pickTarget, agvCorrelationId);
-        await QueueHostOrder(context, hostOrder, DateTime.UtcNow, agvCorrelationId);
+        await QueueHostOrder(context, hostOrder, agvCorrelationId);
     }
 }

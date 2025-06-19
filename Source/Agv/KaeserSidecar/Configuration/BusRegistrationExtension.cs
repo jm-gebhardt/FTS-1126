@@ -24,7 +24,8 @@ public static class BusRegistrationExtension
     {
         cfg.AddConsumer<KaeserGraphEventHandler>();
         cfg.AddConsumer<AgvActionCommandHandler>();
-        cfg.AddConsumer<DecisionPointEventHandler>(); 
+        cfg.AddConsumer<DecisionPointEventHandler>();
+        cfg.AddConsumer<ShortLoopWaitingTriggerPointEventHandler>(); 
         cfg.AddConsumer<CargoTriggerPointEventHandler, SingleActiveHandlerDefinition<CargoTriggerPointEventHandler>>(c => c.ConcurrentMessageLimit = 1);
         cfg.AddConsumer<ConveyorReportingEventHandler>(c =>
             {

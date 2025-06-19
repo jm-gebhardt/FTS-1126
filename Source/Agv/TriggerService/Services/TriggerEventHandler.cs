@@ -14,7 +14,8 @@ namespace Gebhardt.Acc.TriggerService.Services;
 public class TriggerEventHandler(ITriggerManager triggerManager, ILogger<TriggerEventHandler> logger) : 
     IConsumer<AgvReachedTrigger>,
     IConsumer<AgvStartedActionGroupOnTrigger>,
-    IConsumer<DefaultTriggerConfigurationUpdated>
+    IConsumer<DefaultTriggerConfigurationUpdated>,
+    IConsumer<AgvLeftTrigger>
 {
     /// <summary>
     /// Handles the <see cref="AgvReachedTrigger"/> event.
@@ -47,5 +48,17 @@ public class TriggerEventHandler(ITriggerManager triggerManager, ILogger<Trigger
     {
         (var triggerId, ICollection<ConfigurationParameter> updatedParameters) = context.Message;
         await triggerManager.UpdateDefaultConfigurationParameters(triggerId, updatedParameters);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvLeftTrigger"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvLeftTrigger> context)
+    {
+        (var triggerId, Dictionary<string, ConfigurationParameter> parameters, var agvData, var agvStatus, var actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors) = context.Message;
+
+        logger.LogInformation("Invoking leave trigger {TriggerId} for agv {AgvId}", triggerId, agvStatus.CorrelationId);
+
+        await triggerManager.LeaveTrigger(triggerId, parameters, agvData, agvStatus, actionGroup, cargo, errors);
     }
 }

@@ -62,6 +62,16 @@ public class StationRepository : IStationRepository
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
+    public Task<StationOccupancy> GetOccupancyOfStation(string station)
+    {
+        var occupancy = _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key,
+                kvp.Value.Count,
+                kvp.Value.SingleOrDefault()))
+            .SingleOrDefault(s => s.Station == station);
+        return Task.FromResult(occupancy ?? new StationOccupancy(station, 0, null));
+    }
+
+    /// <inheritdoc cref="IStationRepository"/>>
     public Task<StationOccupancy?> GetOccupancyByAgvCorrelationId(Guid agvCorrelationId)
     {
         return Task.FromResult(_stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key,

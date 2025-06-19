@@ -27,6 +27,12 @@ public interface IStationRepository
     Task<ICollection<StationOccupancy>> GetStationOccupancy();
 
     /// <summary>
+    /// Get the occupancy of a station.
+    /// </summary>
+    /// <param name="station">The station</param>
+    Task<StationOccupancy> GetOccupancyOfStation(string station);
+
+    /// <summary>
     /// Get the station an agv occupies.
     /// </summary>
     /// <param name="agvCorrelationId">The agv correlation id.</param>

@@ -91,6 +91,26 @@ public class KaeserGraphConfiguration
     private int[] KnownValidationErrors => [ErrorCodeSourceUnknown, ErrorCodeTargetUnknown, ErrorCodeNoRoute];
 
     /// <summary>
+    /// The left short loop waiting node.
+    /// </summary>
+    public string LeftShortLoopWaitingNode = "map/NODE-32";
+
+    /// <summary>
+    /// The right short loop waiting node.
+    /// </summary>
+    public string RightShortLoopWaitingNode = "map/Node-27";
+
+    /// <summary>
+    /// The waiting position in the short loop by Target source.
+    /// </summary>
+    public Dictionary<string, string> WaitingPositionByAklSource = new ();
+
+    /// <summary>
+    /// The waiting position in the short loop by AKL target.
+    /// </summary>
+    public Dictionary<string, string> WaitingPositionByAklTarget = new();
+
+    /// <summary>
     /// Errors for host order validation sent back to Prismat
     /// </summary>
     public Dictionary<int, string> OrderValidationErrors { get; private set; } =
@@ -208,6 +228,8 @@ public class KaeserGraphConfiguration
             { "2", "PS02" },
             { "3", "PS03" }
         };
+
+        SetDefaultShortLoopWaitingPositions();
     }
 
     /// <summary>
@@ -294,8 +316,41 @@ public class KaeserGraphConfiguration
             UseAklAgvLimit = yamlData.UseAklAgvLimit;
         }
 
+        if (!yamlData.LeftShortLoopWaitingNode.IsNullOrEmpty())
+        {
+            LeftShortLoopWaitingNode = yamlData.LeftShortLoopWaitingNode;
+        }
+
+        if (!yamlData.RightShortLoopWaitingNode.IsNullOrEmpty())
+        {
+            RightShortLoopWaitingNode = yamlData.RightShortLoopWaitingNode;
+        }
+
+        SetDefaultShortLoopWaitingPositions();
+        UpdateWaitingPositionByAklSource(yamlData.WaitingPositionByAklSource);
+        UpdateWaitingPositionByAklTarget(yamlData.WaitingPositionByAklTarget);
+
         LocalizeStations();
         IsLoaded = true;
+    }
+
+    private void SetDefaultShortLoopWaitingPositions()
+    {
+        WaitingPositionByAklSource = new Dictionary<string, string>()
+        {
+            { "2130", LeftShortLoopWaitingNode },
+            { "2230", LeftShortLoopWaitingNode },
+            { "2330", RightShortLoopWaitingNode },
+            { "2430", RightShortLoopWaitingNode }
+        };
+
+        WaitingPositionByAklTarget = new Dictionary<string, string>()
+        {
+            { "2110", RightShortLoopWaitingNode },
+            { "2210", RightShortLoopWaitingNode },
+            { "2310", RightShortLoopWaitingNode },
+            { "2410", RightShortLoopWaitingNode }
+        };
     }
 
     /// <summary>
@@ -384,6 +439,22 @@ public class KaeserGraphConfiguration
         foreach ((string station, double liftHeight) in updatedLiftHeights)
         {
             TargetLiftHeight[station] = liftHeight;
+        }
+    }
+
+    private void UpdateWaitingPositionByAklSource(Dictionary<string, string> updatedWaitingPosition)
+    {
+        foreach ((string source, string waitingPosition) in updatedWaitingPosition)
+        {
+            WaitingPositionByAklSource[source] = waitingPosition;
+        }
+    }
+
+    private void UpdateWaitingPositionByAklTarget(Dictionary<string, string> updatedWaitingPosition)
+    {
+        foreach ((string target, string waitingPosition) in updatedWaitingPosition)
+        {
+            WaitingPositionByAklTarget[target] = waitingPosition;
         }
     }
 

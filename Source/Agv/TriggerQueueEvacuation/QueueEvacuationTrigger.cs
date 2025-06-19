@@ -101,4 +101,10 @@ public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> lo
     {
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        return Task.CompletedTask;
+    }
 }

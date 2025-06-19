@@ -128,6 +128,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriggerQueueEvacuation", "T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriggerQueueHeadEvacuation", "TriggerQueueHeadEvacuation\TriggerQueueHeadEvacuation.csproj", "{28B03E2B-F704-4592-958F-49876C576535}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriggerShortLoopWaitingPoint", "TriggerShortLoopWaitingPoint\TriggerShortLoopWaitingPoint.csproj", "{71C67D3B-EACE-4BA4-B488-87C5FA764B77}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -346,6 +348,10 @@ Global
 		{28B03E2B-F704-4592-958F-49876C576535}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28B03E2B-F704-4592-958F-49876C576535}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28B03E2B-F704-4592-958F-49876C576535}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71C67D3B-EACE-4BA4-B488-87C5FA764B77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71C67D3B-EACE-4BA4-B488-87C5FA764B77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71C67D3B-EACE-4BA4-B488-87C5FA764B77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71C67D3B-EACE-4BA4-B488-87C5FA764B77}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -404,6 +410,7 @@ Global
 		{5DA191B4-18F2-41CB-84E4-F306DAACDF9E} = {7A1D4655-2027-455F-80F0-86FFA7D70BDD}
 		{0B7BEBE5-999B-47CA-A850-2AA94982611B} = {1FCAC2CE-4DA2-4BDF-B4BB-10EE3513529D}
 		{28B03E2B-F704-4592-958F-49876C576535} = {1FCAC2CE-4DA2-4BDF-B4BB-10EE3513529D}
+		{71C67D3B-EACE-4BA4-B488-87C5FA764B77} = {1FCAC2CE-4DA2-4BDF-B4BB-10EE3513529D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8AF26A4-DDC8-432C-9E5A-C27502C1D249}

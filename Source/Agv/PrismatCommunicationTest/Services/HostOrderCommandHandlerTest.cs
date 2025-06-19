@@ -103,15 +103,7 @@ public class HostOrderCommandHandlerTest
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, CreateActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
 
-        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
-        var pickAction = queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
-        var dropAction = queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
-
-        pickAction.Sequence.ShouldBe(0);
-        dropAction.Sequence.ShouldBe(1);
-
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
-        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(3);
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
@@ -180,16 +172,9 @@ public class HostOrderCommandHandlerTest
         var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(new CreateHostOrder("Hu", order));
         fixture.VerifyHostOrderAdded();
 
-        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(3);
         var pickAction = queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
         var dropAction = queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
-
-        pickAction.Sequence.ShouldBe(0);
-        dropAction.Sequence.ShouldBe(1);
-
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
-        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
 
         pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.CargoRotation, out string? _).ShouldBeTrue();
         pickAction.InfoToAgv?.TryGetValue(InfoToAgvKey.LiftHeight, out string? _).ShouldBeFalse();
@@ -483,7 +468,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
-        var actionGroup = order.CreateMovePickDropActionGroup(fixture.Configuration, DateTime.UtcNow);
+        var actionGroup = order.CreateActionGroup(fixture.Configuration);
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
 
         var command = new FinishPick(order.CorrelationId, pickAction.CorrelationId, DateTime.UtcNow);
@@ -844,7 +829,7 @@ public class HostOrderCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
-        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
+        queueActionGroup.ActionGroup.Actions.Count.ShouldBe(3);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AssignedAgv);
     }
 

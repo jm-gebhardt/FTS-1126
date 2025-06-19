@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,8 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 [UsedImplicitly]
 public class DecisionPointEventHandler(
     ILogger<DecisionPointEventHandler> logger,
-    ITargetSelector selector) :
+    ITargetSelector selector,
+    KaeserGraphConfiguration configuration) :
     IConsumer<AgvPassedDecisionPoint1>
 {
     /// <summary>
@@ -26,6 +28,13 @@ public class DecisionPointEventHandler(
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) || actionGroup.Actions.All(a => a.Target.NodeId != string.Empty))
         {
             logger.LogWarning("Skip target selection: Agv {AgvCorrelationId} passed decision point without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
+            return;
+        }
+        var moveAction = actionGroup.Actions.FirstOrDefault(a => a.ActionType == ActionType.Move);
+        if (moveAction == null || moveAction.Target.NodeId != configuration.LongLoopMoveTargetNode)
+        {
+            logger.LogWarning("Skip target selection: Agv {AgvCorrelationId} passed decision point without without pick drop action group for long loop ({ActionGroup})", agvStatus.CorrelationId, actionGroup.CorrelationId);
+
             return;
         }
         var action = actionGroup.Actions.FirstOrDefault(a => a.Target.NodeId == string.Empty);

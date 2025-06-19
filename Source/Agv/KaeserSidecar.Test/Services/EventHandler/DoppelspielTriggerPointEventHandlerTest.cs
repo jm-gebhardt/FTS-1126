@@ -23,8 +23,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = actionState;
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = actionState;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
@@ -58,8 +58,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
@@ -93,8 +93,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
@@ -128,8 +128,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
@@ -163,8 +163,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var previousPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         dropHostOrder.RegisterForDoppelspiel();
@@ -201,8 +201,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
@@ -234,8 +234,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var pickOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var pickHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(pickOrderDetails);
-        var actionGroup = pickHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, pickOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Pick).State = ActionState.Started;
+        var actionGroup = pickHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
        
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
@@ -282,8 +282,8 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var pickOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var pickHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(pickOrderDetails);
-        var actionGroup = pickHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, pickOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Pick).State = ActionState.Started;
+        var actionGroup = pickHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).State = ActionState.Started;
         actionGroup.AssignedAgv = agvData.CorrelationId;
 
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()

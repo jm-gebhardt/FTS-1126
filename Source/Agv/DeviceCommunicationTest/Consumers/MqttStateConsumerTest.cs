@@ -97,7 +97,7 @@ public class MqttStateConsumerTest
             }
         }, null);
 
-        await fixture.ShouldHavePublishedAsync<MqttState>();
+        await fixture.ShouldHaveConsumedAsync<MqttState>();
 
         var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();
         consumedState.AgvPosition.ShouldNotBeNull();

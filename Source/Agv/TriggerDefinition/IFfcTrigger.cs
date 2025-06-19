@@ -41,4 +41,9 @@ public interface IFfcTrigger
     /// Invoke trigger on action group change.
     /// </summary>
     Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
+
+    /// <summary>
+    /// Leave trigger.
+    /// </summary>
+    Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors);
 }

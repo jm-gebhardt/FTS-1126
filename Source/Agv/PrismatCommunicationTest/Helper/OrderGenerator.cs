@@ -53,6 +53,16 @@ public static class OrderGenerator
             HostOrderCreator.Wms, huRotation);
     }
 
+    public static OrderDetails GenerateOrderDetails(string source, string target)
+    {
+        return new OrderDetails(Guid.NewGuid(),
+            "OrderId",
+            source,
+            target,
+            Guid.NewGuid().ToString(),
+            HostOrderCreator.Wms);
+    }
+
     public static OrderDetails GenerateUnknownPickTargetOrder(int pickTarget = 0)
     {
         return new OrderDetails(Guid.NewGuid(),

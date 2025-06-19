@@ -45,6 +45,15 @@ public class TriggerManager(ReflectionService reflectionService, ILogger<Trigger
         await trigger.Invoke(parameters, agvData, agvStatus, actionGroup, cargo, errors);
     }
 
+    /// <inheritdoc cref="ITriggerManager"/>>
+    public async Task LeaveTrigger(Guid triggerId, Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        var trigger = await triggerRepository.GetById(triggerId);
+        var triggerInfo = trigger.GetProperties();
+        logger.LogInformation("Leave trigger: {Id} / {Name} for agv {AgvCorrelationId}", triggerInfo.Id, triggerInfo.DisplayName, agvStatus.CorrelationId);
+        await trigger.Leave(parameters, agvData, agvStatus, actionGroup, cargo, errors);
+    }
+
     /// <inheritdoc cref="ITriggerManager"/>
     public async Task InvokeActionGroupChangedOnTrigger(Guid triggerId, Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {

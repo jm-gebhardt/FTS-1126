@@ -18,7 +18,7 @@ public class TriggerEventHandlerTest
         var message = new AgvReachedTrigger(Guid.NewGuid(), new Dictionary<string, ConfigurationParameter>(), AgvDataGenerator.GenerateAgvData(), new AgvStatus(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
 
         await fixture.TestHarness.Bus.Publish(message);
-        
+
         await fixture.ShouldHaveConsumedAsync<AgvReachedTrigger>();
         fixture.VerifyTriggerInvoked(message.TriggerId, message.AgvData, message.AgvStatus, message.ActionGroup, message.Cargo, message.Errors);
     }
@@ -30,8 +30,21 @@ public class TriggerEventHandlerTest
 
         var message = new DefaultTriggerConfigurationUpdated(Guid.NewGuid(), [new ConfigurationParameter("name", "description", "value", "validation")]);
         await fixture.TestHarness.Bus.Publish(message);
-        
+
         await fixture.ShouldHaveConsumedAsync<DefaultTriggerConfigurationUpdated>();
         fixture.VerifyConfigurationParametersUpdated(message.TriggerId, message.UpdatedParameters);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvLeftTrigger_ValidData_InvokeLeaveTrigger()
+    {
+        var fixture = new TriggerMessageConsumerTestFixture<TriggerEventHandler>();
+
+        var message = new AgvLeftTrigger(Guid.NewGuid(), new Dictionary<string, ConfigurationParameter>(), AgvDataGenerator.GenerateAgvData(), new AgvStatus(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
+
+        await fixture.TestHarness.Bus.Publish(message);
+
+        await fixture.ShouldHaveConsumedAsync<AgvLeftTrigger>();
+        fixture.VerifyLeaveTriggerInvoked(message.TriggerId, message.AgvData, message.AgvStatus, message.ActionGroup, message.Cargo, message.Errors);
     }
 }

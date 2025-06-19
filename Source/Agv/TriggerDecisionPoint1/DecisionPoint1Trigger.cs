@@ -58,4 +58,10 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
 
         await Invoke(parameters, agvData, agvStatus, actionGroup, cargo, errors);
     }
+
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        return Task.CompletedTask;
+    }
 }

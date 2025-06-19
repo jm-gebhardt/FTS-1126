@@ -64,11 +64,15 @@ public static class HostBuilderExtension
         {
             services.AddConfigurationTypeManager();
             services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+            services.AddSingleton<IWaitingHandler, WaitingHandler>();
+            services.AddSingleton<IHostedService>(sp => (IHostedService)sp.GetRequiredService<IWaitingHandler>());
+
             services.AddSingleton<ITargetSelector, TargetSelector>();
             services.AddSingleton<IHostedService>(sp => (IHostedService)sp.GetRequiredService<ITargetSelector>());
             // Add prismat communication db connection
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
+            services.AddTransient<IPrismatCommunicationShortLoopWeTargetStationRepository, PrismatCommunicationShortLoopWeTargetStationRepository>();
             services.AddTransient<IPrismatCommunicationHostOrderRepository, PrismatCommunicationHostOrderRepository>();
             services.AddTransient<IPrismatCommunicationStationRepository, PrismatCommunicationStationRepository>();
             services.AddTransient<IPrismatCommunicationSystemStatusRepository, PrismatCommunicationSystemStatusRepository>();
@@ -76,6 +80,7 @@ public static class HostBuilderExtension
             services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
             services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();
             services.AddTransient<IDecisionPointActionRepository, EfDecisionPointActionRepository>();
+            services.AddTransient<IWaitingPointActionRepository, EfWaitingPointActionRepository>();
             services.AddTransient<ITransportOrderStationRepository, TransportOrderStationRepository>();
             services.AddTransient<ITransportOrderAgvSettingsProvider, TransportOrderAgvSettingsProvider>();
             services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();

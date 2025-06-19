@@ -12,10 +12,10 @@ public interface ITargetSelector
     void SetStationCount(int stationCount);
 
     /// <summary>
-    /// Enqueue an agv
+    /// Enqueue an agv.
     /// </summary>
-    /// <param name="actionCorrelationId"></param>
-    /// <param name="agvCorrelationId"></param>
+    /// <param name="actionCorrelationId">The correlation id of the action that needs target selection.</param>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     Task Enqueue(Guid actionCorrelationId, Guid agvCorrelationId);
 
     /// <summary>

@@ -29,6 +29,7 @@ public class KaeserSidecarDbContext: DbContext
         modelBuilder.ApplyConfiguration(new StationOccupancyEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OrderReportEntityConfiguration());
         modelBuilder.ApplyConfiguration(new DecisionPointActionEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new WaitingPointActionEntityConfiguration());
     }
 
     /// <summary>

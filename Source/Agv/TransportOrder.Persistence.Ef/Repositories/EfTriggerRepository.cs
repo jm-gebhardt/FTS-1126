@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -192,10 +193,10 @@ public class EfTriggerRepository : ITriggerRepository
     }
 
     /// <inheritdoc  cref="ITriggerRepository"/>>
-    public async Task<ICollection<Location>> GetPolygonTriggerLocations(Guid agvId, AgvPosition agvPosition)
+    public async Task<ICollection<PolygonTriggerResult>> GetPolygonTriggerLocations(Guid agvId, AgvPosition agvPosition)
     {
         ICollection<Location> locationsWithPolygon = _triggerLocationDictionaryProvider.ConcurrentDict.Values.Where(l => l.Polygon.Count > 0).ToList();
-        List<Location> locationsWithTriggerToCall = [];
+        List<PolygonTriggerResult> triggerResults = [];
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -207,7 +208,11 @@ public class EfTriggerRepository : ITriggerRepository
                 if (!location.Agvs.Contains(agvId))
                 {
                     location.Agvs.Add(agvId);
-                    locationsWithTriggerToCall.Add(location);
+                    triggerResults.Add(new PolygonTriggerResult
+                    {
+                        Location = location,
+                        Action = PolygonTriggerAction.Entered
+                    });
                     _logger.LogDebug("{Method}: AGV {AgvId} entered polygon", nameof(GetPolygonTriggerLocations), agvId);
 
                     var locationRecord = await GetLocationByIdAsync(context, location);
@@ -229,6 +234,11 @@ public class EfTriggerRepository : ITriggerRepository
                 if (location.Agvs.Contains(agvId))
                 {
                     location.Agvs.Remove(agvId);
+                    triggerResults.Add(new PolygonTriggerResult
+                    {
+                        Location = location,
+                        Action = PolygonTriggerAction.Left
+                    });
                     _logger.LogDebug("{Method}: AGV {AgvId} left polygon.", nameof(GetPolygonTriggerLocations), agvId);
 
                     var locationRecord = await GetLocationByIdAsync(context, location);
@@ -242,7 +252,7 @@ public class EfTriggerRepository : ITriggerRepository
                 }
             }
         }
-        return locationsWithTriggerToCall;
+        return triggerResults;
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>

@@ -101,4 +101,10 @@ public class QueueHeadEvacuationTrigger(IBus bus, ILogger<QueueHeadEvacuationTri
                    GetDefaultConfigurationParameters().GetValueOrDefault(_evacuationNodeParameter.Name);
         return node?.Value ?? string.Empty;
     }
+
+    /// <inheritdoc cref="IFfcTrigger"/>>
+    public Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        return Task.CompletedTask;
+    }
 }

@@ -42,6 +42,18 @@ public class TriggerMessageConsumerTestFixture<TConsumer> : MassTransitConsumerT
             Times.Once);
     }
 
+    public void VerifyLeaveTriggerInvoked(Guid triggerId, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    {
+        _triggerManagerMock.Verify(x => x.LeaveTrigger(triggerId,
+                It.IsAny<Dictionary<string, ConfigurationParameter>>(),
+                It.Is<AgvData>(a => a.CorrelationId == agvData.CorrelationId),
+                It.Is<AgvStatus>(a => a.CorrelationId == agvStatus.CorrelationId),
+                It.Is<ActionGroup?>(a => (a == null && actionGroup == null)|| a!.CorrelationId == actionGroup!.CorrelationId),
+                It.Is<ICollection<Cargo>>(c => !cargo.Select(ca => ca.CorrelationId).Except(c.Select(ca => ca.CorrelationId)).Any()),
+                It.Is<ICollection<AgvError>>(e => !errors.Select(er => er.CorrelationId).Except(e.Select(er => er.CorrelationId)).Any())),
+            Times.Once);
+    }
+
     public void VerifyConfigurationParametersUpdated(Guid triggerId, ICollection<ConfigurationParameter> parameters)
     {
         _triggerManagerMock.Verify(x => x.UpdateDefaultConfigurationParameters(triggerId, 

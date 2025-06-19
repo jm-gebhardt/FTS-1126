@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -63,7 +64,15 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
             List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(newLastNodeId).ToList();
             if (triggerLocations.Count > 0)
             {
-                await PublishAgvReachedTrigger(context, agvId, triggerLocations);
+                await PublishAgvReachedOrLeftTrigger(context, agvId, triggerLocations, false);
+            }
+        }
+        if (oldLastNodeId != null)
+        {
+            List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(oldLastNodeId).ToList();
+            if (triggerLocations.Count > 0)
+            {
+                await PublishAgvReachedOrLeftTrigger(context, agvId, triggerLocations, true);
             }
         }
     }
@@ -77,14 +86,20 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
     {
         var (agvId, newAgvPosition, _, _) = context.Message;
 
-        ICollection<Location> triggerLocations = await _triggerRepository.GetPolygonTriggerLocations(agvId, newAgvPosition);
-        if (triggerLocations.Count > 0)
+        ICollection<PolygonTriggerResult> triggerLocations = await _triggerRepository.GetPolygonTriggerLocations(agvId, newAgvPosition);
+        List<Location> enteredTriggers = triggerLocations.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
+        List<Location> leftTriggers = triggerLocations.Where(l => l.Action == PolygonTriggerAction.Left).Select(l => l.Location).ToList();
+        if (enteredTriggers.Count > 0)
         {
-            await PublishAgvReachedTrigger(context, agvId, triggerLocations);
+            await PublishAgvReachedOrLeftTrigger(context, agvId, enteredTriggers, false);
+        }
+        if (leftTriggers.Count > 0)
+        {
+            await PublishAgvReachedOrLeftTrigger(context, agvId, leftTriggers, true);
         }
     }
 
-    private async Task PublishAgvReachedTrigger<T>(T context, Guid agvId, ICollection<Location> triggerLocations) where T : ConsumeContext
+    private async Task PublishAgvReachedOrLeftTrigger(IPublishEndpoint context, Guid agvId, ICollection<Location> triggerLocations, bool leftTrigger) 
     {
         Agv? agv;
         try
@@ -93,7 +108,7 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
         }
         catch (AgvNotFoundException)
         {
-            _logger.LogDebug("{MethodName}: Agv not yet stored in database", nameof(PublishAgvReachedTrigger));
+            _logger.LogDebug("{MethodName}: Agv not yet stored in database", nameof(PublishAgvReachedOrLeftTrigger));
             return;
         }
 
@@ -110,6 +125,11 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
 
         foreach (var triggerLocation in triggerLocations)
         {
+            if (leftTrigger)
+            {
+                await context.Publish(new AgvLeftTrigger(triggerLocation.TriggerId, triggerLocation.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList));
+                continue;
+            }
             await context.Publish(new AgvReachedTrigger(triggerLocation.TriggerId, triggerLocation.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList));
 
             var trigger = await _triggerRepository.GetById(triggerLocation.TriggerId);

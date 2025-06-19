@@ -16,10 +16,10 @@ public class ConveyorReportingEventHandlerTest
     [DataRow(true, null)]
     public async Task Consume_DroppingAgvPassedDoppelspielTriggerPoint_DropAt1050DroppingNextPickAvailable_ReportsToConveyor(bool hasLowBatteryLevel, string? pickStation)
     {
-        var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
-        var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId = OrderGenerator.KaeserConfiguration.GetShortLoopTarget();
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
 
         var fixture = new ConveyorReportingEventHandlerTestFixture()
@@ -40,10 +40,10 @@ public class ConveyorReportingEventHandlerTest
     [TestMethod]
     public async Task Consume_DroppingAgvPassedDoppelspielTriggerPoint_DropAt1050DroppingNoNextPickAvailable_ReportsToConveyor()
     {
-        var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
-        var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId = OrderGenerator.KaeserConfiguration.GetShortLoopTarget();
 
         var fixture = new ConveyorReportingEventHandlerTestFixture()
             .WithHostOrders(dropHostOrder)
@@ -56,8 +56,8 @@ public class ConveyorReportingEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
         
         fixture.VerifyReportingToConveyors("PS03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, dropHostOrder.Hu, Times.Once());
-        (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Source, dropHostOrder.CorrelationId)).ShouldBeFalse();
-        (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId)).ShouldBeTrue();
+        (await fixture.OrderRepository.HasOrderBeenReported(dropHostOrder.Source, dropHostOrder.CorrelationId)).ShouldBeFalse();
+        (await fixture.OrderRepository.HasOrderBeenReported(dropHostOrder.Target, dropHostOrder.CorrelationId)).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -65,8 +65,8 @@ public class ConveyorReportingEventHandlerTest
     {
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
-        var actionGroup = dropHostOrder.TryCreatePickDropActionGroup(OrderGenerator.KaeserConfiguration, dropOrderDetails.CreationDate);
-        actionGroup!.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
+        var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
 
         var fixture = new ConveyorReportingEventHandlerTestFixture()
             .WithHostOrders(dropHostOrder)

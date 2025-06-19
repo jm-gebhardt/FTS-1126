@@ -4,6 +4,7 @@ using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using OrderGenerator = Gebhardt.Acc.PrismatCommunicationTest.Helper.OrderGenerator;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 
@@ -20,6 +21,7 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
         base.AddServices(collection);
         collection.AddTransient(_ => new Mock<ILogger<DecisionPointEventHandler>>().Object);
         collection.AddTransient(_ => _targetSelectorMock.Object);
+        collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
         return this;
     }
 
@@ -34,6 +36,11 @@ public class DecisionPointEventHandlerTestFixture: MassTransitConsumerTestFixtur
     public void VerifyActionEnqueued( Guid action, Guid agv, Times times)
     {
         _targetSelectorMock.Verify(x => x.Enqueue(action, agv), times);
+    }
+
+    public void VerifyNoActionEnqueued()
+    {
+        _targetSelectorMock.Verify(x => x.Enqueue(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
     }
 
     public void VerifyStationCountSet(int consideredStations, Times times)

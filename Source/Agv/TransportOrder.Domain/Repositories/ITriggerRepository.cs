@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
@@ -55,7 +56,7 @@ public interface ITriggerRepository
     /// <param name="agvId">The id of the AGV.</param>
     /// <param name="agvPosition">The position of the AGV.</param>
     /// <returns></returns>
-    Task<ICollection<Location>> GetPolygonTriggerLocations(Guid agvId, AgvPosition agvPosition);
+    Task<ICollection<PolygonTriggerResult>> GetPolygonTriggerLocations(Guid agvId, AgvPosition agvPosition);
 
     /// <summary>
     /// Get polygon trigger locations with triggers to call where the agv is located ignoring if it was already in the polygon.

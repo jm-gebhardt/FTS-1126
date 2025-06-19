@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -491,7 +492,8 @@ public class EfTriggerRepositoryTest
         var agvId = Guid.NewGuid();
         var agvPosition = new AgvPosition(true, 1.5f, 1.5f, 0, 0);
 
-        ICollection<Location> locations = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
+        ICollection<PolygonTriggerResult> result = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
+        List<Location> locations = result.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
         locations.Count.ShouldBe(1);
         locations.First().TriggerId.ShouldBe(triggers[2].Id);
     }
@@ -526,7 +528,8 @@ public class EfTriggerRepositoryTest
         var agvId = Guid.NewGuid();
         var agvPosition = new AgvPosition(true, 3f, 3f, 0, 0);
 
-        ICollection<Location> locations = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
+        ICollection<PolygonTriggerResult> result = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
+        List<Location> locations = result.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
         locations.Count.ShouldBe(0);
     }
 
