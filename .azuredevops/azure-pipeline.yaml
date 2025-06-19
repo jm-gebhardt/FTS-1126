@@ -45,11 +45,11 @@ stages:
         displayName: 'Code analysis'
         pool:
           vmImage: windows-latest
-          steps:
-            - script: git config --system core.longpaths true
-            - checkout: self
-            - template: ./templates/restore-and-build.steps.yaml
-            - template: ./templates/code-analysis.steps.yaml
+        steps:
+          - script: git config --system core.longpaths true
+          - checkout: self
+          - template: ./templates/restore-and-build.steps.yaml
+          - template: ./templates/code-analysis.steps.yaml
 
   - stage: unitTest
     dependsOn: [ ]

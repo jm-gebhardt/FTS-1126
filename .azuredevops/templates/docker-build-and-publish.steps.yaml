@@ -42,15 +42,18 @@ steps:
           previousCommit=$(git rev-parse HEAD^)
           dotnet-affected -p ./ --to $previousCommit --from $(Build.SourceBranch) --format text -v
         displayName: Get Affected Projects
+        continueOnError: true
   - ${{ else }}:
       - bash: |
           dotnet-affected -p ./ --to origin/master --from $(Build.SourceBranch) --format text -v
         displayName: Get Affected Projects
+        continueOnError: true
 
   - bash: |
       components=$(echo '["${{ join('","', parameters.components) }}"]' | jq)
       componentsToBuild=()
       
+      echo "Components"
       echo "$components"
       
       for i in $(echo "$components" | jq -r '.[]')
@@ -61,16 +64,22 @@ steps:
         fi
       done
       
+      
+      echo "Components to build"
       echo  "$componentsToBuild"
       componentsToBuildStr=$(IFS=,; echo "${componentsToBuild[*]}")
       
-      echo "##vso[task.setvariable variable=componentsToBuild;]$componentsToBuildStr"
+      echo "Components To Build Str"
+      echo "$componentsToBuildStr"
+      
+      echo "##vso[task.setvariable variable=componentsToBuild]$componentsToBuildStr"
     displayName: Collecting Projects To Build
 
   - ${{ each projectName in parameters.components }}:
       - bash: |
           docker pull crffcpocarch.azurecr.io/gebhardt/fleet-management/${{lower(projectName)}}:latest
         displayName: Pulling image ${{ projectName }}
+        continueOnError: true
         condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
   - ${{ each projectName in parameters.components }}:
