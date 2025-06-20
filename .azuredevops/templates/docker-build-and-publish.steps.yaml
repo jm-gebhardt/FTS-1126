@@ -64,6 +64,16 @@ steps:
         fi
       done
       
+      # if no project were detected to build
+      # defaulting to all projects
+      if [ ${#componentsToBuild[@]} -eq 0 ]; then
+        echo "No projects affected, defaulting to all"
+        for i in $(echo "$components" | jq -r '.[]')
+        do
+          componentsToBuild+=("$i")
+        done
+      fi
+      
       
       echo "Components to build"
       echo  "$componentsToBuild"
