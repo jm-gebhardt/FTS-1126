@@ -145,7 +145,6 @@ public class EfNodeStateRepository : INodeStateRepository
             var nodeLock = GetNodeLockInState(agvCorrelationId, NodeLockState.Occupied);
             if (nodeLock != null)
             {
-                _logger.LogDebug("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}", nodeLock.NodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
             }
             // ReSharper disable once StringLiteralTypo
@@ -159,7 +158,7 @@ public class EfNodeStateRepository : INodeStateRepository
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            _logger.LogDebug("Free node {NodeId}", nodeId);
+            _logger.LogInformation("Free node {NodeId}", nodeId);
             return await UpdateNodeAsync(nodeId, NodeLockState.Free, null);
         });
     }

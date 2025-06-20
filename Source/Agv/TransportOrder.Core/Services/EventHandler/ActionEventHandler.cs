@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -16,7 +17,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// Provides a handler for action group related events.
 /// </summary>
 [UsedImplicitly]
-public class ActionEventHandler(IActionGroupRepository actionGroupRepository, ILogger<ActionEventHandler> logger) :
+public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IAgvDb agvDb, ILogger<ActionEventHandler> logger) :
     IConsumer<ActionCompleted>,
     IConsumer<StartingActionForAgvFailed>,
     IConsumer<NonChargingActionCompleted>,
@@ -97,7 +98,18 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IL
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
-        await context.Publish(new FreeNode(context.Message.TargetNodeId, context.Message.ReservedOnly));
+        var (agvCorrelationId, targetNode, reservedOnly) = context.Message;
+        if (agvCorrelationId != null)
+        {
+            var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
+            if (agv.AgvStatus?.LastNodeId == targetNode)
+            {
+                logger.LogInformation("Automatic action withdrawn: not calling free node for agv {AgvCorrelation} already occupying node {Node}", agvCorrelationId, targetNode);
+                return;
+            }
+        }
+        logger.LogInformation("Automatic action withdrawn: calling free node for agv {AgvCorrelation} and node {Node}", agvCorrelationId, targetNode);
+        await context.Publish(new FreeNode(targetNode, reservedOnly));
     }
 
     /// <inheritdoc />

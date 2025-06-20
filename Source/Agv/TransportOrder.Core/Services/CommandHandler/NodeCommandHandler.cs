@@ -91,6 +91,7 @@ public class NodeCommandHandler(
 
         if (oldLastNode != null && oldLastNode.IsOccupiedByAgv(agvCorrelationId))
         {
+            logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);
             await nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
             await PublishNodeStateChange(context, oldLastNodeId!);
             nodeLocksForAgv.Remove(oldLastNode);

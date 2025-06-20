@@ -4,8 +4,10 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -39,6 +41,12 @@ public class ActionEventHandlerTestFixture : MassTransitConsumerTestFixture<Acti
     public ActionEventHandlerTestFixture AddAssignedAgv(Guid? correlationId)
     {
         _actionGroupRepository.Setup(x => x.GetAgvAssignedToAction(It.IsAny<Guid>())).ReturnsAsync(correlationId);
+        return this;
+    }
+
+    public ActionEventHandlerTestFixture WithAgv(Agv agv)
+    {
+        _agvDb.AddAgvs(new List<Agv>{agv});
         return this;
     }
 
