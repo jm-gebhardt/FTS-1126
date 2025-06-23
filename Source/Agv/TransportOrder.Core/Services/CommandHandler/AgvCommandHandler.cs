@@ -972,6 +972,7 @@ public class AgvCommandHandler :
             _logger.LogInformation("Agv {AgvCorrelationId} is not available for busy", agv.CorrelationId);
             return;
         }
+        _logger.LogInformation("Agv {AgvCorrelationId} is set to busy for action {ActionId}", agv.CorrelationId, action.CorrelationId);
 
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(action.ParentId);
         if (actionGroup == null)

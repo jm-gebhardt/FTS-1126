@@ -67,6 +67,7 @@ public class ActionCommandHelper
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy.", assignedAgv.CorrelationId);
             return false;
         }
+        _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} is set to busy for action {Action} of group {ActionGroupCorrelationId}", assignedAgv.CorrelationId, action.CorrelationId, action.ParentId);
 
         // here the state has changed in all cases
         await PublishStateChange(assignedAgv);
