@@ -1,53 +1,54 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
-using System.Collections.ObjectModel;
-using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.Common.Messages.Queue;
-using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
-using Gebhardt.Acc.TransportOrder.Domain.Constants;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
-using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
-using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
 using Microsoft.IdentityModel.Tokens;
+using System.Collections.ObjectModel;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
+using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
+using CreateQueueingActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.CreateQueueingActionGroup;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
-using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
-using CreateQueueingActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.CreateQueueingActionGroup;
 using RequestAgvZones = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvZones;
+using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 using UpdateErrorStatus = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UpdateErrorStatus;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
@@ -74,7 +75,7 @@ public class AgvCommandHandler :
     IConsumer<HandleActionCompletion>,
     IConsumer<PrepareAgvForStartingAction>,
     IConsumer<UpdateCargo>,
-    IConsumer<PrepareParkingOfAgv>,
+    IConsumer<PrepareIdleActionOfAgv>,
     IConsumer<PrepareChargingOfAgv>,
     IConsumer<UpdateAgvSettingsGroupReference>,
     IConsumer<TryReactivateParkingAgvs>,
@@ -190,61 +191,109 @@ public class AgvCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="PrepareParkingOfAgv"/> command.
+    /// Handles the <see cref="PrepareIdleActionOfAgv"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<PrepareParkingOfAgv> context)
+    public async Task Consume(ConsumeContext<PrepareIdleActionOfAgv> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
 
-        if (agv.CheckShouldCharge(agvSettings) || agv.IsLocked)
+        if (agv.IsLocked)
         {
             return;
         }
 
         if (await _actionGroupRepository.HasCurrentAssignedActionGroupAsync(agvCorrelationId))
         {
-            _logger.LogDebug("No need for a park / queue action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
+            _logger.LogDebug("No need for an idle action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
             await context.Publish(new AgvBecameIdle(agvCorrelationId));
             return;
         }
 
-        bool hasParkers = await  _parkPointService.HasParkersAsync(agvCorrelationId);
-        if (hasParkers && (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agvCorrelationId)))
+        // Idle hierarchy : queue, charge, park
+        if (await TryQueueing(context, agv))
         {
-            _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}", agvCorrelationId);
             return;
         }
 
-        if (agv.IsQueueing || await _queueManager.IsOnAQueueNode(agvCorrelationId))
+        if (await TryCharging(context, agv))
         {
-            _logger.LogDebug("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}", agvCorrelationId);
             return;
+        }
+
+        await TryParking(context, agv);
+    }
+
+    private async Task<bool> TryQueueing(IPublishEndpoint context, Agv agv)
+    {
+        if (agv.IsQueueing || await _queueManager.IsOnAQueueNode(agv.CorrelationId))
+        {
+            _logger.LogDebug("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}", agv.CorrelationId);
+            return true;
         }
 
         string? targetNode = await _queueManager.TryEnterQueue(agv);
-        if (targetNode != null)
+        if (targetNode == null)
         {
-            agv.IsQueueing = true;
-            await _agvDb.Agvs.UpdateAgvAsync(agv);
-            _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}", agvCorrelationId);
-            await context.Publish(new QueueNodeSelectedForAgv(agvCorrelationId, targetNode));
+            return false;
+        }
+
+        agv.IsQueueing = true;
+        await _agvDb.Agvs.UpdateAgvAsync(agv);
+        _logger.LogInformation("Starting queueing action for agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
+        await context.Publish(new QueueNodeSelectedForAgv(agv.CorrelationId, targetNode));
+        return true;
+    }
+
+    private async Task<bool> TryCharging(IPublishEndpoint context, Agv agv)
+    {
+        if (await _chargingPointManager.IsOnAChargingNodeAsync(agv))
+        {
+            _logger.LogInformation("Agv {AgvCorrelationId} is already on charger {NodeId}, no need to reserve one", agv.CorrelationId, agv.AgvStatus?.LastNodeId);
+            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, agv.AgvStatus!.LastNodeId!));
+            return true;
+        }
+
+        var reservedChargingNode = await _chargingPointManager.GetReservedChargerForAgvAsync(agv.CorrelationId);
+            string? chargingNodeId = reservedChargingNode?.NodeId;
+            if (chargingNodeId == null)
+            {
+                try
+                {
+                    var node = await _chargingPointManager.ReserveChargerAsync(agv);
+                    chargingNodeId = node.Id;
+                }
+                catch (NoChargeStationAvailableException)
+                {
+                    _logger.LogInformation("No charger available for idling agv {AgvCorrelationId}, try parking", agv.CorrelationId);
+                    return false;
+                }
+            }
+
+        await PublishNodeStateChange(context, chargingNodeId);
+        await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, chargingNodeId));
+        return true;
+    }
+
+    private async Task TryParking(IPublishEndpoint context, Agv agv)
+    {
+        if (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agv.CorrelationId))
+        {
+            _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}", agv.CorrelationId);
             return;
         }
 
+        bool hasParkers = await _parkPointService.HasParkersAsync(agv.CorrelationId);
         if (hasParkers)
         {
-            _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}", agvCorrelationId);
+            _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
             var parkNode = await _parkPointService.ReserveParkAsync(agv);
             await PublishNodeStateChange(context, parkNode.Id);
-            await context.Publish(new ParkingNodeSelectedForAgv(agvCorrelationId, parkNode.Id));
+            await context.Publish(new ParkingNodeSelectedForAgv(agv.CorrelationId, parkNode.Id));
+            return;
         }
-        else
-        {
-            _logger.LogInformation("No parking stations defined");
-        }
+        _logger.LogInformation("No parking stations defined");
     }
 
     /// <summary>

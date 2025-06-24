@@ -149,7 +149,7 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvCanStartIdleAction> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        await context.Publish(new PrepareParkingOfAgv(agvCorrelationId));
+        await context.Publish(new PrepareIdleActionOfAgv(agvCorrelationId));
     }
 
     /// <summary>
