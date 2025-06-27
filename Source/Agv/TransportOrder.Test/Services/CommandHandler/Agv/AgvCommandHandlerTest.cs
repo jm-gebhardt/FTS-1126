@@ -1071,7 +1071,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_PrepareIdleActionOfAgv_NoQueueChargerAvailable_PublishesChargingNodeSelectedForAgv()
+    public async Task Consume_PrepareParkingOfAgv_ValidData_PublishesParkingNodeSelectedForAgv()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         const string parkNodeName = "Park-1";
@@ -1081,91 +1081,37 @@ public class AgvCommandHandlerTest
             .WithAgvsGraph()
             .HasAlreadyReservedNode(false)
             .WithCurrentAssignedActionGroup(false)
-            .WithEnqueueingTarget(null)
-            .WithIsOnAQueueNode(false)
-            .AddChargingNode(false, NodeGenerator.GenerateChargingNode("charge"))
             .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
 
-        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new PrepareParkingOfAgv(agv.CorrelationId));
 
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<QueueNodeSelectedForAgv>();
-        await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
-        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
-    }
-
-    [TestMethod]
-    public async Task Consume_PrepareIdleActionOfAgv_NoQueueIsOnCharger_PublishesChargingNodeSelectedForAgv()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        const string parkNodeName = "Park-1";
-
-        var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([agv])
-            .WithAgvsGraph()
-            .WithCurrentAssignedActionGroup(false)
-            .WithEnqueueingTarget(null)
-            .WithIsOnAQueueNode(false)
-            .AddChargingNode(true, NodeGenerator.GenerateChargingNode("charge"))
-            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
-
-        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
-
-        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<QueueNodeSelectedForAgv>();
-        await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
-        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
-    }
-
-    [TestMethod]
-    public async Task Consume_PrepareIdleActionOfAgv_NoQueueFreeCharger_PublishesChargingNodeSelectedForAgv()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        const string parkNodeName = "Park-1";
-
-        var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([agv])
-            .WithAgvsGraph()
-            .WithCurrentAssignedActionGroup(false)
-            .WithEnqueueingTarget(null)
-            .WithIsOnAQueueNode(false)
-            .AddChargingNode(false, NodeGenerator.GenerateChargingNode("charge"))
-            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
-
-        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
-
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<QueueNodeSelectedForAgv>();
-        await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
-        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
-    }
-
-    [TestMethod]
-    public async Task Consume_PrepareIdleActionOfAgv_NoQueueNoCharger_PublishesParkingNodeSelectedForAgv()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        const string parkNodeName = "Park-1";
-
-        var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgvs([agv])
-            .WithAgvsGraph()
-            .HasAlreadyReservedNode(false)
-            .WithCurrentAssignedActionGroup(false)
-            .WithEnqueueingTarget(null)
-            .WithIsOnAQueueNode(false)
-            .AddChargingNode(false, null)
-            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
-
-        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
-
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<QueueNodeSelectedForAgv>();
-        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
         await fixture.ShouldHavePublishedAsync<ParkingNodeSelectedForAgv>();
     }
 
     [TestMethod]
-    public async Task Consume_PrepareIdleActionOfAgv_AgvIsLocked_DoesNotPublishIdleNodeSelectedForAgv()
+    public async Task Consume_PrepareParkingOfAgv_BatteryIsLow_DoesNotPublishParkingNodeSelectedForAgv()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 20);
+        const string parkNodeName = "Park-1";
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsGraph()
+            .HasAlreadyReservedNode(false)
+            .WithCurrentAssignedActionGroup(true)
+            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
+
+        var command = new PrepareParkingOfAgv(agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<PrepareParkingOfAgv>();
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareParkingOfAgv_AgvIsLocked_DoesNotPublishParkingNodeSelectedForAgv()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         const string parkNodeName = "Park-1";
@@ -1177,16 +1123,35 @@ public class AgvCommandHandlerTest
             .WithCurrentAssignedActionGroup(false)
             .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
 
-        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
-        
+        var command = new PrepareParkingOfAgv(agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<PrepareParkingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        await fixture.ShouldNotHavePublishedAsync<QueueNodeSelectedForAgv>();
-        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
         await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
     }
 
     [TestMethod]
-    public async Task Consume_PrepareIdleActionOfAgv_HasAssignedActionGroup_DoesNotPublishParkingNodeSelectedForAgv()
+    public async Task Consume_PrepareParkingOfAgv_HasAlreadyReservedParkingNode_DoesNotPublishParkingNodeSelectedForAgv()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string parkNodeName = "Park-1";
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsGraph()
+            .HasAlreadyReservedNode(true)
+            .WithCurrentAssignedActionGroup(false)
+            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
+
+        var command = new PrepareParkingOfAgv(agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<PrepareParkingOfAgv>();
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareParkingOfAgv_HasAssignedActionGroup_DoesNotPublishParkingNodeSelectedForAgv()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         const string parkNodeName = "Park-1";
@@ -1198,7 +1163,27 @@ public class AgvCommandHandlerTest
             .WithCurrentAssignedActionGroup(true)
             .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
 
-        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
+        var command = new PrepareParkingOfAgv(agv.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<PrepareParkingOfAgv>();
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareParkingOfAgv_NoParkingNodes_PublishesParkingNodeSelectedForAgv()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string parkNodeName = "Park-1";
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsGraph(withParkingNodes: false)
+            .HasAlreadyReservedNode(false)
+            .WithCurrentAssignedActionGroup(false)
+            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName));
+
+        await fixture.PublishMessageAsync(new PrepareParkingOfAgv(agv.CorrelationId));
 
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
