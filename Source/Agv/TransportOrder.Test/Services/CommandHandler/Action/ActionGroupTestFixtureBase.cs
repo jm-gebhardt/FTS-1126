@@ -227,7 +227,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithLastActionDockFront(bool dockFront, bool isChargeOrParkOrder=false)
     {
-        ActionGroupRepository.Setup(x => x.GetDockFrontOfLastCompletedAction(It.IsAny<Guid>())).ReturnsAsync((dockFront, isChargeOrParkOrder));
+        ActionGroupRepository.Setup(x => x.GetDockFrontOfLastCompletedAction(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync((dockFront, isChargeOrParkOrder));
         return this;
     }
 

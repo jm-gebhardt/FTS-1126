@@ -585,16 +585,16 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<(bool? dockfront, bool isAutomaticChargeOrPark)> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId)
+    public async Task<(bool? dockfront, bool isAutomaticChargeOrPark)> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId, Guid actionGroupCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .Include(a => a.Actions)
-            .Where(a => a.AssignedAgv == agvCorrelationId && a.State == ActionGroupState.Completed)
-            .OrderByDescending(a => a.CompletedDate)
+            .Where(a => a.CorrelationId != actionGroupCorrelationId && a.AssignedAgv == agvCorrelationId && (a.State == ActionGroupState.Completed || a.State == ActionGroupState.Started))
+            .OrderByDescending(a => a.StartedDate)
             .FirstOrDefaultAsync();
-        bool? dockFront = actionGroup?.Actions.OrderByDescending(a => a.Sequence).First().InfoToAgv?.GetDockFront();
+        bool? dockFront = actionGroup?.Actions.OrderByDescending(a => a.Sequence).First(a => !a.ShouldSkip).InfoToAgv?.GetDockFront();
         bool isAutomaticParkOrder = actionGroup != null && actionGroup.Actions.All(a => a.ActionType == ActionType.Move) && actionGroup.Actions.Count == 1 && actionGroup is { IsManual: false, HasPriority: false };
         bool isAutomaticChargeOrPark = actionGroup != null && (actionGroup.IsChargingOrder || isAutomaticParkOrder);
         return (dockFront, isAutomaticChargeOrPark);

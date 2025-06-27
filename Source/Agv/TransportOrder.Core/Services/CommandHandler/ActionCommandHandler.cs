@@ -129,7 +129,7 @@ public class ActionCommandHandler :
             bool wasPreviousActionGroupChargeOrPark = false;
             if (action.IsFirstAction)
             {
-                (previousActionGroupDockFront, wasPreviousActionGroupChargeOrPark) = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId);
+                (previousActionGroupDockFront, wasPreviousActionGroupChargeOrPark) = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId, actionGroup.CorrelationId);
             }
             actionGroup.SetDockFrontOfAction(action.CorrelationId, wasPreviousActionGroupChargeOrPark? false : previousActionGroupDockFront);
             actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
