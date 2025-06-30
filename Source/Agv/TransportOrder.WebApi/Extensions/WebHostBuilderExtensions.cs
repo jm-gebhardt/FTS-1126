@@ -41,7 +41,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 public static class WebHostBuilderExtensions
 {
     private const string AccessToken = "access_token";
-   
+
     /// <summary>
     /// Configured the WebHostBuilder to use the TransportOrderWebApi <paramref name="webHostBuilder" />
     /// </summary>
@@ -68,7 +68,7 @@ public static class WebHostBuilderExtensions
             services.AddSingleton<ISignificanceChecker<AgvBatteryStatusDto>, AgvBatteryStatusSignificanceChecker>();
             services.AddSingleton<ISignificanceChecker<AgvPositionDto>, AgvPositionSignificanceChecker>();
             services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
-            
+
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
             services.AddControllers()
@@ -77,35 +77,35 @@ public static class WebHostBuilderExtensions
 
             var config = context.Configuration.GetSection("KEYCLOAK");
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
-            {
-                o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
-                o.RequireHttpsMetadata = false;
-                o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
-                o.TokenValidationParameters.ValidateIssuer = false;
-                o.TokenValidationParameters.ValidateAudience = false;
-                o.TokenValidationParameters.ValidateIssuerSigningKey = false;
-                o.TokenValidationParameters.SignatureValidator =
-                    delegate(string token, TokenValidationParameters _)
-                    {
-                        var jwt = new JsonWebToken(token);
-                        return jwt;
-                    };
-                o.Events = new JwtBearerEvents
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
                 {
-                    OnMessageReceived = ctx =>
-                    {
-                        var accessToken = ctx.Request.Query[AccessToken];
-
-                        if (!string.IsNullOrEmpty(accessToken) &&
-                            (ctx.HttpContext.WebSockets.IsWebSocketRequest || ctx.Request.Headers["Accept"] == "text/event-stream"))
+                    o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
+                    o.RequireHttpsMetadata = false;
+                    o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
+                    o.TokenValidationParameters.ValidateIssuer = false;
+                    o.TokenValidationParameters.ValidateAudience = false;
+                    o.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                    o.TokenValidationParameters.SignatureValidator =
+                        delegate(string token, TokenValidationParameters _)
                         {
-                            ctx.Token = accessToken;
+                            var jwt = new JsonWebToken(token);
+                            return jwt;
+                        };
+                    o.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = ctx =>
+                        {
+                            var accessToken = ctx.Request.Query[AccessToken];
+
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (ctx.HttpContext.WebSockets.IsWebSocketRequest || ctx.Request.Headers["Accept"] == "text/event-stream"))
+                            {
+                                ctx.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
                         }
-                        return Task.CompletedTask;
-                    }
-                };
-            });
+                    };
+                });
 
             services.AddAuthorization(AuthorizationPolicies.Configure);
 
@@ -141,7 +141,7 @@ public static class WebHostBuilderExtensions
                     Description = "Please enter a valid token",
                     Name = "Authorization",
                     Type = SecuritySchemeType.ApiKey,
-                    BearerFormat = "JWT", 
+                    BearerFormat = "JWT",
                     Scheme = JwtBearerDefaults.AuthenticationScheme
                 };
                 options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
@@ -152,7 +152,7 @@ public static class WebHostBuilderExtensions
                         {
                             Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
                         },
-                        new string[] {}
+                        new string[] { }
                     }
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
@@ -162,7 +162,11 @@ public static class WebHostBuilderExtensions
 
             services.AddSignalR(options =>
                 {
+                    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+                    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
                     options.EnableDetailedErrors = true;
+                    // Typical downstream traffic: ~25 kB / 15 s for 5 AGVs (estimated)
+                    options.StatefulReconnectBufferSize = 100_000;
                 })
                 .AddJsonProtocol(options =>
                 {
@@ -204,7 +208,10 @@ public static class WebHostBuilderExtensions
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-            endpoints.MapHub<AgvHub>(AgvHub.UrlPath);
+            endpoints.MapHub<AgvHub>(AgvHub.UrlPath, o =>
+            {
+                o.AllowStatefulReconnects = true;
+            });
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
             endpoints.MapHub<MapHub>(MapHub.UrlPath);
             endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath);
