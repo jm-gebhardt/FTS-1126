@@ -236,4 +236,23 @@ public class NodeCommandHandlerTest
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync("new", AgvSerialNumber.ToGuid()), Times.Never);
     }
+    
+    [TestMethod]
+    public async Task Consume_UpdateNodeOccupancy_CurrentActionTargetsOldLastNode_UnOccupyNotCalled()
+    {
+        var agvId = AgvSerialNumber.ToGuid();
+        const string oldNodeId = "charge-5";
+        const string newNodeId = "node99";
+        var actionGroup = Helper.AgvActionGenerator.GenerateChargeActionGroup(targetNodeId: oldNodeId, assignedAgv: agvId);
+
+        var oldLastNodeState = new NodeLock(oldNodeId, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var fixture = new NodeCommandHandlerTestFixture()
+            .WithNodeStates([oldLastNodeState])
+            .WithActionGroups([actionGroup])
+            .WithCurrentAgvAction(actionGroup.Actions[0]);
+
+        await fixture.PublishMessageAsync(new UpdateNodeOccupancy(agvId, oldNodeId, newNodeId));
+        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(agvId), Times.Never);
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+    }
 }

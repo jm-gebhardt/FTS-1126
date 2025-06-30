@@ -31,7 +31,7 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _graphRepository.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
-       
+
         return this;
     }
 
@@ -85,6 +85,14 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     public NodeCommandHandlerTestFixture WithActionGroups(ICollection<ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetPendingActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
+        return this;
+    }
+
+    public NodeCommandHandlerTestFixture WithCurrentAgvAction(AgvAction action)
+    {
+        _actionGroupRepository
+            .Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(action);
         return this;
     }
 }

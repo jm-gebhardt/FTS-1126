@@ -21,7 +21,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 public class NodeCommandHandler(
     INodeStateRepository nodeStateRepository,
     IStationRepository stationRepository,
-    IActionGroupRepository actionGroupRepository, 
+    IActionGroupRepository actionGroupRepository,
     IGraphRepository graphRepository,
     ILogger<NodeCommandHandler> logger) :
     IConsumer<FreeNode>,
@@ -51,7 +51,7 @@ public class NodeCommandHandler(
 
         if (!await nodeStateRepository.FreeNodeAsync(nodeId))
         {
-            logger.LogWarning("Could not free node {NodeId}, node is locked.", nodeId);
+            logger.LogWarning("Could not free node {NodeId}, node is locked", nodeId);
         }
 
         nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
@@ -66,15 +66,16 @@ public class NodeCommandHandler(
         await Task.Delay(Agv.OfflineTolerance);
         ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(context.Message.AgvCorrelationId);
         ICollection<GraphNode> nodes = await graphRepository.GetNodesByIdsAsync(nodeLocksForAgv.Select(n => n.NodeId).ToList());
-        ICollection<Task<bool>> freeNodeTasks = [];
-        ICollection<Task> publishTasks = [];
+        ICollection<Task> tasks = [];
         foreach (var node in nodes.Where(n => !n.IsCharger() && !n.IsParker()))
         {
-            freeNodeTasks.Add(nodeStateRepository.FreeNodeAsync(node.Id));
-            publishTasks.Add(PublishNodeStateChange(context, node.Id));
+            tasks.Add(Task.Run(async () =>
+            {
+                await nodeStateRepository.FreeNodeAsync(node.Id);
+                await PublishNodeStateChange(context, node.Id);
+            }));
         }
-        await Task.WhenAll(freeNodeTasks);
-        await Task.WhenAll(publishTasks);
+        await Task.WhenAll(tasks);
     }
 
     /// <summary>
@@ -91,15 +92,23 @@ public class NodeCommandHandler(
 
         if (oldLastNode != null && oldLastNode.IsOccupiedByAgv(agvCorrelationId))
         {
-            logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);
-            await nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
-            await PublishNodeStateChange(context, oldLastNodeId!);
-            nodeLocksForAgv.Remove(oldLastNode);
+            var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(agvCorrelationId);
+            if (currentAction?.Target.NodeId == oldLastNodeId)
+            {
+                logger.LogInformation("Node {NodeId} is occupied by AGV {AgvCorrelationId} and has an active action going towards it, this might be a redock, so not unoccupying it", oldLastNode, agvCorrelationId);
+            }
+            else
+            {
+                logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);
+                await nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
+                await PublishNodeStateChange(context, oldLastNodeId!);
+                nodeLocksForAgv.Remove(oldLastNode);
+            }
         }
 
         if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
         {
-            logger.LogWarning("Setting {nodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
+            logger.LogWarning("Setting {NodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
             await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
             await PublishNodeStateChange(context, newLastNodeId!);
             nodeLocksForAgv.Remove(newLastNode);
@@ -116,19 +125,21 @@ public class NodeCommandHandler(
     private async Task FreeUnusedNodes(IPublishEndpoint context, ICollection<NodeLock> nodeLocks, Guid agvCorrelationId)
     {
         ICollection<ActionGroup> agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
-        ICollection<Task<bool>> freeNodeTasks = [];
-        ICollection<Task> publishTasks = [];
+        ICollection<Task> tasks = [];
         foreach (var node in nodeLocks)
         {
             if (!agvActionGroups.Any(a => a.Actions.Any(action => action.Target.NodeId == node.NodeId)))
             {
                 logger.LogWarning("For agv {AgvCorrelationId} free residual node {NodeId}", agvCorrelationId, node.NodeId);
-                freeNodeTasks.Add(nodeStateRepository.FreeNodeAsync(node.NodeId));
-                publishTasks.Add(PublishNodeStateChange(context, node.NodeId));
+
+                tasks.Add(Task.Run(async () =>
+                {
+                    await nodeStateRepository.FreeNodeAsync(node.NodeId);
+                    await PublishNodeStateChange(context, node.NodeId);
+                }));
             }
         }
-        await Task.WhenAll(freeNodeTasks);
-        await Task.WhenAll(publishTasks);
+        await Task.WhenAll(tasks);
     }
 
     private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
