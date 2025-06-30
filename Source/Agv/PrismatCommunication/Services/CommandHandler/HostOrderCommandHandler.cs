@@ -154,18 +154,19 @@ public class HostOrderCommandHandler(
         await hostOrderRepository.SaveAsync();
     }
 
-    private async Task QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, Guid? assignedAgv = null, string? pickNode = null)
+    private async Task<bool> QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, Guid? assignedAgv = null, string? pickNode = null)
     {
         if (!configuration.IsPickAtAkl(hostOrder.Source) && await ViolatesAklAgvLimitation(hostOrder))
         {
             logger.LogInformation("Host order {OrderId} / {CorrelationId} is kept back because of AKL station limitation.", hostOrder.Hu, hostOrder.CorrelationId);
-            return;
+            return false;
         }
 
         var actionGroup = hostOrder.CreateActionGroup(configuration, assignedAgv, pickNode);
         await context.Publish(new QueueActionGroup(actionGroup, false));
         hostOrder.IsQueued = true;
         await hostOrderRepository.SaveAsync();
+        return true;
     }
 
     private async Task<bool> ViolatesAklAgvLimitation(HostOrder hostOrder)
@@ -358,14 +359,15 @@ public class HostOrderCommandHandler(
         {
             var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
             pickingHostOrder.SetDoppelspielpartner(droppingHostOrderCorrelationId);
-            logger.LogInformation("Queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
-            await QueueHostOrder(context, pickingHostOrder, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
-
-            droppingHostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
-            await hostOrderRepository.UpdateAsync(droppingHostOrder);
-            await hostOrderRepository.UpdateAsync(pickingHostOrder);
-            await hostOrderRepository.SaveAsync();
-            return;
+            logger.LogInformation("Dropping agv {AgvCorrelationId} should pick next: Queueing order {HostOrder} with pick node {Node}", agvCorrelationId, pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
+            if (await QueueHostOrder(context, pickingHostOrder, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode))
+            {
+                droppingHostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
+                await hostOrderRepository.UpdateAsync(droppingHostOrder);
+                await hostOrderRepository.UpdateAsync(pickingHostOrder);
+                await hostOrderRepository.SaveAsync();
+                return;
+            }
         }
 
         if (droppingHostOrder.IsRegisteredForDoppelspiel)
@@ -471,17 +473,22 @@ public class HostOrderCommandHandler(
             await context.RespondAsync(new DoppelspielPartnerQueued(null));
             return;
         }
-        pickingHostOrder.RegisterForDoppelspiel();
-        pickingHostOrder.SetDoppelspielpartner(hostOrder.CorrelationId);
-        hostOrder.RegisterForDoppelspiel();
-        hostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
 
-        logger.LogInformation("Queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
-        await QueueHostOrder(context, pickingHostOrder, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
-        await hostOrderRepository.UpdateAsync(pickingHostOrder);
-        await hostOrderRepository.UpdateAsync(hostOrder);
-        await hostOrderRepository.SaveAsync();
-        await context.RespondAsync(new DoppelspielPartnerQueued(pickingHostOrder.CorrelationId));
+        logger.LogInformation("Try queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
+        if (await QueueHostOrder(context, pickingHostOrder, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode))
+        {
+            pickingHostOrder.RegisterForDoppelspiel();
+            pickingHostOrder.SetDoppelspielpartner(hostOrder.CorrelationId);
+            hostOrder.RegisterForDoppelspiel();
+            hostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
+
+            await hostOrderRepository.UpdateAsync(pickingHostOrder);
+            await hostOrderRepository.UpdateAsync(hostOrder);
+            await hostOrderRepository.SaveAsync();
+            await context.RespondAsync(new DoppelspielPartnerQueued(pickingHostOrder.CorrelationId));
+            return;
+        }
+        await context.RespondAsync(new DoppelspielPartnerQueued(null));
     }
 
     /// <summary>

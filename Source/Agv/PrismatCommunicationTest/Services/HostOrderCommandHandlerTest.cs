@@ -865,12 +865,13 @@ public class HostOrderCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
 
         fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
     [TestMethod]
-    public async Task Consume_TriggerDoppelspielpartnerQueueing_AklStation_RespondsDoppelspielPartnerQueued()
+    public async Task Consume_TriggerDoppelspielpartnerQueueing_AklStation_RespondsButDoesNotQueueActionGroup()
     {
-        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         hostOrder.Start(DateTime.UtcNow, Guid.NewGuid());
         hostOrder.RegisterForDoppelspiel();
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
@@ -884,6 +885,74 @@ public class HostOrderCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
 
         fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerDoppelspielpartnerQueueing_PartnerOrderHeadsTowardsFreeAklStation_LoopSwitch_RespondPublishesQueueActionGroup()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        hostOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        nextPickOrder.IsQueued = false;
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder])
+            .WithNextPickOrder(nextPickOrder)
+            .WithStationGroup(false, false);
+
+        await fixture.PublishMessageAsync(new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node"));
+        await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
+
+        fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBe(nextPickOrder.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        nextPickOrder.IsQueued.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerDoppelspielpartnerQueueing_PartnerOrderHeadsTowardsFreeAklStation_RespondPublishesQueueActionGroup()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        hostOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        nextPickOrder.IsQueued = false;
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder])
+            .WithNextPickOrder(nextPickOrder)
+            .WithStationGroup(false, false);
+
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<TriggerDoppelspielpartnerQueueing>();
+        await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
+
+        fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBe(nextPickOrder.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        nextPickOrder.IsQueued.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerDoppelspielpartnerQueueing_PartnerOrderHeadsTowardsOccupiedAklStation_RespondsButDoesNotQueueActionGroup()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        hostOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        nextPickOrder.IsQueued = false;
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder])
+            .WithNextPickOrder(nextPickOrder)
+            .WithStationGroup(true, false);
+
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<TriggerDoppelspielpartnerQueueing>();
+        await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
+
+        fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
     [TestMethod]
@@ -904,6 +973,7 @@ public class HostOrderCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
 
         fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
     [TestMethod]
