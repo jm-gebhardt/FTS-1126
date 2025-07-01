@@ -741,4 +741,15 @@ public class EfActionGroupRepository : IActionGroupRepository
             a.State == ActionGroupState.Paused
         ).ToListAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<string> targets)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>().AsNoTracking();
+        return await actionGroups.Where(ag => ag.AssignedAgv == agvId
+                                              && ag.State == ActionGroupState.Created
+                                              && ag.Actions.All(a => targets.Contains(a.Target.NodeId ?? string.Empty)))
+            .ToListAsync();
+    }
 }

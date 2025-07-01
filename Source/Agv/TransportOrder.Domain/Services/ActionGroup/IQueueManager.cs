@@ -61,4 +61,11 @@ public interface IQueueManager
     /// <param name="targetNode">The target node of the queue.</param>
     /// <returns>True, if the agv was removed from the queue.</returns>
     Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode);
+
+    /// <summary>
+    /// Gets all the action groups that are internal to the queue that the agv might be in.
+    /// </summary>
+    /// <param name="agv">The agv to check.</param>
+    /// <returns>A collection of action group ids.</returns>
+    Task<ICollection<Guid>> GetQueueInternalActionGroups(Agv agv);
 }

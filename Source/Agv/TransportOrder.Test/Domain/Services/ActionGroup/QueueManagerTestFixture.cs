@@ -25,6 +25,7 @@ public class QueueManagerTestFixture: FixtureBase
     private readonly SemaphoreProvider<IQueueingSemaphore> _semaphore = new();
     private readonly Mock<ILogger<QueueManager>> _logger = new();
     private readonly Mock<IGraphRepository> _graphRepository = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     public readonly QueueManager QueueManager;
 
     public QueueManagerTestFixture()
@@ -36,6 +37,7 @@ public class QueueManagerTestFixture: FixtureBase
             s.AddTransient(_ => _routeService.Object);
             s.AddTransient(_ => _graphRepository.Object);
             s.AddTransient(_ => _agvDb.Object);
+            s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient<ISemaphoreProvider<IQueueingSemaphore>>(_ => _semaphore);
             s.AddTransient(_ => _logger.Object);
             s.AddTransient<QueueManager>();

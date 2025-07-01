@@ -112,7 +112,8 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateFullQueue();
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([]);
+            .WithActionGroups([])
+            .WithQueueInternalMoves([AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.NodeId)]);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!);
         await fixture.TestHarness.Bus.Publish(command);
@@ -131,6 +132,8 @@ public class QueueCommandHandlerTest
         message.ActionGroup.IsManual.ShouldBeTrue();
         message.ActionGroup.Actions.Count.ShouldBe(1);
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(command.EvacuationTarget);
+
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
     }
 
     [TestMethod]
@@ -139,11 +142,12 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([]);
+            .WithActionGroups([])
+            .WithQueueInternalMoves([]);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!);
         await fixture.TestHarness.Bus.Publish(command);
-
+        
         List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(1);
 
@@ -155,6 +159,8 @@ public class QueueCommandHandlerTest
         message.ActionGroup.IsManual.ShouldBeTrue();
         message.ActionGroup.Actions.Count.ShouldBe(1);
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(command.EvacuationTarget);
+
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
     }
 
     [TestMethod]

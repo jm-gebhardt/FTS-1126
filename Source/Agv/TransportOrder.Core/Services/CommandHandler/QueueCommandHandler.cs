@@ -152,6 +152,9 @@ public class QueueCommandHandler(
                 return;
             }
 
+            ICollection<Domain.Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.Value, queue.NonEntryNodes);
+            await Task.WhenAll(queueInternalMoves.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag.CorrelationId))));
+
             logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTarget, agv);
             var actionGroupId = Guid.NewGuid();
             await QueueNewActionGroup(context,

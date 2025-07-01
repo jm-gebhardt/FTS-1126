@@ -938,7 +938,8 @@ public class AgvCommandHandlerTest
             .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup)
-            .WithIsOnAQueueNode(true);
+            .WithIsOnAQueueNode(true)
+            .WithQueueInternalMoves([Guid.NewGuid()]);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -947,6 +948,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
         agv.IsQueueing.ShouldBeFalse();
     }
 
@@ -964,7 +966,8 @@ public class AgvCommandHandlerTest
             .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup)
-            .WithIsOnAQueueNode(true);
+            .WithIsOnAQueueNode(true)
+            .WithQueueInternalMoves([Guid.NewGuid()]);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -973,6 +976,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
         agv.IsQueueing.ShouldBeFalse();
     }
 
@@ -987,7 +991,8 @@ public class AgvCommandHandlerTest
             .AddAgvs([agv])
             .WithAgvsToMove(agvsToMove, 0)
             .WithActionGroup(actionGroup)
-            .WithIsOnAQueueNode(true);
+            .WithIsOnAQueueNode(true)
+            .WithQueueInternalMoves([]);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -997,6 +1002,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<QueueBecameEmpty>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
         agv.IsQueueing.ShouldBeFalse();
     }
 

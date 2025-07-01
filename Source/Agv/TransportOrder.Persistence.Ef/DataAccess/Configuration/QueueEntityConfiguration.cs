@@ -18,6 +18,7 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
             .HasMaxLength(DbStringLimits.Description);
 
         builder.Ignore(e => e.Head);
+        builder.Ignore(e => e.NonEntryNodes);
         builder.Ignore(e => e.Tail);
         builder.Ignore(e => e.Agvs);
 

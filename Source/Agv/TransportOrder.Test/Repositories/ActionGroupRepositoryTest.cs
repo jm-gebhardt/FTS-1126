@@ -1316,4 +1316,24 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.FilterAgvsWithPriorityActionGroups([agvWithPriorityGroup, agvWithoutActionGroup, agvWithNonPriorityGroup])).ShouldBeEmpty();
     }
+
+    [TestMethod]
+    public async Task GetNotStartedActionGroupsToTargetsForAgv_ValidData_ReturnsActionGroups()
+    {
+        const string target = "targetNode";
+        var agv = Guid.NewGuid();
+        var startedActionGroupToTarget = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: target, assignedAgv: agv);
+        startedActionGroupToTarget.StartAction(startedActionGroupToTarget.Actions.Single().CorrelationId, [], []);
+
+        var notStartedActionGroupToTarget = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: target, assignedAgv: agv);
+
+        var actionGroupToDifferentTarget = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: "different target", assignedAgv: agv);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                startedActionGroupToTarget, notStartedActionGroupToTarget, actionGroupToDifferentTarget
+            ]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv, [target])).ShouldBeEquivalentTo(new List<ActionGroup>{ notStartedActionGroupToTarget });
+    }
 }

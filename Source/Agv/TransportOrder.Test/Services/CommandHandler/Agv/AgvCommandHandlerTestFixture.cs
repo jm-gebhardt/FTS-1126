@@ -282,6 +282,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
+    public AgvCommandHandlerTestFixture WithQueueInternalMoves(ICollection<Guid> actionGroups)
+    {
+        _queueManager.Setup(x => x.GetQueueInternalActionGroups(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(actionGroups);
+        return this;
+    }
+
     public AgvCommandHandlerTestFixture WithActionGroups(List<ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>>(),

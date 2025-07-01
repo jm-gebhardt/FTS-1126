@@ -52,6 +52,11 @@ public class Queue
     public string? EntryNode => Nodes.OrderBy(n => n.Position).LastOrDefault()?.NodeId;
 
     /// <summary>
+    /// All the nodes of the queue that are not the entry node.
+    /// </summary>
+    public ICollection<string> NonEntryNodes => Nodes.Select(q => q.NodeId).Where(n => n !=  EntryNode).ToList();
+
+    /// <summary>
     /// The agv fill quantity.
     /// </summary>
     public int AgvFillQuantity { get; set; }

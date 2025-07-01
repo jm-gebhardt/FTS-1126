@@ -326,4 +326,12 @@ public interface IActionGroupRepository
     /// <param name="target">The target node.</param>
     /// <returns>Action groups.</returns>
     Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(string target);
+
+    /// <summary>
+    /// Get all the not started action groups for a specific agv that are targeting one of the nodes of a collection.
+    /// </summary>
+    /// <param name="agvId">The agv to check.</param>
+    /// <param name="targets">The targets to check.</param>
+    /// <returns></returns>
+    Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<string> targets);
 }

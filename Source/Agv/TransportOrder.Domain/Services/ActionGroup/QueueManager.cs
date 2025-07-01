@@ -15,6 +15,7 @@ public class QueueManager(IAgvDb agvDb,
     IRouteService routeService,
     ILogger<QueueManager> logger,
     IGraphRepository graphRepository,
+    IActionGroupRepository actionGroupRepository,
     ISemaphoreProvider<IQueueingSemaphore> semaphoreProvider) :  IQueueManager
 {
     /// <inheritdoc cref="IQueueManager"/>
@@ -210,5 +211,23 @@ public class QueueManager(IAgvDb agvDb,
             logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
         });
         return removed;
-    } 
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<Guid>> GetQueueInternalActionGroups(Agv agv)
+    {
+        if (!agv.IsQueueing)
+        {
+            return [];
+        }
+        var queue = await queueRepository.GetQueueForAgv(agv.CorrelationId);
+
+        if (queue == null)
+        {
+            return [];
+        }
+
+        ICollection<Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.CorrelationId, queue.NonEntryNodes);
+        return queueInternalMoves.Select(ag => ag.CorrelationId).ToList();
+    }
 }
