@@ -27,6 +27,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
+using ActionGroupCreated = Gebhardt.Acc.Common.Messages.ActionGroups.Events.ActionGroupCreated;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvData = Gebhardt.Acc.Common.Domain.Models.AgvData;
@@ -131,7 +132,12 @@ public class ActionCommandHandler :
             {
                 (previousActionGroupDockFront, wasPreviousActionGroupChargeOrPark) = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId, actionGroup.CorrelationId);
             }
-            actionGroup.SetDockFrontOfAction(action.CorrelationId, wasPreviousActionGroupChargeOrPark? false : previousActionGroupDockFront);
+            string? targetNodeId = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).Target.NodeId;
+
+            var targetNode = targetNodeId != null ? await _agvDb.Graphs.GetNodeAsync(targetNodeId) : null;
+            DockingDirection? nodeDockingDirection = targetNode?.DockingDirection;
+            actionGroup.SetDockFrontOfAction(action.CorrelationId, wasPreviousActionGroupChargeOrPark? false : previousActionGroupDockFront, nodeDockingDirection);
+            actionGroup.SetCargoLiftHeightForAction(action.CorrelationId, targetNode?.PickLiftHeight, targetNode?.DropLiftHeight);
             actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
             await _actionService.TryUpdateActionGroup(actionGroup);
             action = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
@@ -1036,7 +1042,10 @@ public class ActionCommandHandler :
             var route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
             bool? previousDockFront = currentAction!.InfoToAgv?.GetDockFront();
             currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNodeId, route);
-            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, currentAction.Sequence == 0 ? previousDockFront : null);
+            DockingDirection? nodeDockingDirection= (await _agvDb.Graphs.GetNodeAsync(targetNodeId)).DockingDirection;
+            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, currentAction.Sequence == 0 ? previousDockFront : null, nodeDockingDirection);
+            var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
+            actionGroup.SetCargoLiftHeightForAction(currentAction.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
 
         actionGroup.SetTargetForAction(actionId, targetNodeId);

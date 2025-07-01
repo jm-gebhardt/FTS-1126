@@ -23,6 +23,7 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<EfNode>
         builder.Property(e => e.Type).HasConversion(
             v => JsonSerializer.Serialize(v, jsonOptions),
             v => JsonSerializer.Deserialize<object>(v, jsonOptions)!);
+        builder.Property(e => e.DockingDirection).HasMaxLength(DbStringLimits.State);
 
         builder.ConfigureAllProperties(except: new[] { nameof(EfNode.Maps), nameof(EfNode.AgvGraphs) });
     }

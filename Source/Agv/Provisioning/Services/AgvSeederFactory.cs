@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.Provisioning.Services;
 /// <summary>
 /// Factory for creating an <see cref="ISeeder"/> for creating an Agv.
 /// </summary>
-internal class AgvSeederFactory
+public class AgvSeederFactory
 {
     private readonly IServiceProvider _serviceProvider;
 

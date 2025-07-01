@@ -3,7 +3,7 @@
 /// <summary>
 /// Seeds data to the main system.
 /// </summary>
-internal interface ISeeder
+public interface ISeeder
 {
     /// <summary>
     /// The human-readable name of the seeder.

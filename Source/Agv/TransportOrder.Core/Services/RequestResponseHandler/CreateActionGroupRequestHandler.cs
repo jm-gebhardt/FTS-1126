@@ -127,11 +127,11 @@ public class CreateActionGroupRequestHandler :
 
         var pickAction = new AgvAction(pickId, ActionType.Pick, sourceNode, correlationId) {Sequence = 0, AdditionalInfo = infoPick};
         pickAction.SetDockFrontValue(dockFrontPick);
-        pickAction.SetLiftHeight();
+        pickAction.SetExternalLiftHeight();
 
         var dropAction = new AgvAction(dropId, ActionType.Drop, targetNode, correlationId) {Sequence = 1, AdditionalInfo = infoDrop};
         dropAction.SetDockFrontValue(dockFrontDrop);
-        dropAction.SetLiftHeight();
+        dropAction.SetExternalLiftHeight();
 
         var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
             correlationId,

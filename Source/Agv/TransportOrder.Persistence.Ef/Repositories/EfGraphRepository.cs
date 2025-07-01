@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
@@ -9,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -392,5 +392,18 @@ public class EfGraphRepository : IGraphRepository
             nodesByAgv.Add(element.Key, _mapper.Map<GraphNode>(efNode));
         }
         return nodesByAgv;
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateNode(GraphNode node)
+    {
+        await _semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
+            var efNode = _mapper.Map<EfNode>(node);
+
+            context.Update(efNode);
+            await context.SaveChangesAsync();
+        });
     }
 }

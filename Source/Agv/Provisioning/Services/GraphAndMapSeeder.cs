@@ -13,13 +13,14 @@ namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]
-internal class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
+public class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
 {
     /// <inheritdoc />
     public GraphAndMapSeeder(IBus bus, IOptions<ConfigOptions> configOptions, ILogger<GraphAndMapSeeder> logger) : base(bus, configOptions.Value.BasePath, logger)
     {
     }
 
+    /// <inheritdoc />
     protected override void Validate(GraphAndMap data)
     {
         EnsureNotNull(data.Graph, nameof(data.Graph));

@@ -1,5 +1,8 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -236,7 +239,7 @@ public class NodeCommandHandlerTest
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
         fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync("new", AgvSerialNumber.ToGuid()), Times.Never);
     }
-    
+
     [TestMethod]
     public async Task Consume_UpdateNodeOccupancy_CurrentActionTargetsOldLastNode_UnOccupyNotCalled()
     {
@@ -254,5 +257,35 @@ public class NodeCommandHandlerTest
         await fixture.PublishMessageAsync(new UpdateNodeOccupancy(agvId, oldNodeId, newNodeId));
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(agvId), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_SetNodeApproachingProperties_ValidData_NodeUpdated()
+    {
+        var node = new GraphNode("nodeId");
+
+        var fixture = new NodeCommandHandlerTestFixture()
+            .WithNode(node);
+
+        await fixture.TestHarness.Bus.Publish(new SetNodeApproachingProperties(Guid.NewGuid(), node.Id, 12, 12, DockingDirection.Back));
+
+        await fixture.ShouldHaveConsumedAsync<SetNodeApproachingProperties>();
+        fixture.VerifyNodeUpdated();
+        await fixture.ShouldHavePublishedAsync<NodeApproachingPropertiesUpdated>();
+    }
+
+    [TestMethod]
+    public async Task Consume_InitializeNodeApproachingProperties_ValidData_NodeUpdated()
+    {
+        var node = new GraphNode("nodeId");
+
+        var fixture = new NodeCommandHandlerTestFixture()
+            .WithNode(node);
+
+        await fixture.TestHarness.Bus.Publish(new InitializeNodeApproachingProperties(node.Id, 12, 12, DockingDirection.Back));
+
+        await fixture.ShouldHaveConsumedAsync<InitializeNodeApproachingProperties>();
+        fixture.VerifyNodeUpdated();
+        await fixture.ShouldHavePublishedAsync<NodeApproachingPropertiesUpdated>();
     }
 }

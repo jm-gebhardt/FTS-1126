@@ -8,13 +8,14 @@ namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]
-internal class AgvDataSeeder : JsonSeeder<AgvData>
+public class AgvDataSeeder : JsonSeeder<AgvData>
 {
     /// <inheritdoc />
     public AgvDataSeeder(IBus bus, string basePath, ILogger<AgvDataSeeder> logger) : base(bus, basePath, logger)
     {
     }
 
+    /// <inheritdoc />
     protected override void Validate(AgvData data)
     {
         EnsureNotNull(data.CorrelationId, nameof(data.CorrelationId));

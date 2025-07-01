@@ -50,14 +50,21 @@ public class AgvActionExtensionTest
     public void GetDestinationStation_Charge_ReturnsStationInfo()
     {
         const string toStationId = "Charge-1";
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, toStationId, Guid.NewGuid());
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, toStationId, Guid.NewGuid())
+        {
+            InfoToAgv = new Dictionary<InfoToAgvKey, string>
+            {
+                { InfoToAgvKey.DockFront, "true" },
+                { InfoToAgvKey.LiftHeight, "42"}
+            }
+        }; 
 
         var station = action.GetDestinationStation();
 
         station.ShouldNotBeNull();
         station.Id.ShouldBe(toStationId);
         station.DockFront.ShouldBeTrue();
-        station.LiftHeight.ShouldBeNull();
+        station.LiftHeight.ShouldBe(42);
     }
 
     [TestMethod]

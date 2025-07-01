@@ -52,6 +52,21 @@ public class EfNode
     /// </summary>
     public ICollection<EfAgvGraph> AgvGraphs { get; init; }
 
+    /// <summary>
+    /// The drop lift height [mm], if set.
+    /// </summary>
+    public double? DropLiftHeight { get; init; }
+
+    /// <summary>
+    /// The pick lift height [mm], if set.
+    /// </summary>
+    public double? PickLiftHeight { get; init; }
+
+    /// <summary>
+    /// The docking direction of the node, if set.
+    /// </summary>
+    public DockingDirection? DockingDirection { get; init; }
+
     [JsonConstructor]
     private EfNode()
     {

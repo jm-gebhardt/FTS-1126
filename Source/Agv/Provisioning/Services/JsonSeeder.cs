@@ -1,6 +1,8 @@
-﻿using MassTransit;
+﻿using System.Collections;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Provisioning.Services;
 
@@ -8,10 +10,16 @@ namespace Gebhardt.Acc.Provisioning.Services;
 /// Seeds for json file.
 /// </summary>
 /// <typeparam name="TJson">The type of the json file.</typeparam>
-internal abstract class JsonSeeder<TJson> : ISeeder
+public abstract class JsonSeeder<TJson> : ISeeder
 {
     private readonly IBus _bus;
-    private readonly ILogger _logger;
+   
+    /// <summary>
+    /// The logger.
+    /// </summary>
+    [PublicAPI]
+    protected readonly ILogger Logger;
+    
     private readonly string _fileName = $"{typeof(TJson).Name}.json";
     private TJson? _content;
 
@@ -26,11 +34,22 @@ internal abstract class JsonSeeder<TJson> : ISeeder
     {
         _bus = bus;
         BasePath = basePath;
-        _logger = logger;
+        Logger = logger;
+    }
+
+    /// <inheritdoc cref="AgvDataSeeder" />
+    protected JsonSeeder(IBus bus, string basePath, ILogger logger, string fileName)
+    {
+        _bus = bus;
+        BasePath = basePath;
+        Logger = logger;
+        _fileName = fileName;
+        logger.LogInformation("File name : {FileName}", _fileName);
     }
 
     private async Task<TJson> ReadJsonAsync(string path)
     {
+        Logger.LogInformation("Read json data from {Path}", path);
         string json = await File.ReadAllTextAsync(path);
         var options = new JsonSerializerOptions
         {
@@ -39,7 +58,7 @@ internal abstract class JsonSeeder<TJson> : ISeeder
         var content = JsonSerializer.Deserialize<TJson>(json, options);
         if (content == null)
         {
-            _logger.LogError("Failed to deserialize json file {Path}", path);
+            Logger.LogError("Failed to deserialize json file {Path}", path);
             throw new InvalidOperationException($"Failed to deserialize json file {path}");
         }
         return content;
@@ -52,6 +71,10 @@ internal abstract class JsonSeeder<TJson> : ISeeder
     /// </summary>
     protected string BasePath { get; }
 
+    /// <summary>
+    /// Validate the json data.
+    /// </summary>
+    /// <param name="data">The json data.</param>
     protected abstract void Validate(TJson data);
 
     /// <summary>
@@ -73,23 +96,40 @@ internal abstract class JsonSeeder<TJson> : ISeeder
         {
             if (_skipNonExistentFile)
             {
-                _logger.LogDebug("File {Path} not found, skipping", jsonFilePath);
+                Logger.LogInformation("File {Path} not found, skipping", jsonFilePath);
                 return;
             }
 
             throw new InvalidOperationException($"File {jsonFilePath} not found");
         }
 
-        _logger.LogInformation("Seeding: {SeederName}", Name);
+        Logger.LogInformation("Seeding: {SeederName}", Name);
 
         _content = await ReadJsonAsync(jsonFilePath);
 
         Validate(_content);
 
         object message = await GetMessageAsync(_content);
+        if (message is IList messages)
+        {
+            foreach (object? m in messages)
+            {
+                Logger.LogInformation("Sending message: {Message} of {MessageCount} messages", m, messages.Count);
+                await _bus.Publish(m);
+            }
+            return;
+        }
+        Logger.LogInformation("Sending message: {Message}", message);
         await _bus.Publish(message);
     }
 
+    /// <summary>
+    /// Ensure the value of the property is not null.
+    /// </summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value.</param>
+    /// <param name="propertyName">The property name.</param>
+    /// <exception cref="InvalidOperationException">Thrown, if the value is null.</exception>
     protected static void EnsureNotNull<T>(T? value, string propertyName)
     {
         if (value == null)

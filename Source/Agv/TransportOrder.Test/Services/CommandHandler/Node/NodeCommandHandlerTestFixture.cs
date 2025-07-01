@@ -16,6 +16,7 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<IGraphRepository> _graphRepository = new();
+    private readonly Mock<IMapRepository> _mapRepository = new();
 
     public NodeCommandHandlerTestFixture()
     {
@@ -30,8 +31,9 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _graphRepository.Object);
+        collection.AddTransient(_ => _mapRepository.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
-
+        _graphRepository.Setup(x => x.UpdateNode(It.IsAny<GraphNode>())).Verifiable();
         return this;
     }
 
@@ -94,5 +96,18 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
             .Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>()))
             .ReturnsAsync(action);
         return this;
+    }
+
+    public NodeCommandHandlerTestFixture WithNode(GraphNode node)
+    {
+        _graphRepository.Setup(x => x.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
+        _graphRepository.Setup(x => x.TryGetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
+        _mapRepository.Setup(x => x.GetMapIdForNode(node.Id)).ReturnsAsync(Guid.NewGuid);
+        return this;
+    }
+
+    public void VerifyNodeUpdated()
+    {
+        _graphRepository.Verify(x => x.UpdateNode(It.IsAny<GraphNode>()), Times.Once);
     }
 }

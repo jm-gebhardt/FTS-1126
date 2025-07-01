@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -387,7 +388,8 @@ public class ActionGroup
     /// </summary>
     /// <param name="actionId">The id of the action for which dockfront is to be set.</param>
     /// <param name="dockFrontPreviousActionGroup">The value of dockfront of the last action of the previous action group.</param>
-    public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup)
+    /// <param name="nodeDockingDirection">The docking direction as given by the node.</param>
+    public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup, DockingDirection? nodeDockingDirection)
     {
         var action = Actions.Single(a => a.CorrelationId == actionId);
 
@@ -400,30 +402,58 @@ public class ActionGroup
 
         if (IsChargingOrder)
         {
-            action.SetDockFront(needsRotation, null);
+            action.SetDockFront(needsRotation, null, nodeDockingDirection);
             return;
         }
 
         bool isAutomaticParkOrder = Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1 && !IsManual && !HasPriority;
         if (isAutomaticParkOrder)
         {
-            action.SetDockFront(false, null);
+            action.SetDockFront(false, null, nodeDockingDirection);
             return;
         }
 
         if (action.IsFirstAction)
         {
-            action.SetDockFront(needsRotation, dockFrontPreviousActionGroup);
+            action.SetDockFront(needsRotation, dockFrontPreviousActionGroup, nodeDockingDirection);
             return;
         }
         var previousAction = Actions.Single(a => a.Sequence == action.Sequence - 1);
-        action.SetDockFront(needsRotation, previousAction.InfoToAgv!.GetDockFront());
+        action.SetDockFront(needsRotation, previousAction.InfoToAgv!.GetDockFront(), nodeDockingDirection);
     }
 
     private bool GetNeedsRotation()
     {
         var pickAction = Actions.SingleOrDefault(a => a is { ActionType: ActionType.Pick, ShouldSkip: false });
         return pickAction?.InfoToAgv != null && pickAction.InfoToAgv.NeedsRotation();
+    }
+
+    /// <summary>
+    /// Set the lift height for an action.
+    /// </summary>
+    /// <param name="actionId">The id of the action.</param>
+    /// <param name="pickLiftHeight">The picking lift height.</param>
+    /// <param name="dropLiftHeight">The dropping lift height.</param>
+    public void SetCargoLiftHeightForAction(Guid actionId, double? pickLiftHeight, double? dropLiftHeight)
+    {
+        var action = Actions.Single(a => a.CorrelationId == actionId);
+        if (action.HasLiftHeight() && IsManual) 
+        {
+            return;
+        }
+
+        if (action.ActionType == ActionType.Pick)
+        {
+            action.SetLiftHeight(pickLiftHeight);
+        }
+
+        if (action.ActionType == ActionType.Drop)
+        {
+            action.SetLiftHeight(dropLiftHeight);
+        }
+
+        double? liftHeight = ((double?[])[pickLiftHeight, dropLiftHeight]).FirstOrDefault(l => l != null); 
+        action.SetLiftHeight(liftHeight);
     }
 
     /// <summary>

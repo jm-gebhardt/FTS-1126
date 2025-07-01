@@ -15,7 +15,7 @@ public class GraphProfileTest
     [TestMethod]
     public void Map_GraphNodeWithAdditionalType_MapsNodeTypeCorrectly()
     {
-        var graphNode = new GraphNode("nodeId", 1, 1, 0, [AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park]);
+        var graphNode = new GraphNode("nodeId", 1, 1, 0, [AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park], null, null, null);
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
 

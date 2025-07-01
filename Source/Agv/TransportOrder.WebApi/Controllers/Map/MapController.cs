@@ -1,4 +1,6 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
@@ -20,6 +22,7 @@ public class MapController : Controller
     private readonly IRequestClient<GetMapGraph> _getMapGraphClient;
     private readonly IRequestClient<GetMapNodeStates> _getMapNodeStatesClient;
     private readonly IRequestClient<GetMapStations> _getMapStationsClient;
+    private readonly IRequestClient<TrySettingNodeApproachingProperties> _nodeApproachingPropertiesClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -30,13 +33,15 @@ public class MapController : Controller
         IRequestClient<GetMap> getMapClient,
         IRequestClient<GetMapGraph> getMapGraphClient,
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient,
-        IRequestClient<GetMapStations> getMapStationsClient)
+        IRequestClient<GetMapStations> getMapStationsClient,
+        IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient)
     {
         _getMapImageClient = getMapImageClient;
         _getMapClient = getMapClient;
         _getMapGraphClient = getMapGraphClient;
         _getMapNodeStatesClient = getMapNodeStatesClient;
         _getMapStationsClient = getMapStationsClient;
+        _nodeApproachingPropertiesClient = nodeApproachingPropertiesClient;
         _mapper = mapper;
     }
 
@@ -130,5 +135,17 @@ public class MapController : Controller
         Response<GotMapStations> response = await _getMapStationsClient.GetResponse<GotMapStations>(new GetMapStations(correlationId));
         var stationsDto = _mapper.Map<List<StationDto>>(response.Message.Stations);
         return Ok(stationsDto);
+    }
+
+    /// <summary>
+    /// Set approaching properties for a node.
+    /// </summary>
+    [Authorize]
+    [HttpPatch]
+    [Route("/map/{correlationId:guid}/nodes/{nodeId}/setApproachingProperties")]
+    public async Task<ActionResult> SetApproachProperties(Guid correlationId, string nodeId, [FromQuery] double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection)
+    {
+        await _nodeApproachingPropertiesClient.GetResponse<Success>(new TrySettingNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+        return Ok();
     }
 }

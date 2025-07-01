@@ -143,8 +143,8 @@ public static class AgvActionExtension
         var destinationToSend = action.ActionType switch
         {
             ActionType.Drop => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
-            ActionType.Move => new StationInfo { Id = targetNodeId, DockFront = dockFront },
-            ActionType.Charge => new StationInfo { Id = targetNodeId, DockFront = true },
+            ActionType.Move => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
+            ActionType.Charge => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
             _ => throw new InvalidOperationException($"Can't handle {action.ActionType} yet")
         };
         return destinationToSend;

@@ -57,7 +57,7 @@ public class TriggerEventHandlerTest
     public async Task Consume_ActionGroupStarted_ValidDataNodeTrigger_PublishesAgvStartedActionGroupOnTrigger()
     {
         const string nodeId = "lastNode";
-        var node = new GraphNode(nodeId, 1, 1, 0, AgvGraph.NodeType.Charge);
+        var node = new GraphNode(nodeId, 1, 1, 0, AgvGraph.NodeType.Charge, null, null, null);
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId:nodeId);
 
         var actionGroup = new ActionGroup(Guid.NewGuid(), "order") { AssignedAgv = agv.CorrelationId };

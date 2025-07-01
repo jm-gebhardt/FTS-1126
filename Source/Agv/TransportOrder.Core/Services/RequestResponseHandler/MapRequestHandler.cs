@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
 using MassTransit;
@@ -12,20 +15,23 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Defines a handler for map related requests.
 /// </summary>
 [UsedImplicitly]
-public class GetMapRequestHandler :
+public class MapRequestHandler :
     IConsumer<GetMapList>,
-    IConsumer<GetMap>
+    IConsumer<GetMap>,
+    IConsumer<TrySettingNodeApproachingProperties>
 {
     private readonly IMapRepository _mapRepository;
     private readonly IMapper _mapper;
+    private readonly IBus _bus;
+    private readonly IGraphRepository _graphRepository;
 
-    /// <summary/>
-    /// <param name="mapRepository"></param>
-    /// <param name="mapper"></param>
-    public GetMapRequestHandler(IMapRepository mapRepository, IMapper mapper)
+    /// <inheritdoc cref="MapRequestHandler"/>/>
+    public MapRequestHandler(IMapRepository mapRepository, IMapper mapper, IBus bus, IGraphRepository graphRepository)
     {
         _mapRepository = mapRepository;
         _mapper = mapper;
+        _bus = bus;
+        _graphRepository = graphRepository;
     }
 
     /// <summary>
@@ -51,5 +57,19 @@ public class GetMapRequestHandler :
         var fetchedMap = await _mapRepository.GetMapAsync(correlationId);
         var map = _mapper.Map<Messages.Requests.Map.Map>(fetchedMap);
         await context.RespondAsync(new GotMap(map));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TrySettingNodeApproachingProperties"/> request.
+    /// </summary>
+    public async  Task Consume(ConsumeContext<TrySettingNodeApproachingProperties> context)
+    {
+        (var correlationId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        await _mapRepository.GetMapAsync(correlationId);
+        await _graphRepository.GetNodeAsync(nodeId);
+
+        await _bus.Publish(new SetNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+
+        await context.RespondAsync(new Success());
     }
 }

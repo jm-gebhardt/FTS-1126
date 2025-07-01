@@ -140,4 +140,10 @@ public interface IGraphRepository
     /// <param name="nodeType">The node type to check</param>
     /// <returns>True, if the agv has a node of the given type.</returns>
     Task<bool> HasAnyNodeOfTypeAsync(Guid agvCorrelationId, AgvGraph.NodeType nodeType);
+
+    /// <summary>
+    /// Update the node of a graph.
+    /// </summary>
+    /// <param name="node">The updated node.</param>
+    Task UpdateNode(GraphNode node);
 }

@@ -34,6 +34,8 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
 
     public Mock<IMapRepository> MapRepositoryMock { get; }
 
+    private readonly Mock<IGraphRepository> _graphRepositoryMock = new();
+
     public List<TransportOrder.Domain.Models.Map.Map> Maps { get; }
 
     protected override IEnumerable<Profile> GetProfiles() =>
@@ -56,6 +58,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         {
             sc.AddTransient(_ => MapRepositoryMock.Object);
             sc.AddTransient(_ => GetAgvRepository().Object);
+            sc.AddTransient(_ => _graphRepositoryMock.Object);
         });
 
         base.Build();

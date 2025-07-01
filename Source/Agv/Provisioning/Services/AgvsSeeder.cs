@@ -7,7 +7,7 @@ namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]
-internal class AgvsSeeder : ISeeder
+public class AgvsSeeder : ISeeder
 {
     private readonly AgvSeederFactory _agvSeederFactory;
     private readonly string[] _folderPaths = [];

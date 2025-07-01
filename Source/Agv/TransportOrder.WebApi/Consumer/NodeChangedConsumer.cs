@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
@@ -9,12 +10,14 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Represents the handler for node state changes.
+/// Represents the handler for node changes.
 /// </summary>
 [UsedImplicitly]
-public class NodeStateChangedConsumer(
+public class NodeChangedConsumer(
     IMapPublisher mapPublisher, 
-    ILogger<NodeStateChangedConsumer> logger) : IConsumer<NodeStateChanged>
+    ILogger<NodeChangedConsumer> logger) : 
+    IConsumer<NodeStateChanged>,
+    IConsumer<NodeApproachingPropertiesUpdated>
 {
     /// <summary>
     /// Handles the <see cref="NodeStateChanged"/> command.
@@ -34,5 +37,14 @@ public class NodeStateChangedConsumer(
         }
         
         await mapPublisher.SendNodeStateChangedAsync(nodeLock, stationId, modifyingUser, lockReason, lockDescription);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="NodeApproachingPropertiesUpdated"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<NodeApproachingPropertiesUpdated> context)
+    {
+        (var mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        await mapPublisher.SendNodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection);
     }
 }

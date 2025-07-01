@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Provisioning.Configuration;
 using JetBrains.Annotations;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -9,14 +8,15 @@ namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]
-internal class TriggerLocationsSeeder : ISeeder
+public class TriggerLocationsSeeder : ISeeder
 {
     private readonly string[] _folderPaths = [];
-    private readonly IServiceProvider _serviceProvider;
     private readonly IBus _bus;
 
     [UsedImplicitly]
     private readonly IOptions<ConfigOptions> _configOptions;
+
+    private readonly ILogger<TriggerLocationSeeder> _triggerLocationsLogger;
 
     /// <inheritdoc />
     public string Name { get; }
@@ -25,12 +25,12 @@ internal class TriggerLocationsSeeder : ISeeder
     public TriggerLocationsSeeder(
         IOptions<ConfigOptions> configOptions,
         ILogger<TriggerLocationsSeeder> logger,
-        IServiceProvider serviceProvider,
+        ILogger<TriggerLocationSeeder> triggerLocationsLogger,
         IBus bus)
     {
-         _serviceProvider = serviceProvider;
          _bus = bus;
          _configOptions = configOptions;
+         _triggerLocationsLogger = triggerLocationsLogger;
          string triggerBasePath = Path.Join(_configOptions.Value.BasePath, "TriggerLocations");
 
          if (Directory.Exists(triggerBasePath))
@@ -55,7 +55,7 @@ internal class TriggerLocationsSeeder : ISeeder
     public async Task SeedAsync()
     {
         IEnumerable<Task> tasks = _folderPaths.Select(f =>
-            Task.Run(async () => await new TriggerLocationSeeder(_bus, f, _serviceProvider.GetRequiredService<ILogger<TriggerLocationSeeder>>()).SeedAsync()));
+            Task.Run(async () => await new TriggerLocationSeeder(_bus, f, _triggerLocationsLogger).SeedAsync()));
         await Task.WhenAll(tasks);
     }
 }

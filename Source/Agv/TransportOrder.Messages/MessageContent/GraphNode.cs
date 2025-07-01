@@ -46,4 +46,19 @@ public record GraphNode
     /// The Theta coordinate of the node
     /// </summary>
     public float Theta { get; init; }
+
+    /// <summary>
+    /// The drop lift height, if set.
+    /// </summary>
+    public double? DropLiftHeight { get; init; }
+
+    /// <summary>
+    /// The pick lift height, if set.
+    /// </summary>
+    public double? PickLiftHeight { get; init; }
+
+    /// <summary>
+    /// The docking direction of the node, if set.
+    /// </summary>
+    public DockingDirection? DockingDirection { get; init; }
 }

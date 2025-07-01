@@ -150,7 +150,7 @@ public class AgvActionTest
         {
             AdditionalInfo = $"LiftHeight:{liftHeight}"
         };
-        action.SetLiftHeight();
+        action.SetExternalLiftHeight();
         action.InfoToAgv.ShouldNotBeNull();
         action.InfoToAgv[InfoToAgvKey.LiftHeight].ShouldBe(liftHeight);
     }
@@ -163,7 +163,7 @@ public class AgvActionTest
             AdditionalInfo = "Some other info"
         };
         action.SetDockFrontValue(true);
-        action.SetLiftHeight();
+        action.SetExternalLiftHeight();
         action.InfoToAgv.ShouldNotBeNull();
         action.InfoToAgv.TryGetValue(InfoToAgvKey.LiftHeight, out string? liftHeight);
         liftHeight.ShouldBeNull();
@@ -176,7 +176,7 @@ public class AgvActionTest
         {
             AdditionalInfo = "Some other info"
         };
-        action.SetLiftHeight();
+        action.SetExternalLiftHeight();
         action.InfoToAgv.ShouldBeNull();
     }
 

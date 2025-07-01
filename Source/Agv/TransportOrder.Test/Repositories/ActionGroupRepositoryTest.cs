@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -1090,8 +1091,8 @@ public class ActionGroupRepositoryTest
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, null);
-        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, null, DockingDirection.Both);
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, null, DockingDirection.Both);
         bool dockFront = dropAction.InfoToAgv!.GetDockFront();
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1106,7 +1107,7 @@ public class ActionGroupRepositoryTest
     {
         var actionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Completed, completedDate: DateTime.UtcNow.AddMinutes(-10), assignedAgv: Guid.NewGuid());
         var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
-        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null, DockingDirection.Both);
         bool dockFront = moveAction.InfoToAgv!.GetDockFront();
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1122,7 +1123,7 @@ public class ActionGroupRepositoryTest
         var actionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Completed, completedDate: DateTime.UtcNow.AddMinutes(-10), assignedAgv: Guid.NewGuid());
         actionGroup.HasPriority = true;
         var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
-        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null, DockingDirection.Both);
         bool dockFront = moveAction.InfoToAgv!.GetDockFront();
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1139,8 +1140,8 @@ public class ActionGroupRepositoryTest
         var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
         var chargeAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Charge);
 
-        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null);
-        actionGroup.SetDockFrontOfAction(chargeAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null, DockingDirection.Both);
+        actionGroup.SetDockFrontOfAction(chargeAction.CorrelationId, null, DockingDirection.Both);
         bool dockFront = chargeAction.InfoToAgv!.GetDockFront();
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1157,15 +1158,15 @@ public class ActionGroupRepositoryTest
         var earlierActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: assignedAgv, startedDate: DateTime.UtcNow);
         var earlierPickAction = earlierActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         var earlierDropAction = earlierActionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
-        earlierActionGroup.SetDockFrontOfAction(earlierPickAction.CorrelationId, null);
-        earlierActionGroup.SetDockFrontOfAction(earlierDropAction.CorrelationId, null);
+        earlierActionGroup.SetDockFrontOfAction(earlierPickAction.CorrelationId, null, DockingDirection.Both);
+        earlierActionGroup.SetDockFrontOfAction(earlierDropAction.CorrelationId, null, DockingDirection.Both);
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: assignedAgv, startedDate: DateTime.UtcNow);
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, earlierDropAction.InfoToAgv!.GetDockFront());
-        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, earlierDropAction.InfoToAgv!.GetDockFront());
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, earlierDropAction.InfoToAgv!.GetDockFront(), DockingDirection.Both);
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, earlierDropAction.InfoToAgv!.GetDockFront(), DockingDirection.Both);
         bool dockFront = dropAction.InfoToAgv!.GetDockFront();
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1194,8 +1195,8 @@ public class ActionGroupRepositoryTest
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, null);
-        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, null);
+        actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, null, DockingDirection.Both);
+        actionGroup.SetDockFrontOfAction(dropAction.CorrelationId, null, DockingDirection.Both);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([actionGroup])

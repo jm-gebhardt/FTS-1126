@@ -1,10 +1,13 @@
-using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using JetBrains.Annotations;
+using System.Globalization;
+using System.Text.Json.Serialization;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 
@@ -122,6 +125,19 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         }
 
         return InfoToAgv.TryGetValue(InfoToAgvKey.DockFront, out string? value) && bool.TryParse(value, out _);
+    }
+
+    /// <summary>
+    /// True, if the lift height has been set externally.
+    /// </summary>
+    public bool HasLiftHeight()
+    {
+        if (InfoToAgv == null)
+        {
+            return false;
+        }
+
+        return InfoToAgv.TryGetValue(InfoToAgvKey.LiftHeight, out string? value) && double.TryParse(value, out _);
     }
 
     /// <summary>
@@ -300,7 +316,8 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// </summary>
     /// <param name="needsRotation">True, if the pallet needs rotation.</param>
     /// <param name="previousDockFront">Value of dockFront of the previous action.</param>
-    public void SetDockFront(bool needsRotation, bool? previousDockFront)
+    /// <param name="nodeDockingDirection">The docking direction as given by the node.</param>
+    public void SetDockFront(bool needsRotation, bool? previousDockFront, DockingDirection? nodeDockingDirection)
     {
         bool dockFront;
         switch (ActionType)
@@ -308,7 +325,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
             case ActionType.Pick:
             case ActionType.Move:
                 dockFront = previousDockFront?? true;
-                SetDockFrontValue(dockFront);
+                SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
                 return;
 
             case ActionType.Drop:
@@ -318,12 +335,12 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
                 {
                     dockFront = false;
                 }
-                SetDockFrontValue(dockFront);
+                SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
                 return;
             }
 
             case ActionType.Charge:
-                SetDockFrontValue(true);
+                SetDockFrontValue(nodeDockingDirection.GetDockfront(true));
                 return;
         }
     }
@@ -465,7 +482,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// Set the lift height based on additional action information.
     /// </summary>
-    public void SetLiftHeight()
+    public void SetExternalLiftHeight()
     {
         string? liftHeight = AdditionalInfo.ExtractValue("LiftHeight", ";");
         if (liftHeight == null)
@@ -475,5 +492,28 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         
         InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
         InfoToAgv[InfoToAgvKey.LiftHeight] = liftHeight;
+    }
+
+    /// <summary>
+    /// Set the lift height.
+    /// </summary>
+    public void SetLiftHeight(double? liftHeight)
+    {
+        if (liftHeight == null)
+        {
+            if (HasLiftHeight())
+            {
+                InfoToAgv!.Remove(InfoToAgvKey.LiftHeight);
+            }
+            return;
+        }
+
+        if (HasLiftHeight())
+        {
+            return;
+        }
+
+        InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
+        InfoToAgv.Add(InfoToAgvKey.LiftHeight, liftHeight.Value.ToString(CultureInfo.InvariantCulture));
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Provisioning.Configuration;
 using JetBrains.Annotations;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,11 +10,11 @@ namespace Gebhardt.Acc.Provisioning.Services;
 [UsedImplicitly]
 public class QueuesSeeder : ISeeder
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IBus _bus;
     private readonly IOptions<ConfigOptions> _configOptions;
     private readonly string[] _queueFolders;
     private readonly ILogger<QueuesSeeder> _logger;
+    private readonly ILogger<QueueSeeder> _queuesLogger;
 
     /// <inheritdoc />
     public string Name { get; }
@@ -23,12 +22,12 @@ public class QueuesSeeder : ISeeder
     /// <inheritdoc cref="QueuesSeeder"/>
     public QueuesSeeder(IOptions<ConfigOptions> configOptions,
         ILogger<QueuesSeeder> logger,
-        IServiceProvider serviceProvider,
+        ILogger<QueueSeeder> queuesLogger,
         IBus bus)
     {
-        _serviceProvider = serviceProvider;
         _bus = bus;
         _logger = logger;
+        _queuesLogger = queuesLogger;
         _configOptions = configOptions;
         _queueFolders = GetPaths();
         Name = $"Queue seeder for {_queueFolders.Length} queues";
@@ -56,7 +55,7 @@ public class QueuesSeeder : ISeeder
     public async Task SeedAsync()
     {
         IEnumerable<Task> seedingTasks = _queueFolders.Select(f => Task.Run(async () =>
-            await new QueueSeeder(_bus, f, _serviceProvider.GetRequiredService<ILogger<QueueSeeder>>()).SeedAsync()));
+            await new QueueSeeder(_bus, f, _queuesLogger).SeedAsync()));
         await Task.WhenAll(seedingTasks);
     }
 }

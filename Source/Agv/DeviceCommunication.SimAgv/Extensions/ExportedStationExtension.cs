@@ -19,12 +19,12 @@ public static class ExportedStationExtension
         bool isNodeType = type is AgvGraph.NodeType;
         if (isNodeType)
         {
-            return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (AgvGraph.NodeType)type )
+            return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (AgvGraph.NodeType)type, null, null, null )
             {
                 Theta = station.Position.Theta
             };
         }
-        return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (List<AgvGraph.NodeType>)type)
+        return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (List<AgvGraph.NodeType>)type, null, null, null)
         {
             Theta = station.Position.Theta
         };

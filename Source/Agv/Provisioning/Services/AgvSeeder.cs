@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
-internal class AgvSeeder : ISeeder
+public class AgvSeeder : ISeeder
 {
     private const int WaitingTimeMs = 1000;
     private readonly AgvStatusSeeder _agvStatusSeeder;

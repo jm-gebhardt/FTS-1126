@@ -35,8 +35,8 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetMapGraph> getMapGraphClient = GetRequestClient<GetMapGraph>();
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
         IRequestClient<GetMapStations> getStationsClient = GetRequestClient<GetMapStations>();
-
-        var controller = new MapController(Mapper, getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient);
+        IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
+        var controller = new MapController(Mapper, getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient, nodeApproachingPropertiesClient);
         return controller;
     }
     

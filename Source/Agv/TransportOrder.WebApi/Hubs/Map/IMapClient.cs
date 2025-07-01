@@ -15,4 +15,10 @@ public interface IMapClient
     /// <param name="nodeState"></param>
     [SignalRMethod("NodeStateChanged")]
     Task NodeStateChanged(NodeStateDto nodeState);
+
+    /// <summary>
+    /// Node approaching properties changed.
+    /// </summary>
+    [SignalRMethod("NodeApproachingPropertiesChanged")]
+    Task NodeApproachingPropertiesChanged(NodeApproachingPropertiesDto nodeState);
 }

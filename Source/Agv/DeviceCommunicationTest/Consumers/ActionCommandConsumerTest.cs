@@ -187,7 +187,16 @@ public class ActionCommandConsumerTest
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Charge-1";
 
-            var action = new AgvAction(actionCorrelationId, ActionType.Charge, toStationId, orderCorrelationId);
+            var action = new AgvAction(actionCorrelationId,
+                ActionType.Charge,
+                toStationId,
+                orderCorrelationId,
+                infoToAgv: new Dictionary<InfoToAgvKey, string>()
+                {
+                    {
+                        InfoToAgvKey.DockFront, "true".ToString(CultureInfo.InvariantCulture)
+                    }
+                });
             var correlationId = Guid.NewGuid();
             var message = new StartActionCommand(correlationId, agvSerialNumber, action);
 
@@ -615,7 +624,16 @@ public class ActionCommandConsumerTest
             var orderCorrelationId = orderId.ToGuid();
             const string toStationId = "Charge-1";
 
-            var action = new AgvAction(actionCorrelationId, ActionType.Charge, toStationId, orderCorrelationId);
+            var action = new AgvAction(actionCorrelationId,
+                ActionType.Charge,
+                toStationId,
+                orderCorrelationId,
+                infoToAgv: new Dictionary<InfoToAgvKey, string>()
+                {
+                    {
+                        InfoToAgvKey.DockFront, "true".ToString(CultureInfo.InvariantCulture)
+                    }
+                });
             var correlationId = Guid.NewGuid();
             var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
 

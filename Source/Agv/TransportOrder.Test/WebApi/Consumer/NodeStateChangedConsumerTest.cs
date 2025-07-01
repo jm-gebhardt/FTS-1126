@@ -14,7 +14,7 @@ public class NodeStateChangedConsumerTest
     [TestMethod]
     public async Task Consume_NodeStateChanged_ValidData_SendNodeStateChanged()
     {
-        var fixture = new ConsumerHubTestFixture<NodeStateChangedConsumer, IMapPublisher>();
+        var fixture = new ConsumerHubTestFixture<NodeChangedConsumer, IMapPublisher>();
         
         const string nodeId = "NodeId";
         var dateModified = DateTime.UtcNow;

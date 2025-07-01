@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -9,6 +10,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
@@ -159,7 +161,22 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<UnlockStation, StationCommandHandler>(c);
         });
 
-        busRegistrationConfigurator.AddConsumer<NodeCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<NodeCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            c.Message<SetNodeApproachingProperties>(x =>
+                x.UsePartitioner(partitioner, p => p.Message.NodeId));
+            c.Message<InitializeNodeApproachingProperties>(x =>
+            {
+                x.UsePartitioner(partitioner, p => p.Message.NodeId);
+
+                x.UseMessageRetry(r =>
+                {
+                    r.Interval(6, TimeSpan.FromSeconds(5));
+                    r.Handle<NodeNotFoundException>();
+                });
+            });
+        });
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 
         busRegistrationConfigurator.AddConsumer<RestrictedAreaCommandHandler>(c =>
@@ -400,9 +417,10 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<NodeStateRequestHandler>();
         configurator.AddRequestClient<GetMapNodeStates>();
 
-        configurator.AddConsumer<GetMapRequestHandler>();
+        configurator.AddConsumer<MapRequestHandler>();
         configurator.AddRequestClient<GetMapList>();
         configurator.AddRequestClient<GetMap>();
+        configurator.AddRequestClient<TrySettingNodeApproachingProperties>();
 
         configurator.AddConsumer<StationsRequestHandler>();
         configurator.AddRequestClient<GetMapStations>();

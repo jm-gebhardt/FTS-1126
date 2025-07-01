@@ -50,7 +50,7 @@ public class HostOrderCommandHandler(
 
         var hostOrder = new HostOrder(orderDetails.OrderId, hu, orderDetails.CreationDate);
 
-        (Dictionary<InfoToAgvKey, string>? pickInfoToAgv, Dictionary<InfoToAgvKey, string>? dropInfoToAgv) = GeneratePickAndDropInformation(context.Message, configuration);
+        (Dictionary<InfoToAgvKey, string>? pickInfoToAgv, Dictionary<InfoToAgvKey, string>? dropInfoToAgv) = GeneratePickAndDropInformation(context.Message);
         logger.LogDebug("pickInfoToAgv: {PickInfoToAgv}", pickInfoToAgv == null ? "empty" : string.Join(", ", pickInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
         logger.LogDebug("dropInfoToAgv: {DropInfoToAgv}", dropInfoToAgv == null ? "empty" : string.Join(", ", dropInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
 
@@ -264,42 +264,22 @@ public class HostOrderCommandHandler(
     /// Generates pick information for a host order.
     /// </summary>
     /// <param name="createHostOrderMessage">The message to generate cargo rotation information from.</param>
-    /// <param name="configuration">The configuration with lift height information.</param>
     /// <returns></returns>
-    private static (Dictionary<InfoToAgvKey, string>?, Dictionary<InfoToAgvKey, string>?) GeneratePickAndDropInformation(CreateHostOrder createHostOrderMessage, KaeserGraphConfiguration configuration)
+    private static (Dictionary<InfoToAgvKey, string>?, Dictionary<InfoToAgvKey, string>?) GeneratePickAndDropInformation(CreateHostOrder createHostOrderMessage)
     {
         Dictionary<InfoToAgvKey, string>? pickInfoToAgv = null;
         Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null;
 
         var orderDetails = createHostOrderMessage.OrderDetails;
 
-        double? liftHeightPick = configuration.GetLiftHeight(orderDetails.Source);
-        double? liftHeightDrop = configuration.GetLiftHeight(orderDetails.Destination);
-
-        if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator || liftHeightPick.HasValue)
+        if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator )
         {
             pickInfoToAgv = new Dictionary<InfoToAgvKey, string>();
             if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator)
             {
                 pickInfoToAgv.Add(InfoToAgvKey.CargoRotation, orderDetails.LeRotation.ToString(CultureInfo.InvariantCulture));
             }
-            if (liftHeightPick.HasValue)
-            {
-                pickInfoToAgv.Add(InfoToAgvKey.LiftHeight, liftHeightPick.Value.ToString(CultureInfo.InvariantCulture));
-            }
         }
-
-        if (liftHeightDrop.HasValue)
-        {
-            dropInfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeightDrop.Value.ToString(CultureInfo.InvariantCulture) } };
-        }
-
-        if (configuration.IsDropAtAkl(orderDetails.Destination))
-        {
-            dropInfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
-            dropInfoToAgv.Add(InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture));
-        }
-
         return (pickInfoToAgv, dropInfoToAgv);
     }
 

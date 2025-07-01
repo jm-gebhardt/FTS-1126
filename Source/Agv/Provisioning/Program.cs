@@ -21,6 +21,7 @@ try
             services.AddScoped<ISeeder, TriggerLocationsSeeder>();
             services.AddScoped<ISeeder, AgvsSeeder>();
             services.AddScoped<ISeeder, QueuesSeeder>();
+            services.AddScoped<ISeeder, NodesPropertiesSeeder>();
             services.AddSingleton<AgvSeederFactory>();
         });
 

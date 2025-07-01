@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Microsoft.AspNetCore.SignalR;
@@ -33,5 +34,12 @@ public class MapPublisher : IMapPublisher
         };
    
         return _hubContext.Clients.All.NodeStateChanged(nodeStateDto);
+    }
+
+    /// <inheritdoc/>
+    public Task SendNodeApproachingPropertiesUpdated(Guid mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection)
+    {
+        var nodeApproachingPropertiesDto = new NodeApproachingPropertiesDto(mapId, nodeId, dropLiftHeight, pickLiftHeight, dockingDirection);
+        return _hubContext.Clients.All.NodeApproachingPropertiesChanged(nodeApproachingPropertiesDto);
     }
 }

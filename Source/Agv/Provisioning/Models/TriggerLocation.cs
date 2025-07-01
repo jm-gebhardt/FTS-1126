@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.Provisioning.Models;
 /// Base data of the trigger location.
 /// </summary>
 [UsedImplicitly]
-internal class TriggerLocation
+public class TriggerLocation
 {
     /// <summary>
     /// The id of the trigger.

@@ -1,10 +1,12 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
@@ -23,10 +25,13 @@ public class NodeCommandHandler(
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository,
     IGraphRepository graphRepository,
+    IMapRepository mapRepository,
     ILogger<NodeCommandHandler> logger) :
     IConsumer<FreeNode>,
     IConsumer<UpdateNodeOccupancy>,
-    IConsumer<ClearNodesFromAgv>
+    IConsumer<ClearNodesFromAgv>,
+    IConsumer<SetNodeApproachingProperties>,
+    IConsumer<InitializeNodeApproachingProperties>
 {
     /// <summary>
     /// Handles the <see cref="FreeNode"/> command.
@@ -173,5 +178,46 @@ public class NodeCommandHandler(
         }
         var dateModified = DateTime.UtcNow;
         await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, dateModified), stationId, user, lockReason, lockDescription));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SetNodeApproachingProperties"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SetNodeApproachingProperties> context)
+    {
+        (var mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+
+        var node = await graphRepository.GetNodeAsync(nodeId);
+        dockingDirection ??= DockingDirection.Both;
+        
+        logger.LogInformation("Setting approaching properties for node {NodeId} on map {MapId}: docking direction {DockingDirection}, drop lift height {DropLiftHeight}, pick lift height {PickLiftHeight}", node, mapId, dockingDirection, dropLiftHeight, pickLiftHeight);
+        
+        node.DockingDirection = dockingDirection;
+        node.DropLiftHeight = dropLiftHeight;
+        node.PickLiftHeight = pickLiftHeight;
+
+        await graphRepository.UpdateNode(node);
+
+        await context.Publish(new NodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="InitializeNodeApproachingProperties"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<InitializeNodeApproachingProperties> context)
+    {
+        (string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+
+        var node = await graphRepository.GetNodeAsync(nodeId);
+           
+        node.DockingDirection = dockingDirection;
+        node.DropLiftHeight = dropLiftHeight;
+        node.PickLiftHeight = pickLiftHeight;
+
+        await graphRepository.UpdateNode(node);
+
+        var mapId = await mapRepository.GetMapIdForNode(nodeId);
+
+        await context.Publish(new NodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
     }
 }

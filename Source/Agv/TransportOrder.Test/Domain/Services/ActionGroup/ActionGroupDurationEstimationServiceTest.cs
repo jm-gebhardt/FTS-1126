@@ -82,7 +82,7 @@ public class ActionGroupDurationEstimationServiceTest
     [DataTestMethod]
     public async Task GetDurationEstimate_MoveFromCoordinateToGraph_ReturnsDuration(double velocity, double expectedDuration)
     {
-        var node = new GraphNode("a node", 1, 1, 0, AgvGraph.NodeType.WayPoint);
+        var node = new GraphNode("a node", 1, 1, 0, AgvGraph.NodeType.WayPoint, null, null, null);
         var agvPositionStatus = new AgvPositionStatus(Guid.NewGuid(), "agv", new AgvPosition(true, 0, 1, 0, 0));
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithPositionStatus(agvPositionStatus)

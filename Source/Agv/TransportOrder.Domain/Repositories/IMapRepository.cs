@@ -47,4 +47,11 @@ public interface IMapRepository
     /// <param name="agvId"></param>
     /// <returns></returns>
     Task AssignAgvGraphToMapsAsync(Guid agvId);
+
+    /// <summary>
+    /// Gets the correlation id of the map a node is on.
+    /// </summary>
+    /// <param name="nodeId">The node id.</param>
+    /// <returns>Correlation id of a map.</returns>
+    Task<Guid> GetMapIdForNode(string nodeId);
 }

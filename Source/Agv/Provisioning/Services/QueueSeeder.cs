@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]
-internal class QueueSeeder: JsonSeeder<Queue>
+public class QueueSeeder: JsonSeeder<Queue>
 {
     /// <inheritdoc />
     public QueueSeeder(IBus bus, string basePath, ILogger<QueueSeeder> logger) : base(bus, basePath, logger)

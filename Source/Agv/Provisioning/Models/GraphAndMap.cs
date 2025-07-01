@@ -7,7 +7,7 @@ namespace Gebhardt.Acc.Provisioning.Models;
 /// Contains the map and graph data.
 /// </summary>
 [UsedImplicitly]
-internal class GraphAndMap
+public class GraphAndMap
 {
     /// <summary>
     /// The Graph.

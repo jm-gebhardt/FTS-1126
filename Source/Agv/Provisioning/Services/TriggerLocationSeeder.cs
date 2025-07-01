@@ -10,13 +10,14 @@ namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc />
 [UsedImplicitly]
-internal class TriggerLocationSeeder : JsonSeeder<TriggerLocation>
+public class TriggerLocationSeeder : JsonSeeder<TriggerLocation>
 {
     /// <inheritdoc />
     public TriggerLocationSeeder(IBus bus, string basePath, ILogger<TriggerLocationSeeder> logger) : base(bus, basePath, logger)
     {
     }
 
+    /// <inheritdoc />
     protected override void Validate(TriggerLocation data)
     {
         EnsureNotNull(data.TriggerUrn, nameof(data.TriggerUrn));

@@ -39,14 +39,16 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        var startedAction = actionGroup.Actions.First();
         const bool dockFront = true;
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
+            .WithTargetNode(new GraphNode(startedAction.Target.NodeId!))
             .WithLastActionDockFront(dockFront);
 
-        var startAction = new StartActionOfActionGroup(actionGroup.Actions.First(), agv.CorrelationId);
+        var startAction = new StartActionOfActionGroup(startedAction, agv.CorrelationId);
 
         var startActionCommand = await fixture.PublishAndGetFirstMessageAsync<StartActionOfActionGroup, StartActionCommand>(startAction);
 
@@ -61,13 +63,15 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         const bool dockFront = true;
+        var startedAction = actionGroup.Actions.First();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
+            .WithTargetNode(new GraphNode(startedAction.Target.NodeId!))
             .WithLastActionDockFront(dockFront, true);
 
-        var startAction = new StartActionOfActionGroup(actionGroup.Actions.First(), agv.CorrelationId);
+        var startAction = new StartActionOfActionGroup(startedAction, agv.CorrelationId);
 
         var startActionCommand = await fixture.PublishAndGetFirstMessageAsync<StartActionOfActionGroup, StartActionCommand>(startAction);
 
@@ -81,12 +85,14 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        var pickAction = actionGroup.Actions.First();
+
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
+            .WithTargetNode(new GraphNode(pickAction.Target.NodeId!))
             .WithLastActionDockFront(false);
-        var pickAction = actionGroup.Actions.First();
         var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
 
         await fixture.TestHarness.Bus.Publish(startAction);
@@ -1723,7 +1729,9 @@ public class ActionCommandHandlerTest
             moveActionState: ActionState.Started);
         actionGroup.Actions[0].InfoToAgv = new Dictionary<InfoToAgvKey, string>();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddActionGroup(actionGroup).AddAgv(agv);
+            .AddActionGroup(actionGroup)
+            .AddAgv(agv)
+            .WithTargetNode(new GraphNode("target"));
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 

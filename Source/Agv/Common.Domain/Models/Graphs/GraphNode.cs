@@ -52,6 +52,21 @@ public class GraphNode : IEquatable<GraphNode>
     public float Z { get; init; }
 
     /// <summary>
+    /// The drop lift height [mm], if set.
+    /// </summary>
+    public double? DropLiftHeight { get; set; }
+
+    /// <summary>
+    /// The pick lift height [mm], if set.
+    /// </summary>
+    public double? PickLiftHeight { get; set; }
+
+    /// <summary>
+    /// The docking direction of the node, if set.
+    /// </summary>
+    public DockingDirection? DockingDirection { get; set; } 
+
+    /// <summary>
     /// The Theta coordinate of the node
     /// </summary>
     public float Theta
@@ -87,23 +102,29 @@ public class GraphNode : IEquatable<GraphNode>
     }
 
     /// <inheritdoc cref="GraphNode"/>>
-    public GraphNode(string id, float x, float y, float z, NodeType nodeType)
+    public GraphNode(string id, float x, float y, float z, NodeType nodeType, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection)
     {
         Id = id;
         Y = y;
         X = x;
         Z = z;
         Type = nodeType;
+        PickLiftHeight = pickLiftHeight;
+        DropLiftHeight = dropLiftHeight;
+        DockingDirection = dockingDirection;
     }
 
     /// <inheritdoc cref="GraphNode"/>>
-    public GraphNode(string id, float x, float y, float z, ICollection<NodeType> nodeType)
+    public GraphNode(string id, float x, float y, float z, ICollection<NodeType> nodeType, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection)
     {
         Id = id;
         Y = y;
         X = x;
         Z = z;
         Type = nodeType;
+        PickLiftHeight = pickLiftHeight;
+        DropLiftHeight = dropLiftHeight;
+        DockingDirection = dockingDirection;
     }
 
     /// <summary>

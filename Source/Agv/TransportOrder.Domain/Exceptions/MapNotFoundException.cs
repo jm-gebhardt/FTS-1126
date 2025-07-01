@@ -12,4 +12,9 @@ public class MapNotFoundException : NotFoundException
     public MapNotFoundException(Guid correlationId) : base(nameof(Map), nameof(Map.CorrelationId), correlationId)
     {
     }
+
+    /// <inheritdoc cref="MapNotFoundException"/>
+    public MapNotFoundException(string nodeId) : base($"Map with node {nodeId}")
+    {
+    }
 }

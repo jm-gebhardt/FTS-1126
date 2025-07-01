@@ -155,7 +155,22 @@ public class EfMapRepository : IMapRepository
             }, CancellationToken.None
         );
     }
-    
+
+    /// <inheritdoc />
+    public async Task<Guid> GetMapIdForNode(string nodeId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var map = await context.Set<Map>()
+            .Include(m => m.Nodes)
+            .FirstOrDefaultAsync(m => m.Nodes.Any(n => n.Id == nodeId));
+        if (map == null)
+        {
+            throw new MapNotFoundException(nodeId);
+        }
+        return map.CorrelationId;
+    }
+
     private async Task<bool> AddOrUpdateAsync(Map map)
     {
         try
