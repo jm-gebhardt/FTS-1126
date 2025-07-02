@@ -210,7 +210,8 @@ public static class WebHostBuilderExtensions
             endpoints.MapControllers();
             endpoints.MapHub<AgvHub>(AgvHub.UrlPath, o =>
             {
-                o.AllowStatefulReconnects = true;
+                // deactivated, as it freezes the FE after some time
+                o.AllowStatefulReconnects = false;
             });
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
             endpoints.MapHub<MapHub>(MapHub.UrlPath);
