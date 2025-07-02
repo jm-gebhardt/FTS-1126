@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.Statistics.Domain.Models;
 /// <summary>
 /// Represents an agv position on a grid.
 /// </summary>
-public class GridAgvPosition
+public class GridAgvPosition : ITimestamped
 {
     /// <summary>
     /// The unique id of the <see cref="GridAgvPosition"/>.
@@ -17,7 +17,7 @@ public class GridAgvPosition
     /// The id of the grid the position is on.
     /// </summary>
     public Guid GridId { get; init; }
-    
+
     /// <summary>
     /// The Grid object.
     /// </summary>
@@ -51,22 +51,14 @@ public class GridAgvPosition
     /// <summary>
     /// The agv serial number.
     /// </summary>
-    public string SerialNumber
-    {
-        [PublicAPI]
-        get;
-        init;
-    }
+    public string SerialNumber { get; init; }
 
-    /// <summary>
-    /// The time the agv was at this position.
-    /// </summary>
+    /// <inheritdoc />
     public DateTime Timestamp { get; init; }
 
     /// <summary>
     /// The list of AgvMapPositions object.
     /// </summary>
-    [UsedImplicitly]
     public ICollection<MapAgvPositions>? MapAgvPositions { get; init; }
 
     /// <summary>
@@ -80,6 +72,12 @@ public class GridAgvPosition
     /// </summary>
     [UsedImplicitly]
     public ICollection<AgvFieldViolation>? AgvFieldViolations { get; set; }
+
+    /// <summary>
+    /// The list of Wi-Fi metrics.
+    /// </summary>
+    [UsedImplicitly]
+    public ICollection<AgvWifiMetrics>? AgvWifiMetrics { get; set; }
 
     /// <inheritdoc cref="GridAgvPosition"/>>
     public GridAgvPosition(Guid gridId, string serialNumber, float x, float y, float z, int xIndex, int yIndex, DateTime time, Grid? grid)

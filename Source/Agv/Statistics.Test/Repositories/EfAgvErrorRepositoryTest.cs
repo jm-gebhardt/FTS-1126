@@ -27,7 +27,7 @@ public class EfAgvErrorRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_ValidData_ReturnsCountHeatmap()
+    public async Task GetErrorOccurence_ValidData_ReturnsScalarHeatmap()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -47,11 +47,11 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence(_grid!.GridId, _map!.MapId, _position.Timestamp.AddMinutes(-1), DateTime.UtcNow, [_position.SerialNumber], agvError.ErrorLevel, agvError.ErrorCode);
         heatmap.GridId.ShouldBe(_grid.GridId);
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEquivalentTo(new List<ICollection<float>> { new List<float> { 1, 1, 1 } });
+        heatmap.Values.ShouldBeEquivalentTo(new List<ICollection<float>> { new List<float> { 1, 1, 1 } });
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_NoAgvsGiven_ReturnsCountHeatmap()
+    public async Task GetErrorOccurence_NoAgvsGiven_ReturnsScalarHeatmap()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -71,11 +71,11 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence(_grid!.GridId, _map!.MapId, _position.Timestamp.AddMinutes(-1), DateTime.UtcNow, [], agvError.ErrorLevel, agvError.ErrorCode);
         heatmap.GridId.ShouldBe(_grid.GridId);
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEquivalentTo(new List<ICollection<float>> { new List<float> { 1, 1, 1 } });
+        heatmap.Values.ShouldBeEquivalentTo(new List<ICollection<float>> { new List<float> { 1, 1, 1 } });
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_UnknownGrid_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetErrorOccurence_UnknownGrid_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -95,11 +95,11 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence("unknown".ToGuid(), _map!.MapId, _position.Timestamp.AddMinutes(-1), DateTime.UtcNow, [_position.SerialNumber], agvError.ErrorLevel, agvError.ErrorCode);
         heatmap.GridId.ShouldBe("unknown".ToGuid());
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_UnknownMap_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetErrorOccurence_UnknownMap_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -119,11 +119,11 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence(_grid!.GridId, "unknown".ToGuid(), _position.Timestamp.AddMinutes(-1), DateTime.UtcNow, [_position.SerialNumber], agvError.ErrorLevel, agvError.ErrorCode);
         heatmap.MapId.ShouldBe("unknown".ToGuid());
         heatmap.GridId.ShouldBe(_grid.GridId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_NoDataInTimeRange_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetErrorOccurence_NoDataInTimeRange_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -143,11 +143,11 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence(_grid!.GridId, _map!.MapId, _position.Timestamp.AddMinutes(1), _position.Timestamp.AddMinutes(2), [_position.SerialNumber], agvError.ErrorLevel, agvError.ErrorCode);
         heatmap.MapId.ShouldBe(_map.MapId);
         heatmap.GridId.ShouldBe(_grid.GridId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_NoErrorWithGivenLevel_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetErrorOccurence_NoErrorWithGivenLevel_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -167,11 +167,11 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence(_grid!.GridId, _map!.MapId, _position.Timestamp.AddMinutes(-1), DateTime.UtcNow, [_position.SerialNumber], new List<ErrorLevel> { ErrorLevel.Fatal , ErrorLevel.Warning}.Single(e => e != error.ErrorLevel), agvError.ErrorCode);
         heatmap.MapId.ShouldBe(_map.MapId);
         heatmap.GridId.ShouldBe(_grid.GridId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_NoErrorWithGivenErrorCode_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetErrorOccurence_NoErrorWithGivenErrorCode_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -191,11 +191,11 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence(_grid!.GridId, _map!.MapId, _position.Timestamp.AddMinutes(-1), DateTime.UtcNow, [_position.SerialNumber], agvError.ErrorLevel, "unknown");
         heatmap.GridId.ShouldBe(_grid.GridId);
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetErrorOccurence_NoErrors_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetErrorOccurence_NoErrors_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -207,6 +207,6 @@ public class EfAgvErrorRepositoryTest
         var heatmap = await fixture.GridAgvErrors.GetErrorOccurence(_grid!.GridId, _map!.MapId, DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, [_position!.SerialNumber], ErrorLevel.Fatal, "a code");
         heatmap.GridId.ShouldBe(_grid.GridId);
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 }

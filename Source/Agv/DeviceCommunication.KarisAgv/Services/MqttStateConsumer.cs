@@ -39,11 +39,7 @@ public class MqttStateConsumer : IConsumer<MqttState>
         await SendAgvPositionAsync(context);
         await SendAgvErrorStatusAsync(context);
         await SendAgvLoadStatusAsync(context);
-    }
-
-    private async Task SendAgvLoadStatusAsync(ConsumeContext<MqttState> context)
-    {
-        await context.Publish(new AgvLoadStatusReceived(_stateParser.CorrelationId, _stateParser.Cargos));
+        await SendWifiMetricsAsync(context);
     }
 
     private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context)
@@ -55,7 +51,7 @@ public class MqttStateConsumer : IConsumer<MqttState>
         );
         await context.Publish(agvStatusReceived, context.CancellationToken);
 
-       await FeedAgvRepository(_stateParser.CorrelationId, agvStatusReceived);
+        await FeedAgvRepository(_stateParser.CorrelationId, agvStatusReceived);
     }
 
     private async Task SendAgvPositionAsync(ConsumeContext<MqttState> context)
@@ -73,6 +69,25 @@ public class MqttStateConsumer : IConsumer<MqttState>
     {
         var agvErrorStatusReceived = new AgvErrorStatusReceived(_stateParser.CorrelationId, _stateParser.AgvErrors, _stateParser.AgvPosition);
         await context.Publish(agvErrorStatusReceived, context.CancellationToken);
+    }
+
+    private async Task SendAgvLoadStatusAsync(ConsumeContext<MqttState> context)
+    {
+        await context.Publish(new AgvLoadStatusReceived(_stateParser.CorrelationId, _stateParser.Cargos));
+    }
+
+    private async Task SendWifiMetricsAsync(ConsumeContext<MqttState> context)
+    {
+        if (_stateParser.WifiMetrics != null)
+        {
+            await context.Publish(new AgvWifiMetricsReceived(
+                _stateParser.CorrelationId,
+                _stateParser.SerialNumber,
+                _stateParser.AgvPosition,
+                _stateParser.WifiMetrics), context.CancellationToken);
+            
+            _logger.LogDebug("Published {MessageType} for {AgvId}", nameof(AgvWifiMetricsReceived), _stateParser.SerialNumber);
+        }
     }
 
     private async Task FeedAgvRepository(Guid correlationId, AgvStatusReceived agvStatusReceived)

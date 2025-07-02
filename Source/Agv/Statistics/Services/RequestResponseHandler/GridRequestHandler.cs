@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Messages.Requests;
 using JetBrains.Annotations;
@@ -14,7 +15,8 @@ public class GridRequestHandler :
     IConsumer<GetGrids>,
     IConsumer<GetPositionFrequencies>,
     IConsumer<GetErrorFrequencies>,
-    IConsumer<GetFieldViolationFrequencies>
+    IConsumer<GetFieldViolationFrequencies>,
+    IConsumer<GetWifiSignalStrength>
 
 {
     private readonly IStatisticsDb _db;
@@ -23,6 +25,15 @@ public class GridRequestHandler :
     public GridRequestHandler(IStatisticsDb db)
     {
         _db = db;
+    }
+
+    private async Task ValidateHeatmapAsync(ScalarHeatmap heatmap, Guid gridId, Guid mapId)
+    {
+        if (heatmap.Values.Count == 0)
+        {
+            await _db.Grids.ThrowIfNotExistAsync(gridId);
+            await _db.Maps.ThrowIfNotExistAsync(mapId);
+        }
     }
 
     /// <summary>
@@ -44,14 +55,10 @@ public class GridRequestHandler :
         DateTime? fromDate = context.Message.FromDate;
         DateTime? toDate = context.Message.ToDate;
 
-        var positionFrequency = await _db.GridAgvPositions.GetPositionFrequency(gridId, mapId, fromDate, toDate);
-        if (positionFrequency.Frequencies.Count == 0)
-        {
-            await _db.Grids.ThrowIfNotExistAsync(gridId);
-            await _db.Maps.ThrowIfNotExistAsync(mapId);
-        }
+        var heatmap = await _db.GridAgvPositions.GetPositionFrequency(gridId, mapId, fromDate, toDate);
+        await ValidateHeatmapAsync(heatmap, gridId, mapId);
 
-        await context.RespondAsync(new GotPositionFrequencies(positionFrequency));
+        await context.RespondAsync(new GotPositionFrequencies(heatmap));
     }
 
     /// <summary>
@@ -59,16 +66,19 @@ public class GridRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetErrorFrequencies> context)
     {
-        (var gridId, var mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers, var errorLevel, string? errorCode) = context.Message;
+        var get = context.Message;
 
-        var errorFrequency = await _db.GridAgvErrors.GetErrorOccurence(gridId, mapId, fromDate, toDate, agvSerialNumbers, errorLevel, errorCode);
-        if (errorFrequency.Frequencies.Count == 0)
-        {
-            await _db.Grids.ThrowIfNotExistAsync(gridId);
-            await _db.Maps.ThrowIfNotExistAsync(mapId);
-        }
+        var heatmap = await _db.GridAgvErrors.GetErrorOccurence(
+            get.GridId,
+            get.MapId,
+            get.FromDate,
+            get.ToDate,
+            get.AgvSerialNumbers,
+            get.ErrorLevel,
+            get.ErrorCode);
+        await ValidateHeatmapAsync(heatmap, get.GridId, get.MapId);
 
-        await context.RespondAsync(new GotPositionFrequencies(errorFrequency));
+        await context.RespondAsync(new GotPositionFrequencies(heatmap));
     }
 
     /// <summary>
@@ -76,15 +86,34 @@ public class GridRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetFieldViolationFrequencies> context)
     {
-        (var gridId, var mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers) = context.Message;
+        var get = context.Message;
 
-        var errorFrequency = await _db.GridAgvFieldViolations.GetFieldViolationOccurence(gridId, mapId, fromDate, toDate, agvSerialNumbers);
-        if (errorFrequency.Frequencies.Count == 0)
-        {
-            await _db.Grids.ThrowIfNotExistAsync(gridId);
-            await _db.Maps.ThrowIfNotExistAsync(mapId);
-        }
+        var heatmap = await _db.GridAgvFieldViolations.GetFieldViolationOccurence(
+            get.GridId,
+            get.MapId,
+            get.FromDate,
+            get.ToDate,
+            get.AgvSerialNumbers);
+        await ValidateHeatmapAsync(heatmap, get.GridId, get.MapId);
 
-        await context.RespondAsync(new GotPositionFrequencies(errorFrequency));
+        await context.RespondAsync(new GotPositionFrequencies(heatmap));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetWifiSignalStrength"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetWifiSignalStrength> context)
+    {
+        var get = context.Message;
+
+        var heatmap = await _db.GridAgvWifiMetrics.GetWifiSignalStrengthHeatmapAsync(
+            get.GridId,
+            get.MapId,
+            get.FromDate,
+            get.ToDate,
+            get.AgvSerialNumbers);
+        await ValidateHeatmapAsync(heatmap, get.GridId, get.MapId);
+
+        await context.RespondAsync(new GotWifiSignalStrength(heatmap));
     }
 }

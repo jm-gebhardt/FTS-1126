@@ -16,18 +16,19 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
 {
     private Mock<IRequestClient<AddGrid>> _addGridClient = null!;
 
-    private GotPositionFrequencies _gotPositionFrequencies = null!;
+    private ScalarHeatmap _heatmap = null!;
     private GotGrids _gotGrids = null!;
 
-    protected override IEnumerable<Profile> GetProfiles() => [new GridProfile(), new PositionFrequencyProfile()];
+    protected override IEnumerable<Profile> GetProfiles() => [new GridProfile(), new HeatmapProfile()];
 
     protected override void SetupController()
     {
-        AddRequestClient<GetPositionFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
-        AddRequestClient<GetErrorFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
-        AddRequestClient<GetFieldViolationFrequencies, GotPositionFrequencies>(() => _gotPositionFrequencies);
+        AddRequestClient<GetPositionFrequencies, GotPositionFrequencies>(() => new GotPositionFrequencies(_heatmap));
+        AddRequestClient<GetErrorFrequencies, GotPositionFrequencies>(() => new GotPositionFrequencies(_heatmap));
+        AddRequestClient<GetFieldViolationFrequencies, GotPositionFrequencies>(() => new GotPositionFrequencies(_heatmap));
         AddRequestClient<GetGrids, GotGrids>(() => _gotGrids);
         _addGridClient = AddRequestClient<AddGrid, Success>(new Success());
+        AddRequestClient<GetWifiSignalStrength, GotWifiSignalStrength>(() => new GotWifiSignalStrength(_heatmap));
     }
 
     public new GridControllerTestFixture Build()
@@ -42,9 +43,9 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
         return this;
     }
 
-    public GridControllerTestFixture WithCountHeatmap(CountHeatmap countHeatmap)
+    public GridControllerTestFixture WithScalarHeatmap(ScalarHeatmap scalarHeatmap)
     {
-        _gotPositionFrequencies = new GotPositionFrequencies(countHeatmap);
+        _heatmap = scalarHeatmap;
         return this;
     }
 

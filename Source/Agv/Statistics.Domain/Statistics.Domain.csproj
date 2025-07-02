@@ -4,6 +4,7 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
+        <PackageReference Include="AutoMapper" />
         <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>

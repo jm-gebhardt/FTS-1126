@@ -85,7 +85,7 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
         return this;
     }
 
-    public MockDbConsumerTestFixture<TConsumer> WithFieldViolationOccurence(CountHeatmap heatmap)
+    public MockDbConsumerTestFixture<TConsumer> WithFieldViolationOccurence(ScalarHeatmap heatmap)
     {
         StatisticsDbMock.Setup(x => x.GridAgvFieldViolations.GetFieldViolationOccurence(
             It.IsAny<Guid>(),
@@ -93,6 +93,18 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
             It.IsAny<DateTime?>(),
             It.IsAny<DateTime?>(),
             It.IsAny<string[]>())).ReturnsAsync(heatmap);
+        return this;
+    }
+    
+    public MockDbConsumerTestFixture<TConsumer> WithWifiSignalStrength(ScalarHeatmap heatmap)
+    {
+        StatisticsDbMock.Setup(x => x.GridAgvWifiMetrics.GetWifiSignalStrengthHeatmapAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<Guid>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<string[]>()))
+            .ReturnsAsync(heatmap);
         return this;
     }
 }

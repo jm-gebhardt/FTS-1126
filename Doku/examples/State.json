@@ -1,67 +1,68 @@
 {
-  "headerId": 43,
-  "timestamp": "2022-07-06T13:14:15",
-  "version": "1.3.2",
-  "manufacturer": "TAR",
-  "serialNumber": "AGV-01",
-  "orderId": "ORD_01",
-  "orderUpdateId": 0,
-  "lastNodeId": "CRG_01",
-  "lastNodeSequenceId": 0,
-  "nodeStates": [],
-  "edgeStates": [],
-  "driving": true,
   "actionStates": [],
-  "batteryState": {
-    "batteryCharge": 31.25,
-    "charging": false,
-    "batteryVoltage": 43.5,
-    "batteryHealth": 93.4,
-    "reach": 190.25
+  "agvPosition": {
+    "deviationRange": 0,
+    "localizationScore": 0.249469646999998,
+    "mapDescription": "the map",
+    "mapId": "map",
+    "positionInitialized": true,
+    "theta": -1.5707425769278534,
+    "x": 14.895071623210502,
+    "y": -4.013774003902574
   },
-  "operatingMode": "SEMIAUTOMATIC",
-  "errors": [],
+  "batteryState": {
+    "batteryCharge": 90.782600402832031,
+    "batteryCurrent": -1,
+    "batteryHealth": 100,
+    "batteryTemperature": 30.300000000000001,
+    "batteryVoltage": 58,
+    "charging": false,
+    "reach": 1000
+  },
+  "wifistate": {
+    "band": "0",
+    "beaconSignalAverage": -54,
+    "channel": 40,
+    "frequency": 5200,
+    "noise": -92,
+    "quality": 78,
+    "ssid": "18-KAE-GEB-FTS"
+  },
+  "distanceSinceLastNode": 0,
+  "driving": false,
+  "edgeStates": [],
+  "errors": [
+    {
+      "errorDescription": "Fahrzeug kann Zone nicht reservieren: ZAPL1",
+      "errorLevel": "FATAL",
+      "errorType": "Trajectory::RESOURCE_MISSING"
+    }
+  ],
+  "headerId": 789,
+  "information": [],
+  "lastNodeId": "map/NODE-36",
+  "lastNodeSequenceId": 0,
+  "loads": [],
+  "manufacturer": "TAR",
+  "newBaseRequest": false,
+  "nodeStates": [],
+  "operatingMode": "AUTOMATIC",
+  "orderId": "1e2ca195-4350-46d2-9956-1ef2bf8e8e4a",
+  "orderUpdateId": 0,
+  "paused": false,
   "safetyState": {
-    "eStop": "none",
+    "eStop": "NONE",
     "fieldViolation": false
   },
-  "zoneSetId": "",
-  "paused": true,
-  "newBaseRequest": true,
-  "distanceSinceLastNode": 306.5,
-  "agvPosition": {
-    "x": -26.5,
-    "y": 371.75,
-    "theta": 86.5,
-    "mapId": "base",
-    "positionInitialized": false,
-    "mapDescription": "Base Map",
-    "localizationScore": -62.5,
-    "deviationRange": 836.75
-  },
+  "serialNumber": "agv02",
+  "stationIds": [],
+  "timestamp": "2025-06-23T13:37:57Z",
   "velocity": {
-    "vx": 611.75,
-    "vy": 128.25,
-    "omega": -95.25
+    "omega": -0,
+    "vx": 0,
+    "vy": 0
   },
-  "loads": [
-	  {
-		"BoundingBoxReference": {
-			"Theta": 0.785,
-			"X": 1.0,
-			"Y": 2.0,
-			"Z": 3.0
-		},
-		"LoadDimensions": {
-			"Height": 2.5,
-			"Length": 5.0,
-			"Width": 3.0
-		},
-		"LoadId": "L12345",
-		"LoadPosition": "FrontLeft",
-		"LoadType": "Pallet",
-		"Weight": 150.5
-	  }
-  ],
-  "information": []
+  "version": "2.0.0",
+  "zoneIds": [],
+  "zoneSetId": ""
 }

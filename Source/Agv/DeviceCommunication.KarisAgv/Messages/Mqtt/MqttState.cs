@@ -163,7 +163,7 @@ public record MqttState
     /// Optional: If the AGV does not use zones, this field can be omitted.
     /// </summary>
     public string? ZoneSetId { get; set; }
-    
+
     /// <summary>
     /// The zones that the agv is in if any.
     /// </summary>
@@ -173,6 +173,11 @@ public record MqttState
     /// The stations that the agv reserves if any.
     /// </summary>
     public List<string>? StationIds { get; set; }
+
+    /// <summary>
+    /// The Wi-Fistatus of the AGV.
+    /// </summary>
+    public MqttWifiStatus? WifiState { get; set; }
 
     /// <summary>
     /// Initializes a new instance of <see cref="MqttState"/>.
@@ -783,4 +788,46 @@ public enum MqttEStop
 
     /// <summary/>
     Remote
+}
+
+/// <summary>
+/// Represents the Wi-Fi status of an AGV, reported via MQTT on the subtopic `/wifiStatus`.
+/// </summary>
+[PublicAPI]
+public record MqttWifiStatus
+{
+    /// <summary>
+    /// SSID string of the connected WLAN.
+    /// </summary>
+    public string Ssid { get; set; } = null!;
+
+    /// <summary>
+    /// WLAN band/modulation type mix.
+    /// </summary>
+    public string? Band { get; set; }
+
+    /// <summary>
+    /// WLAN channel used by the AGV.
+    /// </summary>
+    public int Channel { get; set; }
+
+    /// <summary>
+    /// Radio frequency in MHz.
+    /// </summary>
+    public int Frequency { get; set; }
+
+    /// <summary>
+    /// Signal level average in dBm of the last few beacons received.
+    /// </summary>
+    public int BeaconSignalAverage { get; set; }
+
+    /// <summary>
+    /// Radio link quality.
+    /// </summary>
+    public int Quality { get; set; }
+
+    /// <summary>
+    /// Noise level in dBm.
+    /// </summary>
+    public int Noise { get; set; }
 }

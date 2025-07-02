@@ -18,26 +18,27 @@ public class ErrorCommandHandler(IStatisticsDb db) : IConsumer<AddError>
     /// </summary>
     public async Task Consume(ConsumeContext<AddError> context)
     {
-        var (agvError, positionId) = context.Message;
+        (var agvError, List<Guid> positionIds) = context.Message;
 
-        var position = await db.GridAgvPositions.GetByIdAsync(positionId);
+        foreach (var positionId in positionIds)
+        {
+            if (agvError.IsFieldViolation())
+            {
+                var error = new AgvFieldViolation(positionId, agvError.ErrorReceived);
+                db.GridAgvFieldViolations.Add(error);
+            }
+            else
+            {
+                var error = new AgvError(positionId,
+                    agvError.ErrorReceived,
+                    agvError.ErrorLevel,
+                    agvError.ErrorCode ?? "",
+                    agvError.ErrorType,
+                    agvError.ErrorCategory);
+                db.GridAgvErrors.Add(error);
+            }
+        }
 
-        if (agvError.IsFieldViolation())
-        {
-            var error = new AgvFieldViolation(position.PositionId, agvError.ErrorReceived);
-            db.GridAgvFieldViolations.Add(error);
-        }
-        else
-        {
-            var error = new AgvError(position.PositionId,
-                agvError.ErrorReceived,
-                agvError.ErrorLevel,
-                agvError.ErrorCode ?? "",
-                agvError.ErrorType,
-                agvError.ErrorCategory);
-            db.GridAgvErrors.Add(error);
-        }
-      
         await db.SaveAsync();
     }
 }

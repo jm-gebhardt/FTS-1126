@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Statistics.Test.Fixtures;
 /// <summary>
 /// Provides a test fixture for the <see cref="IStatisticsDb"/>.
 /// </summary>
-public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>,  IStatisticsDb, IDisposable
+public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>, IStatisticsDb, IDisposable
 {
     private readonly StatisticsDbContext _context;
 
@@ -29,6 +29,8 @@ public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>,  
 
     public IAgvFieldViolationRepository GridAgvFieldViolations { get; }
 
+    public IAgvWifiMetricsRepository GridAgvWifiMetrics { get; }
+
     /// <inheritdoc cref="StatisticsDbTestFixture"/>
     public StatisticsDbTestFixture()
     {
@@ -39,5 +41,6 @@ public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>,  
         MapAgvPositions = new EfMapAgvPositionsRepository(_context);
         GridAgvErrors = new EfAgvErrorRepository(_context);
         GridAgvFieldViolations = new EfAgvFieldViolationRepository(_context);
+        GridAgvWifiMetrics = new EfAgvWifiMetricsRepository(_context);
     }
 }

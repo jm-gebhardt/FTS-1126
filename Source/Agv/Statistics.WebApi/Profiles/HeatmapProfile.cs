@@ -6,14 +6,14 @@ using JetBrains.Annotations;
 namespace Gebhardt.Acc.Statistics.WebApi.Profiles;
 
 /// <summary>
-/// Profile for mapping the <see cref="FrequencyDto"/>.
+/// Profile for mapping the <see cref="ScalarHeatmapDto"/>.
 /// </summary>
 [UsedImplicitly]
-public class PositionFrequencyProfile : Profile
+public class HeatmapProfile : Profile
 {
     /// <inheritdoc />
-    public PositionFrequencyProfile()
+    public HeatmapProfile()
     {
-        CreateMap<CountHeatmap, FrequencyDto>();
+        CreateMap<ScalarHeatmap, ScalarHeatmapDto>();
     }
 }

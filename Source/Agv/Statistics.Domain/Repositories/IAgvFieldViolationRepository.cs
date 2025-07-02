@@ -17,5 +17,5 @@ public interface IAgvFieldViolationRepository : IRepository<AgvFieldViolation>
     /// <param name="fromDate">The UTC from Date, only items with a greater Timestamp will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less Timestamp will be considered.</param>
     /// <param name="agvSerialNumbers">The serial numbers of the agvs which error shall be included.</param>
-    Task<CountHeatmap> GetFieldViolationOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers);
+    Task<ScalarHeatmap> GetFieldViolationOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers);
 }

@@ -5,15 +5,21 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.SemaphoreProviders;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Memory;
+using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Contracts;
 using Gebhardt.Acc.Common.Messages.Filters;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Gebhardt.Acc.Statistics.Extensions;
+using Gebhardt.Acc.Statistics.Messages.Commands;
+using Gebhardt.Acc.Statistics.Messages.Events;
 using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 using Gebhardt.Acc.Statistics.Services.BackgroundServices;
+using Gebhardt.Acc.Statistics.Services.EventHandler;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,6 +34,22 @@ namespace Gebhardt.Acc.Statistics.Configuration;
 /// </summary>
 public static class HostBuilderExtension
 {
+    private static void ConfigureGridPositionAttachedEventHandler<THandler, TMessage>(IRabbitMqReceiveEndpointConfigurator e, IBusRegistrationContext ctx, IPartitioner partitioner)
+        where THandler : class, IConsumer
+        where TMessage : class, IAgvSerialNumber, IWithAgvPosition, IMessageCreatedDate
+    {
+        e.ConfigureConsumer<THandler>(ctx, cc =>
+        {
+            cc.Message<TMessage>(x =>
+                x.UsePartitioner(partitioner, m => m.Message.SerialNumber));
+        });
+        e.ConfigureConsumer<GridPositionPersistedForwarder<TMessage>>(ctx, cc =>
+        {
+            cc.Message<GridPositionPersisted>(x =>
+                x.UsePartitioner(partitioner, m => m.Message.SerialNumber));
+        });
+    }
+
     /// <summary>
     /// Add MassTransit configuration.
     /// </summary>
@@ -47,6 +69,23 @@ public static class HostBuilderExtension
                 }, rabbitMqConfiguration: (ctx, cfg) =>
                 {
                     cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
+
+                    cfg.ReceiveEndpoint("agv-events", e =>
+                    {
+                        // we need one queue and one partitioner for the AGVs, to ensure that all messages for the same AGV are processed in order
+                        var partitioner = e.CreatePartitioner(16);
+
+                        e.ConfigureConsumer<AgvPositionReceivedHandler>(ctx, cc =>
+                        {
+                            cc.Message<AgvPositionReceived>(x =>
+                                x.UsePartitioner(partitioner, m => m.Message.SerialNumber));
+                            cc.Message<ForcePersistAgvPosition>(x =>
+                                x.UsePartitioner(partitioner, m => m.Message.SerialNumber));
+                        });
+
+                        ConfigureGridPositionAttachedEventHandler<AgvErrorEventHandler, AgvErrorReceived>(e, ctx, partitioner);
+                        ConfigureGridPositionAttachedEventHandler<WifiMetricsEventHandler, AgvWifiMetricsReceived>(e, ctx, partitioner);
+                    });
                 });
             }
             catch (InvalidOperationException e)
@@ -70,7 +109,7 @@ public static class HostBuilderExtension
         {
             services.AddConfigurationTypeManager();
             services.AddDbContext<StatisticsDbContext>(o =>
-                o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName), 
+                o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
                     m => m.MigrationsHistoryTable(StatisticsDbContext.MigrationTableName)));
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();
             services.AddTransient<IMapRepository, EfMapRepository>();
@@ -79,9 +118,16 @@ public static class HostBuilderExtension
             services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
             services.AddTransient<IGridAgvPositionRepository, EfGridAgvPositionRepository>();
             services.AddTransient<IMapAgvPositionsRepository, EfMapAgvPositionsRepository>();
-            
-            services.AddSingleton(typeof(IInMemoryCache<,>), typeof(InMemoryCache<,>));
-            
+            services.AddTransient<IAgvWifiMetricsRepository, EfAgvWifiMetricsRepository>();
+
+            services.AddSingleton(typeof(ICache<,>), typeof(Cache<,>));
+            services.AddAgvScopedCache<Guid>(1000, false);
+            services.AddAgvScopedCache<AgvWifiMetricsReceived>(20);
+            services.AddAgvScopedCache<AgvErrorReceived>(20);
+            // we need to register it also here (next to the AddConsumer), because the GridPositionPersistedForwarder needs to resolve it via DI
+            services.AddScoped<GridPositionAttachedHandlerBase<AgvErrorReceived>, AgvErrorEventHandler>();
+            services.AddScoped<GridPositionAttachedHandlerBase<AgvWifiMetricsReceived>, WifiMetricsEventHandler>();
+
             RegisterFilters(services);
         });
         return hostBuilder;

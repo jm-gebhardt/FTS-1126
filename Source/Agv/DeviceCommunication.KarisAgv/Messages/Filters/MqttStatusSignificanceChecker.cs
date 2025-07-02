@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 
+// ReSharper disable EnforceIfStatementBraces
+
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Filters;
 
 /// <summary>
@@ -8,156 +10,136 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Filters;
 /// </summary>
 public class MqttStatusSignificanceChecker : ISignificanceChecker<MqttState>
 {
-    private const float Epsilon = 0.00001f;
+    private const float Epsilon = 1E-5f;
 
     /// <inheritdoc cref="ISignificanceChecker{T}"/>>
-    public bool HasSignificantChanges(MqttState obj1, MqttState obj2)
+    public bool HasSignificantChanges(MqttState a, MqttState b)
     {
-        if (!string.Equals(obj1.SerialNumber, obj2.SerialNumber, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return true;
-        }
-
-        if (!string.Equals(obj1.OrderId, obj2.OrderId, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return true;
-        }
-
-        if (!string.Equals(obj1.LastNodeId, obj2.LastNodeId, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return true;
-        }
-
-        if (!string.Equals(obj1.Manufacturer, obj2.Manufacturer, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return true;
-        }
-
-        if (!string.Equals(obj1.Version, obj2.Version, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return true;
-        }
-
-        if (!string.Equals(obj1.ZoneSetId, obj2.ZoneSetId, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return true;
-        }
-
-        if (obj1.LastNodeSequenceId != obj2.LastNodeSequenceId)
-        {
-            return true;
-        }
-
-        if (obj1.OrderUpdateId != obj2.OrderUpdateId)
-        {
-            return true;
-        }
-
-        if (obj1.Driving != obj2.Driving)
-        {
-            return true;
-        }
-
-        if (obj1.OperatingMode != obj2.OperatingMode)
-        {
-            return true;
-        }
-
-        if (Math.Abs(obj1.DistanceSinceLastNode.GetValueOrDefault() - obj2.DistanceSinceLastNode.GetValueOrDefault()) > Epsilon)
-        {
-            return true;
-        }
-
-        if (obj1.NewBaseRequest != obj2.NewBaseRequest)
-        {
-            return true;
-        }
-
-        if (obj1.Paused != obj2.Paused)
-        {
-            return true;
-        }
-
-        if (!(obj1.AgvPosition?.Equals(obj2.AgvPosition) ?? obj2.AgvPosition == null))
-        {
-            return true;
-        }
-
-        if (!(obj1.BatteryState?.Equals(obj2.BatteryState) ?? obj2.BatteryState == null))
-        {
-            return true;
-        }
-
-        if (!(obj1.SafetyState?.Equals(obj2.SafetyState) ?? obj2.SafetyState == null))
-        {
-            return true;
-        }
-
-        if (!(obj1.Velocity?.Equals(obj2.Velocity) ?? obj2.Velocity == null))
-        {
-            return true;
-        }
-
-        // Compare lists (null-safe and deep comparison)
-        if (!AreListsEqual(obj1.ActionStates, obj2.ActionStates))
-        {
-            return true;
-        }
-
-        if (!AreListsEqual(obj1.EdgeStates, obj2.EdgeStates))
-        {
-            return true;
-        }
-
-        if (!AreListsEqual(obj1.Errors, obj2.Errors))
-        {
-            return true;
-        }
-
-        if (!AreListsEqual(obj1.Information, obj2.Information))
-        {
-            return true;
-        }
-
-        if (!AreListsEqual(obj1.Loads, obj2.Loads))
-        {
-            return true;
-        }
-
-        if (!AreListsEqual(obj1.NodeStates, obj2.NodeStates))
-        {
-            return true;
-        }
-
-        if (!AreListsEqual(obj1.ZoneIds, obj2.ZoneIds))
-        {
-            return true;
-        }
-
+        if (!EqualsIgnoreCase(a.SerialNumber, b.SerialNumber)) return true;
+        if (!EqualsIgnoreCase(a.OrderId, b.OrderId)) return true;
+        if (!AreListsEqual(a.ActionStates, b.ActionStates, (x, y) => x.Equals(y))) return true;
+        if (!AreObjectsEqual(a.AgvPosition, b.AgvPosition)) return true;
+        if (!AreObjectsEqual(a.BatteryState, b.BatteryState)) return true;
+        if (!AreFloatsEqual(a.DistanceSinceLastNode, b.DistanceSinceLastNode)) return true;
+        if (a.Driving != b.Driving) return true;
+        if (!AreListsEqual(a.EdgeStates, b.EdgeStates, EdgeStateEqual)) return true;
+        if (!AreListsEqual(a.Errors, b.Errors, ErrorEqual)) return true;
+        if (!AreIntsEqual(a.HeaderId, b.HeaderId)) return true;
+        if (!AreListsEqual(a.Information, b.Information, InformationEqual)) return true;
+        if (!EqualsIgnoreCase(a.LastNodeId, b.LastNodeId)) return true;
+        if (a.LastNodeSequenceId != b.LastNodeSequenceId) return true;
+        if (!AreListsEqual(a.Loads, b.Loads, (x, y) => x.Equals(y))) return true;
+        if (!EqualsIgnoreCase(a.Manufacturer, b.Manufacturer)) return true;
+        if (a.NewBaseRequest != b.NewBaseRequest) return true;
+        if (!AreListsEqual(a.NodeStates, b.NodeStates, (x, y) => x.Equals(y))) return true;
+        if (a.OperatingMode != b.OperatingMode) return true;
+        if (a.OrderUpdateId != b.OrderUpdateId) return true;
+        if (a.Paused != b.Paused) return true;
+        if (!SafetyStateEqual(a.SafetyState, b.SafetyState)) return true;
+        if (!AreTimestampsEqual(a.Timestamp, b.Timestamp)) return true;
+        if (!AreObjectsEqual(a.Velocity, b.Velocity)) return true;
+        if (!EqualsIgnoreCase(a.Version, b.Version)) return true;
+        if (!EqualsIgnoreCase(a.ZoneSetId, b.ZoneSetId)) return true;
+        if (!AreListsEqual(a.ZoneIds, b.ZoneIds, (x, y) => x.Equals(y))) return true;
+        if (!AreListsEqual(a.StationIds, b.StationIds, EqualsIgnoreCase)) return true;
+        if (!WifiStatusEqual(a.WifiState, b.WifiState)) return true;
         return false;
     }
 
-    private bool AreListsEqual<T>(List<T>? list1, List<T>? list2)
+    private static bool EqualsIgnoreCase(string? x, string? y) => string.Equals(x, y, StringComparison.InvariantCultureIgnoreCase);
+
+    private static bool AreIntsEqual(int? x, int? y) => x.GetValueOrDefault() == y.GetValueOrDefault();
+
+    private static bool AreFloatsEqual(float? x, float? y) => Math.Abs(x.GetValueOrDefault() - y.GetValueOrDefault()) < Epsilon;
+
+    private static bool AreTimestampsEqual(DateTimeOffset x, DateTimeOffset y) => x.UtcDateTime == y.UtcDateTime;
+
+    private static bool AreObjectsEqual<T>(T? x, T? y)
     {
-        if (ReferenceEquals(list1, list2))
+        if (ReferenceEquals(x, y)) return true;
+        if (x is null || y is null) return false;
+        return x.Equals(y);
+    }
+
+    private static bool AreListsEqual<T>(IList<T>? x, IList<T>? y, Func<T, T, bool> itemEqual)
+    {
+        if (ReferenceEquals(x, y)) return true;
+        if (x is null || y is null || x.Count != y.Count) return false;
+
+        for (int i = 0; i < x.Count; i++)
         {
-            return true;
-        }
-        if (list1 == null || list2 == null)
-        {
-            return false;
-        }
-        if (list1.Count != list2.Count)
-        {
-            return false;
-        }
-        for (int i = 0; i < list1.Count; i++)
-        {
-            if (!(list1[i]?.Equals(list2[i]) ?? list2[i] == null))
+            if (!itemEqual(x[i], y[i]))
             {
                 return false;
             }
         }
+
         return true;
+    }
+
+    private static bool ControlPointEqual(MqttControlPoint a, MqttControlPoint b)
+    {
+        return AreFloatsEqual(a.X, b.X) &&
+               AreFloatsEqual(a.Y, b.Y) &&
+               AreFloatsEqual(a.Weight, b.Weight);
+    }
+
+    private static bool TrajectoryEqual(MqttTrajectory? a, MqttTrajectory? b)
+    {
+        return ReferenceEquals(a, b) ||
+               (a is not null && b is not null &&
+                AreIntsEqual(a.Degree, b.Degree) &&
+                AreListsEqual(a.KnotVector, b.KnotVector, (x, y) => AreFloatsEqual(x, y)) &&
+                AreListsEqual(a.ControlPoints, b.ControlPoints, ControlPointEqual));
+    }
+
+    private static bool EdgeStateEqual(MqttEdgeState a, MqttEdgeState b) =>
+        EqualsIgnoreCase(a.EdgeId, b.EdgeId) &&
+        EqualsIgnoreCase(a.EdgeDescription, b.EdgeDescription) &&
+        a.Released == b.Released &&
+        AreIntsEqual(a.SequenceId, b.SequenceId) &&
+        TrajectoryEqual(a.Trajectory, b.Trajectory);
+
+    private static bool ErrorReferenceEqual(MqttErrorReference a, MqttErrorReference b) =>
+        EqualsIgnoreCase(a.ReferenceKey, b.ReferenceKey) &&
+        EqualsIgnoreCase(a.ReferenceValue, b.ReferenceValue);
+
+    private static bool ErrorEqual(MqttError a, MqttError b) =>
+        EqualsIgnoreCase(a.ErrorDescription, b.ErrorDescription) &&
+        EqualsIgnoreCase(a.ErrorType, b.ErrorType) &&
+        a.ErrorLevel == b.ErrorLevel &&
+        AreListsEqual(a.ErrorReferences, b.ErrorReferences, ErrorReferenceEqual);
+
+    private static bool InfoReferenceEqual(MqttInfoReference a, MqttInfoReference b) =>
+        EqualsIgnoreCase(a.ReferenceKey, b.ReferenceKey) &&
+        EqualsIgnoreCase(a.ReferenceValue, b.ReferenceValue);
+
+    private static bool InformationEqual(MqttInformation a, MqttInformation b) =>
+        EqualsIgnoreCase(a.InfoDescription, b.InfoDescription) &&
+        EqualsIgnoreCase(a.InfoType, b.InfoType) &&
+        a.InfoLevel == b.InfoLevel &&
+        AreListsEqual(a.InfoReferences, b.InfoReferences, InfoReferenceEqual);
+
+    private static bool SafetyStateEqual(MqttSafetyState? a, MqttSafetyState? b)
+    {
+        if (ReferenceEquals(a, b)) return true;
+        if (a is null || b is null) return false;
+
+        return a.EStop == b.EStop &&
+               a.FieldViolation == b.FieldViolation;
+    }
+
+    private static bool WifiStatusEqual(MqttWifiStatus? a, MqttWifiStatus? b)
+    {
+        if (ReferenceEquals(a, b)) return true;
+        if (a is null || b is null) return false;
+
+        return EqualsIgnoreCase(a.Ssid, b.Ssid) &&
+               EqualsIgnoreCase(a.Band, b.Band) &&
+               a.Channel == b.Channel &&
+               a.Frequency == b.Frequency &&
+               a.BeaconSignalAverage == b.BeaconSignalAverage &&
+               a.Quality == b.Quality &&
+               a.Noise == b.Noise;
     }
 }

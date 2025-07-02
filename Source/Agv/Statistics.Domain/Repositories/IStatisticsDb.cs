@@ -37,4 +37,9 @@ public interface IStatisticsDb : IUnitOfWork
     /// The <see cref="AgvFieldViolation"/> repository.
     /// </summary>
     IAgvFieldViolationRepository GridAgvFieldViolations { get; }
+    
+    /// <summary>
+    /// The <see cref="AgvWifiMetrics"/> repository.
+    /// </summary>
+    IAgvWifiMetricsRepository GridAgvWifiMetrics { get; }
 }

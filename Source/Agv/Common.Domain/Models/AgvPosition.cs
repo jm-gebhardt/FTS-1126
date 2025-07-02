@@ -61,3 +61,14 @@ public record AgvPosition
         return $"[X={X:F3}/Y={Y:F3}/Theta={Theta:F3}]";
     }
 }
+
+/// <summary>
+/// Interface for classes that contain an AGV position.
+/// </summary>
+public interface IWithAgvPosition
+{
+    /// <summary>
+    /// AGV position
+    /// </summary>
+    AgvPosition AgvPosition { get; }
+}

@@ -6,4 +6,4 @@ namespace Gebhardt.Acc.Statistics.Messages.Requests;
 /// Represents the response to the <see cref="GetPositionFrequencies"/> request.
 /// </summary>
 /// <param name="PositionFrequency"></param>
-public record GotPositionFrequencies(CountHeatmap PositionFrequency);
+public record GotPositionFrequencies(ScalarHeatmap PositionFrequency) : GotHeatmap(PositionFrequency);

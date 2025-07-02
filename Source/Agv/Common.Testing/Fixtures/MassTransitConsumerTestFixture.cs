@@ -27,7 +27,7 @@ public abstract class MassTransitConsumerTestFixture<TConsumer> : MassTransitTes
     /// </summary>
     protected MassTransitConsumerTestFixture()
     {
-        AddServices(s => s.AddSingleton(new Mock<ILogger<TConsumer>>().Object));
+        AddServices(s => s.AddSingleton(Mock.Of<ILogger<TConsumer>>()));
     }
 
     protected override void ConfigureMassTransitTestHarness(IBusRegistrationConfigurator busRegistrationConfigurator)

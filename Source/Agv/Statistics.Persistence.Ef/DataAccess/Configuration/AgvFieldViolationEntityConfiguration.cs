@@ -19,6 +19,6 @@ public class AgvFieldViolationEntityConfiguration : IEntityTypeConfiguration<Agv
             .HasForeignKey(e => e.PositionId)
             .OnDelete(DeleteBehavior.NoAction); // 
         builder.Navigation(e => e.Position).AutoInclude();
-        builder.ConfigureAllProperties(except: new[] { nameof(AgvError.Position) });
+        builder.ConfigureAllProperties(except: [nameof(AgvError.Position)]);
     }
 }

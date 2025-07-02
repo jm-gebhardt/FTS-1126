@@ -24,7 +24,7 @@ public class EfAgvFieldViolationRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetFieldViolationOccurence_ValidData_ReturnsCountHeatmap()
+    public async Task GetFieldViolationOccurence_ValidData_ReturnsScalarHeatmap()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -39,11 +39,11 @@ public class EfAgvFieldViolationRepositoryTest
        
         heatmap.GridId.ShouldBe(_grid.GridId);
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEquivalentTo(new List<ICollection<float>> { new List<float> { 1, 1, 1 } });
+        heatmap.Values.ShouldBeEquivalentTo(new List<ICollection<float>> { new List<float> { 1, 1, 1 } });
     }
 
     [TestMethod]
-    public async Task GetFieldViolationOccurence_UnknownGrid_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetFieldViolationOccurence_UnknownGrid_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -58,11 +58,11 @@ public class EfAgvFieldViolationRepositoryTest
        
         heatmap.GridId.ShouldBe("unknown".ToGuid());
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetFieldViolationOccurence_UnknownMap_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetFieldViolationOccurence_UnknownMap_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -77,11 +77,11 @@ public class EfAgvFieldViolationRepositoryTest
 
         heatmap.MapId.ShouldBe("unknown".ToGuid());
         heatmap.GridId.ShouldBe(_grid.GridId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetFieldViolationOccurence_NoDataInTimeRange_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetFieldViolationOccurence_NoDataInTimeRange_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -96,11 +96,11 @@ public class EfAgvFieldViolationRepositoryTest
 
         heatmap.GridId.ShouldBe(_grid.GridId);
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task GetFieldViolationOccurence_NoFieldViolations_ReturnsCountHeatmapWithEmptyFrequencies()
+    public async Task GetFieldViolationOccurence_NoFieldViolations_ReturnsScalarHeatmapWithEmptyFrequencies()
     {
         await using var fixture = new StatisticsDbTestFixture();
         fixture.MapAgvPositions.Add(_mapPosition!);
@@ -113,6 +113,6 @@ public class EfAgvFieldViolationRepositoryTest
 
         heatmap.GridId.ShouldBe(_grid.GridId);
         heatmap.MapId.ShouldBe(_map.MapId);
-        heatmap.Frequencies.ShouldBeEmpty();
+        heatmap.Values.ShouldBeEmpty();
     }
 }

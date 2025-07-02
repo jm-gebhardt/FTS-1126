@@ -8,39 +8,39 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 
-/// <inheritdoc cref="IGridAgvPositionRepository"/>>.
+/// <inheritdoc cref="IGridAgvPositionRepository"/>
 public class EfGridAgvPositionRepository(StatisticsDbContext context) : EfRepository<GridAgvPosition, StatisticsDbContext>(context), IGridAgvPositionRepository
 {
-    /// <inheritdoc cref="IGridAgvPositionRepository"/>>
-    public async Task<CountHeatmap> GetPositionFrequency(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate)
+    /// <inheritdoc cref="IGridAgvPositionRepository"/>
+    public async Task<ScalarHeatmap> GetPositionFrequency(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate)
     {
-        IQueryable<GridAgvPosition> query = DbSet.Where(p => p.GridId == gridId)
-            .Include(agp => agp.MapAgvPositions)
-            .Where(p => p.MapAgvPositions!.Any(mp => mp.MapId== mapId));
-        
-        if (fromDate != null && fromDate != DateTime.MinValue)
-        {
-            query = query.Where(g => g.Timestamp >= fromDate);
-        }
+        IQueryable<GridAgvPosition> query = BuildBaseQuery(gridId, mapId, fromDate, toDate);
 
-        if (toDate != null && toDate != DateTime.MaxValue)
-        {
-            query = query.Where(g => g.Timestamp <= toDate);
-        }
+        var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId);
 
-        List<GridAgvPosition> positions = await query.ToListAsync();
-        ICollection<ICollection<float>> frequencies = [];
-        if (positions.Count > 0)
-        {
-            frequencies = await query
-                .GroupBy(entry => new { entry.XIndex, entry.YIndex })
-                .Select(group => new List<float>
-                {
-                    group.Key.XIndex, group.Key.YIndex, group.Count()
-                } as ICollection<float>).ToListAsync();
-        }
-        
-        return new CountHeatmap(gridId, mapId, frequencies);
+        return heatmap;
+    }
+
+    private IQueryable<GridAgvPosition> BuildBaseQuery(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? serialNumbers = null)
+    {
+        IQueryable<GridAgvPosition> query = DbSet
+            .Where(e => e.GridId == gridId)
+            .Include(e => e.MapAgvPositions)
+            .Where(e => e.MapAgvPositions!.Any(mp => mp.MapId == mapId))
+            .WhereIn(serialNumbers, e => e.SerialNumber)
+            .WhereInTimeRange(fromDate, toDate, e => e.Timestamp);
+
+        return query;
+    }
+
+    private static async Task<ScalarHeatmap> BuildScalarHeatmapAsync(IQueryable<GridAgvPosition> query, Guid gridId, Guid mapId)
+    {
+        List<ICollection<float>> frequencies = await query
+            .GroupBy(e => new { e.XIndex, e.YIndex })
+            .Select(g => new List<float> { g.Key.XIndex, g.Key.YIndex, g.Count() } as ICollection<float>)
+            .ToListAsync();
+
+        return new ScalarHeatmap(gridId, mapId, frequencies);
     }
 
     /// <inheritdoc cref="IGridAgvPositionRepository"/>
@@ -67,9 +67,9 @@ public class EfGridAgvPositionRepository(StatisticsDbContext context) : EfReposi
         Context.RemoveRange(entitiesToDelete);
         await Context.SaveChangesAsync();
     }
-    
+
     /// <inheritdoc cref="IGridAgvPositionRepository"/>>
-    public async Task<GridAgvPosition> GetPositionAsync(Guid gridId, int xPosition,  int yPosition, float z, string agvSerialNumber)
+    public async Task<GridAgvPosition> GetPositionAsync(Guid gridId, int xPosition, int yPosition, float z, string agvSerialNumber)
     {
         try
         {

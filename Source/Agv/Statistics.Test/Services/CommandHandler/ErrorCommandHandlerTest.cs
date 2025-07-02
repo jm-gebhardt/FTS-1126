@@ -19,7 +19,7 @@ public class ErrorCommandHandlerTest
         MockDbConsumerTestFixture<ErrorCommandHandler> fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
             .WithGridPositions([ position]);
         var error = AgvErrorGenerator.GenerateAgvError();
-        await fixture.TestHarness.Bus.Publish(new AddError(error, position.PositionId));
+        await fixture.TestHarness.Bus.Publish(new AddError(error, [position.PositionId]));
         (await fixture.ConsumerHarness.Consumed.Any<AddError>()).ShouldBeTrue();
         fixture.StatisticsDbMock.VerifyErrorAdded();
     }
@@ -31,7 +31,7 @@ public class ErrorCommandHandlerTest
         MockDbConsumerTestFixture<ErrorCommandHandler> fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
             .WithGridPositions([position]);
         var fieldViolation = new FieldViolation(Guid.NewGuid(), DateTime.UtcNow);
-        await fixture.TestHarness.Bus.Publish(new AddError(fieldViolation, position.PositionId));
+        await fixture.TestHarness.Bus.Publish(new AddError(fieldViolation, [position.PositionId]));
         (await fixture.ConsumerHarness.Consumed.Any<AddError>()).ShouldBeTrue();
         fixture.StatisticsDbMock.VerifyFieldViolationAdded();
     }

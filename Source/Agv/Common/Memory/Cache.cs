@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Gebhardt.Acc.Common.Memory;
 
 /// <inheritdoc />
-public class InMemoryCache<TKey, TValue> : IInMemoryCache<TKey, TValue>
+public class Cache<TKey, TValue> : ICache<TKey, TValue>
     where TKey : notnull
 {
     private readonly ConcurrentDictionary<TKey, (TValue Value, DateTime CreatedAt)> _cache = new();

@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.Statistics.Domain.Models;
 /// <summary>
 /// Represents and agv error on a grid.
 /// </summary>
-public class AgvError
+public class AgvError : IPositionedEntity
 {
     /// <summary>
     /// The id of the error.
@@ -17,14 +17,10 @@ public class AgvError
     /// </summary>
     public Guid PositionId { get; init; }
 
-    /// <summary>
-    /// The Agv grid position object.
-    /// </summary>
+    /// <inheritdoc />
     public GridAgvPosition? Position { get; init; }
 
-    /// <summary>
-    /// The time the error was received.
-    /// </summary>
+    /// <inheritdoc />
     public DateTime Timestamp { get; init; }
 
     /// <summary>

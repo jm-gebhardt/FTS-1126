@@ -16,7 +16,7 @@ public interface IGridAgvPositionRepository : IRepository<GridAgvPosition>
     /// <param name="mapId">The CorrelationId of the Map.</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater Timestamp will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less Timestamp will be considered.</param>
-    Task<CountHeatmap> GetPositionFrequency(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate);
+    Task<ScalarHeatmap> GetPositionFrequency(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate);
 
     /// <summary>
     /// Deletes any agv positions older than the given timestamp.

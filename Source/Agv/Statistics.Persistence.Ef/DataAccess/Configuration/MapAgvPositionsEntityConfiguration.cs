@@ -24,6 +24,6 @@ public class MapAgvPositionsEntityConfiguration : IEntityTypeConfiguration<MapAg
             .HasForeignKey(mp => mp.PositionId)
             .OnDelete(DeleteBehavior.Cascade);
         
-        builder.ConfigureAllProperties(except: new[] { nameof(MapAgvPositions.AgvGridPosition), nameof(MapAgvPositions.Map) });
+        builder.ConfigureAllProperties(except: [nameof(MapAgvPositions.AgvGridPosition), nameof(MapAgvPositions.Map)]);
     }
 }

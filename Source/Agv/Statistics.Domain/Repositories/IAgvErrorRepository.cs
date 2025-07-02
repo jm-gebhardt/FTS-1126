@@ -20,5 +20,5 @@ public interface IAgvErrorRepository : IRepository<AgvError>
     /// <param name="agvSerialNumbers">The serial numbers of the agvs which error shall be included.</param>
     /// <param name="errorLevel">The error level.</param>
     /// <param name="errorCode">The error code.</param>
-    Task<CountHeatmap> GetErrorOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers, ErrorLevel errorLevel, string? errorCode);
+    Task<ScalarHeatmap> GetErrorOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers, ErrorLevel errorLevel, string? errorCode);
 }

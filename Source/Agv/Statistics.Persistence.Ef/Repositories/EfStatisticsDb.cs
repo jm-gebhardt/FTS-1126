@@ -15,6 +15,7 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
     private readonly bool _efMapAgvPositionRepositoryRegistered;
     private readonly bool _efAgvGridErrorRepositoryRegistered;
     private readonly bool _efAgvGridFieldViolationRepositoryRegistered;
+    private readonly bool _efAgvWifiMetricsRepositoryRegistered;
 
     /// <inheritdoc />
     public async Task<int> SaveAsync(CancellationToken cancellationToken = default)
@@ -49,6 +50,11 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
         {
             await GridAgvFieldViolations.SaveAsync();
         }
+        
+        if(!_efAgvWifiMetricsRepositoryRegistered)
+        {
+            await GridAgvWifiMetrics.SaveAsync();
+        }
 
         return await DbContext.SaveChangesAsync(cancellationToken);
     }
@@ -71,6 +77,9 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
     /// <inheritdoc />
     public IAgvFieldViolationRepository GridAgvFieldViolations { get; }
 
+    /// <inheritdoc />
+    public IAgvWifiMetricsRepository GridAgvWifiMetrics { get; }
+
     /// <inheritdoc cref="EfStatisticsDb" />
     public EfStatisticsDb(IServiceProvider provider,
         StatisticsDbContext context,
@@ -79,7 +88,8 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
         IGridAgvPositionRepository gridAgvPositionRepository,
         IMapAgvPositionsRepository mapAgvPositionsRepository,
         IAgvErrorRepository gridAgvErrorRepository,
-        IAgvFieldViolationRepository gridAgvFieldViolationRepository
+        IAgvFieldViolationRepository gridAgvFieldViolationRepository,
+        IAgvWifiMetricsRepository gridAgvWifiMetricsRepository
         )
     {
         _efGridRepositoryRegistered = provider.GetService(typeof(EfGridRepository)) != null;
@@ -88,6 +98,7 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
         _efMapAgvPositionRepositoryRegistered = provider.GetService(typeof(EfMapAgvPositionsRepository)) != null;
         _efAgvGridErrorRepositoryRegistered = provider.GetService(typeof(EfAgvErrorRepository)) != null;
         _efAgvGridFieldViolationRepositoryRegistered = provider.GetService(typeof(EfAgvFieldViolationRepository)) != null;
+        _efAgvWifiMetricsRepositoryRegistered = provider.GetService(typeof(EfAgvWifiMetricsRepository)) != null;
         DbContext = context;
         Maps = mapRepository;
         Grids = gridRepository;
@@ -95,6 +106,7 @@ public class EfStatisticsDb : IStatisticsDb, IAsyncDisposable
         MapAgvPositions = mapAgvPositionsRepository;
         GridAgvErrors = gridAgvErrorRepository;
         GridAgvFieldViolations = gridAgvFieldViolationRepository;
+        GridAgvWifiMetrics = gridAgvWifiMetricsRepository;
     }
 
     /// <inheritdoc cref="IAsyncDisposable" />

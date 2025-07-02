@@ -40,13 +40,13 @@ public class GridControllerTest
         var mapId = Guid.NewGuid();
         DateTime? fromDate = DateTime.UtcNow;
         DateTime? toDate = DateTime.UtcNow;
-        
-        var positionFrequency = new CountHeatmap(gridId, mapId, new List<ICollection<float>>());
+
+        var positionFrequency = new ScalarHeatmap(gridId, mapId, new List<ICollection<float>>());
 
         var fixture = new GridControllerTestFixture()
-            .WithCountHeatmap(positionFrequency)
+            .WithScalarHeatmap(positionFrequency)
             .Build();
-        
+
         var positionFrequencyDto = await fixture.GetControllerResultValueAsync(c => c.GetPositionFrequency(gridId, mapId, fromDate, toDate));
 
         positionFrequencyDto.GridId.ShouldBe(gridId);
@@ -61,15 +61,35 @@ public class GridControllerTest
         DateTime? fromDate = DateTime.UtcNow;
         DateTime? toDate = DateTime.UtcNow;
 
-        var fieldViolationFrequency = new CountHeatmap(gridId, mapId, new List<ICollection<float>>());
+        var fieldViolationFrequency = new ScalarHeatmap(gridId, mapId, new List<ICollection<float>>());
 
         var fixture = new GridControllerTestFixture()
-            .WithCountHeatmap(fieldViolationFrequency)
+            .WithScalarHeatmap(fieldViolationFrequency)
             .Build();
 
         var positionFrequencyDto = await fixture.GetControllerResultValueAsync(c => c.GetFieldViolationFrequency(gridId, mapId, fromDate, toDate, []));
 
         positionFrequencyDto.GridId.ShouldBe(gridId);
         positionFrequencyDto.MapId.ShouldBe(mapId);
+    }
+
+    [TestMethod]
+    public async Task GetWifiSignalStrength_ValidData_ReturnsSignalStrengthDto()
+    {
+        var gridId = Guid.NewGuid();
+        var mapId = Guid.NewGuid();
+        DateTime? fromDate = DateTime.UtcNow;
+        DateTime? toDate = DateTime.UtcNow;
+
+        var wifiSignalStrength = new ScalarHeatmap(gridId, mapId, new List<ICollection<float>>());
+
+        var fixture = new GridControllerTestFixture()
+            .WithScalarHeatmap(wifiSignalStrength)
+            .Build();
+
+        var signalStrengthDto = await fixture.GetControllerResultValueAsync(c => c.GetWifiSignalStrength(gridId, mapId, fromDate, toDate, []));
+
+        signalStrengthDto.GridId.ShouldBe(gridId);
+        signalStrengthDto.MapId.ShouldBe(mapId);
     }
 }

@@ -34,6 +34,7 @@ public class StatisticsDbContext : DbContext
         modelBuilder.ApplyConfiguration(new AgvFieldViolationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new GridEntityConfiguration());
         modelBuilder.ApplyConfiguration(new MapAgvPositionsEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvWifiMetricsEntityConfiguration());
     }
 
     /// <summary>

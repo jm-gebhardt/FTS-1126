@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 /// An event reporting the current position of an AGV.
 /// </summary>
 [PublicAPI]
-public record AgvPositionReceived : CorrelatedBy<Guid>, IAgv, IMessageCreatedDate
+public record AgvPositionReceived : CorrelatedBy<Guid>, IAgvSerialNumber, IMessageCreatedDate, IWithAgvPosition
 {
     /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; }

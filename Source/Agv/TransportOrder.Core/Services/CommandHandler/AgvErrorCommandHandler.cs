@@ -24,7 +24,7 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
     private readonly IMetricCollectionService _metricCollector;
 
     /// <inheritdoc cref="AgvErrorCommandHandler"/>>
-    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger, IMetricCollectionService metricCollector )
+    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger, IMetricCollectionService metricCollector)
     {
         _agvDb = agvDb;
         _logger = logger;
@@ -38,7 +38,7 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
     {
         (var correlationId, List<AgvError>? errors, var position) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-        
+
         IList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
         List<AgvError> newErrors = errors.Where(e => !activeErrors.Any(e.IsSameError)).ToList();
         LogErrors(newErrors, agv);
@@ -103,7 +103,7 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
 
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Information))
         {
-            _logger.LogAgvInformation(LogCodes.AgvInformation, agv.CorrelationId,"AGV Information",
+            _logger.LogAgvInformation(LogCodes.AgvInformation, agv.CorrelationId, "AGV Information",
                 $"AGV {agv.SerialNumber} sent information {agvError.ErrorDescription}",
                 new Dictionary<string, object?>
                 {

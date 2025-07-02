@@ -45,6 +45,11 @@ public class StateParser(ILogger logger, IMapper mapper)
     public List<AgvError>? AgvErrors { get; private set; }
 
     /// <summary>
+    /// The Wi-Fi metrics of the agv.
+    /// </summary>
+    public WifiMetrics? WifiMetrics { get; private set; }
+
+    /// <summary>
     /// Parse the <see cref="MqttState"/>.
     /// </summary>
     /// <param name="state">The state.</param>
@@ -57,6 +62,7 @@ public class StateParser(ILogger logger, IMapper mapper)
         GetErrors(state);
         GetInformation(state);
         ConvertFieldViolationToWarning(state);
+        GetWifiMetrics(state);
     }
 
     private void GetSerialNumber(MqttState state)
@@ -196,7 +202,7 @@ public class StateParser(ILogger logger, IMapper mapper)
             state.AgvPosition.X,
             state.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
             0f,
-            (float)Mathematics.ConvertToRadians(90.0f) - state.AgvPosition.Theta, // Special treatment for Karis AGV. 90° in our System (AGV facing right) is 0° in our world
+            (float) Mathematics.ConvertToRadians(90.0f) - state.AgvPosition.Theta, // Special treatment for Karis AGV. 90° in our System (AGV facing right) is 0° in our world
             state.AgvPosition.DeviationRange
         );
     }
@@ -266,5 +272,10 @@ public class StateParser(ILogger logger, IMapper mapper)
             return;
         }
         AgvErrors.Add(fieldViolationWarning);
+    }
+
+    private void GetWifiMetrics(MqttState state)
+    {
+        WifiMetrics = mapper.Map<WifiMetrics>(state.WifiState, opts => { opts.Items[nameof(WifiMetrics.Timestamp)] = state.Timestamp.DateTime; });
     }
 }

@@ -21,6 +21,6 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
             .HasForeignKey(e => e.PositionId)
             .OnDelete(DeleteBehavior.NoAction); // 
         builder.Navigation(e => e.Position).AutoInclude();
-        builder.ConfigureAllProperties(except: new[] { nameof(AgvError.Position), nameof(AgvError.ErrorCode), nameof(AgvError.ErrorType) });
+        builder.ConfigureAllProperties(except: [nameof(AgvError.Position), nameof(AgvError.ErrorCode), nameof(AgvError.ErrorType)]);
     }
 }

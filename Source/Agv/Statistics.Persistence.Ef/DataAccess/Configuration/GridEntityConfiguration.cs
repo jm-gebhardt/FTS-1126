@@ -23,6 +23,6 @@ public class GridEntityConfiguration : IEntityTypeConfiguration<Grid>
             .WithOne(agp => agp.Grid)
             .HasForeignKey(agp => agp.GridId);
         
-        builder.ConfigureAllProperties(except: new[] { nameof(Grid.AgvGridPositions), nameof(Grid.Maps), nameof(Grid.GridName) });
+        builder.ConfigureAllProperties(except: [nameof(Grid.AgvGridPositions), nameof(Grid.Maps), nameof(Grid.GridName)]);
     }
 }

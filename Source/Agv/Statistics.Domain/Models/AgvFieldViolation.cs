@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents an agv field violation on a grid.
 /// </summary>
-public class AgvFieldViolation
+public class AgvFieldViolation : IPositionedEntity
 {
     /// <summary>
     /// The id of the violation.
@@ -15,14 +15,10 @@ public class AgvFieldViolation
     /// </summary>
     public Guid PositionId { get; init; }
 
-    /// <summary>
-    /// The agv grid position object.
-    /// </summary>
+    /// <inheritdoc />
     public GridAgvPosition? Position { get; init; }
 
-    /// <summary>
-    /// The time the error was received.
-    /// </summary>
+    /// <inheritdoc />
     public DateTime Timestamp { get; init; }
 
     /// <inheritdoc cref="AgvFieldViolation"/>>.
