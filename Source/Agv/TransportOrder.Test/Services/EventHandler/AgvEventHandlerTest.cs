@@ -30,7 +30,7 @@ public class AgvEventHandlerTest
         var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
 
         await fixture.PublishMessageAsync(agvNeedsCharging);
-        
+
         await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<CreateChargingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
@@ -91,7 +91,7 @@ public class AgvEventHandlerTest
         var agvBecameIdle = new AgvBecameIdle(agv.CorrelationId);
 
         await fixture.PublishMessageAsync(agvBecameIdle);
-        
+
         await fixture.ShouldHavePublishedAsync<TryStartNewActionGroup>();
     }
 
@@ -170,7 +170,7 @@ public class AgvEventHandlerTest
         var fixture = new AgvEventHandlerTestFixture();
 
         await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus(), AgvEventHandlerTestFixture.AgvSettingsMessage)));
-        
+
         await fixture.ShouldHavePublishedAsync<AgvNeedsCharging>();
         await fixture.ShouldNotHavePublishedAsync<ChargingAgvCanHandleActionsAgain>();
         await fixture.ShouldNotHavePublishedAsync<AbortChargeAction>();
@@ -184,9 +184,24 @@ public class AgvEventHandlerTest
         const double oldCharge = AgvEventHandlerTestFixture.MaxChargeUp - 1;
         const double newCharge = AgvEventHandlerTestFixture.MaxChargeUp;
         await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus { BatteryCharge = newCharge }, AgvEventHandlerTestFixture.AgvSettingsMessage)));
-        
+
         await fixture.ShouldHavePublishedAsync<AbortChargeAction>();
         await fixture.ShouldNotHavePublishedAsync<ChargingAgvCanHandleActionsAgain>();
+        await fixture.ShouldNotHavePublishedAsync<AgvNeedsCharging>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvBatteryChargeChanged_MinChargeUpReachedStillCharging_Publish_AgvBatteryChargedToMinimum()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+
+        const double oldCharge = AgvEventHandlerTestFixture.MinChargeUp - 1;
+        const double newCharge = AgvEventHandlerTestFixture.MinChargeUp;
+        await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus { BatteryCharge = newCharge }, AgvEventHandlerTestFixture.AgvSettingsMessage)));
+
+        await fixture.ShouldNotHavePublishedAsync<AbortChargeAction>();
+        await fixture.ShouldHavePublishedAsync<ChargingAgvCanHandleActionsAgain>();
+        await fixture.ShouldHavePublishedAsync<AgvBatteryChargedToMinimum>();
         await fixture.ShouldNotHavePublishedAsync<AgvNeedsCharging>();
     }
 
@@ -197,7 +212,7 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
         await fixture.PublishMessageAsync(new AgvBatteryChargeChanged(oldCharge, new AgvBatteryStatus(new AgvStatus { BatteryCharge = newCharge }, AgvEventHandlerTestFixture.AgvSettingsMessage)));
-        
+
         await fixture.ShouldHavePublishedAsync<ChargingAgvCanHandleActionsAgain>();
         await fixture.ShouldNotHavePublishedAsync<AgvNeedsCharging>();
     }
@@ -316,8 +331,8 @@ public class AgvEventHandlerTest
     {
         var mode = new AgvMode(ModeType.Normal);
         mode.PrepareSwitch(ModeType.Maintenance, currentActionPolicy: policy);
-        var agv = AgvGenerator.GenerateIdleAgv(mode:mode);
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:agv.CorrelationId);
+        var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], []);
         var fixture = new AgvEventHandlerTestFixture()
             .WithActionGroups([actionGroup]);
@@ -372,5 +387,122 @@ public class AgvEventHandlerTest
 
         await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
         await fixture.ShouldHavePublishedAsync<SwitchMode>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CriticalAgvHasNoCharger_ChargerAvailable_PublishesChargingNodeSelectedForAgv()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithReservedCharger("charger");
+        fixture.AddAgv(agv);
+
+        await fixture.PublishMessageAsync(new CriticalAgvHasNoCharger(agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CriticalAgvHasNoCharger_NoChargerNoAgvWithMinBatteryLevel_DoesNotPublish()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithReservedCharger(null)
+            .WithMinBatteryAgvs([]);
+        fixture.AddAgv(agv);
+
+        await fixture.PublishMessageAsync(new CriticalAgvHasNoCharger(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CriticalAgvHasNoCharger_NoChargerAgvWithMinBatteryLevel_PublishesSwitchChargingAgvs()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        var highestChargingAgv = AgvGenerator.GenerateChargingAgv(2, batteryCharge: 85);
+        var lowerChargingAgv = AgvGenerator.GenerateChargingAgv(1, batteryCharge: 55);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithReservedCharger(null)
+            .WithMinBatteryAgvs([lowerChargingAgv, highestChargingAgv]);
+        fixture.AddAgv(agv);
+
+        var switchChargingAgvs = await fixture.PublishAndGetFirstMessageAsync<CriticalAgvHasNoCharger, SwitchChargingAgvs>(new CriticalAgvHasNoCharger(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
+        switchChargingAgvs.CorrelationId.ShouldBe(highestChargingAgv.CorrelationId);
+        switchChargingAgvs.NonChargingAgv.ShouldBe(agv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvBatteryChargedToMinimum_NoAgvWithCriticalBatteryLevel_DoesNotPublish()
+    {
+        var fixture = new AgvEventHandlerTestFixture();
+
+        await fixture.PublishMessageAsync(new AgvBatteryChargedToMinimum(Guid.NewGuid()));
+
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvBatteryChargedToMinimum_AgvWithCriticalBatteryLevel_PublishesSwitchChargingAgvs()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 65);
+        var fixture = new AgvEventHandlerTestFixture();
+        fixture.AddAgv(agv);
+
+        await fixture.PublishMessageAsync(new AgvBatteryChargedToMinimum(agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<SwitchChargingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchChargingAgvsFailed_OtherCandidatesAvailable_PublishesSwitchChargingAgvs()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        var highestChargingAgv = AgvGenerator.GenerateChargingAgv(2, batteryCharge: 85);
+        var lowerChargingAgv = AgvGenerator.GenerateChargingAgv(1, batteryCharge: 55);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithReservedCharger(null)
+            .WithMinBatteryAgvs([lowerChargingAgv, highestChargingAgv]);
+        fixture.AddAgv(agv);
+
+        var switchChargingAgvs = await fixture.PublishAndGetFirstMessageAsync<SwitchChargingAgvsFailed, SwitchChargingAgvs>(new SwitchChargingAgvsFailed(agv.CorrelationId, highestChargingAgv.CorrelationId, 0));
+
+        switchChargingAgvs.CorrelationId.ShouldBe(lowerChargingAgv.CorrelationId);
+        switchChargingAgvs.NonChargingAgv.ShouldBe(agv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchChargingAgvsFailed_NoOtherCandidatesAvailable_DoesNotPublishSwitchChargingAgvs()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        var highestChargingAgv = AgvGenerator.GenerateChargingAgv(2, batteryCharge: 85);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithReservedCharger(null)
+            .WithMinBatteryAgvs([highestChargingAgv]);
+        fixture.AddAgv(agv);
+
+        await fixture.PublishMessageAsync(new SwitchChargingAgvsFailed(agv.CorrelationId, highestChargingAgv.CorrelationId, 0));
+
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvs>();
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchChargingAgvsFailed_ChargerAvailable_PublishesChargingNodeSelectedForAgv()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
+        var highestChargingAgv = AgvGenerator.GenerateChargingAgv(2, batteryCharge: 85);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithReservedCharger("charger")
+            .WithMinBatteryAgvs([highestChargingAgv]);
+        fixture.AddAgv(agv);
+
+        await fixture.PublishMessageAsync(new SwitchChargingAgvsFailed(agv.CorrelationId, highestChargingAgv.CorrelationId, 0));
+
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvs>();
+        await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
     }
 }

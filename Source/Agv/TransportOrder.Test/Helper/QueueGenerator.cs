@@ -35,7 +35,7 @@ public static class QueueGenerator
     {
         if (nodeStates != null && size == null)
         {
-            size = nodeStates.Count;
+            size = nodeStates.Count(n => n.NodeState != NodeLockState.Free);
         }
         var mapper = MappingHelper.GetMapper(new GraphProfile());
         var queue = new Queue(name)

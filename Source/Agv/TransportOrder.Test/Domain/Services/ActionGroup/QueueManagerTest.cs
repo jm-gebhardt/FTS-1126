@@ -299,4 +299,55 @@ public class QueueManagerTest
 
         (await fixture.QueueManager.IsOnAQueueNode(agv)).ShouldBe(expectedResult);
     }
+
+    [TestMethod]
+    public async Task TrySwapAgv_ValidData_ReturnsAgvsToMove()
+    {
+        var queue = QueueGenerator.GenerateFullQueue(nodes: 3);
+        var node = queue.Nodes.Single(n => n.Position == 1);
+        var agv = Guid.Parse(node.OccupiedAgv!.Value.ToString());
+        var agvToMove = queue.Nodes.Single(n => n.Position > node.Position).GetCurrentAgv()!.Value;
+        var fixture = new QueueManagerTestFixture()
+            .WithQueue(queue);
+        var agvInQueue = AgvGenerator.GenerateRawAgv(agv, "serial number");
+        agvInQueue.IsQueueing = true;
+        (Dictionary<Guid, string>? agvsToMove, string? entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(agvInQueue, AgvGenerator.GenerateIdleAgv());
+
+        agvsToMove.ShouldNotBeEmpty();
+        agvsToMove[agvToMove].ShouldBe(node.NodeId);
+        fixture.VerifyQueueWasUpdated();
+        node.ReservedAgv.ShouldBe(agvToMove);
+        queue.Agvs.ShouldNotContain(agv);
+        swapped.ShouldBeTrue();
+        entryNode.ShouldBe(queue.EntryNode);
+    }
+
+    [TestMethod]
+    public async Task TrySwapAgv_AgvNotInsideQueue_DifferentQueueAvailable_ReturnsEntryNode()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        var fixture = new QueueManagerTestFixture()
+            .WithQueues([queue])
+            .WithQueue(null)
+            .WithAgv(agv);
+        (Dictionary<Guid, string>? agvsToMove, string? entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(AgvGenerator.GenerateIdleAgv(), agv);
+
+        agvsToMove.ShouldBeNull();
+        swapped.ShouldBeTrue();
+        entryNode.ShouldBe(queue.EntryNode);
+    }
+
+    [TestMethod]
+    public async Task TrySwapAgv_AgvNotInsideQueue_NoDifferentQueueAvailable_ReturnsNotSwapped()
+    {
+        var fixture = new QueueManagerTestFixture()
+            .WithQueues([])
+            .WithQueue(null);
+        (Dictionary<Guid, string>? agvsToMove, string? entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(AgvGenerator.GenerateIdleAgv(), AgvGenerator.GenerateIdleAgv());
+
+        agvsToMove.ShouldBeNull();
+        swapped.ShouldBeFalse();
+        entryNode.ShouldBeNull();
+    }
 }

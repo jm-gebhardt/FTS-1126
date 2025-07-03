@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Node;
@@ -26,7 +27,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override string Description => "Charging";
 
     /// <inheritdoc />
-    public async Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv, string? startNodeId = null)
+    public async Task<GraphNode> ReserveChargerAsync(Agv agv, string? startNodeId = null)
     {
         try
         {
@@ -42,7 +43,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.IsCharger();
 
     /// <inheritdoc />
-    public async Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv, string? startNodeId = null)
+    public async Task<GraphNode?> GetBestChargerAsync(Agv agv, string? startNodeId = null)
     {
         try
         {
@@ -69,7 +70,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsOnAChargingNodeAsync(Models.Agv.Agv agv)
+    public async Task<bool> IsOnAChargingNodeAsync(Agv agv)
     {
         return await IsAgvOnSuchANode(agv);
     }

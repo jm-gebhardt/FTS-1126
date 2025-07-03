@@ -63,6 +63,13 @@ public interface IQueueManager
     Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode);
 
     /// <summary>
+    /// Tries to find the best queue for an agv by also respecting the possibility of swapping out another agv and updates the queue if necessary.
+    /// </summary>
+    /// <param name="agvInside">The agv already in the queue.</param>
+    /// <param name="agvOutside">The agv currently outside the queue.</param>
+    Task<(Dictionary<Guid, string>? agvsToMove, string? queueEntry, bool swapped)> TrySwapAgv(Agv agvInside, Agv agvOutside);
+
+    /// <summary>
     /// Gets all the action groups that are internal to the queue that the agv might be in.
     /// </summary>
     /// <param name="agv">The agv to check.</param>

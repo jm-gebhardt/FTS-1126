@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Linq.Expressions;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
@@ -58,6 +59,15 @@ public class QueueManagerTestFixture: FixtureBase
     {
         _queueRepository.Setup(x => x.GetOccupiedQueues()).ReturnsAsync(queues);
         _queueRepository.Setup(x => x.GetQueuesWithCapacity()).ReturnsAsync(queues);
+        var queue = queues.FirstOrDefault();
+        if (queue != null)
+        {
+            _graphRepository.Setup(x => x.GetNodesByIdsAsync(It.IsAny<ICollection<string>>())).ReturnsAsync(queue.Nodes.Select(n => new GraphNode(n.NodeId)).ToList());
+            _routeService.Setup(x => x.GetNodeWithLowestCostsAsync(It.IsAny<Agv>(),
+                    It.IsAny<IList<GraphNode>>(),
+                    It.IsAny<AgvData?>(), It.IsAny<string?>()))
+                .ReturnsAsync(new GraphNode(queue.EntryNode!));
+        }
         return this;
     }
 

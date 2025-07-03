@@ -105,6 +105,11 @@ public interface IAgvRepository
     Task<ICollection<Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync();
 
     /// <summary>
+    /// Get all agvs with critical battery level that are not currently charging.
+    /// </summary>
+    public Task<ICollection<Models.Agv.Agv>> GetNotChargingAgvsWithCriticalBatteryLevel();
+
+    /// <summary>
     /// Get the last node id of the agv with the given correlation id.
     /// </summary>
     /// <param name="agvCorrelationId">The AgvCorrelationId</param>
@@ -122,4 +127,10 @@ public interface IAgvRepository
     /// True, if there are online agvs.
     /// </summary>
     Task<bool> HasOnlineAgvs();
+
+    /// <summary>
+    /// Gets all the agvs currently charging with min charge level.
+    /// </summary>
+    /// <returns>Charging agvs with at least minimum charge up level.</returns>
+    Task<ICollection<Models.Agv.Agv>> GetChargingAgvsWithAtLeastMinChargeUpLevel();
 }

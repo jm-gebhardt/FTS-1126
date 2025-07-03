@@ -99,6 +99,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<ReceiveAgvZones, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveAgvFromZones, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveAgvFromZone, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<SwitchChargingAgvs, AgvCommandHandler>(c);
         });
 
         busRegistrationConfigurator.AddConsumer<ZoneCommandHandler>(c =>

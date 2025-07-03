@@ -56,10 +56,11 @@ public abstract class BaseNodePicker
     /// <param name="agv"></param>
     /// <param name="agvData"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
-    /// <returns></returns>
-    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv, AgvData? agvData, string? startNodeId = null)
+    /// <param name="ignoredNodeIds">Node ids to ignore.</param>
+    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv, AgvData? agvData, string? startNodeId = null, params string[] ignoredNodeIds)
     {
-        IEnumerable<GraphNode> availableNodes = await GetAvailableNodes(agv);
+        IEnumerable<GraphNode> availableNodes = (await GetAvailableNodes(agv)).Where(n => !ignoredNodeIds.Contains(n.Id));
+
         var node = await SelectBestNode(availableNodes, agv, agvData, startNodeId);
 
         return node;

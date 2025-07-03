@@ -91,6 +91,7 @@ public class QueueTest
         tail.Position.ShouldBe(queue.Nodes.OrderBy(n => n.Position).First().Position);
         var agv = Guid.NewGuid();
 
+        queue.TryEnterQueue();
         queue.TryEnqueue(agv, out string? targetNode).ShouldBeTrue();
 
         targetNode.ShouldBe(tail.NodeId);
@@ -403,5 +404,30 @@ public class QueueTest
         queue.ReachNode(downstreamNode!, agvThatDidNotReachNodeYet);
         queue.Nodes.Single(n => n.NodeId == downstreamNode).OccupiedAgv.ShouldBe(agvThatDidNotReachNodeYet);
         queue.Nodes.Single(n => n.NodeId == downstreamNode).ReservedAgv.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void TrySwapAgv_AgvNotInQueue_NoAgvsToMove()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue();
+
+        queue.TrySwapAgv(Guid.NewGuid(), out Dictionary<Guid, string> agvsToMove);
+
+        agvsToMove.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public void TrySwapAgv_ValidData_FillQuantityUnchanged()
+    {
+        var queue = QueueGenerator.GenerateFullQueue(nodes:3);
+        var node = queue.Nodes.Single(n => n.Position == 1);
+        var agv = Guid.Parse(node.OccupiedAgv!.Value.ToString());
+
+        queue.TrySwapAgv(agv, out Dictionary<Guid, string> agvsToMove);
+
+        agvsToMove.ShouldNotBeEmpty();
+        agvsToMove.Count.ShouldBe(1);
+        queue.IsFull.ShouldBeTrue();
+        queue.Agvs.ShouldNotContain(agv);
     }
 }

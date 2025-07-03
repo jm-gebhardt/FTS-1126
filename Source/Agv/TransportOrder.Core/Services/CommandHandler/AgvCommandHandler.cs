@@ -21,6 +21,7 @@ using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using System.Collections.ObjectModel;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
@@ -82,7 +83,8 @@ public class AgvCommandHandler :
     IConsumer<ReceiveAgvZones>,
     IConsumer<RemoveAgvFromZones>,
     IConsumer<RemoveAgvFromZone>,
-    IConsumer<LeaveQueue>
+    IConsumer<LeaveQueue>,
+    IConsumer<SwitchChargingAgvs>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -182,10 +184,19 @@ public class AgvCommandHandler :
         }
 
         var reservedChargingNode = await _chargingPointManager.GetReservedChargerForAgvAsync(agvCorrelationId);
-        string nodeIdToPublish = reservedChargingNode?.NodeId ?? (await _chargingPointManager.ReserveChargerAsync(agv)).Id;
-
-        await PublishNodeStateChange(context, nodeIdToPublish);
-        await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, nodeIdToPublish, initiator));
+        try
+        {
+            string nodeIdToPublish = reservedChargingNode?.NodeId ?? (await _chargingPointManager.ReserveChargerAsync(agv)).Id;
+            await PublishNodeStateChange(context, nodeIdToPublish);
+            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, nodeIdToPublish, initiator));
+        }
+        catch (NoChargeStationAvailableException)
+        {
+            if (agvMustCharge)
+            {
+                await context.Publish(new CriticalAgvHasNoCharger(agv.CorrelationId));
+            }
+        }
     }
 
     /// <summary>
@@ -210,7 +221,7 @@ public class AgvCommandHandler :
             return;
         }
 
-        bool hasParkers = await  _parkPointService.HasParkersAsync(agvCorrelationId);
+        bool hasParkers = await _parkPointService.HasParkersAsync(agvCorrelationId);
         if (hasParkers && (await _parkPointService.IsOnAParkNodeAsync(agv) || await _parkPointService.AgvHasReservedParkingNodeAsync(agvCorrelationId)))
         {
             _logger.LogDebug("No need for a park action because the agv is already in parking for agvId: {AgvCorrelationId}", agvCorrelationId);
@@ -1196,7 +1207,7 @@ public class AgvCommandHandler :
         {
             return;
         }
-        
+
         await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         await context.Publish(new AgvZonesChanged(agv.CorrelationId, agv.AgvStatus?.ZoneIds ?? []));
@@ -1472,5 +1483,155 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
         agv.IsQueueing = false;
         await _agvDb.Agvs.UpdateAgvAsync(agv);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SwitchChargingAgvs"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SwitchChargingAgvs> context)
+    {
+        var (nonChargingAgvId, chargingAgvId) = context.Message;
+
+        var nonChargingAgv = await _agvDb.Agvs.GetAgvAsync(nonChargingAgvId);
+        var chargingAgv = await _agvDb.Agvs.GetAgvAsync(chargingAgvId);
+
+        _logger.LogInformation("Try switching charging agv {AgvCorrelationId} with non-charging agv {NonChargingAgvCorrelationId}", chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
+        
+        ICollection<NodeLock> nodeLocks = await _nodeStateRepository.GetNodeLocksForAgv(chargingAgvId);
+        string? chargingNode = nodeLocks.FirstOrDefault(n => n.IsOccupiedByAgv(chargingAgvId))?.NodeId ?? chargingAgv.AgvStatus?.LastNodeId;
+
+        if (chargingNode == null)
+        {
+            _logger.LogError("{Command}: Could not find charger for switching {ChargingAgv} with {NonChargingAgv}", nameof(SwitchChargingAgvs), chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
+            await context.Publish(new SwitchChargingAgvsFailed(nonChargingAgvId, chargingAgvId));
+            return;
+        }
+
+        bool foundQueueToEnter = false;
+
+        await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            foundQueueToEnter = await TrySwapAgvsInQueue(context, nonChargingAgv, chargingAgv);
+            if (foundQueueToEnter)
+            {
+                chargingAgv.IsQueueing = true;
+                await _agvDb.Agvs.UpdateAgvAsync(chargingAgv);
+            }
+        });
+
+        if (foundQueueToEnter)
+        {
+            await TakeOverCharger(context, chargingNode, nonChargingAgv, chargingAgv, nonChargingAgvId);
+            return;
+        }
+           
+        if(!await TryParking(context, chargingAgv, nonChargingAgv))
+        {
+            string? fallbackSwitchPosition = nonChargingAgv.AgvStatus?.LastNodeId;
+
+            if (fallbackSwitchPosition == null)
+            {
+                _logger.LogError("{Command}: Cannot use fallback of LastNodeId to switch out {ChargingAgv} with {NonChargingAgv}", nameof(SwitchChargingAgvs), chargingAgv, nonChargingAgv);
+                await context.Publish(new SwitchChargingAgvsFailed(nonChargingAgvId, chargingAgvId));
+                return;
+            }
+
+            _logger.LogInformation("Using fallback of LastNodeId {LastNodeId} to switch out {ChargingAgv} with {NonChargingAgv}", fallbackSwitchPosition, chargingAgv, nonChargingAgv);
+
+            var groupCorrelationId = Guid.NewGuid();
+            var actionGroup = new ActionGroup(
+                groupCorrelationId,
+                $"Move agv {chargingAgv.SerialNumber}",
+                actions: new List<Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, fallbackSwitchPosition, groupCorrelationId) },
+                assignedAgv: chargingAgv.CorrelationId,
+                creator: ActionGroupCreator.TransportOrder,
+                hasPriority: true,
+                isQueued: true
+            );
+            await context.Publish(new QueueActionGroup(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
+        }
+
+        await TakeOverCharger(context, chargingNode, nonChargingAgv, chargingAgv, nonChargingAgvId);
+    }
+
+    private async Task TakeOverCharger(IPublishEndpoint context, string chargingNode, Agv nonChargingAgv, Agv chargingAgv, Guid nonChargingAgvId)
+    {
+        if (!await _nodeStateRepository.ForceReserveNodeAsync(chargingNode, nonChargingAgv.CorrelationId))
+        {
+            _logger.LogError("{Command}: Cannot reserve charger {Charger} to switch out {ChargingAgv} with {NonChargingAgv}", nameof(SwitchChargingAgvs), chargingNode, chargingAgv, nonChargingAgv);
+            return;
+        }
+
+        await context.Publish(new ChargingNodeSelectedForAgv(nonChargingAgvId, chargingNode));
+        await PublishNodeStateChange(context, chargingNode);
+        await context.Publish(new AbortChargeAction(chargingAgv.CorrelationId));
+    }
+
+    private async Task<bool> TrySwapAgvsInQueue(IPublishEndpoint context, Agv queuingAgv, Agv agvToQueue)
+    {
+        (Dictionary<Guid, string>? agvsToMove, string? queueEntry,  bool swapped) = await _queueManager.TrySwapAgv(queuingAgv, agvToQueue);
+        if (!swapped || queueEntry == null)
+        {
+            return false;
+        }
+
+        if (agvsToMove == null)
+        {
+            await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToQueue.CorrelationId, queueEntry));
+            return true;
+        }
+
+        ICollection<Guid> actionGroupsToAbort = await _queueManager.GetQueueInternalActionGroups(queuingAgv);
+        await Task.WhenAll(actionGroupsToAbort.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
+  
+        foreach ((var agvToMoveId, string nodeId) in agvsToMove)
+        {
+            var agvToMove = await _agvDb.Agvs.GetAgvAsync(agvToMoveId);
+            if (!agvToMove.IsQueueing)
+            {
+                continue;
+            }
+            _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMoveId, nodeId);
+            await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMoveId, nodeId));
+        }
+        await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToQueue.CorrelationId, queueEntry));
+        return true;
+    }
+
+    private async Task<bool> TryParking(IPublishEndpoint context, Agv chargingAgv, Agv nonChargingAgv)
+    {
+        bool hasParkers = await _parkPointService.HasParkersAsync(chargingAgv.CorrelationId);
+        if (!hasParkers)
+        {
+            _logger.LogInformation("No parking stations defined");
+            return false;
+        }
+
+        if (await _parkPointService.IsOnAParkNodeAsync(nonChargingAgv) || await _parkPointService.AgvHasReservedParkingNodeAsync(nonChargingAgv.CorrelationId))
+        {
+            string? parker = (await _nodeStateRepository.GetNodeLocksForAgv(nonChargingAgv.CorrelationId)).FirstOrDefault()?.NodeId;
+            if (parker != null)
+            {
+                await _nodeStateRepository.ForceReserveNodeAsync(parker, chargingAgv.CorrelationId);
+                _logger.LogInformation("Starting park action to {ParkNode} for agv with CorrelationId: {AgvCorrelationId}", parker, chargingAgv.CorrelationId);
+                await PublishNodeStateChange(context, parker);
+                await context.Publish(new ParkingNodeSelectedForAgv(chargingAgv.CorrelationId, parker));
+                return true;
+            }
+        }
+
+        try
+        {
+            var parkNode = await _parkPointService.ReserveParkAsync(chargingAgv);
+            _logger.LogInformation("Starting park action to {ParkNode} for agv with CorrelationId: {AgvCorrelationId}", parkNode, chargingAgv.CorrelationId);
+            await PublishNodeStateChange(context, parkNode.Id);
+            await context.Publish(new ParkingNodeSelectedForAgv(chargingAgv.CorrelationId, parkNode.Id));
+            return true;
+        }
+        catch (ParkNodeNotAvailableException)
+        {
+            _logger.LogWarning("No parking stations found for agv {AgvCorrelationId}", nonChargingAgv.CorrelationId);
+            return false;
+        }
     }
 }

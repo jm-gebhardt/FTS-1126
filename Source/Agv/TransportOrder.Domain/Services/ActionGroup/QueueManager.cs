@@ -10,7 +10,8 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
 /// <inheritdoc cref="IQueueManager"/>
-public class QueueManager(IAgvDb agvDb,
+public class QueueManager(
+    IAgvDb agvDb,
     IQueueRepository queueRepository,
     IRouteService routeService,
     ILogger<QueueManager> logger,
@@ -34,6 +35,36 @@ public class QueueManager(IAgvDb agvDb,
             logger.LogInformation("Queue {QueueName} selected for entering agv {AgvCorrelationId}", queue.Name, agv.CorrelationId);
             return entryNode;
         });
+    }
+
+    /// <inheritdoc cref="IQueueManager"/>
+    public async Task<(Dictionary<Guid, string>? agvsToMove, string? queueEntry, bool swapped)> TrySwapAgv(Agv agvInside, Agv agvOutside)
+    {
+        var queueOfAgvInside = await queueRepository.GetQueueForAgv(agvInside.CorrelationId);
+        if (queueOfAgvInside != null)
+        {
+            queueOfAgvInside.TrySwapAgv(agvInside.CorrelationId, out Dictionary<Guid, string> agvsToMove);
+            logger.LogInformation("Queue {QueueName} selected for swapping in agv {AgvCorrelationId} with {AgvToSwapOut}", queueOfAgvInside.Name, agvOutside.CorrelationId, agvInside.CorrelationId);
+            await queueRepository.UpdateQueueAsync(queueOfAgvInside);
+            return (agvsToMove, queueOfAgvInside.EntryNode!, true);
+        }
+
+        // Try getting different queue
+        var queue = await GetQueue(agvOutside);
+        if (queue == null)
+        {
+            logger.LogWarning("No queue available for swapping in agv {AgvCorrelationId} with {AgvToSwapOut}", agvOutside.CorrelationId, agvInside.CorrelationId);
+            return (null, null, false);
+        }
+        string? entryNode = queue.TryEnterQueue();
+        if (entryNode != null)
+        {
+            logger.LogInformation("Queue {QueueName} selected for queueing agv {AgvCorrelationId} ", queue.Name, agvOutside.CorrelationId);
+            await queueRepository.UpdateQueueAsync(queue);
+            return (null, entryNode, true);
+        }
+        logger.LogWarning("No entry node available for queue {Queue} for queueing agv {AgvCorrelationId}", queue.Id, agvOutside.CorrelationId);
+        return (null, null, false);
     }
 
     /// <inheritdoc cref="IQueueManager"/>

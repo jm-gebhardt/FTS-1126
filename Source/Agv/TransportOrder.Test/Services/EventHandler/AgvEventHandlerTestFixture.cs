@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -25,6 +27,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     private readonly SemaphoreProvider<IAgvsSemaphore> _agvSemaphoreProvider = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<IChargingPointManager> _chargingPointManager = new();
+
     private readonly Mock<IAgvDb> _agvDb = new();
 
     public const int BatteryLevelCritical = 10;
@@ -55,6 +59,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _nodeStateRepository.Object);
+        collection.AddTransient(_ => _chargingPointManager.Object);
         return this;
     }
 
@@ -69,9 +74,15 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         return this;
     }
 
-    public void AddAgv(TransportOrder.Domain.Models.Agv.Agv agv)
+    public void AddAgv(Agv agv)
     {
-        _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvDb.AddAgvs(new List<Agv> { agv });
+    }
+
+    public AgvEventHandlerTestFixture WithMinBatteryAgvs(ICollection<Agv> agvs)
+    {
+        _agvDb.Setup(x => x.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
+        return this;
     }
 
     public void AddChargeAction(ActionGroup actionGroup = null!, bool existsPriorToTest = true)
@@ -108,6 +119,21 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
         _actionGroupRepository.Setup(x => x.GetPendingActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
 
+        return this;
+    }
+
+    public AgvEventHandlerTestFixture WithReservedCharger(string? charger)
+    {
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(),
+                It.IsAny<string?>()))
+            .ReturnsAsync((Agv _, string? _) =>
+            {
+                if (charger == null)
+                {
+                    throw new NoChargeStationAvailableException();
+                }
+                return new GraphNode(charger);
+            });
         return this;
     }
 }

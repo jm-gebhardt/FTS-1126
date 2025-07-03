@@ -66,7 +66,7 @@ public interface IQueueRepository
     /// <summary>
     /// Get all queues that are not full.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>All queues that are not full.</returns>
     Task<ICollection<Queue>> GetQueuesWithCapacity();
 
     /// <summary>

@@ -1,7 +1,9 @@
 using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
@@ -15,7 +17,7 @@ public class CargoRepositoryTestFixture : TransportOrderDbFixture
 
     public CargoRepositoryTestFixture()
     {
-        AgvRepository = new AgvRepository(ContextFactory, new InMemoryAgvSettingsProvider());
+        AgvRepository = new AgvRepository(ContextFactory, new InMemoryAgvSettingsProvider(), MappingHelper.GetMapper(new AgvGraphProfile()));
         Repository = new CargoRepository(ContextFactory, AgvRepository, _cargoCache);
     }
 

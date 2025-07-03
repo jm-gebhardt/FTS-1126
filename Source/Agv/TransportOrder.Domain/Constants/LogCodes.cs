@@ -15,6 +15,7 @@ public static class LogCodes
     public const int BatteryFullyCharged = 205;
     public const int BatteryError = 206;
     public const int BatteryWarning = 207;
+    public const int BatteryNeedsChargingAllOccupied = 208;
 
     // Agv 
     public const int AgvDiscovered = 300;

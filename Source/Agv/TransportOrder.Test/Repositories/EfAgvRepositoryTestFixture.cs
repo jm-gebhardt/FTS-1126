@@ -1,24 +1,41 @@
+using AutoMapper;
 using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 public class EfAgvRepositoryTestFixture : TransportOrderDbFixture
 {
+    private readonly IMapper _mapper = MappingHelper.GetMapper(new GraphProfile());
+    
     public AgvRepository Repository { get; }
 
     private readonly IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel> _inMemorySettingsProvider = new InMemoryAgvSettingsProvider();
 
     public EfAgvRepositoryTestFixture()
     {
-        Repository = new AgvRepository(ContextFactory, _inMemorySettingsProvider);
+        Repository = new AgvRepository(ContextFactory, _inMemorySettingsProvider, _mapper);
     }
 
     public async Task Add(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         _inMemorySettingsProvider.Add(agv.AgvSettingsGroup, EfAgvSettingsProvider.DefaultSettings);
         await Repository.AddAgvAsync(agv);
+    }
+
+    public async Task AddChargingAgv(TransportOrder.Domain.Models.Agv.Agv agv)
+    {
+        await Add(agv);
+        var node = _mapper.Map<EfNode>(new GraphNode(agv.SerialNumber) { Type = AgvGraph.NodeType.Charge});
+        await AddAsync(node);
+        var nodeLock = new NodeLock(node.Id, NodeLockState.Occupied, false, agv.CorrelationId, DateTime.UtcNow);
+        await AddAsync(nodeLock);
     }
 }

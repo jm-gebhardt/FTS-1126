@@ -1,13 +1,17 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
@@ -40,11 +44,15 @@ public class AgvEventHandler :
     IConsumer<QueueNodeSelectedForAgv>,
     IConsumer<ChargingNodeSelectedForAgv>,
     IConsumer<AgvModeChangePending>,
-    IConsumer<AgvZonesReceived>
+    IConsumer<AgvZonesReceived>,
+    IConsumer<CriticalAgvHasNoCharger>,
+    IConsumer<AgvBatteryChargedToMinimum>,
+    IConsumer<SwitchChargingAgvsFailed>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _semaphoreProvider;
+    private readonly IChargingPointManager _chargingPointManager;
     private readonly IAgvDb _agvDb;
 
     /// <inheritdoc cref="AgvEventHandler"/>
@@ -52,11 +60,13 @@ public class AgvEventHandler :
         IActionGroupRepository actionGroupRepository,
         ISemaphoreProvider<IAgvsSemaphore> semaphoreProvider,
         IAgvDb agvDb,
+        IChargingPointManager chargingPointManager,
         ILogger<AgvEventHandler> logger)
     {
         _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
         _agvDb = agvDb;
+        _chargingPointManager = chargingPointManager;
         _logger = logger;
     }
 
@@ -184,6 +194,11 @@ public class AgvEventHandler :
         if (!wasMinChargedUp && isMinChargedUp)
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached min charge up level and can handle actions again", agvCorrelationId);
+            
+            if (isCharging)
+            {
+                await context.Publish(new AgvBatteryChargedToMinimum(agvCorrelationId));
+            }
             await context.Publish(new ChargingAgvCanHandleActionsAgain(agvCorrelationId));
         }
 
@@ -337,5 +352,81 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvZonesReceived> context)
     {
         await context.Publish(new ReceiveAgvZones(context.Message.CorrelationId, context.Message.SerialNumber, context.Message.AgvZones));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CriticalAgvHasNoCharger"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CriticalAgvHasNoCharger> context)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        try
+        {
+            var charger = await _chargingPointManager.ReserveChargerAsync(agv);
+            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, charger.Id));
+        }
+        catch(NoChargeStationAvailableException)
+        {
+            ICollection<Agv> candidatesToStopCharging = await _agvDb.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel();
+
+            if (candidatesToStopCharging.Count == 0)
+            {
+                _logger.LogBatteryWarning(LogCodes.BatteryNeedsChargingAllOccupied, agv.CorrelationId, null, "Agv cannot charge", $"Agv {agv.CorrelationId} needs charging but no chargers are available and no charging agv has at least min charge level");
+                return;
+            }
+
+            var highestChargingAgv = candidatesToStopCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? 0).Last();
+
+            await context.Publish(new SwitchChargingAgvs(agv.CorrelationId, highestChargingAgv.CorrelationId));
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvBatteryChargedToMinimum"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvBatteryChargedToMinimum> context)
+    {
+        ICollection<Agv> candidatesToStartCharging = await _agvDb.Agvs.GetNotChargingAgvsWithCriticalBatteryLevel();
+
+        if (candidatesToStartCharging.Count == 0)
+        {
+            return;
+        }
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+
+        var agvToStartCharging = candidatesToStartCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? double.MaxValue).First();
+
+        await context.Publish(new SwitchChargingAgvs(agvToStartCharging.CorrelationId, agv.CorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SwitchChargingAgvsFailed"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SwitchChargingAgvsFailed> context)
+    {
+        (var agvWithCriticalBatteryLevel, var chargingAgv, double retryDelaySec) = context.Message;
+
+        await Task.Delay(TimeSpan.FromSeconds(retryDelaySec));
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvWithCriticalBatteryLevel);
+        try
+        {
+            var charger = await _chargingPointManager.ReserveChargerAsync(agv);
+            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, charger.Id));
+        }
+        catch (NoChargeStationAvailableException)
+        {
+            ICollection<Agv> candidatesToStopCharging = (await _agvDb.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel()).Where(c => c.CorrelationId != chargingAgv).ToList();
+
+            if (candidatesToStopCharging.Count == 0)
+            {
+                _logger.LogBatteryWarning(LogCodes.BatteryNeedsChargingAllOccupied, agvWithCriticalBatteryLevel, null, "Agv cannot charge", $"Agv {agvWithCriticalBatteryLevel} needs charging but no chargers are available and no charging agv has at least min charge level");
+                return;
+            }
+
+            var highestChargingAgv = candidatesToStopCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? 0).Last();
+
+            await context.Publish(new SwitchChargingAgvs(agvWithCriticalBatteryLevel, highestChargingAgv.CorrelationId));
+        }
     }
 }

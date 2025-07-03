@@ -270,6 +270,29 @@ public class Queue
     }
 
     /// <summary>
+    /// Try swap one agv for another.
+    /// </summary>
+    /// <param name="queueingAgv">The correlation id of the agv that already queues.</param>
+    /// <param name="agvsToMove">The Output: agvs to move one position down</param>
+    public void TrySwapAgv(Guid queueingAgv, out Dictionary<Guid, string> agvsToMove)
+    {
+        agvsToMove = new Dictionary<Guid, string>();
+        var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == queueingAgv);
+        if (node == null)
+        {
+            return ;
+        }
+        ShiftDown(ref agvsToMove, node.Position);
+        node.RemoveAgv(queueingAgv);
+        //Remove agv from all queue nodes
+        foreach (var reservedNode in Nodes.Where(n => n.GetCurrentAgv() == queueingAgv))
+        {
+            reservedNode.RemoveAgv(queueingAgv);
+        }
+        // Do not update fill size, as another agv is going to replace it
+    }
+
+    /// <summary>
     /// Reach a queue node.
     /// </summary>
     /// <param name="nodeId">The id of the node.</param>
@@ -295,11 +318,8 @@ public class Queue
     public void RemoveAgv(Guid agvCorrelationId)
     {
         var node = Nodes.SingleOrDefault(n => n.AgvIsAssigned(agvCorrelationId));
-        if (node != null) // Agv already enqueued.
-        {
-            node.Free(agvCorrelationId);
-        }
-        
+        node?.Free(agvCorrelationId); // Agv might already be dequeued.
+
         AgvFillQuantity -= 1;
         AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
     }

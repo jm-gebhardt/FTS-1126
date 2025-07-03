@@ -260,4 +260,34 @@ public class AgvEfRepositoryTest
             maintenanceModeAgv.CorrelationId
         ])).ShouldBeEmpty();
     }
+
+    [TestMethod]
+    public async Task GetChargingAgvsWithAtLeastMinChargeUpLevel_ValidData_ReturnsChargingAgvsWithMinBatteryLevel()
+    {
+        var agvLowLevel = AgvGenerator.GenerateChargingAgv(2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        var agvMinLevel = AgvGenerator.GenerateChargingAgv(1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp + 1);
+        var fixture = new EfAgvRepositoryTestFixture();
+        await fixture.AddChargingAgv(agvLowLevel);
+        await fixture.AddChargingAgv(agvMinLevel);
+
+        ICollection<Agv> agvs = await fixture.Repository.GetChargingAgvsWithAtLeastMinChargeUpLevel();
+
+        agvs.ShouldNotBeEmpty();
+        agvs.Single().CorrelationId.ShouldBeEquivalentTo(agvMinLevel.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNotChargingAgvsWithCriticalBatteryLevel_ValidData_ReturnsNotChargingAgvsWithCriticalBatteryLevel()
+    {
+        var agvCriticalLevel = AgvGenerator.GenerateIdleAgv(2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical);
+        var chargingAgv = AgvGenerator.GenerateChargingAgv(1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical);
+        var fixture = new EfAgvRepositoryTestFixture();
+        await fixture.Add(agvCriticalLevel);
+        await fixture.AddChargingAgv(chargingAgv);
+
+        ICollection<Agv> agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevel();
+
+        agvs.ShouldNotBeEmpty();
+        agvs.Single().CorrelationId.ShouldBe(agvCriticalLevel.CorrelationId);
+    }
 }

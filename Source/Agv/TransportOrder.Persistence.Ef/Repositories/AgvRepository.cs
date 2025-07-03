@@ -1,7 +1,12 @@
-﻿using Gebhardt.Acc.Common.Dictionaries;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
@@ -15,14 +20,16 @@ public class AgvRepository : IAgvRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
     private readonly IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel> _agvSettingsProvider;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="AgvRepository"/> instance.
     /// </summary>
-    public AgvRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel> agvSettingsProvider)
+    public AgvRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel> agvSettingsProvider, IMapper mapper)
     {
         _dbContextFactory = dbContextFactory;
         _agvSettingsProvider = agvSettingsProvider;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -32,6 +39,7 @@ public class AgvRepository : IAgvRepository
     {
         _dbContextFactory = dbContextFactory;
         _agvSettingsProvider = null!;
+        _mapper = null!;
     }
 
     private IQueryable<Agv> Agvs =>
@@ -188,6 +196,88 @@ public class AgvRepository : IAgvRepository
                                                                                                g.Actions.Any(a => a.ActionType == ActionType.Charge && a.State == ActionState.Started)) &&
                                                                          agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging && !agv.IsLocked).ToListAsync();
         return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].MinChargeUp).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<Agv>> GetChargingAgvsWithAtLeastMinChargeUpLevel()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // Occupied node locks 
+        var nodeLocks = await context.Set<NodeLock>()
+            .Where(nl => nl.NodeState == NodeLockState.Occupied)
+            .Select(nl => new { nl.NodeId, nl.AgvCorrelationId })
+            .ToListAsync();
+        List<string> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
+
+        // Nodes corresponding to locks to get which are chargers
+        List<EfNode> efNodes = await context.Set<EfNode>()
+            .Where(en => nodeIds.Contains(en.Id))
+            .ToListAsync();
+        var lockedNodes = _mapper.Map<List<GraphNode>>(efNodes);
+
+        HashSet<string> chargerNodeIds = lockedNodes
+            .Where(n => n.IsCharger())
+            .Select(n => n.Id)
+            .ToHashSet();
+        
+        // Charging agvs
+        List<Guid?> chargingAgvIds = nodeLocks
+            .Where(nl => chargerNodeIds.Contains(nl.NodeId))
+            .Select(nl => nl.AgvCorrelationId)
+            .Distinct()
+            .ToList();
+
+        List<Agv> agvs = await context.Set<Agv>()
+            .AsNoTracking()
+            .Where(agv => chargingAgvIds.Contains(agv.CorrelationId))
+            .ToListAsync();
+
+        return agvs
+            .Where(agv => agv.AgvStatus != null &&
+                          agv.AgvStatus.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].MinChargeUp)
+            .ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevel()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // Occupied or reserved node locks 
+        var nodeLocks = await context.Set<NodeLock>()
+            .Where(nl => nl.NodeState == NodeLockState.Occupied || nl.NodeState == NodeLockState.Reserved)
+            .Select(nl => new { nl.NodeId, nl.AgvCorrelationId })
+            .ToListAsync();
+        List<string> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
+
+        // Nodes corresponding to locks to get which are chargers
+        List<EfNode> efNodes = await context.Set<EfNode>()
+            .Where(en => nodeIds.Contains(en.Id))
+            .ToListAsync();
+        var lockedNodes = _mapper.Map<List<GraphNode>>(efNodes);
+
+        HashSet<string> chargerNodeIds = lockedNodes
+            .Where(n => n.IsCharger())
+            .Select(n => n.Id)
+            .ToHashSet();
+
+        // Charging agvs
+        List<Guid?> chargingAgvIds = nodeLocks
+            .Where(nl => chargerNodeIds.Contains(nl.NodeId))
+            .Select(nl => nl.AgvCorrelationId)
+            .Distinct()
+            .ToList();
+
+        List<Agv> agvs = await context.Set<Agv>()
+            .AsNoTracking()
+            .Where(agv => !chargingAgvIds.Contains(agv.CorrelationId))
+            .ToListAsync();
+
+        return agvs
+            .Where(agv => agv.AgvStatus != null &&
+                          agv.AgvStatus.BatteryCharge <= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].BatteryLevelCritical)
+            .ToList();
     }
 
     /// <inheritdoc />
