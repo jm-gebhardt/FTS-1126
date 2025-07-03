@@ -56,6 +56,8 @@ public class ActionProfileTest
         actionDto.CompletedDate.ShouldBe(action.CompletedDate);
         actionDto.TargetNodeType.ShouldBe(action.TargetNodeType);
         actionDto.AdditionalInfo.ShouldBe(action.AdditionalInfo);
+        actionDto.PausedDate.ShouldBe(action.PausedDate);
+        actionDto.PausedDuration.ShouldBe(action.PausedDuration);
     }
 
     [TestMethod]

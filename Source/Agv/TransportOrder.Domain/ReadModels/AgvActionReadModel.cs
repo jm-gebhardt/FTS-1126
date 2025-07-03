@@ -38,7 +38,7 @@ public record AgvActionReadModel(
     DateTime? StartedDate,
     [PublicAPI]DateTime? CompletedDate,
     [PublicAPI]DateTime? PausedDate,
-    TimeSpan PausedDuration,
+    long PausedDuration,
     bool IsSkipped,
     Dictionary<InfoToAgvKey, string>? InfoToAgv = null,
     string? AdditionalInfo = null);

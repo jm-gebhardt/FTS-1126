@@ -90,14 +90,14 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     public string? AdditionalInfo { get; set; }
 
     /// <summary>
-    /// Duration that the action has been paused for.
+    /// Duration that the action has been paused for in seconds
     /// </summary>
-    public TimeSpan PausedDuration { get; set; } = TimeSpan.Zero;
+    public long PausedDuration { get; set; }
 
     /// <summary>
     /// The duration of the action.
     /// </summary>
-    public TimeSpan? Duration => CompletedDate - StartedDate - PausedDuration;
+    public TimeSpan? Duration => CompletedDate - StartedDate - TimeSpan.FromSeconds(PausedDuration);
 
     /// <summary>
     /// Whether this <see cref="AgvAction"/> should be skipped.
@@ -200,7 +200,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         DateTime? completedDate,
         DateTime? pausedDate,
         Dictionary<InfoToAgvKey, string>? infoToAgv,
-        TimeSpan pausedDuration,
+        long pausedDuration,
         bool shouldSkip
     )
     {
@@ -234,7 +234,8 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 
         if (State == ActionState.Paused && PausedDate != null)
         {
-            PausedDuration += (TimeSpan)(DateTime.UtcNow - PausedDate);
+            var pauseTimeSpan = (TimeSpan)(DateTime.UtcNow - PausedDate);
+            PausedDuration += (long)pauseTimeSpan.TotalSeconds;
             PausedDate = null;
         }
 
