@@ -12,7 +12,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 

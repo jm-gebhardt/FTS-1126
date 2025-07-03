@@ -9,7 +9,6 @@ using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 using JetBrains.Annotations;
 using MassTransit;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 

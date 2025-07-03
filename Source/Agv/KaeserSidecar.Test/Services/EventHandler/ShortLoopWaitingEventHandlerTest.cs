@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -27,7 +26,7 @@ public class ShortLoopWaitingEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopWaitingHandler>();
 
-        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.NodeId.IsNullOrEmpty()).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
+        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => string.IsNullOrEmpty(a.Target.NodeId)).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
     }
 
     [TestMethod]
@@ -45,7 +44,7 @@ public class ShortLoopWaitingEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopWaitingHandler>();
 
-        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.NodeId.IsNullOrEmpty()).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
+        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => string.IsNullOrEmpty(a.Target.NodeId)).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
     }
 
     [TestMethod]

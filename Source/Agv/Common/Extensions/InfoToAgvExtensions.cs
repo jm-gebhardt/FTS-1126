@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.Common.Extensions;
 

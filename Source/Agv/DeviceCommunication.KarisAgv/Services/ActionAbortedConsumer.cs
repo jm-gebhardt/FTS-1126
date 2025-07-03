@@ -8,7 +8,6 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 
@@ -36,7 +35,7 @@ public class ActionAbortedConsumer : IConsumer<ActionAborted>
         var (assignedAgv, action) = context.Message;
 
         var agvInformation = await _agvRepository.GetAgv(assignedAgv);
-        if (agvInformation.SerialNumber.IsNullOrEmpty())
+        if (string.IsNullOrEmpty(agvInformation.SerialNumber))
         {
             throw new AssignedAgvNotFoundException(assignedAgv, agvInformation.SerialNumber, action);
         }

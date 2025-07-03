@@ -6,7 +6,6 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.PrismatCommunication.SimulationMode;
 
@@ -68,7 +67,7 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
         ConcurrentDictionary<string, string> triggerPointMapping = kaeserGraphConfiguration.TriggerPointMapping.ConcurrentDict;
         foreach (KeyValuePair<string, string> triggerPoint in triggerPointMapping)
         {
-            if (!triggerPoint.Value.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(triggerPoint.Value))
             {
                 continue;
             }

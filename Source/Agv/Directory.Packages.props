@@ -20,7 +20,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.15" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.15" />
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.5.1" />
-    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.12.1" />
     <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.14.0" />
     <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.14.0" />
     <PackageVersion Include="Quartz" Version="3.14.0" />
