@@ -43,12 +43,20 @@ public class RouteService : IRouteService
 
     private async Task<Route?> GetRouteIfExistingAsync(Agv agv, string destinationNodeId, string? startNodeId = null, bool throwIfNodeUnknown = false, AgvData? agvData = null, CancellationToken cancellationToken = default)
     {
-        startNodeId ??= GetLastNodeId(agv);
+        if (startNodeId == null)
+        {
+            startNodeId = agv.AgvStatus?.LastNodeId;
+            if (startNodeId == null)
+            {
+                _logger.LogWarning("Agv with CorrelationId {CorrelationId} has no last node set, cannot calculate route", agv.CorrelationId);
+                return null;
+            }
+        }
 
         cancellationToken.ThrowIfCancellationRequested();
         if (!await _graphRepository.ExistsAsync(agv.CorrelationId))
         {
-            _logger.LogWarning("AgvGraph for Agv with AgvId {AgvCorrelationId} does not exist. Cannot calculate route.", agv.CorrelationId);
+            _logger.LogWarning("AgvGraph for Agv with AgvId {AgvCorrelationId} does not exist, cannot calculate route", agv.CorrelationId);
             return null;
         }
 
@@ -170,7 +178,18 @@ public class RouteService : IRouteService
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        List<Task<double?>> hasRouteTasks = agvs.Select(agv => GetCostsForFirstActionAsync(agv, actionGroup, null, cts.Token)).ToList();
+        List<Task<double?>> hasRouteTasks = agvs.Select(agv =>
+        {
+            try
+            {
+                return GetCostsForFirstActionAsync(agv, actionGroup, null, cts.Token);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error while calculating route for Agv with CorrelationId {CorrelationId} in HasAnyAgvRouteAsync", agv.CorrelationId);
+                return Task.FromResult<double?>(null);
+            }
+        }).ToList();
 
         while (hasRouteTasks.Count != 0)
         {

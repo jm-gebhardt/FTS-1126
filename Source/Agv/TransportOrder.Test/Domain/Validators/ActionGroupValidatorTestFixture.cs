@@ -33,6 +33,7 @@ public class ActionGroupValidatorTestFixture : FixtureBase
     {
         _agvRepository.Setup(x => x.GetAgvAsync(agv.CorrelationId)).ReturnsAsync(agv);
         _agvRepository.Setup(x => x.GetAllAgvsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvRepository.Setup(x => x.GetAllAgvsWithGraphAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         return this;
     }
 
