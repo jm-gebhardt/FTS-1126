@@ -58,7 +58,7 @@ public interface IGraphRepository
     /// Gets the graph for the given map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
-    /// <returns></returns>
+    /// <returns>Only nodes and edges which are used in any AgvGraph will be returned.</returns>
     Task<IGraph> GetGraphForMap(Guid mapCorrelationId);
 
     /// <summary>
@@ -66,7 +66,7 @@ public interface IGraphRepository
     /// </summary>
     /// <param name="agvGraph">The Agv graph to add or replace</param>
     /// <returns>True if the AgvGraph was added or updated. False if e.g. not all nodes/edges were existing.</returns>
-    Task<bool> AddOrUpdateAgvGraphAsync(AgvGraph agvGraph);
+    Task<(bool AnyRelationsMissing, bool AnyChanges)> AddOrUpdateAgvGraphAsync(AgvGraph agvGraph);
 
     /// <summary>
     /// Remove the graph for the given agv.

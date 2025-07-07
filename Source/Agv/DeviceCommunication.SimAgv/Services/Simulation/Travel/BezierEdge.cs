@@ -23,9 +23,10 @@ public class BezierEdge : SimpleEdge
         controlPolygon.AddRange(VariantParameters.Select(variantParameter => new Vector2((float)variantParameter.X!, (float)variantParameter.Y!)));
         controlPolygon.Add(new Vector2(targetNode.X, targetNode.Y));
         _bezier = new Bezier(controlPolygon);
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
 
         var sourceVector1 = _bezier.DeCasteljau(PositionCloseToSource, out _, out _);
-        ReferenceTarget = new GraphNode("bezier") { X = sourceVector1.X, Y = sourceVector1.Y, Z = SourceNode.Z };
+        ReferenceTarget = new GraphNode("bezier") { X = sourceVector1.X, Y = sourceVector1.Y, Z = SourceNode.Z, TimeStamp = timeStamp };
 
         var targetVector = _bezier.DeCasteljau(PositionCloseToTarget, out _, out _);
         AgvOrientation = agvGoesBackwards ? GetAgvOrientation(sourceVector1, sourceNode.AsVector2()) : GetAgvOrientation(targetVector, targetNode.AsVector2());

@@ -12,8 +12,14 @@ public static class EdgeGenerator
         Guid? id = null,
         double length = 1,
         EdgeType variant = EdgeType.Direct,
-        ICollection<EdgeCoefficient>? variantParameters = null)
+        ICollection<EdgeCoefficient>? variantParameters = null,
+        DateTime timeStamp = default
+        )
     {
+        if (timeStamp == default)
+        {
+            timeStamp = DateTime.UtcNow;
+        }
         return new GraphEdge
         {
             FromNodeId = fromNodeId,
@@ -21,7 +27,8 @@ public static class EdgeGenerator
             Id = id ?? Guid.NewGuid(),
             Length = length,
             Variant = variant,
-            VariantParameters = variantParameters ?? new List<EdgeCoefficient>()
+            VariantParameters = variantParameters ?? new List<EdgeCoefficient>(),
+            TimeStamp = timeStamp
         };
     }
 }

@@ -51,12 +51,12 @@ public static class ExportedEdgeExtension
 
     private static ICollection<GraphEdge> ToDirectEdges(this ExportedEdge edge, float length)
     {
-        var graphEdge = GraphEdge.CreateDirect(edge.StartId, edge.EndId, length, GraphHelper.ToGuid(EdgeType.Direct, edge.StartId, length, edge.EndId));
+        var graphEdge = GraphEdge.CreateDirect(edge.StartId, edge.EndId, length, GraphHelper.ToGuid(EdgeType.Direct, edge.StartId, length, edge.EndId), edge.TimeStamp);
         if (!edge.Bidirectional)
         {
             return [graphEdge];
         }
-        var reverseGraphEdge = GraphEdge.CreateDirect(edge.EndId, edge.StartId, length, GraphHelper.ToGuid(EdgeType.Direct, edge.EndId, length, edge.StartId));
+        var reverseGraphEdge = GraphEdge.CreateDirect(edge.EndId, edge.StartId, length, GraphHelper.ToGuid(EdgeType.Direct, edge.EndId, length, edge.StartId), edge.TimeStamp);
         return [graphEdge, reverseGraphEdge];
     }
 
@@ -65,14 +65,16 @@ public static class ExportedEdgeExtension
         EdgeCoefficient[] edgeCoefficients = edge.ControlPoints.Select(c => c.ToEdgeCoefficient()).ToArray();
         var graphEdge = GraphEdge.CreateBezier5(edge.StartId, edge.EndId, length,
             edgeCoefficients,
-            GraphHelper.ToGuid(EdgeType.Bezier5, edge.StartId, length, edge.EndId));
+            GraphHelper.ToGuid(EdgeType.Bezier5, edge.StartId, length, edge.EndId),
+            edge.TimeStamp);
         if (!edge.Bidirectional)
         {
             return [graphEdge];
         }
         var reverseGraphEdge = GraphEdge.CreateBezier5(edge.EndId, edge.StartId, length,
             edgeCoefficients.Reverse().ToArray(),
-            GraphHelper.ToGuid(EdgeType.Bezier5, edge.EndId, length, edge.StartId));
+            GraphHelper.ToGuid(EdgeType.Bezier5, edge.EndId, length, edge.StartId),
+            edge.TimeStamp);
         return [graphEdge, reverseGraphEdge];
     }
 }

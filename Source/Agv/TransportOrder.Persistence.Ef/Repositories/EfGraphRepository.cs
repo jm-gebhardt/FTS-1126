@@ -162,12 +162,15 @@ public class EfGraphRepository : IGraphRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var map = await context.Set<Map>()
-                .Include(m => m.Nodes)
-                .Include(m => m.Edges)
-                .AsSplitQuery()
-                .AsNoTracking()
-                .SingleOrDefaultAsync(m => m.CorrelationId == mapCorrelationId)
-            ;
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Where(m => m.CorrelationId == mapCorrelationId)
+            // Only include nodes/edges which are attached to at least one AgvGraph
+            .Include(m => m.Nodes
+                .Where(n => n.AgvGraphs.Count > 0))
+            .Include(m => m.Edges
+                .Where(e => e.AgvGraphs.Count > 0))
+            .SingleOrDefaultAsync();
 
         if (map == null)
         {
@@ -184,7 +187,7 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public Task<bool> AddOrUpdateAgvGraphAsync(AgvGraph agvGraph)
+    public Task<(bool AnyRelationsMissing, bool AnyChanges)> AddOrUpdateAgvGraphAsync(AgvGraph agvGraph)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -198,7 +201,7 @@ public class EfGraphRepository : IGraphRepository
                 List<string> missingNodes = efGraph.Nodes.Select(n => n.Id).Except(await context.Set<EfNode>().Select(n => n.Id).ToListAsync()).ToList();
                 _logger.LogWarning("Not all nodes exist yet, so we cannot store the AgvGraph yet. Missing nodes: {MissingNodes}", string.Join(", ", missingNodes));
 
-                return false;
+                return (true, false);
             }
 
             int existingEdgesCount = await context.Set<EfEdge>().CountAsync(edge => efGraph.Edges.Select(e => e.Id).Contains(edge.Id));
@@ -206,13 +209,15 @@ public class EfGraphRepository : IGraphRepository
             {
                 List<Guid> missingEdges = efGraph.Edges.Select(e => e.Id).Except(await context.Set<EfEdge>().Select(e => e.Id).ToListAsync()).ToList();
                 _logger.LogWarning("Not all edges exist yet, so we cannot store the AgvGraph yet. Missing edges: {MissingEdges}", string.Join(", ", missingEdges));
-                return false;
+                return (true, false);
             }
 
             context.AttachRange(efGraph.Nodes);
             context.AttachRange(efGraph.Edges);
 
             var existingGraph = await context.Set<EfAgvGraph>()
+                .Include(g => g.Nodes)
+                .Include(g => g.Edges)
                 .SingleOrDefaultAsync(g => g.CorrelationId == agvGraph.CorrelationId);
 
             if (existingGraph == null)
@@ -221,12 +226,23 @@ public class EfGraphRepository : IGraphRepository
             }
             else
             {
-                // For an existing graph, just overwrite the properties
-                context.Update(existingGraph).CurrentValues.SetValues(efGraph);
+                existingGraph.Usability = efGraph.Usability;
+
+                existingGraph.Nodes.Clear();
+                foreach (var node in efGraph.Nodes)
+                {
+                    existingGraph.Nodes.Add(node);
+                }
+
+                existingGraph.Edges.Clear();
+                foreach (var edge in efGraph.Edges)
+                {
+                    existingGraph.Edges.Add(edge);
+                }
             }
 
-            await context.SaveChangesAsync();
-            return true;
+            int changedEntries = await context.SaveChangesAsync();
+            return (false, changedEntries > 0);
         });
     }
 
@@ -338,24 +354,48 @@ public class EfGraphRepository : IGraphRepository
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             await using var context = await _dbContextFactory.CreateDbContextAsync();
+
             var efNodes = _mapper.Map<List<EfNode>>(graph.Nodes);
             var efEdges = _mapper.Map<List<EfEdge>>(graph.Edges);
 
             List<EfNode> existingNodes = await context.Set<EfNode>()
                 .Where(efNode => graph.Nodes.Select(n => n.Id).Contains(efNode.Id))
-                .AsNoTracking()
                 .ToListAsync();
 
-            List<EfNode> newNodes = efNodes.Where(efNode => !existingNodes.Select(n => n.Id).Contains(efNode.Id)).ToList();
+            List<EfNode> newNodes = efNodes
+                .Where(n => existingNodes.All(en => en.Id != n.Id))
+                .ToList();
+            List<EfNode> updateNodes = efNodes
+                .Where(n => existingNodes.Any(en => en.Id == n.Id))
+                .ToList();
+
             context.AddRange(newNodes);
 
+            foreach (var incoming in updateNodes)
+            {
+                var tracked = existingNodes.Single(en => en.Id == incoming.Id);
+
+                context.Entry(tracked).CurrentValues.SetValues(incoming);
+            }
+
             List<EfEdge> existingEdges = await context.Set<EfEdge>()
-                .Where(efEdge => graph.Edges.Select(n => n.Id).Contains(efEdge.Id))
-                .AsNoTracking()
+                .Where(efEdge => graph.Edges.Select(e => e.Id).Contains(efEdge.Id))
                 .ToListAsync();
 
-            IEnumerable<EfEdge> newEdges = efEdges.Where(efEdge => !existingEdges.Select(n => n.Id).Contains(efEdge.Id));
+            List<EfEdge> newEdges = efEdges
+                .Where(e => existingEdges.All(ee => ee.Id != e.Id))
+                .ToList();
+            List<EfEdge> updateEdges = efEdges
+                .Where(e => existingEdges.Any(ee => ee.Id == e.Id))
+                .ToList();
+
             context.AddRange(newEdges);
+
+            foreach (var incoming in updateEdges)
+            {
+                var tracked = existingEdges.Single(ee => ee.Id == incoming.Id);
+                context.Entry(tracked).CurrentValues.SetValues(incoming);
+            }
 
             await context.SaveChangesAsync();
         }, CancellationToken.None);

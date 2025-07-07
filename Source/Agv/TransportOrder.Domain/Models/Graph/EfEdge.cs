@@ -14,6 +14,16 @@ public class EfEdge
     public Guid Id { get; init; } = Guid.NewGuid();
 
     /// <summary>
+    /// The time (UTC) when this edge was created.
+    /// </summary>
+    public DateTime TimeStamp
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
+
+    /// <summary>
     /// The Id of the starting node of the edge
     /// </summary>
     public string FromNodeId { get; init; }

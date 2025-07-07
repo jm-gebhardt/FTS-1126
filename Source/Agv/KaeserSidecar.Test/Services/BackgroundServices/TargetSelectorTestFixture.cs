@@ -64,7 +64,7 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
     protected override void ConfigureMassTransitTestHarness(IBusRegistrationConfigurator busRegistrationConfigurator)
     {
         base.ConfigureMassTransitTestHarness(busRegistrationConfigurator);
-        busRegistrationConfigurator.AddSingleton(RequestClientGenerator<GetJamState>.CreateDummyRequestClient(() => new GotJamState(_hasJam)));
+        busRegistrationConfigurator.AddSingleton(RequestClientGenerator<GetJamState>.CreateDummyRequestClient(_ => new GotJamState(_hasJam)));
     }
 
     public TargetSelectorTestFixture WithDecisionPointAction(params DecisionPointAction[] actions)

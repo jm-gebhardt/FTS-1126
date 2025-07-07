@@ -14,7 +14,7 @@ public class AgvGraphReceivedEventHandlerTest
     public async Task Consume_AgvGraphReceived_RepositoryHasSuccess_PublishesAgvGraphChanged()
     {
         var fixture = new AgvGraphReceivedEventHandlerTestFixture()
-            .WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns(true);
+            .WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns((false, true));
 
         var agvGraphChanged = await fixture.PublishAndGetFirstMessageAsync<AgvGraphReceived, AgvGraphChanged>(
             fixture.AgvGraphReceived);
@@ -27,7 +27,7 @@ public class AgvGraphReceivedEventHandlerTest
     public async Task Consume_AgvGraphReceived_RepositoryNoSuccess_PublishesAgvGraphMissing()
     {
         var fixture = new AgvGraphReceivedEventHandlerTestFixture()
-            .WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns(false);
+            .WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns((true, false));
 
         var graphMissing = await fixture.PublishAndGetFirstMessageAsync<AgvGraphReceived, GraphMissing>(
             fixture.AgvGraphReceived);

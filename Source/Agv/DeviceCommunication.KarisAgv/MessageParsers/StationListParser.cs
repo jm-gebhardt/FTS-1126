@@ -120,11 +120,13 @@ public class StationListParser
                 bool added;
                 if (graphNode == null)
                 {
+                    var timeStamp = _stationList.ModificationDate.UtcDateTime;
                     graphNode = new GraphNode(station.Identifier)
                     {
                         X = station.Position.X,
                         Y = station.Position.Y,
-                        Z = 0f
+                        Z = 0f,
+                        TimeStamp = timeStamp
                     };
                     graphNode.UpdateOrientation(station.Position.Theta);
                     graphNode.UpdateType(GetNodeType(station.Function));
@@ -134,8 +136,8 @@ public class StationListParser
                         float metric = graphParser.IsVelocityDataValid ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
                         string graphNodeId = graphNode.Id;
                         string nodeNearbyId = nodeNearby.Id;
-                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId)));
-                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId)));
+                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId), timeStamp));
+                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId), timeStamp));
                     }
                 }
                 else

@@ -37,6 +37,7 @@ public class GridGraphGenerator : GraphGeneratorBase
     private const float OriginYOffset = 5;
     private const float NodeOffset = 5;
     private const float EdgeMetric = 1;
+    private readonly DateTime _timeStamp = DateTime.UtcNow;
 
     /// <summary>
     /// The width of the grid.
@@ -143,7 +144,8 @@ public class GridGraphGenerator : GraphGeneratorBase
                 {
                     Type = AgvGraph.NodeType.WayPoint,
                     X = x * NodeOffset + OriginXOffset,
-                    Y = y * NodeOffset + OriginYOffset
+                    Y = y * NodeOffset + OriginYOffset,
+                    TimeStamp = _timeStamp
                 });
             }
         }
@@ -192,7 +194,8 @@ public class GridGraphGenerator : GraphGeneratorBase
                 Type = AgvGraph.NodeType.Pick,
                 X = gridNode.X,
                 Y = gridNode.Y - OriginYOffset / 2,
-                Theta = North
+                Theta = North,
+                TimeStamp = _timeStamp
             };
             OtherNodes.Add(sourceNode);
             AddEdge(sourceNode, gridNode);
@@ -218,7 +221,8 @@ public class GridGraphGenerator : GraphGeneratorBase
                 Type = AgvGraph.NodeType.Drop,
                 X = gridNode.X,
                 Y = gridNode.Y + OriginYOffset / 2,
-                Theta = South
+                Theta = South,
+                TimeStamp = _timeStamp
             };
             OtherNodes.Add(destinationNode);
             AddEdge(destinationNode, gridNode);
@@ -255,7 +259,8 @@ public class GridGraphGenerator : GraphGeneratorBase
             Type = nodeType,
             X = gridNode.X + OriginXOffset / 2 * side,
             Y = gridNode.Y,
-            Theta = side == -1 ? West : East
+            Theta = side == -1 ? West : East,
+            TimeStamp = _timeStamp
         };
         OtherNodes.Add(serviceNode);
         AddEdge(serviceNode, gridNode);
@@ -296,10 +301,10 @@ public class GridGraphGenerator : GraphGeneratorBase
     {
         string fromNodeId = fromNode.Id;
         string toNodeId = toNode.Id;
-        Edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, EdgeMetric, toNodeId)));
+        Edges.Add(GraphEdge.CreateDirect(fromNodeId, toNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, EdgeMetric, toNodeId), _timeStamp));
         if (bidirectional)
         {
-            Edges.Add(GraphEdge.CreateDirect(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, toNodeId, EdgeMetric, fromNodeId)));
+            Edges.Add(GraphEdge.CreateDirect(toNodeId, fromNodeId, EdgeMetric, GraphHelper.ToGuid(EdgeType.Direct, toNodeId, EdgeMetric, fromNodeId), _timeStamp));
         }
     }
 

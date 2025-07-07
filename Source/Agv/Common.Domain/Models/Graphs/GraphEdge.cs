@@ -11,62 +11,42 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <summary>
     /// The Id of the edge.
     /// </summary>
-    public Guid Id
+    public Guid Id { get; init; } = Guid.NewGuid();
+
+    /// <summary>
+    /// The time (UTC) when this edge was created.
+    /// </summary>
+    public DateTime TimeStamp
     {
         get;
         [UsedImplicitly]
-        init;
-    } = Guid.NewGuid();
+        set;
+    }
 
     /// <summary>
     /// The Id of the starting node of the edge.
     /// </summary>
-    public string FromNodeId
-    {
-        get;
-        [UsedImplicitly]
-        init;
-    }
+    public string FromNodeId { get; init; }
 
     /// <summary>
     /// The Id of the ending node of the edge.
     /// </summary>
-    public string ToNodeId
-    {
-        get;
-        [UsedImplicitly]
-        init;
-    }
+    public string ToNodeId { get; init; }
 
     /// <summary>
     /// Length of this edge in [m].
     /// </summary>
-    public double Length
-    {
-        get;
-        [UsedImplicitly]
-        init;
-    } = 1.0;
+    public double Length { get; init; } = 1.0;
 
     /// <summary>
     /// The <see cref="EdgeType"/> of this edge.
     /// </summary>
-    public EdgeType Variant
-    {
-        get;
-        [UsedImplicitly]
-        init;
-    }
+    public EdgeType Variant { get; init; }
 
     /// <summary>
     /// The parameters for this edge type.
     /// </summary>
-    public ICollection<EdgeCoefficient> VariantParameters
-    {
-        get;
-        [UsedImplicitly]
-        init;
-    }
+    public ICollection<EdgeCoefficient> VariantParameters { get; init; }
 
     /// <summary>
     /// Simple string representation.
@@ -159,13 +139,13 @@ public class GraphEdge : IEquatable<GraphEdge>
             return true;
         }
 
-        return obj.GetType() == GetType() && Equals((GraphEdge)obj);
+        return obj.GetType() == GetType() && Equals((GraphEdge) obj);
     }
 
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, FromNodeId, ToNodeId, Length, (int)Variant, VariantParameters);
+        return HashCode.Combine(Id, FromNodeId, ToNodeId, Length, (int) Variant, VariantParameters);
     }
 
     /// <summary>
@@ -175,10 +155,15 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="toNodeId">The end point of the edge.</param>
     /// <param name="length">Length of the edge in [m].</param>
     /// <param name="id">Optional id.</param>
+    /// <param name="timeStamp">The time (UTC) when this edge was created.</param>
     /// <returns></returns>
-    public static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float length = 1f, Guid? id = null)
+    public static GraphEdge CreateDirect(string fromNodeId, string toNodeId, float length = 1f, Guid? id = null, DateTime timeStamp = default)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid());
+        if (timeStamp == default)
+        {
+            timeStamp = DateTime.UtcNow;
+        }
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid()) { TimeStamp = timeStamp };
     }
 
     /// <summary>
@@ -190,10 +175,15 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="x">The x coordinate of the Bezier curve control polygon point.</param>
     /// <param name="y">The y coordinate of the Bezier curve control polygon point.</param>
     /// <param name="id">Optional id.</param>
+    /// <param name="timeStamp">The time (UTC) when this edge was created.</param>
     [UsedImplicitly]
-    public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float length, double x, double y, Guid? id = null)
+    public static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, float length, double x, double y, Guid? id = null, DateTime timeStamp = default)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> { new(x, y) });
+        if (timeStamp == default)
+        {
+            timeStamp = DateTime.UtcNow;
+        }
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier2, new List<EdgeCoefficient> { new(x, y) }) { TimeStamp = timeStamp };
     }
 
     /// <summary>
@@ -207,10 +197,15 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="x2">The x coordinate of the second Bezier curve control polygon point.</param>
     /// <param name="y2">The y coordinate of the second Bezier curve control polygon point.</param>
     /// <param name="id">Optional id.</param>
+    /// <param name="timeStamp">The time (UTC) when this edge was created.</param>
     [UsedImplicitly]
-    public static GraphEdge CreateBezier3(string fromNodeId, string toNodeId, float length, double x1, double y1, double x2, double y2, Guid? id = null)
+    public static GraphEdge CreateBezier3(string fromNodeId, string toNodeId, float length, double x1, double y1, double x2, double y2, Guid? id = null, DateTime timeStamp = default)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier3, new List<EdgeCoefficient> { new(x1, y1), new(x2, y2) });
+        if (timeStamp == default)
+        {
+            timeStamp = DateTime.UtcNow;
+        }
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier3, new List<EdgeCoefficient> { new(x1, y1), new(x2, y2) }) { TimeStamp = timeStamp };
     }
 
     /// <summary>
@@ -221,14 +216,19 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="length">Length of the edge in [m].</param>
     /// <param name="controlPoints">The control points except start and end of the edge.</param>
     /// <param name="id">Optional id.</param>
+    /// <param name="timeStamp">The time (UTC) when this edge was created.</param>
     [UsedImplicitly]
-    public static GraphEdge CreateBezier5(string fromNodeId, string toNodeId, float length, EdgeCoefficient[] controlPoints, Guid? id = null)
+    public static GraphEdge CreateBezier5(string fromNodeId, string toNodeId, float length, EdgeCoefficient[] controlPoints, Guid? id = null, DateTime timeStamp = default)
     {
+        if (timeStamp == default)
+        {
+            timeStamp = DateTime.UtcNow;
+        }
         if (controlPoints.Length != 4)
         {
             throw new Exception("Wrong number of control points, should be 4 excluding source and target for Bezier 5");
         }
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier5, controlPoints);
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Bezier5, controlPoints) { TimeStamp = timeStamp };
     }
 
     /// <summary>
@@ -240,9 +240,14 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="exitAngle">The angle that the node is exited on.</param>
     /// <param name="exitDistance">The distance to travel before entering the slant.</param>
     /// <param name="id">Optional id.</param>
-    public static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float length, double exitAngle, double exitDistance, Guid? id = null)
+    /// <param name="timeStamp">The time (UTC) when this edge was created.</param>
+    public static GraphEdge CreateSlanted(string fromNodeId, string toNodeId, float length, double exitAngle, double exitDistance, Guid? id = null, DateTime timeStamp = default)
     {
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> { new(exitAngle), new(exitDistance) });
+        if (timeStamp == default)
+        {
+            timeStamp = DateTime.UtcNow;
+        }
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Slanted, new List<EdgeCoefficient> { new(exitAngle), new(exitDistance) }) { TimeStamp = timeStamp };
     }
 
     /// <summary>
@@ -253,10 +258,15 @@ public class GraphEdge : IEquatable<GraphEdge>
     /// <param name="length">Length of the edge in [m].</param>
     /// <param name="pathPoints">The points of the polypath (max 10).</param>
     /// <param name="id">Optional id.</param>
+    /// <param name="timeStamp">The time (UTC) when this edge was created.</param>
     /// <exception cref="ArgumentException">If the path is longer than ten points or one of the coefficients is not a point.</exception>
     [UsedImplicitly]
-    public static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, float length, ICollection<EdgeCoefficient> pathPoints, Guid? id = null)
+    public static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, float length, ICollection<EdgeCoefficient> pathPoints, Guid? id = null, DateTime timeStamp = default)
     {
+        if (timeStamp == default)
+        {
+            timeStamp = DateTime.UtcNow;
+        }
         if (pathPoints.Any(ec => !ec.IsPoint))
         {
             throw new ArgumentException("Polypath definition contains non-point coefficient");
@@ -265,7 +275,7 @@ public class GraphEdge : IEquatable<GraphEdge>
         {
             throw new ArgumentException($"Polypath definition has too many coefficients: {pathPoints.Count} > 10");
         }
-        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Polypath, pathPoints);
+        return new GraphEdge(fromNodeId, toNodeId, length, id ?? Guid.NewGuid(), EdgeType.Polypath, pathPoints) { TimeStamp = timeStamp };
     }
 
     /// <summary>
@@ -290,17 +300,18 @@ public class GraphEdge : IEquatable<GraphEdge>
         var source = sourceNode;
         var sections = new List<GraphEdge>();
         var virtualNodes = new List<GraphNode>();
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
         List<EdgeCoefficient> controlPoints = VariantParameters.ToList();
         GraphEdge? section;
         foreach (var controlPoint in controlPoints.Select((edgeCoefficient, index) => new { edgeCoefficient, index }))
         {
-            var target = new GraphNode(Guid.NewGuid().ToString()) { X = (float)controlPoint.edgeCoefficient.X!, Y = (float)controlPoint.edgeCoefficient.Y! };
+            var target = new GraphNode(Guid.NewGuid().ToString()) { TimeStamp = timeStamp, X = (float) controlPoint.edgeCoefficient.X!, Y = (float) controlPoint.edgeCoefficient.Y! };
             virtualNodes.Add(target);
-            section = CreateDirect(source.Id, target.Id, (float)Mathematics.EuclideanDistance(source, target), Guid.NewGuid());
+            section = CreateDirect(source.Id, target.Id, (float) Mathematics.EuclideanDistance(source, target), Guid.NewGuid(), timeStamp);
             sections.Add(section);
             source = target;
         }
-        section = CreateDirect(source.Id, targetNode.Id, (float)Mathematics.EuclideanDistance(source, targetNode), Guid.NewGuid());
+        section = CreateDirect(source.Id, targetNode.Id, (float) Mathematics.EuclideanDistance(source, targetNode), Guid.NewGuid(), timeStamp);
         sections.Add(section);
         return (sections, virtualNodes);
     }
@@ -309,22 +320,23 @@ public class GraphEdge : IEquatable<GraphEdge>
     {
         var source = sourceNode;
         var sections = new List<GraphEdge>();
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
         GraphEdge? section;
-        double angle = (double)VariantParameters.First().Scalar!;
-        double distance = (double)VariantParameters.Last().Scalar!;
+        double angle = (double) VariantParameters.First().Scalar!;
+        double distance = (double) VariantParameters.Last().Scalar!;
         double outAngle = 2 * Math.PI + angle; // 
         List<GraphNode> virtualNodes =
         [
-            new(Guid.NewGuid().ToString()) { X = sourceNode.X - (float)(distance * Math.Sin(angle)), Y = sourceNode.Y - (float)(distance * Math.Cos(angle)) },
-            new(Guid.NewGuid().ToString()) { X = targetNode.X + (float)(distance * Math.Sin(outAngle)), Y = targetNode.Y + (float)(distance * Math.Cos(outAngle)) }
+            new(Guid.NewGuid().ToString()) { X = sourceNode.X - (float) (distance * Math.Sin(angle)), Y = sourceNode.Y - (float) (distance * Math.Cos(angle)), TimeStamp = timeStamp },
+            new(Guid.NewGuid().ToString()) { X = targetNode.X + (float) (distance * Math.Sin(outAngle)), Y = targetNode.Y + (float) (distance * Math.Cos(outAngle)), TimeStamp = timeStamp }
         ];
         foreach (var virtualNode in virtualNodes)
         {
-            section = CreateDirect(source.Id, virtualNode.Id, (float)Mathematics.EuclideanDistance(source, virtualNode), Guid.NewGuid());
+            section = CreateDirect(source.Id, virtualNode.Id, (float) Mathematics.EuclideanDistance(source, virtualNode), Guid.NewGuid(), timeStamp);
             sections.Add(section);
             source = virtualNode;
         }
-        section = CreateDirect(source.Id, targetNode.Id, (float)Mathematics.EuclideanDistance(source, targetNode), Guid.NewGuid());
+        section = CreateDirect(source.Id, targetNode.Id, (float) Mathematics.EuclideanDistance(source, targetNode), Guid.NewGuid(), timeStamp);
         sections.Add(section);
         return (sections, virtualNodes);
     }

@@ -62,26 +62,31 @@ public static class RequestClientGenerator<TRequest>
     /// <summary>
     ///  Create dummy <see cref="IRequestClient{TRequest}"/>
     /// </summary>
-    /// <typeparam name="TResponse1">Type for first response</typeparam>
+    /// <typeparam name="TResponse">Type for first response</typeparam>
     /// <param name="responseFunc">Function to get response</param>
     /// <param name="exception">[Optional] throw this Exception if not null</param>
-    public static IRequestClient<TRequest> CreateDummyRequestClient<TResponse1>(Func<TResponse1> responseFunc, Exception? exception = null)
-        where TResponse1 : class
+    public static IRequestClient<TRequest> CreateDummyRequestClient<TResponse>(
+        Func<TRequest, TResponse> responseFunc,
+        Exception? exception = null)
+        where TResponse : class
     {
-        var mockRequestClient = new Mock<IRequestClient<TRequest>>();
-        mockRequestClient.Setup(m =>
-                m.GetResponse<TResponse1>(It.IsAny<TRequest>(), It.IsAny<CancellationToken>(), It.IsAny<RequestTimeout>()))
-            .ReturnsAsync(() =>
+        var mock = new Mock<IRequestClient<TRequest>>();
+
+        mock.Setup(m => m.GetResponse<TResponse>(
+                It.IsAny<TRequest>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<RequestTimeout>()))
+            .ReturnsAsync((TRequest req, CancellationToken _, RequestTimeout _) =>
             {
                 if (exception != null)
                 {
                     throw exception;
                 }
 
-                return new DummyResponse<TResponse1>(responseFunc());
+                return new DummyResponse<TResponse>(responseFunc(req));
             });
 
-        return mockRequestClient.Object;
+        return mock.Object;
     }
 
     /// <summary>

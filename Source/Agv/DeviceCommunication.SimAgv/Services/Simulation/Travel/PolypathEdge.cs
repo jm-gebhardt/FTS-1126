@@ -18,13 +18,15 @@ public class PolypathEdge : BaseEdge
     /// <inheritdoc cref="PolypathEdge"/>>
     public PolypathEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
+
         (List<GraphEdge> sections, List<GraphNode> nodes) = edge.GetSections(sourceNode, targetNode);
         nodes.AddRange([sourceNode, targetNode] );
         foreach (var section in sections)
         {
             var source = nodes.Single(n => n.Id == section.FromNodeId);
             var target = nodes.Single(n => n.Id == section.ToNodeId);
-            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && Sections.Count == 0);
+            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && Sections.Count == 0) { TimeStamp = timeStamp};
             Sections.Add(directEdge);
         }
         _currentSection = Sections.First();

@@ -1,8 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Events;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
@@ -125,7 +125,7 @@ public class AgvGraphBuilderStateMachineTest
         requestIdGraph.ShouldNotBe(requestIdList);
 
         // Check if the state machine published AgvGraphReceived finally.
-        var publishedData = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
+        var publishedData = fixture.TestHarness.Published.Select<InternalAgvGraphReceived>().First().Context.Message;
 
         publishedData.CorrelationId.ShouldBe(correlationId);
         publishedData.Graph.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
@@ -196,7 +196,7 @@ public class AgvGraphBuilderStateMachineTest
         (await fixture.SagaHarness.Consumed.Any<InternalGraphReceived>()).ShouldBeTrue();
 
         // Check if the state machine published AgvGraphReceived finally.
-        var publishedData = fixture.TestHarness.Published.Select<AgvGraphReceived>().First().Context.Message;
+        var publishedData = fixture.TestHarness.Published.Select<InternalAgvGraphReceived>().First().Context.Message;
 
         // Check for invalid usability due to duplicate nodes.
         publishedData.Graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidStations);

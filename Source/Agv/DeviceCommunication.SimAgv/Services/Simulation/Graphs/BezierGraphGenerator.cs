@@ -58,10 +58,12 @@ public class BezierGraphGenerator: GridGraphGenerator
         Vector2[] controlPoints = GetControlPoints(fromNode, toNode);
         float length = GetLength(controlPoints.ToList());
         EdgeCoefficient[] edgeCoefficients = controlPoints.Skip(1).Take(4).Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray();
+        var timeStamp = new List<DateTime> { fromNode.TimeStamp, toNode.TimeStamp }.Max();
         
         Edges.Add(
-            GraphEdge.CreateBezier5(fromNode.Id, toNode.Id, length, edgeCoefficients, 
-                GraphHelper.ToGuid(EdgeType.Bezier5, fromNode.Id, length, toNode.Id))
+            GraphEdge.CreateBezier5(fromNode.Id, toNode.Id, length, edgeCoefficients,
+                GraphHelper.ToGuid(EdgeType.Bezier5, fromNode.Id, length, toNode.Id),
+                timeStamp)
             );
         
         if (bidirectional)
@@ -69,7 +71,8 @@ public class BezierGraphGenerator: GridGraphGenerator
             Edges.Add(
                 GraphEdge.CreateBezier5(toNode.Id, fromNode.Id, length, 
                     edgeCoefficients.Reverse().ToArray(), 
-                    GraphHelper.ToGuid(EdgeType.Bezier5, toNode.Id, length, fromNode.Id))
+                    GraphHelper.ToGuid(EdgeType.Bezier5, toNode.Id, length, fromNode.Id),
+                    timeStamp)
                 );
         }
     }

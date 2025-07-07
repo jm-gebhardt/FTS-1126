@@ -83,48 +83,49 @@ public class FixedGraphGenerator : GraphGeneratorBase
     /// <inheritdoc />
     public override AgvGraph Generate(Guid correlationId)
     {
+        var timeStamp = DateTime.UtcNow;
         var nodes = new GraphNode[]
         {
-            new(Park1) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 43.125f, Z = 0f, Theta = West },
-            new(Park2) { Type = AgvGraph.NodeType.Park, X = 33.125f, Y = 43.125f, Z = 0f, Theta = East },
-            new(Park3) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 34.375f, Z = 0f, Theta = West },
-            new(Park4) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 34.375f, Z = 0f, Theta = East },
-            new(Park5) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 29.375f, Z = 0f, Theta = West },
-            new(Park6) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East },
+            new(Park1) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 43.125f, Z = 0f, Theta = West, TimeStamp = timeStamp },
+            new(Park2) { Type = AgvGraph.NodeType.Park, X = 33.125f, Y = 43.125f, Z = 0f, Theta = East, TimeStamp = timeStamp },
+            new(Park3) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 34.375f, Z = 0f, Theta = West, TimeStamp = timeStamp },
+            new(Park4) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 34.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
+            new(Park5) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 29.375f, Z = 0f, Theta = West, TimeStamp = timeStamp },
+            new(Park6) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
 
-            new(Charge0) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = North },
-            new(Charge1) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 39.375f, Z = 0f, Theta = East },
-            new(Charge2) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 31.875f, Z = 0f, Theta = East },
-            new(Charge3) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 24.375f, Z = 0f, Theta = East },
+            new(Charge0) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = North, TimeStamp = timeStamp },
+            new(Charge1) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 39.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
+            new(Charge2) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 31.875f, Z = 0f, Theta = East, TimeStamp = timeStamp },
+            new(Charge3) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 24.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
 
-            new(DPaint) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 59.375f, Z = 0f, Theta = East },
-            new(DPress) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 68.125f, Z = 0f, Theta = East },
-            new(DSaw) { Type = AgvGraph.NodeType.Drop, X = 93.17f, Y = 44.375f, Z = 0f, Theta = East },
+            new(DPaint) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 59.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
+            new(DPress) { Type = AgvGraph.NodeType.Drop, X = 93.295f, Y = 68.125f, Z = 0f, Theta = East, TimeStamp = timeStamp },
+            new(DSaw) { Type = AgvGraph.NodeType.Drop, X = 93.17f, Y = 44.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
 
-            new(PDrill) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 68.125f, Z = 0f, Theta = West },
-            new(PGrinder) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 50.625f, Z = 0f, Theta = West },
-            new(PMilling) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 59.375f, Z = 0f, Theta = West },
+            new(PDrill) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 68.125f, Z = 0f, Theta = West, TimeStamp = timeStamp },
+            new(PGrinder) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 50.625f, Z = 0f, Theta = West, TimeStamp = timeStamp },
+            new(PMilling) { Type = AgvGraph.NodeType.Pick, X = 14.375f, Y = 59.375f, Z = 0f, Theta = West, TimeStamp = timeStamp },
 
-            new(Pdqa) { Type = AgvGraph.NodeType.PickDrop, X = 92.965f, Y = 26.7425f, Z = 0f, Theta = (float)Mathematics.ConvertToRadians(73.4) },
+            new(Pdqa) { Type = AgvGraph.NodeType.PickDrop, X = 92.965f, Y = 26.7425f, Z = 0f, Theta = (float)Mathematics.ConvertToRadians(73.4), TimeStamp = timeStamp },
 
-            new(Way0009) { Type = AgvGraph.NodeType.WayPoint, X = 39.375f, Y = 68.125f, Z = 0f, Theta = 0 },
-            new(Way0010) { Type = AgvGraph.NodeType.WayPoint, X = 64.375f, Y = 68.125f, Z = 0f, Theta = 0 },
-            new(Way0011) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 68.125f, Z = 0f, Theta = 0 },
-            new(Way0012) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 68.125f, Z = 0f, Theta = 0 },
-            new(Way0013) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 59.375f, Z = 0f, Theta = 0 },
-            new(Way0014) { Type = AgvGraph.NodeType.WayPoint, X = 33.125f, Y = 59.375f, Z = 0f, Theta = 0 },
-            new(Way0015) { Type = AgvGraph.NodeType.WayPoint, X = 76.875f, Y = 59.375f, Z = 0f, Theta = 0 },
-            new(Way0016) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 59.375f, Z = 0f, Theta = 0 },
-            new(Way0017) { Type = AgvGraph.NodeType.WayPoint, X = 88.2f, Y = 44.375f, Z = 0f, Theta = 0 },
-            new(Way0018) { Type = AgvGraph.NodeType.WayPoint, X = 46.875f, Y = 49.375f, Z = 0f, Theta = 0 },
-            new(Way0022) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 39.375f, Z = 0f, Theta = 0 },
-            new(Way0023) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 31.875f, Z = 0f, Theta = 0 },
-            new(Way0024) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 24.375f, Z = 0f, Theta = 0 },
-            new(Way0028) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 34.375f, Z = 0f, Theta = 0 },
-            new(Way0029) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 43.125f, Z = 0f, Theta = 0 },
-            new(Way0030) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 29.375f, Z = 0f, Theta = 0 },
-            new(Way0032) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 50.625f, Z = 0f, Theta = 0 },
-            new(Way0123) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 28.125f, Z = 0f, Theta = 0 }
+            new(Way0009) { Type = AgvGraph.NodeType.WayPoint, X = 39.375f, Y = 68.125f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0010) { Type = AgvGraph.NodeType.WayPoint, X = 64.375f, Y = 68.125f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0011) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 68.125f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0012) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 68.125f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0013) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 59.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0014) { Type = AgvGraph.NodeType.WayPoint, X = 33.125f, Y = 59.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0015) { Type = AgvGraph.NodeType.WayPoint, X = 76.875f, Y = 59.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0016) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 59.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0017) { Type = AgvGraph.NodeType.WayPoint, X = 88.2f, Y = 44.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0018) { Type = AgvGraph.NodeType.WayPoint, X = 46.875f, Y = 49.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0022) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 39.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0023) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 31.875f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0024) { Type = AgvGraph.NodeType.WayPoint, X = 40.625f, Y = 24.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0028) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 34.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0029) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 43.125f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0030) { Type = AgvGraph.NodeType.WayPoint, X = 25.625f, Y = 29.375f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0032) { Type = AgvGraph.NodeType.WayPoint, X = 21.875f, Y = 50.625f, Z = 0f, Theta = 0, TimeStamp = timeStamp },
+            new(Way0123) { Type = AgvGraph.NodeType.WayPoint, X = 88.325f, Y = 28.125f, Z = 0f, Theta = 0, TimeStamp = timeStamp }
         };
 
         // metric = length/maxEdgeVelocity
@@ -197,7 +198,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
             CreateDirect(Way0016, DPaint, nodes),
             CreateDirect(DPaint, Way0016, nodes),
             CreateDirect(Way0123, Pdqa, nodes),
-            GraphEdge.CreateDirect(Pdqa, Way0123, 4.841580390930176f, GraphHelper.ToGuid(EdgeType.Direct,Pdqa, 30f, Way0123))
+            GraphEdge.CreateDirect(Pdqa, Way0123, 4.841580390930176f, GraphHelper.ToGuid(EdgeType.Direct,Pdqa, 30f, Way0123), timeStamp)
         };
         return new AgvGraph(correlationId, nodes, edges);
     }
@@ -207,34 +208,38 @@ public class FixedGraphGenerator : GraphGeneratorBase
     {
         var sourceNode = nodes.Single(n => n.Id == fromNodeId);
         var targetNode = nodes.Single(n => n.Id == toNodeId);
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
         float length = (float)Mathematics.EuclideanDistance(sourceNode, targetNode);
-        return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, length, toNodeId));
+        return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, length, toNodeId), timeStamp);
     }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier2"/>
     private static GraphEdge CreateBezier2(string fromNodeId, string toNodeId, double x, double y, GraphNode[] nodes)
     {
-        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x, (float)y) });
-        return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(EdgeType.Bezier2,fromNodeId, length, toNodeId));
+        var timeStamp = new List<DateTime> { nodes.Single(n => n.Id == fromNodeId).TimeStamp, nodes.Single(n => n.Id == toNodeId).TimeStamp }.Max();
+        float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, [new Vector2((float) x, (float) y)]);
+        return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, x, y, GraphHelper.ToGuid(EdgeType.Bezier2,fromNodeId, length, toNodeId), timeStamp);
     }
 
     /// <inheritdoc cref="GraphEdge.CreatePolypath"/>
     private static GraphEdge CreatePolypath(string fromNodeId, string toNodeId, List<EdgeCoefficient> pathPoints, GraphNode[] nodes)
     {
-        var sourceNode = nodes.Single(n => n.Id == fromNodeId).AsVector3();
-        var targetNode = nodes.Single(n => n.Id == toNodeId).AsVector3();
-        List<Vector3> points = [sourceNode];
+        var sourceNode = nodes.Single(n => n.Id == fromNodeId);
+        var targetNode = nodes.Single(n => n.Id == toNodeId);
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
+        List<Vector3> points = [sourceNode.AsVector3()];
         points.AddRange(pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)));
-        points.Add(targetNode);
+        points.Add(targetNode.AsVector3());
         double length = new Polypath(points).GetLength();
-        return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float)length, toNodeId));
+        return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints,GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float)length, toNodeId), timeStamp);
     }
 
     /// <inheritdoc cref="GraphEdge.CreateBezier3"/>
     private static GraphEdge CreateBezier3(string fromNodeId, string toNodeId, double x1, double y1, double x2, double y2, GraphNode[] nodes)
     {
+        var timeStamp = new List<DateTime> { nodes.Single(n => n.Id == fromNodeId).TimeStamp, nodes.Single(n => n.Id == toNodeId).TimeStamp }.Max();
         float length = CalculateBezierLength(nodes, fromNodeId, toNodeId, new List<Vector2> { new((float)x1, (float)y1), new((float)x2, (float)y2) });
-        return GraphEdge.CreateBezier3(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(EdgeType.Bezier3, fromNodeId, length, toNodeId));
+        return GraphEdge.CreateBezier3(fromNodeId, toNodeId, length, x1, y1, x2, y2, GraphHelper.ToGuid(EdgeType.Bezier3, fromNodeId, length, toNodeId), timeStamp);
     }
 
     /// <inheritdoc cref="GraphEdge.CreateSlanted"/>
@@ -242,8 +247,9 @@ public class FixedGraphGenerator : GraphGeneratorBase
     {
         var sourceNode = nodes.Single(n => n.Id == fromNodeId);
         var targetNode = nodes.Single(n => n.Id == toNodeId);
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
         double length = new Slanted(sourceNode.AsVector3(), targetNode.AsVector3(), exitAngle, exitDistance).GetLength();
-        return GraphEdge.CreateSlanted(fromNodeId, toNodeId,(float) length, exitAngle, exitDistance, GraphHelper.ToGuid(EdgeType.Slanted, fromNodeId, (float)length, toNodeId));
+        return GraphEdge.CreateSlanted(fromNodeId, toNodeId,(float) length, exitAngle, exitDistance, GraphHelper.ToGuid(EdgeType.Slanted, fromNodeId, (float)length, toNodeId), timeStamp);
     }
 
     /// <inheritdoc />

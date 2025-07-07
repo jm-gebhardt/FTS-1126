@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Events;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.States;
@@ -116,7 +116,7 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
                     // Build the internal graph and store in the saga instance.
                     .Then(c => c.Saga.MergeGraph())
                     // Respond to the initial request with the graph
-                    .Then(c => c.Publish(new AgvGraphReceived(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.AgvGraph!)))
+                    .Then(c => c.Publish(new InternalAgvGraphReceived(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.AgvGraph!)))
                     .Then(c => c.Publish(new RequestAgvMap(c.Saga.CorrelationId, c.Message.Graph.SerialNumber, c.Saga.RelatedMapId, c.Saga.RelatedMapName!)))
                     .Finalize(),
                 // The response does not correlate to the request

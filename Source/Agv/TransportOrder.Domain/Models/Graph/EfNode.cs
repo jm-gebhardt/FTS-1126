@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 
@@ -15,6 +16,16 @@ public class EfNode
     /// For internal reasons it can be necessary to build/combine an internal identification.
     /// </remarks>
     public string Id { get; init; }
+
+    /// <summary>
+    /// The time (UTC) when this node was created.
+    /// </summary>
+    public DateTime TimeStamp
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
 
     /// <summary>
     /// The type of the node

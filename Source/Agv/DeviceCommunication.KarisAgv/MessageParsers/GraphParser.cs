@@ -20,6 +20,8 @@ public class GraphParser
     private readonly HashSet<GraphNode> _nodes;
     private readonly HashSet<GraphEdge> _edges;
 
+    private DateTime TimeStamp => _graph.ModificationDate.UtcDateTime;
+
     private bool _isParsed;
     
     private string? _serialNumber;
@@ -159,7 +161,7 @@ public class GraphParser
         return allAdded;
     }
 
-    private static GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeId, string toNodeId)
+    private  GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeId, string toNodeId)
     {
         ICollection<MqttControlPoint>? controlPoints = swap ? mqttEdge.ControlPoints?.Reverse().ToList() : mqttEdge.ControlPoints;
         bool parsed = Enum.TryParse<EdgeType>(mqttEdge.EdgeType, true, out var edgeType);
@@ -171,7 +173,7 @@ public class GraphParser
         switch (edgeType)
         {
             case EdgeType.Direct:
-                return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id);
+                return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id, TimeStamp);
 
             case EdgeType.Bezier2:
 
@@ -179,34 +181,34 @@ public class GraphParser
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier2)} curve");
                 }
-                return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, id);
+                return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, id, TimeStamp);
 
             case EdgeType.Bezier3:
                 if (controlPoints?.Count != 2)
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier3)} curve");
                 }
-                return GraphEdge.CreateBezier3(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id);
+                return GraphEdge.CreateBezier3(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id, TimeStamp);
 
             case EdgeType.Bezier5:
                 if (controlPoints?.Count != 4)
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier5)} curve");
                 }
-                return GraphEdge.CreateBezier5(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray(), id);
+                return GraphEdge.CreateBezier5(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray(), id, TimeStamp);
 
             case EdgeType.Polypath:
                 if (controlPoints == null || controlPoints.Count < 1)
                 {
                     throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Polypath)} curve");
                 }
-                return GraphEdge.CreatePolypath(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToList(), id);
+                return GraphEdge.CreatePolypath(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToList(), id, TimeStamp);
 
             case EdgeType.Slanted:
-                return GraphEdge.CreateSlanted(fromNodeId, toNodeId, length, mqttEdge.ExitAngle, mqttEdge.ExitDistance, id);
+                return GraphEdge.CreateSlanted(fromNodeId, toNodeId, length, mqttEdge.ExitAngle, mqttEdge.ExitDistance, id, TimeStamp);
 
             default:
-                return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id);
+                return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, id, TimeStamp);
         }
     }
 
@@ -268,6 +270,7 @@ public class GraphParser
             var newNode = new GraphNode(mqttNode.NodeId)
             {
                 Type = AgvGraph.NodeType.WayPoint,
+                TimeStamp = TimeStamp,
                 X = mqttNode.X,
                 Y = mqttNode.Y,
                 Z = mqttNode.Z ?? 0f

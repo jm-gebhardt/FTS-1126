@@ -33,7 +33,7 @@ internal class AgvGraphReceivedEventHandlerTestFixture : MassTransitConsumerTest
         return this;
     }
 
-    public AgvGraphReceivedEventHandlerTestFixture WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns(bool result)
+    public AgvGraphReceivedEventHandlerTestFixture WithGraphRepositoryAddOrUpdateAgvGraphAsyncReturns((bool AnyRelationsMissing, bool AnyChanges) result)
     {
         _graphRepositoryMock.Setup(r => r.AddOrUpdateAgvGraphAsync(It.Is<AgvGraph>(x => x.CorrelationId == AgvGraphReceived.Graph.CorrelationId)))
             .ReturnsAsync(result);

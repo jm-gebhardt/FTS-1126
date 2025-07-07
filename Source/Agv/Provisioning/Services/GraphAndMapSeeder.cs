@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.Provisioning.Configuration;
 using Gebhardt.Acc.Provisioning.Models;
@@ -49,9 +49,9 @@ public class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
     {
         List<Map> maps = await ReadBackgroundImagesAsync(data);
 
-        var graphChanged = new GraphChanged(Guid.NewGuid(), data.Graph, maps);
+        var updateGraph = new UpdateGraphRequest(Guid.NewGuid(), data.Graph, maps);
 
-        return graphChanged;
+        return updateGraph;
     }
 
     private async Task<List<Map>> ReadBackgroundImagesAsync(GraphAndMap graphAndMap)

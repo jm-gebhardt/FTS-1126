@@ -16,6 +16,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
 
     private readonly AgvData _agvData;
     private readonly ITimeProvider _timeProvider;
+    private readonly DateTime _timeStamp = DateTime.UtcNow;
 
     /// <summary>
     /// All edges of the agvs graph as <see cref="BaseEdge"/>.
@@ -80,13 +81,13 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             bool agvGoesBackwards = sourceNode.IsStation();
             BaseEdge edge = graphEdge.Variant switch
             {
-                EdgeType.Direct => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
-                EdgeType.Polypath => new PolypathEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
-                EdgeType.Slanted => new SlantedEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
-                EdgeType.Bezier2 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
-                EdgeType.Bezier3 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
-                EdgeType.Bezier5 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards),
-                _ => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards)
+                EdgeType.Direct => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards) { TimeStamp = _timeStamp },
+                EdgeType.Polypath => new PolypathEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards) { TimeStamp = _timeStamp },
+                EdgeType.Slanted => new SlantedEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards) { TimeStamp = _timeStamp },
+                EdgeType.Bezier2 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards) { TimeStamp = _timeStamp },
+                EdgeType.Bezier3 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards) { TimeStamp = _timeStamp },
+                EdgeType.Bezier5 => new BezierEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards) { TimeStamp = _timeStamp },
+                _ => new DirectEdge(graphEdge, sourceNode, targetNode, agvGoesBackwards) { TimeStamp = _timeStamp }
             };
             Edges.Add(edge);
         }
@@ -163,8 +164,8 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     {
         ResetAddedVirtualNodes(CurrentNode!.Id);
         var target = _nodes.Single(n => n.Id == targetNode);
-        var graphEdge = GraphEdge.CreateDirect(CurrentNode.Id, targetNode, (float)Mathematics.EuclideanDistance(CurrentNode, target), Guid.NewGuid());
-        var edge = new DirectEdge(graphEdge, CurrentNode, target);
+        var graphEdge = GraphEdge.CreateDirect(CurrentNode.Id, targetNode, (float)Mathematics.EuclideanDistance(CurrentNode, target), Guid.NewGuid(), _timeStamp);
+        var edge = new DirectEdge(graphEdge, CurrentNode, target) { TimeStamp = _timeStamp };
         Edges.Add(edge);
         AddedVirtualEdges.Add(edge.Id);
         var followingEdge = edge;
@@ -182,15 +183,15 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     /// <inheritdoc />
     public void EstimateTravelTimes(AgvPosition targetPosition, DateTime entryTime, double initialVelocity)
     {
-        var virtualSource = new GraphNode(Guid.NewGuid().ToString()) { X = Position.X, Y = Position.Y, Theta = Position.Theta};
-        var virtualTarget = new GraphNode(Guid.NewGuid().ToString()) { X = targetPosition.X, Y = targetPosition.Y, Theta = targetPosition.Theta};
+        var virtualSource = new GraphNode(Guid.NewGuid().ToString()) { X = Position.X, Y = Position.Y, Theta = Position.Theta, TimeStamp = _timeStamp };
+        var virtualTarget = new GraphNode(Guid.NewGuid().ToString()) { X = targetPosition.X, Y = targetPosition.Y, Theta = targetPosition.Theta, TimeStamp = _timeStamp };
         _nodes.Add(virtualSource);
         AddedVirtualNodes.Add(virtualSource.Id);
         _nodes.Add(virtualTarget);
         AddedVirtualNodes.Add(virtualTarget.Id);
         
-        var graphEdge = GraphEdge.CreateDirect(virtualSource.Id, virtualTarget.Id, (float)Mathematics.EuclideanDistance(virtualSource, virtualTarget), Guid.NewGuid());
-        var edge = new DirectEdge(graphEdge, virtualSource, virtualTarget);
+        var graphEdge = GraphEdge.CreateDirect(virtualSource.Id, virtualTarget.Id, (float)Mathematics.EuclideanDistance(virtualSource, virtualTarget), Guid.NewGuid(), _timeStamp);
+        var edge = new DirectEdge(graphEdge, virtualSource, virtualTarget) { TimeStamp = _timeStamp};
         Edges.Add(edge);
         AddedVirtualEdges.Add(edge.Id);
         

@@ -5,153 +5,153 @@
   "RelatedMapId": "H05",
   "Nodes": [
     {
-      "NodeId": 11,
+      "NodeId": "11",
       "X": 10.0,
       "Y": 10.0,
       "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 21,
+      "NodeId": "21",
       "X": 20.0,
       "Y": 10.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 41,
+      "NodeId": "41",
       "X": 40.0,
       "Y": 10.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 12,
+      "NodeId": "12",
       "X": 10.0,
       "Y": 20.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 22,
+      "NodeId": "22",
       "X": 20.0,
       "Y": 20.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 42,
+      "NodeId": "42",
       "X": 40.0,
       "Y": 20.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 13,
+      "NodeId": "13",
       "X": 10.0,
       "Y": 30.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 23,
+      "NodeId": "23",
       "X": 20.0,
       "Y": 30.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 33,
+      "NodeId": "33",
       "X": 30.0,
       "Y": 30.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     },
     {
-      "NodeId": 43,
+      "NodeId": "43",
       "X": 40.0,
       "Y": 30.0,
-      "Z": 0.00,
+      "Z": 0.0,
       "Attributes": []
     }
   ],
   "Edges": [
     {
-      "EdgeId": 1121,
-      "StartId": 11,
-      "EndId": 21,
+      "EdgeId": "1121",
+      "StartId": "11",
+      "EndId": "21",
       "Bidirectional": true,
       "MaxVelocity": 1,
       "Attributes": []
     },
     {
-      "EdgeId": 2122,
-      "StartId": 21,
-      "EndId": 22,
+      "EdgeId": "2122",
+      "StartId": "21",
+      "EndId": "22",
       "Bidirectional": true,
       "MaxVelocity": 1,
       "Attributes": []
     },
     {
-      "EdgeId": 2212,
-      "StartId": 22,
-      "EndId": 12,
+      "EdgeId": "2212",
+      "StartId": "22",
+      "EndId": "12",
       "Bidirectional": false,
       "MaxVelocity": 2,
       "Attributes": []
     },
     {
-      "EdgeId": 1213,
-      "StartId": 12,
-      "EndId": 13,
+      "EdgeId": "1213",
+      "StartId": "12",
+      "EndId": "13",
       "Bidirectional": false,
       "MaxVelocity": 2,
       "Attributes": []
     },
     {
-      "EdgeId": 2223,
-      "StartId": 22,
-      "EndId": 23,
+      "EdgeId": "2223",
+      "StartId": "22",
+      "EndId": "23",
       "Bidirectional": true,
       "MaxVelocity": 2,
       "Attributes": []
     },
     {
-      "EdgeId": 1323,
-      "StartId": 13,
-      "EndId": 23,
+      "EdgeId": "1323",
+      "StartId": "13",
+      "EndId": "23",
       "Bidirectional": false,
       "MaxVelocity": 2,
       "Attributes": []
     },
     {
-      "EdgeId": 2333,
-      "StartId": 23,
-      "EndId": 33,
+      "EdgeId": "2333",
+      "StartId": "23",
+      "EndId": "33",
       "Bidirectional": true,
       "MaxVelocity": 1,
       "Attributes": []
     },
     {
-      "EdgeId": 3343,
-      "StartId": 33,
-      "EndId": 43,
+      "EdgeId": "3343",
+      "StartId": "33",
+      "EndId": "43",
       "Bidirectional": true,
       "MaxVelocity": 1,
       "Attributes": []
     },
     {
-      "EdgeId": 4243,
-      "StartId": 42,
-      "EndId": 43,
+      "EdgeId": "4243",
+      "StartId": "42",
+      "EndId": "43",
       "Bidirectional": true,
       "MaxVelocity": 1,
       "Attributes": []
     },
     {
-      "EdgeId": 4142,
-      "StartId": 41,
-      "EndId": 42,
+      "EdgeId": "4142",
+      "StartId": "41",
+      "EndId": "42",
       "Bidirectional": true,
       "MaxVelocity": 1,
       "Attributes": []

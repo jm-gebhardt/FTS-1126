@@ -25,6 +25,11 @@ public class ExportedGraph
     /// Provides stations.
     /// </summary>
     public ICollection<ExportedStation> Stations { get; set; } = [];
+
+    /// <summary>
+    /// Creation date (UTC) of the graph.
+    /// </summary>
+    public DateTime TimeStamp { get; set; }
 }
 
 /// <summary>
@@ -37,6 +42,11 @@ public record ExportedEdge
     /// Control points.
     /// </summary>
     public ICollection<ExportedControlPoint> ControlPoints { get; set; } = [];
+
+    /// <summary>
+    /// Creation date (UTC) of the edge.
+    /// </summary>
+    public DateTime TimeStamp { get; set; }
 
     /// <summary>
     /// The id of the edge.
@@ -91,6 +101,11 @@ public class ExportedNode
     public string NodeId { get; set; }
 
     /// <summary>
+    /// Creation date (UTC) of the node.
+    /// </summary>
+    public DateTime TimeStamp { get; set; }
+
+    /// <summary>
     /// The x-coordinate of the node.
     /// </summary>
     public double X { get; set; }
@@ -125,6 +140,11 @@ public class ExportedStation
     /// The unique identifier of the station
     /// </summary>
     public string Identifier { get; set; } = null!;
+
+    /// <summary>
+    /// Creation date (UTC) of the station.
+    /// </summary>
+    public DateTime TimeStamp { get; set; }
 
     /// <summary>
     /// The position and rotation of the station based on to the maps/graphs coordinate system

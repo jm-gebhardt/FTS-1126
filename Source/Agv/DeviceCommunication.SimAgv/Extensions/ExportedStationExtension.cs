@@ -21,12 +21,14 @@ public static class ExportedStationExtension
         {
             return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (AgvGraph.NodeType)type, null, null, null )
             {
-                Theta = station.Position.Theta
+                Theta = station.Position.Theta,
+                TimeStamp = station.TimeStamp
             };
         }
         return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (List<AgvGraph.NodeType>)type, null, null, null)
         {
-            Theta = station.Position.Theta
+            Theta = station.Position.Theta,
+            TimeStamp = station.TimeStamp
         };
     }
 

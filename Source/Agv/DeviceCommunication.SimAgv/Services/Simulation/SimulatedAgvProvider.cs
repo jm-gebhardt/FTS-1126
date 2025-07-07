@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
@@ -105,7 +106,7 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
 
     private async Task PublishGraphAndMapsAsync()
     {
-        await _bus.Publish(new GraphChanged(Guid.NewGuid(), _graph, _maps));
+        await _bus.Publish(new UpdateGraphRequest(Guid.NewGuid(), _graph, _maps));
     }
 
     /// <summary>

@@ -24,40 +24,44 @@ public class Graph : IGraph
     public bool Merge(AgvGraph graph)
     {
         graph.Validate();
-
         bool hasChanged = false;
+
         foreach (var edge in graph.Edges)
         {
-            var existingEdge = Edges.SingleOrDefault(e => e.Id == edge.Id);
-            if (existingEdge is null)
+            var existing = Edges.SingleOrDefault(e => e.Id == edge.Id);
+
+            if (existing?.Equals(edge) == true ||
+                (existing != null && existing.TimeStamp >= edge.TimeStamp))
             {
-                Edges.Add(edge);
-                hasChanged = true;
+                continue;
             }
-            else
+
+            if (existing != null)
             {
-                if (!existingEdge.Equals(edge))
-                {
-                    throw new InvalidOperationException($"Edge {edge.Id} already exists in graph but is not equal to the new edge.");
-                }
+                Edges.Remove(existing);
             }
+
+            Edges.Add(edge);
+            hasChanged = true;
         }
 
         foreach (var node in graph.Nodes)
         {
-            var existingNode = Nodes.SingleOrDefault(n => n.Id == node.Id);
-            if (existingNode is null)
+            var existing = Nodes.SingleOrDefault(n => n.Id == node.Id);
+
+            if (existing?.Equals(node) == true ||
+                (existing != null && existing.TimeStamp >= node.TimeStamp))
             {
-                Nodes.Add(node);
-                hasChanged = true;
+                continue;
             }
-            else
+
+            if (existing != null)
             {
-                if (!existingNode.Equals(node))
-                {
-                    throw new InvalidOperationException($"Node {node.Id} already exists in graph but is not equal to the new node.");
-                }
+                Nodes.Remove(existing);
             }
+
+            Nodes.Add(node);
+            hasChanged = true;
         }
 
         return hasChanged;

@@ -14,13 +14,14 @@ public class SlantedEdge : BaseEdge
     /// <inheritdoc cref="SlantedEdge"/>>
     public SlantedEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
+        var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
         (List<GraphEdge> sections, List<GraphNode> nodes) = edge.GetSections(sourceNode, targetNode);
         nodes.AddRange([sourceNode, targetNode]);
         foreach (var section in sections)
         {
             var source = nodes.Single(n => n.Id == section.FromNodeId);
             var target = nodes.Single(n => n.Id == section.ToNodeId);
-            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && _sections.Count == 0);
+            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && _sections.Count == 0) { TimeStamp = timeStamp };
             _sections.Add(directEdge);
         }
         _currentSection = _sections.First();

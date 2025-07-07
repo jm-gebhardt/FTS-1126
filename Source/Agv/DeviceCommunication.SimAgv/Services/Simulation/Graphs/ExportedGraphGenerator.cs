@@ -78,12 +78,12 @@ public class ExportedGraphGenerator: GraphGeneratorBase
 
             if (!_edges.Any(e => e.ToNodeId == nodeNearby.Id && e.FromNodeId == station.Id))
             {
-                var edge = GraphEdge.CreateDirect(station.Id, nodeNearby.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, station.Id, distance, nodeNearby.Id));
+                var edge = GraphEdge.CreateDirect(station.Id, nodeNearby.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, station.Id, distance, nodeNearby.Id), _exportedGraph.TimeStamp);
                 _edges.Add(edge);
             }
             if (!_edges.Any(e => e.FromNodeId == nodeNearby.Id && e.ToNodeId == station.Id))
             {
-                var reverse = GraphEdge.CreateDirect(nodeNearby.Id, station.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, nodeNearby.Id, distance, station.Id));
+                var reverse = GraphEdge.CreateDirect(nodeNearby.Id, station.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, nodeNearby.Id, distance, station.Id), _exportedGraph.TimeStamp);
                 _edges.Add(reverse);
             }
         }

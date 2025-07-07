@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.Statistics.Services.EventHandler;
 /// </summary>
 [UsedImplicitly]
 public class GridEventHandler :
-    IConsumer<GraphChanged>,
+    IConsumer<GraphUpdated>,
     IConsumer<MapSaved>
 {
     private readonly IStatisticsDb _db;
@@ -28,15 +28,13 @@ public class GridEventHandler :
         _logger = logger;
     }
 
-    /// <summary>
-    /// Handles the <see cref="GraphChanged"/> event for the global graph.
-    /// </summary>
-    public async Task Consume(ConsumeContext<GraphChanged> context)
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<GraphUpdated> context)
     {
         List<Map>? maps = context.Message.Maps;
         if (maps == null)
         {
-            _logger.LogTrace("{Module}: context.Message.Maps is empty", nameof(GraphChanged));
+            _logger.LogTrace("{Module}: context.Message.Maps is empty", nameof(GraphUpdated));
         }
 
         var agvGraph = context.Message.Graph;

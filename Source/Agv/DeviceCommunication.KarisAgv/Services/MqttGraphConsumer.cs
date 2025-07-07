@@ -70,14 +70,11 @@ public class MqttGraphConsumer : IConsumer<MqttGraph>
         var graphParser = new GraphParser(reversedYGraph);
         graphParser.Parse();
         await _graphRepository.Add(graphParser.NodesById, graphParser.EdgesById);
-            
+
         var agvGraph = graphParser.Graph;
         FeedAgvRepository(correlationId, agvGraph);
 
-        await context.Publish(new InternalGraphReceived(
-            correlationId,
-            reversedYGraph
-        ), context.CancellationToken);
+        await context.Publish(new InternalGraphReceived(correlationId, reversedYGraph), context.CancellationToken);
     }
 
     private void FeedAgvRepository(Guid correlationId, AgvGraph agvGraph)

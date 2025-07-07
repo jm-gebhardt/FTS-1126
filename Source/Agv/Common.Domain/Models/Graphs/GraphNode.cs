@@ -25,13 +25,23 @@ public class GraphNode : IEquatable<GraphNode>
     } = null!;
 
     /// <summary>
+    /// The time (UTC) when this node was created.
+    /// </summary>
+    public DateTime TimeStamp
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
+
+    /// <summary>
     /// The type of the node
     /// </summary>
     [JsonConverter(typeof(JsonNodeTypeConverter))]
     public object Type
     {
         get => _type;
-        init => _type = value; 
+        init => _type = value;
     }
 
     private object _type = NodeType.WayPoint;
@@ -64,7 +74,7 @@ public class GraphNode : IEquatable<GraphNode>
     /// <summary>
     /// The docking direction of the node, if set.
     /// </summary>
-    public DockingDirection? DockingDirection { get; set; } 
+    public DockingDirection? DockingDirection { get; set; }
 
     /// <summary>
     /// The Theta coordinate of the node
@@ -156,15 +166,15 @@ public class GraphNode : IEquatable<GraphNode>
         }
         if (Type is NodeType type)
         {
-            if (type != (NodeType)other.Type)
+            if (type != (NodeType) other.Type)
             {
                 return false;
             }
         }
         else
         {
-            var types = (ICollection<NodeType>)Type;
-            var otherTypes = (ICollection<NodeType>)other.Type;
+            var types = (ICollection<NodeType>) Type;
+            var otherTypes = (ICollection<NodeType>) other.Type;
             foreach (var (thisType, otherType) in types.Zip(otherTypes))
             {
                 if (thisType != otherType)
@@ -208,7 +218,7 @@ public class GraphNode : IEquatable<GraphNode>
         {
             return false;
         }
-        return Equals((GraphNode)obj);
+        return Equals((GraphNode) obj);
     }
 
     /// <inheritdoc />
@@ -239,7 +249,7 @@ public class JsonNodeTypeConverter : JsonConverter<object>
             {
                 if (Enum.IsDefined(typeof(NodeType), intValue))
                 {
-                    return (NodeType)intValue;
+                    return (NodeType) intValue;
                 }
                 throw new JsonException($"Invalid numeric value {intValue} for NodeType");
             }
@@ -288,4 +298,3 @@ public class JsonNodeTypeConverter : JsonConverter<object>
         }
     }
 }
-
