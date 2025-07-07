@@ -94,7 +94,10 @@ public class MoveAgvRequestHandler(
             throw new InvalidNodeTypeException(node.Id, node.Type.ToString() ?? "", nameof(AgvGraph.NodeType.Charge));
         }
 
-        await ReserveNodeForAgv(AgvGraph.NodeType.Charge, node, agvCorrelationId);
+        if (agv.AgvStatus?.LastNodeId != chargerId)
+        {
+            await ReserveNodeForAgv(AgvGraph.NodeType.Charge, node, agvCorrelationId);
+        }
 
         var actionGroupId = Guid.NewGuid();
         await QueueNewActionGroup(context,

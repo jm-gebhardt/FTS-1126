@@ -86,12 +86,13 @@ public class AgvProfileTest
         dto.BatteryLevelLow.ShouldBe(agvSettings.BatteryLevelLow);
         dto.MinChargeUp.ShouldBe(agvSettings.MinChargeUp);
         dto.MaxChargeUp.ShouldBe(agvSettings.MaxChargeUp);
+        dto.InfiniteCharging.ShouldBe(agvSettings.InfiniteCharging);
     }
 
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvBatteryStatusIsMappedToAgvBatteryStatusDto()
     {
-        var agvBatteryStatus = new AgvBatteryStatus(Guid.NewGuid(), 2, true, 7, 8, 9, 3, 4, 5, 6, null, null);
+        var agvBatteryStatus = new AgvBatteryStatus(Guid.NewGuid(), 2, true, 7, 8, 9, 3, 4, 5, 6, null, null, true);
 
         var mapper = GetMapper();
 
@@ -108,12 +109,13 @@ public class AgvProfileTest
         dto.BatteryTemperature.ShouldBe(agvBatteryStatus.BatteryTemperature);
         dto.EstimatedFullyChargedTime.ShouldBe(agvBatteryStatus.EstimatedFullyChargedTime);
         dto.LastBatteryReplacement.ShouldBe(agvBatteryStatus.LastBatteryReplacement);
+        dto.InfiniteCharging.ShouldBe(agvBatteryStatus.InfiniteCharging);
     }
 
     [TestMethod]
     public void Map_WhenBatterySettingsAreNull_ShouldMapToNegativeValue()
     {
-        var settingsDto = new AgvSettingsDto(12);
+        var settingsDto = new AgvSettingsDto(false, 12);
 
         var mapper = MappingHelper.GetMapper(new AgvSettingsProfile());
         var settings = mapper.Map<AgvSettingsDto, AgvSettingsReadModel>(settingsDto);
@@ -121,5 +123,6 @@ public class AgvProfileTest
         settings.BatteryLevelLow.ShouldBeLessThan(0);
         settings.MinChargeUp.ShouldBeLessThan(0);
         settings.MaxChargeUp.ShouldBeLessThan(0);
+        settings.InfiniteCharging.ShouldBeFalse();
     }
 }

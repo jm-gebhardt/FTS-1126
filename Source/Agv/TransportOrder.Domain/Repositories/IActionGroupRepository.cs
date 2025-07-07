@@ -135,7 +135,13 @@ public interface IActionGroupRepository
     /// </summary>
     /// <returns>Action groups that are going to parkers or chargers.</returns>
     Task<ICollection<ActionGroup>> GetRunningIdleActionGroups();
-   
+
+    /// <summary>
+    /// Get all charging action groups that are actually charging.
+    /// </summary>
+    /// <returns>Action groups that charging at chargers.</returns>
+    Task<ICollection<ActionGroup>> GetRunningChargeActionGroups();
+
     /// <summary>
     /// Get the AgvAction.
     /// </summary>

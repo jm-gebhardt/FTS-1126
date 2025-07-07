@@ -233,6 +233,37 @@ public class AgvEfRepositoryTest
     }
 
     [TestMethod]
+    public async Task SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel_ValidData_ReturnsAgvs()
+    {
+        var fixture = new EfAgvRepositoryTestFixture();
+        var agvAboveMinChargeUp = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.MaxChargeUp);
+        var queueingAgv = AgvGenerator.GenerateIdleAgv(index: 2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        queueingAgv.IsQueueing = true;
+        var offlineAgv = AgvGenerator.GenerateIdleAgv(index: 3, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
+        offlineAgv.GoOffline();
+        var agvBelowMinChargeUp = AgvGenerator.GenerateIdleAgv(index: 4, batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp-1);
+        var lockedAgv = AgvGenerator.GenerateIdleAgv(index: 5, batteryCharge: EfAgvSettingsProvider.DefaultSettings.MaxChargeUp, mode: new AgvMode(ModeType.Locked));
+        var userModeAgv = AgvGenerator.GenerateIdleAgv(index: 6, batteryCharge: EfAgvSettingsProvider.DefaultSettings.MaxChargeUp, mode: new AgvMode(ModeType.UserMode));
+        var maintenanceModeAgv = AgvGenerator.GenerateIdleAgv(index: 7, batteryCharge: EfAgvSettingsProvider.DefaultSettings.MaxChargeUp, mode: new AgvMode(ModeType.Maintenance));
+        var infiniteChargingAgvAboveMinChargeUp = AgvGenerator.GenerateIdleAgv(8, batteryCharge: EfAgvSettingsProvider.DefaultSettings.MaxChargeUp);
+
+        await fixture.Add(agvBelowMinChargeUp);
+        await fixture.Add(infiniteChargingAgvAboveMinChargeUp, true);
+        await fixture.Add(agvAboveMinChargeUp);
+        await fixture.Add(queueingAgv);
+        await fixture.Add(offlineAgv);
+        await fixture.Add(lockedAgv);
+        await fixture.Add(userModeAgv);
+        await fixture.Add(maintenanceModeAgv);
+
+        (await fixture.Repository.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel([
+            agvBelowMinChargeUp.CorrelationId, agvAboveMinChargeUp.CorrelationId, queueingAgv.CorrelationId,
+            offlineAgv.CorrelationId, lockedAgv.CorrelationId, userModeAgv.CorrelationId,
+            maintenanceModeAgv.CorrelationId, infiniteChargingAgvAboveMinChargeUp.CorrelationId
+        ])).Select(a => a.CorrelationId).ToList().ShouldBeEquivalentTo(new List<Guid> { infiniteChargingAgvAboveMinChargeUp.CorrelationId });
+    }
+
+    [TestMethod]
     public async Task SelectAgvsWithAboveCriticalBatteryLevel_AgvNotAmongSelection_ReturnsEmpty()
     {
         var fixture = new EfAgvRepositoryTestFixture();

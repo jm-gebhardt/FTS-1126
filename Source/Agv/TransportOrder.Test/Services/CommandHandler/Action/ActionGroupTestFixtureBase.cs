@@ -172,6 +172,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public ActionGroupTestFixtureBase<T> WithRunningChargeActionGroups(ICollection<ActionGroup> actionGroups)
+    {
+        ActionGroupRepository.Setup(x => x.GetRunningChargeActionGroups()).ReturnsAsync(actionGroups);
+        return this;
+    }
+
     public virtual ActionGroupTestFixtureBase<T> AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true, bool isManual = false)
     {
         ActionGroupRepository.Setup(x => x.UpdateAsync(It.IsAny<ActionGroup>())).Verifiable();

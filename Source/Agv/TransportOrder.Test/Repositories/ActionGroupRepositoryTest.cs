@@ -1337,4 +1337,21 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv, [target])).ShouldBeEquivalentTo(new List<ActionGroup>{ notStartedActionGroupToTarget });
     }
+
+    [TestMethod]
+    public async Task GetRunningChargeActionGroups_ValidData_ReturnsActionGroups()
+    {
+        var chargeActionGroupWithStartedMove = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started, actionStateCharge: ActionState.Created);
+        var chargeActionGroupWithStartedCharge = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge: ActionState.Started);
+        var createdChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge: ActionState.Created);
+        var completedChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge: ActionState.Completed);
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                chargeActionGroupWithStartedMove, chargeActionGroupWithStartedCharge, createdChargeActionGroup, completedChargeActionGroup, pickDropActionGroup
+            ]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetRunningChargeActionGroups()).ShouldBeEquivalentTo(new List<ActionGroup> { chargeActionGroupWithStartedCharge });
+    }
 }

@@ -119,7 +119,7 @@ public class AgvsControllerTest
         AgvsControllerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler> fixture = new AgvsControllerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
-        var response = await fixture.Controller.UpdateDefaultSettings(new AgvSettingsDto(12));
+        var response = await fixture.Controller.UpdateDefaultSettings(new AgvSettingsDto(false, 12));
         response.ShouldNotBeNull();
         var result = response as OkObjectResult;
         result.ShouldBeNull();

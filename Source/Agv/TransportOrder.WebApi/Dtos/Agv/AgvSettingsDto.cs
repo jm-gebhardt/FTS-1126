@@ -20,12 +20,16 @@ public record AgvSettingsDto
     /// <summary>We stop charging at this level actively.</summary>
     public int? MaxChargeUp { get; set; } = null;
 
+    /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
+    public bool InfiniteCharging { get; set; } 
+
     /// <inheritdoc cref="AgvSettingsDto"/>>
-    public AgvSettingsDto(int? batteryLevelCritical = null, int? batteryLevelLow = null, int? minChargeUp = null, int? maxChargeUp = null)
+    public AgvSettingsDto(bool infiniteCharging, int? batteryLevelCritical = null, int? batteryLevelLow = null, int? minChargeUp = null, int? maxChargeUp = null)
     {
         BatteryLevelCritical = batteryLevelCritical;
         BatteryLevelLow = batteryLevelLow;
         MinChargeUp = minChargeUp;
         MaxChargeUp = maxChargeUp;
+        InfiniteCharging = infiniteCharging;
     }
 }

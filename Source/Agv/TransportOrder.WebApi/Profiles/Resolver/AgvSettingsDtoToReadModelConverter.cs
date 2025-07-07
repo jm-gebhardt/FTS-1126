@@ -19,7 +19,8 @@ public class AgvSettingsDtoToReadModelConverter : ITypeConverter<AgvSettingsDto,
             BatteryLevelCritical = source.BatteryLevelCritical ?? -1,
             BatteryLevelLow = source.BatteryLevelLow ?? -1,
             MinChargeUp = source.MinChargeUp ?? -1,
-            MaxChargeUp = source.MaxChargeUp ?? -1
+            MaxChargeUp = source.MaxChargeUp ?? -1,
+            InfiniteCharging = source.InfiniteCharging
         };
     }
 }

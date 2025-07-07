@@ -292,6 +292,15 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Where(a => !a.IsMovingCargo).ToList();
     }
 
+    /// <inheritdoc />
+    public async Task<ICollection<ActionGroup>> GetRunningChargeActionGroups()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<ActionGroup>()
+                .Where(ag => ag.State == ActionGroupState.Started && ag.Actions.Any(a =>
+                    a.ActionType == ActionType.Charge && a.State == ActionState.Started)).ToListAsync();
+    }
+
     /// <inheritdoc cref="IActionGroupRepository"/>
     public async Task<AgvAction?> GetActionByIdAsync(Guid correlationId)
     {

@@ -41,5 +41,10 @@ public class AgvSettingEntityConfiguration: IEntityTypeConfiguration<Domain.Mode
             .HasForeignKey(e => e.MaxChargeUpId)
             .OnDelete(DeleteBehavior.NoAction);
         builder.Navigation(e => e.MaxChargeUp).AutoInclude();
+        builder.HasOne(e => e.InfiniteCharging)
+            .WithMany()
+            .HasForeignKey(e => e.InfiniteChargingId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Navigation(e => e.InfiniteCharging).AutoInclude();
     }
 }

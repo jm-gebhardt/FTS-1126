@@ -45,24 +45,29 @@ public class AgvSettings
     public Guid AgvOfflineTimeoutMsWhileBusyId { get; set; }
 
     /// <summary>
-    /// Reference to <see cref="AgvOfflineTimeoutMsWhileBusy"/>.
+    /// Reference to <see cref="BatteryLevelCritical"/>.
     /// </summary>
     public Guid BatteryLevelCriticalId { get; set; }
 
     /// <summary>
-    /// Reference to <see cref="AgvOfflineTimeoutMsWhileBusy"/>.
+    /// Reference to <see cref="BatteryLevelLow"/>.
     /// </summary>
     public Guid BatteryLevelLowId { get; set; }
 
     /// <summary>
-    /// Reference to <see cref="AgvOfflineTimeoutMsWhileBusy"/>.
+    /// Reference to <see cref="MinChargeUp"/>.
     /// </summary>
     public Guid MinChargeUpId { get; set; }
 
     /// <summary>
-    /// Reference to <see cref="AgvOfflineTimeoutMsWhileBusy"/>.
+    /// Reference to <see cref="MaxChargeUp"/>.
     /// </summary>
     public Guid MaxChargeUpId { get; set; }
+
+    /// <summary>
+    /// Reference to <see cref="InfiniteCharging"/>.
+    /// </summary>
+    public Guid InfiniteChargingId { get; set; }
 
     /// Group specific settings
     /// <summary>Timeout value [ms] to set AGV offline while it is in busy mode</summary>
@@ -83,6 +88,9 @@ public class AgvSettings
     /// <summary>We stop charging at this level actively.</summary>
     public Setting MaxChargeUp { get; set; } = null!;
 
+    /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
+    public Setting InfiniteCharging { get; set; } = null!;
+
     /// <summary>
     /// Update all valid settings.
     /// </summary>
@@ -94,16 +102,16 @@ public class AgvSettings
         {
             var settingsProperty = GetType()
                 .GetProperties()
-                .SingleOrDefault(p => p.PropertyType == typeof(Setting) && p.Name.ToUpper() == name.ToUpper());
-
+                .SingleOrDefault(p => p.PropertyType == typeof(Setting) && p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+           
             var setting = (Setting?)settingsProperty!.GetValue(this);
-            bool isNewAgvSpecificValue = setting == null || (!isDefault && setting.IsDefault && setting.Value != value!.ToString())!;
+            bool isNewAgvSpecificValue = setting == null || (!isDefault && setting.IsDefault && !string.Equals(setting.Value, value!.ToString(), StringComparison.InvariantCultureIgnoreCase))!;
             if (isNewAgvSpecificValue)
             {
-                setting = new Setting(Guid.NewGuid(), name, value!.ToString()!, value.GetType().FullName!, isDefault);
+                setting = new Setting(Guid.NewGuid(), name, value!.ToString()!.ToLower(), value.GetType().FullName!, isDefault);
                 UpdatePropertyId(name, setting.Id);
             }
-            setting!.Value = value!.ToString()!;
+            setting!.Value = value!.ToString()!.ToLower();
             settingsProperty.SetValue(this, setting);
         }
     }
@@ -210,6 +218,7 @@ public class AgvSettings
         readModel.MaxChargeUp = ConvertToType(MaxChargeUp.ValueType, MaxChargeUp.Value, readModel.MaxChargeUp);
         readModel.AgvOfflineTimeoutMsWhileBusy = ConvertToType(AgvOfflineTimeoutMsWhileBusy.ValueType, AgvOfflineTimeoutMsWhileBusy.Value, readModel.AgvOfflineTimeoutMsWhileBusy);
         readModel.AgvOfflineTimeoutMsWhileIdle = ConvertToType(AgvOfflineTimeoutMsWhileIdle.ValueType, AgvOfflineTimeoutMsWhileIdle.Value, readModel.AgvOfflineTimeoutMsWhileIdle);
+        readModel.InfiniteCharging = ConvertToType(InfiniteCharging.ValueType, InfiniteCharging.Value, readModel.InfiniteCharging);
         return readModel;
     }
 

@@ -193,11 +193,12 @@ public class AgvSettingsReadModelTest
             batteryLevelLow: -1,
             minChargeUp: -1);
 
-        settings.GetValidPropertiesInformation().Single().ShouldBe((nameof(settings.MaxChargeUp), validMaxChargeUp));
+        settings.GetValidPropertiesInformation().Count.ShouldBe(2);
+        settings.GetValidPropertiesInformation().ShouldContain((nameof(settings.MaxChargeUp), validMaxChargeUp));
     }
 
     [TestMethod]
-    public void GetValidPropertiesInformation_NoValidData_ReturnsEmptyCollection()
+    public void GetValidPropertiesInformation_NoValidDataForIntProperties_ReturnsOnlyBoolProperty()
     {
         var settings = new AgvSettingsReadModel(
             maxChargeUp: -1,
@@ -207,6 +208,7 @@ public class AgvSettingsReadModelTest
             batteryLevelLow: -1,
             minChargeUp: -1);
 
-        settings.GetValidPropertiesInformation().ShouldBeEmpty();
+        settings.GetValidPropertiesInformation().Count.ShouldBe(1);
+        settings.GetValidPropertiesInformation().ShouldContain((nameof(settings.InfiniteCharging), false));
     }
 }

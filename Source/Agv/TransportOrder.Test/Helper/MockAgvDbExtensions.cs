@@ -41,6 +41,7 @@ public static class MockAgvDbExtensions
         repoMock.Setup(r => r.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
         repoMock.Setup(r => r.AgvSettings.GetSettingsGroupForAgv(It.IsAny<Agv?>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
         repoMock.Setup(r => r.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ReturnsAsync(agvs);
+        repoMock.Setup(r => r.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
         repoMock.Setup(r => r.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
         repoMock.Setup(r => r.Agvs.HasOnlineAgvs()).ReturnsAsync(true);
         repoMock.Setup(r => r.Agvs.GetNotChargingAgvsWithCriticalBatteryLevel()).ReturnsAsync(agvs);

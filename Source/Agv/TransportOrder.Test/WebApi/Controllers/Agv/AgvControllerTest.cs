@@ -215,6 +215,7 @@ public class AgvControllerTest
         dto.BatteryLevelLow.ShouldBe(fixture.AgvSettingsReadModel.BatteryLevelLow);
         dto.MinChargeUp.ShouldBe(fixture.AgvSettingsReadModel.MinChargeUp);
         dto.MaxChargeUp.ShouldBe(fixture.AgvSettingsReadModel.MaxChargeUp);
+        dto.InfiniteCharging.ShouldBe(fixture.AgvSettingsReadModel.InfiniteCharging);
     }
 
     [TestMethod]
@@ -479,7 +480,7 @@ public class AgvControllerTest
         AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
-        var actionResult = await fixture.Controller.UpdateAgvSettings(fixture.AgvSerialNumbers[2].ToGuid(), new AgvSettingsDto(batteryLevelCritical:13));
+        var actionResult = await fixture.Controller.UpdateAgvSettings(fixture.AgvSerialNumbers[2].ToGuid(), new AgvSettingsDto(false, batteryLevelCritical:13));
         var result = actionResult as OkObjectResult;
         result.ShouldBeAssignableTo<OkResult>();
     }

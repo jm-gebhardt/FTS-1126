@@ -1344,7 +1344,7 @@ public class AgvCommandHandler :
                 new Dictionary<string, object?> { { LogLabels.BatteryLevel, Math.Round(newAgvStatus.BatteryCharge) } });
         }
 
-        if (!wasMaxChargedUp && isMaxChargedUp)
+        if (!wasMaxChargedUp && isMaxChargedUp && !agvSettings.InfiniteCharging)
         {
             _logger.LogBatteryInformation(LogCodes.BatteryMaxChargeLevel, oldAgvStatus.CorrelationId,
                 "Maximum Charging Level", $"Battery has reached maximum charging level {agvSettings.MaxChargeUp}%",

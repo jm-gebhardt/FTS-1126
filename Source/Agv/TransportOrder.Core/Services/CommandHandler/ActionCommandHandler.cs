@@ -1139,7 +1139,7 @@ public class ActionCommandHandler :
         {
             // Get and select agv
             //Get a list of all action groups that are started but idling
-            ICollection<Domain.Models.ActionGroup.ActionGroup> idleActionGroups = await _actionGroupRepository.GetRunningIdleActionGroups();
+            List<Domain.Models.ActionGroup.ActionGroup> idleActionGroups = (await _actionGroupRepository.GetRunningIdleActionGroups()).ToList();
             //Get AGV that handles these already started action groups
             List<Guid> idleAgvCorrelationIds = idleActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
             _logger.LogInformation("There are AGVs {ListOfAgvs} with started action groups", string.Join(',', idleAgvCorrelationIds));
@@ -1160,6 +1160,21 @@ public class ActionCommandHandler :
                 ICollection<Agv> idleAgvs = await _agvDb.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(idleAgvCorrelationIds);
                 //add those AGV to the list of ready AGV
                 agvs.AddRange(idleAgvs);
+            }
+
+            //Get infinitely charging agvs that reached min charge up
+            ICollection<Domain.Models.ActionGroup.ActionGroup> chargingActionGroups = await _actionGroupRepository.GetRunningChargeActionGroups();
+            List<Guid> chargingAgvCorrelationIds = chargingActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
+            List<Guid> infinitelyChargingAgvsList = [];
+            if (chargingAgvCorrelationIds.Count != 0)
+            {
+                ICollection<Agv> infinitelyChargingAgvs = await _agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(chargingAgvCorrelationIds);
+                infinitelyChargingAgvsList = infinitelyChargingAgvs.Select(a => a.CorrelationId).ToList();
+                _logger.LogInformation("There are AGVs {ListOfAgvs} that are infinitely charging and have a battery level above min charge up", string.Join(',', infinitelyChargingAgvsList));
+                chargingActionGroups = chargingActionGroups.Where(a => infinitelyChargingAgvsList.Contains(a.AssignedAgv.GetValueOrDefault())).ToList();
+                idleActionGroups.AddRange(chargingActionGroups);
+                
+                agvs.AddRange(infinitelyChargingAgvs);
             }
             
             //if the list of AGV at a queue head is not empty
@@ -1216,7 +1231,7 @@ public class ActionCommandHandler :
                 return;
             }
 
-            if (!idleAgvCorrelationIds.Contains(closestAgvRoute.agv.Value))
+            if (!idleAgvCorrelationIds.Contains(closestAgvRoute.agv.Value) && !infinitelyChargingAgvsList.Contains(closestAgvRoute.agv.Value))
             {
                 _logger.LogInformation("Reactivate agv {AgvCorrelationId}", closestAgvRoute.agv);
                 await context.Publish(new AgvBecameIdle(closestAgvRoute.agv.Value));
@@ -1248,7 +1263,7 @@ public class ActionCommandHandler :
             await context.Publish(new ActionGroupStarted(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, DateTime.UtcNow));
 
             var abortedActionGroup = idleActionGroups.Single(a => a.AssignedAgv == assignedAgv.CorrelationId);
-            await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
+            await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedActionGroup.Actions.Single(a => a.State == ActionState.Started).CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
 
             // Log for ui
             _logger.LogOrderInformation(

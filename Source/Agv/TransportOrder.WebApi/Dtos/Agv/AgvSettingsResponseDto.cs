@@ -19,4 +19,7 @@ public record AgvSettingsResponseDto
 
     /// <summary>We stop charging at this level actively.</summary>
     public int? MaxChargeUp { get; init; }
+
+    /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
+    public bool InfiniteCharging { get; init; } 
 }

@@ -44,6 +44,9 @@ public record AgvBatteryStatusDto : DatedMessage
     /// <summary>We stop charging at this level actively.</summary>
     public int MaxChargeUp { get; init; }
 
+    /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
+    public bool InfiniteCharging { get; init; }
+
     /// <inheritdoc cref="AgvBatteryStatusDto"/>
     /// <param name="correlationId">The CorrelationId of the Agv</param>
     /// <param name="batteryCharge">The current SOC [%]</param>
@@ -57,6 +60,7 @@ public record AgvBatteryStatusDto : DatedMessage
     /// <param name="batteryLevelLow">Below this threshold only ActionGroups are started when the system is under high load.</param>
     /// <param name="minChargeUp">Once charging is started it will at least charge up to this level.</param>
     /// <param name="maxChargeUp">We stop charging at this level actively.</param>
+    /// <param name="infiniteCharging">Flag to switch on/off infinite charging.</param>
     public AgvBatteryStatusDto(
         [PublicAPI] Guid correlationId,
         double batteryCharge,
@@ -69,7 +73,8 @@ public record AgvBatteryStatusDto : DatedMessage
         int batteryLevelCritical,
         int batteryLevelLow,
         int minChargeUp,
-        int maxChargeUp
+        int maxChargeUp,
+        bool infiniteCharging
     )
     {
         CorrelationId = correlationId;
@@ -84,6 +89,7 @@ public record AgvBatteryStatusDto : DatedMessage
         BatteryLevelLow = batteryLevelLow;
         MinChargeUp = minChargeUp;
         MaxChargeUp = maxChargeUp;
+        InfiniteCharging = infiniteCharging;
     }
 
     /// <summary>

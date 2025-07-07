@@ -82,6 +82,13 @@ public interface IAgvRepository
     Task<ICollection<Models.Agv.Agv>> SelectAgvsWithAboveCriticalBatteryLevel(ICollection<Guid> agvCorrelationIds);
 
     /// <summary>
+    /// Selects all agvs that have above min charge battery level and that are configured for infinite charging.
+    /// </summary>
+    /// <param name="agvCorrelationIds">The agvs to select from.</param>
+    /// <returns></returns>
+    Task<ICollection<Models.Agv.Agv>> SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(ICollection<Guid> agvCorrelationIds);
+
+    /// <summary>
     /// Update an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>

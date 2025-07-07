@@ -7,55 +7,47 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 /// <summary>
 /// Battery status of an AGV.
 /// </summary>
+[PublicAPI]
 public record AgvBatteryStatus
 {
     /// <summary>The agv correlation id.</summary>
-    [UsedImplicitly]
     public Guid CorrelationId { get; init; }
 
     /// <summary>Battery charge of the agv after the change.</summary>
-    [UsedImplicitly]
     public double BatteryCharge { get; init; }
 
     /// <summary>Battery voltage [V].</summary>
-    [UsedImplicitly]
     public double BatteryVoltage { get; init; }
 
     /// <summary>Battery current [A].</summary>
-    [UsedImplicitly]
     public double BatteryCurrent { get; init; }
 
     /// <summary>Battery temperature [°C].</summary>
-    [UsedImplicitly]
     public double BatteryTemperature { get; init; }
 
     /// <summary>Time when the Agv is fully charged.</summary>
-    [UsedImplicitly]
     public DateTime? EstimatedFullyChargedTime { get; init; }
 
     /// <summary>The date when the battery was replaced the last time.</summary>
-    [UsedImplicitly]
     public DateTime? LastBatteryReplacement { get; init; }
 
     /// <summary>Below this threshold only charge actions will be started.</summary>
-    [UsedImplicitly]
     public int BatteryLevelCritical { get; init; }
 
     /// <summary>Below this threshold only ActionGroups are started when the system is under high load.</summary>
-    [UsedImplicitly]
     public int BatteryLevelLow { get; init; }
 
     /// <summary>Once charging is started it will at least charge up to this level.</summary>
-    [UsedImplicitly]
     public int MinChargeUp { get; init; }
 
     /// <summary>We stop charging at this level actively.</summary>
-    [UsedImplicitly]
     public int MaxChargeUp { get; init; }
 
     /// <summary>Is Battery currently charging.</summary>
-    [UsedImplicitly]
     public bool IsCharging { get; init; }
+
+    /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
+    public bool InfiniteCharging { get; init; }
 
     /// <summary>
     /// AutoMapper
@@ -76,6 +68,7 @@ public record AgvBatteryStatus
     /// <param name="maxChargeUp">We stop charging at this level actively.</param>
     /// <param name="estimatedFullyChargedTime">Time when the Agv is fully charged.</param>
     /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
+    /// <param name="infiniteCharging">Flag to switch on/off infinite charging.</param>
     public AgvBatteryStatus(
         Guid correlationId,
         double batteryCharge,
@@ -88,7 +81,8 @@ public record AgvBatteryStatus
         int minChargeUp,
         int maxChargeUp,
         DateTime? estimatedFullyChargedTime,
-        DateTime? lastBatteryReplacement
+        DateTime? lastBatteryReplacement,
+        bool infiniteCharging
     )
     {
         CorrelationId = correlationId;
@@ -103,6 +97,7 @@ public record AgvBatteryStatus
         BatteryTemperature = batteryTemperature;
         EstimatedFullyChargedTime = estimatedFullyChargedTime;
         LastBatteryReplacement = lastBatteryReplacement;
+        InfiniteCharging = infiniteCharging;
     }
 
     /// <param name="agvStatus">The AgvStatus.</param>
@@ -122,7 +117,8 @@ public record AgvBatteryStatus
         agvSettings.MinChargeUp,
         agvSettings.MaxChargeUp,
         agvStatus.EstimatedFullyChargedTime,
-        agvStatus.LastBatteryReplacement
+        agvStatus.LastBatteryReplacement,
+        agvSettings.InfiniteCharging
     )
     {
     }

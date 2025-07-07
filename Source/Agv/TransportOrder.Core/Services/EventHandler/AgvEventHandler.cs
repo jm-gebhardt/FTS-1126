@@ -178,7 +178,10 @@ public class AgvEventHandler :
     {
         var message = context.Message;
         var agvCorrelationId = message.CorrelationId;
-
+        
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        
         double oldSoc = message.OldBatteryCharge;
         double newSoc = message.AgvBatteryStatus.BatteryCharge;
 
@@ -202,7 +205,7 @@ public class AgvEventHandler :
             await context.Publish(new ChargingAgvCanHandleActionsAgain(agvCorrelationId));
         }
 
-        if (!wasMaxChargedUp && isMaxChargedUp)
+        if (!wasMaxChargedUp && isMaxChargedUp && !agvSettings.InfiniteCharging)
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached max charge up level. So aborting charge action now", agvCorrelationId);
             await context.Publish(new AbortChargeAction(message.CorrelationId));

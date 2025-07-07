@@ -153,6 +153,24 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
+    public async Task<ICollection<Agv>> SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(ICollection<Guid> agvCorrelationIds)
+    {
+        if (agvCorrelationIds.Count == 0)
+        {
+            return [];
+        }
+        List<Agv> agvs = await Agvs
+            .Where(a => agvCorrelationIds.Contains(a.CorrelationId))
+            .Where(a => !a.IsLocked &&
+                        !a.IsQueueing &&
+                        a.IsOnline &&
+                        a.Mode.Type == ModeType.Normal).ToListAsync();
+        return agvs.Where(a =>
+            a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].MinChargeUp &&
+            _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].InfiniteCharging).ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<bool> UpdateAgvAsync(Agv agv)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();

@@ -504,8 +504,8 @@ public class AgvSettingsTest
 
         foreach ((string name, object? value) in EfAgvSettingsProvider.DefaultSettings.GetValidPropertiesInformation())
         {
-            settings.Any(s => s!.Name == name).ShouldBeTrue();
-            settings.Any(s => s!.Value == value!.ToString()).ShouldBeTrue();
+            settings.Any(s => string.Equals(s!.Name, name)).ShouldBeTrue();
+            settings.Any(s => string.Equals(s!.Value, value!.ToString()!, StringComparison.InvariantCultureIgnoreCase)).ShouldBeTrue();
         }
     }
 

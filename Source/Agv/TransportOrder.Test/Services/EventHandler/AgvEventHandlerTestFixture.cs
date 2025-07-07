@@ -47,7 +47,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         MinChargeUp = _agvSettingsReadModel.MinChargeUp,
         BatteryLevelLow = _agvSettingsReadModel.BatteryLevelLow,
         AgvOfflineTimeoutMsWhileIdle = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileIdle,
-        AgvOfflineTimeoutMsWhileBusy = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileBusy
+        AgvOfflineTimeoutMsWhileBusy = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileBusy,
+        InfiniteCharging = _agvSettingsReadModel.InfiniteCharging
     };
 
     protected override MassTransitConsumerTestFixture<AgvEventHandler> AddServices(IServiceCollection collection)
@@ -74,14 +75,22 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         return this;
     }
 
-    public void AddAgv(Agv agv)
-    {
-        _agvDb.AddAgvs(new List<Agv> { agv });
-    }
-
     public AgvEventHandlerTestFixture WithMinBatteryAgvs(ICollection<Agv> agvs)
     {
         _agvDb.Setup(x => x.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
+          return this;
+    }
+    
+    public AgvEventHandlerTestFixture WithAgv(Agv agv)
+    {
+        _agvDb.AddAgvs(new List<Agv> { agv });
+        return this;
+    }
+
+    public AgvEventHandlerTestFixture WithInfiniteCharging(bool infiniteCharging)
+    {
+        var agvSettings = new AgvSettingsReadModel(15000, 20000, BatteryLevelCritical, BatteryLevelLow, MinChargeUp, MaxChargeUp, infiniteCharging);
+        _agvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(agvSettings);
         return this;
     }
 

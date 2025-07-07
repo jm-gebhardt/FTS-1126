@@ -194,13 +194,29 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionGroupCreated_AssignedAgv_PublishesAgvBecameIdle()
+    public async Task Consume_ActionGroupCreated_AssignedAgvIsNotCharging_PublishesAgvBecameIdle()
     {
-        var fixture = new ActionEventHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new ActionEventHandlerTestFixture()
+            .WithAgv(agv);
 
-        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(new ActionGroup(), Guid.NewGuid(), "assignedAgv".ToGuid()));
+        await fixture.PublishMessageAsync(new ActionGroupCreated(new ActionGroup(), Guid.NewGuid(), "assignedAgv".ToGuid()));
         
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldNotHavePublishedAsync<AbortChargeAction>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCreated_AssignedAgvIsChargingInfinitely_PublishesAbortChargeAction()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new ActionEventHandlerTestFixture()
+            .WithAgv(agv);
+
+        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(new ActionGroup{IsQueued = true}, Guid.NewGuid(), agv.CorrelationId));
+
         await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
+        await fixture.ShouldHavePublishedAsync<AbortChargeAction>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 
@@ -209,9 +225,8 @@ public class ActionEventHandlerTest
     {
         var fixture = new ActionEventHandlerTestFixture();
 
-        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(new ActionGroup(), Guid.NewGuid(), null));
+        await fixture.PublishMessageAsync(new ActionGroupCreated(new ActionGroup(), Guid.NewGuid(), null));
 
-        await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
     }
 
@@ -220,9 +235,8 @@ public class ActionEventHandlerTest
     {
         var fixture = new ActionEventHandlerTestFixture();
         var actionGroup = Common.Testing.Helpers.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
-        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(actionGroup, Guid.NewGuid(), null));
+        await fixture.PublishMessageAsync(new ActionGroupCreated(actionGroup, Guid.NewGuid(), null));
 
-        await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
     }
 
@@ -231,9 +245,8 @@ public class ActionEventHandlerTest
     {
         var fixture = new ActionEventHandlerTestFixture();
         var actionGroup = Common.Testing.Helpers.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
-        await fixture.TestHarness.Bus.Publish(new ActionGroupCreated(actionGroup, Guid.NewGuid(), null));
+        await fixture.PublishMessageAsync(new ActionGroupCreated(actionGroup, Guid.NewGuid(), null));
 
-        await fixture.ShouldHaveConsumedAsync<ActionGroupCreated>();
         await fixture.ShouldNotHavePublishedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<TryUpdateIdleAction>();
     }

@@ -24,9 +24,16 @@ public class EfAgvRepositoryTestFixture : TransportOrderDbFixture
         Repository = new AgvRepository(ContextFactory, _inMemorySettingsProvider, _mapper);
     }
 
-    public async Task Add(TransportOrder.Domain.Models.Agv.Agv agv)
+    public async Task Add(TransportOrder.Domain.Models.Agv.Agv agv, bool infiniteCharging=false)
     {
-        _inMemorySettingsProvider.Add(agv.AgvSettingsGroup, EfAgvSettingsProvider.DefaultSettings);
+        var settings = new AgvSettingsReadModel(EfAgvSettingsProvider.DefaultSettings.AgvOfflineTimeoutMsWhileIdle,
+            EfAgvSettingsProvider.DefaultSettings.AgvOfflineTimeoutMsWhileBusy,
+            EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical,
+            EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow,
+            EfAgvSettingsProvider.DefaultSettings.MinChargeUp,
+            EfAgvSettingsProvider.DefaultSettings.MaxChargeUp,
+            infiniteCharging);
+        _inMemorySettingsProvider.Add(agv.AgvSettingsGroup, settings);
         await Repository.AddAgvAsync(agv);
     }
 

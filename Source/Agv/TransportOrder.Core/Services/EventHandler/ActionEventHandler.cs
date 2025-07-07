@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -125,6 +126,12 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
        
         if (agvCorrelationId != null)
         {
+            ICollection<Agv> infiniteChargingAgvs = await agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel([agvCorrelationId.Value]);
+            if (infiniteChargingAgvs.Count > 0 && actionGroup.IsQueued)
+            {
+                logger.LogInformation("New queued action group {ActionGroupCorrelationId} was created for infinitely charging agv with max charge up level {AgvCorrelationId}, aborting charge action", actionGroup.CorrelationId, actionGroup.AssignedAgv);
+                await context.Publish(new AbortChargeAction(agvCorrelationId.Value));
+            }
             await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));
             return;
         }
