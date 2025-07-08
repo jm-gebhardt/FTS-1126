@@ -18,7 +18,7 @@ public class AgvErrorEventHandlerTest
     {
         var msg = new AgvErrorReceived(AgvErrorGenerator.GenerateAgvError(), new AgvPosition(true, 1, 1, 0, 0), "agv");
         var gridIds = new List<Guid> { Guid.NewGuid() };
-        var fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>();
+        GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived> fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
 
         await fixture.Handler.HandleTestMessageDirectly(msg, gridIds);
 

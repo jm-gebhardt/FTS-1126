@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.SemaphoreProviders;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Messages;
@@ -135,15 +134,19 @@ public static class HostBuilderExtension
 
     private static void RegisterFilters(IServiceCollection services)
     {
+        // Agv position
         services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000) { MinInterval = TimeSpan.FromSeconds(3), MaxInterval = TimeSpan.FromSeconds(20) });
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
-        services.AddSingleton<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedFilter>();
-
-        services.AddSingleton<IConcurrentDictionaryProvider<IMessageFilter<AgvPositionReceived>>, AgvPositionReceivedDictionaryProvider>();
         services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedInMemoryFilter>();
-        services.AddSingleton<ISemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>, SemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>();
-        services.AddSingleton<IConcurrentDictionaryProvider<ISemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>, ConcurrentDictionaryProvider<ISemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>>();
-        services.AddSingleton<IKeyedSemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>, KeyedSemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider>>();
-        services.AddSingleton<IKeyedSemaphoreDictionaryProvider<IAgvPositionsReceivedSemaphoreProvider>, KeyedSemaphoreDictionaryProvider<IAgvPositionsReceivedSemaphoreProvider>>();
+        // Wi-Fi metrics
+        services.AddSingleton(new WifiConfiguration(3, 10, 3) { MinInterval = TimeSpan.FromSeconds(3), MaxInterval = TimeSpan.FromSeconds(20) });
+        services.AddSingleton<ISignificanceChecker<WifiMetrics>, WifiMetricsSignificanceChecker>();
+        services.AddTransient<IMessageFilter<AgvWifiMetricsReceived>, AgvWifiMetricsReceivedInMemoryFilter>();
+
+        // generic
+        services.AddSingleton(typeof(IConcurrentDictionaryProvider<>), typeof(ConcurrentDictionaryProvider<>));
+        services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+        services.AddSingleton(typeof(IKeyedSemaphoreProvider<>), typeof(KeyedSemaphoreProvider<>));
+        services.AddSingleton(typeof(IKeyedSemaphoreDictionaryProvider<>), typeof(KeyedSemaphoreDictionaryProvider<>));
     }
 }

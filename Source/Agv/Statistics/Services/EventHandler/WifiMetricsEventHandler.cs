@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Statistics.Cache;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using JetBrains.Annotations;
@@ -13,19 +14,28 @@ namespace Gebhardt.Acc.Statistics.Services.EventHandler;
 [UsedImplicitly]
 public class WifiMetricsEventHandler : GridPositionAttachedHandlerBase<AgvWifiMetricsReceived>
 {
+    private readonly IMessageFilter<AgvWifiMetricsReceived> _filter;
+
     /// <inheritdoc />
     public WifiMetricsEventHandler(
         IReadOnlyAgvScopedPositionCache<Guid> positionCache,
         IAgvScopedPositionCache<AgvWifiMetricsReceived> pendingCache,
         IPublishEndpoint publishEndpoint,
+        IMessageFilter<AgvWifiMetricsReceived> filter,
         ILogger<WifiMetricsEventHandler> logger)
         : base(positionCache, pendingCache, publishEndpoint, logger)
     {
+        _filter = filter;
     }
 
     /// <inheritdoc />
-    protected override Task HandleWithGridIdsAsync(AgvWifiMetricsReceived message, List<Guid> gridIds)
+    protected override async Task HandleWithGridIdsAsync(AgvWifiMetricsReceived message, List<Guid> gridIds)
     {
-        return PublishEndpoint.Publish(new AddWifiMetrics(message.Metrics, gridIds));
+        if (!await _filter.ShouldActAsync(message))
+        {
+            return;
+        }
+
+        await PublishEndpoint.Publish(new AddWifiMetrics(message.Metrics, gridIds));
     }
 }

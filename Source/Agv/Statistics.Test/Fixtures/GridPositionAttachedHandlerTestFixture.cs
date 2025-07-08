@@ -1,52 +1,41 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Statistics.Cache;
-using Gebhardt.Acc.Statistics.Test.Models;
-using Gebhardt.Acc.Statistics.Test.Services.EventHandler;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.Statistics.Test.Fixtures;
 
-internal class GridPositionAttachedHandlerTestFixture
+internal class GridPositionAttachedHandlerTestFixture<THandler, TMessage> : FixtureBase
+    where THandler : class
+    where TMessage : class, IMessageCreatedDate
 {
     private readonly Mock<IReadOnlyAgvScopedPositionCache<Guid>> _positionCacheMock = new();
 
-    public Mock<IAgvScopedPositionCache<TestMessage>> PendingCacheMock { get; } = new();
+    private readonly Mock<IAgvScopedPositionCache<TMessage>> _pendingCacheMock = new();
+    private readonly Mock<ILogger<THandler>> _loggerMock = new();
 
     public Mock<IPublishEndpoint> PublishEndpointMock { get; } = new();
 
-    public TestHandler Handler { get; }
+    public THandler Handler => Provider.GetRequiredService<THandler>();
 
-    public GridPositionAttachedHandlerTestFixture()
+    protected override FixtureBase AddServices(IServiceCollection services)
     {
-        Handler = new TestHandler(_positionCacheMock.Object, PendingCacheMock.Object, PublishEndpointMock.Object, Mock.Of<ILogger<TestHandler>>());
+        services.AddSingleton(_positionCacheMock.Object);
+        services.AddSingleton(_pendingCacheMock.Object);
+        services.AddSingleton(PublishEndpointMock.Object);
+        services.AddSingleton(_loggerMock.Object);
+
+        services.AddTransient<THandler>();
+
+        return base.AddServices(services);
     }
 
-    public static ConsumeContext<TestMessage> CreateContext(TestMessage message)
-        => Mock.Of<ConsumeContext<TestMessage>>(x => x.Message == message);
-
-    public GridPositionAttachedHandlerTestFixture WithCachedPosition(string serial, AgvPosition pos, List<Guid> gridIds)
+    public new GridPositionAttachedHandlerTestFixture<THandler, TMessage> Build()
     {
-        _positionCacheMock.Setup(x => x.TryGet(serial, pos, out gridIds!)).Returns(true);
-        return this;
-    }
-
-    public GridPositionAttachedHandlerTestFixture WithNoCachedPosition()
-    {
-        _positionCacheMock.Setup(x => x.TryGet(It.IsAny<string>(), It.IsAny<AgvPosition>(), out It.Ref<List<Guid>?>.IsAny)).Returns(false);
-        return this;
-    }
-
-    public GridPositionAttachedHandlerTestFixture WithPendingMessages(string serial, AgvPosition pos, List<TestMessage> messages)
-    {
-        PendingCacheMock.Setup(x => x.TryRemove(serial, pos, out messages!)).Returns(true);
-        return this;
-    }
-
-    public GridPositionAttachedHandlerTestFixture WithNoPendingMessages()
-    {
-        PendingCacheMock.Setup(x => x.TryRemove(It.IsAny<string>(), It.IsAny<AgvPosition>(), out It.Ref<List<TestMessage>?>.IsAny)).Returns(false);
+        base.Build();
         return this;
     }
 }

@@ -94,12 +94,12 @@ public class AgvPositionReceivedHandler : IConsumer<AgvPositionReceived>, IConsu
     /// <inheritdoc />
     public Task Consume(ConsumeContext<ForcePersistAgvPosition> context)
     {
-        _logger.LogInformation("Trying to force persisting position for AGV {SerialNumber} at {Position} ({Timestamp})",
+        _logger.LogDebug("Trying to force persisting position for AGV {SerialNumber} at {Position} ({Timestamp})",
             context.Message.SerialNumber, context.Message.AgvPosition, context.Message.MessageCreatedDate);
 
         if (_positionCache.TryGet(context.Message.SerialNumber, context.Message.AgvPosition, out List<Guid>? cacheValue) && cacheValue.Count > 0)
         {
-            _logger.LogInformation("Position {Position} for AGV {SerialNumber} already exists in DB, no need to force persistence",
+            _logger.LogDebug("Position {Position} for AGV {SerialNumber} already exists in DB, no need to force persistence",
                 context.Message.AgvPosition, context.Message.SerialNumber);
             return Task.CompletedTask;
         }

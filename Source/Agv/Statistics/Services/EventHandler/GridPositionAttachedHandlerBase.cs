@@ -61,7 +61,7 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
         }
 
         _pendingCache.AddItem(message.SerialNumber, message.AgvPosition, message);
-        _logger.LogDebug("Adding to pending error cache for AGV {SerialNumber} with position {Position} and sending force persist position", message.SerialNumber, message.AgvPosition);
+        _logger.LogDebug("Adding to pending cache for AGV {SerialNumber} with position {Position} and sending force persist position", message.SerialNumber, message.AgvPosition);
 
         await PublishEndpoint.Publish(new ForcePersistAgvPosition(message.SerialNumber, message.AgvPosition)
         {
@@ -77,7 +77,7 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
             message.SerialNumber, message.AgvPosition, message.GridPositionIds);
         if (_pendingCache.TryRemove(message.SerialNumber, message.AgvPosition, out List<TMessage>? pending))
         {
-            _logger.LogInformation("Found {Count} pending messages for AGV {SerialNumber} with position {Position}",
+            _logger.LogDebug("Found {Count} pending messages for AGV {SerialNumber} with position {Position}",
                 pending.Count, message.SerialNumber, message.AgvPosition);
             foreach (var original in pending)
             {

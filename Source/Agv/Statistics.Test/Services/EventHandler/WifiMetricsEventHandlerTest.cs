@@ -18,7 +18,9 @@ public class WifiMetricsEventHandlerTest
     {
         var msg = new AgvWifiMetricsReceived(Guid.NewGuid(), "agv", new AgvPosition(true, 1, 1, 0, 0), WifiMetricsGenerator.GenerateWifiMetrics());
         var gridIds = new List<Guid> { Guid.NewGuid() };
-        var fixture = new GridPositionAttachedHandlerTestFixture<WifiMetricsEventHandler, AgvWifiMetricsReceived>();
+        GridPositionAttachedHandlerTestFixture<WifiMetricsEventHandler, AgvWifiMetricsReceived> fixture = new WifiMetricsEventHandlerTestFixture()
+            .FilterReturns(true)
+            .Build();
 
         await fixture.Handler.HandleTestMessageDirectly(msg, gridIds);
 
@@ -27,5 +29,20 @@ public class WifiMetricsEventHandlerTest
                 x.Metrics == msg.Metrics &&
                 x.GridPositionIds.SequenceEqual(gridIds)),
             CancellationToken.None), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task HandleWithGridIds_FilterReturnsFalse_DoesNotPublishAddWifiMetrics()
+    {
+        var msg = new AgvWifiMetricsReceived(Guid.NewGuid(), "agv", new AgvPosition(true, 1, 1, 0, 0), WifiMetricsGenerator.GenerateWifiMetrics());
+        var gridIds = new List<Guid> { Guid.NewGuid() };
+
+        GridPositionAttachedHandlerTestFixture<WifiMetricsEventHandler, AgvWifiMetricsReceived> fixture = new WifiMetricsEventHandlerTestFixture()
+            .FilterReturns(false)
+            .Build();
+
+        await fixture.Handler.HandleTestMessageDirectly(msg, gridIds);
+
+        fixture.PublishEndpointMock.Verify(p => p.Publish(It.IsAny<AddWifiMetrics>(), CancellationToken.None), Times.Never);
     }
 }
