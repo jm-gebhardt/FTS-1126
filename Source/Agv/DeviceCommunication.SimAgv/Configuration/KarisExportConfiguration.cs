@@ -1,6 +1,5 @@
-﻿using System.Text.RegularExpressions;
-using JetBrains.Annotations;
-using Microsoft.IdentityModel.Tokens;
+﻿using JetBrains.Annotations;
+using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Configuration;
@@ -171,23 +170,23 @@ public class KarisExportConfiguration
         }
         string yaml = File.ReadAllText(path);
         var config = deserializer.Deserialize<KarisExportConfiguration>(yaml);
-        if (!config.WayPointRegexPattern.IsNullOrEmpty())
+        if (!string.IsNullOrEmpty(config.WayPointRegexPattern))
         {
             WayPointRegexPattern = config.WayPointRegexPattern;
         }
-        if (!config.ChargeRegexPattern.IsNullOrEmpty())
+        if (!string.IsNullOrEmpty(config.ChargeRegexPattern))
         {
             ChargeRegexPattern = config.ChargeRegexPattern;
         }
-        if(!config.ParkRegexPattern.IsNullOrEmpty())
+        if(!string.IsNullOrEmpty(config.ParkRegexPattern))
         {
             ParkRegexPattern = config.ParkRegexPattern;
         }
-        if (!config.PickRegexPattern.IsNullOrEmpty())
+        if (!string.IsNullOrEmpty(config.PickRegexPattern))
         {
             PickRegexPattern = config.PickRegexPattern;
         }
-        if (!config.PickRegexPattern.IsNullOrEmpty())
+        if (!string.IsNullOrEmpty(config.DropRegexPattern))
         {
             DropRegexPattern = config.DropRegexPattern;
         }

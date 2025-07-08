@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
 using JetBrains.Annotations;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Gebhardt.Acc.TransportOrder.Routing.Implementations;
 
@@ -338,7 +337,7 @@ public class AStar : BaseRouteAlgorithm
             angle = Mathematics.AngleBetween((Vector2)current.EntryVector, CalculateEntryVector(edge));
         }
 
-        bool isFirstNode = current.Predecessor.IsNullOrEmpty();
+        bool isFirstNode = string.IsNullOrEmpty(current.Predecessor);
 
         bool needsSpotTurn = angle > TurnOnSpotThreshold || isFirstNode;
 
@@ -448,7 +447,7 @@ public class AStar : BaseRouteAlgorithm
             ExpandNode(current, end);
         } while (_openList.Count != 0);
 
-        if (end.Predecessor.IsNullOrEmpty())
+        if (string.IsNullOrEmpty(end.Predecessor))
         {
             // No path found.
             return null;

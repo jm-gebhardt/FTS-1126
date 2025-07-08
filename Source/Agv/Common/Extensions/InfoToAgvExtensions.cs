@@ -51,7 +51,7 @@ public static class InfoToAgvExtensions
 
         infoToAgv.TryGetValue(InfoToAgvKey.LiftHeight, out string? liftHeightValue);
 
-        if (!liftHeightValue.IsNullOrEmpty())
+        if (!string.IsNullOrEmpty(liftHeightValue))
         {
             if (double.TryParse(liftHeightValue, CultureInfo.InvariantCulture, out double parsedLiftHeight))
             {

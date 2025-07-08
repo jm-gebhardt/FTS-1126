@@ -1,6 +1,5 @@
-﻿using JetBrains.Annotations;
-using Microsoft.IdentityModel.Tokens;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using JetBrains.Annotations;
 
 // Disabled because properties are reset by reflection (not visible to resharper)
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
@@ -226,7 +225,7 @@ public class AgvSettings
     {
         var type = Type.GetType(valueType);
 
-        if (valueType.IsNullOrEmpty() || value.IsNullOrEmpty() || type == null)
+        if (string.IsNullOrEmpty(valueType) || string.IsNullOrEmpty(value) || type == null)
         {
             return defaultValue;
         }
