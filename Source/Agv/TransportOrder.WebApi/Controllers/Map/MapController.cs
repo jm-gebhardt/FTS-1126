@@ -142,8 +142,8 @@ public class MapController : Controller
     /// </summary>
     [Authorize]
     [HttpPatch]
-    [Route("/map/{correlationId:guid}/nodes/{nodeId}/setApproachingProperties")]
-    public async Task<ActionResult> SetApproachProperties(Guid correlationId, string nodeId, [FromQuery] double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection)
+    [Route("/map/{correlationId:guid}/nodes/setApproachingProperties")]
+    public async Task<ActionResult> SetApproachProperties(Guid correlationId, [FromQuery] string nodeId, [FromQuery] double? pickLiftHeight, [FromQuery] double? dropLiftHeight, [FromQuery] DockingDirection? dockingDirection)
     {
         await _nodeApproachingPropertiesClient.GetResponse<Success>(new TrySettingNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
         return Ok();
