@@ -149,7 +149,7 @@ public class AgvEventHandlerTest
 
         await fixture.PublishMessageAsync(new AgvCanStartIdleAction(agv.CorrelationId));
 
-        await fixture.ShouldHavePublishedAsync<PrepareParkingOfAgv>();
+        await fixture.ShouldHavePublishedAsync<PrepareIdleActionOfAgv>();
     }
 
     [TestMethod]

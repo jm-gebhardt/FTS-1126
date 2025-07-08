@@ -30,6 +30,7 @@ using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -93,6 +94,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public void VerifyAgvUpdated(Times times)
     {
         AgvDb.Verify(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), times);
+    }
+
+    public AgvCommandHandlerTestFixture WithInfiniteCharging(bool infiniteCharging)
+    {
+        var agvSettings = new AgvSettingsReadModel(15000, 20000, 5, 40, 60, 80, infiniteCharging);
+        AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(agvSettings);
+        return this;
     }
 
     public AgvCommandHandlerTestFixture WithAgvsAtQueueHead(ICollection<Guid> agvs)
@@ -295,6 +303,14 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         {
             _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
         }
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture AddChargingNode(bool isOnCharger, GraphNode? chargeGraphNode)
+    {
+        _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(isOnCharger);
+        _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync( chargeGraphNode != null? new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow): null);
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(() => chargeGraphNode?? throw new NoChargeStationAvailableException());
         return this;
     }
 
