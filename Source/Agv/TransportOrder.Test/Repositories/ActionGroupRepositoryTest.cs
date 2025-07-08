@@ -1085,7 +1085,7 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetDockFrontOfLastCompletedAction_PickDropActionGroup_ReturnsDockFrontIsNotChargeOrParkOrder()
+    public async Task GetDockFrontOfLastCompletedAction_PickDropActionGroup_ReturnsDockFront()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, completedDate: DateTime.UtcNow.AddMinutes(-10), assignedAgv: Guid.NewGuid());
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
@@ -1099,60 +1099,11 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([actionGroup])
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value, Guid.NewGuid())).ShouldBe((dockFront, false));
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value, Guid.NewGuid())).ShouldBe(dockFront);
     }
 
     [TestMethod]
-    public async Task GetDockFrontOfLastCompletedAction_ParkActionGroup_ReturnsDockFrontIsChargeOrParkOrder()
-    {
-        var actionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Completed, completedDate: DateTime.UtcNow.AddMinutes(-10), assignedAgv: Guid.NewGuid());
-        var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
-        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null, DockingDirection.Both);
-        bool dockFront = moveAction.InfoToAgv!.GetDockFront();
-
-        var fixture = await new ActionGroupRepositoryTestFixture()
-            .WithActionGroups([actionGroup])
-            .BuildAsync();
-
-        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value, Guid.NewGuid())).ShouldBe((dockFront, true));
-    }
-
-    [TestMethod]
-    public async Task GetDockFrontOfLastCompletedAction_QueueGroup_ReturnsDockFrontIsNotChargeOrParkOrder()
-    {
-        var actionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Completed, completedDate: DateTime.UtcNow.AddMinutes(-10), assignedAgv: Guid.NewGuid());
-        actionGroup.HasPriority = true;
-        var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
-        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null, DockingDirection.Both);
-        bool dockFront = moveAction.InfoToAgv!.GetDockFront();
-
-        var fixture = await new ActionGroupRepositoryTestFixture()
-            .WithActionGroups([actionGroup])
-            .BuildAsync();
-
-        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value, Guid.NewGuid())).ShouldBe((dockFront, false));
-    }
-
-    [TestMethod]
-    public async Task GetDockFrontOfLastCompletedAction_ChargeGroup_ReturnsDockFrontIsChargeOrParkOrder()
-    {
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge: ActionState.Completed, completedDate: DateTime.UtcNow.AddMinutes(-10), assignedAgv: Guid.NewGuid());
-        var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
-        var chargeAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Charge);
-
-        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, null, DockingDirection.Both);
-        actionGroup.SetDockFrontOfAction(chargeAction.CorrelationId, null, DockingDirection.Both);
-        bool dockFront = chargeAction.InfoToAgv!.GetDockFront();
-
-        var fixture = await new ActionGroupRepositoryTestFixture()
-            .WithActionGroups([actionGroup])
-            .BuildAsync();
-
-        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value, Guid.NewGuid())).ShouldBe((dockFront, true));
-    }
-
-    [TestMethod]
-    public async Task GetDockFrontOfLastCompletedAction_MultipleCompletedPickDropActionGroups_ReturnsDockFrontIsNotChargeOrParkOrder()
+    public async Task GetDockFrontOfLastCompletedAction_MultipleCompletedPickDropActionGroups_ReturnsDockFront()
     {
         var assignedAgv = Guid.NewGuid();
         var earlierActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: assignedAgv, startedDate: DateTime.UtcNow);
@@ -1173,11 +1124,11 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([earlierActionGroup, actionGroup])
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(assignedAgv, Guid.NewGuid())).ShouldBe((dockFront, false));
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(assignedAgv, Guid.NewGuid())).ShouldBe(dockFront);
     }
 
     [TestMethod]
-    public async Task GetDockFrontOfLastCompletedAction_NoCompletedOrStartedActionGroup_ReturnsNullIsNotChargeOrParkOrder()
+    public async Task GetDockFrontOfLastCompletedAction_NoCompletedOrStartedActionGroup_ReturnsNull()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
 
@@ -1185,11 +1136,11 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([actionGroup])
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value, Guid.NewGuid())).ShouldBe((null, false));
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(actionGroup.AssignedAgv!.Value, Guid.NewGuid())).ShouldBeNull();
     }
 
     [TestMethod]
-    public async Task GetDockFrontOfLastCompletedAction_NoLastActionGroup_ReturnsNullIsNotChargeOrParkOrder()
+    public async Task GetDockFrontOfLastCompletedAction_NoLastActionGroup_ReturnsNull()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Started, assignedAgv: Guid.NewGuid());
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
@@ -1202,7 +1153,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([actionGroup])
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(Guid.NewGuid(), Guid.NewGuid())).ShouldBe((null, false));
+        (await fixture.ActionGroupRepository.GetDockFrontOfLastCompletedAction(Guid.NewGuid(), Guid.NewGuid())).ShouldBeNull();
     }
 
     [TestMethod]

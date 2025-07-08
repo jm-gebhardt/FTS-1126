@@ -127,18 +127,19 @@ public class ActionCommandHandler :
         if (agvActionCanBeStarted)
         {
             bool? previousActionGroupDockFront = null;
-            bool wasPreviousActionGroupChargeOrPark = false;
             if (action.IsFirstAction)
             {
-                (previousActionGroupDockFront, wasPreviousActionGroupChargeOrPark) = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId, actionGroup.CorrelationId);
+                previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId, actionGroup.CorrelationId);
             }
             string? targetNodeId = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).Target.NodeId;
 
             var targetNode = targetNodeId != null ? await _agvDb.Graphs.GetNodeAsync(targetNodeId) : null;
             DockingDirection? nodeDockingDirection = targetNode?.DockingDirection;
-            actionGroup.SetDockFrontOfAction(action.CorrelationId, wasPreviousActionGroupChargeOrPark? false : previousActionGroupDockFront, nodeDockingDirection);
-            actionGroup.SetCargoLiftHeightForAction(action.CorrelationId, targetNode?.PickLiftHeight, targetNode?.DropLiftHeight);
+            bool startNodeIsStation = await GetStartNodeIsStation(action);
+            // ensure nodes are set before DockFront is diagnosed, to allow identification of Doppelspiel
             actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
+            actionGroup.SetDockFrontOfAction(action.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
+            actionGroup.SetCargoLiftHeightForAction(action.CorrelationId, targetNode?.PickLiftHeight, targetNode?.DropLiftHeight);
             await _actionService.TryUpdateActionGroup(actionGroup);
             action = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
             
@@ -1040,10 +1041,16 @@ public class ActionCommandHandler :
             agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
             var route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
-            bool? previousDockFront = currentAction!.InfoToAgv?.GetDockFront();
             currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNodeId, route);
+            bool startNodeIsStation = await GetStartNodeIsStation(currentAction);
+            bool? previousActionGroupDockFront = null;
+            if (currentAction.IsFirstAction)
+            {
+                // For diagnosing DokFront of the first action of the group we need the docking direction of the last completed action
+                previousActionGroupDockFront= await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agv.CorrelationId, actionGroup.CorrelationId);
+            }
             DockingDirection? nodeDockingDirection= (await _agvDb.Graphs.GetNodeAsync(targetNodeId)).DockingDirection;
-            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, currentAction.Sequence == 0 ? previousDockFront : null, nodeDockingDirection);
+            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
             var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
             actionGroup.SetCargoLiftHeightForAction(currentAction.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
@@ -1076,6 +1083,11 @@ public class ActionCommandHandler :
             });
     }
 
+    private async Task<bool> GetStartNodeIsStation(AgvAction currentAction)
+    {
+        return currentAction.Nodes.Length >= 1 && (await _agvDb.Graphs.GetNodeAsync(currentAction.Nodes.First())).IsStation();
+    }
+
     /// <summary>
     /// Handles the <see cref="CancelOrAbortActionGroup"/>
     /// </summary>
@@ -1090,7 +1102,7 @@ public class ActionCommandHandler :
             return;
         }
         var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
-        //if actiongroup was queueing order, set AGV free of queing
+        //if action group was queueing order, set AGV free of queuing
         if (actionGroup.OrderId.Equals(QueuingOrderId))
         {
             assignedAgv.IsQueueing = false;
@@ -1133,7 +1145,7 @@ public class ActionCommandHandler :
     public async Task Consume(ConsumeContext<TryUpdateIdleAction> context)
     {
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
-        string targetNode = actionGroup.Actions.Single(a => a.IsFirstAction).Target.NodeId!;
+        string targetNodeId = actionGroup.Actions.Single(a => a.IsFirstAction).Target.NodeId!;
 
         await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -1216,7 +1228,7 @@ public class ActionCommandHandler :
             List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
 
             //create tuples of AGV and route costs to action group
-            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNode);
+            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNodeId);
             if (closestAgvRoute.agv == null)
             {
                 _logger.LogInformation("Reactivate all parking agvs and agvs at queue heads");
@@ -1238,11 +1250,19 @@ public class ActionCommandHandler :
                 return;
             }
             _logger.LogInformation("Reactivate agv {AgvCorrelationId} that is running idle action", closestAgvRoute.agv);
-            // Prepare action group
+
+            var abortedActionGroup = idleActionGroups.Single(a => a.AssignedAgv == closestAgvRoute.agv.Value);
+            var abortedAction = abortedActionGroup.Actions.Single(a => a.State == ActionState.Started);
+            var closestAgv = agvs.Single(a => a.CorrelationId == closestAgvRoute.agv.Value);
+            bool startNodeIsStation = closestAgv.AgvStatus?.LastNodeId != null && (await _agvDb.Graphs.GetNodeAsync(closestAgv.AgvStatus.LastNodeId)).IsStation();
+
             var actionToStart = actionGroup.FirstNotStartedAction!;
+            var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
+            DockingDirection? nodeDockingDirection = targetNode.DockingDirection;
             actionGroup.AssignedAgv = closestAgvRoute.agv;
             actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges);
             actionGroup.HasPriority = true;
+            actionGroup.SetDockFrontOfAction(actionToStart.CorrelationId, abortedAction.InfoToAgv?.GetDockFront(), nodeDockingDirection, startNodeIsStation);
 
             // Get route costs
             var assignedAgv = agvs.Single(a => a.CorrelationId == actionGroup.AssignedAgv!.Value);
@@ -1255,15 +1275,10 @@ public class ActionCommandHandler :
             // Publish messages
             await context.Publish(new AbortAndStartActionCommand(assignedAgv.CorrelationId,
                 assignedAgv.SerialNumber,
-                _mapper.Map<MessageAgvAction>(actionToStart),
-                idleActionGroups.SingleOrDefault(a => a.AssignedAgv == assignedAgv.CorrelationId)
-                    ?.Actions.SingleOrDefault(a => a.State == ActionState.Started)
-                    ?.CorrelationId));
+                _mapper.Map<MessageAgvAction>(actionToStart), abortedAction.CorrelationId));
 
             await context.Publish(new ActionGroupStarted(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, DateTime.UtcNow));
-
-            var abortedActionGroup = idleActionGroups.Single(a => a.AssignedAgv == assignedAgv.CorrelationId);
-            await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedActionGroup.Actions.Single(a => a.State == ActionState.Started).CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
+            await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedAction.CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
 
             // Log for ui
             _logger.LogOrderInformation(

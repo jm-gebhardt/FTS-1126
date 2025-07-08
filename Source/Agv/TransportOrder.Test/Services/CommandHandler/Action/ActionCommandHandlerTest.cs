@@ -1,7 +1,6 @@
 using FluentValidation.Results;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -53,30 +52,6 @@ public class ActionCommandHandlerTest
         var startActionCommand = await fixture.PublishAndGetFirstMessageAsync<StartActionOfActionGroup, StartActionCommand>(startAction);
 
         startActionCommand.Action.InfoToAgv.ShouldNotBeNull();
-        startActionCommand.Action.InfoToAgv.GetDockFront().ShouldBeTrue();
-        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
-    }
-
-    [TestMethod]
-    public async Task Consume_StartActionOfActionGroup_PreviousActionGroupWasChargeOrPark_Publishes_DockFrontFalse()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        const bool dockFront = true;
-        var startedAction = actionGroup.Actions.First();
-        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddAgv(agv)
-            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
-            .AddActionGroup(actionGroup)
-            .WithTargetNode(new GraphNode(startedAction.Target.NodeId!))
-            .WithLastActionDockFront(dockFront, true);
-
-        var startAction = new StartActionOfActionGroup(startedAction, agv.CorrelationId);
-
-        var startActionCommand = await fixture.PublishAndGetFirstMessageAsync<StartActionOfActionGroup, StartActionCommand>(startAction);
-
-        startActionCommand.Action.InfoToAgv.ShouldNotBeNull();
-        startActionCommand.Action.InfoToAgv.GetDockFront().ShouldBeFalse();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
     }
 
@@ -1913,6 +1888,7 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([])
             .WithClosestAgv(closestAgv.CorrelationId, route)
+            .WithTargetNode(new GraphNode())
             .AddAgvs([closestAgv]);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
@@ -1950,6 +1926,7 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([])
             .WithClosestAgv(closestAgv.CorrelationId, route)
+            .WithTargetNode(new GraphNode())
             .AddAgvs([closestAgv]);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
@@ -2040,6 +2017,7 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([warning])
             .WithClosestAgv(closestAgv.CorrelationId, route)
+            .WithTargetNode(new GraphNode())
             .AddAgvs([closestAgv]);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);

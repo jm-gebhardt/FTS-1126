@@ -269,8 +269,8 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="currentActionGroupCorrelationId">The correlation id of the current action group.</param>
-    /// <returns>The Dockfront value of the action and if it was an automatic charge or park action.</returns>
-    Task<(bool? dockfront, bool isAutomaticChargeOrPark)> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId, Guid currentActionGroupCorrelationId);
+    /// <returns>The DockFront value of the action.</returns>
+    Task<bool?> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId, Guid currentActionGroupCorrelationId);
 
     /// <summary>
     /// Gets the last completed action of an AGV. This is independent of the action group.

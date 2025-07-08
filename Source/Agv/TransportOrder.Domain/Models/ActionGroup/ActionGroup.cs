@@ -388,37 +388,39 @@ public class ActionGroup
     /// <param name="actionId">The id of the action for which dockfront is to be set.</param>
     /// <param name="dockFrontPreviousActionGroup">The value of dockfront of the last action of the previous action group.</param>
     /// <param name="nodeDockingDirection">The docking direction as given by the node.</param>
-    public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup, DockingDirection? nodeDockingDirection)
+    /// <param name="startIsStation">True, if the start node is a station.</param>
+    public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup, DockingDirection? nodeDockingDirection, bool startIsStation=false)
     {
         var action = Actions.Single(a => a.CorrelationId == actionId);
 
+        // Do not reset dock front, if it has been set manually
         if (IsManual && action.HasDockFront())
         {
             return;
         }
 
-        bool needsRotation = GetNeedsRotation();
-
-        if (IsChargingOrder)
+        bool isMove = Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1;
+        if (isMove)
         {
-            action.SetDockFront(needsRotation, null, nodeDockingDirection);
+            action.SetDockFront(false, dockFrontPreviousActionGroup, nodeDockingDirection, HasPriority && !startIsStation);
             return;
         }
 
-        bool isAutomaticParkOrder = Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1 && !IsManual && !HasPriority;
-        if (isAutomaticParkOrder)
+        if (IsChargingOrder)
         {
             action.SetDockFront(false, null, nodeDockingDirection);
             return;
         }
 
+        bool palletNeedsRotation = GetNeedsRotation();
         if (action.IsFirstAction)
         {
-            action.SetDockFront(needsRotation, dockFrontPreviousActionGroup, nodeDockingDirection);
+            action.SetDockFront(palletNeedsRotation, dockFrontPreviousActionGroup, nodeDockingDirection, !startIsStation);
             return;
         }
-        var previousAction = Actions.Single(a => a.Sequence == action.Sequence - 1);
-        action.SetDockFront(needsRotation, previousAction.InfoToAgv!.GetDockFront(), nodeDockingDirection);
+        var previousAction = Actions.OrderBy(a => a.Sequence).Last(a => !a.ShouldSkip && a.Sequence < action.Sequence);
+        bool noTurning = previousAction.ActionType == ActionType.Move;
+        action.SetDockFront(palletNeedsRotation, previousAction.InfoToAgv!.GetDockFront(), nodeDockingDirection, noTurning);
     }
 
     private bool GetNeedsRotation()

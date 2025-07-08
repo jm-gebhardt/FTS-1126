@@ -315,35 +315,55 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// Set dock front of an action.
     /// </summary>
-    /// <param name="needsRotation">True, if the pallet needs rotation.</param>
+    /// <param name="palletNeedsRotation">True, if the pallet needs rotation.</param>
     /// <param name="previousDockFront">Value of dockFront of the previous action.</param>
     /// <param name="nodeDockingDirection">The docking direction as given by the node.</param>
-    public void SetDockFront(bool needsRotation, bool? previousDockFront, DockingDirection? nodeDockingDirection)
+    /// <param name="noTurning">True, if the agv should not turn for a followup action.</param>
+    public void SetDockFront(bool palletNeedsRotation, bool? previousDockFront, DockingDirection? nodeDockingDirection, bool noTurning = false)
     {
         bool dockFront;
-        switch (ActionType)
-        {
-            case ActionType.Pick:
-            case ActionType.Move:
-                dockFront = previousDockFront?? true;
-                SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
-                return;
 
-            case ActionType.Drop:
+        bool isDoppelspiel = Nodes.Length == 1 && ActionType == ActionType.Pick;
+        if ((IsFirstAction && isDoppelspiel) || ActionType == ActionType.Charge || (IsFirstAction && noTurning))
+        {
+            dockFront = previousDockFront ?? true; // Fallback to avoid exceptions
+            SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
+            return;
+        }
+
+        if (IsFirstAction)
+        {
+            dockFront = previousDockFront == null || !previousDockFront.Value;
+            SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
+            return;
+        }
+
+        if (noTurning)
+        {
+            dockFront = previousDockFront!.Value;
+            if (ActionType == ActionType.Drop)
             {
-                dockFront = needsRotation ? previousDockFront!.Value : !previousDockFront!.Value;
+                // only if rotation is needed explicitly
+                dockFront = palletNeedsRotation ? !dockFront : dockFront;
                 if (ForceDropBackWards())
                 {
                     dockFront = false;
                 }
-                SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
-                return;
             }
-
-            case ActionType.Charge:
-                SetDockFrontValue(nodeDockingDirection.GetDockfront(true));
-                return;
+            SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
+            return;
         }
+
+        dockFront = !previousDockFront!.Value;
+        if (ActionType == ActionType.Drop)
+        {
+            dockFront = palletNeedsRotation ? !dockFront : dockFront;
+            if (ForceDropBackWards())
+            {
+                dockFront = false;
+            }
+        }
+        SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));
     }
 
     /// <summary>
