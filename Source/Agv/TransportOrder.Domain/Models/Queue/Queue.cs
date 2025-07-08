@@ -24,6 +24,8 @@ public class Queue
     /// </summary>
     public Guid Id { get; init; }
 
+    private QueueNode? QueueHead => Nodes.MinBy(n => n.Position);
+
     /// <summary>
     ///  The node at the position from which to dequeue if the queue isn't empty.
     /// </summary>
@@ -31,11 +33,10 @@ public class Queue
     {
         get
         {
-            var node = Nodes.MinBy(n => n.Position);
-            bool isOccupied = node?.OccupiedAgv != null ;
+            bool isOccupied = QueueHead?.OccupiedAgv != null;
             if (isOccupied)
             {
-                return node;
+                return QueueHead;
             }
             return null;
         }
@@ -54,7 +55,7 @@ public class Queue
     /// <summary>
     /// All the nodes of the queue that are not the entry node.
     /// </summary>
-    public ICollection<string> NonEntryNodes => Nodes.Select(q => q.NodeId).Where(n => n !=  EntryNode).ToList();
+    public ICollection<string> NonEntryNodes => Nodes.Select(q => q.NodeId).Where(n => n != EntryNode).ToList();
 
     /// <summary>
     /// The agv fill quantity.
@@ -75,7 +76,7 @@ public class Queue
     /// The agvs in the queue, ordered from entry node to head.
     /// </summary>
     public List<Guid> Agvs => Nodes.OrderByDescending(n => n.Position).Where(n => n.GetCurrentAgv() != null).Select(n => n.GetCurrentAgv()!.Value).ToList();
-    
+
     /// <inheritdoc cref="Queue"/>>
     public Queue(string name)
     {
@@ -98,6 +99,16 @@ public class Queue
     {
     }
 
+    private void IncrementAgvFillAmount()
+    {
+        AgvFillQuantity = Math.Min(AgvFillQuantity + 1, Nodes.Count);
+    }
+
+    private void DecreaseAgvFillQuantity()
+    {
+        AgvFillQuantity = Math.Max(0, AgvFillQuantity - 1);
+    }
+
     /// <summary>
     /// Try to enter a queue.
     /// </summary>
@@ -108,7 +119,7 @@ public class Queue
         {
             return null;
         }
-        AgvFillQuantity += 1;
+        IncrementAgvFillAmount();
         return EntryNode;
     }
 
@@ -143,6 +154,10 @@ public class Queue
             throw new NodeNotFoundException(nodeId);
         }
         Nodes.Remove(node);
+        if (node.OccupiedAgv != null)
+        {
+            DecreaseAgvFillQuantity();
+        }
     }
 
     /// <summary>
@@ -152,8 +167,8 @@ public class Queue
     /// <param name="targetNode">The id of the target node to enqueue to.</param>
     public bool TryEnqueue(Guid agvCorrelationId, [MaybeNullWhen(false)] out string targetNode)
     {
-        if (AgvFillQuantity == 0 )
-        { 
+        if (AgvFillQuantity == 0)
+        {
             targetNode = null;
             return false;
         }
@@ -162,13 +177,13 @@ public class Queue
             targetNode = EntryNode!;
             return true;
         }
-        int tail = Tail!.Position ;
+        int tail = Tail!.Position;
         var node = Nodes.Single(n => n.Position == tail);
         if (node.NodeId == EntryNode)
         {
-             node.Occupy(agvCorrelationId);
-             targetNode = node.NodeId;
-             return true;
+            node.Occupy(agvCorrelationId);
+            targetNode = node.NodeId;
+            return true;
         }
         node.Reserve(agvCorrelationId);
         targetNode = node.NodeId;
@@ -195,8 +210,7 @@ public class Queue
         var agv = node.OccupiedAgv!.Value;
         ShiftDown(ref agvsToMove, head);
         node.RemoveAgv(agv);
-        AgvFillQuantity -= 1;
-        AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
+        AgvFillQuantity = Math.Max(0, AgvFillQuantity - 1);
         return agv;
     }
 
@@ -235,12 +249,11 @@ public class Queue
     /// agv and is the given node.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the node.</param>
-    /// <param name="nodeId">The id of the node.</param>
+    /// <param name="nodeId">The node of the Agv.</param>
     /// <returns></returns>
-    public bool IsAgvAtQueueHead(Guid agvCorrelationId, string nodeId)
+    public bool IsAgvAtQueueHead(Guid agvCorrelationId, string? nodeId)
     {
-        var lastNode = Nodes.MinBy(n => n.Position);
-        return lastNode!= null && lastNode.AgvIsAssigned(agvCorrelationId) && lastNode.NodeId == nodeId;
+        return QueueHead != null && QueueHead.AgvIsAssigned(agvCorrelationId) && QueueHead.NodeId == nodeId;
     }
 
     /// <summary>
@@ -260,12 +273,11 @@ public class Queue
         ShiftDown(ref agvsToMove, node.Position);
         node.RemoveAgv(agvCorrelationId);
         //Remove agv from all queue nodes
-        foreach(var reservedNode in Nodes.Where(n => n.GetCurrentAgv() == agvCorrelationId))
+        foreach (var reservedNode in Nodes.Where(n => n.GetCurrentAgv() == agvCorrelationId))
         {
             reservedNode.RemoveAgv(agvCorrelationId);
         }
-        AgvFillQuantity -= 1;
-        AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
+        AgvFillQuantity = Math.Max(0, AgvFillQuantity - 1);
         return node.NodeId;
     }
 
@@ -280,7 +292,7 @@ public class Queue
         var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == queueingAgv);
         if (node == null)
         {
-            return ;
+            return;
         }
         ShiftDown(ref agvsToMove, node.Position);
         node.RemoveAgv(queueingAgv);
@@ -304,10 +316,10 @@ public class Queue
         {
             return;
         }
-        if(Nodes.Any(n => n.NodeId != node.NodeId && n.GetCurrentAgv() == agvCorrelationId && n.Position < node.Position))
+        if (Nodes.Any(n => n.NodeId != node.NodeId && n.GetCurrentAgv() == agvCorrelationId && n.Position < node.Position))
         {
-           // do not occupy if another downstream node has already been reserved for this agv
-           return;
+            // do not occupy if another downstream node has already been reserved for this agv
+            return;
         }
         node.Occupy(agvCorrelationId);
     }
@@ -320,7 +332,6 @@ public class Queue
         var node = Nodes.SingleOrDefault(n => n.AgvIsAssigned(agvCorrelationId));
         node?.Free(agvCorrelationId); // Agv might already be dequeued.
 
-        AgvFillQuantity -= 1;
-        AgvFillQuantity = Math.Max(AgvFillQuantity, 0);
+        AgvFillQuantity = Math.Max(0, AgvFillQuantity - 1);
     }
 }

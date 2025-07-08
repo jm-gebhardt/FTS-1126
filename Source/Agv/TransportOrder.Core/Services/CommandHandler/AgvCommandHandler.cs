@@ -1025,7 +1025,7 @@ public class AgvCommandHandler :
         }
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await TryDequeueAgv(context, agv.CorrelationId);
+            await TryDequeueAgv(context, agv);
             _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
             await PublishStateChange(context, agv);
             await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
@@ -1058,9 +1058,9 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task TryDequeueAgv(IPublishEndpoint context, Guid agvCorrelationId)
+    private async Task TryDequeueAgv(IPublishEndpoint context, Agv agv)
     {
-        Dictionary<Guid, string>? agvsToMove = await _queueManager.TryDequeueAgv(agvCorrelationId);
+        Dictionary<Guid, string>? agvsToMove = await _queueManager.TryDequeueAgv(agv.CorrelationId, agv.AgvStatus?.LastNodeId);
         if (agvsToMove == null)
         {
             return;
@@ -1069,13 +1069,13 @@ public class AgvCommandHandler :
         {
             await context.Publish(new QueueBecameEmpty());
         }
-        foreach (KeyValuePair<Guid, string> agvToMove in agvsToMove)
+        foreach (KeyValuePair<Guid, string> agvIdToMove in agvsToMove)
         {
-            var agv = await _agvDb.Agvs.GetAgvAsync(agvToMove.Key);
-            if (agv.IsQueueing)
+            var agvToMove = await _agvDb.Agvs.GetAgvAsync(agvIdToMove.Key);
+            if (agvToMove.IsQueueing)
             {
-                _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvToMove.Key, agvToMove.Value);
-                await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvToMove.Key, agvToMove.Value));
+                _logger.LogInformation("Trigger creating queue action for agv {AgvCorrelationId} to node {NodeId}", agvIdToMove.Key, agvIdToMove.Value);
+                await context.Publish(new CreateQueueingActionGroup(Guid.NewGuid(), agvIdToMove.Key, agvIdToMove.Value));
             }
         }
         //Trigger refilling of queue

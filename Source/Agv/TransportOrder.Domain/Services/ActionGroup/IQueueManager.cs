@@ -26,7 +26,7 @@ public interface IQueueManager
     /// Try to dequeue an agv.
     /// </summary>
     /// <returns>Object containing the agvs that need to move to the next queue node.</returns>
-    Task<Dictionary<Guid, string>?> TryDequeueAgv(Guid agvCorrelationId);
+    Task<Dictionary<Guid, string>?> TryDequeueAgv(Guid agvCorrelationId, string? agvLastNodeId);
 
     /// <summary>
     /// Try to escape the queue.

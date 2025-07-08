@@ -107,7 +107,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueue(null);
 
-        (await fixture.QueueManager.TryDequeueAgv(agv)).ShouldBeNull();
+        (await fixture.QueueManager.TryDequeueAgv(agv, null)).ShouldBeNull();
     }
 
     [TestMethod]
@@ -118,7 +118,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueue(queue);
 
-        (await fixture.QueueManager.TryDequeueAgv(agv)).ShouldBeNull();
+        (await fixture.QueueManager.TryDequeueAgv(agv, null)).ShouldBeNull();
         fixture.VerifyQueueWasUpdated(false);
     }
 
@@ -138,7 +138,7 @@ public class QueueManagerTest
             .WithAgv(agvInQueue)
             .WithQueue(queue);
 
-        Dictionary<Guid, string>? agvsToMove = await fixture.QueueManager.TryDequeueAgv(agv);
+        Dictionary<Guid, string>? agvsToMove = await fixture.QueueManager.TryDequeueAgv(agv, head.NodeId);
 
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(head.NodeId);

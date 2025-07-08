@@ -103,7 +103,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithAgvsToMove(Dictionary<Guid, string>? agvsToMove, int? queueSize=null, string? nodeId=null, bool swapped=false)
     {
-        _queueManager.Setup(x => x.TryDequeueAgv(It.IsAny<Guid>())).ReturnsAsync(agvsToMove);
+        _queueManager.Setup(x => x.TryDequeueAgv(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync(agvsToMove);
         _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync((agvsToMove, queueSize));
         _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync((agvsToMove, queueSize));
         _queueManager.Setup(x => x.TrySwapAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync((agvsToMove, nodeId, swapped));

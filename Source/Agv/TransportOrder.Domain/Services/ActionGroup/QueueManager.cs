@@ -120,7 +120,7 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<Dictionary<Guid, string>?> TryDequeueAgv(Guid agvCorrelationId)
+    public async Task<Dictionary<Guid, string>?> TryDequeueAgv(Guid agvCorrelationId, string? agvLastNodeId)
     {
         var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
         if (queue == null)
@@ -128,7 +128,7 @@ public class QueueManager(
             logger.LogDebug("Could not dequeue agv {AgvCorrelationId}, no queue found", agvCorrelationId);
             return null;
         }
-        if (!queue.IsAgvAtQueueHead(agvCorrelationId, queue.Head?.NodeId ?? string.Empty))
+        if (!queue.IsAgvAtQueueHead(agvCorrelationId, agvLastNodeId))
         {
             logger.LogWarning("Could not dequeue agv from queue {QueueName}, agv {AgvCorrelationId} is not at head position", queue.Name, agvCorrelationId);
             return null;
@@ -200,7 +200,7 @@ public class QueueManager(
             }
             logger.LogDebug("Agv {AgvCorrelationId} could not reach queue head {Head}, agv does not occupy head {NodeId}", agv.CorrelationId, nodeId, queue.Head?.NodeId);
         });
-        return queue != null && queue!.IsAgvAtQueueHead(agv.CorrelationId, nodeId);
+        return queue != null && queue.IsAgvAtQueueHead(agv.CorrelationId, nodeId);
     }
 
     /// <inheritdoc cref="IQueueManager"/>

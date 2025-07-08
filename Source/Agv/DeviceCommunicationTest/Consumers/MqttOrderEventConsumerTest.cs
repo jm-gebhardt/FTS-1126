@@ -147,13 +147,13 @@ public class MqttOrderEventConsumerTest
         var fixture = new OrderEventConsumerFixture().WithInternalOrderId(internalOrderId);
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
-        var consumedMsg = fixture.ConsumerHarness.Consumed.Select<MqttOrderEvent>().First().Context.Message;
+        var consumedMsg = await fixture.GetFirstConsumedMessageAsync<MqttOrderEvent>();
 
         consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);
         consumedMsg.OrderId.ShouldBe(message.OrderId);
         consumedMsg.OrderEventType.ShouldBe(message.OrderEventType);
 
-        fixture.VerifyOrderMappingRemoved(deleted? Times.Once() : Times.Never());
+        fixture.VerifyOrderMappingRemoved(deleted ? Times.Once() : Times.Never());
         return fixture.TestHarness.Published;
     }
 
@@ -171,7 +171,7 @@ public class MqttOrderEventConsumerTest
 internal class OrderEventConsumerFixture : MqttConsumerTestFixture<MqttOrderEventConsumer>
 {
     private readonly Mock<IActionRepository> _actionRepository = new();
-    
+
     public OrderEventConsumerFixture()
     {
         AddServices(s => s.AddTransient(_ => _actionRepository.Object));
