@@ -86,4 +86,21 @@ public class WaitingHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
     }
+
+    [TestMethod]
+    public async Task StartHanding_AlreadyListed_NotListedAgain()
+    {
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        var actionGroup = order.CreateActionGroup(OrderGenerator.KaeserConfiguration, Guid.NewGuid());
+        var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+        moveAction.StartedDate = DateTime.UtcNow;
+
+        var fixture = new WaitingHandlerTestFixture()
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
+            .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
+
+        await fixture.Handler.StartHandling(moveAction.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate);
+        await fixture.Handler.StartHandling(moveAction.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate);
+        fixture.WaitingPointRepository.Verify(x => x.AddAsync(It.IsAny<WaitingPointAction>()), Times.Once);
+    }
 }

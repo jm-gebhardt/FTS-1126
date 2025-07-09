@@ -92,10 +92,15 @@ public class WaitingHandler(
     {
         return semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            logger.LogInformation("Listing waiting action {ActionCorrelationId}", actionCorrelationId);
-            _actionsToSelectTarget.TryAdd(actionCorrelationId, orderCreationTime);
-            var waitingPointAction = new WaitingPointAction(actionCorrelationId, agvCorrelationId, orderCreationTime);
-            await waitingPointActionRepository.AddAsync(waitingPointAction);
+            if (!_actionsToSelectTarget.ContainsKey(actionCorrelationId))
+            {
+                logger.LogInformation("Listing waiting action {ActionCorrelationId}", actionCorrelationId);
+                _actionsToSelectTarget.TryAdd(actionCorrelationId, orderCreationTime);
+                var waitingPointAction = new WaitingPointAction(actionCorrelationId, agvCorrelationId, orderCreationTime);
+                await waitingPointActionRepository.AddAsync(waitingPointAction);
+                return;
+            }
+            logger.LogInformation("Action {ActionCorrelationId} already listed for waiting, not listing again", actionCorrelationId);
         });
     }
 
