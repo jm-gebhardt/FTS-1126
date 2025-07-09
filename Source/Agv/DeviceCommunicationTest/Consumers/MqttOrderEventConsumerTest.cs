@@ -20,7 +20,8 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 [TestClass]
 public class MqttOrderEventConsumerTest
 {
-    private const string SerialNumber = "AGV0";
+    private static string GetUniqueAgvSerialNumber() => $"#AGV-{Guid.NewGuid()}";
+
     private const string OrderId = "ORDER123";
     private readonly Guid _actionGuid = OrderId.ToGuid();
 
@@ -30,7 +31,7 @@ public class MqttOrderEventConsumerTest
     [TestMethod]
     public async Task ConsumeEventStarted_SameInternalAndVehicleOrderId_CorrectCorrelationId()
     {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Started);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Started);
         var published = await ConsumeMessage(message, null, false);
         var publishedMessage = await AssertPublishedEvent<ActionStarted>(published);
         publishedMessage.CorrelationId.ShouldBe(message.OrderId.ToGuid());
@@ -40,7 +41,7 @@ public class MqttOrderEventConsumerTest
     public async Task ConsumeEventStarted_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
     {
         var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Started);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Started);
         var published = await ConsumeMessage(message, internalOrderId, false);
         var publishedMessage = await AssertPublishedEvent<ActionStarted>(published);
         publishedMessage.CorrelationId.ShouldBe(internalOrderId);
@@ -52,7 +53,7 @@ public class MqttOrderEventConsumerTest
     [TestMethod]
     public async Task ConsumeEventCompleted_SameInternalAndVehicleOrderId_CorrectCorrelationId()
     {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Completed);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Completed);
         var published = await ConsumeMessage(message, null, false);
 
         var publishedMessage = await AssertPublishedEvent<ActionCompleted>(published);
@@ -63,7 +64,7 @@ public class MqttOrderEventConsumerTest
     public async Task ConsumeEventCompleted_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
     {
         var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Completed);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Completed);
         var published = await ConsumeMessage(message, internalOrderId, true);
 
         var publishedMessage = await AssertPublishedEvent<ActionCompleted>(published);
@@ -76,7 +77,7 @@ public class MqttOrderEventConsumerTest
     [TestMethod]
     public async Task ConsumeEventCanceled_SameInternalAndVehicleOrderId_CorrectCorrelationId()
     {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Canceled);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Canceled);
         var published = await ConsumeMessage(message, null, false);
 
         var publishedMessage = await AssertPublishedEvent<ActionCanceled>(published);
@@ -87,7 +88,7 @@ public class MqttOrderEventConsumerTest
     public async Task ConsumeEventCanceled_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
     {
         var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Canceled);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Canceled);
         var published = await ConsumeMessage(message, internalOrderId, true);
 
         var publishedMessage = await AssertPublishedEvent<ActionCanceled>(published);
@@ -100,7 +101,7 @@ public class MqttOrderEventConsumerTest
     [TestMethod]
     public async Task ConsumeEventCancelFailed_SameInternalAndVehicleOrderId_CorrectCorrelationId()
     {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.CancelFailed);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.CancelFailed);
         var published = await ConsumeMessage(message, null, false);
 
         var publishedMessage = await AssertPublishedEvent<ActionCancelFailed>(published);
@@ -111,7 +112,7 @@ public class MqttOrderEventConsumerTest
     public async Task ConsumeEventCancelFailed_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
     {
         var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.CancelFailed);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.CancelFailed);
         var published = await ConsumeMessage(message, internalOrderId, false);
 
         var publishedMessage = await AssertPublishedEvent<ActionCancelFailed>(published);
@@ -124,7 +125,7 @@ public class MqttOrderEventConsumerTest
     [TestMethod]
     public async Task ConsumeEventFailed_SameInternalAndVehicleOrderId_CorrectCorrelationId()
     {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Failed);
         var published = await ConsumeMessage(message, null, false);
 
         var publishedMessage = await AssertPublishedEvent<ActionFailed>(published);
@@ -135,7 +136,7 @@ public class MqttOrderEventConsumerTest
     public async Task ConsumeEventFailed_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
     {
         var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, SerialNumber, OrderEventType.Failed);
+        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Failed);
         var published = await ConsumeMessage(message, internalOrderId, true);
 
         var publishedMessage = await AssertPublishedEvent<ActionFailed>(published);

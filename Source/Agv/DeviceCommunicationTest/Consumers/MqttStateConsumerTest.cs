@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 [TestClass]
 public class MqttStateConsumerTest
 {
-    private const string AgvSerialNumber = "#0815#";
+    private static string GetUniqueAgvSerialNumber() => $"#AGV-{Guid.NewGuid()}";
 
     /// <summary>
     ///  Test for consuming invalid AGV status message.
@@ -60,7 +60,7 @@ public class MqttStateConsumerTest
         var fixture = new AgvStateConsumerTestFixture();
         const string orderId = "Order123";
 
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvSerialNumber, orderId)
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(GetUniqueAgvSerialNumber(), orderId)
         {
             LastNodeId = sentLastNodeId,
             AgvPosition = null
@@ -85,7 +85,8 @@ public class MqttStateConsumerTest
         var fixture = new AgvStateConsumerTestFixture();
         const string orderId = "Order123";
 
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(AgvSerialNumber, orderId)
+        string agvSerialNumber = GetUniqueAgvSerialNumber();
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvSerialNumber, orderId)
         {
             AgvPosition = new MqttAgvPosition()
             {
@@ -115,8 +116,8 @@ public class MqttStateConsumerTest
         consumedState.AgvPosition.Y.ShouldBe(y, 0.00001);
 
         var publishedPos = await fixture.GetFirstPublishedMessageAsync<AgvPositionReceived>();
-        publishedPos.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
-        publishedPos.SerialNumber.ShouldBe(AgvSerialNumber);
+        publishedPos.CorrelationId.ShouldBe(agvSerialNumber.ToGuid());
+        publishedPos.SerialNumber.ShouldBe(agvSerialNumber);
         publishedPos.AgvPosition.PositionInitialized.ShouldBe(positionInitialized);
         publishedPos.AgvPosition.Theta.ShouldBe((float)Mathematics.ConvertToRadians(90) - theta);
         publishedPos.AgvPosition.X.ShouldBe(x);

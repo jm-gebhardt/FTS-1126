@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.SemaphoreProviders;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Services.Significance;
 
 namespace Gebhardt.Acc.Common.Services.Filters;
 
@@ -12,7 +13,8 @@ public class AgvWifiMetricsReceivedInMemoryFilter(
     ISemaphoreProvider<IAgvWifiMetricsReceivedSemaphoreProvider> semaphoreProvider,
     IConcurrentDictionaryProvider<IMessageFilter<AgvWifiMetricsReceived>> concurrentDictionaryProvider,
     ISignificanceChecker<WifiMetrics> significanceChecker,
-    IKeyedSemaphoreProvider<AgvWifiMetricsReceived> guidSemaphoreProvider
+    IKeyedSemaphoreProvider<AgvWifiMetricsReceived> guidSemaphoreProvider,
+    WifiConfiguration configuration
 )
     : KeyedInMemoryFilter<AgvWifiMetricsReceived>(semaphoreProvider,
         concurrentDictionaryProvider)
@@ -21,5 +23,5 @@ public class AgvWifiMetricsReceivedInMemoryFilter(
     protected override Guid GetKey(AgvWifiMetricsReceived value) => value.CorrelationId;
 
     /// <inheritdoc />
-    protected override IMessageFilter<AgvWifiMetricsReceived> GetFilter(AgvWifiMetricsReceived value) => new AgvWifiMetricsReceivedFilter(significanceChecker, guidSemaphoreProvider.Get(value.CorrelationId), value);
+    protected override IMessageFilter<AgvWifiMetricsReceived> GetFilter(AgvWifiMetricsReceived value) => new AgvWifiMetricsReceivedFilter(significanceChecker, guidSemaphoreProvider.Get(value.CorrelationId), value, configuration);
 }

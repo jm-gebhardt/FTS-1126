@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Services.Significance;
 
 namespace Gebhardt.Acc.Common.Services.Filters;
 
@@ -14,8 +15,9 @@ public class AgvWifiMetricsReceivedFilter : InMemoryFilter<AgvWifiMetricsReceive
     public AgvWifiMetricsReceivedFilter(
         ISignificanceChecker<WifiMetrics> significanceChecker,
         ISemaphoreProvider semaphoreProvider,
-        AgvWifiMetricsReceived currentData
-    ) : base(semaphoreProvider, currentData)
+        AgvWifiMetricsReceived currentData,
+        WifiConfiguration configuration
+    ) : base(semaphoreProvider, currentData, configuration)
     {
         _significanceChecker = significanceChecker;
     }

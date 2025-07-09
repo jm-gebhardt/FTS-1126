@@ -21,6 +21,7 @@ public class WifiMetricsSignificanceChecker : ReflectionSignificanceChecker<Wifi
     {
         return new Dictionary<string, Func<WifiMetrics, WifiMetrics, bool>>
         {
+            { nameof(WifiMetrics.Timestamp), (_, _) => false },
             { nameof(WifiMetrics.BeaconSignalAverage), (obj1, obj2) => Math.Abs(obj1.BeaconSignalAverage.GetValueOrDefault(0) - obj2.BeaconSignalAverage.GetValueOrDefault(0)) >= _configuration.BeaconSignalAverageThreshold },
             { nameof(WifiMetrics.Quality), (obj1, obj2) => Math.Abs(obj1.Quality.GetValueOrDefault(0) - obj2.Quality.GetValueOrDefault(0)) >= _configuration.QualityThreshold },
             { nameof(WifiMetrics.Noise), (obj1, obj2) => Math.Abs(obj1.Noise.GetValueOrDefault(0) - obj2.Noise.GetValueOrDefault(0)) >= _configuration.NoiseThreshold }
