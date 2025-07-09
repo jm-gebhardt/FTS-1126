@@ -398,11 +398,12 @@ public class ActionGroup
         {
             return;
         }
-
+        bool noTurning;
         bool isMove = Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1;
         if (isMove)
         {
-            action.SetDockFront(false, dockFrontPreviousActionGroup, nodeDockingDirection, HasPriority && !startIsStation);
+            noTurning = (HasPriority && !startIsStation) || (IsManual && !startIsStation);
+            action.SetDockFront(false, dockFrontPreviousActionGroup, nodeDockingDirection, noTurning);
             return;
         }
 
@@ -419,7 +420,7 @@ public class ActionGroup
             return;
         }
         var previousAction = Actions.OrderBy(a => a.Sequence).Last(a => !a.ShouldSkip && a.Sequence < action.Sequence);
-        bool noTurning = previousAction.ActionType == ActionType.Move;
+        noTurning = previousAction.ActionType == ActionType.Move;
         action.SetDockFront(palletNeedsRotation, previousAction.InfoToAgv!.GetDockFront(), nodeDockingDirection, noTurning);
     }
 

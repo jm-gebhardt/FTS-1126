@@ -855,6 +855,20 @@ public class ActionGroupTests
         queueAction.InfoToAgv.GetDockFront().ShouldBe(move);
     }
 
+    [DataRow(false, null, true)]
+    [DataRow(false, true, true)]
+    [DataRow(false, false, false)]
+    [DataRow(true, false, true)]
+    [DataTestMethod]
+    public void SetDockFrontOfAction_ManualMove_DockFrontSet(bool startIsStation, bool? previous, bool move)
+    {
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual:true);
+        var moveAction = actionGroup.Actions.Single();
+        actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, previous, DockingDirection.Both, startIsStation);
+        moveAction.InfoToAgv.ShouldNotBeNull();
+        moveAction.InfoToAgv.GetDockFront().ShouldBe(move);
+    }
+
     [TestMethod]
     public void SetTargetForActionWithUpdate_NoDropTarget_ActionUpdated()
     {
