@@ -245,15 +245,12 @@ public class Queue
     }
 
     /// <summary>
-    /// True, if the last node is occupied by or reserved for the given
-    /// agv and is the given node.
+    /// True, if the head node is occupied by the given agv.
     /// </summary>
-    /// <param name="agvCorrelationId">The correlation id of the node.</param>
-    /// <param name="nodeId">The node of the Agv.</param>
-    /// <returns></returns>
-    public bool IsAgvAtQueueHead(Guid agvCorrelationId, string? nodeId)
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    public bool IsAgvAtQueueHead(Guid agvCorrelationId)
     {
-        return QueueHead != null && QueueHead.AgvIsAssigned(agvCorrelationId) && QueueHead.NodeId == nodeId;
+        return QueueHead != null && QueueHead.OccupiedAgv == agvCorrelationId;
     }
 
     /// <summary>

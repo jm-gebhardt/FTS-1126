@@ -128,9 +128,9 @@ public class QueueManager(
             logger.LogDebug("Could not dequeue agv {AgvCorrelationId}, no queue found", agvCorrelationId);
             return null;
         }
-        if (!queue.IsAgvAtQueueHead(agvCorrelationId, agvLastNodeId))
+        if (!queue.IsAgvAtQueueHead(agvCorrelationId))
         {
-            logger.LogWarning("Could not dequeue agv from queue {QueueName}, agv {AgvCorrelationId} is not at head position", queue.Name, agvCorrelationId);
+            logger.LogWarning("Could not dequeue agv from queue {QueueName}, agv {AgvCorrelationId} is not at head position, but at {AgvLastNodeId}, {AgvAtHead} is at assigned to head", queue.Name, agvCorrelationId, agvLastNodeId, queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv());
             return null;
         }
 
@@ -193,14 +193,14 @@ public class QueueManager(
             }
             queue.ReachNode(nodeId, agv.CorrelationId);
             await queueRepository.UpdateQueueAsync(queue);
-            if (queue.IsAgvAtQueueHead(agv.CorrelationId, nodeId))
+            if (queue.IsAgvAtQueueHead(agv.CorrelationId))
             {
                 logger.LogInformation("Agv {AgvCorrelationId} reached queue head {Head}", agv.CorrelationId, nodeId);
                 return;
             }
-            logger.LogDebug("Agv {AgvCorrelationId} could not reach queue head {Head}, agv does not occupy head {NodeId}", agv.CorrelationId, nodeId, queue.Head?.NodeId);
+            logger.LogDebug("Agv {AgvCorrelationId} could not reach queue head {Head}, agv does not occupy head {NodeId}, {AgvAtQueueHead} is assigned to head", agv.CorrelationId, nodeId, queue.Head?.NodeId, queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv());
         });
-        return queue != null && queue.IsAgvAtQueueHead(agv.CorrelationId, nodeId);
+        return queue != null && queue.IsAgvAtQueueHead(agv.CorrelationId);
     }
 
     /// <inheritdoc cref="IQueueManager"/>

@@ -310,25 +310,23 @@ public class QueueTest
     public void IsAgvAtQueueHead_DifferentNode_False()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-        var agv = queue.Head!.OccupiedAgv!.Value;
-        queue.IsAgvAtQueueHead(agv, queue.Nodes.MaxBy(n => n.Position)!.NodeId).ShouldBeFalse();
+        var agv = queue.Nodes.Single(n => n.Position == 1).OccupiedAgv!.Value;
+        queue.IsAgvAtQueueHead(agv).ShouldBeFalse();
     }
 
     [TestMethod]
     public void IsAgvAtQueueHead_DifferentAgvIsAtHead_False()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-        string head = queue.Head!.NodeId;
-        queue.IsAgvAtQueueHead(Guid.NewGuid(), head).ShouldBeFalse();
+        queue.IsAgvAtQueueHead(Guid.NewGuid()).ShouldBeFalse();
     }
 
     [TestMethod]
     public void IsAgvAtQueueHead_AgvIsAtHead_True()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-        string head = queue.Head!.NodeId;
         var agv = queue.Head!.OccupiedAgv!.Value;
-        queue.IsAgvAtQueueHead(agv, head).ShouldBeTrue();
+        queue.IsAgvAtQueueHead(agv).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -402,7 +400,7 @@ public class QueueTest
         // agv reaches the queue head
         queue.ReachNode(downstreamNode!, agv);
         queue.Nodes.Single(n => n.NodeId == downstreamNode).OccupiedAgv.ShouldBe(agv);
-        queue.IsAgvAtQueueHead(agv, downstreamNode!).ShouldBeTrue();
+        queue.IsAgvAtQueueHead(agv).ShouldBeTrue();
 
         // agv gets dequeued
         queue.TryDequeue(out Dictionary<Guid, string> agvsToMove);
