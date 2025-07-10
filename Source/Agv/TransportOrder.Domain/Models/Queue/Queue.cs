@@ -268,7 +268,11 @@ public class Queue
         var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == agvCorrelationId);
         if (node == null)
         {
-            return null;
+            node = Nodes.OrderBy(n => n.Position).FirstOrDefault(n => n.ReservedAgv == agvCorrelationId);
+            if (node == null)
+            {
+                return null;
+            }
         }
         ShiftDown(ref agvsToMove, node.Position);
         node.RemoveAgv(agvCorrelationId);

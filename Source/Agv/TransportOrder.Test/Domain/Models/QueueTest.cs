@@ -262,6 +262,23 @@ public class QueueTest
     }
 
     [TestMethod]
+    public void TryEscapeQueue_AgvReservedForHeadEscapes_AgvRemovedFromQueue()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        // Escape initiated by head evacuation
+        var escapedNode = queue.Head!;
+        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out Dictionary<Guid, string> agvsToMoveFirstEscape).ShouldBe(escapedNode.NodeId);
+        agvsToMoveFirstEscape.Count.ShouldBe(2);
+        
+        Guid? agvReservedForHead = queue.Nodes.MinBy(n => n.Position)!.ReservedAgv;
+        agvReservedForHead.ShouldNotBeNull();
+        //Next head evacuation while move from first has not started yet
+        queue.TryEscapeQueue(agvReservedForHead.Value, out Dictionary<Guid, string> agvsToMoveSecondEscape).ShouldBe(escapedNode.NodeId);
+        queue.Nodes.MinBy(n => n.Position)!.GetCurrentAgv().ShouldNotBe(agvReservedForHead);
+        agvsToMoveSecondEscape.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
     public void IsEnqueued_AgvNotInQueue_ReturnsFalse()
     {
         var queue = QueueGenerator.GenerateEmptyQueue();
