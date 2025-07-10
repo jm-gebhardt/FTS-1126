@@ -46,7 +46,8 @@ public class AgvActionCommandHandler(
 
         logger.LogInformation("Handling start of action {CorrelationId} for agv {AgvCorrelationId}", action.CorrelationId, agvCorrelationId);
         var lastFinishedAction = await transportOrderDb.ActionGroups.GetLastCompletedActionAsync(agvCorrelationId);
-        string[] nodes = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).Nodes;
+        ICollection<string> nodes = action.Nodes;
+
         logger.LogInformation("Nodes of action: {Nodes}", string.Join(",", nodes));
         //start node of current order is assumed to be the target node of last completed action of this AGV
         string? startNode = lastFinishedAction?.Target.NodeId;
@@ -182,7 +183,7 @@ public class AgvActionCommandHandler(
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
 
         var action = actionGroup.Actions.OrderBy(a => a.CompletedDate).Last();
-        if (action is {ActionType: ActionType.Drop, ShouldSkip: false})
+        if (action is { ActionType: ActionType.Drop, ShouldSkip: false })
         {
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
             {

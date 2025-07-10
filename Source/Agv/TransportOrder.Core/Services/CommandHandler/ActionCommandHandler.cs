@@ -1046,7 +1046,7 @@ public class ActionCommandHandler :
             bool? previousActionGroupDockFront = null;
             if (currentAction.IsFirstAction)
             {
-                // For diagnosing DokFront of the first action of the group we need the docking direction of the last completed action
+                // For diagnosing DockFront of the first action of the group we need the docking direction of the last completed action
                 previousActionGroupDockFront= await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agv.CorrelationId, actionGroup.CorrelationId);
             }
             DockingDirection? nodeDockingDirection= (await _agvDb.Graphs.GetNodeAsync(targetNodeId)).DockingDirection;

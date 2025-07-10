@@ -77,7 +77,8 @@ public class RouteService : IRouteService
         }
 
         var route = await _routeFinder.TryGetRouteAsync(agvGraph, agvData, cancellationToken, startNodeId, destinationNodeId);
-        return route;
+
+        return route?.Nodes.Length == 0 ? null : route;
     }
 
     private async Task<Route?> GetRouteIfExistingAsync(Agv agv, IEnumerable<string> destinationNodeIds, string? startNodeId, AgvData? agvData, CancellationToken cancellationToken = default)
@@ -149,7 +150,7 @@ public class RouteService : IRouteService
 
         foreach (var action in actionGroup.Actions.Where(a => a is { IsIncomplete: false, IsMoveToCoordinate: false }))
         {
-            var route  = await GetRouteIfExistingAsync(agv, action.Target.NodeId!, null, true, agvData, cancellationToken); 
+            var route = await GetRouteIfExistingAsync(agv, action.Target.NodeId!, null, true, agvData, cancellationToken);
             if (route == null)
             {
                 return null; // Break if a target node is not reachable
