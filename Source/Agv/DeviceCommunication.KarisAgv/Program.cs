@@ -124,6 +124,7 @@ try
                             configurator.ConfigureMessageTopology<MqttInstantActions>();
                             configurator.ConfigureMessageTopology<MqttRequestZones>();
                             configurator.ConfigureMessageTopology<MqttRequestZoneRemoveAgv>();
+                            configurator.ConfigureMessageTopology<MqttRequestStationRemoveAgv>();
 
                             // add filters
                             configurator.UseConsumeFilter<MqttMessageConsumeFilter>(registrationContext);
