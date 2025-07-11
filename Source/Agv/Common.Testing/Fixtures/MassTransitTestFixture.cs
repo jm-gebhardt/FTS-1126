@@ -6,6 +6,7 @@ using Shouldly;
 
 namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
+[PublicAPI]
 public abstract class MassTransitTestFixture : FixtureBase
 {
     private readonly List<Type> _consumers = new();
@@ -80,8 +81,21 @@ public abstract class MassTransitTestFixture : FixtureBase
     /// <typeparam name="T">Type of message to be published.</typeparam>
     public async Task PublishMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null) where T : class, CorrelatedBy<Guid>
     {
+        await PublishMessageAsync<T, Guid>(message, filter);
+    }
+
+    /// <summary>
+    /// Publish and consume the message.
+    /// </summary>
+    /// <param name="message">Message to be published.</param>
+    /// <param name="filter">Message filter.</param>
+    /// <typeparam name="T">Type of message to be published.</typeparam>
+    /// <typeparam name="TKey">Type of correlation id used.</typeparam>
+    public async Task PublishMessageAsync<T, TKey>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null)
+        where T : class, CorrelatedBy<TKey>
+    {
         await TestHarness.Bus.Publish(message);
-        (await (filter != null ? ConsumedMessages.Any(filter) : ConsumedMessages.Any<T>(s => s.Context.Message.CorrelationId == message.CorrelationId))).ShouldBeTrue();
+        (await (filter != null ? ConsumedMessages.Any(filter) : ConsumedMessages.Any<T>(s => s.Context.Message.CorrelationId != null && s.Context.Message.CorrelationId.Equals(message.CorrelationId)))).ShouldBeTrue();
     }
 
     /// <summary>
@@ -102,13 +116,29 @@ public abstract class MassTransitTestFixture : FixtureBase
     /// <param name="filter">Message filter.</param>
     /// <typeparam name="TPublished">Type of message to be published.</typeparam>
     /// <typeparam name="TReceived">Type of message to be received.</typeparam>
+    /// <typeparam name="TKey">Type of correlation id used.</typeparam>
+    public async Task<TReceived> PublishAndGetFirstMessageAsync<TPublished, TReceived, TKey>(TPublished message,
+        FilterDelegate<IReceivedMessage<TPublished>>? filter = null)
+        where TPublished : class, CorrelatedBy<TKey>
+        where TReceived : class
+    {
+        await PublishMessageAsync<TPublished, TKey>(message, filter);
+        return await GetFirstPublishedMessageAsync<TReceived>();
+    }
+
+    /// <summary>
+    /// Publish and return the message.
+    /// </summary>
+    /// <param name="message">Message to be published.</param>
+    /// <param name="filter">Message filter.</param>
+    /// <typeparam name="TPublished">Type of message to be published.</typeparam>
+    /// <typeparam name="TReceived">Type of message to be received.</typeparam>
     public async Task<TReceived> PublishAndGetFirstMessageAsync<TPublished, TReceived>(TPublished message,
         FilterDelegate<IReceivedMessage<TPublished>>? filter = null)
         where TPublished : class, CorrelatedBy<Guid>
         where TReceived : class
     {
-        await PublishMessageAsync(message, filter);
-        return await GetFirstPublishedMessageAsync<TReceived>();
+        return await PublishAndGetFirstMessageAsync<TPublished, TReceived, Guid>(message, filter);
     }
 
     /// <summary>
