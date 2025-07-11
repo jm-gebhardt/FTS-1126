@@ -18,4 +18,9 @@ public class ActionGroupStateInvalidException : Exception
     public ActionGroupStateInvalidException(ActionGroup actionGroup, string message) : base($"ActionGroup State {actionGroup.State} is invalid. {message} ")
     {
     }
+
+    /// <inheritdoc cref="ActionGroupStateInvalidException"/>>
+    public ActionGroupStateInvalidException(string message) : base(message)
+    {
+    }
 }

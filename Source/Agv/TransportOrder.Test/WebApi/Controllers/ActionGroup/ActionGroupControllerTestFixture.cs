@@ -40,6 +40,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly Mock<IAgvDb> _agvDb = new();
+    private readonly Mock<IGraphRepository> _graphRepositoryMock = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
     private readonly List<ActionGroupReadModel> _actionGroupReadModels = new();
     private readonly List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
@@ -62,6 +63,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _maintenanceService.Object);
             sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);
             sc.AddTransient(_ => _agvDb.Object);
+            sc.AddTransient(_ => _graphRepositoryMock.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
             sc.AddTransient<ActionCommandHelper>();
@@ -80,6 +82,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>()))!.ReturnsAsync(
             (AgvAction action, TransportOrder.Domain.Models.Agv.Agv _, ActionState _, Reason? _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
         _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((TransportOrder.Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
+        _graphRepositoryMock.Setup(x => x.NodeExistsAsync(It.IsAny<string>())).ReturnsAsync(true);
     }
 
     protected override ActionGroupController GetController()
@@ -92,6 +95,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         IRequestClient<TryReassignActionGroup> reassignActionGroupClient = GetRequestClient<TryReassignActionGroup>();
         IRequestClient<TriggerActionCompletion> actionCompletionClient = GetRequestClient<TriggerActionCompletion>();
         IRequestClient<TriggerActionGroupQueueing> actionGroupQueueingClient = GetRequestClient<TriggerActionGroupQueueing>();
+        IRequestClient<TriggerSetTarget> setTargetClient = GetRequestClient<TriggerSetTarget>();
 
         var controller = new ActionGroupController(Mapper,
             getActionGroupRequestClient,
@@ -101,7 +105,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             createActionGroupRequestClient,
             reassignActionGroupClient,
             actionCompletionClient,
-            actionGroupQueueingClient)
+            actionGroupQueueingClient,
+            setTargetClient)
         {
             ControllerContext = new ControllerContext(
                 new ActionContext(

@@ -1721,6 +1721,37 @@ public class ActionCommandHandlerTest
         actionGroup.Actions[1].ActionType.ShouldBe(ActionType.Drop);
     }
 
+    [DataRow(ActionState.Started)]
+    [DataRow(ActionState.Created)]
+    [DataTestMethod]
+    public async Task Consume_SetTargetForAction_TargetResetForStartedAction_PublishesUpdateActionGroup(ActionState state)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: state);
+        actionGroup.Actions[0].InfoToAgv = new Dictionary<InfoToAgvKey, string>();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup)
+            .AddAgv(agv)
+            .WithTargetNode(new GraphNode("target"))
+            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()]);
+
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+
+        await fixture.PublishMessageAsync(new SetTargetForAction(pickAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+
+        await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+
+        pickAction.IsIncomplete.ShouldBeFalse();
+        actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
+        pickAction.Target.NodeId.ShouldBe("target");
+
+        var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
+        updateActionCommand.Action.CorrelationId.ShouldBe(pickAction.CorrelationId);
+    }
+
     [TestMethod]
     public async Task Consume_SetTargetForAction_AssignedAgvAllStationsLocked_PublishesAgvBecameIdle_NoUpdate()
     {

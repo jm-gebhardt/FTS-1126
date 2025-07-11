@@ -199,4 +199,18 @@ public class ActionGroupControllerTest
         var controller = fixture.Controller;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await controller.ResetActionGroup(correlationId));
     }
+
+    [TestMethod]
+    public async Task SetTarget_ValidData_ReturnsOk()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget(actionGroupState: ActionGroupState.Started);
+        ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+            .AddActionGroup(actionGroup)
+            .Build();
+
+        var controller = fixture.Controller;
+        var response = await controller.SetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId, "node");
+        var result = response as OkResult;
+        result.ShouldNotBeNull();
+    }
 }

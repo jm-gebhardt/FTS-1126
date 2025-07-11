@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -23,21 +24,24 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<TriggerActionGroupReset>,
     IConsumer<TryReassignActionGroup>,
     IConsumer<TriggerActionCompletion>,
-    IConsumer<TriggerActionGroupQueueing>
+    IConsumer<TriggerActionGroupQueueing>,
+    IConsumer<TriggerSetTarget>
 {
     private readonly IBus _bus;
     private readonly IActionGroupRetrievalService _retrievalService;
     private readonly IActionGroupRepository _actionGroupRepository;
+    private readonly IGraphRepository _graphRepository;
     private readonly ILogger<ActionGroupRequestHandler> _logger;
 
     /// <summary>
     ///  Initializes a new <see cref="ActionGroupRequestHandler"/> instance.
     /// </summary>
-    public ActionGroupRequestHandler(ILogger<ActionGroupRequestHandler> logger, IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IBus bus)
+    public ActionGroupRequestHandler(ILogger<ActionGroupRequestHandler> logger, IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IGraphRepository graphRepository, IBus bus)
     {
         _bus = bus;
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
+        _graphRepository = graphRepository;
         _logger = logger;
     }
 
@@ -154,6 +158,37 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         var actionGroupCorrelationId = context.Message.CorrelationId;
         await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
         await _bus.Publish(new ForceQueueActionGroup(actionGroupCorrelationId));
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TriggerSetTarget"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TriggerSetTarget> context)
+    {
+        (var correlationId, var actionCorrelationId, string targetNode) = context.Message;
+
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
+        if (actionGroup.Actions.All(a => a.CorrelationId != actionCorrelationId))
+        {
+            throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionCorrelationId);
+        }
+
+        await _graphRepository.ThrowIfNodeNotExistsAsync(targetNode);
+   
+        var action = actionGroup.Actions.First(a => a.CorrelationId == actionCorrelationId);
+        if (action.ShouldSkip)
+        {
+            throw new ActionGroupStateInvalidException($"Action {action.CorrelationId} already skipped");
+        }
+
+        if (action.State == ActionState.Completed)
+        {
+            throw new ActionGroupStateInvalidException($"Action {action.CorrelationId} already completed");
+        }
+
+        _logger.LogInformation("Triggering setting target {TargetNode} for action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", targetNode, actionCorrelationId, correlationId);
+        await _bus.Publish(new SetTargetForAction(actionCorrelationId, correlationId, actionGroup.AssignedAgv, targetNode));
         await context.RespondAsync(new Success());
     }
 }

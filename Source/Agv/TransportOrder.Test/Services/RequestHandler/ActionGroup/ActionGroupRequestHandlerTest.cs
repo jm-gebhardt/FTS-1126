@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -225,7 +226,7 @@ public class ActionGroupRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroupWithStartedAction = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
- 
+
         ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroupWithStartedAction)
@@ -241,7 +242,7 @@ public class ActionGroupRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
-       
+
         ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup)
@@ -324,5 +325,99 @@ public class ActionGroupRequestHandlerTest
         await fixture.GetResponseAsync<Success>(new TriggerActionGroupQueueing(actionGroup.CorrelationId));
 
         await fixture.ShouldHavePublishedAsync<ForceQueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerSetTarget_ValidData_RespondsSuccess()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Created);
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+            .WithActionGroups(actionGroup)
+            .AddDefaultGraph()
+            .BuildAsync();
+
+        string node = fixture.GetExistingNode()!;
+        await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node));
+
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerSetTarget_UnknownActionGroup_ThrowsActionGroupNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Created);
+
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .AddDefaultGraph()
+                .BuildAsync();
+
+        string node = fixture.GetExistingNode()!;
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget("unknown".ToGuid(), actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerSetTarget_UnknownAction_ThrowsActionNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Created);
+
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .AddDefaultGraph()
+                .BuildAsync();
+
+        string node = fixture.GetExistingNode()!;
+        await MediatorShould.ThrowRequestExceptionAsync<ActionNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, "unknown".ToGuid(), node)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerSetTarget_UnknownTargetNode_ThrowsNodeNotFoundException()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Created);
+
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .AddDefaultGraph()
+                .BuildAsync();
+
+        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "unknown")));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerSetTarget_ActionIsAlreadyCompleted_ThrowsActionGroupStateInvalidException()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(dropActionState: ActionState.Completed);
+
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .AddDefaultGraph()
+                .BuildAsync();
+
+        string node = fixture.GetExistingNode()!;
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerSetTarget_ActionShouldSkip_ThrowsActionGroupStateInvalidException()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Completed);
+        actionGroup.SetTargetForActionWithUpdate(actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "target");
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .AddDefaultGraph()
+                .BuildAsync();
+
+        string node = fixture.GetExistingNode()!;
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ShouldSkip).CorrelationId, node)));
     }
 }

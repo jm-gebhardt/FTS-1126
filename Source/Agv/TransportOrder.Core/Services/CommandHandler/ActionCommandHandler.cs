@@ -1034,14 +1034,28 @@ public class ActionCommandHandler :
         bool stationIsLocked = await _actionService.StationIsLockedIfExists(targetNodeId);
         bool shouldUpdate = !stationIsLocked && currentAction is { State: ActionState.Started } && assignedAgv != null;
 
-        Agv? agv = null;
+        if (nextAction.State == ActionState.Started || !nextAction.IsIncomplete)
+        {
+            // Reset of previously set action target: no next action needs to be skipped, i.e. next action is current action
+            currentAction = nextAction;
+            shouldUpdate = !stationIsLocked;
+        }
 
+        Agv? agv = null;
+        Route? route = null;
         if (shouldUpdate)
         {
             agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
-            var route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
-            currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNodeId, route);
+            route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
+            if (currentAction?.CorrelationId == nextAction.CorrelationId)
+            {
+                actionGroup.SetTargetForAction(actionId, targetNodeId, route);
+            }
+            else
+            {
+                currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNodeId, route);
+            }
             bool startNodeIsStation = await GetStartNodeIsStation(currentAction);
             bool? previousActionGroupDockFront = null;
             if (currentAction.IsFirstAction)
@@ -1055,7 +1069,7 @@ public class ActionCommandHandler :
             actionGroup.SetCargoLiftHeightForAction(currentAction.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
 
-        actionGroup.SetTargetForAction(actionId, targetNodeId);
+        actionGroup.SetTargetForAction(actionId, targetNodeId, route);
         await _actionGroupRepository.UpdateAsync(actionGroup);
 
         if (assignedAgv != null)

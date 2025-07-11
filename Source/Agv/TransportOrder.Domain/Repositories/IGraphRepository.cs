@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 
@@ -94,6 +95,13 @@ public interface IGraphRepository
     /// <param name="nodeId">The Id of the node</param>
     /// <returns></returns>
     Task<bool> NodeExistsAsync(string nodeId);
+
+    /// <summary>
+    /// Check if a node exists in the repository and raise <see cref="NodeNotFoundException"/> if not.
+    /// </summary>
+    /// <param name="nodeId">The Id of the node</param>
+    /// <exception cref="NodeNotFoundException">Raised, if the node was not found.</exception>
+    Task ThrowIfNodeNotExistsAsync(string nodeId);
 
     /// <summary>
     /// Check if an edge exists in the repository.

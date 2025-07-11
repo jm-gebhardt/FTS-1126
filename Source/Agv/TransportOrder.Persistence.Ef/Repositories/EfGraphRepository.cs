@@ -300,6 +300,21 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
+    public async Task ThrowIfNodeNotExistsAsync(string nodeId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var node = await context.Set<EfNode>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Id == nodeId);
+
+        if (node == null || !string.Equals(node.Id, nodeId, StringComparison.InvariantCulture))
+        {
+            throw new NodeNotFoundException(nodeId);
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<bool> EdgeExistsAsync(Guid edgeId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

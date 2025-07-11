@@ -19,6 +19,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
 {
     private readonly ActionGroupRetrievalServiceTestFixture _actionGroupRetrievalServiceTestFixture = new();
     private readonly ActionGroupRepositoryTestFixture _actionGroupRepositoryFixture = new();
+    private readonly EfAgvGraphRepositoryTestFixture _graphRepositoryTestFixture = new();
     private EfAgvGraph? _efGraph;
     private TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
 
@@ -57,10 +58,12 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         if (_efGraph != null)
         {
             await _actionGroupRetrievalServiceTestFixture.AddAsync(_efGraph);
+            await _graphRepositoryTestFixture.AddAsync(_efGraph);
         }
         await _actionGroupRepositoryFixture.BuildAsync();
         AddServices(s => s.AddTransient<IActionGroupRetrievalService>(_ => _actionGroupRetrievalServiceTestFixture.ActionGroupRetrievalService));
         AddServices(s => s.AddTransient<IActionGroupRepository>(_ => _actionGroupRepositoryFixture.ActionGroupRepository));
+        AddServices(s => s.AddTransient<IGraphRepository>(_ => _graphRepositoryTestFixture.Repository));
 
         await base.BuildAsync();
         Build();
@@ -85,4 +88,9 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         AddConsumers<SuccessRequestHandlerMock<ResetActionGroup>>();
         return this;
     }
+
+    public string? GetExistingNode()
+    {
+        return _efGraph?.Nodes.Select(e => e.Id).FirstOrDefault();
+    } 
 }

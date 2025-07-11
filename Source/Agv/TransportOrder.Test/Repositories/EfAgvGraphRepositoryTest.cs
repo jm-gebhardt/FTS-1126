@@ -172,6 +172,44 @@ public class EfAgvGraphRepositoryTest
     }
 
     [TestMethod]
+    public async Task NodeExistsAsync_NodesDoesNotExist_ReturnsFalse()
+    {
+        var fixture = new EfAgvGraphRepositoryTestFixture();
+
+        (await fixture.Repository.NodeExistsAsync("unknown")).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task ThrowIfNodeNotExistsAsync_NodesDoesNotExist_ThrowsNodeNotFoundException()
+    {
+        var fixture = new EfAgvGraphRepositoryTestFixture();
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+        await fixture.Repository.UpdateGraphAsync(new Graph { Nodes = agvGraph.Nodes, Edges = agvGraph.Edges });
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(agvGraph);
+
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.ThrowIfNodeNotExistsAsync(agvGraph.Nodes.First().Id.ToLower()));
+    }
+
+    [TestMethod]
+    public async Task ThrowIfNodeNotExistsAsync_NodesExists_DoesNotThrowsNodeNotFoundException()
+    {
+        var fixture = new EfAgvGraphRepositoryTestFixture();
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+        await fixture.Repository.UpdateGraphAsync(new Graph { Nodes = agvGraph.Nodes, Edges = agvGraph.Edges });
+        await fixture.Repository.AddOrUpdateAgvGraphAsync(agvGraph);
+
+        await Should.NotThrowAsync(async () => await fixture.Repository.ThrowIfNodeNotExistsAsync(agvGraph.Nodes.First().Id));
+    }
+
+    [TestMethod]
+    public async Task ThrowIfNodeNotExistsAsync_NodesCaseWrong_ThrowsNodeNotFoundException()
+    {
+        var fixture = new EfAgvGraphRepositoryTestFixture();
+
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.ThrowIfNodeNotExistsAsync("unknown"));
+    }
+
+    [TestMethod]
     public async Task RemoveAsync_WhenAgvGraphIsNotExisting_ThrowsAgvGraphNotDefinedException()
     {
         var fixture = new EfAgvGraphRepositoryTestFixture();

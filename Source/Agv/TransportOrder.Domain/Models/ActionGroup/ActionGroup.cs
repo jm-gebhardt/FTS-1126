@@ -465,13 +465,20 @@ public class ActionGroup
     /// <param name="targetNode">The target node.</param>
     /// <exception cref="ActionNotFoundException">Thrown if no action with was found using the action id</exception>
     /// <exception cref="SetActionTargetFailedException">Thrown if the action already had a target</exception>
-    public void SetTargetForAction(Guid actionId, string targetNode)
+    /// <param name="route">The route, if any.</param>
+    public void SetTargetForAction(Guid actionId, string targetNode, Route? route = null)
     {
         if (Actions.All(a => a.CorrelationId != actionId))
         {
             throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionId);
         }
-        Actions.Single(a => a.CorrelationId == actionId).SetTarget(targetNode);
+        var action = Actions.Single(a => a.CorrelationId == actionId);
+        action.SetTarget(targetNode, route == null);
+        if (route != null)
+        {
+            action.Nodes = route.Nodes;
+            action.Edges = route.Edges;
+        }
     }
 
     private void UpdateActionState(Guid actionId, ActionState state)

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -29,6 +30,7 @@ public class ActionGroupController : Controller
     private readonly IRequestClient<TryReassignActionGroup> _reassignActionGroupClient;
     private readonly IRequestClient<TriggerActionCompletion> _actionCompletionClient;
     private readonly IRequestClient<TriggerActionGroupQueueing> _actionGroupQueueingClient;
+    private readonly IRequestClient<TriggerSetTarget> _setTargetClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -42,7 +44,8 @@ public class ActionGroupController : Controller
         IRequestClient<CreatePickDropActionGroup> createActionGroupClient,
         IRequestClient<TryReassignActionGroup> reassignActionGroupClient,
         IRequestClient<TriggerActionCompletion> actionCompletionClient,
-            IRequestClient<TriggerActionGroupQueueing> actionGroupQueueingClient)
+        IRequestClient<TriggerActionGroupQueueing> actionGroupQueueingClient,
+        IRequestClient<TriggerSetTarget> setTargetClient)
     {
         _mapper = mapper;
         _getActionGroupRequestClient = getActionGroupRequestClient;
@@ -53,6 +56,7 @@ public class ActionGroupController : Controller
         _reassignActionGroupClient = reassignActionGroupClient;
         _actionCompletionClient = actionCompletionClient;
         _actionGroupQueueingClient = actionGroupQueueingClient;
+        _setTargetClient = setTargetClient;
     }
 
     /// <summary>
@@ -187,6 +191,20 @@ public class ActionGroupController : Controller
     public async Task<ActionResult> QueueActionGroup(Guid correlationId)
     {
         await _actionGroupQueueingClient.GetResponse<Success>(new TriggerActionGroupQueueing(correlationId));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Set target for action of action group.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Action group or action with given correlationId not found or the given target node has not been found.</response>
+    /// <response code="400">The action has already been completed.</response>
+    [HttpPatch]
+    [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId:guid}/setTarget")]
+    public async Task<ActionResult> SetTarget(Guid correlationId, Guid actionCorrelationId, [FromQuery] [Required] string targetNode)
+    {
+        await _setTargetClient.GetResponse<Success>(new TriggerSetTarget(correlationId, actionCorrelationId, targetNode));
         return Ok();
     }
 }

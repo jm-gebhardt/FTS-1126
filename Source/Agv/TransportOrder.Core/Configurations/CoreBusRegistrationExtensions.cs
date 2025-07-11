@@ -323,6 +323,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TriggerActionCompletion>();
         configurator.AddRequestClient<TriggerActionGroupQueueing>();
 
+        configurator.AddRequestClient<TriggerSetTarget>();
         configurator.AddRequestClient<GetActionGroupStatistics>();
         configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();
     }
