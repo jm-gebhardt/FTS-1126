@@ -1227,8 +1227,10 @@ public class ActionCommandHandler :
             //get list of all AGV data from the available AGV
             List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
 
-            //create tuples of AGV and route costs to action group
-            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNodeId);
+            //Create tuples of AGV and route costs to action group.
+            //Skip agvs that are on the target or on the first edge to the next waypoint,
+            //as it could already be moving away and running a detour to the target.
+            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNodeId, true);
             if (closestAgvRoute.agv == null)
             {
                 _logger.LogInformation("Reactivate all parking agvs and agvs at queue heads");

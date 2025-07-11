@@ -132,7 +132,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithClosestAgv(Guid? closestAgv)
     {
-        _routeService.SetupSequence(x => x.GetAgvRouteClosestToTarget(It.IsAny<ICollection<(TransportOrder.Domain.Models.Agv.Agv agv, AgvData? agvData)>>(), It.IsAny<string>()))
+        _routeService.SetupSequence(x => x.GetAgvRouteClosestToTarget(It.IsAny<ICollection<(TransportOrder.Domain.Models.Agv.Agv agv, AgvData? agvData)>>(), It.IsAny<string>(), It.IsAny<bool>()))
             .ReturnsAsync((closestAgv, new Route(42, [], [])));
         return this;
     }

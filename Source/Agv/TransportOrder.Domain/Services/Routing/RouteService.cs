@@ -263,8 +263,14 @@ public class RouteService : IRouteService
     }
 
     ///<inheritdoc />
-    public async Task<(Guid? agv, Route? route)> GetAgvRouteClosestToTarget(ICollection<(Agv agv, AgvData? agvData)> agvs, string targetNodeId)
+    public async Task<(Guid? agv, Route? route)> GetAgvRouteClosestToTarget(ICollection<(Agv agv, AgvData? agvData)> agvs, string targetNodeId, bool skipAgvsStartingAtTarget = false)
     {
+        if (skipAgvsStartingAtTarget)
+        {
+            // Skip agvs that are on the target or on the first edge to the next waypoint
+            agvs = agvs.Where(a => a.agv.AgvStatus?.LastNodeId != targetNodeId).ToList();
+        }
+
         List<(Guid CorrelationId, Route? Route)> routesWithIds = await Task.WhenAll(agvs.Select(async a =>
             {
                 var route = await GetRouteIfExistingAsync(a.agv, targetNodeId, agvData: a.agvData, startNodeId: a.agv.AgvStatus?.LastNodeId);
@@ -279,6 +285,7 @@ public class RouteService : IRouteService
         {
             return (null, null);
         }
+   
         return routesWithIds.Where(r => r.Route != null).MinBy(r => r.Route?.Costs);
     }
 }

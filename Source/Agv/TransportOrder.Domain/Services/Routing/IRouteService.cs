@@ -98,6 +98,7 @@ public interface IRouteService
     /// </summary>
     /// <param name="agvs">Candidate agvs.</param>
     /// <param name="targetNodeId">Target node id.</param>
+    /// <param name="skipAgvsStartingAtTarget">If true, do not consider agvs that start from the target.</param>
     /// <returns>Correlation id of the agv closest to the node.</returns>
-    Task<(Guid? agv, Route? route)> GetAgvRouteClosestToTarget(ICollection<(Models.Agv.Agv agv, AgvData? agvData)> agvs, string targetNodeId);
+    Task<(Guid? agv, Route? route)> GetAgvRouteClosestToTarget(ICollection<(Models.Agv.Agv agv, AgvData? agvData)> agvs, string targetNodeId, bool skipAgvsStartingAtTarget = false);
 }
