@@ -139,7 +139,7 @@ public static class HostBuilderExtension
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
         services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedInMemoryFilter>();
         // Wi-Fi metrics
-        services.AddSingleton(new WifiConfiguration(3, 10, 3) { MinInterval = TimeSpan.FromSeconds(3), MaxInterval = TimeSpan.FromSeconds(20) });
+        services.AddSingleton(new WifiConfiguration(3, 10, 3) { MinInterval = TimeSpan.Zero, MaxInterval = TimeSpan.MaxValue });
         services.AddSingleton<ISignificanceChecker<WifiMetrics>, WifiMetricsSignificanceChecker>();
         services.AddTransient<IMessageFilter<AgvWifiMetricsReceived>, AgvWifiMetricsReceivedInMemoryFilter>();
 

@@ -29,15 +29,15 @@ public class AgvScopedPositionCache<TItem> : IAgvScopedPositionCache<TItem>
         _warnOnOverflow = warnOnOverflow;
     }
 
-    private static string GetKey(string serial, AgvPosition position) => $"{serial}:{position}";
+    private static string GetKey(string serial, AgvPosition position, DateTime timeStamp) => $"{serial}:{position}:{timeStamp:O}";
 
     /// <inheritdoc />
-    public void AddItem(string agvSerialNumber, AgvPosition agvPosition, TItem item) => AddItem(agvSerialNumber, agvPosition, [item]);
+    public void AddItem(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, TItem item) => AddItem(agvSerialNumber, agvPosition, timeStamp, [item]);
 
     /// <inheritdoc />
-    public void AddItem(string agvSerialNumber, AgvPosition agvPosition, List<TItem> items)
+    public void AddItem(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, List<TItem> items)
     {
-        string key = GetKey(agvSerialNumber, agvPosition);
+        string key = GetKey(agvSerialNumber, agvPosition, timeStamp);
         if (!_inner.TryGet(key, out List<TItem>? list))
         {
             list = items;
@@ -61,14 +61,14 @@ public class AgvScopedPositionCache<TItem> : IAgvScopedPositionCache<TItem>
     }
 
     /// <inheritdoc />
-    public bool TryGet(string agvSerialNumber, AgvPosition agvPosition, [MaybeNullWhen(false)] out List<TItem> value)
+    public bool TryGet(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, [MaybeNullWhen(false)] out List<TItem> value)
     {
-        return _inner.TryGet(GetKey(agvSerialNumber, agvPosition), out value);
+        return _inner.TryGet(GetKey(agvSerialNumber, agvPosition, timeStamp), out value);
     }
 
     /// <inheritdoc />
-    public bool TryRemove(string agvSerialNumber, AgvPosition agvPosition, [MaybeNullWhen(false)] out List<TItem> removed)
+    public bool TryRemove(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, [MaybeNullWhen(false)] out List<TItem> removed)
     {
-        return _inner.TryRemove(GetKey(agvSerialNumber, agvPosition), out removed);
+        return _inner.TryRemove(GetKey(agvSerialNumber, agvPosition, timeStamp), out removed);
     }
 }

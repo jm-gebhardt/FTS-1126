@@ -23,7 +23,7 @@ public record AgvPositionReceived : CorrelatedBy<Guid>, IAgvSerialNumber, IMessa
     public AgvPosition AgvPosition { get; }
 
     /// <inheritdoc />
-    public DateTime MessageCreatedDate { get; } = DateTime.UtcNow;
+    public DateTime MessageCreatedDate { get; init; } = DateTime.UtcNow;
 
     /// <inheritdoc cref="AgvPositionReceived"/>
     public AgvPositionReceived(Guid correlationId, string serialNumber, AgvPosition agvPosition)

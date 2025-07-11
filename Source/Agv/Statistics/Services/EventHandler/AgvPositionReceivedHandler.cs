@@ -67,9 +67,9 @@ public class AgvPositionReceivedHandler : IConsumer<AgvPositionReceived>, IConsu
 
             await _db.SaveAsync();
 
-            _positionCache.AddItem(serial, pos, gridPositionIds);
+            _positionCache.AddItem(serial, pos, timestamp, gridPositionIds);
 
-            await _publishEndpoint.Publish(new GridPositionPersisted(serial, pos, gridPositionIds));
+            await _publishEndpoint.Publish(new GridPositionPersisted(serial, pos, timestamp, gridPositionIds));
         }
         catch (Exception e)
         {
@@ -97,7 +97,7 @@ public class AgvPositionReceivedHandler : IConsumer<AgvPositionReceived>, IConsu
         _logger.LogDebug("Trying to force persisting position for AGV {SerialNumber} at {Position} ({Timestamp})",
             context.Message.SerialNumber, context.Message.AgvPosition, context.Message.MessageCreatedDate);
 
-        if (_positionCache.TryGet(context.Message.SerialNumber, context.Message.AgvPosition, out List<Guid>? cacheValue) && cacheValue.Count > 0)
+        if (_positionCache.TryGet(context.Message.SerialNumber, context.Message.AgvPosition, context.Message.MessageCreatedDate, out List<Guid>? cacheValue) && cacheValue.Count > 0)
         {
             _logger.LogDebug("Position {Position} for AGV {SerialNumber} already exists in DB, no need to force persistence",
                 context.Message.AgvPosition, context.Message.SerialNumber);

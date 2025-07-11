@@ -13,7 +13,7 @@ namespace Gebhardt.Acc.Statistics.Services.EventHandler;
 /// An abstract base class that handles messages associated with grid positions.
 /// Subclasses should implement the specific handling of a message for existing grid IDs.
 /// </summary>
-/// <typeparam name="TMessage"> The type of the message being handled.</typeparam>
+/// <typeparam name="TMessage">The type of the message being handled. The MessageCreatedTime must exactly be the same as the Position for matching.</typeparam>
 public abstract class GridPositionAttachedHandlerBase<TMessage> :
     IConsumer<TMessage>
     where TMessage : class, IAgvSerialNumber, IWithAgvPosition, IMessageCreatedDate
@@ -51,7 +51,8 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
     {
         var message = context.Message;
 
-        if (_positionCache.TryGet(message.SerialNumber, message.AgvPosition, out List<Guid>? gridIds))
+        var timeStamp = message.MessageCreatedDate;
+        if (_positionCache.TryGet(message.SerialNumber, message.AgvPosition, timeStamp, out List<Guid>? gridIds))
         {
             _logger.LogDebug("Handling {MessageType} for AGV {SerialNumber} with position {Position} and grid IDs {GridIds}",
                 typeof(TMessage).Name, message.SerialNumber, message.AgvPosition, gridIds);
@@ -60,12 +61,12 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
             return;
         }
 
-        _pendingCache.AddItem(message.SerialNumber, message.AgvPosition, message);
+        _pendingCache.AddItem(message.SerialNumber, message.AgvPosition, timeStamp, message);
         _logger.LogDebug("Adding to pending cache for AGV {SerialNumber} with position {Position} and sending force persist position", message.SerialNumber, message.AgvPosition);
 
         await PublishEndpoint.Publish(new ForcePersistAgvPosition(message.SerialNumber, message.AgvPosition)
         {
-            MessageCreatedDate = message.MessageCreatedDate
+            MessageCreatedDate = timeStamp
         });
     }
 
@@ -75,7 +76,7 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
     {
         _logger.LogDebug("Received GridPositionPersisted for AGV {SerialNumber} with position {Position} and grid IDs {GridIds}",
             message.SerialNumber, message.AgvPosition, message.GridPositionIds);
-        if (_pendingCache.TryRemove(message.SerialNumber, message.AgvPosition, out List<TMessage>? pending))
+        if (_pendingCache.TryRemove(message.SerialNumber, message.AgvPosition, message.TimeStamp, out List<TMessage>? pending))
         {
             _logger.LogDebug("Found {Count} pending messages for AGV {SerialNumber} with position {Position}",
                 pending.Count, message.SerialNumber, message.AgvPosition);

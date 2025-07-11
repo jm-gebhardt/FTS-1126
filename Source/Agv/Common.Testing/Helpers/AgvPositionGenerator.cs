@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 
-namespace Gebhardt.Acc.TransportOrder.Test.Helper;
+namespace Gebhardt.Acc.Common.Testing.Helpers;
 
 public static class AgvPositionGenerator
 {

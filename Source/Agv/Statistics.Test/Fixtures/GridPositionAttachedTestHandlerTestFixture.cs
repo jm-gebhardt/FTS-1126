@@ -26,27 +26,27 @@ internal class GridPositionAttachedTestHandlerTestFixture
     public static ConsumeContext<TestMessage> CreateContext(TestMessage message)
         => Mock.Of<ConsumeContext<TestMessage>>(x => x.Message == message);
 
-    public GridPositionAttachedTestHandlerTestFixture WithCachedPosition(string serial, AgvPosition pos, List<Guid> gridIds)
+    public GridPositionAttachedTestHandlerTestFixture WithCachedPosition(string serial, AgvPosition pos, DateTime timeStamp, List<Guid> gridIds)
     {
-        _positionCacheMock.Setup(x => x.TryGet(serial, pos, out gridIds!)).Returns(true);
+        _positionCacheMock.Setup(x => x.TryGet(serial, pos, timeStamp, out gridIds!)).Returns(true);
         return this;
     }
 
     public GridPositionAttachedTestHandlerTestFixture WithNoCachedPosition()
     {
-        _positionCacheMock.Setup(x => x.TryGet(It.IsAny<string>(), It.IsAny<AgvPosition>(), out It.Ref<List<Guid>?>.IsAny)).Returns(false);
+        _positionCacheMock.Setup(x => x.TryGet(It.IsAny<string>(), It.IsAny<AgvPosition>(), It.IsAny<DateTime>(), out It.Ref<List<Guid>?>.IsAny)).Returns(false);
         return this;
     }
 
-    public GridPositionAttachedTestHandlerTestFixture WithPendingMessages(string serial, AgvPosition pos, List<TestMessage> messages)
+    public GridPositionAttachedTestHandlerTestFixture WithPendingMessages(string serial, AgvPosition pos, DateTime timeStamp, List<TestMessage> messages)
     {
-        PendingCacheMock.Setup(x => x.TryRemove(serial, pos, out messages!)).Returns(true);
+        PendingCacheMock.Setup(x => x.TryRemove(serial, pos, timeStamp, out messages!)).Returns(true);
         return this;
     }
 
     public GridPositionAttachedTestHandlerTestFixture WithNoPendingMessages()
     {
-        PendingCacheMock.Setup(x => x.TryRemove(It.IsAny<string>(), It.IsAny<AgvPosition>(), out It.Ref<List<TestMessage>?>.IsAny)).Returns(false);
+        PendingCacheMock.Setup(x => x.TryRemove(It.IsAny<string>(), It.IsAny<AgvPosition>(), It.IsAny<DateTime>(), out It.Ref<List<TestMessage>?>.IsAny)).Returns(false);
         return this;
     }
 }

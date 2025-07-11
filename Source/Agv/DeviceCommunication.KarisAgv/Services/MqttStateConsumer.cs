@@ -61,7 +61,11 @@ public class MqttStateConsumer : IConsumer<MqttState>
             await context.Publish(new AgvPositionReceived(
                 _stateParser.CorrelationId,
                 _stateParser.SerialNumber,
-                _stateParser.AgvPosition), context.CancellationToken);
+                _stateParser.AgvPosition)
+                {
+                    MessageCreatedDate = context.Message.Timestamp.UtcDateTime
+                }
+                , context.CancellationToken);
         }
     }
 
@@ -84,7 +88,11 @@ public class MqttStateConsumer : IConsumer<MqttState>
                 _stateParser.CorrelationId,
                 _stateParser.SerialNumber,
                 _stateParser.AgvPosition,
-                _stateParser.WifiMetrics), context.CancellationToken);
+                _stateParser.WifiMetrics)
+                {
+                    MessageCreatedDate = context.Message.Timestamp.UtcDateTime
+                }
+                , context.CancellationToken);
             
             _logger.LogDebug("Published {MessageType} for {AgvId}", nameof(AgvWifiMetricsReceived), _stateParser.SerialNumber);
         }

@@ -18,7 +18,7 @@ public class GridPositionAttachedHandlerBaseTest
         var gridIds = new List<Guid> { Guid.NewGuid() };
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithCachedPosition(message.SerialNumber, message.AgvPosition, gridIds);
+            .WithCachedPosition(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, gridIds);
 
         await fixture.Handler.Consume(GridPositionAttachedTestHandlerTestFixture.CreateContext(message));
 
@@ -36,7 +36,7 @@ public class GridPositionAttachedHandlerBaseTest
 
         await fixture.Handler.Consume(GridPositionAttachedTestHandlerTestFixture.CreateContext(message));
 
-        fixture.PendingCacheMock.Verify(x => x.AddItem(message.SerialNumber, message.AgvPosition, message), Times.Once);
+        fixture.PendingCacheMock.Verify(x => x.AddItem(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, message), Times.Once);
         fixture.PublishEndpointMock.Verify(x => x.Publish(
             It.Is<ForcePersistAgvPosition>(m =>
                 m.SerialNumber == message.SerialNumber &&
@@ -52,9 +52,9 @@ public class GridPositionAttachedHandlerBaseTest
         var gridIds = new List<Guid> { Guid.NewGuid() };
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithPendingMessages(message.SerialNumber, message.AgvPosition, [message]);
+            .WithPendingMessages(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, [message]);
 
-        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(message.SerialNumber, message.AgvPosition, gridIds));
+        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, gridIds));
 
         fixture.Handler.HandledMessages.ShouldHaveSingleItem();
         fixture.Handler.HandledMessages[0].ShouldBe((message, gridIds));
@@ -68,9 +68,9 @@ public class GridPositionAttachedHandlerBaseTest
         var gridIds = new List<Guid> { Guid.NewGuid() };
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithPendingMessages(msg1.SerialNumber, msg1.AgvPosition, [msg1, msg2]);
+            .WithPendingMessages(msg1.SerialNumber, msg1.AgvPosition, msg1.MessageCreatedDate, [msg1, msg2]);
 
-        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(msg1.SerialNumber, msg1.AgvPosition, gridIds));
+        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(msg1.SerialNumber, msg1.AgvPosition, msg1.MessageCreatedDate, gridIds));
 
         fixture.Handler.HandledMessages.Count.ShouldBe(2);
         fixture.Handler.HandledMessages.ShouldContain((msg1, gridIds));
@@ -86,7 +86,7 @@ public class GridPositionAttachedHandlerBaseTest
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
             .WithNoPendingMessages();
 
-        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(msg.SerialNumber, msg.AgvPosition, gridIds));
+        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(msg.SerialNumber, msg.AgvPosition, msg.MessageCreatedDate, gridIds));
 
         fixture.Handler.HandledMessages.ShouldBeEmpty();
     }
