@@ -76,6 +76,7 @@ public class ActionCommandHandler :
     private readonly IActionGroupDurationEstimationService _durationEstimationService;
     private readonly IMetricCollectionService _metricCollectionService;
     private readonly ActionCommandHelper _actionService;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly IQueueManager _queueManager;
 
     private const string QueuingOrderId = "Queuing";
@@ -95,9 +96,12 @@ public class ActionCommandHandler :
         IMapper mapper,
         IBus bus,
         ILogger<ActionCommandHandler> logger,
-        ActionCommandHelper actionService)
+        ActionCommandHelper actionService,
+        IPublishEndpoint publishEndpoint
+        )
     {
         _actionService = actionService;
+        _publishEndpoint = publishEndpoint;
         _logger = logger;
         _routeService = routeService;
         _agvDb = agvDb;
@@ -512,7 +516,7 @@ public class ActionCommandHandler :
 
         if (await _actionGroupRetrievalService.IsAgvHeadingToNodeOfType(agvCorrelationId, AgvGraph.NodeType.Charge))
         {
-            _logger.LogInformation("AGV:{SerialNumber}/{AgvCorrelationId} is already heading to a charging station.", agv.SerialNumber, agv.CorrelationId);
+            _logger.LogInformation("AGV:{SerialNumber}/{AgvCorrelationId} is already heading to a charging station", agv.SerialNumber, agv.CorrelationId);
             // This might happen if the AssignAsync action is called several times due to a low SOC value, although the agv is already charging
             return;
         }
@@ -527,21 +531,22 @@ public class ActionCommandHandler :
             .FirstOrDefault(ag => ag.State == ActionGroupState.Started && ag.Actions.Any(a => a.ActionType == ActionType.Charge));
         if (startedChargingAction != null)
         {
-            _logger.LogInformation("AGV:{CorrelationID} has already started an action group for charging.", agv.CorrelationId);
+            _logger.LogInformation("AGV:{CorrelationID} has already started an action group for charging", agv.CorrelationId);
             return;
         }
 
-        if (!agvMustCharge && hasNotStartedActionGroups)
+        if (!agvMustCharge && hasNotStartedActionGroups && initiator != ActionGroupCreator.TransportOrderWebApi)
         {
-            _logger.LogInformation("Skip charging for AGV:{CorrelationID}. Must charge: {AgvMustCharge}. Action groups not started: {HasNotStartedActionGroups}",
+            _logger.LogInformation("Skip charging for AGV:{CorrelationID}. Must charge: {AgvMustCharge}. Action groups not started: {HasNotStartedActionGroups}. Initiator: {Initiator}",
                 agv.CorrelationId,
                 agvMustCharge,
-                hasNotStartedActionGroups);
+                hasNotStartedActionGroups,
+                initiator);
             return;
         }
 
         // Yes, we want to charge
-        _logger.LogInformation("Creating charge action for agv with CorrelationId: {AgvCorrelationId}.", agv.CorrelationId);
+        _logger.LogInformation("Creating charge action for agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
 
         // Let's see if there is a pending charge action group
         var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
@@ -575,7 +580,7 @@ public class ActionCommandHandler :
                 _logger.LogError("Failed to save action group {ActionGroupCorrelationId}", actionGroup.CorrelationId);
                 throw new ActionsInActionGroupEmptyException(actionGroup.CorrelationId);
             }
-            await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agv.CorrelationId), cancellationToken);
+            await _publishEndpoint.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agv.CorrelationId), cancellationToken);
             _logger.LogOrderInformation(LogCodes.OrderCreated, agv.CorrelationId, actionGroup.CorrelationId,
                 "Order Created", $"Order {actionGroup.OrderId} was created successfully",
                 new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
