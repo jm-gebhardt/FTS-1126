@@ -8,22 +8,22 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="AgvBatteryChargeChanged"/> and sends messages via <see cref="IAgvPublisher"/>.
+/// Consumes <see cref="AgvBatteryStatusChanged"/> and sends messages via <see cref="IAgvPublisher"/>.
 /// </summary>
 [PublicAPI]
-public class AgvBatteryChargeChangedConsumer :
-    IConsumer<AgvBatteryChargeChanged>
+public class AgvBatteryStatusChangedConsumer :
+    IConsumer<AgvBatteryStatusChanged>
 {
-    private readonly ILogger<AgvBatteryChargeChangedConsumer> _logger;
+    private readonly ILogger<AgvBatteryStatusChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
     private readonly IMapper _mapper;
 
     /// <summary>
     /// </summary>
-    public AgvBatteryChargeChangedConsumer(
+    public AgvBatteryStatusChangedConsumer(
         IAgvPublisher agvPublisher,
         IMapper mapper,
-        ILogger<AgvBatteryChargeChangedConsumer> logger)
+        ILogger<AgvBatteryStatusChangedConsumer> logger)
     {
         _logger = logger;
         _agvPublisher = agvPublisher;
@@ -34,10 +34,9 @@ public class AgvBatteryChargeChangedConsumer :
     /// Send message to all clients
     /// </summary>
     /// <param name="context"></param>
-    public Task Consume(ConsumeContext<AgvBatteryChargeChanged> context)
+    public Task Consume(ConsumeContext<AgvBatteryStatusChanged> context)
     {
-        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(AgvBatteryChargeChanged), context.Message.CorrelationId);
-        _logger.LogDebug("{MessageType} Old/New charge level: {OldBatteryCharge}/{NewBatteryCharge}", nameof(AgvBatteryChargeChanged), context.Message.OldBatteryCharge, context.Message.AgvBatteryStatus.BatteryCharge);
+        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(AgvBatteryStatusChanged), context.Message.CorrelationId);
         return _agvPublisher.SendAgvBatteryStatusAsync(context.Message);
     }
 }

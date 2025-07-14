@@ -6,13 +6,13 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
 public static class AgvGenerator
 {
-    public static Agv GenerateBusyAgv(int index = 0,int batteryCharge = 100, bool hasError = false, AgvMode? mode= null)
+    public static Agv GenerateBusyAgv(int index = 0, int batteryCharge = 100, bool hasError = false, AgvMode? mode = null)
     {
         var agv = GenerateAgv(AgvState.Busy, index, "A", batteryCharge: batteryCharge, hasError: hasError, mode: mode);
         return agv;
     }
 
-    public static Agv GenerateIdleAgv(int index = 0, string? lastNodeId = "node", int batteryCharge = 100, bool hasError = false, AgvMode? mode=null, ICollection<string>? zoneIds = null)
+    public static Agv GenerateIdleAgv(int index = 0, string? lastNodeId = "node", int batteryCharge = 100, bool hasError = false, AgvMode? mode = null, ICollection<string>? zoneIds = null)
     {
         var agv = GenerateAgv(AgvState.Idle, index, lastNodeId, batteryCharge: batteryCharge, hasError: hasError, mode: mode, zoneIds: zoneIds);
         return agv;
@@ -36,7 +36,7 @@ public static class AgvGenerator
     [UsedImplicitly]
     public static Agv GenerateChargingAgv(int index = 0, string? lastNodeId = "C-1", int batteryCharge = 100, AgvMode? mode = null)
     {
-        return GenerateAgv(AgvState.Busy, index, lastNodeId, charging: true, batteryCharge: batteryCharge, orderId: string.Empty, mode : mode);
+        return GenerateAgv(AgvState.Busy, index, lastNodeId, charging: true, batteryCharge: batteryCharge, orderId: string.Empty, mode: mode);
     }
 
     [UsedImplicitly]
@@ -44,7 +44,7 @@ public static class AgvGenerator
     {
         return GenerateAgv(serialNumber, agvName, mode: mode);
     }
-    
+
     [UsedImplicitly]
     public static Agv GenerateRawAgv(Guid correlationId, string serialNumber, AgvStatus? agvStatus = null)
     {
@@ -65,7 +65,20 @@ public static class AgvGenerator
     {
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
-        agvStatus ??= new AgvStatus(correlationId, orderId, false, true, batteryCharge, charging, false, lastNodeId, zoneIds: zoneIds);
+        agvStatus ??= new AgvStatus(correlationId,
+            orderId,
+            false,
+            true,
+            batteryCharge,
+            charging,
+            false,
+            lastNodeId,
+            batteryVoltage: 50,
+            batteryCurrent: 0,
+            batteryTemperature: 20,
+            estimatedFullyChargedTime: DateTime.UtcNow.AddMinutes(5),
+            lastBatteryReplacement: DateTime.UtcNow.AddMinutes(-5),
+            zoneIds: zoneIds);
         var agv = new Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus)
         {
             HasError = hasError,
@@ -77,17 +90,17 @@ public static class AgvGenerator
 
     private static Agv GenerateAgv(string serialNumber, string? agvName = null, AgvMode? mode = null)
     {
-        var agv = new Agv(serialNumber, Guid.NewGuid(), agvName) {Mode = mode?? new AgvMode(ModeType.Normal)};
+        var agv = new Agv(serialNumber, Guid.NewGuid(), agvName) { Mode = mode ?? new AgvMode(ModeType.Normal) };
         return agv;
     }
-    
+
     private static Agv GenerateAgv(Guid correlationId, string serialNumber, AgvStatus? agvStatus = null)
     {
         var agv = new Agv(correlationId, Guid.NewGuid(), serialNumber, agvStatus);
         return agv;
     }
 
-    public static Agv SetAgvState(AgvState agvState, Agv agv, bool isLocked=true)
+    public static Agv SetAgvState(AgvState agvState, Agv agv, bool isLocked = true)
     {
         switch (agvState)
         {

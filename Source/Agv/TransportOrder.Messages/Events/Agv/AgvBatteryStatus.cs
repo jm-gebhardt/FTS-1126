@@ -1,5 +1,4 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -31,23 +30,8 @@ public record AgvBatteryStatus
     /// <summary>The date when the battery was replaced the last time.</summary>
     public DateTime? LastBatteryReplacement { get; init; }
 
-    /// <summary>Below this threshold only charge actions will be started.</summary>
-    public int BatteryLevelCritical { get; init; }
-
-    /// <summary>Below this threshold only ActionGroups are started when the system is under high load.</summary>
-    public int BatteryLevelLow { get; init; }
-
-    /// <summary>Once charging is started it will at least charge up to this level.</summary>
-    public int MinChargeUp { get; init; }
-
-    /// <summary>We stop charging at this level actively.</summary>
-    public int MaxChargeUp { get; init; }
-
     /// <summary>Is Battery currently charging.</summary>
     public bool IsCharging { get; init; }
-
-    /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
-    public bool InfiniteCharging { get; init; }
 
     /// <summary>
     /// AutoMapper
@@ -62,13 +46,8 @@ public record AgvBatteryStatus
     /// <param name="batteryVoltage">Battery voltage [V].</param>
     /// <param name="batteryCurrent">Battery current [A].</param>
     /// <param name="batteryTemperature">Battery temperature [°C].</param>
-    /// <param name="batteryLevelCritical">Below this threshold only charge actions will be started.</param>
-    /// <param name="batteryLevelLow">Below this threshold only ActionGroups are started when the system is under high load.</param>
-    /// <param name="minChargeUp">Once charging is started it will at least charge up to this level.</param>
-    /// <param name="maxChargeUp">We stop charging at this level actively.</param>
     /// <param name="estimatedFullyChargedTime">Time when the Agv is fully charged.</param>
     /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
-    /// <param name="infiniteCharging">Flag to switch on/off infinite charging.</param>
     public AgvBatteryStatus(
         Guid correlationId,
         double batteryCharge,
@@ -76,49 +55,30 @@ public record AgvBatteryStatus
         double batteryVoltage,
         double batteryCurrent,
         double batteryTemperature,
-        int batteryLevelCritical,
-        int batteryLevelLow,
-        int minChargeUp,
-        int maxChargeUp,
         DateTime? estimatedFullyChargedTime,
-        DateTime? lastBatteryReplacement,
-        bool infiniteCharging
+        DateTime? lastBatteryReplacement
     )
     {
         CorrelationId = correlationId;
         BatteryCharge = batteryCharge;
-        BatteryLevelCritical = batteryLevelCritical;
-        BatteryLevelLow = batteryLevelLow;
-        MinChargeUp = minChargeUp;
-        MaxChargeUp = maxChargeUp;
         IsCharging = isCharging;
         BatteryVoltage = batteryVoltage;
         BatteryCurrent = batteryCurrent;
         BatteryTemperature = batteryTemperature;
         EstimatedFullyChargedTime = estimatedFullyChargedTime;
         LastBatteryReplacement = lastBatteryReplacement;
-        InfiniteCharging = infiniteCharging;
     }
 
     /// <param name="agvStatus">The AgvStatus.</param>
-    /// <param name="agvSettings">The AgvSettingsReadModel.</param>
-    public AgvBatteryStatus(
-        AgvStatus agvStatus,
-        AgvSettings agvSettings
-    ) : this(
+    public AgvBatteryStatus(AgvStatus agvStatus) : this(
         agvStatus.CorrelationId,
         agvStatus.BatteryCharge,
         agvStatus.Charging,
         agvStatus.BatteryVoltage,
         agvStatus.BatteryCurrent,
         agvStatus.BatteryTemperature,
-        agvSettings.BatteryLevelCritical,
-        agvSettings.BatteryLevelLow,
-        agvSettings.MinChargeUp,
-        agvSettings.MaxChargeUp,
         agvStatus.EstimatedFullyChargedTime,
-        agvStatus.LastBatteryReplacement,
-        agvSettings.InfiniteCharging
+        agvStatus.LastBatteryReplacement
     )
     {
     }

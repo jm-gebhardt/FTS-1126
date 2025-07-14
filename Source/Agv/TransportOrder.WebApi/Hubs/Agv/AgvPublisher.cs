@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
@@ -20,18 +21,21 @@ public class AgvPublisher : IAgvPublisher
     private readonly IMapper _mapper;
     private readonly IMessageFilter<AgvBatteryStatusDto> _agvBatteryStatusFilter;
     private readonly IMessageFilter<AgvPositionStatusDto> _agvPositionFilter;
+    private readonly IAgvDb _agvDb;
 
     /// <summary/>
     public AgvPublisher(
         IHubContext<AgvHub, IAgvClient> hubContext,
         IMessageFilter<AgvBatteryStatusDto> agvBatteryStatusFilter,
         IMessageFilter<AgvPositionStatusDto> agvPositionFilter,
+        IAgvDb agvDb,
         IMapper mapper
     )
     {
         _hubContext = hubContext;
         _agvBatteryStatusFilter = agvBatteryStatusFilter;
         _agvPositionFilter = agvPositionFilter;
+        _agvDb = agvDb;
         _mapper = mapper;
     }
 
@@ -81,9 +85,11 @@ public class AgvPublisher : IAgvPublisher
     }
 
     /// <inheritdoc/>
-    public async Task SendAgvBatteryStatusAsync(AgvBatteryChargeChanged batteryChargeChanged)
+    public async Task SendAgvBatteryStatusAsync(AgvBatteryStatusChanged batteryStatusChanged)
     {
-        var dto = _mapper.Map<AgvBatteryStatusDto>(batteryChargeChanged.AgvBatteryStatus);
+        var agv = await _agvDb.Agvs.GetAgvAsync(batteryStatusChanged.CorrelationId);
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        var dto = _mapper.Map<AgvBatteryStatusDto>((batteryStatusChanged.AgvBatteryStatus, agvSettings));
         if (await _agvBatteryStatusFilter.ShouldActAsync(dto))
         {
             await _hubContext.Clients.All.BatteryStatusChanged(dto);

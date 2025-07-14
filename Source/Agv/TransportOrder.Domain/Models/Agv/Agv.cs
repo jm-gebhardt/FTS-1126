@@ -213,14 +213,34 @@ public class Agv : IAgv
     private TimeSpan AgvZonesRequestTimeout { get; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// The threshold for considering a battery charge change significant.
+    /// The threshold for considering a battery charge change (decreasing) significant [%].
     /// </summary>
-    public const double BatteryChargeChangedThreshold = 0.1d;
+    public const double BatteryChargeDischargingThreshold = 0.1d;
 
     /// <summary>
-    /// The threshold for considering a battery status change (temperature, voltage, current) significant.
+    /// The threshold for considering a battery charge change (increasing) significant [%].
     /// </summary>
-    public const double BatteryStatusChangedThreshold = 0.1d;
+    public const double BatteryChargeChargingThreshold = 0.5d;
+    
+    /// <summary>
+    /// The threshold for considering a battery voltage change significant [V].
+    /// </summary>
+    public const double BatteryVoltageThreshold = 0.5d;
+    
+    /// <summary>
+    /// The threshold for considering a battery current change when idle significant [A].
+    /// </summary>
+    public const double BatteryCurrentIdleThreshold = 0.5d;
+    
+    /// <summary>
+    /// The threshold for considering a battery current change when busy significant [A].
+    /// </summary>
+    public const double BatteryCurrentBusyThreshold = 5d;
+
+    /// <summary>
+    /// The threshold for considering a battery temperature change significant [°C].
+    /// </summary>
+    public const double BatteryTemperatureThreshold = 0.5d;
 
     /// <summary>
     /// The threshold for considering a battery datetime change (LastBatteryReplacement, EstimatedFullyChargedTime) significant.
@@ -338,16 +358,17 @@ public class Agv : IAgv
         var newLastBatteryReplacement = newStatus.LastBatteryReplacement ?? DateTime.MinValue;
         var lastBatteryReplacement = AgvStatus.LastBatteryReplacement ?? DateTime.MinValue;
 
+        double batteryCurrentThreshold = AgvStatus.Busy ? BatteryCurrentBusyThreshold : BatteryCurrentIdleThreshold;
         return newStatus.Charging != AgvStatus.Charging
-               || Math.Abs(newStatus.BatteryCurrent - AgvStatus.BatteryCurrent) > BatteryStatusChangedThreshold
-               || Math.Abs(newStatus.BatteryTemperature - AgvStatus.BatteryTemperature) > BatteryStatusChangedThreshold
-               || Math.Abs(newStatus.BatteryVoltage - AgvStatus.BatteryVoltage) > BatteryStatusChangedThreshold
+               || Math.Abs(newStatus.BatteryCurrent - AgvStatus.BatteryCurrent) > batteryCurrentThreshold
+               || Math.Abs(newStatus.BatteryTemperature - AgvStatus.BatteryTemperature) > BatteryTemperatureThreshold
+               || Math.Abs(newStatus.BatteryVoltage - AgvStatus.BatteryVoltage) > BatteryVoltageThreshold
                || Math.Abs(newEstimatedFullyChargedTime.Ticks - estimatedFullyChargeTime.Ticks) > BatteryStatusTicksThreshold
                || Math.Abs(newLastBatteryReplacement.Ticks - lastBatteryReplacement.Ticks) > BatteryStatusTicksThreshold;
     }
 
     /// <summary>
-    /// Check to see if the difference in battery charge is bigger than <see cref="BatteryChargeChangedThreshold"/>.
+    /// Check to see if the difference in battery charge is bigger than <see cref="BatteryChargeChargingThreshold"/> or <see cref="BatteryChargeDischargingThreshold"/>.
     /// </summary>
     /// <returns></returns>
     private bool CheckBatteryChargeChange(double newBatteryCharge)
@@ -356,7 +377,9 @@ public class Agv : IAgv
         {
             return false;
         }
-        return Math.Abs(AgvStatus.BatteryCharge - newBatteryCharge) > BatteryChargeChangedThreshold;
+
+        double threshold = AgvStatus.Charging ? BatteryChargeChargingThreshold : BatteryChargeDischargingThreshold;
+        return Math.Abs(AgvStatus.BatteryCharge - newBatteryCharge) > threshold;
     }
 
     private bool CheckLastNodeIdChanged(string? newLastNodeId)
@@ -379,7 +402,7 @@ public class Agv : IAgv
     /// Update the agv status.
     /// </summary>
     /// <param name="newStatus"></param>
-    public (bool batteryStatusChanged, bool lastNodeIdChanged) UpdateAgvStatus(AgvStatus newStatus)
+    public (bool batteryStatusChanged, bool batteryChargeChanged, bool lastNodeIdChanged) UpdateAgvStatus(AgvStatus newStatus)
     {
         bool batteryChargeChanged = CheckBatteryChargeChange(newStatus.BatteryCharge);
         if (!batteryChargeChanged && AgvStatus != null)
@@ -405,7 +428,7 @@ public class Agv : IAgv
         bool batteryStatusChanged = batteryChargeChanged || CheckBatteryStatusChange(newStatus);
         bool lastNodeIdChanged = CheckLastNodeIdChanged(newStatus.LastNodeId);
         AgvStatus = newStatus;
-        return (batteryStatusChanged, lastNodeIdChanged);
+        return (batteryStatusChanged, batteryChargeChanged, lastNodeIdChanged);
     }
 
     /// <summary>

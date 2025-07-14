@@ -26,7 +26,6 @@ public class PublisherFixture<TPublisher, THub, TClient> : FixtureBase where TPu
         {
             s.AddSingleton<IHubContext<THub, TClient>>(_ => HubContextMock.Object);
             s.AddSingleton<TPublisher>();
-            s.AddSingleton<IMessageFilter<AgvBatteryStatusDto>>(new FilterMock<AgvBatteryStatusDto>(true));
             s.AddSingleton<IMessageFilter<AgvPositionStatusDto>>(new FilterMock<AgvPositionStatusDto>(true));
         });
     }

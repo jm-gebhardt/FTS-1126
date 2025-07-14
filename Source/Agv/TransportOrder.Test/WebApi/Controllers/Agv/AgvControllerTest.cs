@@ -185,10 +185,14 @@ public class AgvControllerTest
             .Build();
         var correlationId = fixture.AgvSerialNumbers[index].ToGuid();
 
-        var agvData = await fixture.GetControllerResultAsync(c => c.GetAgvBattery(correlationId));
-        agvData.ShouldNotBeNull();
+        var dto = await fixture.GetControllerResultAsync(c => c.GetAgvBattery(correlationId));
+        dto.ShouldNotBeNull();
 
-        agvData.CorrelationId.ShouldBe(correlationId);
+        dto.CorrelationId.ShouldBe(correlationId);
+        dto.MinChargeUp.ShouldNotBe(0);
+        dto.MaxChargeUp.ShouldNotBe(0);
+        dto.BatteryLevelLow.ShouldNotBe(0);
+        dto.BatteryLevelCritical.ShouldNotBe(0);
     }
 
     [TestMethod]

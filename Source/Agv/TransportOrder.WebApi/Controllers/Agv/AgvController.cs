@@ -213,7 +213,7 @@ public class AgvController : Controller
     public async Task<ActionResult<AgvBatteryStatusDto>> GetAgvBattery(Guid correlationId)
     {
         Response<GotAgvBattery> response = await _getAgvBatteryClient.GetResponse<GotAgvBattery>(new GetAgvBattery(correlationId));
-        var agvBattery = _mapper.Map<AgvBatteryStatusDto>(response.Message.AgvBatteryStatus);
+        var agvBattery = _mapper.Map<AgvBatteryStatusDto>((response.Message.AgvBatteryStatus, response.Message.AgvSettings));
         return Ok(agvBattery);
     }
 

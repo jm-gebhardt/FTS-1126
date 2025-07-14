@@ -178,26 +178,26 @@ public class AgvEventHandler :
     {
         var message = context.Message;
         var agvCorrelationId = message.CorrelationId;
-        
+
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
-        
+
         double oldSoc = message.OldBatteryCharge;
-        double newSoc = message.AgvBatteryStatus.BatteryCharge;
+        double newSoc = message.NewBatteryCharge;
 
         bool isCharging = oldSoc < newSoc;
-        bool wasMinChargedUp = oldSoc >= message.AgvBatteryStatus.MinChargeUp;
-        bool isMinChargedUp = newSoc >= message.AgvBatteryStatus.MinChargeUp;
+        bool wasMinChargedUp = oldSoc >= agvSettings.MinChargeUp;
+        bool isMinChargedUp = newSoc >= agvSettings.MinChargeUp;
 
-        bool wasMaxChargedUp = oldSoc >= message.AgvBatteryStatus.MaxChargeUp;
-        bool isMaxChargedUp = newSoc >= message.AgvBatteryStatus.MaxChargeUp;
+        bool wasMaxChargedUp = oldSoc >= agvSettings.MaxChargeUp;
+        bool isMaxChargedUp = newSoc >= agvSettings.MaxChargeUp;
 
-        bool isLow = newSoc <= message.AgvBatteryStatus.BatteryLevelLow;
+        bool isLow = newSoc <= agvSettings.BatteryLevelLow;
 
         if (!wasMinChargedUp && isMinChargedUp)
         {
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} has reached min charge up level and can handle actions again", agvCorrelationId);
-            
+
             if (isCharging)
             {
                 await context.Publish(new AgvBatteryChargedToMinimum(agvCorrelationId));
@@ -213,7 +213,7 @@ public class AgvEventHandler :
 
         if (!isCharging && isLow)
         {
-            _logger.LogInformation("Agv:{CorrelationId} battery level is {newSoc} and requires charging", agvCorrelationId, newSoc);
+            _logger.LogInformation("Agv:{CorrelationId} battery level is {NewSoc} and requires charging", agvCorrelationId, newSoc);
             await context.Publish(new AgvNeedsCharging(agvCorrelationId));
         }
     }
@@ -368,7 +368,7 @@ public class AgvEventHandler :
             var charger = await _chargingPointManager.ReserveChargerAsync(agv);
             await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, charger.Id));
         }
-        catch(NoChargeStationAvailableException)
+        catch (NoChargeStationAvailableException)
         {
             ICollection<Agv> candidatesToStopCharging = await _agvDb.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel();
 

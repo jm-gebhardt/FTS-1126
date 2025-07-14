@@ -15,6 +15,7 @@ public class FixtureBase
 {
     private readonly IServiceCollection _serviceCollection = new ServiceCollection();
     private readonly List<Task> _initTasks = [];
+    private bool _useAutoMapper;
 
     /// <summary>
     /// Service provider
@@ -32,17 +33,25 @@ public class FixtureBase
 
     protected FixtureBase()
     {
-        AddServices(s => s.AddSingleton<ITimeProvider>(_ => TimeProvider));
-        AddServices(AddAutoMapper);
+        LoadAutoMapperProfiles();
+    }
+
+    private void LoadAutoMapperProfiles()
+    {
+        Profile[] profiles = GetProfiles().ToArray();
+
+        _useAutoMapper = profiles.Length != 0;
+        if (_useAutoMapper)
+        {
+            Mapper = MappingHelper.GetMapper(profiles);
+        }
     }
 
     protected virtual void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        Profile[] profiles = GetProfiles().ToArray();
-
-        if (profiles.Length != 0)
+        LoadAutoMapperProfiles();
+        if (_useAutoMapper)
         {
-            Mapper = MappingHelper.GetMapper(profiles);
             serviceCollection.AddTransient(_ => Mapper);
             serviceCollection.AddTransient<IMapper>(_ => Mapper);
         }
@@ -85,6 +94,11 @@ public class FixtureBase
     /// </summary>
     protected void Build()
     {
+        AddServices(s =>
+        {
+            s.AddSingleton<ITimeProvider>(_ => TimeProvider);
+            AddAutoMapper(s);
+        });
         AddServices(_serviceCollection);
 
         Provider = _serviceCollection.BuildServiceProvider(true);

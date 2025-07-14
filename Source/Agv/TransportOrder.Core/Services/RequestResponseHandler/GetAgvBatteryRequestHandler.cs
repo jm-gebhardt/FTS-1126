@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
@@ -39,11 +40,11 @@ public class GetAgvBatteryRequestHandler :
         var correlationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        var agvSettings = _mapper.Map<Messages.MessageContent.AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
+        var agvSettings = _mapper.Map<AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
         var agvStatus = _mapper.Map<AgvStatus>(agv.AgvStatus);
-        var agvBatteryStatus = new AgvBatteryStatus(agvStatus, agvSettings);
+        var agvBatteryStatus = new AgvBatteryStatus(agvStatus);
 
-        await context.RespondAsync(new GotAgvBattery(agvBatteryStatus));
+        await context.RespondAsync(new GotAgvBattery(agvBatteryStatus, agvSettings));
     }
 
     /// <inheritdoc />
@@ -58,12 +59,12 @@ public class GetAgvBatteryRequestHandler :
             throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());
         }
 
-        List<AgvBatteryStatus> batteryStatus = agvs.Select(agv =>
+        List<(AgvBatteryStatus agvBatteryStatus, AgvSettings agvSettings)> batteryStatus = agvs.Select(agv =>
         {
-            var agvSettings = _mapper.Map<Messages.MessageContent.AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
+            var agvSettings = _mapper.Map<AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
             var agvStatus = _mapper.Map<AgvStatus>(agv.AgvStatus);
-            var agvBatteryStatus = new AgvBatteryStatus(agvStatus, agvSettings);
-            return agvBatteryStatus;
+            var agvBatteryStatus = new AgvBatteryStatus(agvStatus);
+            return (agvBatteryStatus, agvSettings);
         }).ToList();
 
         await context.RespondAsync(new GotAgvsBattery(batteryStatus));

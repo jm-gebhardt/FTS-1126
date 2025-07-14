@@ -45,7 +45,6 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddTransient(_ => _actionGroupRetrievalService.Object);
             s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient(_ => _nodeStateRepositoryMock.Object);
-            s.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             if (bus != null)
             {
                 var descriptor = new ServiceDescriptor(typeof(IBus), _ => bus, ServiceLifetime.Singleton);

@@ -19,9 +19,7 @@ public class TriggerCommandHandlerTest
 
         var command = new CreateTrigger(new TriggerProperties("urn", "name", "description"), []);
 
-        await fixture.TestHarness.Bus.Publish(command);
-
-        await fixture.ShouldHaveConsumedAsync<CreateTrigger>();
+        await fixture.PublishMessageAsync(command);
 
         fixture.UpdatedTrigger.DisplayName.ShouldBe(command.Properties.DisplayName);
         fixture.UpdatedTrigger.Description.ShouldBe(command.Properties.Description);
@@ -42,9 +40,7 @@ public class TriggerCommandHandlerTest
 
         var command = new CreateTrigger(properties, trigger.ConfigurationParameters);
 
-        await fixture.TestHarness.Bus.Publish(command);
-
-        await fixture.ShouldHaveConsumedAsync<CreateTrigger>();
+        await fixture.PublishMessageAsync(command);
 
         fixture.UpdatedTrigger.DisplayName.ShouldBe(command.Properties.DisplayName);
         fixture.UpdatedTrigger.Description.ShouldBe(command.Properties.Description);
@@ -65,9 +61,7 @@ public class TriggerCommandHandlerTest
 
         var command = new CreateTrigger(new TriggerProperties(properties.Urn, properties.DisplayName, "new description", properties.Version, properties.InstanceMaximum), trigger.ConfigurationParameters);
 
-        await fixture.TestHarness.Bus.Publish(command);
-
-        await fixture.ShouldHaveConsumedAsync<CreateTrigger>();
+        await fixture.PublishMessageAsync(command);
 
         fixture.UpdatedTrigger.DisplayName.ShouldBe(command.Properties.DisplayName);
         fixture.UpdatedTrigger.Description.ShouldBe(command.Properties.Description);
@@ -88,9 +82,8 @@ public class TriggerCommandHandlerTest
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        await fixture.TestHarness.Bus.Publish(new RemoveTriggerLocation(trigger.Id, location.Id));
+        await fixture.PublishMessageAsync(new RemoveTriggerLocation(trigger.Id, location.Id));
 
-        await fixture.ShouldHaveConsumedAsync<RemoveTriggerLocation>();
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.ShouldBeEmpty();
         await fixture.ShouldHavePublishedAsync<TriggerChanged>();
@@ -104,9 +97,8 @@ public class TriggerCommandHandlerTest
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        await fixture.TestHarness.Bus.Publish(new UpdateDefaultConfigurationParameter(trigger.Id, parameter.Name, "new value"));
+        await fixture.PublishMessageAsync(new UpdateDefaultConfigurationParameter(trigger.Id, parameter.Name, "new value"));
 
-        await fixture.ShouldHaveConsumedAsync<UpdateDefaultConfigurationParameter>();
         await fixture.ShouldHavePublishedAsync<DefaultTriggerConfigurationUpdated>();
         fixture.UpdatedTrigger.ConfigurationParameters.Single( p => p.Name == parameter.Name).Value.ShouldBe("new value");
         await fixture.ShouldHavePublishedAsync<TriggerChanged>();
@@ -120,9 +112,8 @@ public class TriggerCommandHandlerTest
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        await fixture.TestHarness.Bus.Publish(new UpdateDefaultConfigurationParameter(trigger.Id, "unknown", "new value"));
+        await fixture.PublishMessageAsync(new UpdateDefaultConfigurationParameter(trigger.Id, "unknown", "new value"));
 
-        await fixture.ShouldHaveConsumedAsync<UpdateDefaultConfigurationParameter>();
         await fixture.ShouldNotHavePublishedAsync<DefaultTriggerConfigurationUpdated>();
         await fixture.ShouldNotHavePublishedAsync<TriggerChanged>();
         fixture.UpdatedTrigger.ShouldBeEquivalentTo(null!);
@@ -137,9 +128,8 @@ public class TriggerCommandHandlerTest
 
         var command = new AddTriggerLocation(trigger.Id, null, Guid.NewGuid(),  [], Guid.NewGuid(), null);
 
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<AddTriggerLocation>();
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
         fixture.UpdatedTrigger.Locations.First().EdgeId.ShouldBe(command.EdgeId);
@@ -159,9 +149,8 @@ public class TriggerCommandHandlerTest
 
         var command = new AddTriggerLocation(trigger.Id, null, null, [new PolygonPoint(12,12)], Guid.NewGuid(), null);
 
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<AddTriggerLocation>();
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
         fixture.UpdatedTrigger.Locations.First().Polygon.Count.ShouldBe(command.Polygon.Count);
@@ -180,9 +169,8 @@ public class TriggerCommandHandlerTest
 
         var command = new AddTriggerLocation(trigger.Id, "a node", null, [], Guid.NewGuid(), null);
 
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<AddTriggerLocation>();
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
         fixture.UpdatedTrigger.Locations.First().NodeId.ShouldBe(command.NodeId);
@@ -200,9 +188,8 @@ public class TriggerCommandHandlerTest
         trigger.AddLocation("a node", null);
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        await fixture.TestHarness.Bus.Publish(new UpdateLocationConfigurationParameter(trigger.Id, "unknown".ToGuid(), parameter.Name, "new value"));
+        await fixture.PublishMessageAsync(new UpdateLocationConfigurationParameter(trigger.Id, "unknown".ToGuid(), parameter.Name, "new value"));
 
-        await fixture.ShouldHaveConsumedAsync<UpdateLocationConfigurationParameter>();
         await fixture.ShouldNotHavePublishedAsync<TriggerChanged>();
         fixture.UpdatedTrigger.ShouldBeEquivalentTo(null!);
     }
@@ -216,9 +203,8 @@ public class TriggerCommandHandlerTest
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
         const string newValue = "new value";
-        await fixture.TestHarness.Bus.Publish(new UpdateLocationConfigurationParameter(trigger.Id, trigger.Locations.First().Id, parameter.Name, newValue));
+        await fixture.PublishMessageAsync(new UpdateLocationConfigurationParameter(trigger.Id, trigger.Locations.First().Id, parameter.Name, newValue));
 
-        await fixture.ShouldHaveConsumedAsync<UpdateLocationConfigurationParameter>();
         await fixture.ShouldHavePublishedAsync<TriggerChanged>();
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);

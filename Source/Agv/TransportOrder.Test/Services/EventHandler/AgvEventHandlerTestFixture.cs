@@ -36,20 +36,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     public const int MinChargeUp = 80;
     public const int MaxChargeUp = 100;
 
-    private static readonly AgvSettingsReadModel _agvSettingsReadModel = new(15000, 20000, BatteryLevelCritical,BatteryLevelLow, MinChargeUp, MaxChargeUp);
-
     protected override IEnumerable<Profile> GetProfiles() => [new AgvStatusProfile()];
-
-    public static readonly TransportOrder.Messages.MessageContent.AgvSettings AgvSettingsMessage = new()
-    {
-        BatteryLevelCritical = _agvSettingsReadModel.BatteryLevelCritical,
-        MaxChargeUp = _agvSettingsReadModel.MaxChargeUp,
-        MinChargeUp = _agvSettingsReadModel.MinChargeUp,
-        BatteryLevelLow = _agvSettingsReadModel.BatteryLevelLow,
-        AgvOfflineTimeoutMsWhileIdle = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileIdle,
-        AgvOfflineTimeoutMsWhileBusy = _agvSettingsReadModel.AgvOfflineTimeoutMsWhileBusy,
-        InfiniteCharging = _agvSettingsReadModel.InfiniteCharging
-    };
 
     protected override MassTransitConsumerTestFixture<AgvEventHandler> AddServices(IServiceCollection collection)
     {

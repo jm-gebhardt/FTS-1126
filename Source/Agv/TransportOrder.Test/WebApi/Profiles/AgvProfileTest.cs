@@ -92,24 +92,33 @@ public class AgvProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvBatteryStatusIsMappedToAgvBatteryStatusDto()
     {
-        var agvBatteryStatus = new AgvBatteryStatus(Guid.NewGuid(), 2, true, 7, 8, 9, 3, 4, 5, 6, null, null, true);
+        var agvSettings = new AgvSettingsReadModel
+        {
+            BatteryLevelCritical = 2,
+            BatteryLevelLow = 3,
+            MinChargeUp = 4,
+            MaxChargeUp = 5,
+            InfiniteCharging = true
+        };
+        var agvBatteryStatus = new AgvBatteryStatus(Guid.NewGuid(), 2, true, 7, 8, 9, null, null);
 
         var mapper = GetMapper();
 
-        var dto = mapper.Map<AgvBatteryStatusDto>(agvBatteryStatus);
+        var dto = mapper.Map<AgvBatteryStatusDto>((agvBatteryStatus, agvSettings));
+
         dto.CorrelationId.ShouldBe(agvBatteryStatus.CorrelationId);
         dto.BatteryCharge.ShouldBe(agvBatteryStatus.BatteryCharge);
-        dto.BatteryLevelCritical.ShouldBe(agvBatteryStatus.BatteryLevelCritical);
-        dto.BatteryLevelLow.ShouldBe(agvBatteryStatus.BatteryLevelLow);
-        dto.MinChargeUp.ShouldBe(agvBatteryStatus.MinChargeUp);
-        dto.MaxChargeUp.ShouldBe(agvBatteryStatus.MaxChargeUp);
+        dto.BatteryLevelCritical.ShouldBe(agvSettings.BatteryLevelCritical);
+        dto.BatteryLevelLow.ShouldBe(agvSettings.BatteryLevelLow);
+        dto.MinChargeUp.ShouldBe(agvSettings.MinChargeUp);
+        dto.MaxChargeUp.ShouldBe(agvSettings.MaxChargeUp);
         dto.IsCharging.ShouldBe(agvBatteryStatus.IsCharging);
         dto.BatteryVoltage.ShouldBe(agvBatteryStatus.BatteryVoltage);
         dto.BatteryCurrent.ShouldBe(agvBatteryStatus.BatteryCurrent);
         dto.BatteryTemperature.ShouldBe(agvBatteryStatus.BatteryTemperature);
         dto.EstimatedFullyChargedTime.ShouldBe(agvBatteryStatus.EstimatedFullyChargedTime);
         dto.LastBatteryReplacement.ShouldBe(agvBatteryStatus.LastBatteryReplacement);
-        dto.InfiniteCharging.ShouldBe(agvBatteryStatus.InfiniteCharging);
+        dto.InfiniteCharging.ShouldBe(agvSettings.InfiniteCharging);
     }
 
     [TestMethod]

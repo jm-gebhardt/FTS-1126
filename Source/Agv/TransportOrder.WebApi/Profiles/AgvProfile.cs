@@ -1,4 +1,6 @@
+using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
@@ -21,7 +23,19 @@ public class AgvProfile : WebApiProfile
         CreateMap<CurrentAgvRouteReadModel, CurrentAgvRouteDto>()
             .ForMember(c => c.CurrentRoute, c => c.MapFrom(o => o));
         CreateMap<AgvState, AgvStateType>();
-        CreateMap<AgvBatteryStatus, AgvBatteryStatusDto>();
+
+        CreateMap<AgvBatteryStatus, AgvBatteryStatusDto>(MemberList.Source);
+        CreateMap<Messages.MessageContent.AgvSettings, AgvBatteryStatusDto>(MemberList.Source)
+            .ForSourceMember(d => d.AgvOfflineTimeoutMsWhileIdle, o => o.DoNotValidate())
+            .ForSourceMember(d => d.AgvOfflineTimeoutMsWhileBusy, o => o.DoNotValidate());
+        CreateMap<(AgvBatteryStatus, Messages.MessageContent.AgvSettings), AgvBatteryStatusDto>()
+            .IncludeMembers(s => s.Item1, s => s.Item2);
+        CreateMap<AgvSettingsReadModel, AgvBatteryStatusDto>(MemberList.Source)
+            .ForSourceMember(d => d.SectionName, o => o.DoNotValidate())
+            .ForSourceMember(d => d.AgvOfflineTimeoutMsWhileIdle, o => o.DoNotValidate())
+            .ForSourceMember(d => d.AgvOfflineTimeoutMsWhileBusy, o => o.DoNotValidate());
+        CreateMap<(AgvBatteryStatus, AgvSettingsReadModel), AgvBatteryStatusDto>()
+            .IncludeMembers(s => s.Item1, s => s.Item2);
         CreateMap<AgvMode, AgvModeDto>().ReverseMap();
     }
 }

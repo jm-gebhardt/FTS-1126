@@ -51,6 +51,10 @@ public class AgvsControllerTest
         for (int index = 0; index < 2; index++)
         {
             agvBatteryStatus[index].CorrelationId.ShouldBe(fixture.AgvSerialNumbers[index].ToGuid());
+            agvBatteryStatus[index].MinChargeUp.ShouldNotBe(0);
+            agvBatteryStatus[index].MaxChargeUp.ShouldNotBe(0);
+            agvBatteryStatus[index].BatteryLevelLow.ShouldNotBe(0);
+            agvBatteryStatus[index].BatteryLevelCritical.ShouldNotBe(0);
         }
     }
 
