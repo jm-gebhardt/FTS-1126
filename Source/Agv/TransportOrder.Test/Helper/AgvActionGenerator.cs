@@ -11,7 +11,8 @@ namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 public static class AgvActionGenerator
 {
     public static ActionGroup GenerateChargeActionGroup(string targetNodeId = "charger", Guid? assignedAgv = null,
-        ActionState actionStateMove = ActionState.Created, ActionState actionStateCharge = ActionState.Created, DateTime? createdDate=null, DateTime? completedDate = null)
+        ActionState actionStateMove = ActionState.Created, ActionState actionStateCharge = ActionState.Created, 
+        DateTime? createdDate=null, DateTime? completedDate = null, DateTime? startedDate = null)
     {
         var groupId = Guid.NewGuid();
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId, groupId)
@@ -41,6 +42,10 @@ public static class AgvActionGenerator
         if (completedDate != null)
         {
             actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
+        }
+        if (startedDate != null)
+        {
+            actionGroup.GetType().GetProperty(nameof(ActionGroup.StartedDate))!.SetValue(actionGroup, startedDate);
         }
 
         return actionGroup;

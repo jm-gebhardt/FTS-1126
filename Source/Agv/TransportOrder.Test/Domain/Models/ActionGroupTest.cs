@@ -427,14 +427,14 @@ public class ActionGroupTests
     }
 
     [DataRow(true, true, false)] // true on last action of previous action group, pick: true, drop: true
-    [DataRow(false,  false, true)] //  false on last action of previous action group, pick: false, drop: true
+    [DataRow(false, false, true)] //  false on last action of previous action group, pick: false, drop: true
     [DataTestMethod]
     public void SetDockFrontOfAction_PickDropActionGroup_Doppelspiel_DockFrontSet(bool? previous, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.InfoToAgv.ShouldBeNull();
-        pickAction.Nodes = ["target of last action"]; 
+        pickAction.Nodes = ["target of last action"];
         pickAction.Nodes.Length.ShouldBe(1);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.InfoToAgv.ShouldBeNull();
@@ -544,7 +544,7 @@ public class ActionGroupTests
     [DataRow(false, DockingDirection.Front, true, true)] // target node docking is front, false on last action of previous action group, pick: true, drop: true
     [DataRow(false, DockingDirection.Back, false, false)] // target node docking is back, false on last action of previous action group, pick: false, drop: false
     [DataTestMethod]
-    public void SetDockFrontOfAction_PickDropActionGroup_RotationNeeded_ForceDropBackWards_DockFrontSet(bool? previous, DockingDirection? nodeDockingDirection, bool pick,  bool drop)
+    public void SetDockFrontOfAction_PickDropActionGroup_RotationNeeded_ForceDropBackWards_DockFrontSet(bool? previous, DockingDirection? nodeDockingDirection, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(infoToAgv: new Dictionary<InfoToAgvKey, string>
         {
@@ -571,9 +571,9 @@ public class ActionGroupTests
         dropAction.InfoToAgv.GetDockFront().ShouldBe(drop);
     }
 
-    [DataRow(null, true, false, false)] 
-    [DataRow(true, false, true, true)] 
-    [DataRow(false, true, false, false)] 
+    [DataRow(null, true, false, false)]
+    [DataRow(true, false, true, true)]
+    [DataRow(false, true, false, false)]
     [DataTestMethod]
     public void SetDockFrontOfAction_IncompleteDropActionGroup_NoRotationNeeded_DockFrontSet(bool? previous, bool pick, bool move, bool drop)
     {
@@ -743,9 +743,9 @@ public class ActionGroupTests
         dropAction.InfoToAgv.GetDockFront().ShouldBe(drop);
     }
 
-    [DataRow(null, true, false, true)] 
-    [DataRow(true, false, true, false)] 
-    [DataRow(false, true, false, true)] 
+    [DataRow(null, true, false, true)]
+    [DataRow(true, false, true, false)]
+    [DataRow(false, true, false, true)]
     [DataTestMethod]
     public void SetDockFrontOfAction_IncompleteDropActionGroup_UpdateOfMoveAction_NeedsRotation_DockFrontSet(bool? previous, bool pick, bool move, bool drop)
     {
@@ -756,7 +756,7 @@ public class ActionGroupTests
         dropAction.InfoToAgv.ShouldBeNull();
         var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
         moveAction.InfoToAgv.ShouldBeNull();
-        
+
         // Start pick action
         actionGroup.SetDockFrontOfAction(pickAction.CorrelationId, previous, DockingDirection.Both, true);
         pickAction.InfoToAgv.ShouldNotBeNull();
@@ -848,7 +848,7 @@ public class ActionGroupTests
     public void SetDockFrontOfAction_QueueActionGroup_DockFrontSet(bool startIsStation, bool? previous, bool move)
     {
         var queueAction = AgvActionGenerator.GenerateParkAction();
-        var actionGroup = new ActionGroup(queueAction.ParentId, "") { Actions = [queueAction], HasPriority = true};
+        var actionGroup = new ActionGroup(queueAction.ParentId, "") { Actions = [queueAction], HasPriority = true };
 
         actionGroup.SetDockFrontOfAction(queueAction.CorrelationId, previous, DockingDirection.Both, startIsStation);
         queueAction.InfoToAgv.ShouldNotBeNull();
@@ -862,7 +862,7 @@ public class ActionGroupTests
     [DataTestMethod]
     public void SetDockFrontOfAction_ManualMove_DockFrontSet(bool startIsStation, bool? previous, bool move)
     {
-        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual:true);
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual: true);
         var moveAction = actionGroup.Actions.Single();
         actionGroup.SetDockFrontOfAction(moveAction.CorrelationId, previous, DockingDirection.Both, startIsStation);
         moveAction.InfoToAgv.ShouldNotBeNull();
@@ -1031,5 +1031,99 @@ public class ActionGroupTests
         actionGroup.SetCargoLiftHeightForAction(moveAction.CorrelationId, pickLiftHeight, dropLiftHeight);
 
         moveAction.InfoToAgv?.GetLiftHeight().ShouldBe(expected);
+    }
+
+    [DataRow(ActionState.Completed, ActionState.Created, true)]
+    [DataRow(ActionState.Completed, ActionState.Started, true)]
+    [DataRow(ActionState.Completed, ActionState.Paused, true)]
+    [DataRow(ActionState.Completed, ActionState.Aborted, true)]
+    [DataRow(ActionState.Completed, ActionState.Completed, false)]
+    [DataRow(ActionState.Created, ActionState.Created, false)]
+    [DataRow(ActionState.Started, ActionState.Created, false)]
+    [DataRow(ActionState.Paused, ActionState.Created, false)]
+    [DataRow(ActionState.Aborted, ActionState.Created, false)]
+    [DataRow(ActionState.Started, ActionState.Completed, false)] // Drop  manually completed via FE 
+    [DataTestMethod]
+    public void CheckLoadStateMatches_HasCargo_ReturnsExpectedValue(ActionState pickActionState, ActionState dropActionState, bool expected)
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: pickActionState, dropActionState: dropActionState, assignedAgv: agv);
+
+        actionGroup.CheckLoadStateMatches(true, agv).ShouldBe(expected);
+    }
+
+    [DataRow(ActionState.Completed, ActionState.Completed, true)]
+    [DataRow(ActionState.Created, ActionState.Created, true)]
+    [DataRow(ActionState.Completed, ActionState.Aborted, false)]
+    [DataRow(ActionState.Completed, ActionState.Started, false)]
+    [DataRow(ActionState.Completed, ActionState.Paused, false)]
+    [DataRow(ActionState.Started, ActionState.Created, true)]
+    [DataRow(ActionState.Paused, ActionState.Created, true)]
+    [DataRow(ActionState.Aborted, ActionState.Created, true)]
+    [DataRow(ActionState.Started, ActionState.Completed, true)] // Drop  manually completed via FE 
+    [DataTestMethod]
+    public void CheckLoadStateMatches_HasNoCargo_ReturnsExpectedValue(ActionState pickActionState, ActionState dropActionState, bool expected)
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: pickActionState, dropActionState: dropActionState, assignedAgv: agv);
+
+        actionGroup.CheckLoadStateMatches(false, agv).ShouldBe(expected);
+    }
+
+    [DataRow(true, ActionType.Pick, ActionState.Completed, true)]
+    [DataRow(false, ActionType.Pick, ActionState.Completed, false)]
+    [DataRow(true, ActionType.Pick, ActionState.Started, false)]
+    [DataRow(false, ActionType.Pick, ActionState.Started, true)]
+    [DataRow(true, ActionType.Pick, ActionState.Created, false)]
+    [DataRow(false, ActionType.Pick, ActionState.Created, true)]
+    [DataRow(true, ActionType.Pick, ActionState.Paused, false)]
+    [DataRow(false, ActionType.Pick, ActionState.Paused, true)]
+    [DataRow(true, ActionType.Drop, ActionState.Completed, false)]
+    [DataRow(false, ActionType.Drop, ActionState.Completed, true)]
+    [DataRow(true, ActionType.Drop, ActionState.Started, true)]
+    [DataRow(false, ActionType.Drop, ActionState.Started, false)]
+    [DataRow(true, ActionType.Drop, ActionState.Created, true)]
+    [DataRow(false, ActionType.Drop, ActionState.Created, false)]
+    [DataRow(true, ActionType.Drop, ActionState.Paused, true)]
+    [DataRow(false, ActionType.Drop, ActionState.Paused, false)]
+    [DataTestMethod]
+    public void CheckLoadStateMatches_OnlyPickOrDrop_ReturnsExpectedValue(bool hasCargo, ActionType actionType, ActionState actionState, bool expected)
+    {
+        var agv = Guid.NewGuid();
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction() { CorrelationId = Guid.NewGuid(), ParentId = Guid.NewGuid(), State = actionState, ActionType = actionType };
+        var actionGroup = new ActionGroup() { CorrelationId = action.ParentId, Actions = [action], AssignedAgv = agv };
+
+        actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
+    }
+
+    [TestMethod]
+    public void CheckLoadStateMatches_AgvNotAssignedToActionGroup_ThrowsAgvNotAssignedToActionGroupException()
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, assignedAgv: agv);
+
+        Should.Throw<AgvNotAssignedToActionGroupException>(() => actionGroup.CheckLoadStateMatches(true, Guid.NewGuid()));
+    }
+
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public void CheckLoadStateMatches_ChargeActionGroup_ReturnsExpectedValue(bool hasCargo)
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+
+        actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(!hasCargo);
+    }
+
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public void CheckLoadStateMatches_MoveActionGroup_ReturnsExpectedValue(bool hasCargo)
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(assignedAgv: agv);
+
+        actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(!hasCargo);
     }
 }

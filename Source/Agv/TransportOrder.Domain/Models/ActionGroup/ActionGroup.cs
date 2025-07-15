@@ -389,7 +389,7 @@ public class ActionGroup
     /// <param name="dockFrontPreviousActionGroup">The value of dockfront of the last action of the previous action group.</param>
     /// <param name="nodeDockingDirection">The docking direction as given by the node.</param>
     /// <param name="startIsStation">True, if the start node is a station.</param>
-    public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup, DockingDirection? nodeDockingDirection, bool startIsStation=false)
+    public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup, DockingDirection? nodeDockingDirection, bool startIsStation = false)
     {
         var action = Actions.Single(a => a.CorrelationId == actionId);
 
@@ -439,7 +439,7 @@ public class ActionGroup
     public void SetCargoLiftHeightForAction(Guid actionId, double? pickLiftHeight, double? dropLiftHeight)
     {
         var action = Actions.Single(a => a.CorrelationId == actionId);
-        if (action.HasLiftHeight() && IsManual) 
+        if (action.HasLiftHeight() && IsManual)
         {
             return;
         }
@@ -454,7 +454,7 @@ public class ActionGroup
             action.SetLiftHeight(dropLiftHeight);
         }
 
-        double? liftHeight = ((double?[])[pickLiftHeight, dropLiftHeight]).FirstOrDefault(l => l != null); 
+        double? liftHeight = ((double?[])[pickLiftHeight, dropLiftHeight]).FirstOrDefault(l => l != null);
         action.SetLiftHeight(liftHeight);
     }
 
@@ -640,5 +640,53 @@ public class ActionGroup
             return true;
         }
         return CreatedDate < expirationDate;
+    }
+
+    /// <summary>
+    /// Check if the given load state matches the state of the last completed
+    /// or currently running action.
+    /// </summary>
+    /// <param name="agvHasCargo">Load state of the agv.</param>
+    /// <param name="assignedAgv">The correlation id of the agv.</param>
+    /// <returns>True, if the load state matches the action group state.</returns>
+    public bool CheckLoadStateMatches(bool agvHasCargo, Guid assignedAgv)
+    {
+        if (AssignedAgv != assignedAgv)
+        {
+            throw new AgvNotAssignedToActionGroupException(assignedAgv, CorrelationId);
+        }
+
+        if (!IsMovingCargo)
+        {
+            return !agvHasCargo;
+        }
+
+        List<AgvAction> picks = Actions.Where(a => a.ActionType == ActionType.Pick).ToList();
+        List<AgvAction> drops = Actions.Where(a => a.ActionType == ActionType.Drop).ToList();
+
+        ActionState? lastPickState = picks.MaxBy(a => a.StartedDate)?.State;
+        ActionState? lastDropState = drops.MaxBy(a => a.StartedDate)?.State;
+
+        bool pickCompleted = lastPickState == ActionState.Completed;
+        bool dropCompleted = lastDropState== ActionState.Completed;
+
+        bool hasPick = picks.Any();
+        bool hasDrop = drops.Any();
+
+        // Single action type (only Pick or only Drop)
+        if (!hasDrop)
+        {
+            return agvHasCargo == pickCompleted;
+        }
+
+        if (!hasPick)
+        {
+            return agvHasCargo != dropCompleted;
+        }
+
+        // Mixed Pick & Drop actions
+        return agvHasCargo
+            ? pickCompleted && !dropCompleted
+            : dropCompleted || !pickCompleted;
     }
 }

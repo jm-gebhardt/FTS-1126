@@ -76,6 +76,7 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<AgvCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<CheckAgvLoad, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateErrorStatus, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvStatus, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<LeaveQueue, AgvCommandHandler>(c);

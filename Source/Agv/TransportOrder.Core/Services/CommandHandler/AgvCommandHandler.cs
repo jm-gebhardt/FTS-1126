@@ -83,7 +83,8 @@ public class AgvCommandHandler :
     IConsumer<RemoveAgvFromZones>,
     IConsumer<RemoveAgvFromZone>,
     IConsumer<LeaveQueue>,
-    IConsumer<SwitchChargingAgvs>
+    IConsumer<SwitchChargingAgvs>,
+    IConsumer<CheckAgvLoad>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -430,6 +431,7 @@ public class AgvCommandHandler :
         {
             agv.SetOnline();
             await PrepareNodes(context, agvStatus, agv);
+            await context.Publish(new CheckAgvLoad(agv.CorrelationId));
         }
         bool wasReady = agv.IsReady;
         (bool batteryStatusChanged, bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
@@ -1102,6 +1104,7 @@ public class AgvCommandHandler :
         {
             await context.Publish(new HasCargoChanged(agvCorrelationId, hasCargo));
             var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+            await context.Publish(new CheckAgvLoad(agvCorrelationId));
             string cargoState = hasCargo ? "loaded" : "unloaded";
             _logger.LogAgvInformation(LogCodes.AgvCargoUpdated, agvCorrelationId, "Cargo Updated",
                 $"AGV {agv.SerialNumber} cargo has changed to {cargoState} ",
@@ -1684,5 +1687,50 @@ public class AgvCommandHandler :
             _logger.LogWarning("No parking stations found for agv {AgvCorrelationId}", nonChargingAgv.CorrelationId);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="CheckAgvLoad"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<CheckAgvLoad> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+
+        bool hasCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
+
+        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Paused, ActionGroupState.Started], assignedAgvCorrelationId: agvCorrelationId, maxItems: 3, sortBy: SortBy.StartedDate);
+
+        var actionGroup = actionGroups.SingleOrDefault(a => a.State == ActionGroupState.Started) ?? actionGroups.OrderBy(a => a.StartedDate).LastOrDefault();
+
+        if (actionGroup == null)
+        {
+            _logger.LogError("No recent action groups for agv {AgvCorrelationId}, could not check load state", agvCorrelationId);
+            return;
+        }
+
+        List<AgvError> errors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
+        bool hasCargoError = errors.Any(e => e.IsCargoMismatchError());
+        var position = _agvDb.Positions.GetPosition(agvCorrelationId);
+
+        if (actionGroup.CheckLoadStateMatches(hasCargo, agvCorrelationId))
+        {
+            _logger.LogDebug("Load state {HasCargo} of agv {AgvCorrelationId} matches state of order {ActionGroupCorrelationId}", hasCargo, agvCorrelationId, actionGroup.CorrelationId);
+            if (hasCargoError)
+            {
+                _logger.LogInformation("Removing cargo mismatch error for agv {AgvCorrelationId}, cargo state {HasCargo} matches order state", agvCorrelationId, hasCargo);
+                
+                errors.RemoveAll(e => e.IsCargoMismatchError());
+                await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
+            }
+            return;
+        }
+        if (hasCargoError)
+        {
+            _logger.LogWarning("Agv {AgvCorrelationId} keeps having cargo mismatch error, cargo state {HasCargo} does not match state of order {ActionGroupCorrelationId}", agvCorrelationId, hasCargo, actionGroup.CorrelationId);
+            return;
+        }
+        _logger.LogWarning("Agv {AgvCorrelationId} has cargo mismatch error, cargo state {HasCargo} does not match state of order {ActionGroupCorrelationId}", agvCorrelationId, hasCargo, actionGroup.CorrelationId);
+        errors.Add(new CargoMismatchError(agvCorrelationId, DateTime.UtcNow, hasCargo));
+        await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
     }
 }

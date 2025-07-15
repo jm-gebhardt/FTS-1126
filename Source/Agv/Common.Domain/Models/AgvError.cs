@@ -136,6 +136,18 @@ public record AgvError : CorrelatedBy<Guid>
     }
 
     /// <summary>
+    /// True, if the error is a cargo mismatch error.
+    /// </summary>
+    public bool IsCargoMismatchError()
+    {
+        var cargoMismatchError = new CargoMismatchError(CorrelationId, ErrorReceived, false);
+        return ErrorType == cargoMismatchError.ErrorType &&
+               ErrorCategory == cargoMismatchError.ErrorCategory &&
+               ErrorFlag == cargoMismatchError.ErrorFlag &&
+               ErrorLevel == cargoMismatchError.ErrorLevel;
+    }
+
+    /// <summary>
     /// True, if the error is a ressource blocking error.
     /// </summary>
     public bool IsRessourceError()

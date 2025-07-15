@@ -36,7 +36,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// The type of the action, e.g. Pick or Drop
     /// </summary>
-    public ActionType ActionType { get; private set; }
+    public ActionType ActionType { get; set; }
 
     /// <summary>
     /// The target of the action.

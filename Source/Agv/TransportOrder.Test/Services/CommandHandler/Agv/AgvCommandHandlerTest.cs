@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
@@ -177,6 +178,7 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
         agv.IsOnline.ShouldBeTrue();
         await fixture.ShouldHavePublishedAsync<AgvWentOnline>();
+        await fixture.ShouldHavePublishedAsync<CheckAgvLoad>();
     }
 
     [TestMethod]
@@ -1080,6 +1082,7 @@ public class AgvCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<CargoChanged>();
         await fixture.ShouldHavePublishedAsync<HasCargoChanged>();
+        await fixture.ShouldHavePublishedAsync<CheckAgvLoad>();
     }
 
     [TestMethod]
@@ -1098,6 +1101,7 @@ public class AgvCommandHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<CargoChanged>();
         await fixture.ShouldNotHavePublishedAsync<HasCargoChanged>();
+        await fixture.ShouldNotHavePublishedAsync<CheckAgvLoad>();
     }
 
     [TestMethod]
@@ -1852,5 +1856,124 @@ public class AgvCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
         await fixture.ShouldHavePublishedAsync<SwitchChargingAgvsFailed>();
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CheckAgvLoad_NoCurrentActionGroups_DoesNotPublishUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithActionGroups([])
+            .WithHasCargoStates(true);
+
+        await fixture.PublishMessageAsync(new CheckAgvLoad(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CheckAgvLoad_MatchingState_NoPreviousCargoMismatchErrors_DoesNotPublishUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithActionGroups([actionGroup])
+            .WithHasCargoStates(true);
+
+        await fixture.PublishMessageAsync(new CheckAgvLoad(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CheckAgvLoad_MatchingState_PreviousCargoMismatchErrors_PublishesUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithActionGroups([actionGroup])
+            .WithHasCargoStates(true)
+            .WithActiveErrors([new CargoMismatchError(agv.CorrelationId, DateTime.UtcNow, false)]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+
+        updateErrorStatus.Errors.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Consume_CheckAgvLoad_Mismatch_PreviousCargoMismatchErrors_DoesNotPublishUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithActionGroups([actionGroup])
+            .WithHasCargoStates(false)
+            .WithActiveErrors([new CargoMismatchError(agv.CorrelationId, DateTime.UtcNow, false)]);
+
+        await fixture.PublishMessageAsync(new CheckAgvLoad(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CheckAgvLoad_Mismatch_NoPreviousCargoMismatchErrors_PublishesUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithActionGroups([actionGroup])
+            .WithHasCargoStates(false)
+            .WithActiveErrors([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+
+        updateErrorStatus.Errors.ShouldNotBeEmpty();
+        updateErrorStatus.Errors.Any(e => e.IsCargoMismatchError()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_CheckAgvLoad_NoStartedActionGroup_UsesCompletedActionGroup()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge: ActionState.Completed, assignedAgv: agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithActionGroups([actionGroup, chargeActionGroup])
+            .WithHasCargoStates(true)
+            .WithActiveErrors([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+
+        updateErrorStatus.Errors.ShouldNotBeEmpty();
+        updateErrorStatus.Errors.Any(e => e.IsCargoMismatchError()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_CheckAgvLoad_NoStartedActionGroup_PausedActionGroupStartedAfterCompletedActionGroup_UsesPausedActionGroup()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: agv.CorrelationId, startedDate:DateTime.UtcNow.AddMinutes(-10));
+
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Paused, actionStateCharge: ActionState.Created, assignedAgv: agv.CorrelationId, startedDate: DateTime.UtcNow);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithActionGroups([actionGroup, completedActionGroup, chargeActionGroup])
+            .WithHasCargoStates(true)
+            .WithActiveErrors([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+
+        updateErrorStatus.Errors.ShouldNotBeEmpty();
+        updateErrorStatus.Errors.Any(e => e.IsCargoMismatchError()).ShouldBeTrue();
     }
 }
