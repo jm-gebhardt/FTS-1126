@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Time;
@@ -87,6 +88,9 @@ try
                     services.AddSingleton<ISignificanceChecker<ActionUpdated>, AgvActionSignificanceChecker<ActionUpdated>>();
                     services.AddSingleton<UnTimedInMemoryFilter<ActionUpdated>>();
 
+                    services.AddSingleton<ISignificanceChecker<AgvSetToPushOrJoystickMode>, PushModeSignificanceChecker<AgvSetToPushOrJoystickMode>>();
+                    services.AddSingleton<UnTimedInMemoryFilter<AgvSetToPushOrJoystickMode>>();
+
                     services.AddTransient<IActionRepository, EfActionRepository>();
                     services.ConfigureServicesMassTransit(context.Configuration,
                         busRegistrationConfiguration: configurator =>
@@ -129,6 +133,7 @@ try
                             // add filters
                             configurator.UseConsumeFilter<MqttMessageConsumeFilter>(registrationContext);
                             configurator.UsePublishFilter<ActionEventPublishFilter>(registrationContext);
+                            configurator.UsePublishFilter<PushModePublishFilter>(registrationContext);
 
                             //for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();

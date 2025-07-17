@@ -29,6 +29,7 @@ public class AgvErrorRequestHandlerTest
         await fixture.ShouldHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromQueue>();
     }
 
     [TestMethod]
@@ -47,5 +48,25 @@ public class AgvErrorRequestHandlerTest
         await fixture.ShouldNotHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromQueue>();
+    }
+
+    [TestMethod]
+    public async Task SolveRessourceBlockingErrors_QueueBlockingError_PublishesRemoveAgvFromQueue()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
+        AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler>()
+            .WithAgv(agv)
+            .WithActiveAgvErrors(agv.CorrelationId, [new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
+            .WithPostion(position)
+            .WithNodesStates([])
+            .Build();
+
+        await fixture.GetResponseAsync<Success>(new SolveRessourceBlockingErrors(agv.CorrelationId, IgnoreErrorState:true));
+        await fixture.ShouldNotHavePublishedAsync<FreeNode>();
+        await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldHavePublishedAsync<RemoveAgvFromQueue>();
     }
 }

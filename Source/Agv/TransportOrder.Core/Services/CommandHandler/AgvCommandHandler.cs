@@ -84,7 +84,8 @@ public class AgvCommandHandler :
     IConsumer<RemoveAgvFromZone>,
     IConsumer<LeaveQueue>,
     IConsumer<SwitchChargingAgvs>,
-    IConsumer<CheckAgvLoad>
+    IConsumer<CheckAgvLoad>,
+    IConsumer<RemoveAgvFromQueue>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -94,6 +95,7 @@ public class AgvCommandHandler :
     private readonly IAgvDb _agvDb;
     private readonly IParkPointService _parkPointService;
     private readonly IQueueManager _queueManager;
+    private readonly IQueueRepository _queueRepository;
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IMetricCollectionService _metricCollectionService;
@@ -113,6 +115,7 @@ public class AgvCommandHandler :
         ProductionOptions productionOptions,
         IStationRepository stationRepository,
         ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider,
+        IQueueRepository queueRepository,
         ILogger<AgvCommandHandler> logger
     )
     {
@@ -129,6 +132,7 @@ public class AgvCommandHandler :
         _chargingPointManager = chargingPointManager;
         _stationRepository = stationRepository;
         _queueSemaphoreProvider = queueSemaphoreProvider;
+        _queueRepository = queueRepository;
     }
 
     /// <summary>
@@ -631,7 +635,7 @@ public class AgvCommandHandler :
         agv.GoOffline();
         if (wasOnline && !agv.IsOnline)
         {
-            await UpdateOfflineErrors(context, agv);
+            await UpdateOfflineErrors(context, agv, handleQueueBlockingErrors:true);
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {
                 _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(GoOffline), agv.CorrelationId);
@@ -651,7 +655,7 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors = true, bool handleRessourceErrors = true)
+    private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors = true, bool handleRessourceErrors = true, bool handleQueueBlockingErrors=false)
     {
         List<AgvError> agvErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId)).ToList();
         var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
@@ -664,6 +668,29 @@ public class AgvCommandHandler :
         if (handleRessourceErrors)
         {
             await UpdateRessourceBlockingErrors(context, agv, agvErrors, position);
+        }
+
+        if (handleQueueBlockingErrors)
+        {
+            await UpdateQueueBlockingError(context, agv, agvErrors, position);
+        }
+    }
+
+    private async Task UpdateQueueBlockingError(IPublishEndpoint context, Agv agv, List<AgvError> errors, AgvPositionStatus? position)
+    {
+        if (agv.IsOnline)
+        {
+            return;
+        }
+        if (agv.IsQueueing || await _queueRepository.GetQueueForAgv(agv.CorrelationId) != null)
+        {
+            bool hasQueueBlockingError = errors.Any(e => e.IsQueueBlockingError());
+            if (!hasQueueBlockingError)
+            {
+                errors.Add(new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow));
+                _logger.LogInformation("Agv {AgvCorrelationId} went offline in queue or while heading towards queue", agv.CorrelationId);
+                await context.Publish(new UpdateErrorStatus(agv.CorrelationId, errors, position!.AgvPosition));
+            }
         }
     }
 
@@ -1718,7 +1745,7 @@ public class AgvCommandHandler :
             if (hasCargoError)
             {
                 _logger.LogInformation("Removing cargo mismatch error for agv {AgvCorrelationId}, cargo state {HasCargo} matches order state", agvCorrelationId, hasCargo);
-                
+
                 errors.RemoveAll(e => e.IsCargoMismatchError());
                 await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
             }
@@ -1731,6 +1758,42 @@ public class AgvCommandHandler :
         }
         _logger.LogWarning("Agv {AgvCorrelationId} has cargo mismatch error, cargo state {HasCargo} does not match state of order {ActionGroupCorrelationId}", agvCorrelationId, hasCargo, actionGroup.CorrelationId);
         errors.Add(new CargoMismatchError(agvCorrelationId, DateTime.UtcNow, hasCargo));
+        await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
+    }
+    
+    /// <summary>
+    /// Handles the <see cref="RemoveAgvFromQueue"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RemoveAgvFromQueue> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        bool removed = false;
+        await _queueSemaphoreProvider.ExecuteLockedAsync(async () => { removed = await TryEscapeQueue(context, agv); });
+
+        if (!removed)
+        {
+            removed = await _queueManager.RemoveAgvFromQueueEntry(agvCorrelationId);
+        }
+
+        if (!removed)
+        {
+            return;
+        }
+
+        agv.IsQueueing = false;
+
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        {
+            _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+            return;
+        }
+
+        List<AgvError> errors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
+        errors.Remove(errors.Single(e => e.IsQueueBlockingError()));
+        var position = _agvDb.Positions.GetPosition(agvCorrelationId);
         await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
     }
 }

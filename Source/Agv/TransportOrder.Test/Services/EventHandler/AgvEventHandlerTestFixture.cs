@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -8,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -28,6 +30,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
+    private readonly Mock<IQueueRepository> _queueRepository = new();
 
     private readonly Mock<IAgvDb> _agvDb = new();
 
@@ -47,6 +50,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _nodeStateRepository.Object);
+        collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _chargingPointManager.Object);
         return this;
     }
@@ -130,6 +134,18 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
                 }
                 return new GraphNode(charger);
             });
+        return this;
+    }
+
+    public AgvEventHandlerTestFixture WithQueue(Queue? queue)
+    {
+        _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
+        return this;
+    }
+
+    public AgvEventHandlerTestFixture WithActiveErrors(IList<AgvError> errors)
+    {
+        _agvDb.AddActiveErrors(errors);
         return this;
     }
 }

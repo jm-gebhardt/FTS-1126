@@ -72,6 +72,11 @@ public class MqttStateConsumer : IConsumer<MqttState>
     private async Task SendAgvErrorStatusAsync(ConsumeContext<MqttState> context)
     {
         var agvErrorStatusReceived = new AgvErrorStatusReceived(_stateParser.CorrelationId, _stateParser.AgvErrors, _stateParser.AgvPosition);
+        if (agvErrorStatusReceived.Errors?.Any(e => e.IsPushedManually())?? false)
+        {
+            _logger.LogInformation("Agv {AgvCorrelationId} moved in push or joystick mode", agvErrorStatusReceived.CorrelationId);
+            await context.Publish(new AgvSetToPushOrJoystickMode(agvErrorStatusReceived.CorrelationId));
+        }
         await context.Publish(agvErrorStatusReceived, context.CancellationToken);
     }
 

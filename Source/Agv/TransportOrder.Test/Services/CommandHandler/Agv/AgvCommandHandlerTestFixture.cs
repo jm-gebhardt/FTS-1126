@@ -55,6 +55,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRouteService> _routeService = new();
+    private readonly Mock<IQueueRepository> _queueRepository = new();
 
     private static IEnumerable<Profile> Profiles => [new AgvStatusProfile(), new AgvProfile(), new CargoProfile(), new ActionProfile()];
 
@@ -80,6 +81,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _chargingPointManager.Object);
         collection.AddTransient(_ => _parkPointService.Object);
         collection.AddTransient(_ => _queueManager.Object);
+        collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
@@ -109,10 +111,9 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
-    public AgvCommandHandlerTestFixture WithAgvsToMove(Dictionary<Guid, string>? agvsToMove, int? queueSize=null, string? nodeId=null, bool swapped=false)
+    public AgvCommandHandlerTestFixture WithAgvsToMove(Dictionary<Guid, string>? agvsToMove, int? queueSize = null, string? nodeId = null, bool swapped = false)
     {
         _queueManager.Setup(x => x.TryDequeueAgv(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync(agvsToMove);
-        _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync((agvsToMove, queueSize));
         _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync((agvsToMove, queueSize));
         _queueManager.Setup(x => x.TrySwapAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync((agvsToMove, nodeId, swapped));
         return this;
@@ -151,7 +152,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithEnqueueingTarget(string? queueNode)
     {
-        _queueManager.Setup(x => x.TryEnqueueAgv(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(queueNode); 
+        _queueManager.Setup(x => x.TryEnqueueAgv(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(queueNode);
         return this;
     }
 
@@ -170,13 +171,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
         return this;
     }
-    
+
     [PublicAPI]
     public AgvCommandHandlerTestFixture SetupAgv(bool hasPendingActions = false, bool exists = true)
     {
         _actionGroupRepository.Setup(x =>
             x.AgvHasPendingActions(It.IsAny<Guid>())).ReturnsAsync(hasPendingActions);
-        AgvDb.AddAgvGraph(graphExists:exists);
+        AgvDb.AddAgvGraph(graphExists: exists);
 
         return this;
     }
@@ -225,7 +226,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithGraphExists(bool exists)
     {
-        AgvDb.AddAgvGraph(graphExists:exists);
+        AgvDb.AddAgvGraph(graphExists: exists);
         return this;
     }
 
@@ -247,13 +248,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
-    public AgvCommandHandlerTestFixture WithActiveErrors(IList<AgvError> errors) 
+    public AgvCommandHandlerTestFixture WithActiveErrors(IList<AgvError> errors)
     {
         AgvDb.AddActiveErrors(errors);
         return this;
     }
 
-    public AgvCommandHandlerTestFixture WithHasOnlineAgvs(bool hasOnlineAgvs=true)
+    public AgvCommandHandlerTestFixture WithHasOnlineAgvs(bool hasOnlineAgvs = true)
     {
         AgvDb.Setup(r => r.Agvs.HasOnlineAgvs()).ReturnsAsync(hasOnlineAgvs);
         return this;
@@ -309,7 +310,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture AddChargingNode(bool isOnCharger, GraphNode? chargeGraphNode)
     {
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(isOnCharger);
-        _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync( chargeGraphNode != null? new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow): null);
+        _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(chargeGraphNode != null ? new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow) : null);
         _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(() => chargeGraphNode?? throw new NoChargeStationAvailableException());
         return this;
     }
@@ -354,8 +355,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         _parkPointService.Setup(x => x.HasParkersAsync(It.IsAny<Guid>())).ReturnsAsync(nodes.Any(n => n.IsParker()));
         return this;
     }
-    
-    public AgvCommandHandlerTestFixture WithNodesStates(ICollection<NodeLock> nodeLocks, ICollection<GraphNode> nodes, bool nodeReservationFails = false, string? lastNodeId=null)
+
+    public AgvCommandHandlerTestFixture WithNodesStates(ICollection<NodeLock> nodeLocks, ICollection<GraphNode> nodes, bool nodeReservationFails = false, string? lastNodeId = null)
     {
         _nodeStateRepositoryMock.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
         AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Expression<Func<EfNode, bool>>?>())).ReturnsAsync(nodes);
@@ -395,5 +396,17 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         IRequestClient<TRequest> client = TestHarness.Bus!.CreateRequestClient<TRequest>();
         Response<TResult> response = await client.GetResponse<TResult>(request);
         return response;
+    }
+
+    public AgvCommandHandlerTestFixture WithQueue(TransportOrder.Domain.Models.Queue.Queue? queue)
+    {
+        _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithAgvRemovedFromQueueEntry(bool removed)
+    {
+        _queueManager.Setup(x => x.RemoveAgvFromQueueEntry(It.IsAny<Guid>(), It.IsAny<string?>())).ReturnsAsync(removed);
+        return this;
     }
 }

@@ -60,7 +60,7 @@ public interface IQueueManager
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="targetNode">The target node of the queue.</param>
     /// <returns>True, if the agv was removed from the queue.</returns>
-    Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode);
+    Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string? targetNode=null);
 
     /// <summary>
     /// Tries to find the best queue for an agv by also respecting the possibility of swapping out another agv and updates the queue if necessary.

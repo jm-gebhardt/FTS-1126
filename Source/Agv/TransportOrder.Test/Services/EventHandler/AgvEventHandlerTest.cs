@@ -1,8 +1,10 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
@@ -535,5 +537,77 @@ public class AgvEventHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvs>();
         await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvHeadingTowardsQueue_NoPreviousQueueBlockingErrors_PublishesUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = true;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithAgv(agv)
+            .WithQueue(null)
+            .WithActiveErrors([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, UpdateErrorStatus>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+        updateErrorStatus.Errors.Any(e => e.IsQueueBlockingError()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvAtQueueHead_NoPreviousQueueBlockingErrors_PublishesUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = false;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithAgv(agv)
+            .WithQueue(new Queue())
+            .WithActiveErrors([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, UpdateErrorStatus>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+        updateErrorStatus.Errors.Any(e => e.IsQueueBlockingError()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvInQueue_NoPreviousQueueBlockingErrors_PublishesUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = true;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithAgv(agv)
+            .WithQueue(new Queue())
+            .WithActiveErrors([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, UpdateErrorStatus>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+        updateErrorStatus.Errors.Any(e => e.IsQueueBlockingError()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvInQueue_PreviousQueueBlockingErrors_DoesNotPublishUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = true;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithAgv(agv)
+            .WithQueue(new Queue())
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)]);
+
+        await fixture.PublishMessageAsync(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvNotInQueueAndNotHeadingTowardsQueue_DoesNotPublishUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = false;
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithAgv(agv)
+            .WithQueue(null)
+            .WithActiveErrors([]);
+
+        await fixture.PublishMessageAsync(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
     }
 }

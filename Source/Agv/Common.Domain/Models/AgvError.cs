@@ -8,6 +8,9 @@ namespace Gebhardt.Acc.Common.Domain.Models;
 /// </summary>
 public record AgvError : CorrelatedBy<Guid>
 {
+    private const string JoystickMode = "Joystick";
+    private const string PushMode = "Schiebemodus";
+
     /// <summary>
     /// The correlation id of the agv error.
     /// </summary>
@@ -124,6 +127,15 @@ public record AgvError : CorrelatedBy<Guid>
     }
 
     /// <summary>
+    /// Check if the error reports that an agv was pushed manually via joystick or in pushmode.
+    /// </summary>
+    /// <returns>True, if description reports a joystick or pushmode move of agv.</returns>
+    public bool IsPushedManually()
+    {
+        return (ErrorDescription?.Contains(JoystickMode)?? false) || (ErrorDescription?.Contains(PushMode) ?? false);
+    }
+
+    /// <summary>
     /// True, if the error is a zone error.
     /// </summary>
     public bool IsZoneError()
@@ -145,6 +157,18 @@ public record AgvError : CorrelatedBy<Guid>
                ErrorCategory == cargoMismatchError.ErrorCategory &&
                ErrorFlag == cargoMismatchError.ErrorFlag &&
                ErrorLevel == cargoMismatchError.ErrorLevel;
+    }
+
+    /// <summary>
+    /// True, if the error is a queue blocking error.
+    /// </summary>
+    public bool IsQueueBlockingError()
+    {
+        var queueBlockingError = new QueueBlockingError(CorrelationId, ErrorReceived);
+        return ErrorType == queueBlockingError.ErrorType &&
+               ErrorCategory == queueBlockingError.ErrorCategory &&
+               ErrorFlag == queueBlockingError.ErrorFlag &&
+               ErrorLevel == queueBlockingError.ErrorLevel;
     }
 
     /// <summary>

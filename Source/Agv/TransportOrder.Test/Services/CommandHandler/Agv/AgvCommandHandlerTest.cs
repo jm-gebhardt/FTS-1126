@@ -728,7 +728,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithNodesStates([], [])
-            .WithHasOnlineAgvs(false);
+            .WithHasOnlineAgvs(false)
+            .WithQueue(null);
 
         await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
 
@@ -751,6 +752,30 @@ public class AgvCommandHandlerTest
             .WithZones([zone])
             .WithNodesStates([], [])
             .WithHasOnlineAgvs(false);
+
+        await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
+        agv.IsOnline.ShouldBeFalse();
+        await fixture.ShouldHavePublishedAsync<AllAgvsOffline>();
+        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+    }
+
+    [TestMethod]
+    public async Task Consume_GoOffline_AgvWasOnline_InQueue_PublishedAgvOnlineChangedAndUpdateErrorStatus()
+    {
+        var position = AgvPositionStatusGenerator.Generate();
+        var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: []);
+        agv.IsQueueing = true;
+        agv.SetOnline();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithPostion(position)
+            .WithZones([zone])
+            .WithNodesStates([], [])
+            .WithHasOnlineAgvs(false)
+            .WithQueue(new TransportOrder.Domain.Models.Queue.Queue());
 
         await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
 
@@ -1962,7 +1987,7 @@ public class AgvCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
-        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: agv.CorrelationId, startedDate:DateTime.UtcNow.AddMinutes(-10));
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: agv.CorrelationId, startedDate: DateTime.UtcNow.AddMinutes(-10));
 
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Paused, actionStateCharge: ActionState.Created, assignedAgv: agv.CorrelationId, startedDate: DateTime.UtcNow);
         var fixture = new AgvCommandHandlerTestFixture()
@@ -1975,5 +2000,59 @@ public class AgvCommandHandlerTest
 
         updateErrorStatus.Errors.ShouldNotBeEmpty();
         updateErrorStatus.Errors.Any(e => e.IsCargoMismatchError()).ShouldBeTrue();
+    }
+    
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueue_EscapeQueue_PublishesUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        agv.IsQueueing = true;
+        var agvInQueue = AgvGenerator.GenerateRawAgv(Guid.NewGuid(), "serial number");
+        agvInQueue.IsQueueing = true;
+
+        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "a queue head" } };
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv, agvInQueue])
+            .WithAgvsToMove(agvsToMove)
+            .WithAgvRemovedFromQueueEntry(false)
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
+            .WithQueueInternalMoves([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateErrorStatus>(new RemoveAgvFromQueue(agv.CorrelationId));
+
+        updateErrorStatus.Errors.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueue_RemovedFromQueueEntryNode_PublishesUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        agv.IsQueueing = true;
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsToMove(new Dictionary<Guid, string>())
+            .WithAgvRemovedFromQueueEntry(true)
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
+            .WithQueueInternalMoves([]);
+
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateErrorStatus>(new RemoveAgvFromQueue(agv.CorrelationId));
+
+        updateErrorStatus.Errors.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueue_NotInQueueAnymore_DoesNotPublishUpdateErrorStatus()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsToMove(new Dictionary<Guid, string>())
+            .WithAgvRemovedFromQueueEntry(false)
+            .WithActiveErrors([])
+            .WithQueueInternalMoves([]);
+
+        await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
     }
 }

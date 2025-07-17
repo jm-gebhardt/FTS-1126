@@ -225,21 +225,33 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string targetNode)
+    public async Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string? targetNode)
     {
         bool removed = false;
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var queue = await queueRepository.GetQueueByEntryNode(targetNode);
+            Queue? queue;
+            if (targetNode != null)
+            {
+                queue = await queueRepository.GetQueueByEntryNode(targetNode);
+            }
+            else
+            {
+                ICollection<Queue> queues = await queueRepository.GetQueues();
+                var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+                var queueNode = await PickQueue(agv, queues.Select(q => q.EntryNode).Where(e => e != null).ToArray()!);
+                queue = queues.FirstOrDefault(q => q.EntryNode == queueNode.Id);
+            }
             if (queue == null)
             {
                 logger.LogDebug("Agv {AgvCorrelationId} could not be removed from queue, no queue for target node {TargetNode} of agv found", agvCorrelationId, targetNode);
                 return;
             }
+
             queue.RemoveAgv(agvCorrelationId);
-            await queueRepository.UpdateQueueAsync(queue);
-            removed = true;
-            logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
+                await queueRepository.UpdateQueueAsync(queue);
+                removed = true;
+                logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
         });
         return removed;
     }

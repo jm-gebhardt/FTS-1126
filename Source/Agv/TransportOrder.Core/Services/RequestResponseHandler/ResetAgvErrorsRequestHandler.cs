@@ -79,7 +79,12 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
         if (errorIdsToReset.Count != 0)
         {
             // but only try to reset active ones
-            errorIdsToReset = activeErrors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).Select(e => e.CorrelationId).ToList();
+            List<AgvError> errorsToReset = activeErrors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).ToList();
+            if (errorsToReset.Any(e => e.IsQueueBlockingError()))
+            {
+                _logger.LogInformation("Queue blocking error reset via API for agv {AgvCorrelationId}", correlationId);
+            }
+            errorIdsToReset = errorsToReset.Select(e => e.CorrelationId).ToList();
             if (errorIdsToReset.Count == 0)
             {
                 await context.RespondAsync(new ResetAgvErrorsResult("None of the specified errors are active. So all good already."));

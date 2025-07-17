@@ -87,6 +87,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private Mock<IActionGroupRepository> ActionGroupRepository { get; }
 
+    private  readonly Mock<IQueueRepository> _queueRepository = new();
+
     private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
 
     private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; }
@@ -359,6 +361,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _routeService.Object);
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);
+            sc.AddTransient(_ => _queueRepository.Object);
             sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
             sc.AddTransient(_ => _restrictedAreaRepository.Object);
         });

@@ -47,13 +47,15 @@ public class AgvEventHandler :
     IConsumer<AgvZonesReceived>,
     IConsumer<CriticalAgvHasNoCharger>,
     IConsumer<AgvBatteryChargedToMinimum>,
-    IConsumer<SwitchChargingAgvsFailed>
+    IConsumer<SwitchChargingAgvsFailed>,
+    IConsumer<AgvSetToPushOrJoystickMode>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _semaphoreProvider;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IAgvDb _agvDb;
+    private readonly IQueueRepository _queueRepository;
 
     /// <inheritdoc cref="AgvEventHandler"/>
     public AgvEventHandler(
@@ -61,12 +63,14 @@ public class AgvEventHandler :
         ISemaphoreProvider<IAgvsSemaphore> semaphoreProvider,
         IAgvDb agvDb,
         IChargingPointManager chargingPointManager,
+        IQueueRepository queueRepository,
         ILogger<AgvEventHandler> logger)
     {
         _actionGroupRepository = actionGroupRepository;
         _semaphoreProvider = semaphoreProvider;
         _agvDb = agvDb;
         _chargingPointManager = chargingPointManager;
+        _queueRepository = queueRepository;
         _logger = logger;
     }
 
@@ -430,6 +434,27 @@ public class AgvEventHandler :
             var highestChargingAgv = candidatesToStopCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? 0).Last();
 
             await context.Publish(new SwitchChargingAgvs(agvWithCriticalBatteryLevel, highestChargingAgv.CorrelationId));
+        }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvSetToPushOrJoystickMode"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvSetToPushOrJoystickMode> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        if (agv.IsQueueing || await _queueRepository.GetQueueForAgv(agvCorrelationId) != null)
+        {
+            List<AgvError> errors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
+            bool hasQueueBlockingError = errors.Any(e => e.IsQueueBlockingError());
+            if (!hasQueueBlockingError)
+            {
+                var position = _agvDb.Positions.GetPosition(agvCorrelationId);
+                errors.Add(new QueueBlockingError(agvCorrelationId, DateTime.UtcNow));
+                _logger.LogInformation("Agv {AgvCorrelationId} moved manually out of queue", agvCorrelationId);
+                await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
+            }
         }
     }
 }
