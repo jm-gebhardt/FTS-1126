@@ -26,7 +26,8 @@ public class TargetSelectorTest
     {
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .AddDropActionGroup();
+            .AddDropActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
         await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
@@ -39,11 +40,30 @@ public class TargetSelectorTest
     }
 
     [TestMethod]
+    public async Task ExecuteAsync_PalletJamAtStation1_PublishedSetTargetForActionWithStation2()
+    {
+        var fixture = new TargetSelectorTestFixture()
+            .WithDefaultOccupancies()
+            .AddDropActionGroup()
+            .WithStationHasPalletJam("PS01");
+        var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
+
+        await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
+        await fixture.SelectTargetAsync();
+
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
+        var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
+        setTargetForAction.ShouldNotBeNull();
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[1].Name);
+    }
+
+    [TestMethod]
     public async Task ExecuteAsync_TargetSelected_UpdatesDecisionPointRegistry()
     {
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .AddDropActionGroup();
+            .AddDropActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
         await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
@@ -62,7 +82,8 @@ public class TargetSelectorTest
         var agv = Guid.NewGuid();
         var fixture = new TargetSelectorTestFixture()
             .WithOccupancies(occupiedCountAndAgv: (1, agv))
-            .AddDropActionGroup();
+            .AddDropActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
         await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
@@ -80,7 +101,8 @@ public class TargetSelectorTest
     {
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .AddDropActionGroup();
+            .AddDropActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
         await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
@@ -103,7 +125,8 @@ public class TargetSelectorTest
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
             .AddDropActionGroup()
-            .AddPickActionGroup();
+            .AddPickActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
         var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
 
@@ -131,7 +154,8 @@ public class TargetSelectorTest
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
             .AddDropActionGroup()
-            .AddPickActionGroup();
+            .AddPickActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
         await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
@@ -182,7 +206,8 @@ public class TargetSelectorTest
     {
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .AddDropActionGroup();
+            .AddDropActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
         var assignedAgv = fixture.ActionGroups[0].AssignedAgv!.Value;
 
@@ -203,7 +228,8 @@ public class TargetSelectorTest
             .WithStationCount(1)
             .WithOccupancies(occupiedCountAndAgv: (1, originalAgvOnStation))
             .AddDropActionGroup(dropAgv)
-            .AddPickActionGroup();
+            .AddPickActionGroup()
+            .WithStationHasPalletJam(null);
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
         var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
         var pickAgv = fixture.ActionGroups[1].AssignedAgv!.Value;
@@ -234,7 +260,8 @@ public class TargetSelectorTest
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
             .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now))
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithStationHasPalletJam(null);
 
         await fixture.SelectTargetAsync();
 

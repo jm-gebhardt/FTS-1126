@@ -43,7 +43,7 @@ public class StationEventHandler(
     }
 
     /// <summary>
-    /// Handles the <see cref="StationLocked"/> event.
+    /// Handles the <see cref="StationUnlocked"/> event.
     /// </summary>
     public async Task Consume(ConsumeContext<StationUnlocked> context)
     {

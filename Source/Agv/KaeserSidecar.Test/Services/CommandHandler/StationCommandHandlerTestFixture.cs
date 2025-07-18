@@ -3,7 +3,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -22,7 +22,7 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         {
             s.AddSingleton<IStationRepository, StationRepository>();
             s.AddSingleton(Mock.Of<ILogger<StationCommandHandler>>());
-            s.AddSingleton(Mock.Of<KaeserGraphConfiguration>());
+            s.AddSingleton(OrderGenerator.KaeserConfiguration);
         });
         Build();
 

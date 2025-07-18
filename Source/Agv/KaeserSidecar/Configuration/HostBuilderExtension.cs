@@ -21,6 +21,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using InitializationProvider = Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices.InitializationProvider;
 
 namespace Gebhardt.Acc.KaeserSidecar.Configuration;
 
@@ -70,6 +71,8 @@ public static class HostBuilderExtension
 
             services.AddSingleton<ITargetSelector, TargetSelector>();
             services.AddSingleton<IHostedService>(sp => (IHostedService)sp.GetRequiredService<ITargetSelector>());
+
+            services.AddHostedService<InitializationProvider>();
             // Add prismat communication db connection
             services.AddDbContext<PrismatCommunicationDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));

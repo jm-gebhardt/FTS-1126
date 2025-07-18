@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
-using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
@@ -22,8 +21,8 @@ public class TargetSelector(
     ITransportOrderDb transportOrderDb,
     IDecisionPointActionRepository decisionPointActionRepository,
     ISemaphoreProvider<ITargetSelectionSemaphore> semaphoreProvider,
-    IBus bus,
-    IRequestClient<GetJamState> jamStateRequestClient) : BackgroundService, ITargetSelector
+    IJamStateRepository jamStateRepository,
+    IBus bus) : BackgroundService, ITargetSelector
     
 {
     private readonly List<Guid> _lastEvaluatedActions = [];
@@ -136,9 +135,8 @@ public class TargetSelector(
             {
                 string jamStateStation = configuration.ConveyorStationMapping[occupancy.Station];
                 logger.LogInformation("Considering jam state for station {Target}", occupancy.Station);
-                var getJamState = new GetJamState(jamStateStation, DateTime.UtcNow);
-                Response<GotJamState> response = await jamStateRequestClient.GetResponse<GotJamState>(getJamState, timeout: TimeSpan.FromSeconds(2.5 * getJamState.JamStateWaitingTimeSec));
-                if (response.Message.HasJam)
+                bool hasPalletJam = await GetJamState(jamStateStation);
+                if (hasPalletJam)
                 {
                     logger.LogInformation("Station {Target} not available due to pallet jam ", occupancy.Station);
                     continue;
@@ -148,6 +146,12 @@ public class TargetSelector(
             break;
         }
         return selectedTarget;
+    }
+
+    private async Task<bool> GetJamState(string station)
+    {
+        var jamState = await jamStateRepository.GetByStationAsync(station) ?? new JamState(station, 0, DateTime.UtcNow);
+        return jamState.HasPalletJam;
     }
 
     private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies, ICollection<TransportOrder.Domain.Models.Station.Station> stations)

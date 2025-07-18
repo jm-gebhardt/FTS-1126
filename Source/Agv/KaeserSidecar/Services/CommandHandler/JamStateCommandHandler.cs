@@ -14,7 +14,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 [UsedImplicitly]
 public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJamStateRepository jamStateRepository, IConveyorCommunicator communicator): 
     IConsumer<UpdateJamState>,
-    IConsumer<GetJamState>
+    IConsumer<RequestJamState>
 {
     /// <summary>
     /// Handles the <see cref="UpdateJamState"/> command.
@@ -38,26 +38,11 @@ public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJam
     }
 
     /// <summary>
-    /// Handles the <see cref="GetJamState"/> command.
+    /// Handles the <see cref="RequestJamState"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<GetJamState> context)
+    public Task Consume(ConsumeContext<RequestJamState> context)
     {
-        (string station, var requestTime, int waitingTimeSec, int outdatedTimeSec) = context.Message;
-
-        communicator.RequestStationState(station);
-
-        await Task.Delay(TimeSpan.FromSeconds(waitingTimeSec));
-
-        var jamState = await jamStateRepository.GetByStationAsync(station) ?? new JamState(station, 0, DateTime.UtcNow);
-        if ((requestTime - jamState.LastStateChangeTime).TotalSeconds > outdatedTimeSec)
-        {
-            logger.LogInformation("Jam state older than {OutDatedTime} seconds, waiting {WaitingTime} seconds for response", outdatedTimeSec, waitingTimeSec);
-            await Task.Delay(TimeSpan.FromSeconds(waitingTimeSec));
-            jamState = await jamStateRepository.GetByStationAsync(station) ?? new JamState(station, 0, DateTime.UtcNow);
-        }
-
-        logger.LogInformation("Sending jam state {HasJam} for station {Station}, requested {RequestTime}, last updated {LastUpdateTime}", jamState.HasPalletJam, jamState.Station, requestTime, jamState.LastStateChangeTime );
-
-        await context.RespondAsync(new GotJamState(jamState.HasPalletJam));
+        communicator.RequestStationState(context.Message.Station);
+        return Task.CompletedTask;
     }
 }

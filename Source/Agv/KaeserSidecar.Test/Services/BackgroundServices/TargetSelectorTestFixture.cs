@@ -6,12 +6,10 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
-using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
-using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shouldly;
@@ -25,6 +23,7 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
 
     private readonly StationRepository _stationRepository;
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
+    private readonly Mock<IJamStateRepository> _jamStateRepository = new();
     private readonly SemaphoreProvider<ITargetSelectionSemaphore> _semaphore = new();
     private List<DecisionPointAction> _actions = [];
 
@@ -34,16 +33,14 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
 
     public List<ActionGroup> ActionGroups { get; } = new();
 
-    private readonly bool _hasJam;
-
-    public TargetSelectorTestFixture(bool hasJam = false)
+    public TargetSelectorTestFixture()
     {
-        _hasJam = hasJam;
         AddServices(collection =>
         {
             collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
             collection.AddSingleton<IStationRepository, StationRepository>();
             collection.AddTransient(_ => _transportOrderDb.Object);
+            collection.AddTransient(_ => _jamStateRepository.Object);
             collection.AddSingleton<ITargetSelector, TargetSelector>();
             collection.AddSingleton<ISemaphoreProvider<ITargetSelectionSemaphore>>(_ => _semaphore);
             collection.AddTransient(_ => DecisionPointRepository.Object);
@@ -59,12 +56,6 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
         _stationRepository = (Provider.GetRequiredService<IStationRepository>() as StationRepository)!;
         Selector = (Provider.GetRequiredService<ITargetSelector>() as TargetSelector)!;
         _transportOrderDb.Setup(x => x.ActionGroups.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => { return ActionGroups.Single(a => a.Actions.Any(ac => ac.CorrelationId == c)); });
-    }
-
-    protected override void ConfigureMassTransitTestHarness(IBusRegistrationConfigurator busRegistrationConfigurator)
-    {
-        base.ConfigureMassTransitTestHarness(busRegistrationConfigurator);
-        busRegistrationConfigurator.AddSingleton(RequestClientGenerator<GetJamState>.CreateDummyRequestClient(_ => new GotJamState(_hasJam)));
     }
 
     public TargetSelectorTestFixture WithDecisionPointAction(params DecisionPointAction[] actions)
@@ -172,5 +163,12 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
                 stationOccupancy.AgvCorrelationId.ShouldBe(agvCorrelationId);
             }
         }
+    }
+
+    public TargetSelectorTestFixture WithStationHasPalletJam(string? station)
+    {
+        Selector.SetUseJamState(station != null);
+        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<string>())).ReturnsAsync((string s) => new JamState(s, string.Equals(s, station) ? 1 : 0, DateTime.UtcNow));
+        return this;
     }
 }

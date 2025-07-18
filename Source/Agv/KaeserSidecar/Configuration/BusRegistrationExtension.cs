@@ -59,8 +59,8 @@ public static class BusRegistrationExtension
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             c.Message<UpdateJamState>(x => x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
+            c.Message<RequestJamState>(x => x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
         });
-        cfg.AddRequestClient<GetJamState>();
 
         return cfg;
     }

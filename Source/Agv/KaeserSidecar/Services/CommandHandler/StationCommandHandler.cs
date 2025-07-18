@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
@@ -15,7 +17,8 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 public class StationCommandHandler(IStationRepository stationRepository, ILogger<StationCommandHandler> logger, KaeserGraphConfiguration configuration) :
     IConsumer<OccupyStation>,
     IConsumer<FreeStation>,
-    IConsumer<SolveResourceErrorsReceived>
+    IConsumer<SolveResourceErrorsReceived>,
+    IConsumer<StationUnlocked>
 {
     /// <summary>
     /// Handles the <see cref="OccupyStation"/> command.
@@ -64,5 +67,19 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
             return;
         }
         await context.Publish(new FreeStation(occupancy.Station, agvCorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="StationUnlocked"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<StationUnlocked> context)
+    {
+        string unlockedStation = context.Message.StationNodeId;
+        if (!configuration.ConveyorStationMapping.TryGetValue(unlockedStation, out string? jamStateStation))
+        {
+            return;
+        }
+        logger.LogInformation("Requesting jam state for unlocked station {Station}", jamStateStation);
+        await context.Publish(new RequestJamState(jamStateStation));
     }
 }
