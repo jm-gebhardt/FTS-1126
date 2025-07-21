@@ -16,7 +16,7 @@ public class EfNodeStateRepositoryTestFixture : TransportOrderDbFixture
     {
         var mockLogger = new Mock<ILogger<EfNodeStateRepository>>();
 
-        Repository = new EfNodeStateRepository(ContextFactory, new SemaphoreProvider<INodeStateDbSemaphore>(), mockLogger.Object);
+        Repository = new EfNodeStateRepository(ContextFactory, new SemaphoreProvider<INodeStateDbSemaphore>(new Mock<ILogger<SemaphoreProvider<INodeStateDbSemaphore>>>().Object), mockLogger.Object);
     }
 
     public NodeLock? Get(string nodeId)

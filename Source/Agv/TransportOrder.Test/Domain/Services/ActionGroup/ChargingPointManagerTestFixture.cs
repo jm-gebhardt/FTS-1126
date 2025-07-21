@@ -120,7 +120,7 @@ public class ChargingPointManagerTestFixture
     public ChargingPointManagerTestFixture WithChargingPointManager()
     {
         _agvDb.AddAgvData((AgvData?)null);
-        ChargingPointManager = new ChargingPointManager(_agvDb.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>());
+        ChargingPointManager = new ChargingPointManager(_agvDb.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>(new Mock<ILogger<SemaphoreProvider<IChargingSemaphore>>>().Object));
         return this;
     }
     

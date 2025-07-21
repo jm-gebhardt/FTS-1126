@@ -17,6 +17,13 @@ public sealed class SimulateOptions
     public int Speed { get; init; }
 
     /// <summary>
+    /// Flag to simulate only orders in the apl loop.
+    /// </summary>
+    [UsedImplicitly]
+    [Option('a', "aplLoopOnly", HelpText = "Only simulate orders for APL loop (PS0?->AP1L, APL1 -PS0?)", Default = false, Required = false)]
+    public bool AplLoopOnly { get; init; }
+
+    /// <summary>
     /// This is required for 'dotnet ef migrations' to work
     /// </summary>
     [UsedImplicitly]

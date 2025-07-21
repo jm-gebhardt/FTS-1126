@@ -9,6 +9,7 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 
@@ -20,7 +21,7 @@ public class WaitingHandlerTestFixture : MassTransitTestFixture
     
     private readonly StationRepository _stationRepository;
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
-    private readonly SemaphoreProvider<IWaitingHandlerSemaphore> _semaphore = new();
+    private readonly SemaphoreProvider<IWaitingHandlerSemaphore> _semaphore = new(new Mock<ILogger<SemaphoreProvider<IWaitingHandlerSemaphore>>>().Object);
     private readonly Mock<IPrismatCommunicationShortLoopWeTargetStationRepository> _shortLoopWeTargetStationRepository = new();
     private List<WaitingPointAction> _actions = [];
 

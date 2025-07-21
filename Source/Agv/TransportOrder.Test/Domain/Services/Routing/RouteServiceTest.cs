@@ -135,7 +135,8 @@ public class RouteServiceTest
         var farAgv = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
-            .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph]);
+            .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph])
+            .WithBlockedQueueNodes([]);
 
         (await fixture.RouteService.GetAgvRouteClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.Src1)).agv.ShouldBe(closeAgv.CorrelationId);
     }
@@ -153,12 +154,76 @@ public class RouteServiceTest
         var farAgv = AgvGenerator.GenerateIdleAgv(3, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
-            .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph]);
+            .WithAgvs([closeAgv, farAgv, agvAtTarget], [agvGraph, agvGraph, agvGraph])
+            .WithBlockedQueueNodes([]);
 
         (await fixture.RouteService.GetAgvRouteClosestToTarget(
             [(closeAgv, closeAgvData), (farAgv, farAgvData), (agvAtTarget, agvAtTargetData)],
             AgvGraphGenerator.Src1,
             true)).agv.ShouldBe(closeAgv.CorrelationId);
+    }
+
+    // 0 ---- 1 ---- 2 ---- 3 ---- 4 ---- 5 ---- //
+    // |                                         //
+    // 1                   Src2          Src3    //
+    // |                    |    Dbl1            //
+    // 2            Src1    |   /                //
+    // |             |      |  /                 //
+    // 3     Prk1---Way1---Way2----------Prk2    //
+    // |             |      |                    //
+    // 4     Crg1---Way3---Way4----------Crg2    //
+    // |             |      |                    //
+    // 5            Dst1    |                    //
+    // |                    |                    //
+    // 6                   Dst2          Dst3    //
+    // |                                         //
+    ///////////////////////////////////////////////
+    [TestMethod]
+    public async Task GetAgvRouteClosestToTarget_SkipAgvsPassingQueue_ReturnsAgvCorrelationId()
+    {
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: AgvGraphGenerator.Waypoint1.Id);
+        var closeAgvData = AgvDataGenerator.GenerateAgvData(closeAgv.CorrelationId);
+
+        var agvPassingQueue = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.ChargingFar.Id);
+        var agvPassingQueueData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
+
+        var agvAtQueueHead = AgvGenerator.GenerateIdleAgv(3, lastNodeId: AgvGraphGenerator.Waypoint3.Id);
+        var agvAtQueueHeadData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
+
+        var farAgv = AgvGenerator.GenerateIdleAgv(4, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
+        var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
+        var fixture = new RouteServiceTestFixture()
+            .WithAgvs([closeAgv, farAgv, agvPassingQueue, agvAtQueueHead], [agvGraph, agvGraph, agvGraph, agvGraph])
+            .WithBlockedQueueNodes([AgvGraphGenerator.Waypoint3.Id, AgvGraphGenerator.Waypoint4.Id]);
+
+        (await fixture.RouteService.GetAgvRouteClosestToTarget(
+            [(closeAgv, closeAgvData), (farAgv, farAgvData), (agvPassingQueue, agvPassingQueueData), (agvAtQueueHead, agvAtQueueHeadData)],
+            AgvGraphGenerator.Src1,
+            true)).agv.ShouldBe(closeAgv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetAgvRouteClosestToTarget_AgvAtQueueHeadIsClosest_ReturnsAgvCorrelationId()
+    {
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+
+        var agvPassingQueue = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.ChargingFar.Id);
+        var agvPassingQueueData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
+
+        var agvAtQueueHead = AgvGenerator.GenerateIdleAgv(3, lastNodeId: AgvGraphGenerator.Waypoint3.Id);
+        var agvAtQueueHeadData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
+
+        var farAgv = AgvGenerator.GenerateIdleAgv(4, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
+        var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
+        var fixture = new RouteServiceTestFixture()
+            .WithAgvs([farAgv, agvPassingQueue, agvAtQueueHead], [agvGraph, agvGraph, agvGraph])
+            .WithBlockedQueueNodes([AgvGraphGenerator.Waypoint3.Id, AgvGraphGenerator.Waypoint4.Id]);
+
+        (await fixture.RouteService.GetAgvRouteClosestToTarget(
+            [(farAgv, farAgvData), (agvPassingQueue, agvPassingQueueData), (agvAtQueueHead, agvAtQueueHeadData)],
+            AgvGraphGenerator.Src1,
+            true)).agv.ShouldBe(agvAtQueueHead.CorrelationId);
     }
 
     [TestMethod]
@@ -170,7 +235,8 @@ public class RouteServiceTest
         var farAgv = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
-            .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph]);
+            .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph])
+            .WithBlockedQueueNodes([]);
 
         (await fixture.RouteService.GetAgvRouteClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.DestinationUnreachable.Id)).ShouldBe((null, null));
     }

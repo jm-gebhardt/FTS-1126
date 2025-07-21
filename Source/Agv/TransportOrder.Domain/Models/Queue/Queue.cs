@@ -10,6 +10,11 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 public class Queue
 {
     /// <summary>
+    /// The order id use for evacuation-
+    /// </summary>
+    public static string EvacuationOrderId = "Queue Evacuation Move";
+
+    /// <summary>
     /// The nodes corresponding to the queue.
     /// </summary>
     public ICollection<QueueNode> Nodes { get; init; } = [];

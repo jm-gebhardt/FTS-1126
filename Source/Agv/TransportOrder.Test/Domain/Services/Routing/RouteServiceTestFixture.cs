@@ -9,14 +9,14 @@ namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.Routing;
 
 public class RouteServiceTestFixture
 {
-    private readonly Mock<IGraphRepository> _agvGraphRepository;
+    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
+    private readonly Mock<IQueueRepository> _queueRepository = new();
 
     public RouteService RouteService { get; }
 
     public RouteServiceTestFixture()
     {
-        _agvGraphRepository = new Mock<IGraphRepository>();
-        RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object);
+        RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object, _queueRepository.Object);
     }
 
     public RouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, AgvGraph agvGraph)
@@ -35,6 +35,12 @@ public class RouteServiceTestFixture
             _agvGraphRepository.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId)).ReturnsAsync(agvGraph);
         }
 
+        return this;
+    }
+
+    public RouteServiceTestFixture WithBlockedQueueNodes(string[] nodes)
+    {
+        _queueRepository.Setup(x => x.GetBlockedQueueNodes()).ReturnsAsync(nodes);
         return this;
     }
 }

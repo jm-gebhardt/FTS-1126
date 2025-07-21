@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -147,6 +148,35 @@ public class ShortestRouteChooserTest
         var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
         chosenActionGroup.ShouldNotBeNull();
         chosenActionGroup.Actions.First().ShouldBe(moveActionGroup.Actions.First());
+    }
+
+    [TestMethod]
+    public async Task GetNotStartedActionGroupAsync_QueueEvacuationMoveAndQueueHeadMove_ReturnQueueHeadMove()
+    {
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id);
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id); // Closest pick action
+        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Id);
+        var evacuationMove = AgvActionGenerator.GenerateMoveActionGroup("evacuation node", true, hasPriority: false, orderId: Queue.EvacuationOrderId);
+        var queueHeadMove = AgvActionGenerator.GenerateMoveActionGroup("queue head node", true, hasPriority: true, orderId: "Queue ,pve");
+        string agvLastNodeId = AgvGraphGenerator.ParkClose.Id;
+        var agv = AgvGenerator.GenerateIdleAgv(0, agvLastNodeId);
+
+        ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
+            .WithNotStartedActionGroup(actionGroup1)
+            .WithNotStartedActionGroup(actionGroup2)
+            .WithNotStartedActionGroup(evacuationMove)
+            .WithNotStartedActionGroup(queueHeadMove)
+            .WithNotStartedActionGroup(actionGroup3)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.NodeId!, actionGroup2.Actions.Last().Target.NodeId!, actionGroup2, 2f)
+            .WithAgvHasRouteToDestination(agv, agvLastNodeId, evacuationMove.Actions.First().Target.NodeId!, evacuationMove, 10f)
+            .WithAgvHasRouteToDestination(agv, agvLastNodeId, queueHeadMove.Actions.First().Target.NodeId!, queueHeadMove, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.NodeId!, actionGroup3.Actions.Last().Target.NodeId!, actionGroup3, routeCosts: null)
+            .Build();
+
+        var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
+        chosenActionGroup.ShouldNotBeNull();
+        chosenActionGroup.Actions.First().ShouldBe(queueHeadMove.Actions.First());
     }
 
     [TestMethod]

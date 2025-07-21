@@ -1081,7 +1081,7 @@ public class AgvCommandHandler :
         {
             await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
             {
-                if (await TryEscapeQueue(context, agv))
+                if (await TryEscapeQueue(context, agv, actionGroup.CorrelationId))
                 {
                     agv.IsQueueing = false;
                 }
@@ -1105,7 +1105,7 @@ public class AgvCommandHandler :
         }
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            await TryDequeueAgv(context, agv);
+            await TryDequeueAgv(context, agv, actionGroup.CorrelationId);
             _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
             await PublishStateChange(context, agv);
             await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
@@ -1139,7 +1139,7 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task TryDequeueAgv(IPublishEndpoint context, Agv agv)
+    private async Task TryDequeueAgv(IPublishEndpoint context, Agv agv, Guid currentActionGroup)
     {
         Dictionary<Guid, string>? agvsToMove = await _queueManager.TryDequeueAgv(agv.CorrelationId, agv.AgvStatus?.LastNodeId);
         if (agvsToMove == null)
@@ -1150,6 +1150,10 @@ public class AgvCommandHandler :
         {
             await context.Publish(new QueueBecameEmpty());
         }
+
+        ICollection<Guid> queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId);
+        await Task.WhenAll(queueEvacuationMoves.Where(a => a != currentActionGroup).Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
+
         foreach (KeyValuePair<Guid, string> agvIdToMove in agvsToMove)
         {
             var agvToMove = await _agvDb.Agvs.GetAgvAsync(agvIdToMove.Key);
@@ -1186,7 +1190,7 @@ public class AgvCommandHandler :
         });
     }
 
-    private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Agv agv)
+    private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Agv agv, Guid currentActionGroup)
     {
         var agvCorrelationId = agv.CorrelationId;
         string? agvLastNodeId = agv.AgvStatus?.LastNodeId;
@@ -1197,8 +1201,10 @@ public class AgvCommandHandler :
             return false;
         }
 
-        ICollection<Guid> actionGroupsToAbort = await _queueManager.GetQueueInternalActionGroups(agv);
-        await Task.WhenAll(actionGroupsToAbort.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
+        List<Guid> actionGroupsToAbort = (await _queueManager.GetQueueInternalActionGroups(agv)).ToList();
+        ICollection<Guid> queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId);
+        actionGroupsToAbort.AddRange(queueEvacuationMoves);
+        await Task.WhenAll(actionGroupsToAbort.Where(a => a != currentActionGroup).Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
         if (queueSize == 0)
         {
             await context.Publish(new QueueBecameEmpty());
@@ -1771,7 +1777,7 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         bool removed = false;
-        await _queueSemaphoreProvider.ExecuteLockedAsync(async () => { removed = await TryEscapeQueue(context, agv); });
+        await _queueSemaphoreProvider.ExecuteLockedAsync(async () => { removed = await TryEscapeQueue(context, agv, Guid.Empty); });
 
         if (!removed)
         {

@@ -35,13 +35,13 @@ public class EfQueueRepositoryTest
     [TestMethod]
     public async Task AddQueue_ValidData_QueueAdded()
     {
-        var queue = QueueGenerator.GenerateEmptyQueue(nodes:1);
+        var queue = QueueGenerator.GenerateEmptyQueue(nodes: 1);
 
         var fixture = new EfQueueRepositoryTestFixture();
         await fixture.AddRangeAsync(queue.Nodes.Select(q => q.Node));
 
         await fixture.Repository.AddQueue(queue);
-        
+
         ICollection<Queue> queues = await fixture.Repository.GetQueues();
         queues.Count.ShouldBe(1);
 
@@ -58,20 +58,20 @@ public class EfQueueRepositoryTest
     [TestMethod]
     public async Task GetQueuesWithCapacity_ValidData_ReturnsNotFullQueues()
     {
-        var emptyQueue = QueueGenerator.GenerateEmptyQueue(name:"empty", nodes: 1, size:0);
+        var emptyQueue = QueueGenerator.GenerateEmptyQueue(name: "empty", nodes: 1, size: 0);
         var fullQueue = QueueGenerator.GenerateFullQueue(name: "full", nodes: 1);
-        var queueWithCapacity = QueueGenerator.GenerateQueueWithCapacity(name: "capacity", lockStates: [NodeLockState.Occupied, NodeLockState.Free], size:1);
+        var queueWithCapacity = QueueGenerator.GenerateQueueWithCapacity(name: "capacity", lockStates: [NodeLockState.Occupied, NodeLockState.Free], size: 1);
 
         var fixture = new EfQueueRepositoryTestFixture();
         await fixture.AddRangeAsync(emptyQueue);
         await fixture.AddRangeAsync(fullQueue);
         await fixture.AddRangeAsync(queueWithCapacity);
 
-       ICollection<Queue> queues = await fixture.Repository.GetQueuesWithCapacity();
+        ICollection<Queue> queues = await fixture.Repository.GetQueuesWithCapacity();
 
-       queues.Count.ShouldBe(2);
-       queues.Select(q => q.Name).ToList().ShouldBe(new List<string>{emptyQueue.Name, queueWithCapacity.Name}, ignoreOrder:true);
-       queues.SelectMany(q => q.Nodes).Count().ShouldBe(emptyQueue.Nodes.Count + queueWithCapacity.Nodes.Count);
+        queues.Count.ShouldBe(2);
+        queues.Select(q => q.Name).ToList().ShouldBe(new List<string> { emptyQueue.Name, queueWithCapacity.Name }, ignoreOrder: true);
+        queues.SelectMany(q => q.Nodes).Count().ShouldBe(emptyQueue.Nodes.Count + queueWithCapacity.Nodes.Count);
     }
 
     [TestMethod]
@@ -124,5 +124,39 @@ public class EfQueueRepositoryTest
 
         var updatedQueue = await fixture.Repository.GetQueueById(queue.Id);
         updatedQueue.AgvFillQuantity.ShouldBe(queue.AgvFillQuantity);
+    }
+
+    [TestMethod]
+    public async Task GetBlockedQueueNodes_FullQueue_ReturnAllQueueNodes()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+
+        var fixture = new EfQueueRepositoryTestFixture();
+        await fixture.AddAsync(queue);
+
+        (await fixture.Repository.GetBlockedQueueNodes()).Count.ShouldBe(queue.Nodes.Count);
+    }
+
+    [TestMethod]
+    public async Task GetBlockedQueueNodes_EmptyQueue_ReturnNoQueueNodes()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue();
+
+        var fixture = new EfQueueRepositoryTestFixture();
+        await fixture.AddAsync(queue);
+
+        (await fixture.Repository.GetBlockedQueueNodes()).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetBlockedQueueNodes_AgvHasNotEntered_ReturnEntryNode()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        string entryNode = queue.TryEnterQueue()!;
+
+        var fixture = new EfQueueRepositoryTestFixture();
+        await fixture.AddAsync(queue);
+
+        (await fixture.Repository.GetBlockedQueueNodes()).Single().ShouldBe(entryNode);
     }
 }

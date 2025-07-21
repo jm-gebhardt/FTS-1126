@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
@@ -11,7 +12,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 public class TransportOrderStationRepository : TransportOrder.Persistence.Ef.Repositories.EfStationRepository, ITransportOrderStationRepository
 {
     /// <inheritdoc cref="ITransportOrderStationRepository"/>>
-    public TransportOrderStationRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory) : base(dbContextFactory, new SemaphoreProvider<IGraphRepositorySemaphore>())
+    public TransportOrderStationRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, ILogger<SemaphoreProvider<IGraphRepositorySemaphore>> semaphoreLogger) : base(dbContextFactory, new SemaphoreProvider<IGraphRepositorySemaphore>(semaphoreLogger))
     {
         ContextFactory = dbContextFactory;
     }

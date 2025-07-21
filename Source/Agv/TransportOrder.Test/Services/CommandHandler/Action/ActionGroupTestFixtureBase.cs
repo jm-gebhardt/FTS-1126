@@ -21,6 +21,7 @@ using Gebhardt.Acc.TransportOrder.Routing.Models;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -31,7 +32,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFixture<T> where T : class, IConsumer
 {
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
-    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IAgvsSemaphore>>>().Object);
 
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();

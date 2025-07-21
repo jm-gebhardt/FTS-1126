@@ -18,7 +18,7 @@ public interface IQueueRepository
     /// Update a queue.
     /// </summary>
     /// <param name="queue">The queue</param>
-    Task UpdateQueueAsync(Queue queue);
+    Task<bool> UpdateQueueAsync(Queue queue);
 
     /// <summary>
     /// Update the queue size.

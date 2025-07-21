@@ -23,7 +23,7 @@ public class QueueManagerTestFixture: FixtureBase
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IRouteService> _routeService = new();
-    private readonly SemaphoreProvider<IQueueingSemaphore> _semaphore = new();
+    private readonly SemaphoreProvider<IQueueingSemaphore> _semaphore = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
     private readonly Mock<ILogger<QueueManager>> _logger = new();
     private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
@@ -52,7 +52,7 @@ public class QueueManagerTestFixture: FixtureBase
         _nodeStateRepository.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
         _nodeStateRepository.Setup(x => x.ForceReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
         _queueRepository.Setup(x => x.UpdateQueueSize(It.IsAny<Guid>(), It.IsAny<int>())).Verifiable();
-        _queueRepository.Setup(x => x.UpdateQueueAsync(It.IsAny<Queue>())).Verifiable();
+        _queueRepository.Setup(x => x.UpdateQueueAsync(It.IsAny<Queue>())).ReturnsAsync(true);
     }
 
     public QueueManagerTestFixture WithQueues(ICollection<Queue> queues)
@@ -74,6 +74,12 @@ public class QueueManagerTestFixture: FixtureBase
     public QueueManagerTestFixture WithQueue(Queue? queue)
     {
         _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
+        return this;
+    }
+
+    public QueueManagerTestFixture WithActionGroups(ICollection<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups)
+    {
+        _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups.ToList());
         return this;
     }
 

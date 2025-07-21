@@ -17,6 +17,7 @@ using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
@@ -26,7 +27,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 {
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
-    private readonly SemaphoreProvider<IAgvsSemaphore> _agvSemaphoreProvider = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _agvSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IAgvsSemaphore>>>().Object);
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();

@@ -1,5 +1,7 @@
-﻿using Gebhardt.Acc.Common.Dictionaries;
+﻿using System.Reflection;
+using Gebhardt.Acc.Common.Dictionaries;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.Common.Services;
 
@@ -116,7 +118,7 @@ public class SemaphoreProvider : ISemaphoreProvider
 }
 
 /// <inheritdoc />
-public class SemaphoreProvider<T> : ISemaphoreProvider<T> where T : class
+public class SemaphoreProvider<T>(ILogger<SemaphoreProvider<T>> logger) : ISemaphoreProvider<T> where T : class
 {
     /// <summary>
     /// The semaphore used by this provider.
@@ -134,10 +136,13 @@ public class SemaphoreProvider<T> : ISemaphoreProvider<T> where T : class
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            logger.LogDebug("Invoke action {Action} by semaphore {Semaphore}", action.GetMethodInfo().Name, _semaphore.GetType().FullName);
             return await action();
         }
         finally
         {
+            logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
+
             _semaphore.Release();
         }
     }
@@ -148,10 +153,12 @@ public class SemaphoreProvider<T> : ISemaphoreProvider<T> where T : class
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            logger.LogDebug("Invoke action {Action} by semaphore {Semaphore}", action.GetMethodInfo().Name, _semaphore.GetType().FullName);
             await action();
         }
         finally
         {
+            logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
             _semaphore.Release();
         }
     }
@@ -162,20 +169,22 @@ public class SemaphoreProvider<T> : ISemaphoreProvider<T> where T : class
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            logger.LogDebug("Invoke action {Action} by semaphore {Semaphore}", action.GetMethodInfo().Name, _semaphore.GetType().FullName);
             return action();
         }
         finally
         {
+            logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
             _semaphore.Release();
         }
     }
 }
 
 /// <inheritdoc />
-public class KeyedSemaphoreProvider<TSemaphore>(IConcurrentDictionaryProvider<ISemaphoreProvider<TSemaphore>> concurrentDictionaryProvider)
+public class KeyedSemaphoreProvider<TSemaphore>(IConcurrentDictionaryProvider<ISemaphoreProvider<TSemaphore>> concurrentDictionaryProvider, ILogger<SemaphoreProvider<TSemaphore>> logger)
     : IKeyedSemaphoreProvider<TSemaphore>
     where TSemaphore : class
 {
     /// <inheritdoc />
-    public ISemaphoreProvider<TSemaphore> Get(Guid key) => concurrentDictionaryProvider.ConcurrentDict.GetOrAdd(key, _ => new SemaphoreProvider<TSemaphore>());
+    public ISemaphoreProvider<TSemaphore> Get(Guid key) => concurrentDictionaryProvider.ConcurrentDict.GetOrAdd(key, _ => new SemaphoreProvider<TSemaphore>(logger));
 }

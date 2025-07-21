@@ -75,4 +75,11 @@ public interface IQueueManager
     /// <param name="agv">The agv to check.</param>
     /// <returns>A collection of action group ids.</returns>
     Task<ICollection<Guid>> GetQueueInternalActionGroups(Agv agv);
+
+    /// <summary>
+    /// Get all action group correlation ids for queue evacuation moves of this agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <returns></returns>
+    Task<ICollection<Guid>> GetQueueEvacuationMoves(Guid agvCorrelationId);
 }

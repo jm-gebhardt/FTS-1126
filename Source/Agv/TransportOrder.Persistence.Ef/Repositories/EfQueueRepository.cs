@@ -32,11 +32,11 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task UpdateQueueAsync(Queue queue)
+    public async Task<bool> UpdateQueueAsync(Queue queue)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         context.Set<Queue>().Update(queue);
-        await context.SaveChangesAsync();
+        return await context.SaveChangesAsync() > 0;
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
@@ -111,11 +111,20 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     public async Task<ICollection<string>> GetBlockedQueueNodes()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        return (await context.Set<Queue>()
-                .AsSplitQuery().ToListAsync())
+        List<Queue> queues = await context.Set<Queue>()
+            .AsSplitQuery().ToListAsync();
+        
+        List<string> reservedOrOccupiedNodes = queues
             .Where(q => q.AgvFillQuantity > 0 )
             .SelectMany(q => q.Nodes.Where(n => n.GetCurrentAgv() != null).Select(n => n.NodeId))
             .Distinct().ToList();
+        List<string> reservedEntryNodes = queues.Where(q => q is { AllAgvsEntered: false, AgvFillQuantity: > 0 })
+            .Where(q => q.EntryNode != null && !reservedOrOccupiedNodes.Contains(q.EntryNode))
+            .Select(q => q.EntryNode!)
+            .ToList();
+
+        reservedOrOccupiedNodes.AddRange(reservedEntryNodes);
+        return reservedOrOccupiedNodes;
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>

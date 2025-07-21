@@ -158,4 +158,13 @@ public abstract class MassTransitTestFixture : FixtureBase
     {
         (await TestHarness.Published.Any<T>()).ShouldBeFalse();
     }
+
+    /// <summary>
+    /// Get all published messages of given type.
+    /// </summary>
+    /// <typeparam name="T">The message type.</typeparam>
+    public ICollection<T> GetPublishedMessages<T>() where T: class
+    {
+        return TestHarness.Published.Select<T>().Select(m => m.Context.Message).ToList();
+    } 
 }

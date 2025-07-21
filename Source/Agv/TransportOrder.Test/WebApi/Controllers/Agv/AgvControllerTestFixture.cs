@@ -37,6 +37,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using ActionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvData = Gebhardt.Acc.Common.Domain.Models.AgvData;
@@ -55,8 +56,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
-    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IAgvsSemaphore>>>().Object);
+    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
 
     private readonly Mock<IMapRepository> _mapRepository = new();
     

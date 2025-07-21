@@ -924,13 +924,15 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
-            .WithActionGroup(actionGroup);
+            .WithActionGroup(actionGroup)
+            .WithEvacuationMoves([Guid.NewGuid()]);
 
         await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
 
         await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
     }
 
     [TestMethod]
@@ -941,7 +943,8 @@ public class AgvCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithAgvsToMove(agvsToMove)
-            .WithActionGroup(actionGroup);
+            .WithActionGroup(actionGroup)
+            .WithEvacuationMoves([Guid.NewGuid()]);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -951,6 +954,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<QueueBecameEmpty>();
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
     }
 
     [TestMethod]
@@ -990,7 +994,8 @@ public class AgvCommandHandlerTest
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup)
             .WithIsOnAQueueNode(true)
-            .WithQueueInternalMoves([Guid.NewGuid()]);
+            .WithQueueInternalMoves([Guid.NewGuid()])
+            .WithEvacuationMoves([Guid.NewGuid()]); 
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -1018,7 +1023,8 @@ public class AgvCommandHandlerTest
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup)
             .WithIsOnAQueueNode(true)
-            .WithQueueInternalMoves([Guid.NewGuid()]);
+            .WithQueueInternalMoves([Guid.NewGuid()])
+            .WithEvacuationMoves([]);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -1043,7 +1049,8 @@ public class AgvCommandHandlerTest
             .WithAgvsToMove(agvsToMove, 0)
             .WithActionGroup(actionGroup)
             .WithIsOnAQueueNode(true)
-            .WithQueueInternalMoves([]);
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([]);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -2016,7 +2023,8 @@ public class AgvCommandHandlerTest
             .WithAgvsToMove(agvsToMove)
             .WithAgvRemovedFromQueueEntry(false)
             .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
-            .WithQueueInternalMoves([]);
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([]);
 
         var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateErrorStatus>(new RemoveAgvFromQueue(agv.CorrelationId));
 
@@ -2033,7 +2041,8 @@ public class AgvCommandHandlerTest
             .WithAgvsToMove(new Dictionary<Guid, string>())
             .WithAgvRemovedFromQueueEntry(true)
             .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
-            .WithQueueInternalMoves([]);
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([]);
 
         var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateErrorStatus>(new RemoveAgvFromQueue(agv.CorrelationId));
 
@@ -2049,7 +2058,8 @@ public class AgvCommandHandlerTest
             .WithAgvsToMove(new Dictionary<Guid, string>())
             .WithAgvRemovedFromQueueEntry(false)
             .WithActiveErrors([])
-            .WithQueueInternalMoves([]);
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([]);
 
         await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
 

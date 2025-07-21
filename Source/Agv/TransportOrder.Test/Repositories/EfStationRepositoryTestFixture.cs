@@ -4,12 +4,14 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 public class EfStationRepositoryTestFixture : TransportOrderDbFixture
 {
-    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
 
     public EfStationRepository Repository { get; }
 

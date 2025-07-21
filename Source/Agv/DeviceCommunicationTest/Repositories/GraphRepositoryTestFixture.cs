@@ -7,13 +7,15 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Profiles;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.SemaphoreProvider;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;
 
 // ReSharper disable ConvertConstructorToMemberInitializers
 public class GraphRepositoryTestFixture : DeviceCommunicationDbTestFixture
 {
-    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
 
     public IGraphRepository GraphRepository { get; }
 

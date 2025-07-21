@@ -11,6 +11,7 @@ using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -24,7 +25,7 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
     private readonly StationRepository _stationRepository;
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
     private readonly Mock<IJamStateRepository> _jamStateRepository = new();
-    private readonly SemaphoreProvider<ITargetSelectionSemaphore> _semaphore = new();
+    private readonly SemaphoreProvider<ITargetSelectionSemaphore> _semaphore = new(new Mock<ILogger<SemaphoreProvider<ITargetSelectionSemaphore>>>().Object);
     private List<DecisionPointAction> _actions = [];
 
     public Mock<IDecisionPointActionRepository> DecisionPointRepository { get; } = new();

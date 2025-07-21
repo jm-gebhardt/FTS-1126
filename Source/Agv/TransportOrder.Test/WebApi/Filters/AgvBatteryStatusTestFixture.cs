@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Filters;
@@ -27,7 +28,7 @@ public class AgvBatteryStatusTestFixture
 
     private AgvBatteryStatusTestFixture WithCurrentData(AgvBatteryStatusDto data)
     {
-        Filter = new AgvBatteryStatusChangedFilter(_significanceCheckerMock.Object, new SemaphoreProvider<AgvBatteryStatusChangedFilter>(), data);
+        Filter = new AgvBatteryStatusChangedFilter(_significanceCheckerMock.Object, new SemaphoreProvider<AgvBatteryStatusChangedFilter>(new Mock<ILogger<SemaphoreProvider<AgvBatteryStatusChangedFilter>>>().Object), data);
         return this;
     }
 

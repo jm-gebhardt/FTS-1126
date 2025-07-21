@@ -110,10 +110,12 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateQueueHead_ValidData_PublishesQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
+        var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.NodeId);
+        var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).NodeId);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
             .WithActionGroups([])
-            .WithQueueInternalMoves([AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.NodeId)]);
+            .WithQueueInternalMoves([moveToHead, moveToCenter]);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!);
         await fixture.TestHarness.Bus.Publish(command);
@@ -121,7 +123,7 @@ public class QueueCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
 
-        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        ICollection<QueueActionGroup> queueActionGroupMessages = fixture.GetPublishedMessages<QueueActionGroup>();
         queueActionGroupMessages.Count.ShouldBe(1);
 
         queue.Head.ShouldNotBeNull();
@@ -134,6 +136,9 @@ public class QueueCommandHandlerTest
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId.ShouldBe(command.EvacuationTarget);
 
         await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
+        ICollection<CancelOrAbortActionGroup> cancelOrAbortActionGroupMessages = fixture.GetPublishedMessages<CancelOrAbortActionGroup>();
+        cancelOrAbortActionGroupMessages.Count.ShouldBe(1);
+        cancelOrAbortActionGroupMessages.Single().CorrelationId.ShouldBe(moveToCenter.CorrelationId);
     }
 
     [TestMethod]

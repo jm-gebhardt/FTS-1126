@@ -1,7 +1,10 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
+using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
@@ -349,5 +352,20 @@ public class QueueManagerTest
         agvsToMove.ShouldBeNull();
         swapped.ShouldBeFalse();
         entryNode.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetQueueEvacuationMoves_ValidData_ReturnsCorrelations()
+    {
+        var agv = Guid.NewGuid();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv);
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+        var evacuationMove = new AgvAction() { ActionType = ActionType.Move, ParentId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), Target = new ActionTarget("evacuation node") };
+        var evacuationActionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup() { CorrelationId = evacuationMove.ParentId, AssignedAgv = agv,  Actions= [evacuationMove], OrderId = Queue.EvacuationOrderId };
+
+        var fixture = new QueueManagerTestFixture()
+            .WithActionGroups([pickDropActionGroup, chargeActionGroup, evacuationActionGroup]);
+
+        (await fixture.QueueManager.GetQueueEvacuationMoves(agv)).Single().ShouldBe(evacuationActionGroup.CorrelationId);
     }
 }

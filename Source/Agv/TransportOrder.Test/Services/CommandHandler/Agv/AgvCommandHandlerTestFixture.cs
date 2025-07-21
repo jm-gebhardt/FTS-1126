@@ -40,8 +40,8 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Agv;
 
 public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCommandHandler>
 {
-    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
-    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IAgvsSemaphore>>>().Object);
+    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
@@ -122,6 +122,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithQueueInternalMoves(ICollection<Guid> actionGroups)
     {
         _queueManager.Setup(x => x.GetQueueInternalActionGroups(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(actionGroups);
+        return this;
+    }
+
+    public AgvCommandHandlerTestFixture WithEvacuationMoves(ICollection<Guid> actionGroups)
+    {
+        _queueManager.Setup(x => x.GetQueueEvacuationMoves(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
         return this;
     }
 

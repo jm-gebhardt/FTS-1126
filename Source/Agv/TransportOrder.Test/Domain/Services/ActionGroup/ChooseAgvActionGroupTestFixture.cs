@@ -39,7 +39,7 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
         {
             if (realRouteService)
             {
-                s.AddTransient<IRouteService>(_ => new RouteService(new Mock<IGraphRepository>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object));
+                s.AddTransient<IRouteService>(_ => new RouteService(new Mock<IGraphRepository>().Object, new Mock<IRouteFinder>().Object, new Mock<ILogger<RouteService>>().Object, new Mock<IQueueRepository>().Object));
             }
             else
             {

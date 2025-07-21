@@ -134,13 +134,25 @@ public static class HostBuilderExtension
 
             services.AddSingleton<IHostCommunicator, SimulationHostCommunicator>();
             services.AddSingleton(_ => simulateOptions);
-            services.AddHostedService<PollingBackgroundService<LongLoopSimulator>>();
-            services.AddHostedService<PollingBackgroundService<ShortLoopSimulator>>();
-            services.AddHostedService<PollingBackgroundService<InputLoopSimulator>>();
+            if (!simulateOptions.AplLoopOnly)
+            {
+                services.AddHostedService<PollingBackgroundService<LongLoopSimulator>>();
+                services.AddHostedService<PollingBackgroundService<ShortLoopSimulator>>();
+                services.AddHostedService<PollingBackgroundService<InputLoopSimulator>>();
 
-            services.AddSingleton<LongLoopSimulator>();
-            services.AddSingleton<ShortLoopSimulator>();
-            services.AddSingleton<InputLoopSimulator>();
+                services.AddSingleton<LongLoopSimulator>();
+                services.AddSingleton<ShortLoopSimulator>();
+                services.AddSingleton<InputLoopSimulator>();
+            }
+
+            if (simulateOptions.AplLoopOnly)
+            {
+                services.AddHostedService<PollingBackgroundService<LongLoopSimulator>>();
+                services.AddHostedService<PollingBackgroundService<LongLoopInputSimulator>>();
+
+                services.AddSingleton<LongLoopSimulator>();
+                services.AddSingleton<LongLoopInputSimulator>();
+            }
         });
         return hostBuilder;
     }

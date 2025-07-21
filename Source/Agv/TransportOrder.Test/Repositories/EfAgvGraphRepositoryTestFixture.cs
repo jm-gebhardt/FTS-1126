@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 public class EfAgvGraphRepositoryTestFixture : TransportOrderDbFixture
 {
-    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
 
     public EfGraphRepository Repository { get; }
 

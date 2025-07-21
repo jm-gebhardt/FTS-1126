@@ -22,7 +22,7 @@ public class EfMapRepositoryTestFixture : TransportOrderDbFixture
     public EfMapRepositoryTestFixture()
     {
         var mockLogger = new Mock<ILogger<EfMapRepository>>();
-        Repository = new EfMapRepository(ContextFactory, new SemaphoreProvider<IMapRepositorySemaphore>(), mockLogger.Object);
+        Repository = new EfMapRepository(ContextFactory, new SemaphoreProvider<IMapRepositorySemaphore>(new Mock<ILogger<SemaphoreProvider<IMapRepositorySemaphore>>>().Object), mockLogger.Object);
     }
 
     public Map GetNewMap(string mapName = "default")

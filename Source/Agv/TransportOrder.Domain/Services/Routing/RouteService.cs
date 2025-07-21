@@ -19,16 +19,15 @@ public class RouteService : IRouteService
     private readonly IGraphRepository _graphRepository;
     private readonly IRouteFinder _routeFinder;
     private readonly ILogger<RouteService> _logger;
+    private readonly IQueueRepository _queueRepository;
 
     /// <inheritdoc cref="RouteService" />
-    /// <param name="graphRepository"></param>
-    /// <param name="routeFinder"></param>
-    /// <param name="logger"></param>
-    public RouteService(IGraphRepository graphRepository, IRouteFinder routeFinder, ILogger<RouteService> logger)
+    public RouteService(IGraphRepository graphRepository, IRouteFinder routeFinder, ILogger<RouteService> logger, IQueueRepository queueRepository)
     {
         _graphRepository = graphRepository;
         _routeFinder = routeFinder;
         _logger = logger;
+        _queueRepository = queueRepository;
     }
 
     private static string GetLastNodeId(Agv agv)
@@ -285,7 +284,17 @@ public class RouteService : IRouteService
         {
             return (null, null);
         }
-   
-        return routesWithIds.Where(r => r.Route != null).MinBy(r => r.Route?.Costs);
+
+        ICollection<string> queueNodes = await _queueRepository.GetBlockedQueueNodes();
+
+        List<(Guid CorrelationId, Route? Route)> routes = routesWithIds.Where(r =>
+            r.Route != null &&
+            (queueNodes.Contains(r.Route.Nodes.First()) || !r.Route.Nodes.Intersect(queueNodes).Any())).ToList();
+
+        if (routes.Count == 0)
+        {
+            return (null, null);
+        }
+        return routes.MinBy(r => r.Route?.Costs); 
     }
 }

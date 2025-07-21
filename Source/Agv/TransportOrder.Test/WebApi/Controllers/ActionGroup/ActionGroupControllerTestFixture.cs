@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -37,7 +38,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly Mock<IStationRepository> _stationRepository= new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
-    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new();
+    private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IAgvsSemaphore>>>().Object);
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IGraphRepository> _graphRepositoryMock = new();

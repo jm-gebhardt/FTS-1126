@@ -5,6 +5,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Queue;
@@ -13,7 +14,7 @@ public class QueueCommandHandlerTestFixture: MassTransitConsumerTestFixture<Queu
 {
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
-    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new();
+    private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
 
     public QueueCommandHandlerTestFixture()
     {
@@ -40,7 +41,10 @@ public class QueueCommandHandlerTestFixture: MassTransitConsumerTestFixture<Queu
 
     public QueueCommandHandlerTestFixture WithQueueInternalMoves(ICollection<ActionGroup> actionGroups)
     {
-        _actionGroupRepository.Setup(x => x.GetNotStartedActionGroupsToTargetsForAgv(It.IsAny<Guid>(), It.IsAny<ICollection<string>>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetNotStartedActionGroupsToTargetsForAgv(It.IsAny<Guid>(), It.IsAny<ICollection<string>>())).ReturnsAsync((Guid _, ICollection<string> targets) =>
+        {
+            return actionGroups.Where(a => a.GetTargets().Intersect(targets).Count() != 0).ToList();
+        });
         return this;
     }
 }

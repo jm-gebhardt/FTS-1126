@@ -310,9 +310,8 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
-    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null, TimeSpan? duration = null, DateTime? createdDate = null)
+    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null, TimeSpan? duration = null, DateTime? createdDate = null, string orderId="move", bool hasPriority=true)
     {
-        const string orderId = "move";
         var groupId = Guid.NewGuid();
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? AgvGraphGenerator.Waypoint1.Id, groupId);
         if (targetNodeId != null)
@@ -327,7 +326,7 @@ public static class AgvActionGenerator
                 moveAction
             },
             isManual: isManual,
-            hasPriority: true,
+            hasPriority: hasPriority,
             creator: ActionGroupCreator.TransportOrderWebApi,
             assignedAgv: assignedAgv)
         {

@@ -6,6 +6,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
@@ -83,17 +84,25 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         }
 
         IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
+        
+        var priorityActionGroup = notStartedActionGroups.FirstOrDefault(g => g.HasPriority);
         var manualActionGroup = notStartedActionGroups.OrderByDescending(g => g.HasPriority).FirstOrDefault(g => g.IsManual);
-        if (manualActionGroup != null)
+        var chosenActionGroup = manualActionGroup;
+        if(priorityActionGroup != null  && string.Equals(Queue.EvacuationOrderId, manualActionGroup?.OrderId))
         {
-            if (lockedNodeIds is { Count: > 0 } && manualActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.NodeId)))
+           // Let agv drive to queue head first, if there is an evacuation move
+           chosenActionGroup = priorityActionGroup;
+        }
+        if (chosenActionGroup != null)
+        {
+            if (lockedNodeIds is { Count: > 0 } && chosenActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.NodeId)))
             {
-                _logger.LogOrderWarning(LogCodes.OrderWithLockedStation, agv.CorrelationId, manualActionGroup.CorrelationId, "Order Contains Locked Station",
-                    $"Order {manualActionGroup.OrderId} contains locked station.",
-                    new Dictionary<string, object?> { { LogLabels.OrderId, manualActionGroup.OrderId } });
+                _logger.LogOrderWarning(LogCodes.OrderWithLockedStation, agv.CorrelationId, chosenActionGroup.CorrelationId, "Order Contains Locked Station",
+                    $"Order {chosenActionGroup.OrderId} contains locked station.",
+                    new Dictionary<string, object?> { { LogLabels.OrderId, chosenActionGroup.OrderId } });
             }
-            // If there is a manual action group, return this action group. The list of actionGroups is already ordered by the CreationDate, so the first is fine 
-            return manualActionGroup;
+            // If there is a manual or priority action group, return this action group. The list of actionGroups is already ordered by the CreationDate, so the first is fine 
+            return chosenActionGroup;
         }
 
         // Filter these action group which have actions with locked target.
@@ -144,7 +153,12 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
                 return nextActionGroup;
             }
         }
-        return await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroups.Except(nextActionGroupsForAgv).ToList(), nodesToAvoid);
+        nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroups.Except(nextActionGroupsForAgv).ToList(), nodesToAvoid);
+        if (nextActionGroup != null)
+        {
+            _logger.LogInformation("Selected next action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId} with nodes ot avoid {AvoidNodes}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId, string.Join(":", nodesToAvoid));
+        }
+        return nextActionGroup;
     }
 
     /// <summary>

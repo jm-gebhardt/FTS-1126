@@ -155,9 +155,13 @@ public class QueueManager(
             logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
             return (null, null);
         }
-        await queueRepository.UpdateQueueAsync(queue);
-        logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName}", agvCorrelationId, queue.Name);
-        return (agvsToMove, queue.AgvFillQuantity);
+        if (await queueRepository.UpdateQueueAsync(queue))
+        {
+            logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName}", agvCorrelationId, queue.Name);
+            return (agvsToMove, queue.AgvFillQuantity);
+        }
+        logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
+        return (null, null);
     }
 
     private async Task<(Dictionary<Guid, string>? agvsToMove, int? queueSize)> TryEscapeFromQueueEntryNode(Guid agvCorrelationId, string? agvLastNodeId)
@@ -272,5 +276,12 @@ public class QueueManager(
 
         ICollection<Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.CorrelationId, queue.NonEntryNodes);
         return queueInternalMoves.Select(ag => ag.CorrelationId).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<Guid>> GetQueueEvacuationMoves(Guid agvCorrelationId)
+    {
+        IReadOnlyList<Models.ActionGroup.ActionGroup> createdAndStartedActionGroups = await actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        return createdAndStartedActionGroups.Where(a => string.Equals(a.OrderId, Queue.EvacuationOrderId)).Select(a => a.CorrelationId).ToList();
     }
 }
