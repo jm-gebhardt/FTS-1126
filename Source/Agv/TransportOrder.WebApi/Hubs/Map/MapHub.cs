@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 
@@ -7,15 +7,10 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 /// Hub for map/graph/node related notifications.
 /// </summary>
 [Authorize]
-public class MapHub : BaseHub<IMapClient>
+public class MapHub : Hub<IMapClient>
 {
     /// <summary>
     /// Url path
     /// </summary>
     public const string UrlPath = "/hub/map";
-
-    /// <inheritdoc cref="MapHub"/>
-    public MapHub(ILogger<MapHub> logger) : base(logger)
-    {
-    }
 }

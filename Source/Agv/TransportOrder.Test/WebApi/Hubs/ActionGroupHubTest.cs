@@ -22,7 +22,7 @@ public class ActionGroupHubTest
 
         await fixture.Publisher.SendActionGroupCreatedAsync(data);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupCreated(It.IsAny<ActionGroupDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).ActionGroupCreated(It.IsAny<ActionGroupDto>()), Times.Once);
     }
 
     [TestMethod]
@@ -36,7 +36,7 @@ public class ActionGroupHubTest
 
         await fixture.Publisher.SendActionGroupChangedAsync(data);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
     }
 
     [TestMethod]
@@ -49,7 +49,6 @@ public class ActionGroupHubTest
         fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<TransportOrder.Messages.MessageContent.Agv>())).Returns(expectedDto);
 
         await fixture.Publisher.SendActionGroupChangedAsync(data);
-
-        fixture.HubContextMock.Verify(c => c.Clients.All.ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
     }
 }

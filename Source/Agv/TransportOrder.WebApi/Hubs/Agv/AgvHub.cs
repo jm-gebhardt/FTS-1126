@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 
@@ -7,15 +7,10 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 /// Hub for Agv related Dtos
 /// </summary>
 [Authorize]
-public class AgvHub : BaseHub<IAgvClient>
+public class AgvHub : Hub<IAgvClient>
 {
     /// <summary>
     /// Url path
     /// </summary>
     public const string UrlPath = "/hub/agv";
-
-    /// <inheritdoc cref="AgvHub"/>
-    public AgvHub(ILogger<AgvHub> logger) : base(logger)
-    {
-    }
 }

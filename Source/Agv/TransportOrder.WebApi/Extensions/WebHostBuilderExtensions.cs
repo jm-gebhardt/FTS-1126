@@ -9,6 +9,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.WebApi;
+using Gebhardt.Acc.TransportOrder.WebApi.Constants;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs;
@@ -24,6 +25,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Logging;
@@ -68,6 +70,13 @@ public static class WebHostBuilderExtensions
             services.AddSingleton<ISignificanceChecker<AgvBatteryStatusDto>, AgvBatteryStatusSignificanceChecker>();
             services.AddSingleton<ISignificanceChecker<AgvPositionDto>, AgvPositionSignificanceChecker>();
             services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
+
+            services.AddSingleton(typeof(IHubBroadcaster<,>), typeof(HubBroadcaster<,>));
+
+            services.AddHub<AgvHub>();
+            services.AddHub<ActionGroupHub>();
+            services.AddHub<MapHub>();
+            services.AddHub<TriggerHub>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
@@ -162,11 +171,10 @@ public static class WebHostBuilderExtensions
 
             services.AddSignalR(options =>
                 {
-                    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-                    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                    options.ClientTimeoutInterval = TimeSpan.FromSeconds(WebApiConstants.ClientTimeoutSeconds);
+                    options.KeepAliveInterval = TimeSpan.FromSeconds(WebApiConstants.KeepAliveIntervalSeconds);
                     options.EnableDetailedErrors = true;
-                    // Typical downstream traffic: ~25 kB / 15 s for 5 AGVs (estimated)
-                    options.StatefulReconnectBufferSize = 100_000;
+                    options.StatefulReconnectBufferSize = WebApiConstants.StatefulReconnectBufferSize;
                 })
                 .AddJsonProtocol(options =>
                 {
@@ -176,6 +184,12 @@ public static class WebHostBuilderExtensions
         });
 
         return webHostBuilder;
+    }
+
+    private static void AddHub<THub>(this IServiceCollection services) where THub : Hub
+    {
+        services.AddSingleton<IAbortableHubLifetimeManager<THub>, AbortableHubLifetimeManager<THub>>();
+        services.AddSingleton<HubLifetimeManager<THub>>(sp => (HubLifetimeManager<THub>) sp.GetRequiredService<IAbortableHubLifetimeManager<THub>>());
     }
 
     private static void IncludeXmlComments(SwaggerGenOptions options)
@@ -208,11 +222,7 @@ public static class WebHostBuilderExtensions
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-            endpoints.MapHub<AgvHub>(AgvHub.UrlPath, o =>
-            {
-                // deactivated, as it freezes the FE after some time
-                o.AllowStatefulReconnects = false;
-            });
+            endpoints.MapHub<AgvHub>(AgvHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
             endpoints.MapHub<MapHub>(MapHub.UrlPath);
             endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath);

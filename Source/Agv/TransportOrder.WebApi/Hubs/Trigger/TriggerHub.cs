@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 
@@ -7,15 +7,10 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 /// Hub for trigger related Dtos
 /// </summary>
 [Authorize]
-public class TriggerHub: BaseHub<ITriggerClient>
+public class TriggerHub : Hub<ITriggerClient>
 {
     /// <summary>
     /// Url path
     /// </summary>
     public const string UrlPath = "/hub/trigger";
-
-    /// <inheritdoc cref="TriggerHub"/>
-    public TriggerHub(ILogger<TriggerHub> logger) : base(logger)
-    {
-    }
 }

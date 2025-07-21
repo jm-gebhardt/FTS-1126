@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
@@ -10,27 +9,29 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 /// </summary>
 public class ActionGroupPublisher : IActionGroupPublisher
 {
-    private readonly IHubContext<ActionGroupHub, IActionGroupClient> _hubContext;
+    private readonly IHubBroadcaster<ActionGroupHub, IActionGroupClient> _hubBroadcaster;
     private readonly IMapper _mapper;
 
     /// <summary/>
-    public ActionGroupPublisher(IHubContext<ActionGroupHub, IActionGroupClient> hubContext, IMapper mapper)
+    public ActionGroupPublisher(IHubBroadcaster<ActionGroupHub, IActionGroupClient> hubBroadcaster, IMapper mapper)
     {
-        _hubContext = hubContext;
+        _hubBroadcaster = hubBroadcaster;
         _mapper = mapper;
     }
 
     /// <inheritdoc/>
     public Task SendActionGroupCreatedAsync(ActionGroupReadModel actionGroup)
     {
-        var actionGroupDto = _mapper.Map<ActionGroupDto>(actionGroup);
-        return _hubContext.Clients.All.ActionGroupCreated(actionGroupDto);
+        var dto = _mapper.Map<ActionGroupDto>(actionGroup);
+        _hubBroadcaster.Broadcast(c => c.ActionGroupCreated(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendActionGroupChangedAsync(ActionGroupReadModel actionGroup)
     {
-        var actionGroupDto = _mapper.Map<ActionGroupDto>(actionGroup);
-        return _hubContext.Clients.All.ActionGroupChanged(actionGroupDto);
+        var dto = _mapper.Map<ActionGroupDto>(actionGroup);
+        _hubBroadcaster.Broadcast(c => c.ActionGroupChanged(dto));
+        return Task.CompletedTask;
     }
 }

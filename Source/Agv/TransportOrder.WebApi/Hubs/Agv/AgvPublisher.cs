@@ -6,7 +6,6 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
-using Microsoft.AspNetCore.SignalR;
 using AgvPositionStatus = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvPositionStatus;
 using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
 
@@ -17,22 +16,22 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 /// </summary>
 public class AgvPublisher : IAgvPublisher
 {
-    private readonly IHubContext<AgvHub, IAgvClient> _hubContext;
     private readonly IMapper _mapper;
+    private readonly IHubBroadcaster<AgvHub, IAgvClient> _hubBroadcaster;
     private readonly IMessageFilter<AgvBatteryStatusDto> _agvBatteryStatusFilter;
     private readonly IMessageFilter<AgvPositionStatusDto> _agvPositionFilter;
     private readonly IAgvDb _agvDb;
 
     /// <summary/>
     public AgvPublisher(
-        IHubContext<AgvHub, IAgvClient> hubContext,
+        IHubBroadcaster<AgvHub, IAgvClient> hubBroadcaster,
         IMessageFilter<AgvBatteryStatusDto> agvBatteryStatusFilter,
         IMessageFilter<AgvPositionStatusDto> agvPositionFilter,
         IAgvDb agvDb,
         IMapper mapper
     )
     {
-        _hubContext = hubContext;
+        _hubBroadcaster = hubBroadcaster;
         _agvBatteryStatusFilter = agvBatteryStatusFilter;
         _agvPositionFilter = agvPositionFilter;
         _agvDb = agvDb;
@@ -42,22 +41,25 @@ public class AgvPublisher : IAgvPublisher
     /// <inheritdoc/>
     public Task SendAgvStateChangedAsync(Messages.MessageContent.Agv agv)
     {
-        var agvStateDto = _mapper.Map<AgvStateDto>(agv);
-        return _hubContext.Clients.All.AgvStateChanged(agvStateDto);
+        var dto = _mapper.Map<AgvStateDto>(agv);
+        _hubBroadcaster.Broadcast(c => c.AgvStateChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAgvModeChangedAsync(Guid agvCorrelationId, AgvModeDto mode)
     {
-        var agvModeChangedDto = new AgvModeChangedDto(agvCorrelationId, mode);
-        return _hubContext.Clients.All.AgvModeChanged(agvModeChangedDto);
+        var dto = new AgvModeChangedDto(agvCorrelationId, mode);
+        _hubBroadcaster.Broadcast(c => c.AgvModeChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public Task SendAgvDiscoveredAsync(Messages.MessageContent.Agv agv)
     {
-        var agvDto = _mapper.Map<AgvDto>(agv);
-        return _hubContext.Clients.All.AgvDiscovered(agvDto);
+        var dto = _mapper.Map<AgvDto>(agv);
+        _hubBroadcaster.Broadcast(c => c.AgvDiscovered(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
@@ -66,7 +68,7 @@ public class AgvPublisher : IAgvPublisher
         var dto = _mapper.Map<AgvPositionStatusDto>(agvPosition);
         if (await _agvPositionFilter.ShouldActAsync(dto))
         {
-            await _hubContext.Clients.All.AgvPositionChanged(dto);
+            _hubBroadcaster.Broadcast(c => c.AgvPositionChanged(dto));
         }
     }
 
@@ -74,14 +76,16 @@ public class AgvPublisher : IAgvPublisher
     public Task SendAgvRouteChangedAsync(CurrentAgvRouteReadModel currentAgvRouteReadModel)
     {
         var dto = _mapper.Map<CurrentAgvRouteDto>(currentAgvRouteReadModel);
-        return _hubContext.Clients.All.AgvRouteChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.AgvRouteChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAssignedActionGroupChangedAsync(Guid correlationId, Guid? assignedActionGroupCorrelationId)
     {
         var dto = new AssignedActionGroupDto(correlationId, assignedActionGroupCorrelationId);
-        return _hubContext.Clients.All.AssignedActionGroupChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.AssignedActionGroupChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
@@ -92,7 +96,7 @@ public class AgvPublisher : IAgvPublisher
         var dto = _mapper.Map<AgvBatteryStatusDto>((batteryStatusChanged.AgvBatteryStatus, agvSettings));
         if (await _agvBatteryStatusFilter.ShouldActAsync(dto))
         {
-            await _hubContext.Clients.All.BatteryStatusChanged(dto);
+            _hubBroadcaster.Broadcast(c => c.BatteryStatusChanged(dto));
         }
     }
 
@@ -100,56 +104,64 @@ public class AgvPublisher : IAgvPublisher
     public Task SendAgvLockedChangedAsync(Guid correlationId, bool isLocked)
     {
         var dto = new AgvLockedStatusDto(correlationId, isLocked);
-        return _hubContext.Clients.All.AgvLockedChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.AgvLockedChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAgvOnlineChangedAsync(Guid correlationId, bool isOnline)
     {
         var dto = new AgvOnlineStatusDto(correlationId, isOnline);
-        return _hubContext.Clients.All.AgvOnlineChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.AgvOnlineChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAgvErrorChangedAsync(Guid correlationId, List<AgvError> errors)
     {
-        var agvErrorDtos = _mapper.Map<AgvErrorStatusDto>(errors);
-        _mapper.Map(correlationId, agvErrorDtos);
-        return _hubContext.Clients.All.AgvErrorChanged(agvErrorDtos);
+        var dto = _mapper.Map<AgvErrorStatusDto>(errors);
+        _mapper.Map(correlationId, dto);
+        _hubBroadcaster.Broadcast(c => c.AgvErrorChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAgvRemovedAsync(Guid correlationId)
     {
         var dto = new AgvRemovedDto(correlationId);
-        return _hubContext.Clients.All.AgvRemoved(dto);
+        _hubBroadcaster.Broadcast(c => c.AgvRemoved(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendCargoChangeAsync(IReadOnlyCollection<Cargo> cargos)
     {
         var dto = _mapper.Map<ICollection<CargoDto>>(cargos);
-        return _hubContext.Clients.All.CargoChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.CargoChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAgvHasCargoChangedAsync(Guid correlationId, bool hasCargo)
     {
         var dto = new AgvHasCargoDto(correlationId, hasCargo);
-        return _hubContext.Clients.All.AgvHasCargoChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.AgvHasCargoChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAgvZonesChangedAsync(Guid correlationId, ICollection<string> zones)
     {
         var dto = new AgvZonesDto(correlationId, zones);
-        return _hubContext.Clients.All.AgvZonesChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.AgvZonesChanged(dto));
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
     public Task SendAgvStationsChangedAsync(Guid correlationId, ICollection<string> stations)
     {
         var dto = new AgvStationsDto(correlationId, stations);
-        return _hubContext.Clients.All.AgvStationsChanged(dto);
+        _hubBroadcaster.Broadcast(c => c.AgvStationsChanged(dto));
+        return Task.CompletedTask;
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
@@ -7,15 +7,10 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 /// Hub for ActionGroup related Dtos
 /// </summary>
 [Authorize]
-public class ActionGroupHub : BaseHub<IActionGroupClient>
+public class ActionGroupHub : Hub<IActionGroupClient>
 {
     /// <summary>
     /// Url path
     /// </summary>
     public const string UrlPath = "/hub/action";
-
-    /// <inheritdoc cref="ActionGroupHub"/>
-    public ActionGroupHub(ILogger<ActionGroupHub> logger) : base(logger)
-    {
-    }
 }

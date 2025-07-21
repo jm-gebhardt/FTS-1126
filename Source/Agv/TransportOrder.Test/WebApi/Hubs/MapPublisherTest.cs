@@ -19,11 +19,11 @@ public class MapPublisherTest
         var modifiedDate = DateTime.UtcNow;
         var data = new NodeLock(nodeId, NodeLockState.Free, true, null, modifiedDate);
         var expectedDto = new NodeStateDto(nodeId, NodeLockState.Free, true, null, modifiedDate, stationId);
-        
+
         fixture.MapperMock.Setup(m => m.Map<NodeStateDto>(It.IsAny<NodeLock>())).Returns(expectedDto);
 
         await fixture.Publisher.SendNodeStateChangedAsync(data, stationId, null, null, null);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.NodeStateChanged(It.IsAny<NodeStateDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).NodeStateChanged(It.IsAny<NodeStateDto>()), Times.Once);
     }
 }

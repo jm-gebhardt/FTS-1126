@@ -1,16 +1,16 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 
 /// <inheritdoc cref="ITriggerPublisher"/>>
-public class TriggerPublisher(IHubContext<TriggerHub, ITriggerClient> hubContext, IMapper mapper) : ITriggerPublisher
+public class TriggerPublisher(IHubBroadcaster<TriggerHub, ITriggerClient> hubBroadcaster, IMapper mapper) : ITriggerPublisher
 {
     /// <inheritdoc cref="ITriggerPublisher"/>>
     public Task SendTriggerChangedAsync(Domain.Models.Trigger.Trigger trigger)
     {
-        var triggerDto = mapper.Map<TriggerDto>(trigger);
-        return hubContext.Clients.All.TriggerChanged(triggerDto);
+        var dto = mapper.Map<TriggerDto>(trigger);
+        hubBroadcaster.Broadcast(c => c.TriggerChanged(dto));
+        return Task.CompletedTask;
     }
 }

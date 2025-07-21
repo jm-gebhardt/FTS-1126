@@ -25,7 +25,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvStateChangedAsync(data);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvStateChanged(It.IsAny<AgvStateDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvStateChanged(It.IsAny<AgvStateDto>()), Times.Once);
     }
 
     [TestMethod]
@@ -39,7 +39,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvDiscoveredAsync(data);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvDiscovered(It.IsAny<AgvDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvDiscovered(It.IsAny<AgvDto>()), Times.Once);
     }
 
     [TestMethod]
@@ -54,7 +54,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvPositionAsync(data);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvPositionChanged(It.IsAny<AgvPositionStatusDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvPositionChanged(It.IsAny<AgvPositionStatusDto>()), Times.Once);
     }
 
     [TestMethod]
@@ -68,7 +68,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvRouteChangedAsync(data);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvRouteChanged(It.IsAny<CurrentAgvRouteDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvRouteChanged(It.IsAny<CurrentAgvRouteDto>()), Times.Once);
     }
 
     [TestMethod]
@@ -76,7 +76,7 @@ public class AgvPublisherTest
     {
         var fixture = new AgvPublisherTestFixture();
         AssignedActionGroupDto? capturedDto = null;
-        fixture.HubContextMock.Setup(c => c.Clients.All.AssignedActionGroupChanged(It.IsAny<AssignedActionGroupDto>()))
+        fixture.HubContextMock.Setup(c => c.Clients.Client(fixture.TestConnectionId).AssignedActionGroupChanged(It.IsAny<AssignedActionGroupDto>()))
             .Callback<AssignedActionGroupDto>(dto => capturedDto = dto);
 
         var correlationId = Guid.NewGuid();
@@ -87,7 +87,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAssignedActionGroupChangedAsync(correlationId, assignedActionGroup.CorrelationId);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AssignedActionGroupChanged(It.IsAny<AssignedActionGroupDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AssignedActionGroupChanged(It.IsAny<AssignedActionGroupDto>()), Times.Once);
         capturedDto.ShouldNotBeNull();
         capturedDto.CorrelationId.ShouldBe(correlationId);
         capturedDto.ActionGroupCorrelationId.ShouldBe(actionGroupDto.CorrelationId);
@@ -105,7 +105,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvBatteryStatusAsync(batteryStatusChanged);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.BatteryStatusChanged(It.Is<AgvBatteryStatusDto>(dto => dto == expectedDto)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).BatteryStatusChanged(It.Is<AgvBatteryStatusDto>(dto => dto == expectedDto)), Times.Once);
     }
 
     [TestMethod]
@@ -135,12 +135,12 @@ public class AgvPublisherTest
 
         var fixture = new AgvPublisherTestFixture(true)
             .WithAgvSettings(agvSettings);
-        fixture.HubContextMock.Setup(c => c.Clients.All.BatteryStatusChanged(It.IsAny<AgvBatteryStatusDto>()))
+        fixture.HubContextMock.Setup(c => c.Clients.Client(fixture.TestConnectionId).BatteryStatusChanged(It.IsAny<AgvBatteryStatusDto>()))
             .Callback<AgvBatteryStatusDto>(dto => capturedDto = dto);
 
         await fixture.Publisher.SendAgvBatteryStatusAsync(batteryStatusChanged);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.BatteryStatusChanged(It.IsAny<AgvBatteryStatusDto>()), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).BatteryStatusChanged(It.IsAny<AgvBatteryStatusDto>()), Times.Once);
 
         capturedDto.ShouldNotBeNull();
         capturedDto.ShouldSatisfyAllConditions(
@@ -168,7 +168,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvLockedChangedAsync(correlationId, isLocked);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvLockedChanged(It.Is<AgvLockedStatusDto>(dto => dto.CorrelationId == correlationId && dto.IsNowLocked == isLocked)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvLockedChanged(It.Is<AgvLockedStatusDto>(dto => dto.CorrelationId == correlationId && dto.IsNowLocked == isLocked)), Times.Once);
     }
 
     [TestMethod]
@@ -180,7 +180,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvOnlineChangedAsync(correlationId, isOnline);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvOnlineChanged(It.Is<AgvOnlineStatusDto>(dto => dto.CorrelationId == correlationId && dto.IsNowOnline == isOnline)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvOnlineChanged(It.Is<AgvOnlineStatusDto>(dto => dto.CorrelationId == correlationId && dto.IsNowOnline == isOnline)), Times.Once);
     }
 
     [TestMethod]
@@ -196,7 +196,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvErrorChangedAsync(correlationId, errors);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvErrorChanged(It.Is<AgvErrorStatusDto>(dto => dto == expectedDto)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvErrorChanged(It.Is<AgvErrorStatusDto>(dto => dto == expectedDto)), Times.Once);
     }
 
     [TestMethod]
@@ -207,7 +207,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendAgvRemovedAsync(correlationId);
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvRemoved(It.Is<AgvRemovedDto>(dto => dto.CorrelationId == correlationId)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvRemoved(It.Is<AgvRemovedDto>(dto => dto.CorrelationId == correlationId)), Times.Once);
     }
 
     [TestMethod]
@@ -220,7 +220,7 @@ public class AgvPublisherTest
 
         await fixture.Publisher.SendCargoChangeAsync(new List<Cargo>());
 
-        fixture.HubContextMock.Verify(c => c.Clients.All.CargoChanged(It.Is<ICollection<CargoDto>>(dtoCollection => dtoCollection == expectedDtoCollection)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).CargoChanged(It.Is<ICollection<CargoDto>>(dtoCollection => dtoCollection == expectedDtoCollection)), Times.Once);
     }
 
     [TestMethod]
@@ -230,7 +230,7 @@ public class AgvPublisherTest
         const bool hasCargo = true;
         var fixture = new AgvPublisherTestFixture();
         await fixture.Publisher.SendAgvHasCargoChangedAsync(agvCorrelationId, hasCargo);
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvHasCargoChanged(It.Is<AgvHasCargoDto>(dto => dto.CorrelationId == agvCorrelationId && dto.HasCargo == hasCargo)), Times.Once);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvHasCargoChanged(It.Is<AgvHasCargoDto>(dto => dto.CorrelationId == agvCorrelationId && dto.HasCargo == hasCargo)), Times.Once);
     }
 
     [TestMethod]
@@ -239,7 +239,7 @@ public class AgvPublisherTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvPublisherTestFixture();
         await fixture.Publisher.SendAgvZonesChangedAsync(agvCorrelationId, ["test"]);
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvZonesChanged(It.Is<AgvZonesDto>(dto => dto.CorrelationId == agvCorrelationId && dto.Zones.Contains("test"))));
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvZonesChanged(It.Is<AgvZonesDto>(dto => dto.CorrelationId == agvCorrelationId && dto.Zones.Contains("test"))));
     }
 
     [TestMethod]
@@ -249,6 +249,6 @@ public class AgvPublisherTest
         ICollection<string> stations = ["station"];
         var fixture = new AgvPublisherTestFixture();
         await fixture.Publisher.SendAgvStationsChangedAsync(agvCorrelationId, stations);
-        fixture.HubContextMock.Verify(c => c.Clients.All.AgvStationsChanged(It.Is<AgvStationsDto>(dto => dto.CorrelationId == agvCorrelationId && dto.Stations.Contains(stations.Single()))));
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvStationsChanged(It.Is<AgvStationsDto>(dto => dto.CorrelationId == agvCorrelationId && dto.Stations.Contains(stations.Single()))));
     }
 }
