@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using SignalRSwaggerGen.Attributes;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
@@ -21,4 +22,10 @@ public interface IMapClient
     /// </summary>
     [SignalRMethod("NodeApproachingPropertiesChanged")]
     Task NodeApproachingPropertiesChanged(NodeApproachingPropertiesDto nodeState);
+
+    /// <summary>
+    /// Station jam state changed.
+    /// </summary>
+    [SignalRMethod("StationJamStateChanged")]
+    Task StationJamStateChanged(StationJamStateDto stationJamState);
 }

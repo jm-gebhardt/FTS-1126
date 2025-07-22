@@ -26,4 +26,16 @@ public class NodeStateChangedConsumerTest
         (await fixture.ConsumerHarness.Consumed.Any<NodeStateChanged>()).ShouldBeTrue();
         fixture.PublisherMock.Verify(h => h.SendNodeStateChangedAsync(nodeState, stationId, null, null, null),Times.Once);
     }
+
+    [TestMethod]
+    public async Task Consume_JamStateChanged_ValidData_SendJamStateUpdate()
+    {
+        var stationId = Guid.NewGuid();
+        const bool hasPalletJam = true;
+        var fixture = new ConsumerHubTestFixture<NodeChangedConsumer, IMapPublisher>();
+
+        await fixture.PublishMessageAsync(new JamStateChanged(stationId, hasPalletJam));
+
+        fixture.PublisherMock.Verify(h => h.SendJamStateUpdate(stationId, hasPalletJam), Times.Once);
+    }
 }

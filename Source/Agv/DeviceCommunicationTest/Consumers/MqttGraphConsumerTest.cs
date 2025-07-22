@@ -38,7 +38,9 @@ public class MqttGraphConsumerTest
 
         // Did the test publish MqttGraph ...
         await fixture.ShouldHavePublishedAsync<MqttGraph>();
+
         // ... and has the message been consumed?
+        await fixture.ShouldHaveConsumedAsync<MqttGraph>();
         var consumed = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
         consumed.SerialNumber.ShouldBe(AgvSerialNumber);
 
@@ -92,6 +94,7 @@ public class MqttGraphConsumerTest
         // Did the test publish MqttGraph ...
         await fixture.ShouldHavePublishedAsync<MqttGraph>();
         // ... and has the message been consumed?
+        await fixture.ShouldHaveConsumedAsync<MqttGraph>();
         var consumed = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
         consumed.SerialNumber.ShouldBe(AgvSerialNumber);
 

@@ -102,4 +102,17 @@ public class StationCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
         fixture.VerifyStationsAdded(Times.Once());
     }
+
+    [TestMethod]
+    public async Task Consume_UpdateStationJamState_ValidData_PublishesJamStateChanged()
+    {
+        const string station = "station";
+        var fixture = new StationCommandHandlerTestFixture()
+            .WithStation(station);
+
+        await fixture.PublishMessageAsync(new UpdateStationJamState(station.ToGuid(), true));
+
+        await fixture.ShouldHavePublishedAsync<JamStateChanged>();
+        fixture.VerifyStationUpdated(Times.Once());
+    }
 }

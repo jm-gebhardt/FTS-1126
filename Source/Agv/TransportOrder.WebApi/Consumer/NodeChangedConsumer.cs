@@ -17,7 +17,8 @@ public class NodeChangedConsumer(
     IMapPublisher mapPublisher, 
     ILogger<NodeChangedConsumer> logger) : 
     IConsumer<NodeStateChanged>,
-    IConsumer<NodeApproachingPropertiesUpdated>
+    IConsumer<NodeApproachingPropertiesUpdated>,
+    IConsumer<JamStateChanged>
 {
     /// <summary>
     /// Handles the <see cref="NodeStateChanged"/> command.
@@ -46,5 +47,13 @@ public class NodeChangedConsumer(
     {
         (var mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
         await mapPublisher.SendNodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="JamStateChanged"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<JamStateChanged> context)
+    {
+        await mapPublisher.SendJamStateUpdate(context.Message.CorrelationId, context.Message.HasPalletJam);
     }
 }

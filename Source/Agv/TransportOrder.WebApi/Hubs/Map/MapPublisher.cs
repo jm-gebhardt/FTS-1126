@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 
@@ -41,6 +42,14 @@ public class MapPublisher : IMapPublisher
     {
         var dto = new NodeApproachingPropertiesDto(mapId, nodeId, dropLiftHeight, pickLiftHeight, dockingDirection);
         _hubBroadcaster.Broadcast(c => c.NodeApproachingPropertiesChanged(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendJamStateUpdate(Guid stationId, bool hasPalletJam)
+    {
+        var stationJamStateDto = new StationJamStateDto(stationId, hasPalletJam);
+        _hubBroadcaster.Broadcast(c => c.StationJamStateChanged(stationJamStateDto));
         return Task.CompletedTask;
     }
 }

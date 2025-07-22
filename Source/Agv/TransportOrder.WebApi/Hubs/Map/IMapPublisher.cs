@@ -27,4 +27,11 @@ public interface IMapPublisher
     /// <param name="dropLiftHeight">The lift height for dropping.</param>
     /// <param name="dockingDirection">The docking direction.</param>
     Task SendNodeApproachingPropertiesUpdated(Guid mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection);
+
+    /// <summary>
+    /// Publishes jam state changes.
+    /// </summary>
+    /// <param name="stationId">The id of the station.</param>
+    /// <param name="hasPalletJam">True if the station has a pallet jam.</param>
+    Task SendJamStateUpdate(Guid stationId, bool hasPalletJam);
 }

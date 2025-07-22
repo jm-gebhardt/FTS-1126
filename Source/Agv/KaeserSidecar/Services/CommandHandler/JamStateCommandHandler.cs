@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.KaeserSidecar.Domain.Models;
+﻿using Gebhardt.Acc.Common.Messages.Stations.Events;
+using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
@@ -30,6 +31,10 @@ public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJam
             logger.LogInformation("Adding jam state {State} for station {Station}", jamState.State, jamState.Station);
             await jamStateRepository.AddAsync(jamState);
             return;
+        }
+        if (state != jamState.State)
+        {
+            await context.Publish(new JamStateUpdated(jamState.Station, state == 1));
         }
 
         jamState.SetState(state, timeStamp);

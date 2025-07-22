@@ -19,6 +19,7 @@ public class StationEntityConfiguration : IEntityTypeConfiguration<Station>
         builder.Property(e => e.LockDescription).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.Width);
         builder.Property(e => e.Length);
+        builder.Property(e => e.HasPalletJam);
         builder.Property(e => e.PrimaryType);
         builder.Property(e => e.AdditionalTypes).HasJsonConversion();
         builder.Ignore(e => e.NodeLock);

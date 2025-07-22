@@ -22,7 +22,8 @@ public class StationCommandHandler(
     ILogger<StationCommandHandler> logger) :
     IConsumer<LockStation>,
     IConsumer<UnlockStation>,
-    IConsumer<Common.Messages.Maps.MapSaved>
+    IConsumer<Common.Messages.Maps.MapSaved>,
+    IConsumer<UpdateStationJamState>
 {
     /// <summary>
     /// Handles the <see cref="LockStation"/> command.
@@ -106,5 +107,17 @@ public class StationCommandHandler(
         var agvGraph = await graphRepository.GetAgvGraphAsync(agvIds.First());
         await stationRepository.AddStations(agvGraph);
         logger.LogDebug("Stations updated");
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UpdateStationJamState"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UpdateStationJamState> context)
+    {
+        var station = await stationRepository.GetStation(context.Message.CorrelationId);
+        station.HasPalletJam = context.Message.HasPalletJam;
+        await stationRepository.Update(station);
+        logger.LogInformation("Jam state of station {StationName} updated to {JamState}", station.Name, station.HasPalletJam);
+        await context.Publish(new JamStateChanged(station.Id, station.HasPalletJam));
     }
 }

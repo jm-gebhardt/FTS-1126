@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -29,5 +31,15 @@ public class StationEventHandlerTest
 
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<TryReactivateChargingAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_JamStateUpdated_ValidData_PublishesUpdateStationJamState()
+    {
+        var fixture = new StationEventHandlerTestFixture();
+
+        await fixture.PublishMessageAsync<JamStateUpdated, string>(new JamStateUpdated("station", true));
+
+        await fixture.ShouldHavePublishedAsync<UpdateStationJamState>();
     }
 }

@@ -1,7 +1,10 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -12,7 +15,8 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// </summary>
 [UsedImplicitly]
 public class StationEventHandler(IAgvDb agvDb):
-    IConsumer<StationUnlocked>
+    IConsumer<StationUnlocked>,
+    IConsumer<JamStateUpdated>
 {
     /// <summary>
     /// Handles the <see cref="StationUnlocked"/> evnet.
@@ -29,5 +33,13 @@ public class StationEventHandler(IAgvDb agvDb):
             return;
         }
         await context.Publish(new TryReactivateChargingAgv(agvs.First().CorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="JamStateUpdated"/> evnet.
+    /// </summary>
+    public async Task Consume(ConsumeContext<JamStateUpdated> context)
+    {
+        await context.Publish(new UpdateStationJamState(context.Message.StationName.ToGuid(), context.Message.HasPalletJam));
     }
 }

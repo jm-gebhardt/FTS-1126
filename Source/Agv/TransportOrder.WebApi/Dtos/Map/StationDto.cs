@@ -86,6 +86,11 @@ public record StationDto
     public string? LockDescription { get; set; }
 
     /// <summary>
+    /// True, if the station has a pallet jam.
+    /// </summary>
+    public bool HasPalletJam { get; set; }
+
+    /// <summary>
     /// The handling of orders that involve this station.
     /// </summary>
     public LockedOrderHandlingType? LockedOrderHandling { get; set; }
