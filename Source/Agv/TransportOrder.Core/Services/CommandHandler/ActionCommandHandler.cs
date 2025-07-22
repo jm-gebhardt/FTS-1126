@@ -921,7 +921,7 @@ public class ActionCommandHandler :
             await context.Publish(new ActionAborted(agvCorrelationId.Value, _mapper.Map<MessageAgvAction>(action)));
         }
 
-        actionGroup.ResetActionGroup();
+        actionGroup.ResetActionGroup(!actionGroup.IsManual);
         await _actionService.TryUpdateActionGroup(actionGroup);
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))

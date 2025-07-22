@@ -454,7 +454,7 @@ public class ActionGroup
             action.SetLiftHeight(dropLiftHeight);
         }
 
-        double? liftHeight = ((double?[])[pickLiftHeight, dropLiftHeight]).FirstOrDefault(l => l != null);
+        double? liftHeight = ((double?[]) [pickLiftHeight, dropLiftHeight]).FirstOrDefault(l => l != null);
         action.SetLiftHeight(liftHeight);
     }
 
@@ -508,13 +508,17 @@ public class ActionGroup
     /// Resets the <see cref="ActionGroup"/> and all <see cref="AgvAction"/> to
     /// <see cref="ActionState.Created"/>.
     /// </summary>
-    public void ResetActionGroup()
+    /// <param name="resetAssignedAgv">If true, the assigned agv is set to null.</param>
+    public void ResetActionGroup(bool resetAssignedAgv = true)
     {
         foreach (var agvAction in Actions)
         {
             ResetAction(agvAction);
         }
-        AssignedAgv = null;
+        if (resetAssignedAgv)
+        {
+            AssignedAgv = null;
+        }
         StartedDate = null;
         CompletedDate = null;
     }
@@ -668,7 +672,7 @@ public class ActionGroup
         ActionState? lastDropState = drops.MaxBy(a => a.StartedDate)?.State;
 
         bool pickCompleted = lastPickState == ActionState.Completed;
-        bool dropCompleted = lastDropState== ActionState.Completed;
+        bool dropCompleted = lastDropState == ActionState.Completed;
 
         bool hasPick = picks.Any();
         bool hasDrop = drops.Any();
@@ -685,8 +689,6 @@ public class ActionGroup
         }
 
         // Mixed Pick & Drop actions
-        return agvHasCargo
-            ? pickCompleted && !dropCompleted
-            : dropCompleted || !pickCompleted;
+        return agvHasCargo ? pickCompleted && !dropCompleted : dropCompleted || !pickCompleted;
     }
 }

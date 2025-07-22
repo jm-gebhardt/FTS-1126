@@ -150,7 +150,7 @@ public class ActionGroupTests
 
         actionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        ((DateTime)actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
+        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -198,6 +198,29 @@ public class ActionGroupTests
         actionGroup.ResetActionGroup();
 
         actionGroup.AssignedAgv.ShouldBeNull();
+        actionGroup.StartedDate.ShouldBeNull();
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.EstimatedDuration.ShouldBe(TimeSpan.Zero);
+        actionGroup.CreatedDate.ShouldBe(createdDate);
+        actionGroup.State.ShouldBe(ActionGroupState.Created);
+        actionGroup.Actions.ShouldAllBe(a => a.Nodes.Length == 0);
+        actionGroup.Actions.ShouldAllBe(a => a.State == ActionState.Created);
+    }
+
+    [TestMethod]
+    public void ResetActionGroup_ManualActionGroup_DoesNotResetAssignedAgv()
+    {
+        var createdDate = DateTime.UtcNow;
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Started,
+            assignedAgv: agv,
+            createdDate: createdDate);
+        actionGroup.ResetActionGroup(false);
+
+        actionGroup.AssignedAgv.ShouldNotBeNull();
+        actionGroup.AssignedAgv.ShouldBe(agv);
         actionGroup.StartedDate.ShouldBeNull();
         actionGroup.CompletedDate.ShouldBeNull();
         actionGroup.EstimatedDuration.ShouldBe(TimeSpan.Zero);
@@ -547,17 +570,17 @@ public class ActionGroupTests
     public void SetDockFrontOfAction_PickDropActionGroup_RotationNeeded_ForceDropBackWards_DockFrontSet(bool? previous, DockingDirection? nodeDockingDirection, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(infoToAgv: new Dictionary<InfoToAgvKey, string>
-        {
             {
-                InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture)
-            }
-        },
-        dropInfoToAgv: new Dictionary<InfoToAgvKey, string>
-        {
+                {
+                    InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture)
+                }
+            },
+            dropInfoToAgv: new Dictionary<InfoToAgvKey, string>
             {
-                InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture)
-            }
-        });
+                {
+                    InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture)
+                }
+            });
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.InfoToAgv!.NeedsRotation().ShouldBeTrue();
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
