@@ -1274,16 +1274,21 @@ public class ActionCommandHandler :
 
             var abortedActionGroup = idleActionGroups.Single(a => a.AssignedAgv == closestAgvRoute.agv.Value);
             var abortedAction = abortedActionGroup.Actions.Single(a => a.State == ActionState.Started);
-            var closestAgv = agvs.Single(a => a.CorrelationId == closestAgvRoute.agv.Value);
-            bool startNodeIsStation = closestAgv.AgvStatus?.LastNodeId != null && (await _agvDb.Graphs.GetNodeAsync(closestAgv.AgvStatus.LastNodeId)).IsStation();
 
+            // The start of the move action, the docking direction of the last completed action,
+            // and the current nodes are needed 
+            // to deduce the docking direction as if the updated action starts where the to be aborted move started.
+            // The docking direction of the aborted move is not taken as the previous value, as the agvs are configured to
+            // turn as later as possible, i.e. likely not have turned yet.
+            bool startNodeIsStation = await GetStartNodeIsStation(abortedAction);
             var actionToStart = actionGroup.FirstNotStartedAction!;
             var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
             DockingDirection? nodeDockingDirection = targetNode.DockingDirection;
             actionGroup.AssignedAgv = closestAgvRoute.agv;
+            bool? previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(closestAgvRoute.agv.Value, actionGroup.CorrelationId);
             actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges);
             actionGroup.HasPriority = true;
-            actionGroup.SetDockFrontOfAction(actionToStart.CorrelationId, abortedAction.InfoToAgv?.GetDockFront(), nodeDockingDirection, startNodeIsStation);
+            actionGroup.SetDockFrontOfAction(actionToStart.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
 
             // Get route costs
             var assignedAgv = agvs.Single(a => a.CorrelationId == actionGroup.AssignedAgv!.Value);

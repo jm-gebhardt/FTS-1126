@@ -263,7 +263,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
-    public ActionGroupTestFixtureBase<T> WithTargetNode(GraphNode node)
+    public ActionGroupTestFixtureBase<T> WithNode(GraphNode node)
     {
         _agvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
         return this;

@@ -1,6 +1,7 @@
 using FluentValidation.Results;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -44,7 +45,7 @@ public class ActionCommandHandlerTest
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
-            .WithTargetNode(new GraphNode(startedAction.Target.NodeId!))
+            .WithNode(new GraphNode(startedAction.Target.NodeId!))
             .WithLastActionDockFront(dockFront);
 
         var startAction = new StartActionOfActionGroup(startedAction, agv.CorrelationId);
@@ -66,7 +67,7 @@ public class ActionCommandHandlerTest
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
-            .WithTargetNode(new GraphNode(pickAction.Target.NodeId!))
+            .WithNode(new GraphNode(pickAction.Target.NodeId!))
             .WithLastActionDockFront(false);
         var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
 
@@ -1706,7 +1707,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)
             .AddAgv(agv)
-            .WithTargetNode(new GraphNode("target"));
+            .WithNode(new GraphNode("target"));
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
@@ -1734,7 +1735,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)
             .AddAgv(agv)
-            .WithTargetNode(new GraphNode("target"))
+            .WithNode(new GraphNode("target"))
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()]);
 
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
@@ -1919,8 +1920,9 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([])
             .WithClosestAgv(closestAgv.CorrelationId, route)
-            .WithTargetNode(new GraphNode())
-            .AddAgvs([closestAgv]);
+            .WithNode(new GraphNode())
+            .AddAgvs([closestAgv])
+            .WithLastActionDockFront(false);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
 
@@ -1957,8 +1959,9 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([])
             .WithClosestAgv(closestAgv.CorrelationId, route)
-            .WithTargetNode(new GraphNode())
-            .AddAgvs([closestAgv]);
+            .WithNode(new GraphNode())
+            .AddAgvs([closestAgv])
+            .WithLastActionDockFront(false);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
 
@@ -2036,10 +2039,12 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task TryUpdateIdleAction_AgvRunningParkingActionGroupIsClosest_HasActiveWarning_PublishesUpdateActionCommand()
     {
+        const bool previousDockFront = true;
         var closestAgv = AgvGenerator.GenerateBusyAgv();
         var warning = AgvErrorGenerator.GenerateAgvError(closestAgv.CorrelationId, errorLevel:ErrorLevel.Warning);
-        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node", "waypoint"], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
+        parkingActionGroup.Actions.Single().Nodes = ["start", "waypoint"];
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .WithRunningIdleActionGroups([parkingActionGroup])
@@ -2048,8 +2053,9 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([warning])
             .WithClosestAgv(closestAgv.CorrelationId, route)
-            .WithTargetNode(new GraphNode())
-            .AddAgvs([closestAgv]);
+            .WithNode(new GraphNode(){Type = AgvGraph.NodeType.PickDrop, Id = "start"})
+            .AddAgvs([closestAgv])
+            .WithLastActionDockFront(previousDockFront);
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
 
@@ -2070,6 +2076,7 @@ public class ActionCommandHandlerTest
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromParking);
         saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First(a => a.ActionType == ActionType.Move).CorrelationId);
         pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.Actions.Single(a => a.Sequence == 0).InfoToAgv?.GetDockFront().ShouldBe(!previousDockFront); // start of move is station 
     }
 
     [TestMethod]
