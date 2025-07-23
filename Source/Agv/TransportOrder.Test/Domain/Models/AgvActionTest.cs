@@ -1,5 +1,4 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -92,19 +91,11 @@ public class AgvActionTest
     }
 
     [TestMethod]
-    public void SetTarget_ActionIsNotIncomplete_ThrowsSetActionTargetFailedException()
-    {
-        var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), "target");
-
-        Should.Throw<SetActionTargetFailedException>(() => action.SetTarget("new target"));
-    }
-
-    [TestMethod]
     public void SetTarget_ActionIsNotIncompleteWithoutValidation_DoesNotThrow()
     {
         var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), "target");
 
-        Should.NotThrow(() => action.SetTarget("new target", false));
+        Should.NotThrow(() => action.SetTarget("new target"));
     }
 
     [TestMethod]

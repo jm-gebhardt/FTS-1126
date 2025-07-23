@@ -464,7 +464,6 @@ public class ActionGroup
     /// <param name="actionId">The correlation id of the action.</param>
     /// <param name="targetNode">The target node.</param>
     /// <exception cref="ActionNotFoundException">Thrown if no action with was found using the action id</exception>
-    /// <exception cref="SetActionTargetFailedException">Thrown if the action already had a target</exception>
     /// <param name="route">The route, if any.</param>
     public void SetTargetForAction(Guid actionId, string targetNode, Route? route = null)
     {
@@ -473,7 +472,7 @@ public class ActionGroup
             throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionId);
         }
         var action = Actions.Single(a => a.CorrelationId == actionId);
-        action.SetTarget(targetNode, route == null);
+        action.SetTarget(targetNode);
         if (route != null)
         {
             action.Nodes = route.Nodes;
@@ -586,7 +585,7 @@ public class ActionGroup
         var toSkip = Actions.First(a => a.CorrelationId == actionId);
         var toUpdate = Actions.OrderBy(a => a.Sequence).Last(a => a.Sequence < toSkip.Sequence);
         toUpdate.ChangeActiontype(toSkip.ActionType);
-        toUpdate.SetTarget(targetNodeId, false);
+        toUpdate.SetTarget(targetNodeId);
         if (toSkip.ActionType == ActionType.Pick)
         {
             toUpdate.SetInfoToAgv(toSkip.InfoToAgv);

@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using JetBrains.Annotations;
 using System.Globalization;
@@ -257,14 +256,8 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// Sets a target for the action.
     /// </summary>
     /// <param name="targetNodeId">The target node id.</param>
-    /// <param name="shouldValidate">If the action should validate that it has no target yet.</param>
-    /// <exception cref="SetActionTargetFailedException">Thrown, if a target was already set previously.</exception>
-    public void SetTarget(string targetNodeId, bool shouldValidate = true)
+    public void SetTarget(string targetNodeId)
     {
-        if (shouldValidate && Target.NodeId != string.Empty)
-        {
-            throw new SetActionTargetFailedException(targetNodeId);
-        }
         Target.NodeId = targetNodeId;
     }
 

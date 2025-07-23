@@ -297,15 +297,6 @@ public class ActionGroupTests
     }
 
     [TestMethod]
-    public void SetTargetForAction_ActionNotIncomplete_ThrowsSetActionTargetFailedException()
-    {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var action = actionGroup.Actions.First(a => !a.IsIncomplete);
-
-        Should.Throw<SetActionTargetFailedException>(() => actionGroup.SetTargetForAction(action.CorrelationId, "target"));
-    }
-
-    [TestMethod]
     public void PauseActionGroup_MaintenanceReason_StartedActionPaused()
     {
         var agvGuid = Guid.NewGuid();

@@ -1038,12 +1038,11 @@ public class ActionCommandHandler :
 
         bool stationIsLocked = await _actionService.StationIsLockedIfExists(targetNodeId);
         bool shouldUpdate = !stationIsLocked && currentAction is { State: ActionState.Started } && assignedAgv != null;
-
         if (nextAction.State == ActionState.Started || !nextAction.IsIncomplete)
         {
             // Reset of previously set action target: no next action needs to be skipped, i.e. next action is current action
             currentAction = nextAction;
-            shouldUpdate = !stationIsLocked;
+            shouldUpdate = !stationIsLocked && assignedAgv != null;
         }
 
         Agv? agv = null;
@@ -1073,8 +1072,9 @@ public class ActionCommandHandler :
             var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
             actionGroup.SetCargoLiftHeightForAction(currentAction.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
-
-        actionGroup.SetTargetForAction(actionId, targetNodeId, route);
+        
+        actionGroup.SetTargetForAction(actionId, targetNodeId, shouldUpdate ? route : null);
+            
         await _actionGroupRepository.UpdateAsync(actionGroup);
 
         if (assignedAgv != null)
@@ -1082,15 +1082,15 @@ public class ActionCommandHandler :
             if (shouldUpdate)
             {
                 var mappedAction = _mapper.Map<MessageAgvAction>(currentAction);
-
                 await context.Publish(new UpdateActionCommand((Guid)assignedAgv, agv!.SerialNumber, mappedAction), cancellationToken);
-                await context.Publish(new ActionGroupChanged(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
             }
             else
             {
                 await context.Publish(new AgvBecameIdle(assignedAgv.Value), cancellationToken);
             }
         }
+        await context.Publish(new ActionGroupChanged(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
+
         _logger.LogOrderInformation(LogCodes.OrderIncomplete, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Action Target Set",
             $"Target {targetNodeId} set for action {nextAction.ActionType} of order {actionGroup.OrderId}",
