@@ -72,13 +72,13 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
         return this;
     }
 
-    public void VerifyReportingToConveyors(string hu ="", string dropStation = "", string source = "", Times? times = null)
+    public void VerifyReportingToConveyors(string hu = "", string dropStation = "", string source = "", Times? times = null)
     {
         times ??= Times.Once();
         if (times == Times.Never())
         {
-            _communicator.Verify(x => x.ReportPalletDrop(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), (Times)times);
+            _communicator.Verify(x => x.ReportPalletDrop(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), (Times) times);
         }
-        _communicator.Verify(x => x.ReportPalletDrop(source, dropStation, hu), (Times)times);
+        _communicator.Verify(x => x.ReportPalletDrop(source, dropStation, hu), (Times) times);
     }
 }

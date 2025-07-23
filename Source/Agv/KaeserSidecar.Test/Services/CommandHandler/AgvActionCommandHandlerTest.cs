@@ -4,9 +4,10 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shouldly;
+using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.CommandHandler;
 
@@ -20,19 +21,19 @@ public class AgvActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [station];
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
+        var agv = actionGroup.AssignedAgv!.Value;
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var startActionCommand = new StartActionCommand(actionGroup.AssignedAgv!.Value, "serial number", actionGroupMessageContent.Actions.First());
-
-        await fixture.TestHarness.Bus.Publish(startActionCommand);
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        await fixture.ShouldHavePublishedAsync<FreeStation>();
-        fixture.VerifyActionDequeued(actionGroup.Actions.First().CorrelationId, Times.Never());
+        var freeStation = await fixture.GetFirstPublishedMessageAsync<FreeStation>();
+        freeStation.Station.ShouldBe(station);
+        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
+        fixture.VerifyActionDequeued(actionGroup.Actions[0].CorrelationId, Times.Never());
     }
 
     [TestMethod]
@@ -43,15 +44,13 @@ public class AgvActionCommandHandlerTest
         string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
         actionGroup.Actions.First().Nodes = [station];
+        var agv = actionGroup.AssignedAgv!.Value;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var startActionCommand = new StartActionCommand(actionGroup.AssignedAgv!.Value, "serial number", actionGroupMessageContent.Actions.First());
-
-        await fixture.TestHarness.Bus.Publish(startActionCommand);
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldHavePublishedAsync<AgvStartedPick>();
         await fixture.ShouldNotHavePublishedAsync<FreeStation>();
     }
@@ -64,16 +63,14 @@ public class AgvActionCommandHandlerTest
         string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
         actionGroup.Actions.Last().Nodes = [station, "other nodes"];
+        var agv = actionGroup.AssignedAgv!.Value;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
 
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var startActionCommand = new StartActionCommand(actionGroup.AssignedAgv!.Value, "serial number", actionGroupMessageContent.Actions.Last());
-
-        await fixture.TestHarness.Bus.Publish(startActionCommand);
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.Last()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
     }
 
@@ -85,15 +82,13 @@ public class AgvActionCommandHandlerTest
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.OrderBy(c => c.Value).Last().Key;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
         actionGroup.Actions.First().Nodes = [station];
+        var agv = actionGroup.AssignedAgv!.Value;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var startActionCommand = new StartActionCommand(actionGroup.AssignedAgv!.Value, "serial number", actionGroupMessageContent.Actions.First());
-
-        await fixture.TestHarness.Bus.Publish(startActionCommand);
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<FreeStation>();
     }
 
@@ -103,14 +98,12 @@ public class AgvActionCommandHandlerTest
         const string station = "not conveyor station";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [station];
+        var agv = actionGroup.AssignedAgv!.Value;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
 
-        var startActionCommand = new StartActionCommand(actionGroup.AssignedAgv!.Value, "serial number", actionGroupMessageContent.Actions.First());
-
-        await fixture.TestHarness.Bus.Publish(startActionCommand);
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         await fixture.ShouldNotHavePublishedAsync<FreeStation>();
     }
@@ -120,14 +113,12 @@ public class AgvActionCommandHandlerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [];
+        var agv = actionGroup.AssignedAgv!.Value;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
 
-        var startActionCommand = new StartActionCommand(actionGroup.AssignedAgv!.Value, "serial number", actionGroupMessageContent.Actions.First());
-
-        await fixture.TestHarness.Bus.Publish(startActionCommand);
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         await fixture.ShouldNotHavePublishedAsync<FreeStation>();
     }
@@ -138,14 +129,12 @@ public class AgvActionCommandHandlerTest
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.Actions.First().Nodes = [station];
+        var agv = actionGroup.AssignedAgv!.Value;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(null);
 
-        var startActionCommand = new StartActionCommand(actionGroup.AssignedAgv!.Value, "serial number", actionGroupMessageContent.Actions.First());
-
-        await fixture.TestHarness.Bus.Publish(startActionCommand);
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         await fixture.ShouldNotHavePublishedAsync<FreeStation>();
     }
@@ -163,10 +152,7 @@ public class AgvActionCommandHandlerTest
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var actionCompleted = new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<DropActionCompleted>();
+        await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow));
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedDrop>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
@@ -185,10 +171,7 @@ public class AgvActionCommandHandlerTest
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var actionCompleted = new PickActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<PickActionCompleted>();
+        await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
@@ -211,10 +194,7 @@ public class AgvActionCommandHandlerTest
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var actionCompleted = new PickActionCompleted(actionGroup.CorrelationId, moveAction.CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<PickActionCompleted>();
+        await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, moveAction.CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
@@ -233,10 +213,7 @@ public class AgvActionCommandHandlerTest
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);
 
-        var actionCompleted = new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<DropActionCompleted>();
+        await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHavePublishedAsync<AgvFinishedDrop>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(order.Hu, orderDetails.Destination, station, Times.Once());
@@ -250,10 +227,7 @@ public class AgvActionCommandHandlerTest
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(null);
 
-        var actionCompleted = new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTime.UtcNow); 
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<DropActionCompleted>();
+        await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTime.UtcNow));
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedDrop>();
         await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
     }
@@ -268,10 +242,7 @@ public class AgvActionCommandHandlerTest
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(null);
 
-        var actionCompleted = new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
+        await fixture.PublishMessageAsync(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
         await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
     }
 
@@ -285,10 +256,7 @@ public class AgvActionCommandHandlerTest
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(null);
 
-        var actionCompleted = new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
-        await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
+        await fixture.PublishMessageAsync(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
         await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
     }
 
@@ -302,13 +270,11 @@ public class AgvActionCommandHandlerTest
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
 
-        var actionCompleted = new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(actionCompleted);
+        await fixture.PublishMessageAsync(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
     }
-    
+
     [TestMethod]
     public async Task Consume_ActionAborted_ValidData_PublishesFreeStation()
     {
@@ -319,10 +285,7 @@ public class AgvActionCommandHandlerTest
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithActionGroup(actionGroup);
 
-        var actionAborted = new ActionAborted(action.CorrelationId, abortedAction);
-
-        await fixture.TestHarness.Bus.Publish(actionAborted);
-        await fixture.ShouldHaveConsumedAsync<ActionAborted>();
+        await fixture.PublishMessageAsync(new ActionAborted(action.CorrelationId, abortedAction));
         await fixture.ShouldHavePublishedAsync<FreeStation>();
     }
 }

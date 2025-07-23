@@ -76,7 +76,7 @@ public class StationEventHandler(
         var station = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
         if (station?.Node != context.Message.Station)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station: {Station}", agvCorrelationId, station?.Node);
+            logger.LogWarning("AGV {AgvCorrelationId} is not occupying station {Station}, but {OccupiedStation}", agvCorrelationId, context.Message.Station, station?.Node ?? "none");
             return;
         }
 

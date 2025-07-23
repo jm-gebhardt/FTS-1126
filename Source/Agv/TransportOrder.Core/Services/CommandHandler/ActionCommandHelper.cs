@@ -225,7 +225,7 @@ public class ActionCommandHelper
         {
             _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start pick/drop actions in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
             var pauseReason = assignedAgv.Mode.GetPauseReason();
- 
+
             await context.Publish(new PauseActionGroup(actionGroup.CorrelationId, pauseReason));
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
@@ -243,7 +243,7 @@ public class ActionCommandHelper
         }
         if (actionGroup.FirstNotStartedAction == null)
         {
-            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId} there is no action that can be started, {Action}, {ActionInGroup}", action.CorrelationId, actionGroup.CorrelationId, action.ToString(), actionGroup.Actions.Single(a => a.CorrelationId  ==action.CorrelationId).ToString());
+            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId} there is no action that can be started, {Action}, {ActionInGroup}", action.CorrelationId, actionGroup.CorrelationId, action.ToString(), actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).ToString());
             return false;
         }
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
@@ -358,8 +358,13 @@ public class ActionCommandHelper
     /// <param name="action">The current action.</param>
     /// <param name="agv">The current agv.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task TryQueueDoppelspielPartner(ConsumeContext<CompleteActionOfActionGroup> context, ActionGroup actionGroup, AgvAction action,Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
+    public async Task TryQueueDoppelspielPartner(ConsumeContext<CompleteActionOfActionGroup> context, ActionGroup actionGroup, AgvAction action, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
     {
+        if (actionGroup.IsManual)
+        {
+            return;
+        }
+
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         if (agv.CheckMustCharge(agvSettings))
         {

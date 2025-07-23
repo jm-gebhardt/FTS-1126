@@ -203,11 +203,13 @@ public class AgvActionCommandHandler(
         }
 
         string? station = action.Target.NodeId;
-        if (station == null)
+        if (string.IsNullOrEmpty(station) || (configuration.ConveyorStationMapping.TryGetValue(station, out string? _) && !actionGroup.IsManual))
         {
+            // If the station is a conveyor station, we have  already occupied it during the target selection
             return;
         }
-        logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", action.ActionType, actionGroup.AssignedAgv, action.CorrelationId, actionGroup.CorrelationId);
+        logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}, occupying station {Station}",
+            agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, station);
         await context.Publish(new OccupyStation(station, agvCorrelationId));
     }
 

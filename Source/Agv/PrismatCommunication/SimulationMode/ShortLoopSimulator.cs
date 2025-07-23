@@ -16,5 +16,5 @@ public class ShortLoopSimulator(IBus bus, ILogger<SimulatorBase> logger, Simulat
     ];
 
     /// <inheritdoc />
-    public override int PollingInterval { get; } = 360000/ simOptions.Speed; // 10/h in ms
+    public override int PollingInterval { get; } = 360_000 / simOptions.Speed; // 10/h in ms
 }

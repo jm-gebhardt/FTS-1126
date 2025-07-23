@@ -4,7 +4,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
+namespace Gebhardt.Acc.KaeserSidecar.Test.Services;
 
 /// <inheritdoc cref="IStationRepository"/>>
 public class StationRepository : IStationRepository

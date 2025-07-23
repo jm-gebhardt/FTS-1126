@@ -95,8 +95,7 @@ public class TargetSelector(
                 string? target = await SelectTarget(_consideredStations);
                 if (target != null)
                 {
-                    logger.LogInformation("Selecting target {Target} for agv {Agv} running action group {ActionGroup}", target, agvCorrelationId, actionGroup.CorrelationId);
-
+                    logger.LogInformation("Selected target {Target} for agv {Agv} running action group {ActionGroup} and adding to station", target, agvCorrelationId, actionGroup.CorrelationId);
                     // occupy station when target is selected already, so that we can use the occupancy status to select future targets
                     await stationRepository.OccupyStation(target, agvCorrelationId);
                     _lastEvaluatedActions.Add(action.Value);
