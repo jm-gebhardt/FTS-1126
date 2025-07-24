@@ -32,4 +32,10 @@ public class ActionCommandConsumerTestFixture : MqttConsumerTestFixture<ActionCo
     {
         _actionRepository.Verify(x => x.AddVehicleAndInternalOrderIdMapping(It.IsAny<Guid>(), It.IsAny<Guid>()), times);
     }
+
+    public ActionCommandConsumerTestFixture WithVehicleOrderId(Guid? id)
+    {
+        _actionRepository.Setup(x => x.GetVehicleOrderId(It.IsAny<Guid>())).ReturnsAsync(id);
+        return this;
+    }
 }

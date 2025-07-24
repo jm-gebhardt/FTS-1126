@@ -720,7 +720,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
            }
 
-           await context.Publish(new ActionCompleted(action.CorrelationId));
+           await context.Publish(new ActionCompleted(action.CorrelationId, agvCorrelationId));
        }
 
        // update position last time before the ActionStart time is gone
@@ -754,7 +754,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             _logger.LogInformation("Agv {AgvId} / {CorrelationId} aborted action {ActionType} for {OrderId}",
                 context.Saga.SerialNumber, context.Saga.CorrelationId, action.ActionType, action.ParentId);
 
-            await context.Publish(new ActionAbortionCompleted(action.CorrelationId));
+            await context.Publish(new ActionAbortionCompleted(action.CorrelationId, context.Saga.CorrelationId));
         }
 
         context.Saga.AbortAction();

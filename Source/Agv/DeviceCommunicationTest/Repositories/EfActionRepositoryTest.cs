@@ -61,6 +61,30 @@ public class EfActionRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetVehicleOrderId_ValidData_ReturnsVehicleOrderId()
+    {
+        var vehicleOrderId = Guid.NewGuid();
+        var internalOrderId = Guid.NewGuid();
+        var mapping = new OrderIdMapping(vehicleOrderId, internalOrderId);
+
+        var fixture = new EfActionRepositoryTestFixture();
+        await fixture.AddAsync(mapping);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetVehicleOrderId(internalOrderId)).ShouldBe(vehicleOrderId);
+    }
+
+    [TestMethod]
+    public async Task GetVehicleOrderId_MappingDoesNotExist_ReturnsNull()
+    {
+        var internalOrderId = Guid.NewGuid();
+
+        var fixture = new EfActionRepositoryTestFixture();
+
+        (await fixture.Repository.GetVehicleOrderId(internalOrderId)).ShouldBeNull();
+    }
+
+    [TestMethod]
     public async Task RemoveVehicleAndInternalOrderIdMapping_ValidData_RemovesMapping()
     {
         var vehicleOrderId = Guid.NewGuid();

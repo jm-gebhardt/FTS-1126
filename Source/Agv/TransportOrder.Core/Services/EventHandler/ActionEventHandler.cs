@@ -42,6 +42,12 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
             logger.LogWarning("Action {ActionId} of group {ActionGroupCorrelationId} is in state {ActionStation}, not triggering completion ", actionCorrelationId, actionGroup.CorrelationId, action.State);
             return;
         }
+
+        if (actionGroup.AssignedAgv != context.Message.AgvCorrelationId)
+        {
+            logger.LogWarning("Action group {ActionGroupCorrelationId} was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} requested by {Agv}", actionGroup.CorrelationId, actionGroup.AssignedAgv,  actionCorrelationId, context.Message.AgvCorrelationId);
+            return;
+        }
         
         await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }
@@ -80,6 +86,11 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
             logger.LogError("Could not complete action abortion for action {Action}, no assigned agv", actionCorrelationId);
             return;
         }
+        if (assignedAgv != context.Message.AgvCorrelationId)
+        {
+            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} abortion requested by {Agv}", assignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
+            return;
+        }
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));
     }
 
@@ -91,6 +102,11 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         if (assignedAgv == null)
         {
             logger.LogError("Could not complete action cancellation for action {Action}, no assigned agv", actionCorrelationId);
+            return;
+        }
+        if (assignedAgv != context.Message.AgvCorrelationId)
+        {
+            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} cancellation requested by {Agv}", assignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
             return;
         }
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));

@@ -42,7 +42,7 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
         Guid? internalOrderId = await _actionRepository.GetInternalOrderId(actionId);
         if (internalOrderId != null)
         {
-            _logger.LogInformation("Replacing {OrderId} by internally used {InternalOrderId}", actionId, internalOrderId);
+            _logger.LogInformation("Replacing vehicle {OrderId} by fleet management internally used {InternalOrderId}", actionId, internalOrderId);
             actionId = internalOrderId.Value;
         }
 
@@ -55,21 +55,21 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
                 break;
 
             case OrderEventType.Completed:
-                await context.Publish(new ActionCompleted(actionId));
+                await context.Publish(new ActionCompleted(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             case OrderEventType.Canceled:
-                await context.Publish(new ActionCanceled(actionId));
+                await context.Publish(new ActionCanceled(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 
             case OrderEventType.CancelFailed:
-                await context.Publish(new ActionCancelFailed(actionId));
+                await context.Publish(new ActionCancelFailed(actionId, agvCorrelationId));
                 break;
 
             case OrderEventType.Failed:
-                await context.Publish(new ActionFailed(actionId));
+                await context.Publish(new ActionFailed(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 break;
 

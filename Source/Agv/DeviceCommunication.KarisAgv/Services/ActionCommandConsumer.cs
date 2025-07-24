@@ -127,7 +127,14 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
     {
         (_, string serialNumber, var action) = context.Message;
 
-        var order = await GetOrder(action, serialNumber, OrderRecordType.Order, action.CorrelationId.ToString());
+        string orderId = action.CorrelationId.ToString();
+        Guid? vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
+        if (vehicleOrderId != null)
+        {
+            logger.LogInformation("Replacing fleet management service internal order id {InternalCorrelationId}/{InternalOrderId} by vehicle order id {VehicleCorrelationId}/{VehicleOrderId}", action.CorrelationId, orderId, vehicleOrderId, vehicleOrderId.Value.ToString());
+            orderId = vehicleOrderId.Value.ToString();
+        }
+        var order = await GetOrder(action, serialNumber, OrderRecordType.Order, orderId);
         await context.PublishMqtt(order, context.CancellationToken);
 
         logger.LogInformation("Resent order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}",

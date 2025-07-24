@@ -76,12 +76,15 @@ public class ActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+            
+            mqttMessage.Stations.ShouldNotBeNull();
             // For pick action Karis expects destination as source ...
-            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeFalse();
-            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.FromStation.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.FromStation.DockFront.ShouldBeFalse();
+            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
             // ... and empty destination.
-            mqttMessage.Stations?.ToStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Pick);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -156,10 +159,12 @@ public class ActionCommandConsumerTest
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
 
-            mqttMessage.Stations?.FromStation.ShouldBeNull();
-            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeFalse();
-            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldNotBeNull();
+            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.ToStation.DockFront.ShouldBeFalse();
+            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Move);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -229,10 +234,12 @@ public class ActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Stations?.FromStation.ShouldBeNull();
-            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldNotBeNull();
+            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Charge);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -289,12 +296,14 @@ public class ActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+            mqttMessage.Stations.ShouldNotBeNull();
             // For pick action Karis expects destination as source ...
-            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.FromStation.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
             // ... and empty destination.
-            mqttMessage.Stations?.ToStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Pick);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -359,12 +368,14 @@ public class ActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+            mqttMessage.Stations.ShouldNotBeNull();
             // For drop action Karis expects destination ToStation values ...
-            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
+            mqttMessage.Stations.ToStation.ShouldNotBeNull();
+            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.ToStation.LiftHeight.ShouldBe(liftHeight);
             // ... and empty fromStation.
-            mqttMessage.Stations?.FromStation.ShouldBeNull();
+            mqttMessage.Stations.FromStation.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Drop);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
 
@@ -530,12 +541,14 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             mqttMessage.OrderType.ShouldBe(OrderType.Drop);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+            mqttMessage.Stations.ShouldNotBeNull();
             // For drop action Karis expects destination ToStation values ...
-            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
+            mqttMessage.Stations.ToStation.ShouldNotBeNull();
+            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.ToStation.LiftHeight.ShouldBe(liftHeight);
             // ... and empty fromStation.
-            mqttMessage.Stations?.FromStation.ShouldBeNull();
+            mqttMessage.Stations.FromStation.ShouldBeNull();
 
             mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
 
@@ -588,12 +601,14 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             mqttMessage.OrderType.ShouldBe(OrderType.Pick);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+            mqttMessage.Stations.ShouldNotBeNull();
             // For pick action Karis expects destination as source ...
-            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.FromStation.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
             // ... and empty destination.
-            mqttMessage.Stations?.ToStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldBeNull();
 
             mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
 
@@ -650,10 +665,12 @@ public class ActionCommandConsumerTest
             var mqttMessage = publishedMessage.Context.Message;
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Stations?.FromStation.ShouldBeNull();
-            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.ShouldNotBeNull();
+            mqttMessage.Stations.ToStation.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Charge);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
 
@@ -693,10 +710,12 @@ public class ActionCommandConsumerTest
 
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
 
-            mqttMessage.Stations?.FromStation.ShouldBeNull();
-            mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.ToStation?.DockFront.ShouldBeFalse();
-            mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldNotBeNull();
+            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.ToStation.DockFront.ShouldBeFalse();
+            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
             mqttMessage.OrderType.ShouldBe(OrderType.Move);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
             mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
@@ -755,12 +774,14 @@ public class ActionCommandConsumerTest
             mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
             mqttMessage.OrderType.ShouldBe(OrderType.Pick);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
+            mqttMessage.Stations.ShouldNotBeNull();
             // For pick action Karis expects destination as source ...
-            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.FromStation.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
             // ... and empty destination.
-            mqttMessage.Stations?.ToStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldBeNull();
 
             mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
 
@@ -817,11 +838,13 @@ public class ActionCommandConsumerTest
             mqttMessage.OrderType.ShouldBe(OrderType.Pick);
             mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
             // For pick action Karis expects destination as source ...
-            mqttMessage.Stations?.FromStation?.Id.ShouldBe(toStationId);
-            mqttMessage.Stations?.FromStation?.DockFront.ShouldBeTrue();
-            mqttMessage.Stations?.FromStation?.LiftHeight.ShouldBeNull();
+            mqttMessage.Stations.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.ShouldNotBeNull();
+            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
+            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
+            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
             // ... and empty destination.
-            mqttMessage.Stations?.ToStation.ShouldBeNull();
+            mqttMessage.Stations.ToStation.ShouldBeNull();
 
             mqttMessage.OrderId.ShouldBe(abortedActionCorrelationId.ToString());
 
@@ -835,5 +858,53 @@ public class ActionCommandConsumerTest
                     .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
             }
         }
+    }
+
+    [TestMethod]
+    public async Task Consume_ResendAction_ValidData_PublishesMqttOrder()
+    {
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(null);
+
+        var actionCorrelationId = Guid.NewGuid();
+        const string agvSerialNumber = "agv0";
+        const string toStationId = "Pick5";
+
+        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, Guid.NewGuid());
+        var correlationId = Guid.NewGuid();
+        var resendAction = new ResendAction(correlationId, agvSerialNumber, action);
+
+        var message = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resendAction);
+
+        message.OrderId.ShouldBe(actionCorrelationId.ToString());
+        
+        message.Stations.ShouldNotBeNull();
+        message.Stations.FromStation.ShouldNotBeNull();
+        message.Stations.FromStation.Id.ShouldBe(toStationId);
+        message.SerialNumber.ShouldBe(agvSerialNumber);
+    }
+
+    [TestMethod]
+    public async Task Consume_ResendAction_UpdatedOrder_PublishesMqttOrder()
+    {
+        var vehicleOrderId = Guid.NewGuid();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(vehicleOrderId);
+
+        var actionCorrelationId = Guid.NewGuid();
+        const string agvSerialNumber = "agv0";
+        const string toStationId = "Pick";
+
+        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, Guid.NewGuid());
+        var correlationId = Guid.NewGuid();
+        var resendAction = new ResendAction(correlationId, agvSerialNumber, action);
+
+        var message = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resendAction);
+
+        message.OrderId.ShouldBe(vehicleOrderId.ToString());
+        message.Stations.ShouldNotBeNull();
+        message.Stations.FromStation.ShouldNotBeNull();
+        message.Stations.FromStation.Id.ShouldBe(toStationId);
+        message.SerialNumber.ShouldBe(agvSerialNumber);
     }
 }

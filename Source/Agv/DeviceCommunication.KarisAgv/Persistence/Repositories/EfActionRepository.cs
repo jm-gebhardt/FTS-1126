@@ -2,6 +2,7 @@
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 
@@ -37,6 +38,12 @@ public class EfActionRepository(DeviceCommunicationDbContext context) : EfReposi
         {
             return null;
         }
+    }
+
+    /// <inheritdoc cref="IActionRepository"/>>
+    public async Task<Guid?> GetVehicleOrderId(Guid internalOrderId)
+    {
+        return (await Context.Set<OrderIdMapping>().SingleOrDefaultAsync(o => o.InternalOrderId == internalOrderId))?.VehicleOrderId;
     }
 
     /// <inheritdoc cref="IActionRepository"/>>
