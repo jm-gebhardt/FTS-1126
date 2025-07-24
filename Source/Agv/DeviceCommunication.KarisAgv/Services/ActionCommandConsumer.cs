@@ -68,6 +68,13 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
+        Guid? vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
+        if (vehicleOrderId != null)
+        {
+            logger.LogInformation("Replacing fleet management service internal order id {InternalCorrelationId}/{InternalOrderId} by vehicle order id {VehicleCorrelationId}/{VehicleOrderId}", action.CorrelationId, orderId, vehicleOrderId, vehicleOrderId.Value.ToString());
+            orderId = vehicleOrderId.Value.ToString();
+        }
+
         var order = await GetOrder(action, agvSerialNumber, OrderRecordType.OrderUpdate, orderId);
 
         await context.PublishMqtt(order, context.CancellationToken);

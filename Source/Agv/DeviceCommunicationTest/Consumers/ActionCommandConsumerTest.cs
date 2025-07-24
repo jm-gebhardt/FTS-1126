@@ -463,7 +463,8 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_UpdateActionCommand_MoveToCoordinate_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(null);
 
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
@@ -505,9 +506,57 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateActionCommand_PreviouslyAbortedAndStartedOrder_MqttOrderWithPreviousIdSent()
+    {
+        var vehicleId = Guid.NewGuid();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(vehicleId);
+        await fixture.FillGraphRepository();
+
+        var actionCorrelationId = Guid.NewGuid();
+        const string agvSerialNumber = "agv0";
+        const string orderId = "1234";
+        var orderCorrelationId = orderId.ToGuid();
+        const string toStationId = "Drop5";
+        const double liftHeight = 1.23d;
+        var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
+        {
+            Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
+            Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()]
+        };
+        var correlationId = Guid.NewGuid();
+        var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
+
+        var mqttMessage = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(message);
+
+        mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
+        mqttMessage.OrderType.ShouldBe(OrderType.Drop);
+        mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+        // For drop action Karis expects destination ToStation values ...
+        mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
+        mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
+        mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
+        // ... and empty fromStation.
+        mqttMessage.Stations?.FromStation.ShouldBeNull();
+
+        mqttMessage.OrderId.ShouldBe(vehicleId.ToString());
+
+        // Check nodes and edges, should not contain drop station and edge to drop station
+        mqttMessage.Route?.Edges.Count.ShouldBe(2);
+        mqttMessage.Route?.Nodes.Count.ShouldBe(3);
+        List<object>? routeNodes = mqttMessage.Route?.Nodes;
+        if (routeNodes != null)
+        {
+            routeNodes.Select(node => ((MqttNode)node).NodeId)
+                .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
+        }
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateActionCommand_Drop_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(null);
         await fixture.FillGraphRepository();
 
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -567,7 +616,8 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_UpdateActionCommand_Pick_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(null);
         await fixture.FillGraphRepository();
 
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -627,7 +677,8 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_UpdateActionCommand_Charge_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(null);
 
         // Create a publishing observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -681,7 +732,8 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_UpdateActionCommand_MoveToNode_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(null);
 
         // Create a publishing observer
         var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
@@ -725,7 +777,8 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_UpdateActionCommand_EmptyAssignedAgv_ThrowsException()
     {
-        var fixture = new ActionCommandConsumerTestFixture();
+        var fixture = new ActionCommandConsumerTestFixture()
+            .WithVehicleOrderId(null);
         var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
         await fixture.TestHarness.Bus.Publish(new UpdateActionCommand(Guid.Empty, "", action));
         await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
