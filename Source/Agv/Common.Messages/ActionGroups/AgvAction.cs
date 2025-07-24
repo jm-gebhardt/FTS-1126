@@ -74,9 +74,9 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public DateTime? PausedDate { get; set; }
 
     /// <summary>
-    /// Time that the action was paused for
+    /// Duration (in seconds) that the action was run previously and paused for 
     /// </summary>
-    public long PausedDuration { get; set; }
+    public long PriorRunAndPauseDuration { get; set; }
 
     /// <summary>
     /// Indicates whether the action group is marked as skipped.

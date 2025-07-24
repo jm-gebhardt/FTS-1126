@@ -71,9 +71,9 @@ public record AgvActionDto
     public DateTime? PausedDate { get; init; }
 
     /// <summary>
-    /// Duration (in seconds) that the action was paused for
+    /// Duration (in seconds) that the action was run previously and paused for 
     /// </summary>
-    public long PausedDuration { get; init; }
+    public long PriorRunAndPauseDuration { get; init; }
 
     /// <summary>
     /// Indicates whether the action group is marked as skipped.

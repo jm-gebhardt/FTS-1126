@@ -20,7 +20,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="StartedDate">The start date.</param>
 /// <param name="CompletedDate">The completion date.</param>
 /// <param name="PausedDate">The paused date.</param>
-/// <param name="PausedDuration">The duration that the action was paused.</param>
+/// <param name="PriorRunAndPauseDuration">The duration that the action was run previously and paused for.</param>
 /// <param name="IsSkipped">True, if the action group is skipped.</param>
 /// <param name="InfoToAgv">Information that will be sent to the agv.</param>
 /// <param name="AdditionalInfo">Information passed from or to external systems.</param>
@@ -38,7 +38,7 @@ public record AgvActionReadModel(
     DateTime? StartedDate,
     [PublicAPI]DateTime? CompletedDate,
     [PublicAPI]DateTime? PausedDate,
-    long PausedDuration,
+    long PriorRunAndPauseDuration,
     bool IsSkipped,
     Dictionary<InfoToAgvKey, string>? InfoToAgv = null,
     string? AdditionalInfo = null);

@@ -12,6 +12,7 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
+using DateTime = System.DateTime;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 
@@ -180,7 +181,10 @@ public class ActionGroupTests
     [TestMethod]
     public void CompleteAction_LastActionToBeCompleted_SetActionGroupStateCompletedAndAssignedAgvIsSet()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, assignedAgv: Guid.NewGuid());
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed,
+            assignedAgv: Guid.NewGuid(),
+            startedDate: DateTime.UtcNow,
+            completedDate: DateTime.UtcNow);
         actionGroup.CompleteAction(actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
         actionGroup.State.ShouldBe(ActionGroupState.Completed);
         actionGroup.AssignedAgv.ShouldNotBeNull();
@@ -294,6 +298,142 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         Should.Throw<ActionNotFoundException>(() => actionGroup.SetTargetForAction("unknown".ToGuid(), "target"));
+    }
+
+    [TestMethod]
+    public async Task PauseAndResumeActionGroup_PausedOnce_DurationSetCorrectly()
+    {
+        var waitingTime = TimeSpan.FromSeconds(2);
+        var agvGuid = Guid.NewGuid();
+        var createdDate = DateTime.UtcNow;
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agvGuid,
+            createdDate: createdDate);
+        var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
+        var dropAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
+
+        // Run pick action
+        actionGroup.StartAction(pickAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+        actionGroup.CompleteAction(pickAction.CorrelationId);
+
+        // Start drop action
+        actionGroup.StartAction(dropAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Pause
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        await Task.Delay(waitingTime);
+
+        // Resume
+        actionGroup.ResumeActionGroup(false);
+        actionGroup.StartAction(dropAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Complete
+        actionGroup.CompleteAction(dropAction.CorrelationId);
+
+        double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations, tolerance: 1.5); // tolerance is N*truncation of double to long (in each ResumeActionGroup)
+    }
+
+    [TestMethod]
+    public async Task PauseAndResumeActionGroup_MoveAction_PausedOnce_DurationSetCorrectly()
+    {
+        var waitingTime = TimeSpan.FromSeconds(2);
+        var agvGuid = Guid.NewGuid();
+
+        var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvGuid);
+        var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+
+        // Start move action
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Pause
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        await Task.Delay(waitingTime);
+
+        // Resume
+        actionGroup.ResumeActionGroup(false);
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Complete
+        actionGroup.CompleteAction(moveAction.CorrelationId);
+
+        double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations, tolerance: 1.5);
+    }
+
+    [TestMethod]
+    public async Task PauseAndResumeActionGroup_MoveAction_PausedMultipleTimes_DurationSetCorrectly()
+    {
+        var waitingTime = TimeSpan.FromSeconds(1);
+        var agvGuid = Guid.NewGuid();
+
+        var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvGuid);
+        var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+
+        // Start move action
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+        
+        // Pause
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        await Task.Delay(waitingTime);
+        
+        // Resume
+        actionGroup.ResumeActionGroup(false);
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Pause again
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        await Task.Delay(waitingTime);
+
+        // Resume again
+        actionGroup.ResumeActionGroup(false);
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Complete
+        actionGroup.CompleteAction(moveAction.CorrelationId);
+
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(moveAction.Duration!.Value.TotalSeconds, tolerance: 2.5); // tolerance is N*truncation of double to long (in each ResumeActionGroup)
+    }
+
+    [TestMethod]
+    public async Task PauseAndResumeActionGroup_MoveAction_Paused2days_DurationSetCorrectly()
+    {
+        var waitingTime = TimeSpan.FromSeconds(2);
+        var agvGuid = Guid.NewGuid();
+
+        var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvGuid);
+        var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+
+        // Start move action
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Pause
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        // Set dates to 2 days ago
+        actionGroup.GetType().GetProperty(nameof(actionGroup.StartedDate))!.SetValue(actionGroup, actionGroup.StartedDate.GetValueOrDefault().AddDays(-2));
+        moveAction.GetType().GetProperty(nameof(moveAction.StartedDate))!.SetValue(moveAction, moveAction.StartedDate.GetValueOrDefault().AddDays(-2));
+        moveAction.GetType().GetProperty(nameof(moveAction.PausedDate))!.SetValue(moveAction, moveAction.PausedDate.GetValueOrDefault().AddDays(-2));
+
+        // Resume
+        actionGroup.ResumeActionGroup(false);
+        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        await Task.Delay(waitingTime);
+
+        // Complete
+        actionGroup.CompleteAction(moveAction.CorrelationId);
+
+        double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations, tolerance: 1.5); // tolerance is N*truncation of double to long (in each ResumeActionGroup)
     }
 
     [TestMethod]

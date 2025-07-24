@@ -89,14 +89,14 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     public string? AdditionalInfo { get; set; }
 
     /// <summary>
-    /// Duration that the action has been paused for in seconds
+    /// Duration that the action has been paused for and run previously in seconds
     /// </summary>
-    public long PausedDuration { get; set; }
+    public long PriorRunAndPauseDuration { get; set; }
 
     /// <summary>
     /// The duration of the action.
     /// </summary>
-    public TimeSpan? Duration => CompletedDate - StartedDate - TimeSpan.FromSeconds(PausedDuration);
+    public TimeSpan? Duration => CompletedDate - StartedDate + TimeSpan.FromSeconds(PriorRunAndPauseDuration);
 
     /// <summary>
     /// Whether this <see cref="AgvAction"/> should be skipped.
@@ -199,7 +199,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         DateTime? completedDate,
         DateTime? pausedDate,
         Dictionary<InfoToAgvKey, string>? infoToAgv,
-        long pausedDuration,
+        long priorRunAndPauseDuration,
         bool shouldSkip
     )
     {
@@ -216,7 +216,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         CompletedDate = completedDate;
         PausedDate = pausedDate;
         InfoToAgv = infoToAgv;
-        PausedDuration = pausedDuration;
+        PriorRunAndPauseDuration = priorRunAndPauseDuration;
         ShouldSkip = shouldSkip;
     }
 
@@ -234,7 +234,9 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         if (State == ActionState.Paused && PausedDate != null)
         {
             var pauseTimeSpan = (TimeSpan)(DateTime.UtcNow - PausedDate);
-            PausedDuration += (long)pauseTimeSpan.TotalSeconds;
+            var previousRunTime = (TimeSpan)(PausedDate - StartedDate.GetValueOrDefault());
+            PriorRunAndPauseDuration += (long)pauseTimeSpan.TotalSeconds + (long)previousRunTime.TotalSeconds;
+
             PausedDate = null;
         }
 
@@ -242,14 +244,14 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 
         SetDates();
     }
-    
+
     /// <summary>
     /// Sets new info to agv for the action.
     /// </summary>
     /// <param name="infoToAgv">The information for the agv.</param>
     public void SetInfoToAgv(Dictionary<InfoToAgvKey, string>? infoToAgv)
     {
-           InfoToAgv = infoToAgv;
+        InfoToAgv = infoToAgv;
     }
 
     /// <summary>
@@ -446,7 +448,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         {
             return false;
         }
-        if (!PausedDuration.Equals(other.PausedDuration))
+        if (!PriorRunAndPauseDuration.Equals(other.PriorRunAndPauseDuration))
         {
             return false;
         }
@@ -503,7 +505,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         {
             return;
         }
-        
+
         InfoToAgv ??= new Dictionary<InfoToAgvKey, string>();
         InfoToAgv[InfoToAgvKey.LiftHeight] = liftHeight;
     }

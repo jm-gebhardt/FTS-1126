@@ -122,6 +122,11 @@ public class ActionGroup
     public string? HandlingUnit { get; init; }
 
     /// <summary>
+    /// Duration of the action group.
+    /// </summary>
+    public TimeSpan? Duration => CompletedDate - StartedDate;
+
+    /// <summary>
     /// Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.
     /// </summary>
     [UsedImplicitly]
@@ -202,11 +207,11 @@ public class ActionGroup
         switch (State)
         {
             case ActionGroupState.Started:
-                StartedDate = now;
+                StartedDate ??= Actions.OrderBy(a => a.Sequence).FirstOrDefault(a => a.StartedDate != null)?.StartedDate ?? now;
                 break;
 
             case ActionGroupState.Completed:
-                CompletedDate = now;
+                CompletedDate ??= Actions.Where(a => a.CompletedDate != null).MaxBy(a => a.CompletedDate)?.CompletedDate ?? now;
                 break;
 
             case ActionGroupState.Failed:
