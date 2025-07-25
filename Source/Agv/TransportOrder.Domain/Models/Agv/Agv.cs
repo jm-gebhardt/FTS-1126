@@ -421,7 +421,8 @@ public class Agv : IAgv
                 newStatus.BatteryTemperature,
                 newStatus.EstimatedFullyChargedTime,
                 newStatus.LastBatteryReplacement,
-                newStatus.ZoneIds
+                newStatus.ZoneIds, 
+                newStatus.StationIds
             );
         }
 

@@ -537,10 +537,17 @@ public class AgvCommandHandlerTest
         fixture.VerifyAgvUpdated(Times.Once());
     }
 
-    [TestMethod]
-    public async Task Consume_UpdateAgvStatus_StationIdsChanged_StatusStoredPublishesAgvStationsChanged()
+    [DataRow(null, new[] { "PS01" })]
+    [DataRow(new string[] { }, new[] { "PS01" })]
+    [DataRow(new[] { "PS01" }, new string[] { })]
+    [DataRow(new[] { "PS01" }, null)]
+    [DataRow(new[] { "PS01", "APL1" }, new[] { "APL1" })]
+    [DataTestMethod]
+    public async Task Consume_UpdateAgvStatus_StationIdsChanged_StatusStoredPublishesAgvStationsChanged(ICollection<string>? previous, ICollection<string>? current)
     {
-        var agv = AgvGenerator.GenerateChargingAgv();
+        var agvCorrelationId = Guid.NewGuid();
+        var status = Helper.AgvStatusGenerator.Generate(agvCorrelationId, stationIds: previous);
+        var agv = AgvGenerator.GenerateRawAgv(agvCorrelationId, "1", status);
         agv.SetOnline();
         var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
@@ -550,12 +557,36 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true);
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, agv.AgvStatus.LastNodeId, agv.AgvStatus.EstimatedFullyChargedTime, agv.AgvStatus.LastBatteryReplacement, [zone.ZoneId], ["station"]);
-        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
-        await fixture.PublishMessageAsync(updateAgvStatus);
-        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
-        await fixture.ShouldHavePublishedAsync<AgvStationsChanged>();
+        var newStatus = Common.Testing.Helpers.AgvStatusGenerator.Generate(agvCorrelationId, stationIds: current);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newStatus);
+        var stationsChanged = await fixture.PublishAndGetFirstMessageAsync<UpdateAgvStatus, AgvStationsChanged>(updateAgvStatus);
+        stationsChanged.Stations.ShouldBeEquivalentTo(current?.ToList() ?? new List<string>());
         fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [DataRow(null, null)]
+    [DataRow(new string[] { }, new string[] { })]
+    [DataRow(new[] { "PS01" }, new[] { "PS01" })]
+    [DataRow(new[] { "PS01", "APL1" }, new[] { "PS01", "APL1" })]
+    [DataTestMethod]
+    public async Task Consume_UpdateAgvStatus_StationIdsUnchanged_DoesNotPublishAgvStationsChanged(ICollection<string>? previous, ICollection<string>? current)
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var status = Helper.AgvStatusGenerator.Generate(agvCorrelationId, stationIds: previous);
+        var agv = AgvGenerator.GenerateRawAgv(agvCorrelationId, "1", status);
+        agv.SetOnline();
+        var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
+        var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithZones([zone])
+            .WithPostion(position)
+            .WithGraphExists(true);
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var newStatus = Common.Testing.Helpers.AgvStatusGenerator.Generate(agvCorrelationId, stationIds: current);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+        await fixture.ShouldNotHavePublishedAsync<AgvStationsChanged>();
     }
 
     [TestMethod]

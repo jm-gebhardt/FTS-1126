@@ -97,6 +97,19 @@ public class AgvTest
     }
 
     [TestMethod]
+    public void UpdateAgvStatus_StationIdsChanged_StatusUpdated()
+    {
+        var stations = new List<string> { "PS01" };
+        var previousStatus = AgvStatusGenerator.Generate(stationIds: []);
+        var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
+        var newStatus = AgvStatusGenerator.Generate(stationIds: stations);
+
+        agv.UpdateAgvStatus(newStatus);
+
+        agv.AgvStatus.ShouldBe(newStatus);
+    }
+
+    [TestMethod]
     public void UpdateAgvStatus_CurrentChanged_StatusUpdated()
     {
         var now = DateTime.UtcNow;
