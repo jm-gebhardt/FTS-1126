@@ -1,12 +1,15 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Domain.Semaphores;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
@@ -20,10 +23,12 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     private readonly Mock<IHostOrderValidationService> _validationService = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<ISystemStatusRepository> _systemStateRepositoryMock = new();
+    private readonly SemaphoreProvider<IDoppelspielSemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IDoppelspielSemaphore>>>().Object);
 
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
+        collection.AddSingleton<ISemaphoreProvider<IDoppelspielSemaphore>>(_ => _semaphoreProvider);
         collection.AddTransient(_ => HostOrderRepositoryMock.Object);
         collection.AddTransient(_ => _validationService.Object);
         collection.AddTransient(_ => _hostCommunicatorMock.Object);

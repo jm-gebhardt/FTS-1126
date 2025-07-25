@@ -3,9 +3,11 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Domain.Semaphores;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using JetBrains.Annotations;
@@ -25,7 +27,9 @@ public class HostOrderCommandHandler(
     KaeserGraphConfiguration configuration,
     IHostOrderValidationService validationService,
     ISystemStatusRepository systemStatusRepository,
-    IStationRepository stationRepository) :
+    IStationRepository stationRepository,
+    ISemaphoreProvider<IDoppelspielSemaphore> doppelspielSemaphore
+    ) :
     IConsumer<CreateHostOrder>,
     IConsumer<CancelHostOrder>,
     IConsumer<CancelInvalidHostOrder>,
@@ -79,20 +83,27 @@ public class HostOrderCommandHandler(
         }
 
         // Check if there are agvs that are to be selected to handle this order directly after dropping
-        string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Source);
-        logger.LogInformation("Host order for order {Hu} created: {OrderCorrelationId}, Doppelspiel drop target corresponding to current pick {Pick} : {Target}", hu, hostOrder.CorrelationId, hostOrder.Source, doppelSpielDropTarget);
-
-        Guid? dropOrderId = await hostOrderRepository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelSpielDropTarget);
-        if (dropOrderId != null && !configuration.SkipDoppelspiel(doppelSpielDropTarget))
+        await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
-            var dropOrder = await hostOrderRepository.GetByIdAsync(dropOrderId.Value);
-            dropOrder.RegisterForDoppelspiel();
-            hostOrder.RegisterForDoppelspiel();
-            await hostOrderRepository.UpdateAsync(dropOrder);
-            await hostOrderRepository.UpdateAsync(hostOrder);
-            await hostOrderRepository.SaveAsync();
+            string doppelSpielDropTarget = configuration.GetDoppelspielDropTargetForPick(hostOrder.Source);
+            logger.LogInformation("Host order for order {Hu} created: {OrderCorrelationId}, Doppelspiel drop target corresponding to current pick {Pick} : {Target}", hu, hostOrder.CorrelationId, hostOrder.Source, doppelSpielDropTarget);
+
+            Guid? dropOrderId = await hostOrderRepository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelSpielDropTarget);
+            if (dropOrderId != null && !configuration.SkipDoppelspiel(doppelSpielDropTarget))
+            {
+                var dropOrder = await hostOrderRepository.GetByIdAsync(dropOrderId.Value);
+                dropOrder.RegisterForDoppelspiel();
+                hostOrder.RegisterForDoppelspiel();
+                await hostOrderRepository.UpdateAsync(dropOrder);
+                await hostOrderRepository.UpdateAsync(hostOrder);
+                await hostOrderRepository.SaveAsync();
+                await CreateHostOrder(context, hostOrder, dropOrder.AssignedAgv);
+            }
+        });
+
+        if (hostOrder.IsRegisteredForDoppelspiel)
+        {
             logger.LogInformation("Doppelspiel expected for order {OrderCorrelationId}", hostOrder.CorrelationId);
-            await CreateHostOrder(context, hostOrder, dropOrder.AssignedAgv);
             return;
         }
 
@@ -128,22 +139,24 @@ public class HostOrderCommandHandler(
     private async Task HandleRelatedDoppelspielOrders(IPublishEndpoint context, HostOrder hostOrder)
     {
         // Handle related Doppelspiel orders
-
-        HostOrder? unmatchedPick = null;
-        if (hostOrder.IsRegisteredForDoppelspiel)
+        await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
-            List<string>? sources = configuration.DoppelspielPickTargets.GetValueOrDefault(hostOrder.Target);
-            if (sources != null)
+            HostOrder? unmatchedPick = null;
+            if (hostOrder.IsRegisteredForDoppelspiel)
             {
-                unmatchedPick = await hostOrderRepository.GetNextUnmatchedDoppelspielPick(sources, [hostOrder.Target], hostOrder.CorrelationId);
+                List<string>? sources = configuration.DoppelspielPickTargets.GetValueOrDefault(hostOrder.Target);
+                if (sources != null)
+                {
+                    unmatchedPick = await hostOrderRepository.GetNextUnmatchedDoppelspielPick(sources, [hostOrder.Target], hostOrder.CorrelationId);
+                }
             }
-        }
 
-        if (unmatchedPick is { IsQueued: false })
-        {
-            await QueueHostOrder(context, unmatchedPick);
-            unmatchedPick.UnRegisterFromDoppelspiel();
-        }
+            if (unmatchedPick is { IsQueued: false })
+            {
+                await QueueHostOrder(context, unmatchedPick);
+                unmatchedPick.UnRegisterFromDoppelspiel();
+            }
+        });
     }
 
     private async Task CreateHostOrder(IPublishEndpoint context, HostOrder hostOrder, Guid? assignedAgv = null)
@@ -323,6 +336,11 @@ public class HostOrderCommandHandler(
             return;
         }
         hostCommunicator.ReportPickCompletion(hostOrder.Hu, pickAction.Node, timestamp);
+        if (hostOrder.IsRegisteredForDoppelspiel)
+        {
+            logger.LogInformation("Doppelspiel pick finished, unregistering order {CorrelationId} to allow for Doppelspiel during drop", hostOrder.CorrelationId);
+            hostOrder.UnRegisterFromDoppelspiel();
+        }
         await hostOrderRepository.UpdateAsync(hostOrder);
     }
 
@@ -457,15 +475,18 @@ public class HostOrderCommandHandler(
         logger.LogInformation("Try queueing order {HostOrder} with pick node {Node}", pickingHostOrder.CorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode);
         if (await QueueHostOrder(context, pickingHostOrder, agvCorrelationId, pickingHostOrder.HasUnknownDropTarget(configuration) ? null : pickNode))
         {
-            pickingHostOrder.RegisterForDoppelspiel();
-            pickingHostOrder.SetDoppelspielpartner(hostOrder.CorrelationId);
-            hostOrder.RegisterForDoppelspiel();
-            hostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
+            await doppelspielSemaphore.ExecuteLockedAsync(async () =>
+            {
+                pickingHostOrder.RegisterForDoppelspiel();
+                pickingHostOrder.SetDoppelspielpartner(hostOrder.CorrelationId);
+                hostOrder.RegisterForDoppelspiel();
+                hostOrder.SetDoppelspielpartner(pickingHostOrder.CorrelationId);
 
-            await hostOrderRepository.UpdateAsync(pickingHostOrder);
-            await hostOrderRepository.UpdateAsync(hostOrder);
-            await hostOrderRepository.SaveAsync();
-            await context.RespondAsync(new DoppelspielPartnerQueued(pickingHostOrder.CorrelationId));
+                await hostOrderRepository.UpdateAsync(pickingHostOrder);
+                await hostOrderRepository.UpdateAsync(hostOrder);
+                await hostOrderRepository.SaveAsync();
+                await context.RespondAsync(new DoppelspielPartnerQueued(pickingHostOrder.CorrelationId));
+            });
             return;
         }
         await context.RespondAsync(new DoppelspielPartnerQueued(null));

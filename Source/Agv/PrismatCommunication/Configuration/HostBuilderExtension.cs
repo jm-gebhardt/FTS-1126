@@ -99,6 +99,8 @@ public static class HostBuilderExtension
                 });
             }
 
+            services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+
             services.AddDbContext<PrismatCommunicationDbContext>(ConfigureDbContextOptions);
             services.AddDbContextFactory<PrismatCommunicationDbContext>(ConfigureDbContextOptions);
             
