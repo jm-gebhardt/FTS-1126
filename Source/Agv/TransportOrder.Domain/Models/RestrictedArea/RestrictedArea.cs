@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
 /// <summary>
 /// The restricted area entity.
 /// </summary>
-public class RestrictedArea
+public class RestrictedArea: IEquatable<RestrictedArea>
 {
     /// <inheritdoc cref="RestrictedArea"/>>
     public RestrictedArea(ICollection<PolygonPoint> area)
@@ -63,5 +63,52 @@ public class RestrictedArea
     public bool IsPositionInside(float x, float y)
     {
         return Area.PointIsInPolygon(x, y);
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public bool Equals(RestrictedArea? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        foreach (var a in Area)
+        {
+            var otherArea = other.Area.SingleOrDefault(ar => ar.Index == a.Index);
+            if (!a.Equals(otherArea))
+            {
+                return false;
+            }
+        }
+        return Id.Equals(other.Id);
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+        return Equals((RestrictedArea)obj);
+    }
+
+    /// <inheritdoc cref="IEquatable{T}"/>>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id);
     }
 }

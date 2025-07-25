@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
+﻿using Gebhardt.Acc.Common.Messages;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.RestrictedArea;
@@ -7,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.RestrictedArea;
 /// Provides a dto for a restricted area.
 /// </summary>
 [PublicAPI]
-public record RestrictedAreaDto
+public record RestrictedAreaDto: DatedMessage
 {
     /// <summary>
     /// The id of the restricted area.

@@ -148,6 +148,7 @@ public class MqttOrderEventConsumerTest
         var fixture = new OrderEventConsumerFixture().WithInternalOrderId(internalOrderId);
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
 
+        await fixture.ShouldHaveConsumedAsync<MqttOrderEvent>();
         var consumedMsg = await fixture.GetFirstConsumedMessageAsync<MqttOrderEvent>();
 
         consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);

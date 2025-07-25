@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
+using Gebhardt.Acc.TransportOrder.Messages.Events.RestrictedArea;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.RestrictedArea;
@@ -18,6 +19,7 @@ public class RestrictedAreaCommandHandlerTest
         await fixture.PublishMessageAsync(new SaveRestrictedArea(restrictedArea));
 
         fixture.VerifyRestrictedAreaAdded();
+        await fixture.ShouldHavePublishedAsync<RestrictedAreaUpdated>();
     }
 
     [TestMethod]
@@ -31,6 +33,7 @@ public class RestrictedAreaCommandHandlerTest
         await fixture.PublishMessageAsync(new UpdateRestrictedArea(restrictedArea));
 
         fixture.VerifyRestrictedAreaUpdated();
+        await fixture.ShouldHavePublishedAsync<RestrictedAreaUpdated>();
     }
 
     [TestMethod]
@@ -44,5 +47,6 @@ public class RestrictedAreaCommandHandlerTest
         await fixture.PublishMessageAsync(new DeleteRestrictedArea(restrictedArea.Id));
 
         fixture.VerifyRestrictedAreaDeleted(restrictedArea.Id);
+        await fixture.ShouldHavePublishedAsync<RestrictedAreaDeleted>();
     }
 }

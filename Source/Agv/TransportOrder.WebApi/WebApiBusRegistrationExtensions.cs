@@ -27,5 +27,6 @@ public static class WebApiBusRegistrationExtensions
 
         busRegistrationConfigurator.AddConsumer<NodeChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<TriggerChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<RestrictedAreaChangedConsumer>();
     }
 }

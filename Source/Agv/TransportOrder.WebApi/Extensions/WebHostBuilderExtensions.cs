@@ -18,6 +18,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
@@ -60,6 +61,7 @@ public static class WebHostBuilderExtensions
             services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();
             services.AddTransient<IAgvPublisher, AgvPublisher>();
             services.AddTransient<IMapPublisher, MapPublisher>();
+            services.AddTransient<IRestrictedAreaPublisher, RestrictedAreaPublisher>();
 
             services.AddTransient<IMessageFilter<AgvBatteryStatusDto>, AgvBatteryStatusChangedFilter>();
             services.AddTransient<IMessageFilter<AgvPositionStatusDto>, AgvPositionStatusChangedFilter>();
@@ -77,6 +79,7 @@ public static class WebHostBuilderExtensions
             services.AddHub<ActionGroupHub>();
             services.AddHub<MapHub>();
             services.AddHub<TriggerHub>();
+            services.AddHub<RestrictedAreaHub>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
@@ -226,6 +229,7 @@ public static class WebHostBuilderExtensions
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
             endpoints.MapHub<MapHub>(MapHub.UrlPath);
             endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath);
+            endpoints.MapHub<RestrictedAreaHub>(RestrictedAreaHub.UrlPath);
         });
 
         app.UseSwagger(c =>
