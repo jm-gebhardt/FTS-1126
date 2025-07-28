@@ -63,7 +63,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRepository()
@@ -76,12 +76,12 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvRepository()
     {
         _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv>());
-         return this;
+        return this;
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvDataRepository()
     {
-        _agvDb.AddAgvData((AgvData?)null);
+        _agvDb.AddAgvData((AgvData?) null);
         return this;
     }
 
@@ -96,7 +96,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         _agvDb.AddPosition(position);
         return this;
     }
-    
+
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvErrorRepository()
     {
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
@@ -120,9 +120,9 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         IEnumerable<AgvData> specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(correlationId: a.CorrelationId));
 
         _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
-        
+
         Dictionary<Guid, GraphNode?> nodes = agvs.ToDictionary(a => a.CorrelationId,
-            a => a.AgvStatus!.LastNodeId != null ? NodeGenerator.GenerateNode(nodeId:a.AgvStatus!.LastNodeId!, x:1.0f, y:2.0f, z:0.0f, theta:0.0f, nodeType:AgvGraph.NodeType.WayPoint) : null);
+            a => a.AgvStatus!.LastNodeId != null ? NodeGenerator.GenerateNode(nodeId: a.AgvStatus!.LastNodeId!, x: 1.0f, y: 2.0f, z: 0.0f, theta: 0.0f, nodeType: AgvGraph.NodeType.WayPoint) : null);
 
         _agvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => nodes);
 

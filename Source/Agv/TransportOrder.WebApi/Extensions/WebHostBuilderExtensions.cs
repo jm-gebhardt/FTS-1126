@@ -55,7 +55,7 @@ public static class WebHostBuilderExtensions
 
         webHostBuilder.ConfigureServices((context, services) =>
         {
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddTransient<ITriggerPublisher, TriggerPublisher>();
             services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();

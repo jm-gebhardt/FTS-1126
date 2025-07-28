@@ -30,8 +30,7 @@ public static class WebHostBuilderExtension
 
         webHostBuilder.ConfigureServices((context, services) =>
         {
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            services.AddMvc();
+            services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
             services.AddControllers()
                 .AddApplicationPart(executingAssembly)
                 .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
@@ -47,7 +46,7 @@ public static class WebHostBuilderExtension
                     o.TokenValidationParameters.ValidateAudience = false;
                     o.TokenValidationParameters.ValidateIssuerSigningKey = false;
                     o.TokenValidationParameters.SignatureValidator =
-                        delegate (string token, TokenValidationParameters _)
+                        delegate(string token, TokenValidationParameters _)
                         {
                             var jwt = new JsonWebToken(token);
                             return jwt;
@@ -78,7 +77,7 @@ public static class WebHostBuilderExtension
                         {
                             Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
                         },
-                        new string[] {}
+                        new string[] { }
                     }
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);

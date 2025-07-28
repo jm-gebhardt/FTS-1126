@@ -5,9 +5,6 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-      <PackageReference Include="System.Runtime.Caching"  />
-    </ItemGroup>
-    <ItemGroup>
       <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
       <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
       <ProjectReference Include="..\TriggerDefinition\Common.TriggerDefinition.csproj" />

@@ -6,7 +6,6 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
-        <PackageReference Include="System.Runtime.Caching" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
             <PrivateAssets>all</PrivateAssets>

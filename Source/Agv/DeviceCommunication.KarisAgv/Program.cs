@@ -158,7 +158,7 @@ try
             services.AddSingleton<IGraphRepository, EfGraphRepository>();
             services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
 
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
         });
 
         var host = hostBuilder.Build();

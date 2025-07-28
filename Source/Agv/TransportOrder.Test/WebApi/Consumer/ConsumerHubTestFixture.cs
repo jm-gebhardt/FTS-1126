@@ -59,7 +59,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         collection.AddTransient(_ => AgvRouteServiceMock.Object);
         collection.AddTransient(_ => _actionGroupRepositoryMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
-        collection.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        collection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
         return this;
     }
 }

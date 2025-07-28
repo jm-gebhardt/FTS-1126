@@ -6,7 +6,6 @@
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
-        <PackageReference Include="System.Runtime.Caching" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

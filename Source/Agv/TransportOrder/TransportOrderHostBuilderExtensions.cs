@@ -61,7 +61,7 @@ public static class TransportOrderHostBuilderExtensions
 
             RegisterMiscellaneousServices(services);
 
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
         });
 
         return hostBuilder;

@@ -34,7 +34,7 @@ try
     parser.ParseArguments<Options>(args)
         .WithParsed(simulationOptions =>
         {
-            if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false, BezierGridGraph:false, ExportedGraph:false })
+            if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false, BezierGridGraph: false, ExportedGraph: false })
             {
                 throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph} / KaeserGraph {simulationOptions.KaeserGraph} / BezierGraph {simulationOptions.BezierGridGraph})");
             }
@@ -120,7 +120,7 @@ try
             services.AddSingleton<IAgvRepository, AgvRepository>();
             services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
 
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
         });
 
         var host = hostBuilder.Build();

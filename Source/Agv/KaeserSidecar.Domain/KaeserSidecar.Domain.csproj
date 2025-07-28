@@ -6,7 +6,6 @@
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
-        <PackageReference Include="System.Runtime.Caching" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />

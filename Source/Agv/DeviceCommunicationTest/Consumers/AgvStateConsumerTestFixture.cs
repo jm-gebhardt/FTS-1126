@@ -19,7 +19,7 @@ public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateCons
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
     }
 
     public AgvStateConsumerTestFixture WithAgvInformation(AgvInformation agvInformation)
