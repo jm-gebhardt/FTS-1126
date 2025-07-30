@@ -969,7 +969,7 @@ public class ActionCommandHandler :
             if (activeAction != null)
             {
                 var actionMessage = _mapper.Map<MessageAgvAction>(activeAction);
-                await context.Publish(new ActionAborted(agv.CorrelationId, actionMessage));
+                await context.Publish(new ActionAborted(agv.CorrelationId, actionMessage, true));
             }
 
             if (agv is { HasPendingModeSwitch: true, Mode.CurrentActionGroupPolicy: CurrentActionGroupPolicy.Pause })

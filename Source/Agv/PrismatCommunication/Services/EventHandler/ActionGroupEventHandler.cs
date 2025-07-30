@@ -98,17 +98,21 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
     }
 
     /// <summary>
-    /// Handles the <see cref="ActionGroupInvalid"/> message.
+    /// Handles the <see cref="ActionAborted"/> message.
     /// </summary>
     public async Task Consume(ConsumeContext<ActionAborted> context)
     {
-        var (_, action) = context.Message;
+        (_, var action, bool isTemporary) = context.Message;
 
+        if (isTemporary)
+        {
+            return;
+        }
         await context.Publish(new AbortHostOrder(action.ParentId));
     }
 
     /// <summary>
-    /// Handles the <see cref="ActionGroupInvalid"/> message.
+    /// Handles the <see cref="ActionGroupReassignedOrReset"/> message.
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupReassignedOrReset> context)
     {

@@ -34,7 +34,7 @@ public class ActionAbortedConsumer : IConsumer<ActionAborted>
     /// </summary>
     public async Task Consume(ConsumeContext<ActionAborted> context)
     {
-        var (assignedAgv, action) = context.Message;
+        var (assignedAgv, action, _) = context.Message;
 
         var agvInformation = await _agvRepository.GetAgv(assignedAgv);
         if (string.IsNullOrEmpty(agvInformation.SerialNumber))

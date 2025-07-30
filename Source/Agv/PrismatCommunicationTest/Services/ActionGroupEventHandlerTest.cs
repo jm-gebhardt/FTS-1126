@@ -37,7 +37,7 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionAborted_ValidData_AbortHostOrder()
+    public async Task Consume_ActionAborted_ValidDataNotTemporary_AbortHostOrder()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
         var actionAborted = new ActionAborted(Guid.NewGuid(), new AgvAction(){ParentId = Guid.NewGuid()});
@@ -47,6 +47,18 @@ public class ActionGroupEventHandlerTest
 
         (await fixture.TestHarness.Published.Any<AbortHostOrder>(f =>
             f.Context.Message == new AbortHostOrder(actionAborted.Action.ParentId))).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionAborted_ValidDataTemporary_HostOrderNotAborted()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+        var actionAborted = new ActionAborted(Guid.NewGuid(), new AgvAction() { ParentId = Guid.NewGuid() }, true);
+
+        await fixture.PublishMessageAsync(actionAborted);
+
+        (await fixture.TestHarness.Published.Any<AbortHostOrder>(f =>
+            f.Context.Message == new AbortHostOrder(actionAborted.Action.ParentId))).ShouldBeFalse();
     }
 
     [TestMethod]
