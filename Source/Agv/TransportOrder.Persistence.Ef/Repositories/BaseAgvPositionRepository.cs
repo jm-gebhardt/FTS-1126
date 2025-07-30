@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 /// </summary>
 public abstract class BaseAgvPositionRepository : IAgvPositionRepository
 {
-    private const int MaxSilenceInSeconds = 1;
+    private const int MaxSilenceInSeconds = 30;
     private readonly IBus _bus;
     private readonly ISignificanceChecker<AgvPosition> _significanceChecker;
 

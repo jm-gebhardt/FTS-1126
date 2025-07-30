@@ -1,5 +1,4 @@
 using AutoMapper;
-using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
@@ -19,7 +18,6 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvLockedChanged>,
     IConsumer<AgvOnlineChanged>,
     IConsumer<AgvDiscovered>,
-    IConsumer<AgvBecameIdle>,
     IConsumer<CargoChanged>,
     IConsumer<HasCargoChanged>,
     IConsumer<AgvModeChanged>,
@@ -105,15 +103,6 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     {
         _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(AgvOnlineChanged), context.Message.CorrelationId);
         await _agvPublisher.SendAgvOnlineChangedAsync(context.Message.CorrelationId, context.Message.IsNowOnline);
-    }
-
-    /// <summary>
-    /// Send SendAgvRouteChanged with empty remaining route.
-    /// </summary>
-    public async Task Consume(ConsumeContext<AgvBecameIdle> context)
-    {
-        await _agvPublisher.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(context.Message.CorrelationId,
-            Array.Empty<string>(), Array.Empty<Guid>()));
     }
 
     /// <summary>

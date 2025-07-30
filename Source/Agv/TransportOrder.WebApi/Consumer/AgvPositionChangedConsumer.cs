@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -21,10 +20,7 @@ public class AgvPositionChangedConsumer :
 {
     private readonly ILogger<AgvPositionChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
-    private readonly INodeStateRepository _nodeStateRepository;
-    private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
-    private readonly IStationRepository _stationRepository;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -33,18 +29,12 @@ public class AgvPositionChangedConsumer :
         ILogger<AgvPositionChangedConsumer> logger,
         IAgvPublisher agvPublisher,
         INodeStateRepository nodeStateRepository,
-        IActionGroupRepository actionGroupRepository,
-        IActionGroupRetrievalService actionGroupRetrievalService,
-        IStationRepository stationRepository,
-    IAgvRouteRetrievalService agvRouteRetrievalService,
+        IAgvRouteRetrievalService agvRouteRetrievalService,
         IMapper mapper)
     {
         _logger = logger;
         _agvPublisher = agvPublisher;
-        _nodeStateRepository = nodeStateRepository;
-        _actionGroupRetrievalService = actionGroupRetrievalService;
         _agvRouteRetrievalService = agvRouteRetrievalService;
-        _stationRepository = stationRepository;
         _mapper = mapper;
     }
 
@@ -76,14 +66,5 @@ public class AgvPositionChangedConsumer :
 
             await _agvPublisher.SendAgvRouteChangedAsync(agvRoute);
         }
-    }
-
-    private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
-    {
-        var station = await _stationRepository.GetStation(nodeId);
-
-        station.NodeLock ??= new NodeLock(nodeId, NodeLockState.Free, false, null, DateTime.UtcNow);
-       
-        await context.Publish(station);
     }
 }
