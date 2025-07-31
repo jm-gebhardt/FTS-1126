@@ -6,6 +6,7 @@ using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 
 namespace Gebhardt.Acc.KaeserSidecar.Domain.Services;
 
@@ -82,6 +83,7 @@ public class WaitingHandler(
             logger.LogInformation("Adding agv {Agv} to station {Station} for short loop waiting", agvCorrelationId, target);
             await stationRepository.OccupyStation(target, agvCorrelationId);
             await bus.Publish(new SetTargetForAction(action.Value, actionGroup.CorrelationId, agvCorrelationId, target), stoppingToken);
+            await bus.Publish(new StationReserved(target, agvCorrelationId), stoppingToken);
             var waitingPointAction = await waitingPointActionRepository.GetByIdAsync(action.Value);
             waitingPointAction.SetTarget(target);
             await waitingPointActionRepository.UpdateAsync(waitingPointAction);

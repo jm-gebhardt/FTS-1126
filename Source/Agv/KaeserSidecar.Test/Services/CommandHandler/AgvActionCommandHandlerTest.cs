@@ -154,12 +154,12 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow));
         await fixture.ShouldNotHavePublishedAsync<AgvFinishedDrop>();
-        await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
     }
 
     [TestMethod]
-    public async Task Consume_PickActionCompleted_PickOnShortLoop_PublishesAgvFinishedShortLoopPick()
+    public async Task Consume_PickActionCompleted_PickOnShortLoop_PublishesAgvFinishedPick()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
@@ -173,6 +173,26 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
+        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
+        fixture.VerifyReportingToConveyors(times: Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_PickActionCompleted_ManualPickOnShortLoop_PublishesOccupyStation()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        actionGroup.Actions.First().Nodes = [station];
+        actionGroup.IsManual = true;
+
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow));
+        
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
     }
@@ -196,7 +216,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, moveAction.CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHavePublishedAsync<AgvFinishedPick>();
-        await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
     }
 
@@ -215,8 +235,28 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHavePublishedAsync<AgvFinishedDrop>();
-        await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(order.Hu, orderDetails.Destination, station, Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_DropActionCompleted_DropOnShortLoop_ManualAction_PublishesOccupyStation()
+    {
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Destination];
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), destination: station);
+        actionGroup.Actions.Last().Nodes = [station];
+        actionGroup.IsManual = true;
+
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTime.UtcNow));
+        
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
+        fixture.VerifyReportingToConveyors(order.Hu, orderDetails.Destination, station, Times.Never());
     }
 
     [TestMethod]

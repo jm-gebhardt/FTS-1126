@@ -128,7 +128,12 @@ public class AgvActionCommandHandler(
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
 
         string targetNodeId = action.Target.NodeId!;
-        await context.Publish(new OccupyStation(targetNodeId, agvCorrelationId));
+        if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _) || actionGroup.IsManual)
+        {
+            // Only publish for non-WE stations for automatic action groups, as We stations are occupied already during target selection
+            // For manual actions publish also for WE stations
+            await context.Publish(new OccupyStation(targetNodeId, agvCorrelationId));
+        }
 
         if (actionGroup.IsManual)
         {

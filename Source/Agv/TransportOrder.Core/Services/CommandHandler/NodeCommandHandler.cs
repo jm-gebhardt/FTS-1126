@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -30,7 +32,10 @@ public class NodeCommandHandler(
     IConsumer<UpdateNodeOccupancy>,
     IConsumer<ClearNodesFromAgv>,
     IConsumer<SetNodeApproachingProperties>,
-    IConsumer<InitializeNodeApproachingProperties>
+    IConsumer<InitializeNodeApproachingProperties>,
+    IConsumer<FreeStation>, 
+    IConsumer<OccupyStation>,
+    IConsumer<StationReserved>
 {
     /// <summary>
     /// Handles the <see cref="FreeNode"/> command.
@@ -103,6 +108,12 @@ public class NodeCommandHandler(
             }
             else
             {
+                var node = await graphRepository.GetNodeAsync(oldLastNodeId!);
+                if (node.IsDropStation() || node.IsPickStation())
+                {
+                    logger.LogInformation("Not un-occupying station {Station} based on last node id, only explicit freeing via command", oldLastNodeId);
+                    return;
+                }
                 logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);
                 await nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
                 await PublishNodeStateChange(context, oldLastNodeId!);
@@ -218,5 +229,49 @@ public class NodeCommandHandler(
         var mapId = await mapRepository.GetMapIdForNode(nodeId);
 
         await context.Publish(new NodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="FreeStation"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<FreeStation> context)
+    {
+        string stationName = context.Message.Station;
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(stationName);
+        if (nodeState == null)
+        {
+            logger.LogWarning("Could not retrieve node state for station {StationName}", stationName);
+            return;
+        }
+
+        if (!await nodeStateRepository.FreeNodeAsync(stationName))
+        {
+            logger.LogWarning("Could not free node {NodeId}, node is locked", stationName);
+        }
+
+        await PublishNodeStateChange(context, stationName);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="OccupyStation"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<OccupyStation> context)
+    {
+        string stationName = context.Message.Station;
+        var agv = context.Message.AgvCorrelationId;
+
+        await nodeStateRepository.ForceReserveNodeAsync(stationName, agv);
+        await PublishNodeStateChange(context, stationName);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="StationReserved"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<StationReserved> context)
+    {
+        string stationName = context.Message.StationName;
+        var agv = context.Message.AgvCorrelationId;
+        await nodeStateRepository.ForceReserveNodeAsync(stationName, agv);
+        await PublishNodeStateChange(context, stationName);
     }
 }

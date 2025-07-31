@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -20,6 +21,7 @@ public class WaitingHandlerTest
         await fixture.HandleAsync();
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
+        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -49,6 +51,7 @@ public class WaitingHandlerTest
         waitingPointAction.ShouldNotBeNull();
         waitingPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
         waitingPointAction.Target.ShouldBe(WaitingHandlerTestFixture.Target);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -71,6 +74,7 @@ public class WaitingHandlerTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.ActionId.ShouldBe(moveAction.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -85,6 +89,7 @@ public class WaitingHandlerTest
         await fixture.HandleAsync();
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
+        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]

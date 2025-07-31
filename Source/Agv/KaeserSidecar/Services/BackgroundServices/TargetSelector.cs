@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
@@ -100,6 +101,7 @@ public class TargetSelector(
                     await stationRepository.OccupyStation(target, agvCorrelationId);
                     _lastEvaluatedActions.Add(action.Value);
                     await bus.Publish(new SetTargetForAction(action.Value, actionGroup.CorrelationId, agvCorrelationId, target), stoppingToken);
+                    await bus.Publish(new StationReserved(target, agvCorrelationId), stoppingToken);
                     var decisionPointAction = await decisionPointActionRepository.GetByIdAsync(action.Value);
                     decisionPointAction.SetTarget(target);
                     await decisionPointActionRepository.UpdateAsync(decisionPointAction);

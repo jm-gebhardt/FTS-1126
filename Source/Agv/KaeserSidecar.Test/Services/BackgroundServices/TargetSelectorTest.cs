@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,6 +20,7 @@ public class TargetSelectorTest
         await fixture.SelectTargetAsync();
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
+        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -37,6 +39,7 @@ public class TargetSelectorTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -55,6 +58,7 @@ public class TargetSelectorTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[1].Name);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -117,6 +121,7 @@ public class TargetSelectorTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -146,6 +151,7 @@ public class TargetSelectorTest
         Console.WriteLine($"CorrelationId: {setTargetForAction.CorrelationId}, MoveAction: {moveAction.CorrelationId}, MoveActionOfPick: {moveActionOfPick.CorrelationId}");
         setTargetForAction.ActionId.ShouldBe(moveAction.CorrelationId);
         setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -178,6 +184,7 @@ public class TargetSelectorTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First(a => a.Context.Message.ActionId == moveAction.CorrelationId).Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -240,12 +247,14 @@ public class TargetSelectorTest
         await fixture.SelectTargetAsync();
         await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, originalAgvOnStation);
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
+        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
 
         await fixture.FreeStation(fixture.Stations[0].Name, originalAgvOnStation);
         await fixture.SelectTargetAsync();
 
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(1);
         await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, dropAgv);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -269,6 +278,7 @@ public class TargetSelectorTest
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.ActionId.ShouldBe(moveAction.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
@@ -283,5 +293,6 @@ public class TargetSelectorTest
         await fixture.SelectTargetAsync();
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
+        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
     }
 }

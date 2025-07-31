@@ -1,8 +1,10 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
@@ -33,10 +35,13 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
+using RemoveAgvFromZone = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZone;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
+using RequestAgvZones = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvZones;
 using ResendAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.ResendAction;
 using ResetAgvErrors = Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
+using StartInstantAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.StartInstantAction;
 using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Configurations;
@@ -180,6 +185,13 @@ public static class CoreBusRegistrationExtensions
                     r.Handle<NodeNotFoundException>();
                 });
             });
+            var nodePartitioner = c.CreatePartitioner(PartitionCount);
+            c.Message<FreeStation>(x =>
+                x.UsePartitioner(nodePartitioner, p => p.Message.Station));
+            c.Message<OccupyStation>(x =>
+                x.UsePartitioner(nodePartitioner, p => p.Message.Station));
+            c.Message<StationReserved>(x =>
+                x.UsePartitioner(nodePartitioner, p => p.Message.StationName));
         });
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 
