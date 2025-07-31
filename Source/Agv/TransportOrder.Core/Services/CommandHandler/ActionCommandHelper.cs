@@ -10,6 +10,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Routing.Models;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Data.SqlClient;
@@ -72,18 +73,19 @@ public class ActionCommandHelper
         // here the state has changed in all cases
         await PublishStateChange(assignedAgv);
         bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
-        if (!lastActionWasMoveToCoordinate && !action.IsMoveToCoordinate)
+        Route? route = null;
+        if (!action.IsMoveToCoordinate)
         {
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
-            var route = await _routeService.GetRouteAsync(assignedAgv, action.Target.NodeId!, null, agvData, cancellationToken);
+            route = await _routeService.GetRouteAsync(assignedAgv, action.Target.NodeId!, null, agvData, cancellationToken);
             action.Nodes = action.ActionType == ActionType.Charge ? [action.Target.NodeId!] : route.Nodes;
             action.Edges = route.Edges;
         }
 
         if (lastActionWasMoveToCoordinate)
         {
-            action.Nodes = [action.Target.NodeId!];
-            action.Edges = [];
+            action.Nodes = route == null? [action.Target.NodeId!]: route.Nodes;
+            action.Edges = route == null? [] : route.Edges;
         }
 
         if (action.IsMoveToCoordinate)

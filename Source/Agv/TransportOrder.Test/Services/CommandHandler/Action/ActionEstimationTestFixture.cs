@@ -31,9 +31,9 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
         return this;
     }
 
-    public ActionGroupEstimationTestFixture WithLastActionIsMoveToCoordinate(bool isMoveToCoordinate)
+    public new ActionGroupEstimationTestFixture WithLastActionIsMoveToCoordinate(bool isMoveToCoordinate)
     {
-        ActionGroupRepository.Setup(x => x.IsLastCompletedActionMoveToCoordinate(It.IsAny<Guid>())).ReturnsAsync(isMoveToCoordinate);
+        base.WithLastActionIsMoveToCoordinate(isMoveToCoordinate);
         return this;
     }
 

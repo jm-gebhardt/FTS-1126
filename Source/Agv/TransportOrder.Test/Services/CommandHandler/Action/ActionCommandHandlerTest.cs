@@ -62,17 +62,16 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var pickAction = actionGroup.Actions.First();
-
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
             .WithNode(new GraphNode(pickAction.Target.NodeId!))
             .WithLastActionDockFront(false);
+        
         var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
+        await fixture.PublishMessageAsync(startAction);
 
-        await fixture.TestHarness.Bus.Publish(startAction);
-        await fixture.ShouldHaveConsumedAsync<StartActionOfActionGroup>();
         await fixture.ShouldHavePublishedAsync<StartActionCommand>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<ActionGroupStarted>();
@@ -1390,26 +1389,52 @@ public class ActionCommandHandlerTest
             .AddAgv(agv)
             .AddActionGroup(actionGroup, hasUnfinishedAction: true);
 
-        await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new TryStartNewActionGroup(agv.CorrelationId));
 
-        await fixture.ShouldHaveConsumedAsync<TryStartNewActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<NodesSelectedForAction>();
     }
 
-    [TestMethod]
-    public async Task Consume_TryStartNewActionGroup_ValidData_PublishesNodesSelectedForAction()
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public async Task Consume_TryStartNewActionGroup_ValidData_PublishesNodesSelectedForAction(bool lastActionWasMoveToCoordinate)
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
+        string[] nodes = ["Node1", "Node2"];
+
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup, hasUnfinishedAction: false)
-            .AddRoute(["A node", actionGroup.Actions.First().Target.NodeId!], edges: [Guid.NewGuid()]);
+            .AddRoute(nodes, edges: [Guid.NewGuid()])
+            .WithLastActionIsMoveToCoordinate(lastActionWasMoveToCoordinate);
 
-        await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new TryStartNewActionGroup(agv.CorrelationId));
 
-        await fixture.ShouldHaveConsumedAsync<TryStartNewActionGroup>();
         await fixture.ShouldHavePublishedAsync<NodesSelectedForAction>();
+        var nodesSelectedForAction = await fixture.GetFirstPublishedMessageAsync<NodesSelectedForAction>();
+        nodesSelectedForAction.Action.Nodes.ShouldBeEquivalentTo(nodes);
+        actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
+    }
+
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public async Task Consume_TryStartNewActionGroup_MoveToCoordinates_PublishesNodesSelectedForAction(bool lastActionWasMoveToCoordinate)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
+        var actionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup(targetPosition: new AgvPosition(true, 1, 1, 1, 1), assignedAgv: agv.CorrelationId);
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: false)
+            .WithLastActionIsMoveToCoordinate(lastActionWasMoveToCoordinate);
+
+        await fixture.PublishMessageAsync(new TryStartNewActionGroup(agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<NodesSelectedForAction>();
+        var nodesSelectedForAction = await fixture.GetFirstPublishedMessageAsync<NodesSelectedForAction>();
+        nodesSelectedForAction.Action.Nodes.ShouldBeEmpty();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
     }
 
@@ -1725,22 +1750,30 @@ public class ActionCommandHandlerTest
             pickActionState: ActionState.Completed,
             moveActionState: ActionState.Started);
         actionGroup.Actions[0].InfoToAgv = new Dictionary<InfoToAgvKey, string>();
+        var nodes = new List<string> { "Node1", "Node2" };
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)
             .AddAgv(agv)
-            .WithNode(new GraphNode("target"));
+            .WithNode(new GraphNode("target"))
+            .AddRoute(nodes: nodes.ToArray(), edges: [Guid.NewGuid()]);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
+        var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
 
         await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
 
         await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
-
         incompleteAction.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
         actionGroup.Actions[1].Target.NodeId.ShouldBe("target");
         actionGroup.Actions[1].ActionType.ShouldBe(ActionType.Drop);
+
+        var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
+        updateActionCommand.Action.CorrelationId.ShouldBe(moveAction.CorrelationId);
+        updateActionCommand.Action.Nodes.ShouldBeEquivalentTo(nodes);
+        moveAction.Nodes.ToList().ShouldBeEquivalentTo(nodes);
+        moveAction.ActionType.ShouldBe(incompleteAction.ActionType);
     }
 
     [DataRow(ActionState.Started)]

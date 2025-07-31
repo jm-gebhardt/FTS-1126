@@ -244,6 +244,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
+    public ActionGroupTestFixtureBase<T> WithLastActionIsMoveToCoordinate(bool isMoveToCoordinate)
+    {
+        ActionGroupRepository.Setup(x => x.IsLastCompletedActionMoveToCoordinate(It.IsAny<Guid>())).ReturnsAsync(isMoveToCoordinate);
+        return this;
+    }
+
     public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes, Guid[] edges)
     {
         _agvDb.AddAgvData((AgvData?)null);

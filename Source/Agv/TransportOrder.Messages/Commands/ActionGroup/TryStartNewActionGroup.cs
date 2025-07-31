@@ -1,7 +1,13 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+﻿using MassTransit;
+
+namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 
 /// <summary>
 /// Provides a command to start the next <see cref="ActionGroup"/> for an agv.
 /// </summary>
 /// <param name="AgvCorrelationId">The correlationId of the agv.</param>
-public record TryStartNewActionGroup(Guid AgvCorrelationId);
+public record TryStartNewActionGroup(Guid AgvCorrelationId) : CorrelatedBy<Guid>
+{
+    /// <inheritdoc cref="CorrelatedBy{TKey}"/>>
+    public Guid CorrelationId => AgvCorrelationId;
+}
