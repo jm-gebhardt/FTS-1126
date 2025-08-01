@@ -18,6 +18,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             NotInCorrectStateException => HttpStatusCode.BadRequest,
             ActionGroupStateInvalidException => HttpStatusCode.BadRequest,
             ActionNotAllowedInModeException => HttpStatusCode.BadRequest,
+            AgvNotAssignedToActionGroupException => HttpStatusCode.BadRequest,
             InvalidNodeTypeException => HttpStatusCode.BadRequest,
             InvalidAgvSettingsPropertyException => HttpStatusCode.BadRequest,
             ActionGroupInvalidException => HttpStatusCode.BadRequest,

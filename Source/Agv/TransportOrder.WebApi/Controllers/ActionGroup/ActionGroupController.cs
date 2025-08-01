@@ -135,13 +135,15 @@ public class ActionGroupController : Controller
     /// <response code="400">The given pick or drop station node is not of type pick, drop, or pick drop, respectively.
     /// Or the action group is invalid (e.g. there is no agv that can reach both the pick and drop station.).
     /// Or the given pick or drop station is not found. 
-    /// Or the agv is not in maintenance or normal mode.</response>
+    /// Or the agv is not in maintenance or normal mode.
+    /// Or no source or target is given.
+    /// Or only a source or only a target is given, but no assigned agv.</response>
     /// <response code="404">AGV with given correlationId not found .</response>
     [HttpPost]
     [Route("/actionGroup")]
     public async Task<ActionResult<ActionGroupDto>> CreatePickDropActionGroup(
-        string pickStation,
-        string dropStation, 
+        string? pickStation,
+        string? dropStation, 
         bool dockFrontPick,
         bool dockFrontDrop,
         string? handlingUnit,

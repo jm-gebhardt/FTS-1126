@@ -33,20 +33,23 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_AssignedAgvCanNotStartManualPickDropAction_ThrowsActionNotAllowedInModeException()
     {
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: "a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target", nodeType: AgvGraph.NodeType.Drop);
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.UserMode));
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
+            .WithNodes([sourceNode, targetNode])
             .WithAgvs([agv])
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup("a known source", "a known target", false, false, null, agv.CorrelationId, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
     }
 
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_SourceNodeNotFound_ThrowsNodeNotFoundException()
     {
-        var targetNode = NodeGenerator.GenerateNode(nodeId:"a known target");
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target");
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([targetNode])
             .Build();
@@ -59,8 +62,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_SourceNodeNotPickStation_ThrowsInvalidNodeTypeException()
     {
-        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Charge);
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: "a known source", nodeType: AgvGraph.NodeType.Charge);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .Build();
@@ -73,8 +76,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_TargetNodeNotFound_ThrowsNodeNotFoundException()
     {
-        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: "a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .Build();
@@ -87,8 +90,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_TargetNodeNotDropStation_ThrowsInvalidNodeTypeException()
     {
-        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Charge);
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: "a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target", nodeType: AgvGraph.NodeType.Charge);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .Build();
@@ -101,8 +104,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_InvalidActionGroup_ThrowsActionGroupInvalidException()
     {
-        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: "a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .WithValidationResult(new ValidationResult(new List<ValidationFailure> { new("propertyName", "reason") }))
@@ -117,8 +120,8 @@ public class CreateActionGroupRequestHandlerTest
     public async Task Consume_CreatePickDropActionGroup_ValidData_PublishesActionGroupCreatedWithAssignedAgv()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: "a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithAgvs([agv])
             .WithNodes([sourceNode, targetNode])
@@ -146,8 +149,8 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task Consume_CreatePickDropActionGroup_ValidData_PublishesActionGroupCreatedWithoutAssignedAgv()
     {
-        var sourceNode = NodeGenerator.GenerateNode(nodeId:"a known source", nodeType: AgvGraph.NodeType.Pick);
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"a known target", nodeType: AgvGraph.NodeType.Drop);
+        var sourceNode = NodeGenerator.GenerateNode(nodeId: "a known source", nodeType: AgvGraph.NodeType.Pick);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "a known target", nodeType: AgvGraph.NodeType.Drop);
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([sourceNode, targetNode])
             .WithValidationResult(new ValidationResult())
@@ -196,6 +199,125 @@ public class CreateActionGroupRequestHandlerTest
         var dropAction = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).Last();
         dropAction.ActionType.ShouldBe(ActionType.Drop);
         dropAction.TargetNodeId.ShouldBe(targetNode.Id);
+        (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.ActionGroups.Events.ActionGroupCreated>()).ShouldBeTrue();
+        (await fixture.MediatorTestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
+
+        fixture.ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Once);
+    }
+
+    [DataRow(AgvGraph.NodeType.Pick, "source", null)]
+    [DataRow(AgvGraph.NodeType.Drop, null, "target")]
+    [DataTestMethod]
+    public async Task CreatePickDropActionGroup_OnlyPickOrDrop_NoAssignedAgv_ThrowsAgvNotAssignedToActionGroupException(AgvGraph.NodeType nodeType, string? source, string? target)
+    {
+        var node = new GraphNode("a known node") { Type = nodeType };
+        var fixture = new CreateActionGroupRequestHandlerTestFixture()
+            .WithNodes([node])
+            .WithValidationResult(new ValidationResult())
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotAssignedToActionGroupException>(async () =>
+            await fixture.GetResponseAsync<ActionGroupCreated>(
+                new CreatePickDropActionGroup(source !=null ? node.Id : source,
+                    target !=null ? node.Id : target,
+                    false,
+                    false,
+                    "Hu",
+                    null,
+                    null,
+                    null,
+                    false,
+                    ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [TestMethod]
+    public async Task CreatePickDropActionGroup_NoSourceOrTargetGiven_ThrowsActionGroupInvalidException()
+    {
+        var fixture = new CreateActionGroupRequestHandlerTestFixture()
+            .WithNodes([])
+            .WithValidationResult(new ValidationResult())
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionGroupInvalidException>(async () =>
+            await fixture.GetResponseAsync<ActionGroupCreated>(
+                new CreatePickDropActionGroup(null,
+                    null,
+                    false,
+                    false,
+                    "Hu",
+                    null,
+                    null,
+                    null,
+                    false,
+                    ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [DataRow(AgvGraph.NodeType.Pick, "source", null)]
+    [DataRow(AgvGraph.NodeType.Drop, null, "target")]
+    [DataTestMethod]
+    public async Task CreatePickDropActionGroup_OnlyPickOrDrop_AssignedAgvNotInOrPendingMaintenanceMode_ThrowsActionNotAllowedInModeException(AgvGraph.NodeType nodeType, string? source, string? target)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var node = new GraphNode("a known node") { Type = nodeType };
+        var fixture = new CreateActionGroupRequestHandlerTestFixture()
+            .WithAgvs([agv])
+            .WithNodes([node])
+            .WithValidationResult(new ValidationResult())
+            .Build();
+
+        agv.IsInMaintenance.ShouldBeFalse();
+
+        await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () =>
+            await fixture.GetResponseAsync<ActionGroupCreated>(
+                new CreatePickDropActionGroup(source !=null ? node.Id : source,
+                    target !=null ? node.Id : target,
+                    false,
+                    false,
+                    "Hu",
+                    agv.CorrelationId,
+                    null,
+                    null,
+                    false,
+                    ActionGroupCreator.TransportOrderWebApi)));
+    }
+
+    [DataRow(AgvGraph.NodeType.Pick, "source", null)]
+    [DataRow(AgvGraph.NodeType.Drop, null, "target")]
+    [DataTestMethod]
+    public async Task CreatePickDropActionGroup_OnlyPickOrDrop_ValidData_PublishesActionGroupCreated(AgvGraph.NodeType nodeType, string? source, string? target)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.PrepareMaintenanceMode(null, null);
+        agv.SwitchMode();
+        var node = new GraphNode("a known node") { Type = nodeType };
+        var fixture = new CreateActionGroupRequestHandlerTestFixture()
+            .WithAgvs([agv])
+            .WithNodes([node])
+            .WithValidationResult(new ValidationResult())
+            .Build();
+
+        agv.IsInMaintenance.ShouldBeTrue();
+
+        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(
+                new CreatePickDropActionGroup(source !=null ? node.Id : source,
+                    target !=null ? node.Id : target,
+                    false,
+                    false,
+                    "Hu",
+                    agv.CorrelationId,
+                    null,
+                    null,
+                    false,
+                    ActionGroupCreator.TransportOrderWebApi));
+
+        response.Message.ActionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
+        response.Message.ActionGroup.HasPriority.ShouldBeFalse();
+        response.Message.ActionGroup.IsManual.ShouldBeTrue();
+        response.Message.ActionGroup.IsQueued.ShouldBeTrue();
+        response.Message.ActionGroup.Actions.Count.ShouldBe(1);
+        var action = response.Message.ActionGroup.Actions.OrderBy(a => a.Sequence).First();
+        action.ActionType.ShouldBe(nodeType == AgvGraph.NodeType.Pick ?ActionType.Pick : ActionType.Drop);
+        action.TargetNodeId.ShouldBe(node.Id);
         (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.ActionGroups.Events.ActionGroupCreated>()).ShouldBeTrue();
         (await fixture.MediatorTestHarness.Published.Any<ActionGroupCreated>()).ShouldBeTrue();
 

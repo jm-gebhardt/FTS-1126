@@ -151,7 +151,7 @@ public class ActionGroupTests
 
         actionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
+        ((DateTime)actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -379,11 +379,11 @@ public class ActionGroupTests
         // Start move action
         actionGroup.StartAction(moveAction.CorrelationId, [], []);
         await Task.Delay(waitingTime);
-        
+
         // Pause
         actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
         await Task.Delay(waitingTime);
-        
+
         // Resume
         actionGroup.ResumeActionGroup(false);
         actionGroup.StartAction(moveAction.CorrelationId, [], []);
@@ -1279,5 +1279,97 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(assignedAgv: agv);
 
         actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(!hasCargo);
+    }
+
+    [DataRow(ActionType.Pick, true, false)]
+    [DataRow(ActionType.Drop, true, true)]
+    [DataRow(ActionType.Pick, false, true)]
+    [DataRow(ActionType.Drop, false, false)]
+    [DataTestMethod]
+    public void CheckLoadStateMatches_OnlyPickOrDrop_CreatedState_ReturnsExpectedValue(ActionType actionType, bool hasCargo, bool expected)
+    {
+        var agv = Guid.NewGuid();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
+        {
+            new(Guid.NewGuid(), actionType, "node", orderId)
+            {
+                Sequence = 0
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.TransportOrderWebApi,
+            true,
+            DateTime.UtcNow,
+            agv);
+
+        actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
+    }
+
+    [DataRow(ActionType.Pick, true, false)]
+    [DataRow(ActionType.Drop, true, true)]
+    [DataRow(ActionType.Pick, false, true)]
+    [DataRow(ActionType.Drop, false, false)]
+    [DataTestMethod]
+    public void CheckLoadStateMatches_OnlyPickOrDrop_StartedState_ReturnsExpectedValue(ActionType actionType, bool hasCargo, bool expected)
+    {
+        var agv = Guid.NewGuid();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
+        {
+            new(Guid.NewGuid(), actionType, "node", orderId)
+            {
+                Sequence = 0
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.TransportOrderWebApi,
+            true,
+            DateTime.UtcNow,
+            agv);
+
+        actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], []);
+
+        actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
+    }
+
+    [DataRow(ActionType.Pick, true, true)]
+    [DataRow(ActionType.Drop, true, false)]
+    [DataRow(ActionType.Pick, false, false)]
+    [DataRow(ActionType.Drop, false, true)]
+    [DataTestMethod]
+    public void CheckLoadStateMatches_OnlyPickOrDrop_CompletedState_ReturnsExpectedValue(ActionType actionType, bool hasCargo, bool expected)
+    {
+        var agv = Guid.NewGuid();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
+        {
+            new(Guid.NewGuid(), actionType, "node", orderId)
+            {
+                Sequence = 0
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.TransportOrderWebApi,
+            true,
+            DateTime.UtcNow,
+            agv);
+
+        actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], []);
+        actionGroup.CompleteAction(actionGroup.Actions.Single().CorrelationId);
+
+        actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
     }
 }

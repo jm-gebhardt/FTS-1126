@@ -86,6 +86,12 @@ public class Agv : IAgv
     public bool CanStartManualOperationalAction => new List<ModeType> { ModeType.Maintenance, ModeType.Normal, ModeType.UserMode }.Contains(Mode.Type);
 
     /// <summary>
+    /// True, if the agv is in or pending maintenance mode.
+    /// </summary>
+
+    public bool IsInMaintenance => Mode.Type == ModeType.Maintenance || Mode.PendingType == ModeType.Maintenance;
+
+    /// <summary>
     /// The agv should start manual action next.
     /// </summary>
     public bool ShouldStartManualAction =>

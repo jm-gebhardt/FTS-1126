@@ -103,8 +103,8 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
         When(p => p.Actions.Any(a => a.ActionType is ActionType.Pick or ActionType.Drop), () =>
         {
-            RuleFor(p => p.Actions)
-                .Must(CheckPickDropSequence)
+            RuleFor(p => p)
+                .Must(a => CheckPickDropSequence(a.Actions, a.Creator))
                 .WithReason(Reasons.PickDropSequenceMustBeValid);
         });
     }
@@ -133,6 +133,10 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
     private static bool ActionSequenceIdsMustNotHaveAGap(ActionGroup actionGroup)
     {
+        if (actionGroup is { Creator: ActionGroupCreator.TransportOrderWebApi, Actions.Count: 1 })
+        {
+            return true;
+        }
         List<int> sequenceIds = actionGroup.Actions.Select(a => a.Sequence).OrderBy(s => s).ToList();
         bool isSequenceOrdered = sequenceIds.SequenceEqual(Enumerable.Range(0, sequenceIds.Count));
         return isSequenceOrdered;
@@ -145,6 +149,10 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     /// <returns></returns>
     private static bool ActionSequenceOrderedAscending(ActionGroup actionGroup)
     {
+        if (actionGroup is { Creator: ActionGroupCreator.TransportOrderWebApi, Actions.Count: 1 })
+        {
+            return true;
+        }
         IOrderedEnumerable<AgvAction> orderedActions = actionGroup.Actions.OrderBy(a => a.Sequence);
         return orderedActions.SequenceEqual(actionGroup.Actions);
     }
@@ -152,8 +160,8 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     /// <summary>
     /// Checks if Agv or at least one Agv that knows the complete route of all actions within the given ActionGroup.
     /// </summary>
-    /// <param name="actionGroup"></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="actionGroup">The action group.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
     private async Task<bool> CanHandleRouteAsync(ActionGroup actionGroup, CancellationToken cancellationToken)
     {
@@ -184,8 +192,12 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         return _hasRoute;
     }
 
-    private static bool CheckPickDropSequence(IEnumerable<AgvAction> actions)
+    private static bool CheckPickDropSequence(IReadOnlyCollection<AgvAction> actions, ActionGroupCreator creator)
     {
+        if (actions.Count == 1 && creator == ActionGroupCreator.TransportOrderWebApi)
+        {
+            return true;
+        }
         int stack = 0;
         foreach (var action in actions)
         {

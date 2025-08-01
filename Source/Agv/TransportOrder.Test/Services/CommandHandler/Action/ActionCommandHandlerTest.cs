@@ -1807,6 +1807,59 @@ public class ActionCommandHandlerTest
         updateActionCommand.Action.CorrelationId.ShouldBe(pickAction.CorrelationId);
     }
 
+    [DataRow(ActionType.Pick, ActionState.Started)]
+    [DataRow(ActionType.Drop, ActionState.Started)]
+    [DataRow(ActionType.Pick, ActionState.Created)]
+    [DataRow(ActionType.Drop, ActionState.Created)]
+    [DataTestMethod]
+    public async Task Consume_SetTargetForAction_TargetResetForStartedAction_OnlyPickOrDrop_PublishesUpdateActionGroup(ActionType actionType, ActionState state)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<AgvAction>
+        {
+            new(Guid.NewGuid(), actionType, "node", orderId)
+            {
+                Sequence = 0,
+                ActionType = actionType,
+                InfoToAgv = new Dictionary<InfoToAgvKey, string>(),
+                Target = new ActionTarget("old target")
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.TransportOrderWebApi,
+            true,
+            DateTime.UtcNow,
+            agv.CorrelationId);
+        if (state == ActionState.Started)
+        {
+            actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], []);
+        }
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup)
+            .AddAgv(agv)
+            .WithNode(new GraphNode("target"))
+            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()]);
+
+        var action = actionGroup.Actions.First();
+
+        await fixture.PublishMessageAsync(new SetTargetForAction(action.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+
+        await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+
+        action.IsIncomplete.ShouldBeFalse();
+        actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
+        action.Target.NodeId.ShouldBe("target");
+
+        var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
+        updateActionCommand.Action.CorrelationId.ShouldBe(action.CorrelationId);
+    }
+
     [TestMethod]
     public async Task Consume_SetTargetForAction_AssignedAgvAllStationsLocked_PublishesAgvBecameIdle_NoUpdate()
     {

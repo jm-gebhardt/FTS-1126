@@ -40,6 +40,7 @@ public static class Reasons
 
     public const string ActionGroupCanceledByWebApi = "ActionGroup was canceled manually";
     public const string ActionGroupCanceledByExternal = "ActionGroup was canceled by an external system";
+    public const string ActionGroupMustHaveTargetOrSource = "ActionGroup must have a source or target";
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

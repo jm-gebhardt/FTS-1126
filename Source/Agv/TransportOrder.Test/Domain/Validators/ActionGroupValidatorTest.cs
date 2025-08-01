@@ -1,6 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -315,8 +316,8 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.Actions)
-            .WithErrorMessage("Pick/Drop sequence must be valid");
+        validationResult.ShouldHaveValidationErrorFor(x => x)
+            .WithErrorMessage(Reasons.PickDropSequenceMustBeValid);
     }
 
     [TestMethod]
@@ -334,8 +335,8 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.Actions)
-            .WithErrorMessage("Pick/Drop sequence must be valid");
+        validationResult.ShouldHaveValidationErrorFor(x => x)
+            .WithErrorMessage(Reasons.PickDropSequenceMustBeValid);
     }
 
     [TestMethod]
@@ -353,8 +354,8 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.Actions)
-            .WithErrorMessage("Pick/Drop sequence must be valid");
+        validationResult.ShouldHaveValidationErrorFor(x => x)
+            .WithErrorMessage(Reasons.PickDropSequenceMustBeValid);
     }
 
     [TestMethod]
@@ -476,5 +477,74 @@ public class ActionGroupValidatorTest
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
         validationResult.ShouldHaveValidationErrorFor(a => a).WithErrorMessage("Action sequence must not have gaps");
+    }
+
+    [DataRow(ActionType.Pick)]
+    [DataRow(ActionType.Drop)]
+    [DataTestMethod]
+    public async Task ValidateAsync_OnlyPickOrDrop_CreatedByWebApi_Passes(ActionType actionType)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<AgvAction>
+        {
+            new(Guid.NewGuid(), actionType, "node", orderId)
+            {
+                Sequence = 0
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.TransportOrderWebApi,
+            false,
+            DateTime.UtcNow);
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [DataRow(ActionType.Pick)]
+    [DataRow(ActionType.Drop)]
+    [DataTestMethod]
+    public async Task ValidateAsync_OnlyPickOrDrop_NotCreatedByWebApi_Fails(ActionType actionType)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var orderId = Guid.NewGuid();
+        var testActions = new List<AgvAction>
+        {
+            new(Guid.NewGuid(), actionType, "node", orderId)
+            {
+                Sequence = 0
+            }
+        };
+
+        var actionGroup = new ActionGroup(
+            orderId,
+            orderId.ToString(),
+            testActions,
+            ActionGroupCreator.Wms,
+            false,
+            DateTime.UtcNow);
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldHaveValidationErrorFor(x => x)
+            .WithErrorMessage(Reasons.PickDropSequenceMustBeValid);
     }
 }

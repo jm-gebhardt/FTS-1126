@@ -1348,9 +1348,8 @@ public class AgvCommandHandlerTest
             .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
     }
@@ -1369,9 +1368,8 @@ public class AgvCommandHandlerTest
             .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
     }
@@ -1389,9 +1387,8 @@ public class AgvCommandHandlerTest
             .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
     }
@@ -1409,7 +1406,7 @@ public class AgvCommandHandlerTest
             .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
         await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
@@ -1430,9 +1427,8 @@ public class AgvCommandHandlerTest
             .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
     }
@@ -1450,9 +1446,8 @@ public class AgvCommandHandlerTest
             .AddChargingPointManager(NodeGenerator.GenerateChargingNode(chargeNodeName));
 
         var command = new PrepareChargingOfAgv(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<PrepareChargingOfAgv>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldHavePublishedAsync<ChargingNodeSelectedForAgv>();
     }
@@ -1485,9 +1480,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
         var command = new UpdateAgvSettingsGroupReference(agv.CorrelationId);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<UpdateAgvSettingsGroupReference>();
         agv.AgvSettingsGroup.ShouldNotBe(previousGroupId);
     }
 
@@ -1500,9 +1494,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
         var command = new SetUserMode(agv.CorrelationId, initiatingUser, AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.FinishActionGroup, false);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<SetUserMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
         agv.Mode.PendingType.ShouldBe(ModeType.UserMode);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
@@ -1519,9 +1512,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
         var command = new SetMaintenanceMode(agv.CorrelationId, initiatingUser, maintenanceReason, reasonDescription, AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.FinishActionGroup, false);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<SetMaintenanceMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChangePending>();
         agv.Mode.PendingType.ShouldBe(ModeType.Maintenance);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
@@ -1537,13 +1529,13 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
         var command = new SetNormalMode(agv.CorrelationId, initiatingUser);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.InitiatingUser.ShouldBe(initiatingUser);
+        await fixture.ShouldHavePublishedAsync<CheckAgvLoad>();
     }
 
     [TestMethod]
@@ -1552,14 +1544,16 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Maintenance));
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
+        
         var command = new SetNormalMode(agv.CorrelationId, null);
-        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.PublishMessageAsync(command);
 
-        await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.Mode.InitiatingUser.ShouldBeNull();
+
+        await fixture.ShouldHavePublishedAsync<CheckAgvLoad>();
     }
 
     [TestMethod]
@@ -1568,15 +1562,16 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
+        
         var command = new SetNormalMode(agv.CorrelationId, null);
-        await fixture.TestHarness.Bus.Publish(command);
-
-        await fixture.ShouldHaveConsumedAsync<SetNormalMode>();
+        await fixture.PublishMessageAsync(command);
+        
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
         agv.IsLocked.ShouldBeFalse();
         agv.Mode.InitiatingUser.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<CheckAgvLoad>();
     }
 
     [TestMethod]
@@ -1633,9 +1628,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
 
-        await fixture.TestHarness.Bus.Publish(new SwitchMode(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new SwitchMode(agv.CorrelationId));
 
-        await fixture.ShouldHaveConsumedAsync<SwitchMode>();
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         agv.Mode.Type.ShouldBe(pendingType);
         agv.Mode.PendingType.ShouldBeNull();
@@ -1651,8 +1645,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithEnqueueingTarget(null);
 
-        await fixture.TestHarness.Bus.Publish(new TryEnqueueAgv(Guid.NewGuid(), "a queue node"));
-        await fixture.ShouldHaveConsumedAsync<TryEnqueueAgv>();
+        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "a queue node"));
+        
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<QueueEntered>();
     }
@@ -1664,8 +1658,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithEnqueueingTarget(entryNode);
 
-        await fixture.TestHarness.Bus.Publish(new TryEnqueueAgv(Guid.NewGuid(), entryNode));
-        await fixture.ShouldHaveConsumedAsync<TryEnqueueAgv>();
+        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), entryNode));
+        
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<QueueEntered>();
     }
@@ -1676,8 +1670,8 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithEnqueueingTarget("target queue node");
 
-        await fixture.TestHarness.Bus.Publish(new TryEnqueueAgv(Guid.NewGuid(), "queue entry node"));
-        await fixture.ShouldHaveConsumedAsync<TryEnqueueAgv>();
+        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "queue entry node"));
+        
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<QueueEntered>();
     }
@@ -1691,8 +1685,8 @@ public class AgvCommandHandlerTest
 
         var message = new ReceiveAgvZones(agv.CorrelationId, agv.SerialNumber, [new AgvZone("zone1", 1, [new PolygonPoint(1, 1)], []), new AgvZone("zone2", 2, [new PolygonPoint(2, 2)], [])]);
 
-        await fixture.TestHarness.Bus.Publish(message);
-        await fixture.ShouldHaveConsumedAsync<ReceiveAgvZones>();
+        await fixture.PublishMessageAsync(message);
+        
         await fixture.ShouldHavePublishedAsync<AddZone>();
 
         fixture.TestHarness.Published.Select<AddZone>().Count().ShouldBe(message.AgvZones.Count);
@@ -1715,6 +1709,7 @@ public class AgvCommandHandlerTest
             .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
 
         await fixture.PublishMessageAsync(new RemoveAgvFromZones(agv.CorrelationId));
+       
         await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
         fixture.VerifyAgvUpdated(Times.Once());

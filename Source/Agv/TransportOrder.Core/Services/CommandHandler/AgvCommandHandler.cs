@@ -816,7 +816,7 @@ public class AgvCommandHandler :
         }
 
         bool agvWasLocked = agv.IsLocked;
-
+        bool wasMaintenanceMode = agv.IsInMaintenance;
         agv.SetNormalMode(initiatingUser);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
@@ -837,6 +837,11 @@ public class AgvCommandHandler :
                 $"AGV {agv.SerialNumber} is unlocked",
                 new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
             await context.Publish(new AgvLockedChanged(agv.CorrelationId, false));
+        }
+
+        if (wasMaintenanceMode)
+        {
+            await context.Publish(new CheckAgvLoad(agvCorrelationId));
         }
 
         await context.Publish(new AgvModeChanged(agvCorrelationId, agv.Mode));
