@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.KaeserSidecar.Domain;
+using Gebhardt.Acc.KaeserSidecar.Domain.Constants;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -28,7 +29,7 @@ public class TargetSelector(
 {
     private readonly List<Guid> _lastEvaluatedActions = [];
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
-    private int _consideredStations = 3;
+    private int _consideredStations = TargetSelection.DefaultStationCount;
     private bool _useJamState;
 
     /// <summary>
@@ -182,7 +183,7 @@ public class TargetSelector(
             var now = DateTime.UtcNow;
             logger.LogInformation("Listing action {ActionCorrelationId} for target selection", actionCorrelationId);
             _actionsToSelectTarget.TryAdd(actionCorrelationId, now);
-            var decisionPointAction = new DecisionPointAction(actionCorrelationId, agvCorrelationId, now);
+            var decisionPointAction = new DecisionPointAction(actionCorrelationId, agvCorrelationId, now, _consideredStations);
             await decisionPointActionRepository.AddAsync(decisionPointAction);
         });
     }
@@ -232,9 +233,14 @@ public class TargetSelector(
 
     private async Task Initialize()
     {
-        ICollection<DecisionPointAction> decisionPointAction = await decisionPointActionRepository.GetAll();
+        ICollection<DecisionPointAction> decisionPointActions = await decisionPointActionRepository.GetAll();
 
-        foreach (var action in decisionPointAction)
+        if (decisionPointActions.Count > 0)
+        {
+            _consideredStations = decisionPointActions.MaxBy(a => a.EntryTime)?.StationCount ?? TargetSelection.DefaultStationCount;
+        }
+
+        foreach (var action in decisionPointActions)
         {
             if (action.Target == null)
             {

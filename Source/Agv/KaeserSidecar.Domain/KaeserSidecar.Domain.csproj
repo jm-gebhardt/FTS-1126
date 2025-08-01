@@ -12,8 +12,4 @@
       <ProjectReference Include="..\PrismatCommunication\PrismatCommunication.csproj" />
       <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Configuration\" />
-      <Folder Include="Extensions\" />
-    </ItemGroup>
 </Project>

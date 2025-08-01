@@ -268,7 +268,7 @@ public class TargetSelectorTest
 
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now))
+            .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now, 2))
             .AddActionGroup(actionGroup)
             .WithStationHasPalletJam(null);
 
@@ -284,7 +284,7 @@ public class TargetSelectorTest
     [TestMethod]
     public async Task ExecuteAsync_CompletedActionInRepository_NotUsedForTargetSelection()
     {
-        var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now);
+        var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now, 2);
         decisionPointAction.SetTarget("finished");
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
