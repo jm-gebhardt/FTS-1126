@@ -1,3 +1,4 @@
+using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -5,6 +6,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
@@ -32,17 +34,19 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IGraphRepository _graphRepository;
     private readonly ILogger<ActionGroupRequestHandler> _logger;
+    private readonly IMapper _mapper;
 
     /// <summary>
     ///  Initializes a new <see cref="ActionGroupRequestHandler"/> instance.
     /// </summary>
-    public ActionGroupRequestHandler(ILogger<ActionGroupRequestHandler> logger, IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IGraphRepository graphRepository, IBus bus)
+    public ActionGroupRequestHandler(ILogger<ActionGroupRequestHandler> logger, IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IGraphRepository graphRepository, IBus bus, IMapper mapper)
     {
         _bus = bus;
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
         _graphRepository = graphRepository;
         _logger = logger;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -128,7 +132,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionGroupStateInvalidException(actionGroup, "No started or paused pick action");
         }
 
-        await _bus.Publish(new ReassignActionGroup(actionGroup.CorrelationId));
+        await _bus.Publish(new ReassignActionGroup(actionGroup.CorrelationId, context.Message.AssignedAgv));
 
         await context.RespondAsync(new Success());
     }
@@ -146,6 +150,13 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         }
 
         _logger.LogInformation("Triggering completion of action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", actionCorrelationId, correlationId);
+        if (actionGroup.AssignedAgv != null)
+        {
+            _logger.LogInformation("Sending abort action {ActionCorrelationId} to agv {AgvCorrelationId}", actionCorrelationId, actionGroup.AssignedAgv);
+            await _bus.Publish(new ActionAborted(actionGroup.AssignedAgv.Value, _mapper.Map<AgvAction>(actionGroup.Actions.Single(a => a.CorrelationId != actionCorrelationId)), true));
+            await _bus.Publish(new SetAgvForceIdle(actionGroup.AssignedAgv.Value));
+        }
+        
         await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId, ActionGroupCreator.TransportOrderWebApi));
         await context.RespondAsync(new Success());
     }

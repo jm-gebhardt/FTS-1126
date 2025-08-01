@@ -277,7 +277,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup).BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup("Unknown".ToGuid())));
+            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup("Unknown".ToGuid(), null)));
     }
 
     [DataRow(ActionState.Created)]
@@ -296,20 +296,22 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup).BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId)));
+            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId, null)));
     }
 
-    [DataRow(ActionState.Started)]
-    [DataRow(ActionState.Paused)]
+    [DataRow(ActionState.Started, false)]
+    [DataRow(ActionState.Paused, false)]
+    [DataRow(ActionState.Started, true)]
+    [DataRow(ActionState.Paused, true)]
     [DataTestMethod]
-    public async Task Consume_TryReassignActionGroup_ValidData_PublishesReassignActionGroup(ActionState pickActionState)
+    public async Task Consume_TryReassignActionGroup_ValidData_PublishesReassignActionGroup(ActionState pickActionState, bool assignedAgv)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: pickActionState);
         ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup).BuildAsync();
 
-        await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId, assignedAgv ? Guid.NewGuid() : null));
 
         await fixture.ShouldHavePublishedAsync<ReassignActionGroup>();
     }
@@ -419,5 +421,23 @@ public class ActionGroupRequestHandlerTest
         string node = fixture.GetExistingNode()!;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
             await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ShouldSkip).CorrelationId, node)));
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerActionGroupCompletion_ValidData_PublishesCompleteActionOfActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
+
+        ActionGroupRequestHandlerTestFixture<TriggerActionCompletion, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerActionCompletion, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .WithFakeTriggeredActionCompletion()
+                .BuildAsync();
+        
+        await fixture.GetResponseAsync<Success>(new TriggerActionCompletion(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId));
+        
+        await fixture.ShouldHavePublishedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
     }
 }

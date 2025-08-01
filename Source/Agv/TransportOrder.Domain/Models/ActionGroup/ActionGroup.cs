@@ -367,8 +367,10 @@ public class ActionGroup
     {
         action.StartedDate = null;
         action.CompletedDate = null;
+        action.PausedDate = null;
         action.Nodes = [];
         action.Edges = [];
+        action.PriorRunAndPauseDuration = 0;
         EstimatedDuration = TimeSpan.Zero;
         action.UpdateActionState(ActionState.Created);
         UpdateActionGroupState();

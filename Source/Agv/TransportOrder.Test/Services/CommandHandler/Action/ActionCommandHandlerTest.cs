@@ -932,9 +932,8 @@ public class ActionCommandHandlerTest
         fixture.SetupValidationResult(new ValidationResult());
         fixture.AddAgv(agv);
 
-        await fixture.TestHarness.Bus.Publish(new CreateActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup)));
+        await fixture.PublishMessageAsync(new CreateActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup)));
 
-        await fixture.ShouldHaveConsumedAsync<CreateActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
@@ -2290,7 +2289,7 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task ReassignActionGroup_NoAgvAvailable_PublishesActionGroupCreated()
+    public async Task ReassignActionGroup_NoSelectedAgv_NoAgvAvailable_PublishesActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:Guid.NewGuid(), pickActionState: ActionState.Started);
@@ -2299,11 +2298,11 @@ public class ActionCommandHandlerTest
             .WithClosestAgv(null, null)
             .AddAgvs([agv]);
 
-        var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId);
+        var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId, null);
         await fixture.TestHarness.Bus.Publish(command);
       
         await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
-        await fixture.ShouldHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupReassignedOrReset>();
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
@@ -2313,17 +2312,43 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task ReassignActionGroup_AgvAvailable_Publishes_AgvBecameIdle()
+    public async Task ReassignActionGroup_NoSelectedAgv_AgvAvailable_Publishes_AgvBecameIdle()
     {
         var readyAgv = AgvGenerator.GenerateIdleAgv();
         var previouslyAssignedAgv = Guid.NewGuid();
-        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:previouslyAssignedAgv, pickActionState: ActionState.Started);
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: previouslyAssignedAgv, pickActionState: ActionState.Started);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(pickDropActionGroup)
             .WithClosestAgv(readyAgv.CorrelationId, null)
             .AddAgvs([readyAgv]);
 
-        var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId);
+        var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId, null);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionAborted>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+
+        pickDropActionGroup.AssignedAgv.ShouldBe(readyAgv.CorrelationId);
+        pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
+        pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.IsManual.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task ReassignActionGroup_SelectedAgv_Publishes_AgvBecameIdle()
+    {
+        var readyAgv = AgvGenerator.GenerateIdleAgv();
+        var previouslyAssignedAgv = Guid.NewGuid();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: previouslyAssignedAgv, pickActionState: ActionState.Started);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(pickDropActionGroup)
+            .AddAgvs([readyAgv]);
+
+        var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId, readyAgv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();

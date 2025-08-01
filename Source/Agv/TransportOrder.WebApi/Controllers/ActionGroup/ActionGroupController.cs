@@ -158,15 +158,16 @@ public class ActionGroupController : Controller
 
     /// <summary>
     /// Re-assign action group to a different available agv.
+    /// Optionally, provide the one to assign it to.
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     /// <response code="400">The pick action of the action group is not in state started.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/reassign")]
-    public async Task<ActionResult> ReassignActionGroup(Guid correlationId)
+    public async Task<ActionResult> ReassignActionGroup(Guid correlationId, [FromQuery] Guid? assignedAgv)
     {
-        await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId));
+        await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId, assignedAgv));
         return Ok();
     }
 

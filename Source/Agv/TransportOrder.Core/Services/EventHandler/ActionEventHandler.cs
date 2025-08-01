@@ -45,10 +45,10 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
 
         if (actionGroup.AssignedAgv != context.Message.AgvCorrelationId)
         {
-            logger.LogWarning("Action group {ActionGroupCorrelationId} was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} requested by {Agv}", actionGroup.CorrelationId, actionGroup.AssignedAgv,  actionCorrelationId, context.Message.AgvCorrelationId);
+            logger.LogWarning("Action group {ActionGroupCorrelationId} was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} requested by {Agv}", actionGroup.CorrelationId, actionGroup.AssignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
             return;
         }
-        
+
         await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
     }
 
@@ -98,18 +98,24 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     public async Task Consume(ConsumeContext<ActionCanceled> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
-        Guid? assignedAgv = await actionGroupRepository.GetAgvAssignedToAction(actionCorrelationId);
-        if (assignedAgv == null)
+        var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
+        var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
+        if (action.State is ActionState.Completed or ActionState.Aborted or ActionState.Canceled)
+        {
+            logger.LogInformation("Could not complete action cancellation for action {Action}, it is already in state {State}", actionCorrelationId, action.State);
+            return;
+        }
+        if (actionGroup.AssignedAgv == null)
         {
             logger.LogError("Could not complete action cancellation for action {Action}, no assigned agv", actionCorrelationId);
             return;
         }
-        if (assignedAgv != context.Message.AgvCorrelationId)
+        if (actionGroup.AssignedAgv != context.Message.AgvCorrelationId)
         {
-            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} cancellation requested by {Agv}", assignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
+            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} cancellation requested by {Agv}", actionGroup.AssignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
             return;
         }
-        await context.Publish(new HandleActionCompletion(assignedAgv.Value));
+        await context.Publish(new HandleActionCompletion(actionGroup.AssignedAgv.Value));
     }
 
     /// <inheritdoc />
@@ -139,7 +145,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
         (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
-       
+
         if (agvCorrelationId != null)
         {
             ICollection<Agv> infiniteChargingAgvs = await agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel([agvCorrelationId.Value]);

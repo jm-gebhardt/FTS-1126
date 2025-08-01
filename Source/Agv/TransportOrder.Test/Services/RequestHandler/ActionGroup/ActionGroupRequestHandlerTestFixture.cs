@@ -92,5 +92,11 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     public string? GetExistingNode()
     {
         return _efGraph?.Nodes.Select(e => e.Id).FirstOrDefault();
-    } 
+    }
+
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggeredActionCompletion()
+    {
+        AddConsumers<SuccessRequestHandlerMock<CompleteActionOfActionGroup>>();
+        return this;
+    }
 }

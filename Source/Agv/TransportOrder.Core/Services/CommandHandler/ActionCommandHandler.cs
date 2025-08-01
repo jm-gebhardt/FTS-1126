@@ -98,7 +98,7 @@ public class ActionCommandHandler :
         ILogger<ActionCommandHandler> logger,
         ActionCommandHelper actionService,
         IPublishEndpoint publishEndpoint
-        )
+    )
     {
         _actionService = actionService;
         _publishEndpoint = publishEndpoint;
@@ -146,7 +146,7 @@ public class ActionCommandHandler :
             actionGroup.SetCargoLiftHeightForAction(action.CorrelationId, targetNode?.PickLiftHeight, targetNode?.DropLiftHeight);
             await _actionService.TryUpdateActionGroup(actionGroup);
             action = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
-            
+
             var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
             await context.Publish(new StartActionCommand(assignedAgv.CorrelationId, assignedAgv.SerialNumber, _mapper.Map<MessageAgvAction>(action)), cancellationToken);
             await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
@@ -693,7 +693,7 @@ public class ActionCommandHandler :
             await _bus.Publish(new ActionGroupCreated(actionGroupMessageContent, actionGroupMessageContent.CorrelationId, actionGroupMessageContent.AssignedAgv), cancellationToken);
         }
 
-        if (actionGroupMessageContent.AssignedAgv != null )
+        if (actionGroupMessageContent.AssignedAgv != null)
         {
             var agv = await _agvDb.Agvs.GetAgvAsync(actionGroupMessageContent.AssignedAgv.Value);
             _logger.LogOrderInformation(LogCodes.OrderAgvAssigned, actionGroupMessageContent.AssignedAgv.Value,
@@ -772,9 +772,9 @@ public class ActionCommandHandler :
         bool isQueueing = agv.IsQueueing;
         if (agv.IsQueueing && action.Target.NodeId != null)
         {
-           bool isAgvAtQueueHead = await _queueManager.TryReachQueueNode(agv, action.Target.NodeId);
-           isQueueing = !isAgvAtQueueHead;
-           await context.Publish(new TryEnqueueAgv(agv.CorrelationId, action.Target.NodeId), cancellationToken);
+            bool isAgvAtQueueHead = await _queueManager.TryReachQueueNode(agv, action.Target.NodeId);
+            isQueueing = !isAgvAtQueueHead;
+            await context.Publish(new TryEnqueueAgv(agv.CorrelationId, action.Target.NodeId), cancellationToken);
         }
 
         if (agv.HasPendingModeSwitch && agv.Mode.CurrentActionGroupPolicy != CurrentActionGroupPolicy.Pause)
@@ -1067,14 +1067,14 @@ public class ActionCommandHandler :
                 // For diagnosing DockFront of the first action of the group we need the docking direction of the last completed action
                 previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agv.CorrelationId, actionGroup.CorrelationId);
             }
-            DockingDirection? nodeDockingDirection= (await _agvDb.Graphs.GetNodeAsync(targetNodeId)).DockingDirection;
+            DockingDirection? nodeDockingDirection = (await _agvDb.Graphs.GetNodeAsync(targetNodeId)).DockingDirection;
             actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
             var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
             actionGroup.SetCargoLiftHeightForAction(currentAction.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
-        
+
         actionGroup.SetTargetForAction(actionId, targetNodeId, shouldUpdate ? route : null);
-            
+
         await _actionGroupRepository.UpdateAsync(actionGroup);
 
         if (assignedAgv != null)
@@ -1204,10 +1204,10 @@ public class ActionCommandHandler :
                 _logger.LogInformation("There are AGVs {ListOfAgvs} that are infinitely charging and have a battery level above min charge up", string.Join(',', infinitelyChargingAgvsList));
                 chargingActionGroups = chargingActionGroups.Where(a => infinitelyChargingAgvsList.Contains(a.AssignedAgv.GetValueOrDefault())).ToList();
                 idleActionGroups.AddRange(chargingActionGroups);
-                
+
                 agvs.AddRange(infinitelyChargingAgvs);
             }
-            
+
             //if the list of AGV at a queue head is not empty
             if (agvsAtQueueHeads.Count > 0)
             {
@@ -1221,7 +1221,7 @@ public class ActionCommandHandler :
                     agvs.AddRange(queueingAgvs);
                 }
             }
-            
+
             //remove duplicates if any
             _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready before removing duplicates", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
             agvs = agvs.DistinctBy(a => a.CorrelationId).OrderBy(a => a.CorrelationId).ToList();
@@ -1348,35 +1348,38 @@ public class ActionCommandHandler :
             actionGroup.Queue();
             actionGroup.HasPriority = true;
 
-            ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
-            readyAgvs = readyAgvs.Where(a => a.CorrelationId != assignedAgv).ToList();
-
-            List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
-
-            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.NodeId!);
-
-            await context.Publish(new ActionAborted(assignedAgv, _mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionToAbort)));
-
-            if (closestAgvRoute.agv == null)
+            var agvToAssign = context.Message.AssignedAgv != null ? await _agvDb.Agvs.GetAgvAsync(context.Message.AssignedAgv.Value) : null;
+            if (agvToAssign == null)
             {
-                await _actionService.TryUpdateActionGroup(actionGroup);
-                _logger.LogOrderWarning(LogCodes.OrderReset, actionGroup.AssignedAgv.GetValueOrDefault(),
-                    actionGroup.CorrelationId, "Order Reset", $"Order {actionGroup.OrderId} was reset ",
-                    new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
-                await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, null));
-                return;
+                ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+                readyAgvs = readyAgvs.Where(a => a.CorrelationId != assignedAgv).ToList();
+
+                List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
+
+                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.NodeId!);
+
+                if (closestAgvRoute.agv == null)
+                {
+                    await _actionService.TryUpdateActionGroup(actionGroup);
+                    _logger.LogOrderWarning(LogCodes.OrderReset, actionGroup.AssignedAgv.GetValueOrDefault(),
+                        actionGroup.CorrelationId, "Order Reset", $"Order {actionGroup.OrderId} was reset ",
+                        new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
+                    await context.Publish(new ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, null));
+                    return;
+                }
+                agvToAssign = readyAgvs.Single(a => a.CorrelationId == closestAgvRoute.agv!.Value);
             }
 
-            actionGroup.Assign(readyAgvs.Single(a => a.CorrelationId == closestAgvRoute.agv!.Value));
+            actionGroup.Assign(agvToAssign);
             actionGroup.IsManual = true;
 
             await _actionService.TryUpdateActionGroup(actionGroup);
 
-            await context.Publish(new AgvBecameIdle(closestAgvRoute.agv!.Value));
+            await context.Publish(new AgvBecameIdle(agvToAssign.CorrelationId));
+
+            await context.Publish(new ActionAborted(assignedAgv, _mapper.Map<Common.Messages.ActionGroups.AgvAction>(actionToAbort)));
 
             await context.Publish(new ActionGroupChanged(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId));
-
-            var newAssignedAgv = readyAgvs.Single(a => a.CorrelationId == closestAgvRoute.agv!.Value);
 
             await context.Publish(new ActionGroupReassignedOrReset(actionGroup.CorrelationId, actionGroup.Creator));
 
@@ -1385,11 +1388,11 @@ public class ActionCommandHandler :
                 actionGroup.AssignedAgv.GetValueOrDefault(),
                 actionGroup.CorrelationId,
                 "Order Updated",
-                $"Order {actionGroup.OrderId} has been reassigned to agv {newAssignedAgv} ",
+                $"Order {actionGroup.OrderId} has been reassigned to agv {agvToAssign.SerialNumber} ",
                 new Dictionary<string, object?>
                 {
                     { LogLabels.OrderId, actionGroup.OrderId },
-                    { LogLabels.AgvSerialNumber, newAssignedAgv.SerialNumber }
+                    { LogLabels.AgvSerialNumber, agvToAssign.SerialNumber }
                 });
         }, context.CancellationToken);
     }
@@ -1402,7 +1405,7 @@ public class ActionCommandHandler :
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
         actionGroup.Queue();
         await _actionService.TryUpdateActionGroup(actionGroup);
-        
+
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
 
         _logger.LogOrderInformation(LogCodes.OrderQueued, actionGroupMessageContent.AssignedAgv.GetValueOrDefault(),
