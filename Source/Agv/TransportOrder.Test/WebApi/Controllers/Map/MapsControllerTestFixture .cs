@@ -17,8 +17,6 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    private const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-
     private readonly Mock<IGraphRepository> _agvGraphRepositoryMock = new();
 
     private readonly IMapRepository _mapRepository;
@@ -62,11 +60,10 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
         {
-            MapGenerator.Generate(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
-            MapGenerator.Generate(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),  
-            MapGenerator.Generate(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
+            MapGenerator.Generate(),
+            MapGenerator.Generate(),
+            MapGenerator.Generate()
         }));
-        mapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
 
         return mapRepositoryMock;
     }

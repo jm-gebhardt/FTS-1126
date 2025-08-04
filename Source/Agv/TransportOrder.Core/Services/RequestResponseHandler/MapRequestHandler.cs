@@ -5,6 +5,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using JetBrains.Annotations;
 using MassTransit;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
@@ -18,27 +19,28 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 public class MapRequestHandler :
     IConsumer<GetMapList>,
     IConsumer<GetMap>,
+    IConsumer<GetBackgroundImage>,
     IConsumer<TrySettingNodeApproachingProperties>
 {
     private readonly IMapRepository _mapRepository;
     private readonly IMapper _mapper;
-    private readonly IBus _bus;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly IGraphRepository _graphRepository;
 
     /// <inheritdoc cref="MapRequestHandler"/>/>
-    public MapRequestHandler(IMapRepository mapRepository, IMapper mapper, IBus bus, IGraphRepository graphRepository)
+    public MapRequestHandler(IMapRepository mapRepository,
+        IMapper mapper,
+        IPublishEndpoint publishEndpoint,
+        IGraphRepository graphRepository
+    )
     {
         _mapRepository = mapRepository;
         _mapper = mapper;
-        _bus = bus;
+        _publishEndpoint = publishEndpoint;
         _graphRepository = graphRepository;
     }
 
-    /// <summary>
-    /// Handles a GetMapList request
-    /// </summary>
-    /// <param name="context"></param>
-    /// <returns>Maps with an existing AgvGraph</returns>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetMapList> context)
     {
         ICollection<Map> fetchedMaps = await _mapRepository.GetAllMapsAsync();
@@ -47,10 +49,7 @@ public class MapRequestHandler :
         await context.RespondAsync(new GotMapList { Maps = maps });
     }
 
-    /// <summary>
-    /// Handles the <see cref="GetMap"/> request.
-    /// </summary>
-    /// <exception cref="MapNotFoundException"></exception>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetMap> context)
     {
         var correlationId = context.Message.CorrelationId;
@@ -59,16 +58,28 @@ public class MapRequestHandler :
         await context.RespondAsync(new GotMap(map));
     }
 
-    /// <summary>
-    /// Handles the <see cref="TrySettingNodeApproachingProperties"/> request.
-    /// </summary>
-    public async  Task Consume(ConsumeContext<TrySettingNodeApproachingProperties> context)
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<GetBackgroundImage> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+
+        byte[]? image = await _mapRepository.GetBackgroundImageAsync(correlationId);
+        if (image == null || image.Length == 0)
+        {
+            throw new MapNotFoundException(correlationId);
+        }
+
+        await context.RespondAsync(new GotBackgroundImage(image));
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<TrySettingNodeApproachingProperties> context)
     {
         (var correlationId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
         await _mapRepository.GetMapAsync(correlationId);
         await _graphRepository.GetNodeAsync(nodeId);
 
-        await _bus.Publish(new SetNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+        await _publishEndpoint.Publish(new SetNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
 
         await context.RespondAsync(new Success());
     }

@@ -48,8 +48,16 @@ public class MapPublisher : IMapPublisher
     /// <inheritdoc/>
     public Task SendJamStateUpdate(Guid stationId, bool hasPalletJam)
     {
-        var stationJamStateDto = new StationJamStateDto(stationId, hasPalletJam);
-        _hubBroadcaster.Broadcast(c => c.StationJamStateChanged(stationJamStateDto));
+        var dto = new StationJamStateDto(stationId, hasPalletJam);
+        _hubBroadcaster.Broadcast(c => c.StationJamStateChanged(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task SendMapChangedAsync(Messages.Requests.Map.Map map, bool hasBackgroundChanged)
+    {
+        var dto = _mapper.Map<MapChangedDto>((map, hasBackgroundChanged));
+        _hubBroadcaster.Broadcast(c => c.MapChanged(dto));
         return Task.CompletedTask;
     }
 }

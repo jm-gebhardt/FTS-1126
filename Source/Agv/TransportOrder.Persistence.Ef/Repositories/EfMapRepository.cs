@@ -93,10 +93,50 @@ public class EfMapRepository : IMapRepository
         return maps;
     }
 
-    /// <inheritdoc/>
-    public byte[]? GetMapImage(Guid correlationId)
+    /// <inheritdoc />
+    public async Task SetCustomBackgroundAsync(MapBackground mapBackground)
     {
-        return Maps.SingleOrDefault(q => q.CorrelationId == correlationId)?.MapValue;
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var map = await context.Set<Map>()
+            .SingleOrDefaultAsync(m => m.CorrelationId == mapBackground.MapId);
+
+        if (map == null)
+        {
+            throw new MapNotFoundException(mapBackground.CorrelationId);
+        }
+
+        if (map.CustomBackground != null)
+        {
+            // delete the old custom background
+            context.Remove(map.CustomBackground);
+        }
+        context.Set<MapBackground>().Add(mapBackground);
+        map.CustomBackground = mapBackground;
+
+        await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteCustomBackgroundAsync(Guid correlationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var map = await context.Set<Map>()
+            .SingleOrDefaultAsync(m => m.CorrelationId == correlationId);
+
+        if (map == null)
+        {
+            throw new MapNotFoundException(correlationId);
+        }
+
+        if (map.CustomBackground != null)
+        {
+            // delete the old custom background
+            context.Remove(map.CustomBackground);
+        }
+        map.CustomBackground = null;
+        return await context.SaveChangesAsync() > 0;
     }
 
     /// <inheritdoc/>
@@ -111,6 +151,23 @@ public class EfMapRepository : IMapRepository
         return map;
     }
 
+    /// <inheritdoc />
+    public async Task<byte[]> GetBackgroundImageAsync(Guid correlationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var map = await context.Set<Map>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(m => m.CorrelationId == correlationId);
+
+        var mapBackground = map?.CustomBackground ?? map?.BaseBackground;
+        if (mapBackground == null)
+        {
+            throw new MapNotFoundException(correlationId);
+        }
+
+        return mapBackground.Image;
+    }
+
     /// <inheritdoc/>
     public bool Exists(Guid correlationId)
     {
@@ -121,6 +178,33 @@ public class EfMapRepository : IMapRepository
     public async Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken)
     {
         return await _semaphoreProvider.ExecuteLockedAsync(async () => await AddOrUpdateAsync(map), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateMapBackgroundParametersAsync(Guid correlationId, double resolution, double xOffset, double yOffset)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var map = await context.Set<Map>()
+            .SingleOrDefaultAsync(m => m.CorrelationId == correlationId);
+
+        if (map == null)
+        {
+            throw new MapNotFoundException(correlationId);
+        }
+
+        var mapBackground = map.BaseBackground ?? map.CustomBackground;
+
+        if (mapBackground == null)
+        {
+            throw new MapNotFoundException(correlationId);
+        }
+
+        mapBackground.Resolution = resolution;
+        mapBackground.XOffset = xOffset;
+        mapBackground.YOffset = yOffset;
+
+        await context.SaveChangesAsync();
     }
 
     /// <inheritdoc />
@@ -199,7 +283,7 @@ public class EfMapRepository : IMapRepository
                     .Where(agv => map.MapAgvs.Select(x => x.AgvId).Contains(agv.CorrelationId))
                     .CountAsync() != map.MapAgvs.Count)
             {
-                _logger.LogWarning("Not all Agvs exist yet, so we cannot store the Map yet.");
+                _logger.LogWarning("Not all Agvs exist yet, so we cannot store the Map yet");
                 return false;
             }
 
@@ -211,7 +295,23 @@ public class EfMapRepository : IMapRepository
             }
             else
             {
+                if (existingMap.BaseBackground != null)
+                {
+                    context.Remove(existingMap.BaseBackground);
+                }
+                if (existingMap.CustomBackground != null)
+                {
+                    context.Remove(existingMap.CustomBackground);
+                }
                 // update properties
+                if (map.BaseBackground != null)
+                {
+                    context.Add(map.BaseBackground);
+                }
+                if (map.CustomBackgroundId != null)
+                {
+                    context.Add(map.CustomBackgroundId);
+                }
                 context.Update(existingMap).CurrentValues.SetValues(map);
 
                 UpdateRelatedEntities(context, existingMap.MapAgvs, map.MapAgvs, ma => ma.AgvId);

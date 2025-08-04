@@ -34,4 +34,9 @@ public interface IMapPublisher
     /// <param name="stationId">The id of the station.</param>
     /// <param name="hasPalletJam">True if the station has a pallet jam.</param>
     Task SendJamStateUpdate(Guid stationId, bool hasPalletJam);
+
+    /// <summary>
+    /// Publishes map changes.
+    /// </summary>
+    Task SendMapChangedAsync(Messages.Requests.Map.Map map, bool hasBackgroundChanged);
 }

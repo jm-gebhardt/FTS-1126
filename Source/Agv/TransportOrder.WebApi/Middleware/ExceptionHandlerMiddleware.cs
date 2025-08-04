@@ -37,6 +37,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             NotFoundException => HttpStatusCode.NotFound,
             AllAgvsOfflineException => HttpStatusCode.Conflict,
             AgvNotInZoneException => HttpStatusCode.Conflict,
+            BitmapDecodingException => HttpStatusCode.BadRequest,
             _ => HttpStatusCode.InternalServerError
         };
 

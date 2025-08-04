@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -84,8 +83,8 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithAgvsRelatedToNodes([]);
 
-        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
-        
+        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Common.Domain.Models.Graphs.Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
+
         await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
         fixture.VerifyStationsAdded(Times.Never());
     }
@@ -97,7 +96,7 @@ public class StationCommandHandlerTest
             .WithAgvsRelatedToNodes([Guid.NewGuid()])
             .WithAgvsGraph();
 
-        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
+        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Common.Domain.Models.Graphs.Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
 
         await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
         fixture.VerifyStationsAdded(Times.Once());

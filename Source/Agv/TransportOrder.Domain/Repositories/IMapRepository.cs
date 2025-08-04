@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
+using JetBrains.Annotations;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -14,11 +15,23 @@ public interface IMapRepository
     public Task<ICollection<Map>> GetAllMapsAsync();
 
     /// <summary>
-    /// Get a map by its related correlationId from the MapRepository
+    /// Retrieves the background image for the given correlationId.
     /// </summary>
-    /// <param name="correlationId">GUID of the map searched in the repository</param>
-    [UsedImplicitly]
-    public byte[]? GetMapImage(Guid correlationId);
+    /// <param name="correlationId">Unique identifier for the map background.</param>
+    /// <returns>The custom background image (if there is any), or the base background</returns>
+    Task<byte[]> GetBackgroundImageAsync(Guid correlationId);
+
+    /// <summary>
+    /// Sets (or overwrites) the custom background for a map.
+    /// </summary>
+    /// <param name="mapBackground">The background to set.</param>
+    Task SetCustomBackgroundAsync(MapBackground mapBackground);
+
+    /// <summary>
+    /// Delete the background associated with the given correlation ID.
+    /// </summary>
+    /// <param name="correlationId">CorrelationId of the background to delete.</param>
+    Task<bool> DeleteCustomBackgroundAsync(Guid correlationId);
 
     /// <summary>
     /// Get information on a map.
@@ -40,6 +53,15 @@ public interface IMapRepository
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the Map could be stored. False if e.g. the nodes/edges or Agvs were not existing.</returns>
     Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Updates the background parameters of a map.
+    /// </summary>
+    /// <param name="correlationId">Unique identifier for the map.</param>
+    /// <param name="resolution">The resolution of the maps image. Expressed as how many [m] per pixel are represented</param>
+    /// <param name="xOffset">The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.</param>
+    /// <param name="yOffset">The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.</param>
+    Task UpdateMapBackgroundParametersAsync(Guid correlationId, double resolution, double xOffset, double yOffset);
 
     /// <summary>
     /// Adds the relation from the Agv to all Maps where the AgvGraph intersects with the nodes of the Map.

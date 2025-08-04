@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
-using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -16,69 +19,81 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+    private readonly Mock<IGraphRepository> _graphRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepositoryMock = new();
 
-    [UsedImplicitly]
-    private readonly Mock<IGraphRepository> _agvGraphRepository = new();
-
-    private readonly Guid[] _correlationIds =
-    {
-        new("7FE9372B-4219-4D09-8885-966EE125A350"),
-        new("041AD79E-1952-4AB7-BD3E-9EC972E27FBF"),
-        new("465A85A6-6A02-4068-A7AA-E3B4B9821019")
-    };
+    public Mock<IMapRepository> MapRepositoryMock { get; private set; } = null!;
 
     protected override MapController GetController()
     {
-        IRequestClient<GetMapImage> getMapImageRequestClient = GetRequestClient<GetMapImage>();
+        IRequestClient<GetBackgroundImage> getBackgroundImageRequestClient = GetRequestClient<GetBackgroundImage>();
+        IRequestClient<SetBackground> setBackgroundRequestClient = GetRequestClient<SetBackground>();
+        IRequestClient<DeleteBackground> deleteBackgroundRequestClient = GetRequestClient<DeleteBackground>();
+
         IRequestClient<GetMap> getMapRequestClient = GetRequestClient<GetMap>();
+        IRequestClient<UpdateMap> updateMapRequestClient = GetRequestClient<UpdateMap>();
         IRequestClient<GetMapGraph> getMapGraphClient = GetRequestClient<GetMapGraph>();
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
         IRequestClient<GetMapStations> getStationsClient = GetRequestClient<GetMapStations>();
         IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
-        var controller = new MapController(Mapper, getMapImageRequestClient, getMapRequestClient, getMapGraphClient, getMapNodeStatesClient, getStationsClient, nodeApproachingPropertiesClient);
+        var controller = new MapController(Mapper,
+            getBackgroundImageRequestClient,
+            setBackgroundRequestClient,
+            deleteBackgroundRequestClient,
+            getMapRequestClient,
+            updateMapRequestClient,
+            getMapGraphClient,
+            getMapNodeStatesClient,
+            getStationsClient,
+            nodeApproachingPropertiesClient);
         return controller;
     }
-    
+
     protected override IEnumerable<Profile> GetProfiles() =>
     [
         new MapProfile(),
         new Gebhardt.Acc.TransportOrder.Messages.Profiles.MapProfile()
     ];
 
-    private Mock<IMapRepository> GetMapRepository()
+    public MapControllerTestFixture(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> nodeStates) : this()
     {
-        var mapRepositoryMock = new Mock<IMapRepository>();
-
-        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
-        {
-            new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
-            new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
-            new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
-        }));
-        mapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(Convert.FromBase64String(Base64String));
-
-        return mapRepositoryMock;
-    }
-
-    public MapControllerTestFixture(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> nodeStates)
-    {
-        var nodeRepositoryMock = new Mock<INodeRepository>();
-        nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
-        AddServices(s => s.AddTransient(_ => nodeRepositoryMock.Object));
+        _nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
     }
 
     public MapControllerTestFixture()
     {
+        AddServices(s =>
+        {
+            s.AddTransient(_ => _nodeRepositoryMock.Object);
+            s.AddTransient(_ => _graphRepository.Object);
+        });
     }
 
     /// <summary>
     /// Adds the <see cref="IMapRepository"/> mock object
     /// </summary>
     /// <returns></returns>
-    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRepositoryMock()
+    public MapControllerTestFixture<TRequest, TRequestHandler> AddMapRepositoryMock(MapBackground? mapBackground)
     {
-        AddServices(sc => sc.AddTransient(_ => GetMapRepository().Object));
+        MapRepositoryMock = new Mock<IMapRepository>();
+
+        MapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
+        {
+            MapGenerator.Generate(),
+            MapGenerator.Generate(),
+            MapGenerator.Generate()
+        }));
+        if (mapBackground != null)
+        {
+            MapRepositoryMock.Setup(x => x.GetMapAsync(mapBackground.CorrelationId)).ReturnsAsync(MapGenerator.Generate());
+            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>())).ReturnsAsync(mapBackground.Image);
+        }
+        else
+        {
+            MapRepositoryMock.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ThrowsAsync(new MapNotFoundException("Map not found"));
+            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>())).ThrowsAsync(new MapNotFoundException("Map not found"));
+        }
+        AddServices(sc => sc.AddTransient(_ => MapRepositoryMock.Object));
 
         return this;
     }

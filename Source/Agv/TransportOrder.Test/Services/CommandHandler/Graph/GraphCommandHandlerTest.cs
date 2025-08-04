@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +17,7 @@ public class GraphCommandHandlerTest
 
         var graph = new Common.Domain.Models.Graphs.Graph();
         var id = Guid.NewGuid();
-        var maps = Mock.Of<List<Map>>();
+        var maps = Mock.Of<List<Common.Domain.Models.Graphs.Map>>();
         await fixture.PublishMessageAsync(new UpdateGraphRequest(id, graph, maps));
 
         fixture.GraphRepository.Verify(x => x.UpdateGraphAsync(It.IsAny<Common.Domain.Models.Graphs.Graph>()), Times.Once);

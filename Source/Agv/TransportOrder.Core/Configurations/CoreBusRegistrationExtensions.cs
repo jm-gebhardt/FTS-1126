@@ -25,6 +25,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
@@ -159,7 +160,7 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<GetGraphRequestHandler>();
         busRegistrationConfigurator.AddRequestClient<GetGraph>();
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
-        
+
         busRegistrationConfigurator.AddConsumer<StationEventHandler>();
 
         busRegistrationConfigurator.AddConsumer<StationCommandHandler>(c =>
@@ -216,12 +217,12 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartNewActionGroup>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
-          
+
             var actionPartitioner = c.CreatePartitioner(PartitionCount);
             c.Message<CompleteActionOfActionGroup>(x =>
                 {
                     x.UsePartitioner(actionPartitioner, p => p.Message.CorrelationId);
-                   
+
                     x.UseMessageRetry(r =>
                     {
                         // Retry once of the cargo has not been updated yet
@@ -230,7 +231,7 @@ public static class CoreBusRegistrationExtensions
                         r.Handle<CargoStateMismatchException>();
                     });
                 }
-               );
+            );
             actionPartitioner.PartitionMessageById<CreateChargingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<AbortActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResetActionGroup, ActionCommandHandler>(c);
@@ -239,7 +240,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<ForceQueueActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<EstimateActionGroupDuration, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<StartActionOfActionGroup, ActionCommandHandler>(c);
-            
+
             actionPartitioner.PartitionMessageById<CreateQueueingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CreateParkingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<SetTargetForAction, ActionCommandHandler>(c);
@@ -298,7 +299,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddConsumer<FactoryTimeRequestHandler>();
         configurator.AddRequestClient<GetFactoryTimeZone>();
         configurator.AddRequestClient<UpdateFactoryTimeZone>();
-        
+
         configurator.AddRequestClient<GetCertificateExpirations>();
         configurator.AddConsumer<CertificateExpirationRequestHandler>();
     }
@@ -428,16 +429,25 @@ public static class CoreBusRegistrationExtensions
 
     private static void RegisterMediatorMapHandlers(IMediatorRegistrationConfigurator configurator)
     {
-        configurator.AddConsumer<GetMapImageRequestHandler>();
-        configurator.AddRequestClient<GetMapImage>();
-
         configurator.AddConsumer<NodeStateRequestHandler>();
         configurator.AddRequestClient<GetMapNodeStates>();
 
         configurator.AddConsumer<MapRequestHandler>();
         configurator.AddRequestClient<GetMapList>();
         configurator.AddRequestClient<GetMap>();
+        configurator.AddRequestClient<GetBackgroundImage>();
         configurator.AddRequestClient<TrySettingNodeApproachingProperties>();
+
+        configurator.AddConsumer<MapCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<SetBackground, MapCommandHandler>(c);
+            partitioner.PartitionMessageById<DeleteBackground, MapCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateMap, MapCommandHandler>(c);
+        });
+        configurator.AddRequestClient<UpdateMap>();
+        configurator.AddRequestClient<SetBackground>();
+        configurator.AddRequestClient<DeleteBackground>();
 
         configurator.AddConsumer<StationsRequestHandler>();
         configurator.AddRequestClient<GetMapStations>();

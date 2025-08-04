@@ -28,4 +28,10 @@ public interface IMapClient
     /// </summary>
     [SignalRMethod("StationJamStateChanged")]
     Task StationJamStateChanged(StationJamStateDto stationJamState);
+
+    /// <summary>
+    /// Map changed.
+    /// </summary>
+    [SignalRMethod("MapChanged")]
+    Task MapChanged(MapChangedDto mapChangedDto);
 }

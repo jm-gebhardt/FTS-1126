@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
@@ -14,7 +14,7 @@ public class StationsControllerTests
     [TestMethod]
     public async Task GetStation_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
     {
-        var map = new TransportOrder.Domain.Models.Map.Map("map".ToGuid(), "map", [], 8, 8, 1, 1, 1, DateTime.UtcNow);
+        var map = MapGenerator.Generate();
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = map.MapId };
 
         StationsControllerTestFixture<GetStations, StationsRequestHandler> fixture = new StationsControllerTestFixture<GetStations, StationsRequestHandler>()

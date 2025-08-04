@@ -8,6 +8,9 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 /// </summary>
 public record Map
 {
+    private readonly MapBackground? _baseBackground;
+    private MapBackground? _customBackground;
+
     /// <summary>
     /// The correlation id o the map.
     /// </summary>
@@ -19,77 +22,84 @@ public record Map
     public string MapId { get; init; }
 
     /// <summary>
-    /// Map in form bytes
-    /// </summary>
-    public byte[]? MapValue { get; init; }
-
-    /// <summary>
     /// Timestamp of last modification
     /// </summary>
     public DateTime ModificationDate { get; init; }
 
     /// <summary>
-    /// The resolution of the maps image. Expressed as how many [m] per pixel are represented
+    /// The identifier of the base map background.
     /// </summary>
-    public double Resolution { get; init; }
+    [UsedImplicitly]
+    public Guid? BaseBackgroundId { get; set; }
 
     /// <summary>
-    /// The x offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
+    /// The base background image of the map.
     /// </summary>
-    public double XOffset { get; init; }
+    public MapBackground? BaseBackground
+    {
+        get => _baseBackground;
+        init
+        {
+            _baseBackground = value;
+            if (_baseBackground != null)
+            {
+                _baseBackground.IsCustom = false;
+            }
+        }
+    }
 
     /// <summary>
-    /// The y offset of the map in [m] where the mapped graph coordinate system starts. Origin is the left upper corner.
+    /// The Identifier of the custom map background.
     /// </summary>
-    public double YOffset { get; init; }
+    [UsedImplicitly]
+    public Guid? CustomBackgroundId { get; set; }
 
     /// <summary>
-    /// The width of the map [px]
+    /// Optional custom background image of the map.
     /// </summary>
-    public int Width { get; init; }
-
-    /// <summary>
-    /// The height of the map [px]
-    /// </summary>
-    public int Height { get; init; }
+    public MapBackground? CustomBackground
+    {
+        get => _customBackground;
+        set
+        {
+            _customBackground = value;
+            if (_customBackground != null)
+            {
+                _customBackground.IsCustom = true;
+            }
+        }
+    }
 
     /// <summary>
     /// The list of nodes in the graph.
     /// </summary>
-    public ICollection<EfNode> Nodes { get; init; }
+    public required ICollection<EfNode> Nodes { get; init; }
 
     /// <summary>
     /// The list of edges in the graph.
     /// </summary>
-    public ICollection<EfEdge> Edges { get; init; }
+    public required ICollection<EfEdge> Edges { get; init; }
 
     /// <summary>
     /// The list of AgvIds related to this map.
     /// </summary>
     [UsedImplicitly]
-    public ICollection<MapAgv> MapAgvs { get; init; }
+    public required ICollection<MapAgv> MapAgvs { get; init; }
 
     /// <summary>
-    /// Initializes a new <see cref="Map"/> instance.
+    /// Internal
     /// </summary>
-    public Map(Guid correlationId,
-        string mapId,
-        byte[]? mapValue,
-        int width,
-        int height,
-        double resolution,
-        double xOffset,
-        double yOffset,
-        DateTime modificationDate)
+    private Map()
+    {
+        MapId = null!;
+    }
+
+    /// <inheritdoc cref="Map"/>
+    public Map(Guid correlationId, string mapId, MapBackground? baseBackground, DateTime modificationDate)
     {
         CorrelationId = correlationId;
         MapId = mapId;
-        MapValue = mapValue;
-        Width = width;
-        Height = height;
-        Resolution = resolution;
-        XOffset = xOffset;
-        YOffset = yOffset;
+        BaseBackground = baseBackground;
         ModificationDate = modificationDate;
         Nodes = new List<EfNode>();
         Edges = new List<EfEdge>();

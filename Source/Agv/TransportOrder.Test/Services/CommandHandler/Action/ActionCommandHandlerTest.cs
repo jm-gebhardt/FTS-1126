@@ -1518,7 +1518,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
-            .AddActionGroup(actionGroup, isManual:true);
+            .AddActionGroup(actionGroup, isManual: true);
 
         var command = new TryStartNewActionGroup(agv.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
@@ -1715,7 +1715,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
-        
+
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }
 
@@ -1726,16 +1726,19 @@ public class ActionCommandHandlerTest
             assignedAgv: null,
             pickActionState: ActionState.Created,
             moveActionState: ActionState.Created);
+        const string newtargetNode = "target";
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
-
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, newtargetNode));
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
+            ag.CorrelationId == actionGroup.CorrelationId &&
+            ag.Actions[2].Target.NodeId == newtargetNode)), Times.Once);
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }
@@ -1971,15 +1974,15 @@ public class ActionCommandHandlerTest
 
     [TestMethod]
     public async Task CancelOrAbortActionGroup_StartedActionGroup_ResetIsQueueingAndPublishAbortActionGroup()
-    { 
+    {
         var agv = AgvGenerator.GenerateBusyAgv();
         agv.IsQueueing = true;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
-            pickActionState: ActionState.Started, 
-            dropActionState: ActionState.Created, 
+            pickActionState: ActionState.Started,
+            dropActionState: ActionState.Created,
             assignedAgv: agv.CorrelationId,
             orderId: "Queuing"
-            );
+        );
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -2017,7 +2020,7 @@ public class ActionCommandHandlerTest
     {
         var closestAgv = AgvGenerator.GenerateBusyAgv();
         var route = new Route(42, ["a node"], [Guid.NewGuid()]);
-        var chargingActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: closestAgv.CorrelationId, actionStateCharge:ActionState.Started);
+        var chargingActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: closestAgv.CorrelationId, actionStateCharge: ActionState.Started);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .WithRunningIdleActionGroups([])
@@ -2086,7 +2089,7 @@ public class ActionCommandHandlerTest
         var saveActionGroupAbortionCommand = fixture.TestHarness.Published.Select<SaveActionGroupAbortion>().First().Context.Message;
         saveActionGroupAbortionCommand.CorrelationId.ShouldBe(parkingActionGroup.CorrelationId);
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromParking);
-        saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First( a => a.ActionType == ActionType.Move).CorrelationId);
+        saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First(a => a.ActionType == ActionType.Move).CorrelationId);
         pickDropActionGroup.HasPriority.ShouldBeTrue();
     }
 
@@ -2147,7 +2150,7 @@ public class ActionCommandHandlerTest
     {
         const bool previousDockFront = true;
         var closestAgv = AgvGenerator.GenerateBusyAgv();
-        var warning = AgvErrorGenerator.GenerateAgvError(closestAgv.CorrelationId, errorLevel:ErrorLevel.Warning);
+        var warning = AgvErrorGenerator.GenerateAgvError(closestAgv.CorrelationId, errorLevel: ErrorLevel.Warning);
         var route = new Route(42, ["a node", "waypoint"], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
         parkingActionGroup.Actions.Single().Nodes = ["start", "waypoint"];
@@ -2159,7 +2162,7 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([warning])
             .WithClosestAgv(closestAgv.CorrelationId, route)
-            .WithNode(new GraphNode(){Type = AgvGraph.NodeType.PickDrop, Id = "start"})
+            .WithNode(new GraphNode() { Type = AgvGraph.NodeType.PickDrop, Id = "start" })
             .AddAgvs([closestAgv])
             .WithLastActionDockFront(previousDockFront);
 
@@ -2292,7 +2295,7 @@ public class ActionCommandHandlerTest
     public async Task ReassignActionGroup_NoSelectedAgv_NoAgvAvailable_PublishesActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
-        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv:Guid.NewGuid(), pickActionState: ActionState.Started);
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Started);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(pickDropActionGroup)
             .WithClosestAgv(null, null)
@@ -2300,7 +2303,7 @@ public class ActionCommandHandlerTest
 
         var command = new ReassignActionGroup(pickDropActionGroup.CorrelationId, null);
         await fixture.TestHarness.Bus.Publish(command);
-      
+
         await fixture.ShouldHaveConsumedAsync<ReassignActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
@@ -2367,7 +2370,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task ForceQueueActionGroup_ValidData_PublishesActionGroupQueued()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued:false);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
         actionGroup.IsQueued.ShouldBeFalse();
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()

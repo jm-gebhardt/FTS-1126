@@ -14,8 +14,8 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 /// </summary>
 [UsedImplicitly]
 public class NodeChangedConsumer(
-    IMapPublisher mapPublisher, 
-    ILogger<NodeChangedConsumer> logger) : 
+    IMapPublisher mapPublisher,
+    ILogger<NodeChangedConsumer> logger) :
     IConsumer<NodeStateChanged>,
     IConsumer<NodeApproachingPropertiesUpdated>,
     IConsumer<JamStateChanged>
@@ -23,37 +23,37 @@ public class NodeChangedConsumer(
     /// <summary>
     /// Handles the <see cref="NodeStateChanged"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<NodeStateChanged> context)
+    public Task Consume(ConsumeContext<NodeStateChanged> context)
     {
         var (nodeLock, stationId, modifyingUser, lockReason, lockDescription) = context.Message;
-        
+
         if (stationId != null)
         {
             logger.LogStationInformation(
-                LogCodes.StationStateChanged, 
-                stationId.Value, 
+                LogCodes.StationStateChanged,
+                stationId.Value,
                 "State Changed",
                 $"State of station changed to '{nodeLock.NodeState}'",
                 new Dictionary<string, object?> { { LogLabels.NodeState, nodeLock.NodeState } });
         }
-        
-        await mapPublisher.SendNodeStateChangedAsync(nodeLock, stationId, modifyingUser, lockReason, lockDescription);
+
+        return mapPublisher.SendNodeStateChangedAsync(nodeLock, stationId, modifyingUser, lockReason, lockDescription);
     }
 
     /// <summary>
     /// Handles the <see cref="NodeApproachingPropertiesUpdated"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<NodeApproachingPropertiesUpdated> context)
+    public Task Consume(ConsumeContext<NodeApproachingPropertiesUpdated> context)
     {
         (var mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
-        await mapPublisher.SendNodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection);
+        return mapPublisher.SendNodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection);
     }
 
     /// <summary>
     /// Handles the <see cref="JamStateChanged"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<JamStateChanged> context)
+    public Task Consume(ConsumeContext<JamStateChanged> context)
     {
-        await mapPublisher.SendJamStateUpdate(context.Message.CorrelationId, context.Message.HasPalletJam);
+        return mapPublisher.SendJamStateUpdate(context.Message.CorrelationId, context.Message.HasPalletJam);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
@@ -23,8 +24,8 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map1 = fixture.GetNewMap();
-        var map2 = fixture.GetNewMap("2");
+        var map1 = MapGenerator.Generate();
+        var map2 = MapGenerator.Generate();
 
         fixture.Add(map1);
         fixture.Add(map2);
@@ -35,17 +36,17 @@ public class EfMapRepositoryTest
     }
 
     [TestMethod]
-    public void GetMapImage_ShouldReturnMapImage_WhenMapIsFound()
+    public async Task GetBackgroundImageAsync_ShouldReturnMapImage_WhenMapIsFound()
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map1 = fixture.GetNewMap();
+        var map1 = MapGenerator.Generate();
 
         fixture.Add(map1);
 
-        byte[]? mapValue1 = fixture.Repository.GetMapImage(map1.CorrelationId);
+        byte[] backgroundImage = await fixture.Repository.GetBackgroundImageAsync(map1.CorrelationId);
 
-        map1.MapValue.ShouldBe(mapValue1);
+        backgroundImage.ShouldBe(map1.BaseBackground!.Image);
     }
 
     [TestMethod]
@@ -53,7 +54,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap();
+        var map = MapGenerator.Generate();
         map.MapAgvs.Add(new MapAgv(map.CorrelationId, map, Guid.NewGuid(), null));
         fixture.Add(map);
 
@@ -65,23 +66,11 @@ public class EfMapRepositoryTest
     }
 
     [TestMethod]
-    public void GetMap_ShouldThrowInvalidOperationException_WhenMapIsNotFound()
-    {
-        var fixture = new EfMapRepositoryTestFixture();
-
-        var map = fixture.GetNewMap();
-
-        fixture.Add(map);
-
-        fixture.Repository.GetMapImage(Guid.NewGuid()).ShouldBeNull();
-    }
-
-    [TestMethod]
     public void Exists_ShouldReturnTrue_WhenMapIsFound()
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap();
+        var map = MapGenerator.Generate();
 
         fixture.Add(map);
 
@@ -94,7 +83,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap();
+        var map = MapGenerator.Generate();
 
         fixture.Add(map);
 
@@ -106,14 +95,13 @@ public class EfMapRepositoryTest
     public async Task AddOrUpdate_ShouldReturnTrue_WhenAddingNewMap()
     {
         var fixture = new EfMapRepositoryTestFixture();
-        var map = fixture.GetNewMap();
+        var map = MapGenerator.Generate();
 
         bool result = await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
         result.ShouldBeTrue();
 
-        byte[]? mapImage = fixture.Repository.GetMapImage(map.CorrelationId);
-        mapImage.ShouldNotBeNull();
-        mapImage.ShouldBe(map.MapValue);
+        var background = await fixture.Repository.GetMapAsync(map.CorrelationId);
+        background.BaseBackground.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -121,31 +109,42 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        var map = fixture.GetNewMap();
+        var map = MapGenerator.Generate();
 
         bool result = await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
         result.ShouldBeTrue();
 
-        byte[]? mapImage = fixture.Repository.GetMapImage(map.CorrelationId);
-        mapImage.ShouldNotBeNull();
-        mapImage.ShouldBe(map.MapValue);
+        var background = await fixture.Repository.GetMapAsync(map.CorrelationId);
+        background.BaseBackground.ShouldNotBeNull();
+        background.BaseBackground.Image.ShouldBe(map.BaseBackground!.Image);
 
-        var mapUpdate = new Map(
-            "mapId".ToGuid(),
-            "mapId",
+        const string mapNew = "map-new";
+        const int width = 22;
+        const int height = 33;
+        const double resolution = 44;
+        const double xOffset = 55;
+        const double yOffset = 66;
+        var mapUpdate = MapGenerator.Generate(
+            mapNew.ToGuid(),
             Convert.FromBase64String(EfMapRepositoryTestFixture.SmallImage2),
-            1,
-            1,
-            2,
-            2,
-            2,
-            DateTime.UtcNow
-        );
+            mapNew,
+            width,
+            height,
+            resolution,
+            xOffset,
+            yOffset,
+            DateTime.Now);
 
         result = await fixture.Repository.AddOrUpdateAsync(mapUpdate, CancellationToken.None);
         result.ShouldBeTrue();
-        mapImage = fixture.Repository.GetMapImage(mapUpdate.CorrelationId);
-        mapImage.ShouldNotBeNull();
-        mapImage.ShouldBe(mapUpdate.MapValue);
+        background = await fixture.Repository.GetMapAsync(mapUpdate.CorrelationId);
+        background.BaseBackground.ShouldNotBeNull();
+        background.BaseBackground.Image.ShouldNotBeNull();
+        background.BaseBackground.Image.ShouldBe(Convert.FromBase64String(EfMapRepositoryTestFixture.SmallImage2));
+        background.BaseBackground.Width.ShouldBe(width);
+        background.BaseBackground.Height.ShouldBe(height);
+        background.BaseBackground.Resolution.ShouldBe(resolution);
+        background.BaseBackground.XOffset.ShouldBe(xOffset);
+        background.BaseBackground.YOffset.ShouldBe(yOffset);
     }
 }

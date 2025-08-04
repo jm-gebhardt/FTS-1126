@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -16,90 +16,45 @@ public class MapTest
         const string mapId = "mapId";
         var correlationId = mapId.ToGuid();
         const float resolution = 0.3f;
-        const float xOffSet = 1;
-        const float yOffSet = 1;
+        const double xOffSet = 1;
+        const double yOffSet = 1;
+        const int width = 8;
+        const int height = 8;
         var now = DateTime.UtcNow;
-        var map = new Map(
-            correlationId,
-            mapId,
-            Convert.FromBase64String(Base64String),
-            8,
-            8,
+        var map = MapGenerator.Generate(correlationId,
+            Convert.FromBase64String(Base64String), mapId,
+            width,
+            height,
             resolution,
             xOffSet,
             yOffSet,
-            now
-        );
+            now);
+
         map.CorrelationId.ShouldBe(correlationId);
         map.MapId.ShouldBe(mapId);
-        map.MapValue.ShouldBe(Convert.FromBase64String(Base64String));
         map.ModificationDate.ShouldBe(now);
-        map.Height.ShouldBe(8);
-        map.Width.ShouldBe(8);
-        map.Resolution.ShouldBe(resolution);
-        map.XOffset.ShouldBe(xOffSet);
-        map.YOffset.ShouldBe(yOffSet);
+        map.BaseBackground.ShouldNotBeNull();
+        map.BaseBackground.Image.ShouldBe(Convert.FromBase64String(Base64String));
+
+        map.BaseBackground.Height.ShouldBe(width);
+        map.BaseBackground.Width.ShouldBe(height);
+        map.BaseBackground.Resolution.ShouldBe(resolution);
+        map.BaseBackground.XOffset.ShouldBe(xOffSet);
+        map.BaseBackground.YOffset.ShouldBe(yOffSet);
     }
 
     [TestMethod]
     public void Create_NoImageProvided_AllPropertiesSet()
     {
-        const string mapId = "mapId";
-        var correlationId = mapId.ToGuid();
-        const float resolution = 0.3f;
-        const float xOffSet = 1;
-        const float yOffSet = 1;
+        var correlationId = Guid.NewGuid();
         var now = DateTime.UtcNow;
-        var map = new Map(
+        var map = MapGenerator.Generate(
             correlationId,
-            mapId,
-            Array.Empty<byte>(),
-            0,
-            0,
-            resolution,
-            xOffSet,
-            yOffSet,
-            now
+            background: null,
+            modificationDate: now
         );
         map.CorrelationId.ShouldBe(correlationId);
-        map.MapId.ShouldBe(mapId);
-        map.MapValue.ShouldBe(Array.Empty<byte>());
         map.ModificationDate.ShouldBe(now);
-        map.Height.ShouldBe(0);
-        map.Width.ShouldBe(0);
-        map.Resolution.ShouldBe(resolution);
-        map.XOffset.ShouldBe(xOffSet);
-        map.YOffset.ShouldBe(yOffSet);
-    }
-
-    [TestMethod]
-    public void Create_InvalidImageProvided_AllPropertiesSet()
-    {
-        const string mapId = "mapId";
-        var correlationId = mapId.ToGuid();
-        const float resolution = 0.3f;
-        const float xOffSet = 1;
-        const float yOffSet = 1;
-        var now = DateTime.UtcNow;
-        var map = new Map(
-            correlationId,
-            mapId,
-            null,
-            0,
-            0,
-            resolution,
-            xOffSet,
-            yOffSet,
-            now
-        );
-        map.CorrelationId.ShouldBe(correlationId);
-        map.MapId.ShouldBe(mapId);
-        map.MapValue.ShouldBeNull();
-        map.ModificationDate.ShouldBe(now);
-        map.Height.ShouldBe(0);
-        map.Width.ShouldBe(0);
-        map.Resolution.ShouldBe(resolution);
-        map.XOffset.ShouldBe(xOffSet);
-        map.YOffset.ShouldBe(yOffSet);
+        map.BaseBackground.ShouldBeNull();
     }
 }

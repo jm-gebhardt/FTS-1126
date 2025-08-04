@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -19,8 +20,6 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     where TRequestClient : class
     where TConsumer : class, IConsumer
 {
-    public const string Base64String = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
-
     private readonly string[] _agvSerialNumbers = { "AGV001", "AGV002" };
     private readonly string[] _orders = { "ORDER001", "ORDER002", "" };
     private readonly AgvState[] _states = { AgvState.Busy, AgvState.Discovered };
@@ -49,9 +48,9 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         Maps = new List<TransportOrder.Domain.Models.Map.Map>
         {
-            new(_correlationIds[0], "Area51_Floor1_Compartment47", Convert.FromBase64String(Base64String), 1, 1, 0.01, 1, 2, DateTime.UtcNow),
-            new(_correlationIds[1], "Area51_Floor1_Compartment48", Convert.FromBase64String(Base64String), 1, 1, 0.02, 2, 3, DateTime.UtcNow),
-            new(_correlationIds[2], "Area51_Floor1_Compartment49", Convert.FromBase64String(Base64String), 1, 1, 0.03, 2, 1, DateTime.UtcNow)
+            MapGenerator.Generate(),
+            MapGenerator.Generate(),
+            MapGenerator.Generate()
         };
         MapRepositoryMock = GetMapRepository();
         AddServices(sc =>
@@ -98,9 +97,13 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         return repositoryMock;
     }
 
-    public MapRequestTestFixture<TRequestClient, TConsumer> WithImage(string? image)
+    public MapRequestTestFixture<TRequestClient, TConsumer> WithMapBackground(MapBackground? background = null)
     {
-        MapRepositoryMock.Setup(x => x.GetMapImage(It.IsAny<Guid>())).Returns(image != null ? Convert.FromBase64String(image) : null);
+        background ??= MapBackgroundGenerator.Generate();
+        MapRepositoryMock
+            .Setup(r => r.GetBackgroundImageAsync(background.CorrelationId))
+            .ReturnsAsync(background.Image);
+        
         return this;
     }
 }

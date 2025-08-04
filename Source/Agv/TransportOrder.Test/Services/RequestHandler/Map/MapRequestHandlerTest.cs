@@ -1,8 +1,12 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -51,5 +55,34 @@ public class MapRequestHandlerTest
         await fixture.GetResponseAsync<Success>(new TrySettingNodeApproachingProperties(fixture.Maps[0].CorrelationId, "nodeId", 12, 12, DockingDirection.Both));
 
         await fixture.ShouldHavePublishedAsync<SetNodeApproachingProperties>();
+    }
+
+    [TestMethod]
+    public async Task GetBackgroundImage_ShouldReturn_ImageByteArray_WhenBackgroundExists()
+    {
+        var mapBackground = MapBackgroundGenerator.Generate();
+        MapRequestTestFixture<GetBackgroundImage, MapRequestHandler> fixture = new MapRequestTestFixture<GetBackgroundImage, MapRequestHandler>()
+            .WithMapBackground(mapBackground);
+
+        Response<GotBackgroundImage> response = await fixture.GetResponseAsync<GotBackgroundImage>(new GetBackgroundImage(mapBackground.CorrelationId));
+
+        response.Message.Image.ShouldNotBeEmpty();
+        response.Message.Image.Length.ShouldBe(mapBackground.Image.Length);
+
+        var harness = fixture.MediatorTestHarness;
+        (await harness.Consumed.Any<GetBackgroundImage>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GotBackgroundImage>()).ShouldBeTrue();
+        (await harness.Published.Any<GetBackgroundImage>()).ShouldBeTrue();
+        (await harness.Published.Any<GotBackgroundImage>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task GetBackgroundImage_ShouldThrow_MapNotFoundException_WhenImageMissing()
+    {
+        var mapBackground = MapBackgroundGenerator.Generate(image: []);
+        MapRequestTestFixture<GetBackgroundImage, MapRequestHandler> fixture = new MapRequestTestFixture<GetBackgroundImage, MapRequestHandler>()
+            .WithMapBackground(mapBackground);
+
+        await MediatorShould.ThrowRequestExceptionAsync<MapNotFoundException>(async () => await fixture.GetResponseAsync<GotBackgroundImage>(new GetBackgroundImage(mapBackground.CorrelationId)));
     }
 }

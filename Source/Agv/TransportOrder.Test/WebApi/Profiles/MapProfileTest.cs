@@ -3,6 +3,7 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -39,11 +40,10 @@ public class MapProfileTest
     {
         var correlationId = Guid.NewGuid();
 
-        var mapMessageContent = new Map(correlationId, "Area51_Floor1_Compartment47", 50.0d, 0.01, 1, new[]
-        {
+        var mapMessageContent = new Map(correlationId, "Area51_Floor1_Compartment47", new BackgroundInfo(correlationId, 50.0d, 0.01, 1, 10, 10, true), [
             new Guid("3D3D5DA8-1A01-459E-B0DA-EBB875D393F6"),
             new Guid("A781AF33-CB57-4143-8EEF-1590FE9EC2ED")
-        }, 10, 10);
+        ]);
         ImmutableDictionary<Guid, Guid[]> agvMapRelation = new Dictionary<Guid, Guid[]>
         {
             {
@@ -57,11 +57,12 @@ public class MapProfileTest
         dtoMap.ShouldNotBeNull();
         dtoMap.CorrelationId.ShouldBe(mapMessageContent.CorrelationId);
         dtoMap.MapId.ShouldBe(mapMessageContent.MapId);
-        dtoMap.Resolution.ShouldBe(mapMessageContent.Resolution);
-        dtoMap.Resolution.ShouldBe(mapMessageContent.Resolution);
-        dtoMap.XOffset.ShouldBe(mapMessageContent.XOffset);
-        dtoMap.YOffset.ShouldBe(mapMessageContent.YOffset);
+        dtoMap.Resolution.ShouldBe(mapMessageContent.BackgroundInfo.Resolution);
+        dtoMap.Resolution.ShouldBe(mapMessageContent.BackgroundInfo.Resolution);
+        dtoMap.XOffset.ShouldBe(mapMessageContent.BackgroundInfo.XOffset);
+        dtoMap.YOffset.ShouldBe(mapMessageContent.BackgroundInfo.YOffset);
         dtoMap.RelatedAgvs.ShouldAllBe(p => agvMapRelation.Any(kvp => kvp.Key.Equals(dtoMap.CorrelationId) && kvp.Value.Contains(p)));
+        dtoMap.IsCustom.ShouldBeTrue();
     }
 
     [TestMethod]
