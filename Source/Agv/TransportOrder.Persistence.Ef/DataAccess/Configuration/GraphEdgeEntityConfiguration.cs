@@ -21,6 +21,9 @@ public class GraphEdgeEntityConfiguration : IEntityTypeConfiguration<EfEdge>
             .HasForeignKey(e => e.FromNodeId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
+        builder.Property(x => x.FromNodeId).IsCaseSensitive();
+        builder.Property(x => x.ToNodeId).IsCaseSensitive();
+
         builder.HasOne<EfNode>()
             .WithMany()
             .HasForeignKey(e => e.ToNodeId)

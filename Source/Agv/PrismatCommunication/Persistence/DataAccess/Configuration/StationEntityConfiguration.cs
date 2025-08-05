@@ -15,9 +15,9 @@ public class StationEntityConfiguration:IEntityTypeConfiguration<Station>
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Node).HasMaxLength(DbStringLimits.NodeId);
-        builder.Property(e => e.Source).HasMaxLength(DbStringLimits.NodeId);
-        builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Node).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
+        builder.Property(e => e.Source).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
+        builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
         builder.Property(e => e.GroupId);
         builder.Property(e => e.AgvCorrelationId);
         builder.Property(e => e.Occupancy);

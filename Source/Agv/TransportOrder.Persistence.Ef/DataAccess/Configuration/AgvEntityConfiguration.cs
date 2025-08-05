@@ -60,6 +60,10 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
                             .Metadata.SetValueComparer(EfValueConverters.CreateListComparer<string>());
                         break;
 
+                    case nameof(AgvStatus.LastNodeId):
+                        o.Property(s => s.LastNodeId).IsCaseSensitive();
+                        break;
+
                     default:
                         o.Property(propertyInfo.PropertyType, propertyInfo.Name);
                         break;

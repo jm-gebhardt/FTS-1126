@@ -22,7 +22,11 @@ public class AgvGraphEntityConfiguration : IEntityTypeConfiguration<EfAgvGraph>
 
         builder.HasMany(m => m.Nodes)
             .WithMany(n => n.AgvGraphs)
-            .UsingEntity("AgvGraphNodes");
+            .UsingEntity(j =>
+            {
+                j.ToTable("AgvGraphNodes");
+                j.Property<string>("NodesId").IsCaseSensitive();
+            });
 
         builder.ConfigureAllProperties(except: new[] { nameof(EfAgvGraph.Nodes), nameof(EfAgvGraph.Edges) });
     }

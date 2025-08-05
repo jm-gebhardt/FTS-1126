@@ -33,7 +33,7 @@ public class CargoEntityConfiguration : IEntityTypeConfiguration<Cargo>
             .HasForeignKey<Cuboid>(ShadowIdName)
             .OnDelete(DeleteBehavior.ClientCascade);
         builder.Navigation(p => p.Dimension).AutoInclude();
-        builder.Property(e => e.LoadId).HasMaxLength(DbStringLimits.Hu);
+        builder.Property(e => e.LoadId).HasMaxLength(DbStringLimits.Hu).IsCaseSensitive();
         builder.Property(e => e.LoadPosition).HasMaxLength(DbStringLimits.Hu);
         builder.Property(e => e.LoadType).HasMaxLength(DbStringLimits.Hu);
         builder.ConfigureAllProperties(except: new[] { nameof(Cargo.CenterPointPosition), nameof(Cargo.Dimension), nameof(Cargo.LoadId)});

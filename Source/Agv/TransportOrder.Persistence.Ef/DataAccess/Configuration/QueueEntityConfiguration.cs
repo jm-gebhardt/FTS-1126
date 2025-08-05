@@ -26,7 +26,7 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
         {
             nodeBuilder.WithOwner().HasForeignKey("QueueId");
             nodeBuilder.HasKey(n => n.NodeId);
-            nodeBuilder.Property(n => n.NodeId).IsRequired().HasMaxLength(DbStringLimits.NodeId);
+            nodeBuilder.Property(n => n.NodeId).IsRequired().HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
             nodeBuilder.Property(n => n.Position).IsRequired();
             nodeBuilder.Property(n => n.OccupiedAgv);
             nodeBuilder.Property(n => n.LastOccupiedDate);

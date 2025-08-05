@@ -15,7 +15,7 @@ public class ShortLoopTargetStationEntityConfiguration: IEntityTypeConfiguration
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Current).HasMaxLength(DbStringLimits.NodeId);
-        builder.Property(e => e.Primary).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Current).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
+        builder.Property(e => e.Primary).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
     }
 }

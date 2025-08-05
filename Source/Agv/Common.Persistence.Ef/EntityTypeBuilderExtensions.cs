@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -73,6 +74,15 @@ public static class EntityTypeBuilderExtensions
         propertyBuilder.Metadata.SetValueConverter(converter);
         propertyBuilder.Metadata.SetValueComparer(comparer);
 
+        return propertyBuilder;
+    }
+
+    /// <summary>
+    /// Configure this property to be case-sensitive.
+    /// </summary>
+    public static PropertyBuilder<T> IsCaseSensitive<T>(this PropertyBuilder<T> propertyBuilder)
+    {
+        propertyBuilder.UseCollation("SQL_Latin1_General_CP1_CS_AS");
         return propertyBuilder;
     }
 }

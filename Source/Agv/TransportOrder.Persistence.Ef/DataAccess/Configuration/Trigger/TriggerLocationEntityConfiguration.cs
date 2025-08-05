@@ -25,7 +25,7 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
         builder.Property(e => e.MapId);
         builder.Property(e => e.EdgeId);
-        builder.Property(e => e.NodeId).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.NodeId).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
         builder.Property(e => e.Agvs).HasJsonConversion();
     }
 }

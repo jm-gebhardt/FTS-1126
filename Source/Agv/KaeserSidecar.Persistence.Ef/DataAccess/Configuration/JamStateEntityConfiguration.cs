@@ -13,7 +13,7 @@ public class JamStateEntityConfiguration: IEntityTypeConfiguration<JamState>
     {
         builder.HasKey(e => e.Station);
         builder.Property(e => e.LastStateChangeTime);
-        builder.Property(e => e.Station).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Station).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
         builder.Property(e => e.State);
     }
 }

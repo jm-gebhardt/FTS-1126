@@ -16,7 +16,7 @@ public class DecisionPointActionEntityConfiguration : IEntityTypeConfiguration<D
         builder.Property(e => e.CorrelationId);
         builder.Property(e => e.AgvCorrelationId);
         builder.Property(e => e.StationCount).HasDefaultValue(TargetSelection.DefaultStationCount);
-        builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
         builder.Property(e => e.EntryTime);
     }
 }

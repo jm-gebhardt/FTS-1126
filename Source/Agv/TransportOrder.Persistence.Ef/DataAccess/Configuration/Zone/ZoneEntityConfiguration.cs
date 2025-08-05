@@ -14,7 +14,7 @@ public class ZoneEntityConfiguration:IEntityTypeConfiguration<Domain.Models.Zone
     {
         builder.HasKey(e => e.CorrelationId);
         builder.ToTable(TableName);
-        builder.Property(e => e.ZoneId).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.ZoneId).HasMaxLength(DbStringLimits.Description).IsCaseSensitive();
         builder.HasMany(e => e.Polygon)
             .WithOne()
             .HasForeignKey(p => p.LocationId)

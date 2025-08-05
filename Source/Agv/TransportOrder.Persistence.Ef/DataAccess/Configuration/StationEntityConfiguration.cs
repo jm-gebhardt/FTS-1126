@@ -12,7 +12,7 @@ public class StationEntityConfiguration : IEntityTypeConfiguration<Station>
     public void Configure(EntityTypeBuilder<Station> builder)
     {
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Name).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Name).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
         builder.Property(e => e.MapName).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.LockReason).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.LockedBy).HasMaxLength(DbStringLimits.User);

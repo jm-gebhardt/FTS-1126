@@ -40,7 +40,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             a.Property(e => e.AdditionalInfo).HasMaxLength(DbStringLimits.Description);
             a.OwnsOne(e => e.Target, c =>
             {
-                c.Property(t => t.NodeId).HasMaxLength(DbStringLimits.NodeId);
+                c.Property(t => t.NodeId).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
                 c.OwnsOne(t => t.Position);
             });
             a.Property(o => o.InfoToAgv).HasJsonConversion();

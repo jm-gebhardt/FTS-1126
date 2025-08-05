@@ -14,7 +14,7 @@ public class WaitingPointActionEntityConfiguration : IEntityTypeConfiguration<Wa
         builder.HasKey(e => e.CorrelationId);
         builder.Property(e => e.CorrelationId);
         builder.Property(e => e.AgvCorrelationId);
-        builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId).IsCaseSensitive();
         builder.Property(e => e.CreatedTime);
     }
 }
