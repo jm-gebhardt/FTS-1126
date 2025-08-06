@@ -49,9 +49,9 @@ public class AgvErrorCommandHandlerTest
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, position: new AgvPosition(true,1, 1, 1, 0));
         var fixture = new AgvErrorCommandHandlerTestFixture()
             .WithAgv(agv)
-            .WithAddOrUpdateAgvErrorStatusReturnValue(true, errorStatus.Errors!);
+            .WithAddOrUpdateAgvErrorStatusReturnValue(true, errorStatus.Errors);
 
-        await fixture.TestHarness.Bus.Publish(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors!, errorStatus.AgvPosition));
+        await fixture.TestHarness.Bus.Publish(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors, errorStatus.AgvPosition));
         await fixture.ShouldHaveConsumedAsync<UpdateErrorStatus>();
         await fixture.ShouldHavePublishedAsync<AgvErrorChanged>();
         await fixture.ShouldHavePublishedAsync<AgvErrorReceived>();

@@ -36,7 +36,7 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
     {
-        (var correlationId, List<AgvError>? errors, var position) = context.Message;
+        (var correlationId, List<AgvError> errors, var position) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         IList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);

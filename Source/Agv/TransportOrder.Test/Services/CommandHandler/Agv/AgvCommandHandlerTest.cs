@@ -114,7 +114,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Fatal);
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors!, errorStatus.AgvPosition));
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors, errorStatus.AgvPosition));
         fixture.AgvDb.Verify(r =>
             r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Once());
     }
@@ -126,7 +126,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Warning);
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors!, errorStatus.AgvPosition));
+        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors, errorStatus.AgvPosition));
         fixture.AgvDb.Verify(r =>
             r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Never());
     }

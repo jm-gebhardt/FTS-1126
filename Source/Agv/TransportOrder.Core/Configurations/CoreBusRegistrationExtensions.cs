@@ -135,8 +135,11 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddRequestClient<LockAgv>();
         busRegistrationConfigurator.AddRequestClient<SetAgvForceIdle>();
 
-        busRegistrationConfigurator.AddConsumer<AgvErrorCommandHandler>();
-        busRegistrationConfigurator.AddRequestClient<UpdateErrorStatus>();
+        busRegistrationConfigurator.AddConsumer<AgvErrorCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<UpdateErrorStatus, AgvErrorCommandHandler>(c);
+        });
     }
 
     private static void RegisterTriggerHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)

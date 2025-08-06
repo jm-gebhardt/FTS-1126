@@ -59,9 +59,9 @@ public class MqttStateConsumer : IConsumer<MqttState>
         if (context.Message.AgvPosition != null)
         {
             await context.Publish(new AgvPositionReceived(
-                _stateParser.CorrelationId,
-                _stateParser.SerialNumber,
-                _stateParser.AgvPosition)
+                    _stateParser.CorrelationId,
+                    _stateParser.SerialNumber,
+                    _stateParser.AgvPosition)
                 {
                     MessageCreatedDate = context.Message.Timestamp.UtcDateTime
                 }
@@ -71,8 +71,8 @@ public class MqttStateConsumer : IConsumer<MqttState>
 
     private async Task SendAgvErrorStatusAsync(ConsumeContext<MqttState> context)
     {
-        var agvErrorStatusReceived = new AgvErrorStatusReceived(_stateParser.CorrelationId, _stateParser.AgvErrors, _stateParser.AgvPosition);
-        if (agvErrorStatusReceived.Errors?.Any(e => e.IsPushedManually())?? false)
+        var agvErrorStatusReceived = new AgvErrorStatusReceived(_stateParser.CorrelationId, _stateParser.AgvErrors ?? [], _stateParser.AgvPosition);
+        if (agvErrorStatusReceived.Errors.Any(e => e.IsPushedManually()))
         {
             _logger.LogInformation("Agv {AgvCorrelationId} moved in push or joystick mode", agvErrorStatusReceived.CorrelationId);
             await context.Publish(new AgvSetToPushOrJoystickMode(agvErrorStatusReceived.CorrelationId));
@@ -90,15 +90,15 @@ public class MqttStateConsumer : IConsumer<MqttState>
         if (_stateParser.WifiMetrics != null)
         {
             await context.Publish(new AgvWifiMetricsReceived(
-                _stateParser.CorrelationId,
-                _stateParser.SerialNumber,
-                _stateParser.AgvPosition,
-                _stateParser.WifiMetrics)
+                    _stateParser.CorrelationId,
+                    _stateParser.SerialNumber,
+                    _stateParser.AgvPosition,
+                    _stateParser.WifiMetrics)
                 {
                     MessageCreatedDate = context.Message.Timestamp.UtcDateTime
                 }
                 , context.CancellationToken);
-            
+
             _logger.LogDebug("Published {MessageType} for {AgvId}", nameof(AgvWifiMetricsReceived), _stateParser.SerialNumber);
         }
     }

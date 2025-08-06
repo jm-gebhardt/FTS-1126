@@ -3,6 +3,8 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -14,14 +16,16 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
 
     public AgvErrorRepositoryTestFixture()
     {
-        AgvErrorRepository = new EfAgvErrorRepository(ContextFactory, _errorCache);
+        AgvErrorRepository = new EfAgvErrorRepository(ContextFactory, _errorCache, Mock.Of<ILogger<EfAgvErrorRepository>>());
     }
 
-    public AgvErrorRepositoryTestFixture WithAgvErrorStatus(AgvErrorStatusReceived agvErrorStatus)
+    public AgvErrorRepositoryTestFixture WithAgvErrors(List<AgvError> errors)
     {
-        AddInitTask(AgvErrorRepository.AddOrUpdateAgvErrorStatus(agvErrorStatus.Errors, agvErrorStatus.CorrelationId));
+        AddInitTask(AgvErrorRepository.AddOrUpdateAgvErrorStatus(errors, errors.GroupBy(e => e.AgvCorrelationId).Single().Key));
         return this;
     }
+
+    public AgvErrorRepositoryTestFixture WithAgvErrorStatus(AgvErrorStatusReceived agvErrorStatus) => WithAgvErrors(agvErrorStatus.Errors);
 
     private new void Build()
     {
@@ -38,6 +42,6 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
     public List<AgvError> GetCachedErrors(Guid agvCorrelationId)
     {
         _errorCache.ConcurrentDict.TryGetValue(agvCorrelationId, out Lazy<List<AgvError>>? errors);
-        return errors?.Value??[];
+        return errors?.Value ?? [];
     }
 }

@@ -9,9 +9,9 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 [TestClass]
 public class AgvErrorRepositoryTest
 {
-    private static void VerifyAgvErrorsInRepository(IList<AgvError>? agvErrors, AgvErrorStatusReceived errorStatusReceived)
+    private static void VerifyAgvErrorsInRepository(IList<AgvError> agvErrors, AgvErrorStatusReceived errorStatusReceived)
     {
-        if (agvErrors == null || !agvErrors.Any())
+        if (!agvErrors.Any())
         {
             errorStatusReceived.ShouldBeNull();
             return;
@@ -20,7 +20,7 @@ public class AgvErrorRepositoryTest
         foreach (var actualAgvError in agvErrors)
         {
             actualAgvError.AgvCorrelationId.ShouldBe(errorStatusReceived.CorrelationId);
-            var expectedAgvError = errorStatusReceived.Errors!.Find(e => e.ErrorType == actualAgvError.ErrorType);
+            var expectedAgvError = errorStatusReceived.Errors.Find(e => e.ErrorType == actualAgvError.ErrorType);
             expectedAgvError.ShouldNotBeNull();
             actualAgvError.ErrorDescription.ShouldBe(expectedAgvError.ErrorDescription);
             actualAgvError.ErrorLevel.ShouldBe(expectedAgvError.ErrorLevel);
@@ -76,7 +76,7 @@ public class AgvErrorRepositoryTest
             agvError.ErrorResolved.ShouldBeNull();
         }
 
-        agvErrorStatus.Errors = null;
+        agvErrorStatus.Errors = [];
         (bool changed, List<AgvError> newErrors, List<AgvError> resolvedErrors) = await fixture.AgvErrorRepository.AddOrUpdateAgvErrorStatus(agvErrorStatus.Errors, agvErrorStatus.CorrelationId);
 
         agvErrorsInRepository = await fixture.AgvErrorRepository.GetActiveErrorsAsync(agvCorrelationId);
@@ -139,7 +139,72 @@ public class AgvErrorRepositoryTest
         IReadOnlyList<AgvError> actualAgvErrors = await fixture.AgvErrorRepository.GetErrorsAsync(agvCorrelationId, DateTime.MinValue, DateTime.MaxValue);
 
         actualAgvErrors.ShouldNotBeEmpty();
-        VerifyAgvErrorsInRepository((IList<AgvError>?) actualAgvErrors, agvErrorStatus);
+        VerifyAgvErrorsInRepository(actualAgvErrors.ToList(), agvErrorStatus);
         VerifyAgvErrorsInRepository(fixture.GetCachedErrors(agvCorrelationId), agvErrorStatus);
+    }
+
+    [TestMethod]
+    public async Task LoadInMemoryCache_OnlyUnresolvedErrorsLoaded()
+    {
+        const int unresolvedCount = 2;
+        const int resolvedCount = 3;
+        var agvCorrelationId = Guid.NewGuid();
+        var unresolvedStatus = AgvErrorGenerator.GenerateAgvErrorStatus(unresolvedCount, agvCorrelationId);
+        List<AgvError> resolvedErrors = AgvErrorGenerator.GenerateAgvErrorStatus(resolvedCount, agvCorrelationId).Errors
+            .Select(e =>
+            {
+                e.ErrorResolved = DateTime.UtcNow.AddMinutes(-5);
+                return e;
+            }).ToList();
+
+        var fixture = await new AgvErrorRepositoryTestFixture()
+            .WithAgvErrorStatus(unresolvedStatus)
+            .WithAgvErrors(resolvedErrors)
+            .BuildAsync();
+
+        await fixture.AgvErrorRepository.LoadInMemoryCache();
+
+        List<AgvError> cached = fixture.GetCachedErrors(agvCorrelationId);
+        cached.Count.ShouldBe(unresolvedCount);
+        cached.ShouldAllBe(e => e.ErrorResolved == null);
+    }
+
+    [TestMethod]
+    public async Task GetActiveErrorsAsync_OnlyReturnsDataFromCache()
+    {
+        var agv1 = Guid.NewGuid();
+        var agv2 = Guid.NewGuid();
+        var errorAgv1 = AgvErrorGenerator.GenerateAgvError(agv1);
+        var errorAgv2 = AgvErrorGenerator.GenerateAgvError(agv2);
+
+        var fixture = await new AgvErrorRepositoryTestFixture()
+            .WithAgvErrors([errorAgv1])
+            .BuildAsync();
+
+        fixture.Add(errorAgv2);
+
+        fixture.GetCachedErrors(agv1).Count.ShouldBe(1);
+        fixture.GetCachedErrors(agv2).ShouldBeEmpty();
+
+        IList<AgvError> result = await fixture.AgvErrorRepository.GetActiveErrorsAsync(new List<Guid> { agv1, agv2 });
+
+        result.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task GetErrorsAsync_IgnoresCache_ReturnsOnlyDatabaseResults()
+    {
+        var agvInDb = Guid.NewGuid();
+        var errorOnlyInDb = AgvErrorGenerator.GenerateAgvError(agvInDb);
+
+        var fixture = await new AgvErrorRepositoryTestFixture()
+            .BuildAsync();
+
+        fixture.Add(errorOnlyInDb);
+
+        IReadOnlyList<AgvError> result = await fixture.AgvErrorRepository.GetErrorsAsync([agvInDb], DateTime.UtcNow.AddHours(-1), DateTime.UtcNow.AddHours(1));
+
+        result.Count.ShouldBe(1);
+        result.Single().AgvCorrelationId.ShouldBe(agvInDb);
     }
 }
