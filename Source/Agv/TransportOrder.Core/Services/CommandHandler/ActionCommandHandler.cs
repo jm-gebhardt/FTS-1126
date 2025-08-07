@@ -1272,6 +1272,8 @@ public class ActionCommandHandler :
             }
             _logger.LogInformation("Reactivate agv {AgvCorrelationId} that is running idle action", closestAgvRoute.agv);
 
+            idleActionGroups = idleActionGroups.DistinctBy(a => a.CorrelationId).ToList();
+
             var abortedActionGroup = idleActionGroups.Single(a => a.AssignedAgv == closestAgvRoute.agv.Value);
             var abortedAction = abortedActionGroup.Actions.Single(a => a.State == ActionState.Started);
 

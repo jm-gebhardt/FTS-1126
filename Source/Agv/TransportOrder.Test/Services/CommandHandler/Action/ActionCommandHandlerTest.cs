@@ -2023,7 +2023,7 @@ public class ActionCommandHandlerTest
         var chargingActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: closestAgv.CorrelationId, actionStateCharge: ActionState.Started);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithRunningIdleActionGroups([])
+            .WithRunningIdleActionGroups([chargingActionGroup])
             .WithRunningChargeActionGroups([chargingActionGroup])
             .AddActionGroup(pickDropActionGroup)
             .WithAgvsWithPriorityActionGroups([])
