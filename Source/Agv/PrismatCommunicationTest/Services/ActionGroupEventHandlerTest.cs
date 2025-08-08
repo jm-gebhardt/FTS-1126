@@ -50,6 +50,21 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionGroupCanceled_ValidData_AbortHostOrder()
+    {
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
+
+        var actionGroup = new ActionGroup();
+        var actionAborted = new ActionGroupCanceled(actionGroup, actionGroup.CorrelationId, DateTime.Now);
+
+        await fixture.TestHarness.Bus.Publish(actionAborted);
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCanceled>();
+
+        (await fixture.TestHarness.Published.Any<AbortHostOrder>(f =>
+            f.Context.Message == new AbortHostOrder(actionAborted.CorrelationId))).ShouldBeTrue();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionAborted_ValidDataTemporary_HostOrderNotAborted()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();

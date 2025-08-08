@@ -21,6 +21,7 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
     IConsumer<ActionGroupInvalid>,
     IConsumer<PickActionCompleted>,
     IConsumer<ActionAborted>,
+    IConsumer<ActionGroupCanceled>,
     IConsumer<DroppingAgvPassedDoppelspielTriggerPoint>,
     IConsumer<ActionGroupReassignedOrReset>
 {
@@ -122,7 +123,17 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
         {
             return;
         }
-
+        
         await context.Publish(new ResetDoppelspielPartner(actionGroupId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ActionGroupCanceled"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ActionGroupCanceled> context)
+    {
+        var (_, correlationId, _) = context.Message;
+
+        await context.Publish(new AbortHostOrder(correlationId));
     }
 }
