@@ -94,6 +94,18 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                 .WithReason(Reasons.ManualActionMustHaveAgvAssigned);
         });
 
+        When(p => p.IsManual && p.Actions.Any(a => a.ActionType == ActionType.Pick) && p.Actions.Any(a => a.ActionType == ActionType.Drop), () =>
+        {
+            RuleFor(x => x.Actions)
+                .Must(a =>
+                {
+                    var pick = a.First(ac => ac.ActionType == ActionType.Pick);
+                    var drop = a.First(ac => ac.ActionType == ActionType.Drop);
+
+                    return pick.Target != drop.Target;
+                }).WithReason(Reasons.SourceTargetIdentical, a => a.Actions.First(ac => ac.ActionType == ActionType.Pick).Target.NodeId);
+        });
+
         When(p => p.AssignedAgv != null, () =>
         {
             RuleFor(x => x.AssignedAgv)

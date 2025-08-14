@@ -32,6 +32,26 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
+    public async Task ValidateAsync_ManualPickDropSameTarget_Fails()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: "sourceTarget", destination: "sourceTarget");
+
+        actionGroup.IsManual = true;
+
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldHaveValidationErrorFor(x => x.Actions).WithErrorMessage("Source and Target must be different (sourceTarget)");
+    }
+
+    [TestMethod]
     public async Task ValidateAsync_WhenActionGroupIsMoveToCoordinateAndAllConditionsAreMet_Passes()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
