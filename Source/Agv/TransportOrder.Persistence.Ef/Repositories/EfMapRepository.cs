@@ -40,44 +40,6 @@ public class EfMapRepository : IMapRepository
             .Set<Map>()
             .AsNoTracking(); // No need to track changes
 
-    private void UpdateRelatedEntities<TEntity, TId>(DbContext context,
-        ICollection<TEntity> existingEntities,
-        ICollection<TEntity> newEntities,
-        Func<TEntity, TId> getId,
-        bool attachBeforeAdd = false,
-        bool updateExistingEntities = true)
-        where TEntity : class
-        where TId : IEquatable<TId>
-    {
-        // Remove entities that are no longer present
-        foreach (var existingEntity in existingEntities.Where(existingEntity => newEntities.All(e => !Equals(getId(e), getId(existingEntity)))))
-        {
-            context.Remove(existingEntity);
-        }
-
-        // Add or update entities
-        foreach (var newEntity in newEntities)
-        {
-            var existingEntity = existingEntities.SingleOrDefault(e => Equals(getId(e), getId(newEntity)));
-            if (existingEntity == null)
-            {
-                if (attachBeforeAdd)
-                {
-                    context.Set<TEntity>().Attach(newEntity);
-                }
-
-                existingEntities.Add(newEntity);
-            }
-            else
-            {
-                if (updateExistingEntities)
-                {
-                    context.Entry(existingEntity).CurrentValues.SetValues(newEntity);
-                }
-            }
-        }
-    }
-
     /// <inheritdoc/>
     public async Task<ICollection<Map>> GetAllMapsAsync()
     {
@@ -94,25 +56,21 @@ public class EfMapRepository : IMapRepository
     }
 
     /// <inheritdoc />
-    public async Task SetCustomBackgroundAsync(MapBackground mapBackground)
+    public async Task SetCustomBackgroundAsync(Guid mapCorrelationId, MapBackground mapBackground)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var map = await context.Set<Map>()
-            .SingleOrDefaultAsync(m => m.CorrelationId == mapBackground.MapId);
+            .SingleOrDefaultAsync(m => m.CorrelationId == mapCorrelationId);
 
         if (map == null)
         {
             throw new MapNotFoundException(mapBackground.CorrelationId);
         }
 
-        if (map.CustomBackground != null)
-        {
-            // delete the old custom background
-            context.Remove(map.CustomBackground);
-        }
-        context.Set<MapBackground>().Add(mapBackground);
         map.CustomBackground = mapBackground;
+
+        context.Update(map);
 
         await context.SaveChangesAsync();
     }
@@ -130,12 +88,8 @@ public class EfMapRepository : IMapRepository
             throw new MapNotFoundException(correlationId);
         }
 
-        if (map.CustomBackground != null)
-        {
-            // delete the old custom background
-            context.Remove(map.CustomBackground);
-        }
         map.CustomBackground = null;
+        context.Update(map);
         return await context.SaveChangesAsync() > 0;
     }
 
@@ -261,31 +215,24 @@ public class EfMapRepository : IMapRepository
         {
             await using var context = await _dbContextFactory.CreateDbContextAsync();
 
+            if (!await CheckGraphSaved(map, context))
+            {
+                _logger.LogWarning("Not all nodes or edges exist yet, so we cannot store the Map yet.");
+                return false;
+            }
+
+            if (!await CheckAgvsSaved(map, context))
+            {
+                _logger.LogWarning("Not all Agvs exist yet, so we cannot store the Map yet");
+                return false;
+            }
+
             var existingMap = await context.Set<Map>()
                 .Include(m => m.MapAgvs)
                 .Include(m => m.Edges)
                 .Include(m => m.Nodes)
                 .AsSplitQuery()
                 .SingleOrDefaultAsync(g => g.CorrelationId == map.CorrelationId);
-
-            if (await context.Set<EfNode>()
-                    .Where(node => map.Nodes.Select(n => n.Id).Contains(node.Id))
-                    .CountAsync() != map.Nodes.Count ||
-                await context.Set<EfEdge>()
-                    .Where(edge => map.Edges.Select(e => e.Id).Contains(edge.Id))
-                    .CountAsync() != map.Edges.Count)
-            {
-                _logger.LogWarning("Not all nodes or edges exist yet, so we cannot store the Map yet.");
-                return false;
-            }
-
-            if (await context.Set<Domain.Models.Agv.Agv>()
-                    .Where(agv => map.MapAgvs.Select(x => x.AgvId).Contains(agv.CorrelationId))
-                    .CountAsync() != map.MapAgvs.Count)
-            {
-                _logger.LogWarning("Not all Agvs exist yet, so we cannot store the Map yet");
-                return false;
-            }
 
             if (existingMap == null)
             {
@@ -295,28 +242,7 @@ public class EfMapRepository : IMapRepository
             }
             else
             {
-                if (existingMap.BaseBackground != null)
-                {
-                    context.Remove(existingMap.BaseBackground);
-                }
-                if (existingMap.CustomBackground != null)
-                {
-                    context.Remove(existingMap.CustomBackground);
-                }
-                // update properties
-                if (map.BaseBackground != null)
-                {
-                    context.Add(map.BaseBackground);
-                }
-                if (map.CustomBackgroundId != null)
-                {
-                    context.Add(map.CustomBackgroundId);
-                }
-                context.Update(existingMap).CurrentValues.SetValues(map);
-
-                UpdateRelatedEntities(context, existingMap.MapAgvs, map.MapAgvs, ma => ma.AgvId);
-                UpdateRelatedEntities(context, existingMap.Nodes, map.Nodes, n => n.Id, true, false);
-                UpdateRelatedEntities(context, existingMap.Edges, map.Edges, e => e.Id, true, false);
+                UpdateMap(existingMap, map, context);
             }
 
             int stateEntries = await context.SaveChangesAsync();
@@ -327,5 +253,107 @@ public class EfMapRepository : IMapRepository
             _logger.LogError(e, "Could not add or update map");
             return false;
         }
+    }
+
+    private static async Task<bool> CheckAgvsSaved(Map map, TransportOrderDbContext context)
+    {
+        return await context.Set<Domain.Models.Agv.Agv>()
+            .Where(agv => map.MapAgvs.Select(x => x.AgvId).Contains(agv.CorrelationId))
+            .CountAsync() == map.MapAgvs.Count;
+    }
+
+    private static async Task<bool> CheckGraphSaved(Map map, TransportOrderDbContext context)
+    {
+        bool nodesSaved = await context
+            .Set<EfNode>()
+            .Where(node => map.Nodes.Select(n => n.Id).Contains(node.Id))
+            .CountAsync() == map.Nodes.Count;
+
+        bool edgesSaved = await context
+            .Set<EfEdge>()
+            .Where(edge => map.Edges.Select(e => e.Id).Contains(edge.Id))
+            .CountAsync() == map.Edges.Count;
+
+        return edgesSaved && nodesSaved;
+    }
+
+    private static void UpdateMap(Map oldMap, Map newMap, TransportOrderDbContext context)
+    {
+        if (newMap.BaseBackground != null && oldMap.BaseBackgroundId != newMap.BaseBackgroundId)
+        {
+            oldMap.BaseBackground = newMap.BaseBackground;
+        }
+        if (newMap.CustomBackground != null && oldMap.CustomBackgroundId != newMap.CustomBackgroundId)
+        {
+            oldMap.CustomBackground = newMap.CustomBackground;
+        }
+
+        UpdateRelations(oldMap, newMap, context);
+
+        context.Update(oldMap);
+    }
+
+    private static void UpdateRelations(Map existingMap, Map map, TransportOrderDbContext context)
+    {
+        (IEnumerable<EfNode> nodesToRemove, IEnumerable<EfNode> nodesToAdd) = SymmetricDifference(existingMap.Nodes, map.Nodes, n => n.Id);
+        (IEnumerable<EfEdge> edgesToRemove, IEnumerable<EfEdge> edgesToAdd) = SymmetricDifference(existingMap.Edges, map.Edges, n => n.Id);
+        (IEnumerable<MapAgv> agvsToRemove, IEnumerable<MapAgv> agvsToAdd) = SymmetricDifference(existingMap.MapAgvs, map.MapAgvs, ma => ma.AgvId);
+
+        foreach (var node in nodesToAdd)
+        {
+            context.Attach(node);
+            node.Maps.Add(existingMap);
+            existingMap.Nodes.Add(node);
+        }
+
+        foreach (var node in nodesToRemove)
+        {
+            node.Maps.Remove(existingMap);
+            existingMap.Nodes.Remove(node);
+        }
+
+        foreach (var edge in edgesToAdd)
+        {
+            context.Attach(edge);
+            edge.Maps.Add(existingMap);
+            existingMap.Edges.Add(edge);
+        }
+
+        foreach (var edge in edgesToRemove)
+        {
+            edge.Maps.Remove(existingMap);
+            existingMap.Edges.Remove(edge);
+        }
+
+        foreach (var agv in agvsToRemove)
+        {
+            existingMap.MapAgvs.Remove(agv);
+        }
+
+        foreach (var agv in agvsToAdd)
+        {
+            existingMap.MapAgvs.Add(agv);
+        }
+    }
+
+    /// <summary>
+    /// Removes all the entries in two collections that appear in the respective other one
+    /// </summary>
+    /// <param name="leftCollection">The left collection.</param>
+    /// <param name="rightCollection">The right collection,</param>
+    /// <param name="idProvider">Function to provide a comparable id value for the objects in the collections.</param>
+    /// <returns>(LeftOnly, RightOnly)</returns>
+    private static (IEnumerable<T>, IEnumerable<T>) SymmetricDifference<T, TId>(ICollection<T> leftCollection, ICollection<T> rightCollection, Func<T, TId> idProvider) where TId : IEquatable<TId>
+    {
+        List<TId> leftIds = leftCollection.Select(idProvider).ToList();
+        List<TId> rightIds = rightCollection.Select(idProvider).ToList();
+
+        IEnumerable<TId> leftOnly = leftIds.Except(rightIds);
+        IEnumerable<TId> rightOnly = rightIds.Except(leftIds);
+
+        return (
+            leftOnly.Select(id => leftCollection.First(entry => Equals(id,  idProvider(entry)))),
+            rightOnly.Select(id => rightCollection.First(entry => Equals(id, idProvider(entry))))
+        );
     }
 }

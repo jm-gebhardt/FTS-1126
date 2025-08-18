@@ -33,7 +33,7 @@ public class MapCommandHandlerTest
         Response<Success> response = await fixture.GetResponseAsync<Success>(request);
 
         response.Message.ShouldBeOfType<Success>();
-        fixture.MapRepositoryMock.Verify(r => r.SetCustomBackgroundAsync(It.Is<MapBackground>(m => m.MapId == correlationId && m.Width == 1)), Times.Once);
+        fixture.MapRepositoryMock.Verify(r => r.SetCustomBackgroundAsync(correlationId, It.Is<MapBackground>(m => m.Width == 1)), Times.Once);
         await fixture.ShouldHavePublishedAsync<MapChanged>();
     }
 

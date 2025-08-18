@@ -27,6 +27,6 @@ public static class MapBackgroundGenerator
         }
         image ??= Image1;
 
-        return new MapBackground(correlationId, correlationId, resolution, xOffset, yOffset, width, height, image, isCustom);
+        return new MapBackground(correlationId, resolution, xOffset, yOffset, width, height, image, isCustom);
     }
 }

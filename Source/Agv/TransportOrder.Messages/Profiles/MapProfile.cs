@@ -23,7 +23,6 @@ public class MapProfile : Profile
                 opt.MapFrom(c => GetBackground(c)));
 
         CreateMap<SetBackground, MapBackground>(MemberList.Source)
-            .ForCtorParam(nameof(MapBackground.MapId), opt => opt.MapFrom(src => src.CorrelationId))
             .ForCtorParam(nameof(MapBackground.CorrelationId), opt => opt.MapFrom(_ => Guid.NewGuid()))
             .ForCtorParam(nameof(MapBackground.Width), opt => opt.MapFrom((_, ctx) => ctx.Items[nameof(MapBackground.Width)]))
             .ForCtorParam(nameof(MapBackground.Height), opt => opt.MapFrom((_, ctx) => ctx.Items[nameof(MapBackground.Height)]))

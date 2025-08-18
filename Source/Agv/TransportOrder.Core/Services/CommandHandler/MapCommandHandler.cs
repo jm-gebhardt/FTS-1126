@@ -63,11 +63,10 @@ public class MapCommandHandler :
         var map = new Domain.Models.Map.Map(
             messageMap.CorrelationId,
             messageMap.MapId,
-            new MapBackground(mapBackgroundId, messageMap.CorrelationId, messageMap.Resolution, messageMap.XOffset, messageMap.YOffset, messageMap.Width, messageMap.Height, mapValue),
+            new MapBackground(mapBackgroundId, messageMap.Resolution, messageMap.XOffset, messageMap.YOffset, messageMap.Width, messageMap.Height, mapValue),
             messageMap.ModificationDate
         )
         {
-            BaseBackgroundId = mapBackgroundId,
             Edges = efEdges,
             Nodes = efNodes,
             MapAgvs = agvIds.Select(agvId => new MapAgv(messageMap.CorrelationId, null, agvId, null)).ToList()
@@ -143,7 +142,7 @@ public class MapCommandHandler :
             opts.Items[nameof(MapBackground.Height)] = height;
         });
         _logger.LogInformation("Setting custom background for map {CorrelationId} with dimensions {Width}x{Height}", mapBackground.CorrelationId, width, height);
-        await _mapRepository.SetCustomBackgroundAsync(mapBackground);
+        await _mapRepository.SetCustomBackgroundAsync(message.CorrelationId, mapBackground);
 
         var map = await _mapRepository.GetMapAsync(message.CorrelationId);
         var changed = _mapper.Map<MapChanged>((map, true));

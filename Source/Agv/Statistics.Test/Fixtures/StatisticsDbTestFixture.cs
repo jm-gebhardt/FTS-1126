@@ -2,6 +2,8 @@
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Gebhardt.Acc.Statistics.Test.Fixtures;
 
@@ -35,7 +37,7 @@ public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>, I
     public StatisticsDbTestFixture()
     {
         _context = ContextFactory.CreateDbContext();
-        Maps = new EfMapRepository(_context);
+        Maps = new EfMapRepository(_context, new Mock<ILogger<EfMapRepository>>().Object);
         Grids = new EfGridRepository(_context);
         GridAgvPositions = new EfGridAgvPositionRepository(_context);
         MapAgvPositions = new EfMapAgvPositionsRepository(_context);

@@ -40,7 +40,6 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new GraphEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new GraphNodeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new MapEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new MapBackgroundEntityConfiguration());
         modelBuilder.ApplyConfiguration(new MapAgvEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CuboidEntityConfiguration());
         modelBuilder.ApplyConfiguration(new Point3DEntityConfiguration());

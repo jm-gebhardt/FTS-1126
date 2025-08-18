@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 /// </summary>
 public record Map
 {
-    private readonly MapBackground? _baseBackground;
+    private MapBackground? _baseBackground;
     private MapBackground? _customBackground;
 
     /// <summary>
@@ -30,7 +30,7 @@ public record Map
     /// The identifier of the base map background.
     /// </summary>
     [UsedImplicitly]
-    public Guid? BaseBackgroundId { get; set; }
+    public Guid? BaseBackgroundId => BaseBackground?.CorrelationId;
 
     /// <summary>
     /// The base background image of the map.
@@ -38,7 +38,7 @@ public record Map
     public MapBackground? BaseBackground
     {
         get => _baseBackground;
-        init
+        set
         {
             _baseBackground = value;
             if (_baseBackground != null)
@@ -52,7 +52,7 @@ public record Map
     /// The Identifier of the custom map background.
     /// </summary>
     [UsedImplicitly]
-    public Guid? CustomBackgroundId { get; set; }
+    public Guid? CustomBackgroundId => CustomBackground?.CorrelationId;
 
     /// <summary>
     /// Optional custom background image of the map.

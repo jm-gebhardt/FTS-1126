@@ -14,24 +14,8 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
         builder.HasKey(e => e.CorrelationId);
         builder.Property(e => e.MapId).HasMaxLength(DbStringLimits.Description);
 
-        builder.HasOne(m => m.BaseBackground)
-            .WithOne()
-            .HasForeignKey<Map>(m => m.BaseBackgroundId)
-            .HasPrincipalKey<MapBackground>(m => m.CorrelationId)
-            .OnDelete(DeleteBehavior.Cascade);
-        // autoinclude for Base/CustomBackground can be removed once the FE uses the new endpoint (meta)
-        builder.Navigation(m => m.BaseBackground)
-            .UsePropertyAccessMode(PropertyAccessMode.Property)
-            .AutoInclude();
-
-        builder.HasOne(m => m.CustomBackground)
-            .WithOne()
-            .HasForeignKey<Map>(m => m.CustomBackgroundId)
-            .HasPrincipalKey<MapBackground>(m => m.CorrelationId)
-            .OnDelete(DeleteBehavior.Restrict);
-        builder.Navigation(m => m.CustomBackground)
-            .UsePropertyAccessMode(PropertyAccessMode.Property)
-            .AutoInclude();
+        builder.OwnsOne(m => m.BaseBackground);
+        builder.OwnsOne(m => m.CustomBackground);
 
         builder.HasMany(m => m.Edges)
             .WithMany(n => n.Maps)
@@ -45,6 +29,6 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
             .WithOne(ma => ma.Map)
             .HasForeignKey(ma => ma.MapId);
 
-        builder.ConfigureAllProperties(except: [nameof(Map.BaseBackground), nameof(Map.CustomBackground), nameof(Map.Nodes), nameof(Map.Edges), nameof(Map.MapAgvs)]);
+        builder.ConfigureAllProperties(except: [nameof(Map.BaseBackground), nameof(Map.CustomBackground), nameof(Map.Nodes), nameof(Map.Edges), nameof(Map.MapAgvs), nameof(Map.BaseBackgroundId), nameof(Map.CustomBackgroundId)]);
     }
 }

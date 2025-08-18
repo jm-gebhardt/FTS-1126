@@ -82,7 +82,7 @@ public class EfNode
     private EfNode()
     {
         Id = null!;
-        Maps = null!;
+        Maps = [];
         AgvGraphs = null!;
     }
 }

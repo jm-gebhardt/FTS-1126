@@ -24,8 +24,9 @@ public interface IMapRepository
     /// <summary>
     /// Sets (or overwrites) the custom background for a map.
     /// </summary>
+    /// <param name="mapCorrelationId">The correlation id of the map.</param>
     /// <param name="mapBackground">The background to set.</param>
-    Task SetCustomBackgroundAsync(MapBackground mapBackground);
+    Task SetCustomBackgroundAsync(Guid mapCorrelationId, MapBackground mapBackground);
 
     /// <summary>
     /// Delete the background associated with the given correlation ID.

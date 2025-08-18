@@ -68,7 +68,7 @@ public class EfEdge
         ToNodeId = null!;
         Variant = EdgeType.Direct;
         VariantParameters = new List<EdgeCoefficient>();
-        Maps = null!;
+        Maps = [];
         AgvGraphs = null!;
     }
 }
