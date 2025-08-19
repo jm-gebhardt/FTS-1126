@@ -76,7 +76,6 @@ public interface INodeStateRepository
 
     /// <summary>
     /// Free a reserved or occupied node.
-    /// If the node is locked, it will not be freed.
     /// </summary>
     /// <param name="nodeId"></param>
     /// <returns></returns>

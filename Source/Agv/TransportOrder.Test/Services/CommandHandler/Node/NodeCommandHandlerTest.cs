@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
+using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
@@ -342,6 +343,35 @@ public class NodeCommandHandlerTest
 
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UnblockStation_StationNotReservedOrOccupied_FreeNodeNotCalled()
+    {
+        const string nodeId = "APL1";
+        var fixture = new NodeCommandHandlerTestFixture()
+            .WithNodeState(null)
+            .WithAnyStation();
+
+        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(nodeId));
+
+        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Never);
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UnblockStation_ValidData_FreeNodeCalled()
+    {
+        var agv = Guid.NewGuid();
+        const string nodeId = "PS01";
+        var fixture = new NodeCommandHandlerTestFixture()
+            .WithNodeState(new NodeLock(nodeId, NodeLockState.Occupied, false, agv, DateTime.UtcNow))
+            .WithAnyStation();
+
+        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(nodeId));
+
+        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Once);
+        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
     [TestMethod]

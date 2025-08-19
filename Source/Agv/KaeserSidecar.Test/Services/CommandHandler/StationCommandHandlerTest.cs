@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,6 +40,22 @@ public class StationCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new FreeStation(fixture.Occupancies[0].Station, agvCorrelationId));
 
         await fixture.ShouldHaveConsumedAsync<FreeStation>();
+
+        var occupancyAfter = await fixture.StationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
+        occupancyAfter.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_UnblockStation_TryToFreeStation_RemovesOccupancy()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+
+        var fixture = new StationCommandHandlerTestFixture()
+            .WithOccupancies((1, agvCorrelationId));
+
+        await fixture.TestHarness.Bus.Publish(new UnblockStation(fixture.Occupancies[0].Station));
+
+        await fixture.ShouldHaveConsumedAsync<UnblockStation>();
 
         var occupancyAfter = await fixture.StationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         occupancyAfter.ShouldBeNull();

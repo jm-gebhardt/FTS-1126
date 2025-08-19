@@ -1,5 +1,6 @@
 ﻿
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
@@ -52,6 +53,7 @@ public static class BusRegistrationExtension
             var partitioner = c.CreatePartitioner(PartitionCount);
             c.Message<OccupyStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
             c.Message<FreeStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
+            c.Message<UnblockStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
         });
 
         cfg.AddConsumer<JamStateEventHandler>();

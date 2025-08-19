@@ -37,7 +37,8 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
         IRequestClient<GetStation> getStationRequestClient = GetRequestClient<GetStation>();
         IRequestClient<TryLockStation> lockStationRequestClient = GetRequestClient<TryLockStation>();
         IRequestClient<TryUnlockStation> unlockStationRequestClient = GetRequestClient<TryUnlockStation>();
-        var controller = new StationController(Mapper, getStationRequestClient, lockStationRequestClient, unlockStationRequestClient);
+        IRequestClient<UnblockStation> unblockStationRequestClient = GetRequestClient<UnblockStation>();
+        var controller = new StationController(Mapper, getStationRequestClient, lockStationRequestClient, unlockStationRequestClient, unblockStationRequestClient);
         return controller;
     }
 

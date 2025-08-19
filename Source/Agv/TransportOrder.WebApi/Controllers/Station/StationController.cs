@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
@@ -20,16 +21,18 @@ public class StationController : Controller
 {
     private readonly IRequestClient<GetStation> _getStationClient;
     private readonly IRequestClient<TryUnlockStation> _unlockStationClient;
+    private readonly IRequestClient<UnblockStation> _unblockStationClient;
     private readonly IRequestClient<TryLockStation> _lockStationClient;
     private readonly IMapper _mapper;
 
     /// <inheritdoc cref="StationController"/>
     public StationController(IMapper mapper,
-        IRequestClient<GetStation> getStationClient, IRequestClient<TryLockStation> lockStationClient, IRequestClient<TryUnlockStation> unlockStationClient)
+        IRequestClient<GetStation> getStationClient, IRequestClient<TryLockStation> lockStationClient, IRequestClient<TryUnlockStation> unlockStationClient, IRequestClient<UnblockStation> unblockStationClient)
     {
         _getStationClient = getStationClient;
         _lockStationClient = lockStationClient;
         _unlockStationClient = unlockStationClient;
+        _unblockStationClient = unblockStationClient;
         _mapper = mapper;
     }
 
@@ -91,5 +94,19 @@ public class StationController : Controller
         Response<LockedUnlockedStation> response = await _unlockStationClient.GetResponse<LockedUnlockedStation>(new TryUnlockStation(id, email));
         bool result = response.Message.Result;
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Unblock a station.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Station with given id not found.</response>
+    [HttpPatch]
+    [Route("/station/{id:Guid}/unblock")]
+    public async Task<ActionResult> UnblockStation([Required] Guid id)
+    {
+        await _unblockStationClient.GetResponse<Success>(new UnblockStation(id));
+
+        return Ok();
     }
 }

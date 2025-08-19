@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
@@ -180,6 +181,42 @@ public class StationEventHandlerTest
         await fixture.TestHarness.Bus.Publish(new FreeStation("different node", agv));
 
         await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_UnblockStation_ValidData_PublishesRemoveAgvFromStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+        var agv = Guid.NewGuid();
+        station.AddAgv(agv);
+        using var fixture = new StationEventHandlerTestFixture()
+            .WithStation(station);
+
+        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(station.Node!));
+        await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_UnblockStation_NoStation_DoesNotPublishRemoveAgvFromStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+
+        using var fixture = new StationEventHandlerTestFixture();
+
+        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(station.Node!));
+        await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
+    }
+
+    [TestMethod]
+    public async Task Consumer_UnblockStation_NoOccupancy_DoesNotPublishRemoveAgvFromStation()
+    {
+        var station = new Station("source", "target") { Node = "node" };
+
+        using var fixture = new StationEventHandlerTestFixture()
+            .WithStation(station);
+
+        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(station.Node!));
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 }

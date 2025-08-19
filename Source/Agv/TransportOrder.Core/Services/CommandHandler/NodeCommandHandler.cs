@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
+using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -35,6 +36,7 @@ public class NodeCommandHandler(
     IConsumer<InitializeNodeApproachingProperties>,
     IConsumer<FreeStation>, 
     IConsumer<OccupyStation>,
+    IConsumer<UnblockStation>,
     IConsumer<StationReserved>
 {
     /// <summary>
@@ -247,6 +249,27 @@ public class NodeCommandHandler(
         if (!await nodeStateRepository.FreeNodeAsync(stationName))
         {
             logger.LogWarning("Could not free node {NodeId}, node is locked", stationName);
+        }
+
+        await PublishNodeStateChange(context, stationName);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UnblockStation"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UnblockStation> context)
+    {
+        string stationName = context.Message.Station;
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(stationName);
+        if (nodeState == null)
+        {
+            logger.LogWarning("Could not retrieve node state for station {StationName}", stationName);
+            return;
+        }
+
+        if (!await nodeStateRepository.FreeNodeAsync(stationName))
+        {
+            logger.LogWarning("Could not unblock node {NodeId}, node is locked", stationName);
         }
 
         await PublishNodeStateChange(context, stationName);

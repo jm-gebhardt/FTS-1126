@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
@@ -24,6 +25,7 @@ public class StationEventHandler(
     IConsumer<StationUnlocked>,
     IConsumer<AgvLeftStation>,
     IConsumer<FreeStation>,
+    IConsumer<UnblockStation>,
     IConsumer<OccupyStation>
 {
     /// <summary>
@@ -81,6 +83,30 @@ public class StationEventHandler(
         }
 
         await context.Publish(new RemoveAgvFromStation(station.Id, agvCorrelationId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UnblockStation"/> message.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UnblockStation> context)
+    {
+        string stationName = context.Message.Station;
+
+        var station = await stationRepository.GetStationByNode(stationName);
+
+        if (station == null)
+        {
+            logger.LogWarning("Cannot unblock station {station}; No station with that name exists", stationName);
+            return;
+        }
+
+        if (station.AgvCorrelationId == null)
+        {
+            logger.LogWarning("Cannot unblock station {station}; It is not blocked", stationName);
+            return;
+        }
+
+        await context.Publish(new RemoveAgvFromStation(station.Id, station.AgvCorrelationId.Value));
     }
 
     /// <summary>

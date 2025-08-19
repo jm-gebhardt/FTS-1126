@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -18,7 +19,8 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     IConsumer<OccupyStation>,
     IConsumer<FreeStation>,
     IConsumer<SolveResourceErrorsReceived>,
-    IConsumer<StationUnlocked>
+    IConsumer<StationUnlocked>,
+    IConsumer<UnblockStation>
 {
     /// <summary>
     /// Handles the <see cref="OccupyStation"/> command.
@@ -81,5 +83,24 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         }
         logger.LogInformation("Requesting jam state for unlocked station {Station}", jamStateStation);
         await context.Publish(new RequestJamState(jamStateStation));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UnblockStation"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UnblockStation> context)
+    {
+        string station = context.Message.Station;
+
+        var occupancy = await stationRepository.GetOccupancyOfStation(station);
+
+        if (occupancy.AgvCorrelationId == null)
+        {
+            return;
+        }
+
+        logger.LogInformation("Removing agv {Agv} from station: {Station}", occupancy.AgvCorrelationId, station);
+
+        await stationRepository.FreeStation(station, occupancy.AgvCorrelationId.Value);
     }
 }

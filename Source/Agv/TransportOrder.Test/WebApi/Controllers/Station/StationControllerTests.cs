@@ -71,4 +71,19 @@ public class StationControllerTests
         (await fixture.MediatorTestHarness.Consumed.Any<TryUnlockStation>()).ShouldBeTrue();
         (await fixture.MediatorTestHarness.Published.Any<LockedUnlockedStation>()).ShouldBeTrue();
     }
+
+    [TestMethod]
+    public async Task UnblockStation_ValidData_UnblockStation()
+    {
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
+        
+        StationControllerTestFixture<UnblockStation, StationsRequestHandler> fixture = new StationControllerTestFixture<UnblockStation, StationsRequestHandler>()
+            .WithStation(station)
+            .Build();
+
+        await fixture.Controller.UnblockStation(station.Id);
+
+        (await fixture.MediatorTestHarness.Consumed.Any<UnblockStation>()).ShouldBeTrue();
+        (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.Stations.UnblockStation>()).ShouldBeTrue();
+    }
 }

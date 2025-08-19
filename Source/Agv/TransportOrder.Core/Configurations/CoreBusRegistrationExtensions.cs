@@ -197,6 +197,8 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station));
             c.Message<StationReserved>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.StationName));
+            c.Message<Common.Messages.Stations.UnblockStation>(x => 
+                x.UsePartitioner(nodePartitioner, p=>p.Message.Station));
         });
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 
@@ -459,6 +461,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetStation>();
         configurator.AddRequestClient<TryLockStation>();
         configurator.AddRequestClient<TryUnlockStation>();
+        configurator.AddRequestClient<UnblockStation>();
 
         configurator.AddConsumer<AgvStationRequestHandler>();
         configurator.AddRequestClient<RemoveAgvFromStation>();

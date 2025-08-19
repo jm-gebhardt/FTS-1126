@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -25,7 +26,8 @@ public class StationsRequestHandler(
     IConsumer<GetStations>, 
     IConsumer<GetStation>,
     IConsumer<TryLockStation>,
-    IConsumer<TryUnlockStation>
+    IConsumer<TryUnlockStation>,
+    IConsumer<UnblockStation>
 {
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetMapStations> context)
@@ -140,5 +142,17 @@ public class StationsRequestHandler(
         {
             await bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, userEmail, FromStationUnlock: true));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UnblockStation"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UnblockStation> context)
+    {
+        var station = await stationRepository.GetStation(context.Message.StationId);
+
+        await bus.Publish(new Common.Messages.Stations.UnblockStation(station.Name));
+
+        await context.RespondAsync(new Success());
     }
 }
