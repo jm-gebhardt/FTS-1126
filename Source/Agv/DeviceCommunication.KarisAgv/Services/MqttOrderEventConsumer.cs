@@ -18,9 +18,7 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
     private readonly ILogger<MqttOrderEventConsumer> _logger;
     private readonly IActionRepository _actionRepository;
 
-    /// <summary>
-    /// Consumer for MqttOrderEvent messages
-    /// </summary>
+    /// <inheritdoc cref="MqttOrderEventConsumer" />
     [PublicAPI]
     public MqttOrderEventConsumer(ILogger<MqttOrderEventConsumer> logger, IActionRepository actionRepository)
     {
@@ -28,9 +26,7 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
         _actionRepository = actionRepository;
     }
 
-    /// <summary>
-    /// Handle MqttOrderEvent messages
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<MqttOrderEvent> context)
     {
         var message = context.Message;

@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Testing.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Testing;
@@ -101,70 +102,70 @@ public abstract class MassTransitTestFixture : FixtureBase
     /// <summary>
     /// Get the first published message.
     /// </summary>
+    /// <param name="occurrenceNumber">
+    /// The 1-based position of the matching message to return.
+    /// 1 returns the first matching message, 2 returns the second, and so on.
+    /// </param>
     /// <typeparam name="T">Type of published message.</typeparam>
-    public async Task<T> GetFirstPublishedMessageAsync<T>() where T : class
-    {
-        await ShouldHavePublishedAsync<T>();
-        var message = TestHarness.Published.Select<T>().First().Context.Message;
-        return message;
-    }
+    public Task<T> GetFirstPublishedMessageAsync<T>(int occurrenceNumber = 1) where T : class => TestHarness.Published.GetFirstPublishedMessageAsync<T>(occurrenceNumber);
 
     /// <summary>
     /// Publish and return the message.
     /// </summary>
     /// <param name="message">Message to be published.</param>
+    /// <param name="occurrenceNumber">
+    /// The 1-based position of the matching message to return.
+    /// 1 returns the first matching message, 2 returns the second, and so on.
+    /// </param>
     /// <param name="filter">Message filter.</param>
     /// <typeparam name="TPublished">Type of message to be published.</typeparam>
     /// <typeparam name="TReceived">Type of message to be received.</typeparam>
     /// <typeparam name="TKey">Type of correlation id used.</typeparam>
     public async Task<TReceived> PublishAndGetFirstMessageAsync<TPublished, TReceived, TKey>(TPublished message,
+        int occurrenceNumber = 1,
         FilterDelegate<IReceivedMessage<TPublished>>? filter = null)
         where TPublished : class, CorrelatedBy<TKey>
         where TReceived : class
     {
         await PublishMessageAsync<TPublished, TKey>(message, filter);
-        return await GetFirstPublishedMessageAsync<TReceived>();
+        return await GetFirstPublishedMessageAsync<TReceived>(occurrenceNumber);
     }
 
     /// <summary>
     /// Publish and return the message.
     /// </summary>
     /// <param name="message">Message to be published.</param>
+    /// <param name="occurrenceNumber">
+    /// The 1-based position of the matching message to return.
+    /// 1 returns the first matching message, 2 returns the second, and so on.
+    /// </param>
     /// <param name="filter">Message filter.</param>
     /// <typeparam name="TPublished">Type of message to be published.</typeparam>
     /// <typeparam name="TReceived">Type of message to be received.</typeparam>
-    public async Task<TReceived> PublishAndGetFirstMessageAsync<TPublished, TReceived>(TPublished message,
+    public Task<TReceived> PublishAndGetFirstMessageAsync<TPublished, TReceived>(TPublished message,
+        int occurrenceNumber = 1,
         FilterDelegate<IReceivedMessage<TPublished>>? filter = null)
         where TPublished : class, CorrelatedBy<Guid>
         where TReceived : class
     {
-        return await PublishAndGetFirstMessageAsync<TPublished, TReceived, Guid>(message, filter);
+        return PublishAndGetFirstMessageAsync<TPublished, TReceived, Guid>(message, occurrenceNumber, filter);
     }
 
     /// <summary>
     /// Make sure the message has been published.
     /// </summary>
     /// <typeparam name="T">Type of published message.</typeparam>
-    public async Task ShouldHavePublishedAsync<T>() where T : class
-    {
-        (await TestHarness.Published.Any<T>()).ShouldBeTrue();
-    }
+    public Task ShouldHavePublishedAsync<T>() where T : class => TestHarness.Published.ShouldHavePublishedAsync<T>();
 
     /// <summary>
     /// Make sure the message has not been published.
     /// </summary>
     /// <typeparam name="T">Type of published message.</typeparam>
-    public async Task ShouldNotHavePublishedAsync<T>() where T : class
-    {
-        (await TestHarness.Published.Any<T>()).ShouldBeFalse();
-    }
+    public Task ShouldNotHavePublishedAsync<T>() where T : class => TestHarness.Published.ShouldNotHavePublishedAsync<T>();
 
     /// <summary>
     /// Get all published messages of given type.
     /// </summary>
     /// <typeparam name="T">The message type.</typeparam>
-    public ICollection<T> GetPublishedMessages<T>() where T: class
-    {
-        return TestHarness.Published.Select<T>().Select(m => m.Context.Message).ToList();
-    } 
+    public ICollection<T> GetPublishedMessages<T>() where T : class => TestHarness.Published.GetPublishedMessages<T>();
 }

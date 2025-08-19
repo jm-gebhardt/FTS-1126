@@ -152,6 +152,94 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
+    public static ActionGroup GenerateMovePickDropActionGroup(
+        Guid? groupId = null,
+        ActionGroupState actionGroupState = ActionGroupState.Created,
+        ActionState actionState = ActionState.Created,
+        string? source = null,
+        string? destination = null,
+        Guid? assignedAgv = null,
+        string? hu = null,
+        string? additionalPickInfo = null,
+        bool isQueued = true)
+    {
+        const string orderId = "orderId-pick-drop";
+        groupId ??= Guid.NewGuid();
+        var moveActionGuid = Guid.NewGuid();
+        var pickActionGuid = Guid.NewGuid();
+        var dropActionGuid = Guid.NewGuid();
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, AgvGraphGenerator.Waypoint3.Id, groupId.Value)
+        {
+            Sequence = 0,
+            State = actionState
+        };
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
+        {
+            Sequence = 1,
+            State = actionState,
+            AdditionalInfo = additionalPickInfo
+        };
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
+        {
+            Sequence = 2,
+            State = actionState
+        };
+
+        var actionGroup = new ActionGroup(groupId.Value, orderId, new List<AgvAction> { moveAction, pickAction, dropAction }, ActionGroupCreator.Wms)
+        {
+            State = actionGroupState,
+            AssignedAgv = assignedAgv,
+            HandlingUnit = hu,
+            IsQueued = isQueued
+        };
+
+        return actionGroup;
+    }
+
+    public static ActionGroup GeneratePickMoveDropActionGroup(
+        Guid? groupId = null,
+        ActionGroupState actionGroupState = ActionGroupState.Created,
+        ActionState actionState = ActionState.Created,
+        string? source = null,
+        string? destination = null,
+        Guid? assignedAgv = null,
+        string? hu = null,
+        string? additionalPickInfo = null,
+        bool isQueued = true)
+    {
+        const string orderId = "orderId-pick-drop";
+        groupId ??= Guid.NewGuid();
+        var pickActionGuid = Guid.NewGuid();
+        var moveActionGuid = Guid.NewGuid();
+        var dropActionGuid = Guid.NewGuid();
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
+        {
+            Sequence = 0,
+            State = actionState,
+            AdditionalInfo = additionalPickInfo
+        };
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, AgvGraphGenerator.Waypoint3.Id, groupId.Value)
+        {
+            Sequence = 1,
+            State = actionState
+        };
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
+        {
+            Sequence = 2,
+            State = actionState
+        };
+
+        var actionGroup = new ActionGroup(groupId.Value, orderId, new List<AgvAction> { moveAction, pickAction, dropAction }, ActionGroupCreator.Wms)
+        {
+            State = actionGroupState,
+            AssignedAgv = assignedAgv,
+            HandlingUnit = hu,
+            IsQueued = isQueued
+        };
+
+        return actionGroup;
+    }
+
     [UsedImplicitly]
     public static ActionGroup GenerateIncompleteActionGroupWithoutPickTarget(
         Guid? groupId = null,
@@ -174,7 +262,7 @@ public static class AgvActionGenerator
             State = actionState
         };
 
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick,string.Empty, groupId.Value)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, string.Empty, groupId.Value)
         {
             Sequence = 1,
             State = actionState

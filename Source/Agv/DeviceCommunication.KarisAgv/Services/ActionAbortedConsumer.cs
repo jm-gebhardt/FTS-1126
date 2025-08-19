@@ -47,7 +47,7 @@ public class ActionAbortedConsumer : IConsumer<ActionAborted>
         Guid? vehicleOrderId = await _actionRepository.GetVehicleOrderId(action.CorrelationId);
         if (vehicleOrderId != null)
         {
-            _logger.LogInformation("Replacing fleet management service internal order id {InternalCorrelationId}/{InternalOrderId} by vehicle order id {VehicleCorrelationId}/{VehicleOrderId}", action.CorrelationId, orderId, vehicleOrderId, vehicleOrderId.Value.ToString());
+            _logger.LogInformation("Replacing fleet management service internal order id {InternalOrderId} by vehicle order id {VehicleOrderId}", orderId, vehicleOrderId);
             orderId = vehicleOrderId.Value.ToString();
         }
         var orderType = action.ActionType.ToOrderType();

@@ -1,29 +1,27 @@
 ﻿using System.Globalization;
-using System.Reflection;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using MassTransit;
-using MassTransit.Serialization;
 using MassTransit.Testing;
-using MassTransit.Testing.Implementations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
-/// <summary>
-/// Test class for consuming an ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration
-/// </summary>
 [TestClass]
 public class ActionCommandConsumerTest
 {
+    private const string AgvSerialNumber = "agv0";
+    private readonly Guid _agvCorrelationId = AgvSerialNumber.ToGuid();
+    private const string ToStation = "Target";
+    private const string OrderId = "1234";
+    private readonly Guid _orderCorrelationId = OrderId.ToGuid();
+
     /// <summary>
     /// Test consuming an ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration
     /// </summary>
@@ -31,72 +29,34 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
     {
+        var action = AgvActionGenerator.GenerateAction(
+            actionType: ActionType.Pick,
+            targetNodeId: ToStation,
+            parentId: _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        // Create a publishing observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Drop5";
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
 
-            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId);
-            var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
 
-            // Publish ExecuteTransportOrder
-            await fixture.TestHarness.Bus.Publish(message);
-
-            // Get Consumer Harness
-            IConsumerTestHarness<ActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ActionCommandConsumer>();
-
-            // Check if consumed
-            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-            // Get consumed message
-            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
-            action = consumedMessage.Context.Message.Action;
-
-            // Check consumed message
-            action.CorrelationId.ShouldBe(actionCorrelationId);
-            action.ParentId.ShouldBe(orderCorrelationId);
-            action.Target.NodeId.ShouldBe(toStationId);
-
-            // Get published MqttOrder Mqtt message
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            
-            mqttMessage.Stations.ShouldNotBeNull();
-            // For pick action Karis expects destination as source ...
-            mqttMessage.Stations.FromStation.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.FromStation.DockFront.ShouldBeFalse();
-            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
-            // ... and empty destination.
-            mqttMessage.Stations.ToStation.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-        }
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+        mqtt.OrderType.ShouldBe(OrderType.Pick);
+        mqtt.RecordType.ShouldBe(OrderRecordType.Order);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.FromStation.DockFront.ShouldBeFalse();
+        mqtt.Stations.FromStation.LiftHeight.ShouldBeNull();
+        mqtt.Stations.ToStation.ShouldBeNull();
     }
 
     [TestMethod]
     public async Task Consume_StartActionCommand_EmptyAssignedAgv_ThrowsException()
     {
-        var fixture = new ActionCommandConsumerTestFixture();
         var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
+        var fixture = new ActionCommandConsumerTestFixture();
+
         await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
         await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
         await fixture.ShouldHavePublishedAsync<StartActionCommand>();
@@ -113,63 +73,26 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_StartActionCommand_MoveAction_To_AGV_Via_MQTT()
     {
+        var action = AgvActionGenerator.GenerateAction(
+            actionType: ActionType.Move,
+            targetNodeId: ToStation,
+            parentId: _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        // Create a Publish observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Charge-1";
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
 
-            var action = new AgvAction(actionCorrelationId, ActionType.Move, toStationId, orderCorrelationId);
-            var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
 
-            // Publish ExecuteTransportOrder
-            await fixture.TestHarness.Bus.Publish(message);
-
-            // Get Consumer Harness
-            IConsumerTestHarness<ActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ActionCommandConsumer>();
-
-            // Check if consumed
-            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-            // Get consumed message
-            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
-            action = consumedMessage.Context.Message.Action;
-
-            // Check consumed message
-            action.CorrelationId.ShouldBe(actionCorrelationId);
-            action.ParentId.ShouldBe(orderCorrelationId);
-            action.Target.NodeId.ShouldBe(toStationId);
-
-            // Get published MqttOrder Mqtt message
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-
-            mqttMessage.Stations.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.ShouldBeNull();
-            mqttMessage.Stations.ToStation.ShouldNotBeNull();
-            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.ToStation.DockFront.ShouldBeFalse();
-            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Move);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-        }
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldBeNull();
+        mqtt.Stations.ToStation.ShouldNotBeNull();
+        mqtt.Stations.ToStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.ToStation.DockFront.ShouldBeFalse();
+        mqtt.Stations.ToStation.LiftHeight.ShouldBeNull();
+        mqtt.OrderType.ShouldBe(OrderType.Move);
+        mqtt.RecordType.ShouldBe(OrderRecordType.Order);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
     }
 
     /// <summary>
@@ -180,71 +103,27 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_StartActionCommand_ChargeAction_To_AGV_Via_MQTT()
     {
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, ToStation, _orderCorrelationId,
+            infoToAgv: new Dictionary<InfoToAgvKey, string>
+            {
+                { InfoToAgvKey.DockFront, "true" }
+            });
         var fixture = new ActionCommandConsumerTestFixture();
 
-        // Create a publishing observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Charge-1";
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
 
-            var action = new AgvAction(actionCorrelationId,
-                ActionType.Charge,
-                toStationId,
-                orderCorrelationId,
-                infoToAgv: new Dictionary<InfoToAgvKey, string>()
-                {
-                    {
-                        InfoToAgvKey.DockFront, "true".ToString(CultureInfo.InvariantCulture)
-                    }
-                });
-            var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
 
-            // Publish ExecuteTransportOrder
-            await fixture.TestHarness.Bus.Publish(message);
-
-            // Get Consumer Harness
-            IConsumerTestHarness<ActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ActionCommandConsumer>();
-
-            // Check if consumed
-            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-            // Get consumed message
-            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
-            action = consumedMessage.Context.Message.Action;
-
-            // Check consumed message
-            action.CorrelationId.ShouldBe(actionCorrelationId);
-            action.ParentId.ShouldBe(orderCorrelationId);
-            action.Target.NodeId.ShouldBe(toStationId);
-
-            // Get published MqttOrder Mqtt message
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Stations.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.ShouldBeNull();
-            mqttMessage.Stations.ToStation.ShouldNotBeNull();
-            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Charge);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-        }
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldBeNull();
+        mqtt.Stations.ToStation.ShouldNotBeNull();
+        mqtt.Stations.ToStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.ToStation.DockFront.ShouldBeTrue();
+        mqtt.Stations.ToStation.LiftHeight.ShouldBeNull();
+        mqtt.OrderType.ShouldBe(OrderType.Charge);
+        mqtt.RecordType.ShouldBe(OrderRecordType.Order);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
     }
 
     /// <summary>
@@ -255,69 +134,27 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Test_Send_PickAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
     {
+        string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
+        Guid[] edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()];
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
+        {
+            Nodes = nodes,
+            Edges = edges,
+            InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
+        };
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        // Create a publishing observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Drop5";
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
 
-            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
-            {
-                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
-                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
-            };
-            var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
-
-            // Publish ExecuteTransportOrder
-            await fixture.TestHarness.Bus.Publish(message);
-
-            // Get Consumer Harness
-            IConsumerTestHarness<ActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ActionCommandConsumer>();
-
-            // Check if consumed
-            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-            // Get consumed message
-            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
-            action = consumedMessage.Context.Message.Action;
-
-            // Get published MqttOrder Mqtt message
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Stations.ShouldNotBeNull();
-            // For pick action Karis expects destination as source ...
-            mqttMessage.Stations.FromStation.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
-            // ... and empty destination.
-            mqttMessage.Stations.ToStation.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-            // Check nodes and edges, should not contain pick station and edge to pick station
-            mqttMessage.Route?.Edges.Count.ShouldBe(2);
-            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
-            List<object>? routeNodes = mqttMessage.Route?.Nodes;
-            if (routeNodes != null)
-            {
-                routeNodes.Select(node => ((MqttNode)node).NodeId)
-                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
-            }
-        }
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.FromStation.DockFront.ShouldBeTrue();
+        mqtt.Stations.ToStation.ShouldBeNull();
+        mqtt.Route?.Edges.Count.ShouldBe(2);
+        mqtt.Route?.Nodes.Count.ShouldBe(3);
     }
 
     /// <summary>
@@ -328,68 +165,26 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Test_Send_DropAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
     {
+        const double liftHeight = 1.23d;
+        string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, ToStation, _orderCorrelationId,
+            infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
+        {
+            Nodes = nodes
+        };
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        // Create a publishing observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Drop5";
-            const double liftHeight = 1.23d;
-            var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
-            {
-                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()]
-            };
-            var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
 
-            // Publish ExecuteTransportOrder
-            await fixture.TestHarness.Bus.Publish(message);
-
-            // Get Consumer Harness
-            IConsumerTestHarness<ActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ActionCommandConsumer>();
-
-            // Check if consumed
-            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-            // Get consumed message
-            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
-            action = consumedMessage.Context.Message.Action;
-
-            // Get published MqttOrder Mqtt message
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Stations.ShouldNotBeNull();
-            // For drop action Karis expects destination ToStation values ...
-            mqttMessage.Stations.ToStation.ShouldNotBeNull();
-            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.ToStation.LiftHeight.ShouldBe(liftHeight);
-            // ... and empty fromStation.
-            mqttMessage.Stations.FromStation.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Drop);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-            // Check nodes and edges, should not contain drop station and edge to drop station
-            mqttMessage.Route?.Edges.Count.ShouldBe(2);
-            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
-            List<object>? routeNodes = mqttMessage.Route?.Nodes;
-            if (routeNodes != null)
-            {
-                routeNodes.Select(node => ((MqttNode)node).NodeId)
-                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
-            }
-        }
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldBeNull();
+        mqtt.Stations.ToStation.ShouldNotBeNull();
+        mqtt.Stations.ToStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.ToStation.DockFront.ShouldBeTrue();
+        mqtt.Stations.ToStation.LiftHeight.ShouldBe(liftHeight);
+        mqtt.Route?.Nodes.Count.ShouldBe(3);
     }
 
     /// <summary>
@@ -400,392 +195,190 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_StartActionCommand_MoveToCoordinateAction_To_AGV_Via_MQTT()
     {
+        var target = new ActionTarget(12, 12, 0);
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, target, _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        // Create a publishing observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+        mqtt.Coordinates.ShouldBe(new Coordinates
         {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            var target = new ActionTarget(12, 12, 0);
-
-            var action = new AgvAction(actionCorrelationId, ActionType.Move, target, orderCorrelationId);
-            var correlationId = Guid.NewGuid();
-            var message = new StartActionCommand(correlationId, agvSerialNumber, action);
-
-            // Publish StartActionCommand
-            await fixture.TestHarness.Bus.Publish(message);
-
-            // Get Consumer Harness
-            IConsumerTestHarness<ActionCommandConsumer> consumerHarness = fixture.TestHarness.GetConsumerHarness<ActionCommandConsumer>();
-
-            // Check if consumed
-            (await consumerHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-            // Get consumed message
-            IReceivedMessage<StartActionCommand> consumedMessage = consumerHarness.Consumed.Select<StartActionCommand>().First();
-            action = consumedMessage.Context.Message.Action;
-
-            // Check consumed message
-            action.CorrelationId.ShouldBe(actionCorrelationId);
-            action.ParentId.ShouldBe(orderCorrelationId);
-            action.Target.ShouldBe(target);
-
-            // Get published MqttOrder Mqtt message
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-
-            mqttMessage.Coordinates.ShouldBe(new Coordinates()
-            {
-                ToX = target.Position!.X,
-                ToY = target.Position.Y * -1,
-                ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
-            });
-            mqttMessage.Stations.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Move);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-        }
+            ToX = target.Position!.X,
+            ToY = target.Position.Y * -1,
+            ToTheta = (float) Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
+        });
+        mqtt.Stations.ShouldBeNull();
+        mqtt.OrderType.ShouldBe(OrderType.Move);
+        mqtt.RecordType.ShouldBe(OrderRecordType.Order);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
     }
 
     [TestMethod]
     public async Task Consume_UpdateActionCommand_MoveToCoordinate_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(null);
+        var target = new ActionTarget(12, 12, 0);
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, target, _orderCorrelationId);
+        var fixture = new ActionCommandConsumerTestFixture();
 
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
+
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+        mqtt.Coordinates.ShouldBe(new Coordinates
         {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            var target = new ActionTarget(12, 12, 0);
-
-            var action = new AgvAction(actionCorrelationId, ActionType.Move, target, orderCorrelationId);
-            var correlationId = Guid.NewGuid();
-            var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
-
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Coordinates.ShouldBe(new Coordinates()
-            {
-                ToX = target.Position!.X,
-                ToY = target.Position.Y * -1,
-                ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
-            });
-            mqttMessage.Stations.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Move);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-        }
+            ToX = target.Position!.X,
+            ToY = target.Position.Y * -1,
+            ToTheta = (float) Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
+        });
+        mqtt.Stations.ShouldBeNull();
+        mqtt.OrderType.ShouldBe(OrderType.Move);
+        mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
     }
 
     [TestMethod]
     public async Task Consume_UpdateActionCommand_PreviouslyAbortedAndStartedOrder_MqttOrderWithPreviousIdSent()
     {
         var vehicleId = Guid.NewGuid();
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(vehicleId);
+
+        const double liftHeight = 1.23d;
+        string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, ToStation, _orderCorrelationId,
+            infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
+        {
+            Nodes = nodes
+        };
+        var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(vehicleId, action.CorrelationId);
         await fixture.FillGraphRepository();
 
-        var actionCorrelationId = Guid.NewGuid();
-        const string agvSerialNumber = "agv0";
-        const string orderId = "1234";
-        var orderCorrelationId = orderId.ToGuid();
-        const string toStationId = "Drop5";
-        const double liftHeight = 1.23d;
-        var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
-        {
-            Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-            Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()]
-        };
-        var correlationId = Guid.NewGuid();
-        var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
+        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
 
-        var mqttMessage = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(message);
-
-        mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-        mqttMessage.OrderType.ShouldBe(OrderType.Drop);
-        mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
-        // For drop action Karis expects destination ToStation values ...
-        mqttMessage.Stations?.ToStation?.Id.ShouldBe(toStationId);
-        mqttMessage.Stations?.ToStation?.DockFront.ShouldBeTrue();
-        mqttMessage.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
-        // ... and empty fromStation.
-        mqttMessage.Stations?.FromStation.ShouldBeNull();
-
-        mqttMessage.OrderId.ShouldBe(vehicleId.ToString());
-
-        // Check nodes and edges, should not contain drop station and edge to drop station
-        mqttMessage.Route?.Edges.Count.ShouldBe(2);
-        mqttMessage.Route?.Nodes.Count.ShouldBe(3);
-        List<object>? routeNodes = mqttMessage.Route?.Nodes;
-        if (routeNodes != null)
-        {
-            routeNodes.Select(node => ((MqttNode)node).NodeId)
-                .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
-        }
+        mqtt.OrderId.ShouldBe(vehicleId.ToString());
+        mqtt.Stations?.ToStation?.Id.ShouldBe(ToStation);
+        mqtt.Stations?.ToStation?.DockFront.ShouldBeTrue();
+        mqtt.Stations?.ToStation?.LiftHeight.ShouldBe(liftHeight);
+        mqtt.Stations?.FromStation.ShouldBeNull();
+        mqtt.Route?.Nodes.Count.ShouldBe(3);
     }
 
     [TestMethod]
     public async Task Consume_UpdateActionCommand_Drop_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(null);
+        const double liftHeight = 1.23d;
+        string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, ToStation, _orderCorrelationId,
+            infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
+        {
+            Nodes = nodes
+        };
+        var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Drop5";
-            const double liftHeight = 1.23d;
-            var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
-            {
-                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()]
-            };
-            var correlationId = Guid.NewGuid();
-            var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
+        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
 
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.OrderType.ShouldBe(OrderType.Drop);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
-            mqttMessage.Stations.ShouldNotBeNull();
-            // For drop action Karis expects destination ToStation values ...
-            mqttMessage.Stations.ToStation.ShouldNotBeNull();
-            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.ToStation.LiftHeight.ShouldBe(liftHeight);
-            // ... and empty fromStation.
-            mqttMessage.Stations.FromStation.ShouldBeNull();
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-
-            // Check nodes and edges, should not contain drop station and edge to drop station
-            mqttMessage.Route?.Edges.Count.ShouldBe(2);
-            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
-            List<object>? routeNodes = mqttMessage.Route?.Nodes;
-            if (routeNodes != null)
-            {
-                routeNodes.Select(node => ((MqttNode)node).NodeId)
-                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
-            }
-        }
+        mqtt.OrderType.ShouldBe(OrderType.Drop);
+        mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.ToStation.ShouldNotBeNull();
+        mqtt.Stations.ToStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.ToStation.DockFront.ShouldBeTrue();
+        mqtt.Stations.ToStation.LiftHeight.ShouldBe(liftHeight);
+        mqtt.Stations.FromStation.ShouldBeNull();
+        mqtt.Route?.Nodes.Count.ShouldBe(3);
     }
 
     [TestMethod]
     public async Task Consume_UpdateActionCommand_Pick_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(null);
+        string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
+        {
+            Nodes = nodes,
+            InfoToAgv = new Dictionary<InfoToAgvKey, string>
+            {
+                {
+                    InfoToAgvKey.DockFront, "true"
+                }
+            }
+        };
+        var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Pick1";
-            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
-            {
-                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
-                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
-            };
-            var correlationId = Guid.NewGuid();
-            var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
+        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
 
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
-            mqttMessage.Stations.ShouldNotBeNull();
-            // For pick action Karis expects destination as source ...
-            mqttMessage.Stations.FromStation.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
-            // ... and empty destination.
-            mqttMessage.Stations.ToStation.ShouldBeNull();
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-
-            // Check nodes and edges, should not contain drop station and edge to drop station
-            mqttMessage.Route?.Edges.Count.ShouldBe(2);
-            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
-            List<object>? routeNodes = mqttMessage.Route?.Nodes;
-            if (routeNodes != null)
-            {
-                routeNodes.Select(node => ((MqttNode)node).NodeId)
-                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
-            }
-        }
+        mqtt.OrderType.ShouldBe(OrderType.Pick);
+        mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.FromStation.DockFront.ShouldBeTrue();
+        mqtt.Stations.FromStation.LiftHeight.ShouldBeNull();
+        mqtt.Stations.ToStation.ShouldBeNull();
+        mqtt.Route?.Nodes.Count.ShouldBe(3);
     }
 
     [TestMethod]
     public async Task Consume_UpdateActionCommand_Charge_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(null);
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, ToStation, _orderCorrelationId,
+            infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } });
+        var fixture = new ActionCommandConsumerTestFixture();
 
-        // Create a publishing observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Charge-1";
+        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
 
-            var action = new AgvAction(actionCorrelationId,
-                ActionType.Charge,
-                toStationId,
-                orderCorrelationId,
-                infoToAgv: new Dictionary<InfoToAgvKey, string>()
-                {
-                    {
-                        InfoToAgvKey.DockFront, "true".ToString(CultureInfo.InvariantCulture)
-                    }
-                });
-            var correlationId = Guid.NewGuid();
-            var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
-
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.Stations.ShouldNotBeNull();
-            mqttMessage.Stations.ToStation.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.ShouldBeNull();
-            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.ToStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Charge);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-        }
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.ToStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldBeNull();
+        mqtt.Stations.ToStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.ToStation.DockFront.ShouldBeTrue();
+        mqtt.Stations.ToStation.LiftHeight.ShouldBeNull();
+        mqtt.OrderType.ShouldBe(OrderType.Charge);
+        mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
     }
 
     [TestMethod]
     public async Task Consume_UpdateActionCommand_MoveToNode_MqttMessageSent()
     {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(null);
+        var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Move, targetNodeId: ToStation, parentId: _orderCorrelationId);
+        var fixture = new ActionCommandConsumerTestFixture();
 
-        // Create a publishing observer
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
-        {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Node-1";
-            var action = new AgvAction(actionCorrelationId, ActionType.Move, toStationId, orderCorrelationId);
-            var correlationId = Guid.NewGuid();
-            var message = new UpdateActionCommand(correlationId, agvSerialNumber, action);
+        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
 
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-
-            mqttMessage.Stations.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.ShouldBeNull();
-            mqttMessage.Stations.ToStation.ShouldNotBeNull();
-            mqttMessage.Stations.ToStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.ToStation.DockFront.ShouldBeFalse();
-            mqttMessage.Stations.ToStation.LiftHeight.ShouldBeNull();
-            mqttMessage.OrderType.ShouldBe(OrderType.Move);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-        }
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldBeNull();
+        mqtt.Stations.ToStation.ShouldNotBeNull();
+        mqtt.Stations.ToStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.ToStation.DockFront.ShouldBeFalse();
+        mqtt.Stations.ToStation.LiftHeight.ShouldBeNull();
+        mqtt.OrderType.ShouldBe(OrderType.Move);
+        mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
     }
 
     [TestMethod]
     public async Task Consume_UpdateActionCommand_EmptyAssignedAgv_ThrowsException()
     {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(null);
         var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
+        var fixture = new ActionCommandConsumerTestFixture();
+
         await fixture.TestHarness.Bus.Publish(new UpdateActionCommand(Guid.Empty, "", action));
         await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
         await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
 
         IPublishedMessage<Fault<UpdateActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<UpdateActionCommand>>().First();
-        fault.Context.Message.Exceptions.ShouldContain(e => e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
+        fault.Context.Message.Exceptions.ShouldContain(e =>
+            e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
     }
 
     [TestMethod]
@@ -794,60 +387,29 @@ public class ActionCommandConsumerTest
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
         {
-            var actionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Pick1";
-            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
+            Nodes = nodes,
+            InfoToAgv = new Dictionary<InfoToAgvKey, string>
             {
-                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
-                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
-            };
-            var correlationId = Guid.NewGuid();
-            var message = new AbortAndStartActionCommand(correlationId, agvSerialNumber, action, null);
-
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<AbortAndStartActionCommand>();
-
-            fixture.VerifyOrderMappingAdded(Times.Never());
-
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.Order);
-            mqttMessage.Stations.ShouldNotBeNull();
-            // For pick action Karis expects destination as source ...
-            mqttMessage.Stations.FromStation.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
-            // ... and empty destination.
-            mqttMessage.Stations.ToStation.ShouldBeNull();
-
-            mqttMessage.OrderId.ShouldBe(action.CorrelationId.ToString());
-
-            // Check nodes and edges, should not contain drop station and edge to drop station
-            mqttMessage.Route?.Edges.Count.ShouldBe(2);
-            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
-            List<object>? routeNodes = mqttMessage.Route?.Nodes;
-            if (routeNodes != null)
-            {
-                routeNodes.Select(node => ((MqttNode)node).NodeId)
-                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
+                {
+                    InfoToAgvKey.DockFront, "true"
+                }
             }
-        }
+        };
+
+        var cmd = new AbortAndStartActionCommand(_agvCorrelationId, AgvSerialNumber, action, null);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<AbortAndStartActionCommand, MqttOrder>(cmd);
+
+        mqtt.OrderType.ShouldBe(OrderType.Pick);
+        mqtt.RecordType.ShouldBe(OrderRecordType.Order);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.FromStation.DockFront.ShouldBeTrue();
+        mqtt.Stations.ToStation.ShouldBeNull();
+        mqtt.Route?.Nodes.Count.ShouldBe(3);
     }
 
     [TestMethod]
@@ -856,108 +418,150 @@ public class ActionCommandConsumerTest
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var publishObserver = new BusTestPublishObserver(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
-        using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
+        var abortedId = Guid.NewGuid();
+        string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
         {
-            var actionCorrelationId = Guid.NewGuid();
-            var abortedActionCorrelationId = Guid.NewGuid();
-            const string agvSerialNumber = "agv0";
-            const string orderId = "1234";
-            var orderCorrelationId = orderId.ToGuid();
-            const string toStationId = "Pick1";
-            var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId)
+            Nodes = nodes,
+            InfoToAgv = new Dictionary<InfoToAgvKey, string>
             {
-                Nodes = ["WP-001", "WP-002", "WP-003", toStationId],
-                Edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()],
-                InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
-            };
-            var correlationId = Guid.NewGuid();
-            var message = new AbortAndStartActionCommand(correlationId, agvSerialNumber, action, abortedActionCorrelationId);
-
-            await fixture.TestHarness.Bus.Publish(message);
-            await fixture.ShouldHaveConsumedAsync<AbortAndStartActionCommand>();
-
-            fixture.VerifyOrderMappingAdded(Times.Once());
-
-            IPublishedMessage<MqttOrder> publishedMessage = publishObserver.Messages.Select<MqttOrder>().First();
-            // Check routing key and content type
-            var routingKeySpecified = typeof(MqttOrder).GetCustomAttribute(typeof(RoutingKey)) as RoutingKey;
-            publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
-            publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);
-
-            // Check content
-            var mqttMessage = publishedMessage.Context.Message;
-            mqttMessage.SerialNumber.ShouldBe(agvSerialNumber);
-            mqttMessage.OrderType.ShouldBe(OrderType.Pick);
-            mqttMessage.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
-            // For pick action Karis expects destination as source ...
-            mqttMessage.Stations.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.ShouldNotBeNull();
-            mqttMessage.Stations.FromStation.Id.ShouldBe(toStationId);
-            mqttMessage.Stations.FromStation.DockFront.ShouldBeTrue();
-            mqttMessage.Stations.FromStation.LiftHeight.ShouldBeNull();
-            // ... and empty destination.
-            mqttMessage.Stations.ToStation.ShouldBeNull();
-
-            mqttMessage.OrderId.ShouldBe(abortedActionCorrelationId.ToString());
-
-            // Check nodes and edges, should not contain drop station and edge to drop station
-            mqttMessage.Route?.Edges.Count.ShouldBe(2);
-            mqttMessage.Route?.Nodes.Count.ShouldBe(3);
-            List<object>? routeNodes = mqttMessage.Route?.Nodes;
-            if (routeNodes != null)
-            {
-                routeNodes.Select(node => ((MqttNode)node).NodeId)
-                    .ToList().ShouldBeEquivalentTo(action.Nodes.Take(routeNodes.Count).ToList());
+                {
+                    InfoToAgvKey.DockFront, "true"
+                }
             }
-        }
+        };
+
+        var cmd = new AbortAndStartActionCommand(_agvCorrelationId, AgvSerialNumber, action, abortedId);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<AbortAndStartActionCommand, MqttOrder>(cmd);
+
+        mqtt.OrderType.ShouldBe(OrderType.Pick);
+        mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.Id.ShouldBe(ToStation);
+        mqtt.Stations.FromStation.DockFront.ShouldBeTrue();
+        // ... and empty destination.
+        mqtt.Stations.ToStation.ShouldBeNull();
+        mqtt.OrderId.ShouldBe(abortedId.ToString());
+        mqtt.Route?.Nodes.Count.ShouldBe(3);
     }
 
     [TestMethod]
     public async Task Consume_ResendAction_ValidData_PublishesMqttOrder()
     {
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(null);
+        var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Pick, targetNodeId: ToStation);
+        var fixture = new ActionCommandConsumerTestFixture();
+        var resend = new ResendAction(_agvCorrelationId, AgvSerialNumber, action);
 
-        var actionCorrelationId = Guid.NewGuid();
-        const string agvSerialNumber = "agv0";
-        const string toStationId = "Pick5";
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resend);
 
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, Guid.NewGuid());
-        var correlationId = Guid.NewGuid();
-        var resendAction = new ResendAction(correlationId, agvSerialNumber, action);
-
-        var message = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resendAction);
-
-        message.OrderId.ShouldBe(actionCorrelationId.ToString());
-        
-        message.Stations.ShouldNotBeNull();
-        message.Stations.FromStation.ShouldNotBeNull();
-        message.Stations.FromStation.Id.ShouldBe(toStationId);
-        message.SerialNumber.ShouldBe(agvSerialNumber);
+        mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.Id.ShouldBe(ToStation);
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
     }
 
     [TestMethod]
     public async Task Consume_ResendAction_UpdatedOrder_PublishesMqttOrder()
     {
         var vehicleOrderId = Guid.NewGuid();
-        var fixture = new ActionCommandConsumerTestFixture()
-            .WithVehicleOrderId(vehicleOrderId);
+        var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Pick, targetNodeId: ToStation);
+        var fixture = new ActionCommandConsumerTestFixture();
+        await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(vehicleOrderId, action.CorrelationId);
 
-        var actionCorrelationId = Guid.NewGuid();
-        const string agvSerialNumber = "agv0";
-        const string toStationId = "Pick";
+        var resend = new ResendAction(_agvCorrelationId, AgvSerialNumber, action);
 
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, Guid.NewGuid());
-        var correlationId = Guid.NewGuid();
-        var resendAction = new ResendAction(correlationId, agvSerialNumber, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resend);
 
-        var message = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resendAction);
+        mqtt.OrderId.ShouldBe(vehicleOrderId.ToString());
+        mqtt.Stations.ShouldNotBeNull();
+        mqtt.Stations.FromStation.ShouldNotBeNull();
+        mqtt.Stations.FromStation.Id.ShouldBe(ToStation);
+        mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
+    }
 
-        message.OrderId.ShouldBe(vehicleOrderId.ToString());
-        message.Stations.ShouldNotBeNull();
-        message.Stations.FromStation.ShouldNotBeNull();
-        message.Stations.FromStation.Id.ShouldBe(toStationId);
-        message.SerialNumber.ShouldBe(agvSerialNumber);
+    [TestMethod]
+    public async Task Consume_StartActionCommand_PickDrop_HasRightOrderIds()
+    {
+        var fixture = new ActionCommandConsumerTestFixture();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var pickAction = actionGroup.Actions.First();
+        var dropAction = actionGroup.Actions.Last();
+
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
+
+        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
+    }
+
+    [TestMethod]
+    public async Task Consume_StartActionCommand_MovePickDrop_HasRightOrderIds()
+    {
+        var fixture = new ActionCommandConsumerTestFixture();
+        var actionGroup = AgvActionGenerator.GenerateMovePickDropActionGroup();
+        var moveAction = actionGroup.Actions.First();
+        var pickAction = actionGroup.Actions.Skip(1).First();
+        var dropAction = actionGroup.Actions.Skip(2).First();
+
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, moveAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        mqtt.OrderId.ShouldBe(moveAction.CorrelationId.ToString());
+
+        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
+
+        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 3);
+        mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
+    }
+
+    [TestMethod]
+    public async Task Consume_StartActionCommand_PickMoveDrop_HasRightOrderIds()
+    {
+        var fixture = new ActionCommandConsumerTestFixture();
+        var actionGroup = AgvActionGenerator.GeneratePickMoveDropActionGroup();
+        var pickAction = actionGroup.Actions.First();
+        var moveAction = actionGroup.Actions.Skip(1).First();
+        var dropAction = actionGroup.Actions.Skip(2).First();
+
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
+
+        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, moveAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        mqtt.OrderId.ShouldBe(moveAction.CorrelationId.ToString());
+
+        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 3);
+        mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
+    }
+
+    [TestMethod]
+    public async Task Consume_StartActionCommandAndUpdateActionCommand_PickAndMoveGetsUpdatedThenDrop_HasRightOrderIds()
+    {
+        var fixture = new ActionCommandConsumerTestFixture();
+        var actionGroup = AgvActionGenerator.GeneratePickMoveDropActionGroup();
+        var pickAction = actionGroup.Actions.First();
+        var moveAction = actionGroup.Actions.Skip(1).First();
+        var dropAction = actionGroup.Actions.Skip(2).First();
+
+        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
+        await fixture.TryRemoveMappingAsync(mqtt.OrderId.ToGuid(), pickAction.CorrelationId);
+
+        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, moveAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        mqtt.OrderId.ShouldBe(moveAction.CorrelationId.ToString());
+
+        var updateCommand = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(updateCommand, 3);
+        mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
     }
 }

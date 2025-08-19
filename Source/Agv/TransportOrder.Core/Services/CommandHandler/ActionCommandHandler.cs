@@ -800,18 +800,18 @@ public class ActionCommandHandler :
 
         if (actionGroup.AssignedAgv == null)
         {
-            _logger.LogError("Could not abort action group {ActionGroupCorrelationId}, it is not assigned to an agv.", actionGroup.CorrelationId);
+            _logger.LogError("Could not abort action group {ActionGroupCorrelationId}, it is not assigned to an agv", actionGroup.CorrelationId);
             await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, no assigned agv."));
             return;
         }
-        var action = actionGroup.Actions.FirstOrDefault(a => a.State != ActionState.Completed);
+        var action = actionGroup.Actions.FirstOrDefault(a => !a.ShouldSkip && a.State != ActionState.Completed);
         if (action == null)
         {
             _logger.LogError("Could not abort action group {ActionGroupCorrelationId}, no actions that are not completed", actionGroup.CorrelationId);
             await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, all actions completed."));
             return;
         }
-        var agv = await _agvDb.Agvs.GetAgvAsync((Guid)actionGroup.AssignedAgv!);
+        var agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason());
 
         if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && agv.IsQueueing)
@@ -1082,7 +1082,7 @@ public class ActionCommandHandler :
             if (shouldUpdate)
             {
                 var mappedAction = _mapper.Map<MessageAgvAction>(currentAction);
-                await context.Publish(new UpdateActionCommand((Guid)assignedAgv, agv!.SerialNumber, mappedAction), cancellationToken);
+                await context.Publish(new UpdateActionCommand((Guid) assignedAgv, agv!.SerialNumber, mappedAction), cancellationToken);
             }
             else
             {
@@ -1249,7 +1249,7 @@ public class ActionCommandHandler :
             //Create tuples of AGV and route costs to action group.
             //Skip agvs that are on the target or on the first edge to the next waypoint,
             //as it could already be moving away and running a detour to the target.
-            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNodeId, true);
+            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) agvs.Zip(agvsData).ToList(), targetNodeId, true);
             if (closestAgvRoute.agv == null)
             {
                 _logger.LogInformation("Reactivate all parking agvs and agvs at queue heads");
@@ -1358,7 +1358,7 @@ public class ActionCommandHandler :
 
                 List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
 
-                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.NodeId!);
+                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.NodeId!);
 
                 if (closestAgvRoute.agv == null)
                 {

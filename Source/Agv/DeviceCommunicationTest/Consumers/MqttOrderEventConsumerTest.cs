@@ -1,15 +1,13 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
+using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using MassTransit.Testing;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
@@ -20,175 +18,153 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 [TestClass]
 public class MqttOrderEventConsumerTest
 {
-    private static string GetUniqueAgvSerialNumber() => $"#AGV-{Guid.NewGuid()}";
-
-    private const string OrderId = "ORDER123";
-    private readonly Guid _actionGuid = OrderId.ToGuid();
-
-    /// <summary>
-    /// Test for consuming OrderEvent message with the event type 'Started'
-    /// </summary>
     [TestMethod]
-    public async Task ConsumeEventStarted_SameInternalAndVehicleOrderId_CorrectCorrelationId()
+    public async Task ConsumeEventStarted_SameIds_UsesVehicleOrderId()
     {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Started);
-        var published = await ConsumeMessage(message, null, false);
-        var publishedMessage = await AssertPublishedEvent<ActionStarted>(published);
-        publishedMessage.CorrelationId.ShouldBe(message.OrderId.ToGuid());
+        var fixture = new OrderEventConsumerFixture();
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Started);
+
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionStarted>();
+        action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
     [TestMethod]
-    public async Task ConsumeEventStarted_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
+    public async Task ConsumeEventStarted_DifferentIds_UsesInternalId()
     {
-        var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Started);
-        var published = await ConsumeMessage(message, internalOrderId, false);
-        var publishedMessage = await AssertPublishedEvent<ActionStarted>(published);
-        publishedMessage.CorrelationId.ShouldBe(internalOrderId);
-    }
+        var internalId = Guid.NewGuid();
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Started);
+        var fixture = new OrderEventConsumerFixture();
+        await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
-    /// <summary>
-    /// Test for consuming OrderEvent message with the event type 'Completed'
-    /// </summary>
-    [TestMethod]
-    public async Task ConsumeEventCompleted_SameInternalAndVehicleOrderId_CorrectCorrelationId()
-    {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Completed);
-        var published = await ConsumeMessage(message, null, false);
-
-        var publishedMessage = await AssertPublishedEvent<ActionCompleted>(published);
-        publishedMessage.CorrelationId.ShouldBe(message.OrderId.ToGuid());
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: false);
+        var action = await published.GetFirstPublishedMessageAsync<ActionStarted>();
+        action.CorrelationId.ShouldBe(internalId);
     }
 
     [TestMethod]
-    public async Task ConsumeEventCompleted_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
+    public async Task ConsumeEventCompleted_SameIds_UsesVehicleOrderId()
     {
-        var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Completed);
-        var published = await ConsumeMessage(message, internalOrderId, true);
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Completed);
+        var fixture = new OrderEventConsumerFixture();
 
-        var publishedMessage = await AssertPublishedEvent<ActionCompleted>(published);
-        publishedMessage.CorrelationId.ShouldBe(internalOrderId);
-    }
-
-    /// <summary>
-    /// Test for consuming OrderEvent message with the event type 'Canceled'
-    /// </summary>
-    [TestMethod]
-    public async Task ConsumeEventCanceled_SameInternalAndVehicleOrderId_CorrectCorrelationId()
-    {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Canceled);
-        var published = await ConsumeMessage(message, null, false);
-
-        var publishedMessage = await AssertPublishedEvent<ActionCanceled>(published);
-        publishedMessage.CorrelationId.ShouldBe(message.OrderId.ToGuid());
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionCompleted>();
+        action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
     [TestMethod]
-    public async Task ConsumeEventCanceled_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
+    public async Task ConsumeEventCompleted_DifferentIds_UsesInternalId()
     {
-        var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Canceled);
-        var published = await ConsumeMessage(message, internalOrderId, true);
+        var internalId = Guid.NewGuid();
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Completed);
+        var fixture = new OrderEventConsumerFixture();
+        await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
-        var publishedMessage = await AssertPublishedEvent<ActionCanceled>(published);
-        publishedMessage.CorrelationId.ShouldBe(internalOrderId);
-    }
-
-    /// <summary>
-    /// Test for consuming OrderEvent message with the event type 'CancelFailed'
-    /// </summary>
-    [TestMethod]
-    public async Task ConsumeEventCancelFailed_SameInternalAndVehicleOrderId_CorrectCorrelationId()
-    {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.CancelFailed);
-        var published = await ConsumeMessage(message, null, false);
-
-        var publishedMessage = await AssertPublishedEvent<ActionCancelFailed>(published);
-        publishedMessage.CorrelationId.ShouldBe(message.OrderId.ToGuid());
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionCompleted>();
+        action.CorrelationId.ShouldBe(internalId);
     }
 
     [TestMethod]
-    public async Task ConsumeEventCancelFailed_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
+    public async Task ConsumeEventCanceled_SameIds_UsesVehicleOrderId()
     {
-        var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.CancelFailed);
-        var published = await ConsumeMessage(message, internalOrderId, false);
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Canceled);
+        var fixture = new OrderEventConsumerFixture();
 
-        var publishedMessage = await AssertPublishedEvent<ActionCancelFailed>(published);
-        publishedMessage.CorrelationId.ShouldBe(internalOrderId);
-    }
-
-    /// <summary>
-    /// Test for consuming OrderEvent message with the event type 'Failed'
-    /// </summary>
-    [TestMethod]
-    public async Task ConsumeEventFailed_SameInternalAndVehicleOrderId_CorrectCorrelationId()
-    {
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Failed);
-        var published = await ConsumeMessage(message, null, false);
-
-        var publishedMessage = await AssertPublishedEvent<ActionFailed>(published);
-        publishedMessage.CorrelationId.ShouldBe(message.OrderId.ToGuid());
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionCanceled>();
+        action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
     [TestMethod]
-    public async Task ConsumeEventFailed_InternalAndVehicleOrderIdDiffer_CorrectCorrelationId()
+    public async Task ConsumeEventCanceled_DifferentIds_UsesInternalId()
     {
-        var internalOrderId = Guid.NewGuid();
-        var message = new MqttOrderEvent(_actionGuid + " " + OrderId, GetUniqueAgvSerialNumber(), OrderEventType.Failed);
-        var published = await ConsumeMessage(message, internalOrderId, true);
+        var internalId = Guid.NewGuid();
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Canceled);
+        var fixture = new OrderEventConsumerFixture();
+        await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
-        var publishedMessage = await AssertPublishedEvent<ActionFailed>(published);
-        publishedMessage.CorrelationId.ShouldBe(internalOrderId);
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionCanceled>();
+        action.CorrelationId.ShouldBe(internalId);
     }
 
-    private async Task<IPublishedMessageList> ConsumeMessage(MqttOrderEvent message, Guid? internalOrderId, bool deleted)
+    [TestMethod]
+    public async Task ConsumeEventCancelFailed_SameIds_UsesVehicleOrderId()
     {
-        var fixture = new OrderEventConsumerFixture().WithInternalOrderId(internalOrderId);
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.CancelFailed);
+        var fixture = new OrderEventConsumerFixture();
 
-        await fixture.ShouldHaveConsumedAsync<MqttOrderEvent>();
-        var consumedMsg = await fixture.GetFirstConsumedMessageAsync<MqttOrderEvent>();
-
-        consumedMsg.SerialNumber.ShouldBe(message.SerialNumber);
-        consumedMsg.OrderId.ShouldBe(message.OrderId);
-        consumedMsg.OrderEventType.ShouldBe(message.OrderEventType);
-
-        fixture.VerifyOrderMappingRemoved(deleted ? Times.Once() : Times.Never());
-        return fixture.TestHarness.Published;
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionCancelFailed>();
+        action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
-    private async Task<TMessage> AssertPublishedEvent<TMessage>(IPublishedMessageList published) where TMessage : class
+    [TestMethod]
+    public async Task ConsumeEventCancelFailed_DifferentIds_UsesInternalId()
     {
-        (await published.Any<TMessage>()).ShouldBeTrue();
+        var internalId = Guid.NewGuid();
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.CancelFailed);
+        var fixture = new OrderEventConsumerFixture();
+        await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
-        IPublishedMessage<TMessage>? publishedEvent = await published.SelectAsync<TMessage>().First();
-        var actionStatusEvent = publishedEvent.MessageObject as TMessage;
-        actionStatusEvent.ShouldNotBeNull();
-        return publishedEvent.Context.Message;
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: false);
+        var action = await published.GetFirstPublishedMessageAsync<ActionCancelFailed>();
+        action.CorrelationId.ShouldBe(internalId);
+    }
+
+    [TestMethod]
+    public async Task ConsumeEventFailed_SameIds_UsesVehicleOrderId()
+    {
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Failed);
+        var fixture = new OrderEventConsumerFixture();
+
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionFailed>();
+        action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
+    }
+
+    [TestMethod]
+    public async Task ConsumeEventFailed_DifferentIds_UsesInternalId()
+    {
+        var internalId = Guid.NewGuid();
+        var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Failed);
+        var fixture = new OrderEventConsumerFixture();
+        await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
+
+        var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
+        var action = await published.GetFirstPublishedMessageAsync<ActionFailed>();
+        action.CorrelationId.ShouldBe(internalId);
     }
 }
 
-internal class OrderEventConsumerFixture : MqttConsumerTestFixture<MqttOrderEventConsumer>
+internal class OrderEventConsumerFixture : ActionRepositoryConsumerTestFixture<MqttOrderEventConsumer>
 {
-    private readonly Mock<IActionRepository> _actionRepository = new();
-
     public OrderEventConsumerFixture()
     {
-        AddServices(s => s.AddTransient(_ => _actionRepository.Object));
-        _actionRepository.Setup(x => x.RemoveVehicleAndInternalOrderIdMapping(It.IsAny<Guid>())).Verifiable();
         Build();
     }
 
-    public OrderEventConsumerFixture WithInternalOrderId(Guid? correlationId)
+    public async Task<IPublishedMessageList> PublishAndConsumeAsync(MqttOrderEvent message, bool shouldMappingBeNull)
     {
-        _actionRepository.Setup(x => x.GetInternalOrderId(It.IsAny<Guid>())).ReturnsAsync(correlationId);
-        return this;
-    }
+        await TestHarness.Bus.PublishMqtt(message, null);
+        await ShouldHaveConsumedAsync<MqttOrderEvent>();
 
-    public void VerifyOrderMappingRemoved(Times times)
-    {
-        _actionRepository.Verify(x => x.RemoveVehicleAndInternalOrderIdMapping(It.IsAny<Guid>()), times);
+        var consumed = await GetFirstConsumedMessageAsync<MqttOrderEvent>();
+        consumed.SerialNumber.ShouldBe(message.SerialNumber);
+        consumed.OrderId.ShouldBe(message.OrderId);
+        consumed.OrderEventType.ShouldBe(message.OrderEventType);
+
+        if (shouldMappingBeNull)
+        {
+            (await ActionRepository.GetInternalOrderId(message.OrderId.ToGuid())).ShouldBeNull();
+        }
+        else
+        {
+            (await ActionRepository.GetInternalOrderId(message.OrderId.ToGuid())).ShouldNotBeNull();
+        }
+
+        return TestHarness.Published;
     }
 }

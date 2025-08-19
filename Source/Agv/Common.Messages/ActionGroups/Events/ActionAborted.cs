@@ -8,7 +8,9 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 /// </summary>
 public record ActionAborted : CorrelatedBy<Guid>
 {
-    /// <inheritdoc cref="CorrelatedBy{Guid}"/>
+    /// <summary>
+    /// The Agv correlation ID.
+    /// </summary>
     public Guid CorrelationId { get; }
 
     /// <summary>

@@ -23,9 +23,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
     IConsumer<AbortAndStartActionCommand>,
     IConsumer<ResendAction>
 {
-    /// <summary>
-    /// Handles the <see cref="StartActionCommand"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<StartActionCommand> context)
     {
         var action = context.Message.Action;
@@ -53,9 +51,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
     }
 
-    /// <summary>
-    /// Handles the <see cref="UpdateActionCommand"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateActionCommand> context)
     {
         var action = context.Message.Action;
@@ -71,7 +67,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         Guid? vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
         if (vehicleOrderId != null)
         {
-            logger.LogInformation("Replacing fleet management service internal order id {InternalCorrelationId}/{InternalOrderId} by vehicle order id {VehicleCorrelationId}/{VehicleOrderId}", action.CorrelationId, orderId, vehicleOrderId, vehicleOrderId.Value.ToString());
+            logger.LogInformation("Replacing fleet management service internal order id {InternalOrderId} by vehicle order id {VehicleOrderId}", orderId, vehicleOrderId);
             orderId = vehicleOrderId.Value.ToString();
         }
 
@@ -91,16 +87,14 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
     }
 
-    /// <summary>
-    /// Handles the <see cref="AbortAndStartActionCommand"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<AbortAndStartActionCommand> context)
     {
         var action = context.Message.Action;
         string agvSerialNumber = context.Message.SerialNumber;
         var assignedAgv = context.Message.CorrelationId;
         Guid? abortedActionCorrelationId = context.Message.AbortedActionCorrelationId;
-        string orderId = abortedActionCorrelationId == null? action.CorrelationId.ToString(): abortedActionCorrelationId.Value.ToString();
+        string orderId = abortedActionCorrelationId == null ? action.CorrelationId.ToString() : abortedActionCorrelationId.Value.ToString();
 
         if (string.IsNullOrEmpty(agvSerialNumber))
         {
@@ -109,13 +103,13 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
 
         var order = await GetOrder(action, agvSerialNumber, abortedActionCorrelationId == null ? OrderRecordType.Order : OrderRecordType.OrderUpdate, orderId);
 
-        await context.PublishMqtt(order, context.CancellationToken);
-
         FeedAgvRepository(assignedAgv, action);
         if (abortedActionCorrelationId != null)
         {
             await actionRepository.AddVehicleAndInternalOrderIdMapping(abortedActionCorrelationId.Value, action.CorrelationId);
         }
+
+        await context.PublishMqtt(order, context.CancellationToken);
 
         if (action.IsMoveToCoordinate)
         {
@@ -127,9 +121,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             abortedActionCorrelationId, action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
     }
 
-    /// <summary>
-    /// Handles the <see cref="ResendAction"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ResendAction> context)
     {
         (_, string serialNumber, var action) = context.Message;
@@ -138,7 +130,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         Guid? vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
         if (vehicleOrderId != null)
         {
-            logger.LogInformation("Replacing fleet management service internal order id {InternalCorrelationId}/{InternalOrderId} by vehicle order id {VehicleCorrelationId}/{VehicleOrderId}", action.CorrelationId, orderId, vehicleOrderId, vehicleOrderId.Value.ToString());
+            logger.LogInformation("Replacing fleet management service internal order id {InternalOrderId} by vehicle order id {VehicleOrderId}", orderId, vehicleOrderId);
             orderId = vehicleOrderId.Value.ToString();
         }
         var order = await GetOrder(action, serialNumber, OrderRecordType.Order, orderId);

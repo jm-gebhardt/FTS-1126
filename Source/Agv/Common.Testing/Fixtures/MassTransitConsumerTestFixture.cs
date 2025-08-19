@@ -1,10 +1,10 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Testing.Extensions;
+using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
@@ -43,7 +43,7 @@ public abstract class MassTransitConsumerTestFixture<TConsumer> : MassTransitTes
         ConsumerHarness = TestHarness.GetConsumerHarness<TConsumer>();
         return this;
     }
-    
+
     /// <summary>
     /// Get the first consumed message
     /// </summary>
@@ -51,25 +51,24 @@ public abstract class MassTransitConsumerTestFixture<TConsumer> : MassTransitTes
     public async Task<T> GetFirstConsumedMessageAsync<T>() where T : class
     {
         await ShouldHavePublishedAsync<T>();
-        var message = ConsumerHarness.Consumed.Select<T>().First().Context.Message;
-        return message;
+        return await ConsumerHarness.Consumed.GetFirstConsumedMessageAsync<T>();
     }
-    
+
     /// <summary>
     /// Check if the message has been consumed
     /// </summary>
     /// <typeparam name="T">Type of consumed message.</typeparam>
     public async Task ShouldHaveConsumedAsync<T>() where T : class
-    { 
-        (await ConsumerHarness.Consumed.Any<T>()).ShouldBeTrue();
+    {
+        await ConsumerHarness.Consumed.ShouldHaveConsumedAsync<T>();
     }
-    
+
     /// <summary>
     /// Check if the message has not been consumed
     /// </summary>
     /// <typeparam name="T">Type of consumed message.</typeparam>
     public async Task ShouldNotHaveConsumedAsync<T>() where T : class
-    { 
-        (await ConsumerHarness.Consumed.Any<T>()).ShouldBeFalse();
+    {
+        await ConsumerHarness.Consumed.ShouldNotHaveConsumedAsync<T>();
     }
 }

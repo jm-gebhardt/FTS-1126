@@ -11,7 +11,7 @@ public class DbTestFixtureBase<TContext> : FixtureBase, IAsyncDisposable where T
 
     public IDbContextFactory<TContext> ContextFactory { get; }
 
-    protected DbTestFixtureBase()
+    public DbTestFixtureBase()
     {
         AddServices(s => s.AddTestingDb<TContext>(_id));
         Build();

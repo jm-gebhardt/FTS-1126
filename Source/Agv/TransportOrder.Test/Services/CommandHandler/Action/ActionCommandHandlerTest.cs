@@ -68,7 +68,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup)
             .WithNode(new GraphNode(pickAction.Target.NodeId!))
             .WithLastActionDockFront(false);
-        
+
         var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
         await fixture.PublishMessageAsync(startAction);
 
@@ -789,6 +789,29 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_AbortActionGroup_MoveActionSkippedAndDropRunning_PublishesActionAbortedForRunningAction()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.TryTransitionToBusy(true);
+
+        var actionGroup = AgvActionGenerator.GeneratePickMoveDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Completed,
+            wasMoveSkipped: true,
+            dropActionState: ActionState.Started);
+        var dropAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup);
+
+        await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.WebApi));
+        await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
+        var actionAborted = await fixture.GetFirstPublishedMessageAsync<ActionAborted>();
+        actionAborted.Action.CorrelationId.ShouldBe(dropAction.CorrelationId);
     }
 
     [TestMethod]
