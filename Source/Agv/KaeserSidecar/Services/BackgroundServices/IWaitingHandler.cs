@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.KaeserSidecar.Domain.Services;
+﻿namespace Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 
 /// <summary>
 /// A handler for short loop waiting.

@@ -1,14 +1,15 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
-using Gebhardt.Acc.Common.Messages.Stations.Events;
 
-namespace Gebhardt.Acc.KaeserSidecar.Domain.Services;
+namespace Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 
 /// <inheritdoc cref="IWaitingHandler"/>>
 public class WaitingHandler(
@@ -17,6 +18,7 @@ public class WaitingHandler(
     ITransportOrderDb transportOrderDb,
     IWaitingPointActionRepository waitingPointActionRepository,
     IPrismatCommunicationShortLoopWeTargetStationRepository shortLoopTargetStationRepository,
+    IJamStateRepository jamStateRepository,
     ISemaphoreProvider<IWaitingHandlerSemaphore> semaphoreProvider,
     IBus bus) : BackgroundService, IWaitingHandler
 {
@@ -61,7 +63,7 @@ public class WaitingHandler(
             Guid? action = _actionsToSelectTarget
                 .Where(kvp => !_lastEvaluatedActions.Contains(kvp.Key))
                 .OrderBy(kvp => kvp.Value) // order by entry time 
-                .Select(kvp => (Guid?) kvp.Key) // use the action correlation id
+                .Select(kvp => (Guid?)kvp.Key) // use the action correlation id
                 .FirstOrDefault();
             if (action == null)
             {
@@ -78,6 +80,14 @@ public class WaitingHandler(
             {
                 return;
             }
+
+            bool hasPalletJam = await GetJamState(target);
+            if (hasPalletJam)
+            {
+                logger.LogInformation("Station {Target} not available due to pallet jam ", occupancy.Station);
+                return;
+            }
+
             _lastEvaluatedActions.Add(action.Value);
             // occupy station when target is selected already, so that we can use the occupancy status for future waiting
             logger.LogInformation("Adding agv {Agv} to station {Station} for short loop waiting", agvCorrelationId, target);
@@ -88,6 +98,12 @@ public class WaitingHandler(
             waitingPointAction.SetTarget(target);
             await waitingPointActionRepository.UpdateAsync(waitingPointAction);
         }, stoppingToken);
+    }
+
+    private async Task<bool> GetJamState(string station)
+    {
+        var jamState = await jamStateRepository.GetByStationAsync(station) ?? new JamState(station, 0, DateTime.UtcNow);
+        return jamState.HasPalletJam;
     }
 
     /// <inheritdoc cref="IWaitingHandler"/>>

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
-using Gebhardt.Acc.KaeserSidecar.Domain.Services;
+using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;

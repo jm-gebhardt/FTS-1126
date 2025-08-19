@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
-using Gebhardt.Acc.KaeserSidecar.Domain.Services;
+using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -20,6 +20,7 @@ public class WaitingHandlerTestFixture : MassTransitTestFixture
     
     private readonly StationRepository _stationRepository;
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
+    private readonly Mock<IJamStateRepository> _jamStateRepository = new();
     private readonly SemaphoreProvider<IWaitingHandlerSemaphore> _semaphore = new(new Mock<ILogger<SemaphoreProvider<IWaitingHandlerSemaphore>>>().Object);
     private readonly Mock<IPrismatCommunicationShortLoopWeTargetStationRepository> _shortLoopWeTargetStationRepository = new();
     private List<WaitingPointAction> _actions = [];
@@ -37,6 +38,7 @@ public class WaitingHandlerTestFixture : MassTransitTestFixture
             collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
             collection.AddSingleton<IStationRepository, StationRepository>();
             collection.AddTransient(_ => _transportOrderDb.Object);
+            collection.AddTransient(_ => _jamStateRepository.Object);
             collection.AddSingleton<IWaitingHandler, WaitingHandler>();
             collection.AddSingleton<ISemaphoreProvider<IWaitingHandlerSemaphore>>(_ => _semaphore);
             collection.AddTransient(_ => WaitingPointRepository.Object);
@@ -59,6 +61,12 @@ public class WaitingHandlerTestFixture : MassTransitTestFixture
     public WaitingHandlerTestFixture WithWaitingPointAction(params WaitingPointAction[] actions)
     {
         _actions = actions.ToList();
+        return this;
+    }
+
+    public WaitingHandlerTestFixture WithPalletJam(string? station)
+    {
+        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<string>())).ReturnsAsync((string s) => new JamState(s, string.Equals(s, station) ? 1 : 0, DateTime.UtcNow));
         return this;
     }
 

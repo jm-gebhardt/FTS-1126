@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.KaeserSidecar.Domain.Services;
+using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.Extensions.DependencyInjection;

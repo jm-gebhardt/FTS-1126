@@ -34,6 +34,7 @@ public class WaitingHandlerTest
 
         var fixture = new WaitingHandlerTestFixture()
             .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
+            .WithPalletJam(null)
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
 
         await fixture.Handler.StartHandling(moveAction.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate);
@@ -52,6 +53,26 @@ public class WaitingHandlerTest
         waitingPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
         waitingPointAction.Target.ShouldBe(WaitingHandlerTestFixture.Target);
         await fixture.ShouldHavePublishedAsync<StationReserved>();
+    }
+
+    [TestMethod]
+    public async Task ExecuteAsync_StationHasPalletJam_DoesNotPublishSetTargetForAction()
+    {
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        var actionGroup = order.CreateActionGroup(OrderGenerator.KaeserConfiguration, Guid.NewGuid());
+        var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
+        moveAction.StartedDate = DateTime.UtcNow;
+
+        var fixture = new WaitingHandlerTestFixture()
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
+            .WithPalletJam(WaitingHandlerTestFixture.Target)
+            .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
+
+        await fixture.Handler.StartHandling(moveAction.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate);
+        await fixture.HandleAsync();
+
+        await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
+        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
     }
 
     [TestMethod]
