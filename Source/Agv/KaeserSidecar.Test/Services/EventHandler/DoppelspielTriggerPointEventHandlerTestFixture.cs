@@ -4,8 +4,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,13 +12,12 @@ using OrderGenerator = Gebhardt.Acc.PrismatCommunicationTest.Helper.OrderGenerat
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 
-public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumerTestFixture<DoppelspielTriggerPointEventHandler>
+public class DoppelspielTriggerPointEventHandlerTestFixture : MassTransitConsumerTestFixture<DoppelspielTriggerPointEventHandler>
 {
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
-    private readonly Mock<IPrismatCommunicationStationRepository> _stationRepository = new();
-    private readonly Mock<IPrismatCommunicationSystemStatusRepository> _systemStatusRepository = new();
     private readonly Mock<IAgvSettingsService> _agvSettingsService = new();
+    private readonly Mock<IAklAgvLimitGuard> _aklAgvLimitGuard = new();
 
     /// <inheritdoc cref="MassTransitConsumerTestFixture{DoppelspielTriggerPointEventHandler}"/>>
     protected override MassTransitConsumerTestFixture<DoppelspielTriggerPointEventHandler> AddServices(IServiceCollection collection)
@@ -33,8 +31,7 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
         collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddTransient(_ => _agvSettingsService.Object);
         collection.AddTransient(_ => _transportOrderDb.Object);
-        collection.AddTransient(_ => _stationRepository.Object);
-        collection.AddTransient(_ => _systemStatusRepository.Object);
+        collection.AddTransient(_ => _aklAgvLimitGuard.Object);
         return this;
     }
 
@@ -44,22 +41,9 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
         Build();
     }
 
-    public DoppelspielTriggerPointEventHandlerTestFixture WithStationGroup(bool? isOccupied, bool hasHostOrders)
+    public DoppelspielTriggerPointEventHandlerTestFixture WithinAklAgvLimit(bool isWithinLimit)
     {
-        var station = new Station();
-        if (isOccupied != null && isOccupied.Value)
-        {
-            station.AddAgv(Guid.NewGuid());
-        }
-        var stationGroup = isOccupied == null ? null : new StationGroup([station]);
-        _stationRepository.Setup(x => x.GetStationGroup(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(stationGroup);
-        _hostOrderRepository.Setup(x => x.HasCurrentHostOrdersForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(hasHostOrders);
-        return this;
-    }
-
-    public DoppelspielTriggerPointEventHandlerTestFixture WithSystemStatus(SystemStatus? status)
-    {
-        _systemStatusRepository.Setup(x => x.GetStatus()).ReturnsAsync(status);
+        _aklAgvLimitGuard.Setup(x => x.IsWithinAklAgvLimitAsync(It.IsAny<HostOrder>())).ReturnsAsync(isWithinLimit);
         return this;
     }
 
@@ -74,7 +58,7 @@ public class DoppelspielTriggerPointEventHandlerTestFixture: MassTransitConsumer
         _hostOrderRepository.Setup(x => x.GetNextPickForSources(It.IsAny<ICollection<string>>())).ReturnsAsync(order);
         return this;
     }
-    
+
     public DoppelspielTriggerPointEventHandlerTestFixture WithAgvHasCriticalBatteryLevel(bool hasLowBatteryLevel)
     {
         _agvSettingsService.Setup(x => x.CheckAgvHasCriticalBatteryLevel(It.IsAny<Guid>())).ReturnsAsync(hasLowBatteryLevel);

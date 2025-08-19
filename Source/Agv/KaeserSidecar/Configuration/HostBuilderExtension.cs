@@ -12,6 +12,8 @@ using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.KaeserSidecar.SimulationMode;
 using Gebhardt.Acc.PrismatCommunication.Configuration;
+using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
@@ -22,6 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using InitializationProvider = Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices.InitializationProvider;
+using IStationRepository = Gebhardt.Acc.KaeserSidecar.Domain.Repositories.IStationRepository;
 
 namespace Gebhardt.Acc.KaeserSidecar.Configuration;
 
@@ -78,8 +81,13 @@ public static class HostBuilderExtension
                 o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
             services.AddTransient<IPrismatCommunicationShortLoopWeTargetStationRepository, PrismatCommunicationShortLoopWeTargetStationRepository>();
             services.AddTransient<IPrismatCommunicationHostOrderRepository, PrismatCommunicationHostOrderRepository>();
+            services.AddTransient<IHostOrderRepository>(sp => sp.GetRequiredService<IPrismatCommunicationHostOrderRepository>());
             services.AddTransient<IPrismatCommunicationStationRepository, PrismatCommunicationStationRepository>();
+            services.AddTransient<PrismatCommunication.Domain.Repositories.IStationRepository>(sp => sp.GetRequiredService<IPrismatCommunicationStationRepository>());
             services.AddTransient<IPrismatCommunicationSystemStatusRepository, PrismatCommunicationSystemStatusRepository>();
+            services.AddTransient<ISystemStatusRepository>(sp => sp.GetRequiredService<IPrismatCommunicationSystemStatusRepository>());
+            
+            services.AddTransient<IAklAgvLimitGuard, AklAgvLimitGuard>();
             services.AddTransient<ITransportOrderDb, TransportOrderDb>();
             services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
             services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();

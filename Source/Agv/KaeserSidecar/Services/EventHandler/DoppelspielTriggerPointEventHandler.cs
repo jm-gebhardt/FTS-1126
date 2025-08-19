@@ -7,6 +7,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -20,8 +21,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 public class DoppelspielTriggerPointEventHandler(
     ILogger<DoppelspielTriggerPointEventHandler> logger,
     IPrismatCommunicationHostOrderRepository hostOrderRepository,
-    IPrismatCommunicationStationRepository stationRepository,
-    IPrismatCommunicationSystemStatusRepository systemStatusRepository,
+    IAklAgvLimitGuard aklAgvLimitGuard,
     KaeserGraphConfiguration configuration,
     IAgvSettingsService agvSettingsService) :
     IConsumer<AgvPassedDoppelspielTriggerPoint>
@@ -83,33 +83,13 @@ public class DoppelspielTriggerPointEventHandler(
         await context.Publish(new ManualActionPassedDoppelspielTrigger(sap, action.Target.NodeId!, isPicking, actionGroup.HandlingUnit!, action.CorrelationId, actionGroup.AssignedAgv!.Value));
     }
 
-    private async Task<bool> CanBeUsedForDoppelspiel(HostOrder? hostOrder)
+    private Task<bool> CanBeUsedForDoppelspiel(HostOrder? hostOrder)
     {
-        if (hostOrder == null)
+        if (hostOrder?.IsQueued == true)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
-        if (hostOrder.IsQueued)
-        {
-            return false;
-        }
-
-        var systemStatus = await systemStatusRepository.GetStatus();
-        if (systemStatus is not { UseAklAgvLimit: true })
-        {
-            return true;
-        }
-
-        var stationGroup = await stationRepository.GetStationGroup(hostOrder.Source, hostOrder.Target);
-        if (stationGroup == null)
-        {
-            return true;
-        }
-        if (stationGroup.IsOccupied)
-        {
-            return false;
-        }
-        return !await hostOrderRepository.HasCurrentHostOrdersForStationGroup(stationGroup.Sources, stationGroup.Targets);
+        return aklAgvLimitGuard.IsWithinAklAgvLimitAsync(hostOrder);
     }
 }

@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Semaphores;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
@@ -22,8 +21,10 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     public readonly KaeserGraphConfiguration Configuration = OrderGenerator.KaeserConfiguration;
     private readonly Mock<IHostOrderValidationService> _validationService = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
-    private readonly Mock<ISystemStatusRepository> _systemStateRepositoryMock = new();
     private readonly SemaphoreProvider<IDoppelspielSemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IDoppelspielSemaphore>>>().Object);
+    private readonly Mock<IAklAgvLimitGuard> _aklAgvLimitGuard = new();
+    private HostOrder? _nextHostOrder;
+    private StationGroup? _stationGroup;
 
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
@@ -32,14 +33,17 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         collection.AddTransient(_ => HostOrderRepositoryMock.Object);
         collection.AddTransient(_ => _validationService.Object);
         collection.AddTransient(_ => _hostCommunicatorMock.Object);
-        collection.AddTransient(_ => _systemStateRepositoryMock.Object);
         collection.AddSingleton(_ => Configuration);
         collection.AddTransient(_ => _stationRepository.Object);
+        collection.AddTransient(_ => _aklAgvLimitGuard.Object);
         return this;
     }
 
     public HostOrderConsumerTestFixture()
     {
+        _stationRepository.Setup(x => x.GetStationGroup(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(() => _stationGroup);
+        HostOrderRepositoryMock.Setup(x => x.GetNextHostOrderForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(() => _nextHostOrder);
+
         Build();
     }
 
@@ -50,23 +54,21 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithStationGroup(bool? isOccupied, bool hasHostOrders, HostOrder? nextHostOrder = null)
+    public HostOrderConsumerTestFixture<TConsumer> WithNextHostOrder(HostOrder nextHostOrder)
     {
-        var station = new Station();
-        if (isOccupied != null && isOccupied.Value)
-        {
-            station.AddAgv(Guid.NewGuid());
-        }
-        var stationGroup = isOccupied == null ? null : new StationGroup([station]);
-        _stationRepository.Setup(x => x.GetStationGroup(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(stationGroup);
-        HostOrderRepositoryMock.Setup(x => x.HasCurrentHostOrdersForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(hasHostOrders);
-        HostOrderRepositoryMock.Setup(x => x.GetNextHostOrderForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(nextHostOrder);
+        _nextHostOrder = nextHostOrder;
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithSystemStatus(SystemStatus? status)
+    public HostOrderConsumerTestFixture<TConsumer> WithinAklAgvLimit(bool isWithinLimit)
     {
-        _systemStateRepositoryMock.Setup(x => x.GetStatus()).ReturnsAsync(status);
+        if (isWithinLimit)
+        {
+            var station = new Station();
+            station.AddAgv(Guid.NewGuid());
+            _stationGroup = new StationGroup([station]);
+        }
+        _aklAgvLimitGuard.Setup(x => x.IsWithinAklAgvLimitAsync(It.IsAny<HostOrder>())).ReturnsAsync(isWithinLimit);
         return this;
     }
 
@@ -83,7 +85,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     {
         var queue = new Queue<HostOrder>(hostOrders);
         HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
-            .ReturnsAsync(() =>  queue.Dequeue());
+            .ReturnsAsync(() => queue.Dequeue());
         HostOrderRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<HostOrder>())).Verifiable();
         return this;
     }
@@ -91,7 +93,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     public HostOrderConsumerTestFixture<TConsumer> WithHostOrderWithSameHu(HostOrder? hostOrder)
     {
         HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrderByHu(It.IsAny<string>())).ReturnsAsync(hostOrder);
-        HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrdersByHu(It.IsAny<string>(), It.IsAny<DateTime>())).ReturnsAsync(hostOrder== null ? [] : [hostOrder]);
+        HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrdersByHu(It.IsAny<string>(), It.IsAny<DateTime>())).ReturnsAsync(hostOrder == null ? [] : [hostOrder]);
         return this;
     }
 
@@ -124,7 +126,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         HostOrderRepositoryMock.Verify(x => x.Add(It.IsAny<HostOrder>()), times);
     }
 
-    public void VerifyReportOrderCompletion(string? destination=null,Times times = default)
+    public void VerifyReportOrderCompletion(string? destination = null, Times times = default)
     {
         _hostCommunicatorMock.Verify(x => x.ReportOrderCompletion(It.IsAny<string>(), It.IsAny<string>(), destination ?? It.IsAny<string>()), times);
     }

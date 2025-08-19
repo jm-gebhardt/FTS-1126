@@ -56,7 +56,7 @@ public class HostOrderRepositoryTest
     [TestMethod]
     public async Task GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint_ValidData_DoppelspielPartnerReturned()
     {
-        var doppelspielPartnerCandidate = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020:false));
+        var doppelspielPartnerCandidate = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         doppelspielPartnerCandidate.Start(DateTime.UtcNow, Guid.NewGuid());
         doppelspielPartnerCandidate.FinishAction(DateTime.UtcNow, ActionType.Pick);
         doppelspielPartnerCandidate.IsQueued = true;
@@ -77,6 +77,83 @@ public class HostOrderRepositoryTest
         fixture.Repository.AddRange(doppelspielPartnerCandidate, notStartedOrderPickOrder, unfinishedPickOrder, passedTriggerPointOrder);
         await fixture.Repository.SaveAsync();
         (await fixture.Repository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelspielPartnerCandidate.Target)).ShouldBe(doppelspielPartnerCandidate.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task HasHostOrdersForStationGroup_RunningOrderExists_ReturnsTrue()
+    {
+        var fixture = new HostOrderRepositoryTestFixture();
+        var runningOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        runningOrder.IsQueued = true;
+        runningOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        fixture.Repository.Add(runningOrder);
+        await fixture.Repository.SaveAsync();
+        bool hasHostOrdersForStationGroup = await fixture.Repository.HasHostOrdersForStationGroup([runningOrder.Source], [runningOrder.Target], null);
+        hasHostOrdersForStationGroup.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasHostOrdersForStationGroup_QueuedButNotStartedOrderExists_ReturnsTrue()
+    {
+        var fixture = new HostOrderRepositoryTestFixture();
+        var runningOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        runningOrder.IsQueued = true;
+        fixture.Repository.Add(runningOrder);
+        await fixture.Repository.SaveAsync();
+        bool hasHostOrdersForStationGroup = await fixture.Repository.HasHostOrdersForStationGroup([runningOrder.Source], [runningOrder.Target], null);
+        hasHostOrdersForStationGroup.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasHostOrdersForStationGroup_RunningOrderButSameAgv_ReturnsFalse()
+    {
+        var fixture = new HostOrderRepositoryTestFixture();
+        var runningOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        runningOrder.IsQueued = true;
+        var agvCorrelationId = Guid.NewGuid();
+        runningOrder.Start(DateTime.UtcNow, agvCorrelationId);
+        fixture.Repository.Add(runningOrder);
+        await fixture.Repository.SaveAsync();
+        bool hasHostOrdersForStationGroup = await fixture.Repository.HasHostOrdersForStationGroup([runningOrder.Source], [runningOrder.Target], agvCorrelationId);
+        hasHostOrdersForStationGroup.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task HasHostOrdersForStationGroup_RunningOrderButOtherAgv_ReturnsTrue()
+    {
+        var fixture = new HostOrderRepositoryTestFixture();
+        var runningOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        runningOrder.IsQueued = true;
+        var agvCorrelationId = Guid.NewGuid();
+        runningOrder.Start(DateTime.UtcNow, agvCorrelationId);
+        fixture.Repository.Add(runningOrder);
+        await fixture.Repository.SaveAsync();
+        bool hasHostOrdersForStationGroup = await fixture.Repository.HasHostOrdersForStationGroup([runningOrder.Source], [runningOrder.Target], Guid.NewGuid());
+        hasHostOrdersForStationGroup.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasHostOrdersForStationGroup_RunningOrderButNotAtThatStartStationExists_ReturnsTrue()
+    {
+        var fixture = new HostOrderRepositoryTestFixture();
+        var runningOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        runningOrder.IsQueued = true;
+        fixture.Repository.Add(runningOrder);
+        await fixture.Repository.SaveAsync();
+        bool hasHostOrdersForStationGroup = await fixture.Repository.HasHostOrdersForStationGroup(["some-other-source"], [runningOrder.Target], null);
+        hasHostOrdersForStationGroup.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasHostOrdersForStationGroup_RunningOrderButNotAtThatTargetStationExists_ReturnsTrue()
+    {
+        var fixture = new HostOrderRepositoryTestFixture();
+        var runningOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        runningOrder.IsQueued = true;
+        fixture.Repository.Add(runningOrder);
+        await fixture.Repository.SaveAsync();
+        bool hasHostOrdersForStationGroup = await fixture.Repository.HasHostOrdersForStationGroup([runningOrder.Source], ["some-other-target"], null);
+        hasHostOrdersForStationGroup.ShouldBeTrue();
     }
 
     [TestMethod]

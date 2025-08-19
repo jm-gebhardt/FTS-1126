@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 
 /// <summary>
 /// A station group
@@ -20,6 +22,7 @@ public class StationGroup
     /// <summary>
     /// The id of the group.
     /// </summary>
+    [PublicAPI]
     public Guid? GroupId => _stations.FirstOrDefault()?.GroupId;
 
     /// <summary>

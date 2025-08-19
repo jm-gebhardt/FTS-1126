@@ -156,7 +156,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroups.Except(nextActionGroupsForAgv).ToList(), nodesToAvoid);
         if (nextActionGroup != null)
         {
-            _logger.LogInformation("Selected next action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId} with nodes ot avoid {AvoidNodes}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId, string.Join(":", nodesToAvoid));
+            _logger.LogInformation("Selected next action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId} with nodes to avoid: {AvoidNodes}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId, string.Join(":", nodesToAvoid));
         }
         return nextActionGroup;
     }

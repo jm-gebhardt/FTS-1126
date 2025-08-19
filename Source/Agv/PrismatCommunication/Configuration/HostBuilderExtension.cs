@@ -125,6 +125,8 @@ public static class HostBuilderExtension
             services.AddSingleton<ISignificanceChecker<PickActionCompleted>, ActionGroupEventSignificanceChecker<PickActionCompleted>>();
             services.AddSingleton<UnTimedInMemoryFilter<PickActionCompleted>>();
 
+            services.AddTransient<IAklAgvLimitGuard, AklAgvLimitGuard>();
+            
             services.RegisterValidators();
 
             if (simulateOptions == null)

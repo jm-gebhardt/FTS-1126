@@ -61,16 +61,17 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
-    public async Task<bool> HasCurrentHostOrdersForStationGroup(ICollection<string> sources, ICollection<string> targets)
+    public async Task<bool> HasHostOrdersForStationGroup(ICollection<string> sources, ICollection<string> targets, Guid? agvCorrelationId)
     {
        return await _context.Set<HostOrder>().Where(
             h => h.IsQueued &&
                  h.CanceledDate == null &&
                  h.FinishedDate == null &&
-                 h.StartedDate != null &&
                  h.FailedDate == null &&
                  (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.FinishedDate == null) ||
-                  h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.FinishedDate == null)))
+                  h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.FinishedDate == null)) &&
+                 (h.AssignedAgv == null || h.AssignedAgv != agvCorrelationId)
+                 )
             .AnyAsync();
     }
 

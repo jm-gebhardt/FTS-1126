@@ -26,10 +26,10 @@ public class HostOrderCommandHandler(
     IHostCommunicator hostCommunicator,
     KaeserGraphConfiguration configuration,
     IHostOrderValidationService validationService,
-    ISystemStatusRepository systemStatusRepository,
     IStationRepository stationRepository,
-    ISemaphoreProvider<IDoppelspielSemaphore> doppelspielSemaphore
-    ) :
+    ISemaphoreProvider<IDoppelspielSemaphore> doppelspielSemaphore,
+    IAklAgvLimitGuard aklAgvLimitGuard
+) :
     IConsumer<CreateHostOrder>,
     IConsumer<CancelHostOrder>,
     IConsumer<CancelInvalidHostOrder>,
@@ -196,30 +196,7 @@ public class HostOrderCommandHandler(
             return false;
         }
 
-        var systemStatus = await systemStatusRepository.GetStatus();
-        if (systemStatus is not { UseAklAgvLimit: true })
-        {
-            return false;
-        }
-
-        var stationGroup = await stationRepository.GetStationGroup(hostOrder.Source, hostOrder.Target);
-        if (stationGroup == null)
-        {
-            return false;
-        }
-
-        if (stationGroup.IsOccupied)
-        {
-            logger.LogWarning("Delaying host order {CorrelationId}, station group {StationGroupId} at {FirstSource}/{LastSource} is occupied.", hostOrder.CorrelationId, stationGroup.GroupId, stationGroup.Sources.First(), stationGroup.Sources.Last());
-            return true;
-        }
-
-        if (await hostOrderRepository.HasCurrentHostOrdersForStationGroup(stationGroup.Sources, stationGroup.Targets))
-        {
-            logger.LogWarning("Delaying host order {CorrelationId}, orders are heading towards it.", hostOrder.CorrelationId);
-            return true;
-        }
-        return false;
+        return !await aklAgvLimitGuard.IsWithinAklAgvLimitAsync(hostOrder);
     }
 
     /// <summary>
@@ -285,7 +262,7 @@ public class HostOrderCommandHandler(
 
         var orderDetails = createHostOrderMessage.OrderDetails;
 
-        if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator )
+        if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator)
         {
             pickInfoToAgv = new Dictionary<InfoToAgvKey, string>();
             if (Math.Abs(orderDetails.LeRotation) > Mathematics.DoubleComparator)
@@ -352,7 +329,7 @@ public class HostOrderCommandHandler(
         (var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, string? pickNode) = context.Message;
         var droppingHostOrder = await hostOrderRepository.GetByIdAsync(droppingHostOrderCorrelationId);
         droppingHostOrder.PassTriggerPoint();
-       
+
         if (shouldPickNext)
         {
             var pickingHostOrder = await hostOrderRepository.GetByIdAsync(nextPickHostOrderCorrelationId!.Value);
@@ -400,7 +377,7 @@ public class HostOrderCommandHandler(
             // not order known to prismat
         }
     }
-    
+
     /// <summary>
     /// Handles the <see cref="TryQueueDelayedOrder"/> command.
     /// </summary>
@@ -415,7 +392,7 @@ public class HostOrderCommandHandler(
 
         ICollection<string> sources = stationGroup.Sources;
         if (configuration.IsPickAtAkl(context.Message.Source))
-        {  
+        {
             // Do not queue AKL picks here, they are queued upon finish of the pick of a drop at AKL
             sources = [];
         }
@@ -436,7 +413,7 @@ public class HostOrderCommandHandler(
     public async Task Consume(ConsumeContext<ResetDoppelspielPartner> context)
     {
         var actionGroupId = context.Message.ActionGroupCorrelationId;
-        
+
         var hostOrder = await hostOrderRepository.GetByIdAsync(actionGroupId);
 
         if (hostOrder is { IsRegisteredForDoppelspiel: true, HasQueuedDoppelspielpartner: false })
@@ -464,7 +441,7 @@ public class HostOrderCommandHandler(
             await context.RespondAsync(new DoppelspielPartnerQueued(null));
             return;
         }
-       
+
         var pickingHostOrder = await hostOrderRepository.GetNextPickForSources(sources);
         if (pickingHostOrder == null)
         {

@@ -44,12 +44,13 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     Task<HostOrder?> GetNextHostOrderForStationGroup(ICollection<string> sources, ICollection<string> targets);
 
     /// <summary>
-    /// Check if there are currently running host orders for a station group given by sources and targets.
+    /// Check if there are any queued or currently running host orders for a station group given by sources and targets.
     /// </summary>
     /// <param name="sources">The sources of the station group.</param>
     /// <param name="targets">The targets of the station group.</param>
-    /// <returns>True, if there are running host orders to this station group.</returns>
-    Task<bool> HasCurrentHostOrdersForStationGroup(ICollection<string> sources, ICollection<string> targets);
+    /// <param name="agvCorrelationId">The correlation id of the AGV that is excluded from the check.</param>
+    /// <returns>True, if there are host orders (of a different or unassigned Agv) to this station group already queued or running. This includes not running, but queued orders.</returns>
+    Task<bool> HasHostOrdersForStationGroup(ICollection<string> sources, ICollection<string> targets, Guid? agvCorrelationId);
 
     /// <summary>
     /// Get the next order for the given source SAPs.

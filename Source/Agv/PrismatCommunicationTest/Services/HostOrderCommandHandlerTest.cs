@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
@@ -26,7 +25,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
-            .WithStationGroup(false, false)
+            .WithinAklAgvLimit(true)
             .WithValidationError(null)
             .WithHostCommunicator();
 
@@ -88,14 +87,11 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_DropOrderFor1050PickAtAkl_CreateActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
-            .WithStationGroup(false, false)
-            .WithSystemStatus(systemStatus)
+            .WithinAklAgvLimit(true)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
@@ -110,14 +106,11 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_DropOrderFor1050_StationGroupOccupied_CreateActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
-            .WithStationGroup(true, false)
-            .WithSystemStatus(systemStatus)
+            .WithinAklAgvLimit(false)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
@@ -133,14 +126,11 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_DropOrderFor1050_StationGroupWillBeOccupied_PublishesCreateActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
-            .WithStationGroup(false, true)
-            .WithSystemStatus(systemStatus)
+            .WithinAklAgvLimit(false)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
@@ -156,15 +146,12 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_StationGroupNotOccupied_QueueActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
             .WithValidationError(null)
-            .WithStationGroup(false, false)
-            .WithSystemStatus(systemStatus)
+            .WithinAklAgvLimit(true)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
@@ -185,15 +172,12 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_StationGroupOccupied_PublishesCreateActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
             .WithValidationError(null)
-            .WithStationGroup(true, false)
-            .WithSystemStatus(systemStatus)
+            .WithinAklAgvLimit(false)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
@@ -209,8 +193,6 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_PickOrderFor1020NoPendingDropAt1050_StationGroupWillBeOccupied_PublishesCreateActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
@@ -218,8 +200,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrders([])
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
             .WithValidationError(null)
-            .WithStationGroup(false, true)
-            .WithSystemStatus(systemStatus)
+            .WithinAklAgvLimit(false)
             .WithHostCommunicator();
 
         await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
@@ -233,8 +214,6 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_PickOrderFor1020PendingDropAt1050_PublishesCreateActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var order = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
@@ -243,7 +222,6 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderWithSameHu(null)
             .WithHostOrders([dropOrder])
             .WithValidationError(null)
-            .WithSystemStatus(systemStatus)
             .WithHostCommunicator();
 
         await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
@@ -258,14 +236,11 @@ public class HostOrderCommandHandlerTest
     [DataTestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup(int input)
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
-            .WithSystemStatus(systemStatus)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input);
@@ -314,14 +289,11 @@ public class HostOrderCommandHandlerTest
     [DataTestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup(int output)
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(null)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
-            .WithSystemStatus(systemStatus)
             .WithHostCommunicator();
 
         var order = OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output);
@@ -372,15 +344,12 @@ public class HostOrderCommandHandlerTest
     public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsNotEmpty_QueueActionGroup(int output)
     {
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(dropOrder.CorrelationId)
             .WithHostOrders([dropOrder])
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
-            .WithSystemStatus(systemStatus)
             .WithHostCommunicator();
         fixture.Configuration.SetQueueIsOccupied(true);
 
@@ -530,16 +499,13 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_PassTriggerPoint_ShouldPickNext_ShortCircuit_PublishesQueueActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
 
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
         dropOrder.RegisterForDoppelspiel();
         nextPickOrder.RegisterForDoppelspiel();
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithHostOrders([dropOrder, nextPickOrder])
-            .WithSystemStatus(systemStatus);
+            .WithHostOrders([dropOrder, nextPickOrder]);
 
         var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, "pickNode");
 
@@ -557,16 +523,13 @@ public class HostOrderCommandHandlerTest
     [DataTestMethod]
     public async Task Consume_PassTriggerPoint_ShouldPickNext_LongCircuitWE_PublishesQueueActionGroup(int input)
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
 
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input));
         dropOrder.RegisterForDoppelspiel();
         nextPickOrder.RegisterForDoppelspiel();
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithHostOrders([dropOrder, nextPickOrder])
-            .WithSystemStatus(systemStatus);
+            .WithHostOrders([dropOrder, nextPickOrder]);
 
         var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, "pickNode");
 
@@ -582,8 +545,6 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_PassTriggerPoint_ShouldPickNext_LongCircuitAPL_PublishesQueueActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
 
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
@@ -592,8 +553,7 @@ public class HostOrderCommandHandlerTest
         string pickNode = nextPickOrder.Actions
             .Single(a => a.ActionType == ActionType.Pick).Node;
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithHostOrders([dropOrder, nextPickOrder])
-            .WithSystemStatus(systemStatus);
+            .WithHostOrders([dropOrder, nextPickOrder]);
 
         var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, pickNode);
 
@@ -610,8 +570,6 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_PassTriggerPoint_ShouldNotPickNext_DoppelspielPartner_PublishesQueueActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
 
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
@@ -621,8 +579,7 @@ public class HostOrderCommandHandlerTest
             .Single(a => a.ActionType == ActionType.Pick).Node;
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([dropOrder])
-            .WithUnMatchedPickOrder(nextPickOrder)
-            .WithSystemStatus(systemStatus);
+            .WithUnMatchedPickOrder(nextPickOrder);
 
         var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, false, pickNode);
 
@@ -637,8 +594,6 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartner_PublishesQueueActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
 
         var doppelspielPartner = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
@@ -647,8 +602,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder])
             .WithUnMatchedPickOrder(doppelspielPartner)
-            .WithStationGroup(false, false)
-            .WithSystemStatus(systemStatus);
+            .WithinAklAgvLimit(true);
 
         var command = new AbortHostOrder(hostOrder.CorrelationId);
 
@@ -661,8 +615,6 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartner_StationIsOccupied_OrderLikelyReportedToConveyor_PublishesQueueActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
 
         var doppelspielPartner = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
@@ -671,8 +623,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder])
             .WithUnMatchedPickOrder(doppelspielPartner)
-            .WithStationGroup(true, false)
-            .WithSystemStatus(systemStatus);
+            .WithinAklAgvLimit(false);
 
         var command = new AbortHostOrder(hostOrder.CorrelationId);
 
@@ -685,8 +636,6 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartner_StationIsOccupied_AklAgvLimitUnused_PublishesQueueActionGroup()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(false);
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
 
         var doppelspielPartner = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
@@ -695,8 +644,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder])
             .WithUnMatchedPickOrder(doppelspielPartner)
-            .WithStationGroup(true, false)
-            .WithSystemStatus(systemStatus);
+            .WithinAklAgvLimit(true);
 
         var command = new AbortHostOrder(hostOrder.CorrelationId);
 
@@ -725,12 +673,10 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryQueueDelayedOrder_StationIsOccupied_DoesNotPublishQueueHostOrder()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(true, false, nextOrder)
-            .WithSystemStatus(systemStatus);
+            .WithNextHostOrder(nextOrder)
+            .WithinAklAgvLimit(false);
 
         var command = new TryQueueDelayedOrder(fixture.Configuration.AklDoppelspielPickTargets[nextOrder.Target], nextOrder.Target);
         await fixture.TestHarness.Bus.Publish(command);
@@ -742,12 +688,10 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryQueueDelayedOrder_StationIsOccupied_AklAgvLimitNotUsed_PublishesQueueHostOrder()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(false);
         var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(true, false, nextOrder)
-            .WithSystemStatus(systemStatus);
+            .WithNextHostOrder(nextOrder)
+            .WithinAklAgvLimit(true);
 
         var command = new TryQueueDelayedOrder(fixture.Configuration.DoppelspielPickTargets[nextOrder.Target].First(), nextOrder.Target);
         await fixture.TestHarness.Bus.Publish(command);
@@ -759,12 +703,9 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryQueueDelayedOrder_NoNextOrderForStationGroup_DoesNotPublishQueueHostOrder()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(false, false)
-            .WithSystemStatus(systemStatus);
+            .WithinAklAgvLimit(true);
 
         var command = new TryQueueDelayedOrder(fixture.Configuration.DoppelspielPickTargets[nextOrder.Target].First(), nextOrder.Target);
         await fixture.TestHarness.Bus.Publish(command);
@@ -776,12 +717,10 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryQueueDelayedOrder_ValidData_PublishesQueueHostOrder()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-        systemStatus.SetUseAklAgvLimit(true);
         var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(false, false, nextOrder)
-            .WithSystemStatus(systemStatus);
+            .WithNextHostOrder(nextOrder)
+            .WithinAklAgvLimit(true);
 
         var command = new TryQueueDelayedOrder(fixture.Configuration.AklDoppelspielPickTargets[nextOrder.Target], nextOrder.Target);
         await fixture.TestHarness.Bus.Publish(command);
@@ -793,12 +732,10 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_ResetDoppelspielPartner_ValidData_ResetsDoppelspiel()
     {
-        var systemStatus = new SystemStatus(Guid.NewGuid(), true, 0, string.Empty);
-
-        systemStatus.SetUseAklAgvLimit(true);
         var orderId = Guid.NewGuid();
         var partnerOrderId = Guid.NewGuid();
-        List<HostOrder> orders = [
+        List<HostOrder> orders =
+        [
             OrderGenerator.GenerateHostOrderFromOrderDetails(new OrderDetails(orderId, "HU", "A", "B", "leNo", HostOrderCreator.Wms, DateTime.UtcNow)),
             OrderGenerator.GenerateHostOrderFromOrderDetails(new OrderDetails(partnerOrderId, "HU", "B", "A", "leNo", HostOrderCreator.Wms, DateTime.UtcNow))
         ];
@@ -820,7 +757,8 @@ public class HostOrderCommandHandlerTest
     {
         var nextOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(false, false, nextOrder);
+            .WithNextHostOrder(nextOrder)
+            .WithinAklAgvLimit(true);
 
         var command = new TryQueueNextAklPick(nextOrder.Source, Guid.NewGuid());
 
@@ -837,7 +775,7 @@ public class HostOrderCommandHandlerTest
     public async Task Consume_TryQueueNextAklPick_NoNextOrder_DoesNotQueueActionGroup()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithStationGroup(false, false);
+            .WithinAklAgvLimit(true);
 
         var command = new TryQueueNextAklPick("2130", Guid.NewGuid());
 
@@ -898,7 +836,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder])
             .WithNextPickOrder(nextPickOrder)
-            .WithStationGroup(false, false);
+            .WithinAklAgvLimit(true);
 
         await fixture.PublishMessageAsync(new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node"));
         await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
@@ -918,7 +856,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder])
             .WithNextPickOrder(nextPickOrder)
-            .WithStationGroup(false, false);
+            .WithinAklAgvLimit(true);
 
         var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
 
@@ -942,7 +880,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder])
             .WithNextPickOrder(nextPickOrder)
-            .WithStationGroup(true, false);
+            .WithinAklAgvLimit(false);
 
         var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
 

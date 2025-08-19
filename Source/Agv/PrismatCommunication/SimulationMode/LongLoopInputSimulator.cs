@@ -15,5 +15,5 @@ public class LongLoopInputSimulator(IBus bus, ILogger<SimulatorBase> logger, Sim
     ];
 
     /// <inheritdoc />
-    public override int PollingInterval { get; } = 240000 / simOptions.Speed; // 15/h in ms
+    public override int PollingInterval { get; } = 240_000 / simOptions.Speed; // 15/h in ms
 }
