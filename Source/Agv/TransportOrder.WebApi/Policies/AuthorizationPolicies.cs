@@ -23,27 +23,42 @@ public static class AuthorizationPolicies
     public const string MapFullAccess = "MapFullAccess";
 
     /// <summary>
+    /// Policy name for allowing updates to node properties.
+    /// </summary>
+    public const string NodePropertiesUpdate = "NodePropertiesUpdate";
+
+    private static class ClaimTypes
+    {
+        public const string ResourceAccess = "resource_access";
+    }
+
+    private record Policy(string PolicyName, string ClaimContent, string ClaimType);
+
+    private static readonly IReadOnlyList<Policy> _policies = [
+        new (TriggersFullAccess, "fm-triggers-full", ClaimTypes.ResourceAccess),
+        new (RestrictedAreasFullAccess, "fm-restrictedAreas-full", ClaimTypes.ResourceAccess),
+        new (MapFullAccess, "fm-map-full", ClaimTypes.ResourceAccess),
+        new (NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess)
+    ];
+
+    private static void AddNewPolicy(this AuthorizationOptions options, Policy newPolicy)
+    {
+        options.AddPolicy(newPolicy.PolicyName, policy =>
+            policy.RequireAssertion(ctx =>
+                ctx.User.HasClaim(claim =>
+                    claim.Type == newPolicy.ClaimType &&
+                    claim.Value.Contains(newPolicy.ClaimContent))));
+    }
+
+    /// <summary>
     /// Configures authorization policies.
     /// </summary>
     /// <param name="options">The authorization options.</param>
     public static void Configure(AuthorizationOptions options)
     {
-        options.AddPolicy(TriggersFullAccess, policy =>
-            policy.RequireAssertion(ctx =>
-                ctx.User.HasClaim(claim =>
-                    claim.Type == "resource_access" &&
-                    claim.Value.Contains("fm-triggers-full"))));
-
-        options.AddPolicy(RestrictedAreasFullAccess, policy =>
-            policy.RequireAssertion(ctx =>
-                ctx.User.HasClaim(claim =>
-                    claim.Type == "resource_access" &&
-                    claim.Value.Contains("fm-restrictedAreas-full"))));
-
-        options.AddPolicy(MapFullAccess, policy =>
-            policy.RequireAssertion(ctx =>
-                ctx.User.HasClaim(claim =>
-                    claim.Type == "resource_access" &&
-                    claim.Value.Contains("fm-map-full"))));
+        foreach (var policy in _policies)
+        {
+            options.AddNewPolicy(policy);
+        }
     }
 }
