@@ -42,7 +42,7 @@ public class ActionAbortedConsumer : IConsumer<ActionAborted>
             throw new AssignedAgvNotFoundException(assignedAgv, agvInformation.SerialNumber, action);
         }
         string orderId = action.CorrelationId.ToString();
-        _logger.LogInformation("Received {MessageType} for {Action} of order {Order} assigned to agv {AgvId}/{AgvCorrelationId}", nameof(ActionAborted), action.CorrelationId, orderId, agvInformation.SerialNumber, assignedAgv);
+        _logger.LogInformation("Handle {MessageType} for {Action} of order {Order} assigned to agv {AgvId}/{AgvCorrelationId}", nameof(ActionAborted), action.CorrelationId, orderId, agvInformation.SerialNumber, assignedAgv);
 
         Guid? vehicleOrderId = await _actionRepository.GetVehicleOrderId(action.CorrelationId);
         if (vehicleOrderId != null)

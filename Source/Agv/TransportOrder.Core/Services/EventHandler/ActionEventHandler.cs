@@ -100,22 +100,28 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
-        if (action.State is ActionState.Completed or ActionState.Aborted or ActionState.Canceled)
+        Guid? agv = actionGroup.AssignedAgv;
+        if (action.State is ActionState.Completed or ActionState.Canceled)
         {
             logger.LogInformation("Could not complete action cancellation for action {Action}, it is already in state {State}", actionCorrelationId, action.State);
             return;
         }
-        if (actionGroup.AssignedAgv == null)
+        if (agv == null)
         {
             logger.LogError("Could not complete action cancellation for action {Action}, no assigned agv", actionCorrelationId);
             return;
         }
-        if (actionGroup.AssignedAgv != context.Message.AgvCorrelationId)
+        if (agv != context.Message.AgvCorrelationId)
         {
-            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} cancellation requested by {Agv}", actionGroup.AssignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
+            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} cancellation requested by {Agv}", agv, actionCorrelationId, context.Message.AgvCorrelationId);
             return;
         }
-        await context.Publish(new HandleActionCompletion(actionGroup.AssignedAgv.Value));
+        if (action.State is ActionState.Aborted)
+        {
+            await context.Publish(new HandleActionAbortion(agv.Value));
+            return;
+        }
+        await context.Publish(new HandleActionCompletion(agv.Value));
     }
 
     /// <inheritdoc />

@@ -6,7 +6,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
@@ -80,7 +79,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroupCountsByState> context)
     {
         AgvGroupCountByState[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state => _actionGroupRepository.GetActionGroupsCountAsync(new[] { state })
-                .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
+            .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));
     }
@@ -152,11 +151,10 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         _logger.LogInformation("Triggering completion of action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", actionCorrelationId, correlationId);
         if (actionGroup.AssignedAgv != null)
         {
-            _logger.LogInformation("Sending abort action {ActionCorrelationId} to agv {AgvCorrelationId}", actionCorrelationId, actionGroup.AssignedAgv);
-            await _bus.Publish(new ActionAborted(actionGroup.AssignedAgv.Value, _mapper.Map<AgvAction>(actionGroup.Actions.Single(a => a.CorrelationId != actionCorrelationId)), true));
-            await _bus.Publish(new SetAgvForceIdle(actionGroup.AssignedAgv.Value));
+            _logger.LogInformation("Sending abort action {ActionCorrelationId} to agv {AgvCorrelationId}, as this action was just completed", actionCorrelationId, actionGroup.AssignedAgv.Value);
+            await _bus.Publish(new ActionAborted(actionGroup.AssignedAgv.Value, _mapper.Map<AgvAction>(actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId)), true));
         }
-        
+
         await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId, ActionGroupCreator.TransportOrderWebApi));
         await context.RespondAsync(new Success());
     }
@@ -186,7 +184,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         }
 
         await _graphRepository.ThrowIfNodeNotExistsAsync(targetNode);
-   
+
         var action = actionGroup.Actions.First(a => a.CorrelationId == actionCorrelationId);
         if (action.ShouldSkip)
         {

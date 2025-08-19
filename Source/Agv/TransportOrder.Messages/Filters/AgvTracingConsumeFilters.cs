@@ -15,6 +15,7 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Filters;
 public class AgvTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<PrepareAgvForStartingAction>>,
     IFilter<ConsumeContext<HandleActionCompletion>>,
+    IFilter<ConsumeContext<HandleActionAbortion>>,
     IFilter<ConsumeContext<AgvPreparedForStartingAction>>,
     IFilter<ConsumeContext<AgvBecameIdle>>,
     IFilter<ConsumeContext<AgvNeedsCharging>>,
@@ -35,6 +36,13 @@ public class AgvTracingConsumeFilters : BaseTracingFilter,
 
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<HandleActionCompletion> context, IPipe<ConsumeContext<HandleActionCompletion>> next)
+    {
+        LogDebug(context);
+        await next.Send(context);
+    }
+
+    /// <inheritdoc cref="IFilter{TContext}"/>>
+    public async Task Send(ConsumeContext<HandleActionAbortion> context, IPipe<ConsumeContext<HandleActionAbortion>> next)
     {
         LogDebug(context);
         await next.Send(context);
