@@ -401,6 +401,29 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
+    public async Task GetCurrentActionGroupsWithNodesAsync_PausedActionGroups_ReturnsActionGroupsByAgvCorrelationId()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
+        actionGroup.PauseActionGroup(new Reason("reason"));
+        var agvCorrelationId = Guid.NewGuid();
+        actionGroup.AssignedAgv = agvCorrelationId;
+        await fixture.AddAsync(actionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyDictionary<Guid, ActionGroupReadModel?> actionGroupsByAgvCorrelationId = await fixture.ActionGroupRetrievalService.GetCurrentActionGroupsWithNodesAsync(new List<Guid> { agvCorrelationId });
+
+        var actualActionGroup = actionGroupsByAgvCorrelationId[agvCorrelationId]!;
+        actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+
+        actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
+        actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.Pick);
+        actualActionGroup.Actions.Last().TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
+        actualActionGroup.State.ShouldBe(ActionGroupState.Paused);
+    }
+
+    [TestMethod]
     public async Task GetCurrentActionGroupsWithNodesAsync_ActionGroupWithMoveToCoordinate_ReturnsActionGroupsByAgvCorrelationId()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
@@ -524,6 +547,27 @@ public class ActionGroupRetrievalServiceTest
         actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentAgvActionGroupWithNodesAsync_PausedActionGroup_ReturnsActionGroup()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.PauseActionGroup(new Reason("reason"));
+        await fixture.AddAsync(actionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        var actualActionGroup = await fixture.ActionGroupRetrievalService
+            .GetActionGroupWithNodesAsync(actionGroup.CorrelationId);
+
+        actualActionGroup.ShouldNotBeNull();
+        actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
+        actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
+        actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.Pick);
+        actualActionGroup.Actions.Last().TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
+        actualActionGroup.State.ShouldBe(ActionGroupState.Paused);
     }
 
     [TestMethod]

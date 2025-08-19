@@ -143,7 +143,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     {
         await using var context = await CreateDbContextAsync();
         List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
-            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv) && g.State == ActionGroupState.Started)
+            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv) && (g.State == ActionGroupState.Started || g.State == ActionGroupState.Paused))
             .OrderByDescending(g => g.StartedDate)
             .ToListAsync();
 
@@ -317,7 +317,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         await using var context = await CreateDbContextAsync();
 
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
-        var actionGroup = actionGroups.FirstOrDefault(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started);
+        var actionGroup = actionGroups.Where(g => g.AssignedAgv == agvCorrelationId && (g.State == ActionGroupState.Started || g.State == ActionGroupState.Paused)).OrderByDescending(ag => ag.StartedDate).FirstOrDefault();
         if (actionGroup == null)
         {
             return null;
