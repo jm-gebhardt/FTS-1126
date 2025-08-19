@@ -10,12 +10,19 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Agv;
 
 public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvErrorCommandHandler>
 {
-    private (bool, List<AgvError>, List<AgvError>) _addOrUpdateAgvErrorStatusReturnValue;
     public readonly Mock<IAgvDb> AgvDbMock = new();
     private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
+    private readonly List<AgvError> _errors = new();
 
     public AgvErrorCommandHandlerTestFixture()
     {
+        AgvDbMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(() => _errors);
+        AgvDbMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(() => _errors);
+        AgvDbMock.Setup(x => x.Errors.AddAndUpdateAgvErrorAsync(It.IsAny<List<AgvError>>(), It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).Callback((List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId) =>
+        {
+            _errors.RemoveAll(e => e.AgvCorrelationId == agvCorrelationId && resolvedErrors.Any(r => r.CorrelationId == e.CorrelationId));
+            _errors.AddRange(newErrors);
+        });
         Build();
     }
 
@@ -24,8 +31,6 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
         base.AddServices(collection);
         collection.AddTransient(_ => AgvDbMock.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
-        AgvDbMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync([]);
-        AgvDbMock.Setup(x => x.Errors.AddOrUpdateAgvErrorStatus(It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).ReturnsAsync(() => _addOrUpdateAgvErrorStatusReturnValue);
         _metricCollectorServiceMock.Setup(x => x.CollectSafetyFieldViolationMetrics(It.IsAny<Guid>(), It.IsAny<List<AgvError>>(), It.IsAny<List<AgvError>>())).Verifiable();
         return this;
     }
@@ -36,9 +41,9 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
         return this;
     }
 
-    public AgvErrorCommandHandlerTestFixture WithAddOrUpdateAgvErrorStatusReturnValue(bool returnValue, List<AgvError> newErrors)
+    public AgvErrorCommandHandlerTestFixture WithActiveAgvErrors(IReadOnlyList<AgvError> agvErrors)
     {
-        _addOrUpdateAgvErrorStatusReturnValue = (returnValue, newErrors, []);
+        _errors.AddRange(agvErrors);
         return this;
     }
 

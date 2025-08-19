@@ -204,7 +204,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         }
 
         repository.Setup(x => x.GetAllPositions()).Returns(agvPositions);
-        repository.Setup(x => x.GetPosition(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvPositions.FirstOrDefault(agvPosition => agvPosition.CorrelationId == correlationId); });
+        repository.Setup(x => x.GetPositionIfExisting(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvPositions.SingleOrDefault(agvPosition => agvPosition.CorrelationId == correlationId); });
+        repository.Setup(x => x.GetPosition(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvPositions.Single(agvPosition => agvPosition.CorrelationId == correlationId); });
 
         return repository;
     }
@@ -262,7 +263,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<StartInstantAction> startInstantActionsClient = GetRequestClient<StartInstantAction>();
         IRequestClient<ResendAction> resendActionClient = GetRequestClient<ResendAction>();
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient = GetRequestClient<RemoveAgvFromZones>();
-        IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient = GetRequestClient<SolveRessourceBlockingErrors>();
+        IRequestClient<SolveResourceBlockingErrors> resourceBlockingClient = GetRequestClient<SolveResourceBlockingErrors>();
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient = GetRequestClient<RemoveAgvFromZone>();
         IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient = GetRequestClient<RemoveAgvFromStation>();
 
@@ -299,7 +300,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             startInstantActionsClient,
             resendActionClient,
             removeAgvFromZonesClient,
-            ressourceBlockingClient,
+            resourceBlockingClient,
             removeAgvFromZoneClient,
             removeAgvFromStationClient
         )

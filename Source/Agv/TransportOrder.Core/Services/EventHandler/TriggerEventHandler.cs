@@ -18,7 +18,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// Provides handlers for trigger-related events
 /// </summary>
 [UsedImplicitly]
-public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerRepository, IGraphRepository graphRepository, IMapper mapper, ILogger<TriggerEventHandler> logger):
+public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerRepository, IGraphRepository graphRepository, IMapper mapper, ILogger<TriggerEventHandler> logger) :
     IConsumer<TriggerConfigured>,
     IConsumer<ActionGroupStarted>
 {
@@ -57,7 +57,7 @@ public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerReposit
             return;
         }
 
-        var position = agvDb.Positions.GetPosition(agvId);
+        var position = agvDb.Positions.GetPositionIfExisting(agvId);
 
         if (position == null)
         {
@@ -77,7 +77,7 @@ public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerReposit
 
             if (isCloseToNode)
             {
-               triggers = triggers.Concat(triggerRepository.GetNodeTriggerLocations(lastNodeId)).ToList();
+                triggers = triggers.Concat(triggerRepository.GetNodeTriggerLocations(lastNodeId)).ToList();
             }
         }
 
@@ -100,9 +100,9 @@ public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerReposit
         IReadOnlyCollection<Domain.Models.Agv.Cargo> cargoList = await agvDb.Cargos.GetCargosAsync(agvId);
         ICollection<Cargo> commonCargoList = cargoList.Select(mapper.Map<Cargo>).ToList();
 
-        IList<AgvError> errorList = await agvDb.Errors.GetActiveErrorsAsync(agvId);
+        IReadOnlyList<AgvError> errorList = await agvDb.Errors.GetActiveErrorsAsync(agvId);
 
-        IEnumerable<Task> tasks = triggers.Select(trigger => context.Publish(new AgvStartedActionGroupOnTrigger(trigger.TriggerId, trigger.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData, agvStatusCommon, actionGroup, commonCargoList, errorList)));
+        IEnumerable<Task> tasks = triggers.Select(trigger => context.Publish(new AgvStartedActionGroupOnTrigger(trigger.TriggerId, trigger.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData, agvStatusCommon, actionGroup, commonCargoList, errorList.ToList())));
 
         await Task.WhenAll(tasks);
     }

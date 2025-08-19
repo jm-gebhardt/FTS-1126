@@ -26,7 +26,8 @@ public static class ErrorGenerator
                 ErrorCategory.Dirt,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             ),
             1 => new AgvError(
                 correlationId,
@@ -38,7 +39,8 @@ public static class ErrorGenerator
                 ErrorCategory.Temperature,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Battery
+                ErrorFlag.Battery,
+                AgvErrorSource.Agv
             ),
             2 => new AgvError(
                 correlationId,
@@ -50,7 +52,8 @@ public static class ErrorGenerator
                 ErrorCategory.General,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             ),
             3 => new FieldViolation(
                 correlationId,
@@ -66,7 +69,8 @@ public static class ErrorGenerator
                 ErrorCategory.Temperature,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             )
         };
     }
@@ -90,7 +94,8 @@ public static class ErrorGenerator
                 ErrorCategory.General,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             ),
             1 => new AgvError(
                 correlationId,
@@ -102,7 +107,8 @@ public static class ErrorGenerator
                 ErrorCategory.General,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             ),
             2 => new AgvError(
                 correlationId,
@@ -114,7 +120,8 @@ public static class ErrorGenerator
                 ErrorCategory.General,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             ),
             3 => new AgvError(
                 correlationId,
@@ -126,7 +133,8 @@ public static class ErrorGenerator
                 ErrorCategory.General,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             ),
             4 => new AgvError(
                 correlationId,
@@ -138,7 +146,8 @@ public static class ErrorGenerator
                 ErrorCategory.Temperature,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Battery
+                ErrorFlag.Battery,
+                AgvErrorSource.Agv
             ),
             _ => new AgvError(
                 correlationId,
@@ -150,7 +159,8 @@ public static class ErrorGenerator
                 ErrorCategory.General,
                 null,
                 DateTime.UtcNow,
-                ErrorFlag.Agv
+                ErrorFlag.Agv,
+                AgvErrorSource.Agv
             )
         };
     }

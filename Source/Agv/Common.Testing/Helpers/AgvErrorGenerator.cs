@@ -10,7 +10,15 @@ public static class AgvErrorGenerator
 {
     private static readonly AgvPosition _defaultAgvPosition = new(true, 1, 1, 1, 0);
 
-    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems, Guid agvCorrelationId, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General, AgvPosition? position = null, ErrorFlag errorFlag = ErrorFlag.Agv)
+    public static AgvErrorStatusReceived GenerateAgvErrorStatus(int errorItems,
+        Guid agvCorrelationId,
+        string errorCode = "",
+        ErrorLevel errorLevel = ErrorLevel.Fatal,
+        ErrorCategory errorCategory = ErrorCategory.General,
+        AgvPosition? position = null,
+        ErrorFlag errorFlag = ErrorFlag.Agv,
+        AgvErrorSource errorSource = AgvErrorSource.Agv
+    )
     {
         var errors = new List<AgvError>();
         for (int i = 0; i < errorItems; i++)
@@ -25,17 +33,27 @@ public static class AgvErrorGenerator
                 errorCategory,
                 new List<ErrorReference>(),
                 DateTime.UtcNow,
-                errorFlag
+                errorFlag,
+                errorSource
             ));
         }
 
-        return new AgvErrorStatusReceived(agvCorrelationId, errors, position?? _defaultAgvPosition);
+        return new AgvErrorStatusReceived(agvCorrelationId, errors, position ?? _defaultAgvPosition);
     }
 
-    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null, List<ErrorReference>? errorReferences = null, string errorCode = "", ErrorLevel errorLevel = ErrorLevel.Fatal, ErrorCategory errorCategory = ErrorCategory.General, ErrorFlag errorFlag = ErrorFlag.Agv)
+    public static AgvError GenerateAgvError(Guid? agvCorrelationId = null,
+        List<ErrorReference>? errorReferences = null,
+        string errorCode = "",
+        ErrorLevel errorLevel = ErrorLevel.Fatal,
+        ErrorCategory errorCategory = ErrorCategory.General,
+        ErrorFlag errorFlag = ErrorFlag.Agv,
+        DateTime errorResolved = default,
+        Guid agvErrorCorrelationId = default,
+        AgvErrorSource errorSource = AgvErrorSource.Agv
+    )
     {
         agvCorrelationId ??= Guid.NewGuid();
-        return new AgvError(agvCorrelationId.Value,
+        var agvError = new AgvError(agvCorrelationId.Value,
             $"ErrorTitle({agvCorrelationId})",
             $"ErrorDescription({agvCorrelationId})",
             errorCode,
@@ -43,6 +61,17 @@ public static class AgvErrorGenerator
             $"ErrorType({agvCorrelationId})",
             errorCategory,
             errorReferences ?? [new ErrorReference { ReferenceKey = $"ReferenceKey#{agvCorrelationId}", ReferenceValue = $"ReferenceValue#{agvCorrelationId}" }],
-            DateTime.UtcNow, errorFlag);
+            DateTime.UtcNow,
+            errorFlag,
+            errorSource
+        )
+        {
+            CorrelationId = agvErrorCorrelationId == Guid.Empty ? Guid.NewGuid() : agvErrorCorrelationId
+        };
+        if (errorResolved != default)
+        {
+            agvError.ErrorResolved = errorResolved;
+        }
+        return agvError;
     }
 }

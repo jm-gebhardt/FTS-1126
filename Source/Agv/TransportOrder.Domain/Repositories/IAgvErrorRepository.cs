@@ -9,46 +9,45 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 public interface IAgvErrorRepository
 {
     /// <summary>
-    /// If error type in AgvErrorStatus error list is not existing in repository, we save the new error
-    /// If error type in repository is no longer included in AgvErrorStatus error list, we mark it as resolved
+    /// Updates the repository with new errors and marks resolved errors for the specified AGV.
     /// </summary>
-    /// <param name="errors"></param>
-    /// <param name="agvCorrelationId"></param>
-    /// <returns>(True if the errors have changed, list of new errors, list of resolved errors).</returns>
-     Task<(bool changed, List<AgvError> newErrors, List<AgvError> resolvedErrors)> AddOrUpdateAgvErrorStatus(List<AgvError> errors, Guid agvCorrelationId);
+    /// <param name="newErrors">List of new errors to be added.</param>
+    /// <param name="resolvedErrors">List of errors to mark as resolved.</param>
+    /// <param name="agvCorrelationId">The CorrelationId of the Agv</param>
+    Task AddAndUpdateAgvErrorAsync(List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId);
 
     /// <summary>
     /// Gets all active errors for given Agv excluding the resolved errors
     /// </summary>
-    /// <param name="agvCorrelationId"></param>
-    /// <returns></returns>
-     Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId);
+    /// <param name="agvCorrelationId">The CorrelationId of the Agv</param>
+    /// <returns>List of active errors for the given AGV.</returns>
+    Task<IReadOnlyList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Gets all active errors for given Agvs excluding the resolved errors
     /// </summary>
-    /// <param name="agvCorrelationIds"></param>
-    /// <returns></returns>
-    Task<IList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds);
+    /// <param name="agvCorrelationIds">The CorrelationIds of the Agv</param>
+    /// <returns>List of active errors for the given AGV.</returns>
+    Task<IReadOnlyList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Gets all previous errors for given Agv including resolved errors
     /// </summary>
-    /// <param name="agvCorrelationId"></param>
+    /// <param name="agvCorrelationId">The CorrelationId of the Agv</param>
     /// <param name="dateFrom">Only consider errors newer than this parameter (if set)</param>
     /// <param name="dateTo">Only consider errors older than this parameter (if set)</param>
-    /// <returns></returns>
-   Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo);
+    /// <returns>List of all errors for the given AGV and time range.</returns>
+    Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo);
 
     /// <summary>
     /// Gets all previous errors for given Agvs including resolved errors
     /// </summary>
-    /// <param name="agvCorrelationIds"></param>
+    /// <param name="agvCorrelationIds">The CorrelationIds of the Agv</param>
     /// <param name="dateFrom">Only consider errors newer than this parameter (if set)</param>
     /// <param name="dateTo">Only consider errors older than this parameter (if set)</param>
-    /// <returns></returns>
+    /// <returns>List of all errors for the given AGVs and time range.</returns>
     [PublicAPI]
-   Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo);
+    Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo);
 
     /// <summary>
     /// Load db agv error information into the cache.

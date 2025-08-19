@@ -17,38 +17,39 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// </summary>
 [UsedImplicitly]
 public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus bus, INodeStateRepository nodeStateRepository, IAgvDb agvDb) :
-    IConsumer<SolveRessourceBlockingErrors>
+    IConsumer<SolveResourceBlockingErrors>
 {
     /// <summary>
-    /// Handles the <see cref="SolveRessourceBlockingErrors"/> request.
+    /// Handles the <see cref="SolveResourceBlockingErrors"/> request.
     /// </summary>
-    public async Task Consume(ConsumeContext<SolveRessourceBlockingErrors> context)
+    public async Task Consume(ConsumeContext<SolveResourceBlockingErrors> context)
     {
         (var agvCorrelationId, bool ignoreErrorState) = context.Message;
         ICollection<NodeLock> nodeLocks = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
-        IList<AgvError> agvErrors = await agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
-        bool hasRessourceErrors = ignoreErrorState || agvErrors.Any(e => e.IsRessourceError());
-        bool hasQueueBlockingError = agvErrors.Any(e => e.IsQueueBlockingError());
+        IReadOnlyList<AgvError> agvErrors = await agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        var resourceError = agvErrors.SingleOrDefault(e => e.IsResourceError());
+        bool hasResourceErrors = resourceError != null;
+        var queueBlockingError = agvErrors.SingleOrDefault(e => e.IsQueueBlockingError());
+        bool hasQueueBlockingError = queueBlockingError != null;
         var position = agvDb.Positions.GetPosition(agvCorrelationId);
 
-        if (hasRessourceErrors && nodeLocks.Count > 0)
+        if (!ignoreErrorState)
         {
-            foreach (var nodeLock in nodeLocks)
+            if (hasResourceErrors)
             {
-                logger.LogInformation("Solving ressource blocking errors for agv {AgvCorrelationId} and node {NodeId}", agvCorrelationId, nodeLock.NodeId);
-                await bus.Publish(new FreeNode(nodeLock.NodeId));
+                foreach (var nodeLock in nodeLocks)
+                {
+                    logger.LogInformation("Solving resource blocking errors for agv {AgvCorrelationId} and node {NodeId}", agvCorrelationId, nodeLock.NodeId);
+                    await bus.Publish(new FreeNode(nodeLock.NodeId));
+                }
+                
+                await bus.Publish(new ResolveSystemAgvError(agvCorrelationId, resourceError!, position.AgvPosition));
             }
         }
 
         if (hasQueueBlockingError)
         {
             await bus.Publish(new RemoveAgvFromQueue(agvCorrelationId));
-        }
-
-        if (!ignoreErrorState)
-        {
-            agvErrors = agvErrors.Where(e => !e.IsRessourceError()).ToList();
-            await bus.Publish(new UpdateErrorStatus(agvCorrelationId, agvErrors.ToList(), position!.AgvPosition));
         }
 
         await bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));

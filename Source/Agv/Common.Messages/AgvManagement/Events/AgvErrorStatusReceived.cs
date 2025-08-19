@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -22,6 +23,7 @@ public record AgvErrorStatusReceived : CorrelatedBy<Guid>
     /// <summary>
     /// List of errors, Agv had encountered
     /// </summary>
+    [UsedImplicitly]
     public List<AgvError> Errors { get; set; }
 
     /// <summary>

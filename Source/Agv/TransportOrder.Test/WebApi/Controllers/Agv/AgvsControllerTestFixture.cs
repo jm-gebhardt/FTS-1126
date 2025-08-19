@@ -167,7 +167,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         }
 
         repository.Setup(x => x.GetAllPositions()).Returns(agvPositions);
-        repository.Setup(x => x.GetPosition(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvPositions.FirstOrDefault(agvPosition => agvPosition.CorrelationId == correlationId); });
+        repository.Setup(x => x.GetPositionIfExisting(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvPositions.SingleOrDefault(agvPosition => agvPosition.CorrelationId == correlationId); });
+        repository.Setup(x => x.GetPosition(It.IsAny<Guid>())).Returns<Guid>(correlationId => { return agvPositions.Single(agvPosition => agvPosition.CorrelationId == correlationId); });
 
         return repository;
     }
@@ -242,7 +243,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         new CargoProfile()
     ];
 
-    public AgvsControllerTestFixture<TRequest, TRequestHandler> WithActiveAgvErrors(IList<AgvError> agvErrors)
+    public AgvsControllerTestFixture<TRequest, TRequestHandler> WithActiveAgvErrors(IReadOnlyList<AgvError> agvErrors)
     {
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(agvErrors);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(agvErrors);

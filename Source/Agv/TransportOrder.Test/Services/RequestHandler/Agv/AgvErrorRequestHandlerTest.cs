@@ -14,56 +14,56 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
 public class AgvErrorRequestHandlerTest
 {
     [TestMethod]
-    public async Task SolveRessourceBlockingErrors_ValidData_PublishesFreeNodeAndUpdateErrorStatus()
+    public async Task SolveResourceBlockingErrors_ValidData_PublishesFreeNodeAndResolveSystemAgvError()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler>()
+        AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
             .WithAgv(agv)
-            .WithActiveAgvErrors(agv.CorrelationId, [new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")])
+            .WithActiveAgvErrors(agv.CorrelationId, [new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")])
             .WithPostion(position)
             .WithNodesStates([new NodeLock("a node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)])
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new SolveRessourceBlockingErrors(agv.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId));
         await fixture.ShouldHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromQueue>();
     }
 
     [TestMethod]
-    public async Task SolveRessourceBlockingErrors_NoRessourceBlocked_PublishesUpdateErrorStatus()
+    public async Task SolveResourceBlockingErrors_SolveResourceBlocking_PublishesResolveSystemAgvError()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler>()
+        AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
             .WithAgv(agv)
-            .WithActiveAgvErrors(agv.CorrelationId, [new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")])
+            .WithActiveAgvErrors(agv.CorrelationId, [new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")])
             .WithPostion(position)
             .WithNodesStates([])
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new SolveRessourceBlockingErrors(agv.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId));
         await fixture.ShouldNotHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromQueue>();
     }
 
     [TestMethod]
-    public async Task SolveRessourceBlockingErrors_QueueBlockingError_PublishesRemoveAgvFromQueue()
+    public async Task SolveResourceBlockingErrors_QueueBlockingError_PublishesRemoveAgvFromQueue()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveRessourceBlockingErrors, AgvErrorRequestHandler>()
+        AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
             .WithAgv(agv)
             .WithActiveAgvErrors(agv.CorrelationId, [new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
             .WithPostion(position)
             .WithNodesStates([])
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new SolveRessourceBlockingErrors(agv.CorrelationId, IgnoreErrorState:true));
+        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId, IgnoreErrorState:true));
         await fixture.ShouldNotHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();

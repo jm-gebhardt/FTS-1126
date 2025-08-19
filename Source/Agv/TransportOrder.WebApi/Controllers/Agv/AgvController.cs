@@ -70,7 +70,7 @@ public class AgvController : Controller
     private readonly IRequestClient<StartInstantAction> _startInstantActionsClient;
     private readonly IRequestClient<ResendAction> _resendActionClient;
     private readonly IRequestClient<RemoveAgvFromZones> _removeAgvFromZonesClient;
-    private readonly IRequestClient<SolveRessourceBlockingErrors> _ressourceBlockingClient;
+    private readonly IRequestClient<SolveResourceBlockingErrors> _resourceBlockingClient;
     private readonly IRequestClient<RemoveAgvFromZone> _removeAgvFromZoneClient;
     private readonly IRequestClient<RemoveAgvFromStation> _requestAgvRemovalClient;
     private readonly IMapper _mapper;
@@ -112,7 +112,7 @@ public class AgvController : Controller
         IRequestClient<StartInstantAction> startInstantActionsClient,
         IRequestClient<ResendAction> resendActionClient,
         IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient,
-        IRequestClient<SolveRessourceBlockingErrors> ressourceBlockingClient,
+        IRequestClient<SolveResourceBlockingErrors> resourceBlockingClient,
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient,
         IRequestClient<RemoveAgvFromStation> requestAgvRemovalClient
     )
@@ -151,7 +151,7 @@ public class AgvController : Controller
         _resendActionClient = resendActionClient;
         _removeAgvFromZonesClient = removeAgvFromZonesClient;
         _removeAgvFromZoneClient = removeAgvFromZoneClient;
-        _ressourceBlockingClient = ressourceBlockingClient;
+        _resourceBlockingClient = resourceBlockingClient;
         _requestAgvRemovalClient = requestAgvRemovalClient;
     }
 
@@ -731,7 +731,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/solveRessourceErrors")]
     public async Task<ActionResult> SolveRessourceErrors([FromRoute] Guid correlationId, bool ignoreErrorState = false)
     {
-        await _ressourceBlockingClient.GetResponse<Success>(new SolveRessourceBlockingErrors(correlationId, ignoreErrorState));
+        await _resourceBlockingClient.GetResponse<Success>(new SolveResourceBlockingErrors(correlationId, ignoreErrorState));
         return Ok();
     }
 

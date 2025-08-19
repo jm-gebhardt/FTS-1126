@@ -73,8 +73,24 @@ public record AgvError : CorrelatedBy<Guid>
     /// </summary>
     public ErrorFlag ErrorFlag { get; init; } = ErrorFlag.Agv;
 
+    /// <summary>
+    /// Specifies the origin of the AGV error.
+    /// </summary>
+    public AgvErrorSource Source { get; init; }
+
     /// <inheritdoc cref="AgvError"/>>
-    public AgvError(Guid agvCorrelationId, string?  errorTitle, string? errorDescription, string? errorCode, ErrorLevel errorLevel, string errorType, ErrorCategory errorCategory, List<ErrorReference>? errorReferences, DateTime errorReceived, ErrorFlag errorFlag)
+    public AgvError(Guid agvCorrelationId,
+        string? errorTitle,
+        string? errorDescription,
+        string? errorCode,
+        ErrorLevel errorLevel,
+        string errorType,
+        ErrorCategory errorCategory,
+        List<ErrorReference>? errorReferences,
+        DateTime errorReceived,
+        ErrorFlag errorFlag,
+        AgvErrorSource source
+    )
     {
         AgvCorrelationId = agvCorrelationId;
         ErrorTitle = errorTitle;
@@ -89,6 +105,7 @@ public record AgvError : CorrelatedBy<Guid>
             ErrorReceived = errorReceived;
         }
         ErrorFlag = errorFlag;
+        Source = source;
     }
 
     /// <summary>
@@ -107,7 +124,10 @@ public record AgvError : CorrelatedBy<Guid>
     /// <returns>True if the error type, category, and level is the same.</returns>
     public bool IsSameError(AgvError error2)
     {
-        return ErrorType == error2.ErrorType && ErrorLevel == error2.ErrorLevel && ErrorCategory == error2.ErrorCategory && error2.ErrorFlag == ErrorFlag;
+        return ErrorType == error2.ErrorType &&
+               ErrorLevel == error2.ErrorLevel &&
+               ErrorCategory == error2.ErrorCategory &&
+               ErrorFlag == error2.ErrorFlag;
     }
 
     /// <summary>
@@ -117,12 +137,12 @@ public record AgvError : CorrelatedBy<Guid>
     public bool IsFieldViolation()
     {
         var fieldViolation = new FieldViolation(CorrelationId, ErrorReceived);
-        return ErrorType == fieldViolation.ErrorType 
-               && ErrorLevel == fieldViolation.ErrorLevel 
-               && ErrorCategory == fieldViolation.ErrorCategory 
-               && fieldViolation.ErrorFlag == ErrorFlag 
-               && fieldViolation.ErrorCode == ErrorCode 
-               && fieldViolation.ErrorDescription == ErrorDescription 
+        return ErrorType == fieldViolation.ErrorType
+               && ErrorLevel == fieldViolation.ErrorLevel
+               && ErrorCategory == fieldViolation.ErrorCategory
+               && fieldViolation.ErrorFlag == ErrorFlag
+               && fieldViolation.ErrorCode == ErrorCode
+               && fieldViolation.ErrorDescription == ErrorDescription
                && fieldViolation.ErrorTitle == ErrorTitle;
     }
 
@@ -132,7 +152,7 @@ public record AgvError : CorrelatedBy<Guid>
     /// <returns>True, if description reports a joystick or pushmode move of agv.</returns>
     public bool IsPushedManually()
     {
-        return (ErrorDescription?.Contains(JoystickMode)?? false) || (ErrorDescription?.Contains(PushMode) ?? false);
+        return (ErrorDescription?.Contains(JoystickMode) ?? false) || (ErrorDescription?.Contains(PushMode) ?? false);
     }
 
     /// <summary>
@@ -172,15 +192,15 @@ public record AgvError : CorrelatedBy<Guid>
     }
 
     /// <summary>
-    /// True, if the error is a ressource blocking error.
+    /// True, if the error is a resource blocking error.
     /// </summary>
-    public bool IsRessourceError()
+    public bool IsResourceError()
     {
-        var ressourceError = new RessourceBlockingError(CorrelationId, ErrorReceived, "any");
-        return ErrorType == ressourceError.ErrorType &&
-               ErrorCategory == ressourceError.ErrorCategory &&
-               ErrorFlag == ressourceError.ErrorFlag &&
-               ErrorLevel == ressourceError.ErrorLevel;
+        var resourceError = new ResourceBlockingError(CorrelationId, ErrorReceived, "any");
+        return ErrorType == resourceError.ErrorType &&
+               ErrorCategory == resourceError.ErrorCategory &&
+               ErrorFlag == resourceError.ErrorFlag &&
+               ErrorLevel == resourceError.ErrorLevel;
     }
 }
 
@@ -198,4 +218,20 @@ public enum ErrorFlag
     /// Battery error.
     /// </summary>
     Battery
+}
+
+/// <summary>
+/// Identifies the source of an AGV error.
+/// </summary>
+public enum AgvErrorSource
+{
+    /// <summary>
+    /// The error originates from the AGV.
+    /// </summary>
+    Agv,
+
+    /// <summary>
+    /// The error originates from the System.
+    /// </summary>
+    System
 }

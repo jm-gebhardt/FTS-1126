@@ -18,7 +18,9 @@ public record CargoMismatchError : AgvError
         ErrorCategory.General,
         null,
         received,
-        ErrorFlag.Agv)
+        ErrorFlag.Agv,
+        AgvErrorSource.System
+    )
     {
     }
 }

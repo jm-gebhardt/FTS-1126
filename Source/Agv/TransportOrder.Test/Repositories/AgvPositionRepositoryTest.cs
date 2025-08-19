@@ -78,11 +78,11 @@ public class AgvPositionRepositoryTest
     }
 
     [TestMethod]
-    public void GetPosition_ReturnsNull_WhenRepositoryIsEmpty()
+    public void GetPositionIfExisting_ReturnsNull_WhenRepositoryIsEmpty()
     {
         var fixture = new AgvPositionRepositoryTestFixture();
 
-        var retrievedPosition = fixture.AgvPositionRepository.GetPosition(Guid.NewGuid());
+        var retrievedPosition = fixture.AgvPositionRepository.GetPositionIfExisting(Guid.NewGuid());
         retrievedPosition.ShouldBeNull();
     }
 

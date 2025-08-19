@@ -83,7 +83,7 @@ public static class CoreBusRegistrationExtensions
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<CheckAgvLoad, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<UpdateErrorStatus, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<AgvErrorChanged, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvStatus, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<LeaveQueue, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvGraphExist, AgvCommandHandler>(c);
@@ -140,6 +140,9 @@ public static class CoreBusRegistrationExtensions
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<UpdateErrorStatus, AgvErrorCommandHandler>(c);
+            partitioner.PartitionMessageById<AddSystemAgvErrors, AgvErrorCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateSystemAgvErrors, AgvErrorCommandHandler>(c);
+            partitioner.PartitionMessageById<ResolveSystemAgvError, AgvErrorCommandHandler>(c);
         });
     }
 
@@ -366,7 +369,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<RemoveAgvFromZone>();
 
         configurator.AddConsumer<AgvErrorRequestHandler>();
-        configurator.AddRequestClient<SolveRessourceBlockingErrors>();
+        configurator.AddRequestClient<SolveResourceBlockingErrors>();
     }
 
     private static void RegisterMediatorAgvRequestHandlers(IMediatorRegistrationConfigurator configurator)

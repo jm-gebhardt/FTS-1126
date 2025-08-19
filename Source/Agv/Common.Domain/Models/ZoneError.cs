@@ -16,7 +16,9 @@ public record ZoneError : AgvError
         ErrorCategory.General,
         null,
         received,
-        ErrorFlag.Agv)
+        ErrorFlag.Agv,
+        AgvErrorSource.System
+    )
     {
     }
 }

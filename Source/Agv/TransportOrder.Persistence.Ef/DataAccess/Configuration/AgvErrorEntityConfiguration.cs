@@ -16,5 +16,6 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
         ValueConversionExtensions.HasJsonConversion(builder.Property(o => o.ErrorReferences));
         builder.Property(o => o.ErrorCode).HasMaxLength(DbStringLimits.Description);
         builder.Property(o => o.ErrorType).HasMaxLength(DbStringLimits.Description);
+        builder.Property(o => o.Source).HasConversion<string>().HasMaxLength(DbStringLimits.Enum);
     }
 }

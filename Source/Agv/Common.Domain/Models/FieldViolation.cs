@@ -16,7 +16,9 @@ public record FieldViolation : AgvError
         ErrorCategory.General,
         null,
         received,
-        ErrorFlag.Agv)
+        ErrorFlag.Agv,
+        AgvErrorSource.Agv
+    )
     {
     }
 }

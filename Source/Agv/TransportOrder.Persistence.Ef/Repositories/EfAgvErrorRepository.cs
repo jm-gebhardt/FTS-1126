@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -15,13 +15,13 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <summary>
     /// Contains active errors for AGVs in memory.
     /// </summary>
-    private readonly IConcurrentDictionaryProvider<Guid, Lazy<List<AgvError>>> _errorCache;
+    private readonly ICache<Guid, List<AgvError>> _errorCache;
 
     private readonly ILogger<EfAgvErrorRepository> _logger;
 
     /// <inheritdoc cref="EfAgvErrorRepository"/>>
     public EfAgvErrorRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory,
-        IConcurrentDictionaryProvider<Guid, Lazy<List<AgvError>>> errorCache,
+        ICache<Guid, List<AgvError>> errorCache,
         ILogger<EfAgvErrorRepository> logger)
 
     {
@@ -31,41 +31,31 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     }
 
     /// <inheritdoc />
-    public async Task<(bool changed, List<AgvError> newErrors, List<AgvError> resolvedErrors)> AddOrUpdateAgvErrorStatus(List<AgvError> errors, Guid agvCorrelationId)
+    public async Task AddAndUpdateAgvErrorAsync(List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId)
     {
-        _errorCache.ConcurrentDict.TryGetValue(agvCorrelationId, out Lazy<List<AgvError>>? inMemoryErrors);
-        List<AgvError> previousErrors = inMemoryErrors?.Value ?? [];
-        List<AgvError> resolvedErrors = previousErrors.Where(p => !errors.Any(p.IsSameError)).ToList();
         ResolveErrors(resolvedErrors);
-        List<AgvError> newErrors = [];
-
-        if (errors.Count != 0)
-        {
-            newErrors = errors.Where(e => !previousErrors.Any(e.IsSameError)).ToList();
-        }
-
-        bool changed = newErrors.Count > 0 || resolvedErrors.Count > 0;
-
-        if (!changed)
-        {
-            return (changed, newErrors, resolvedErrors);
-        }
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<AgvError> dbSet = context.Set<AgvError>();
         await dbSet.AddRangeAsync(newErrors);
         dbSet.UpdateRange(resolvedErrors);
-        changed = await context.SaveChangesAsync() != 0;
+        bool changed = await context.SaveChangesAsync() != 0;
 
         if (changed)
         {
-            _errorCache.ConcurrentDict[agvCorrelationId] = new Lazy<List<AgvError>>(() => [.. newErrors, .. previousErrors.Except(resolvedErrors)]);
+            _errorCache.TryGet(agvCorrelationId, out List<AgvError>? previousErrors);
+            previousErrors ??= [];
+            List<AgvError> newMemory = previousErrors
+                .Where(e => resolvedErrors.All(r => r.CorrelationId != e.CorrelationId))
+                .Concat(newErrors.Where(n => previousErrors.All(e => e.CorrelationId != n.CorrelationId)))
+                .ToList();
+
+            _errorCache.AddOrUpdate(agvCorrelationId, newMemory);
         }
         else
         {
             _logger.LogWarning("No changes were made to the database for AGV {AgvCorrelationId} despite new errors or resolved errors", agvCorrelationId);
         }
-        return (changed, newErrors, resolvedErrors);
     }
 
     private static void ResolveErrors(IList<AgvError> resolvedErrors)
@@ -77,18 +67,15 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     }
 
     /// <inheritdoc />
-    public Task<IList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId)
+    public Task<IReadOnlyList<AgvError>> GetActiveErrorsAsync(Guid agvCorrelationId)
     {
         return GetActiveErrorsAsync(new List<Guid> { agvCorrelationId });
     }
 
     /// <inheritdoc />
-    public Task<IList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds)
+    public Task<IReadOnlyList<AgvError>> GetActiveErrorsAsync(IList<Guid> agvCorrelationIds)
     {
-        return Task.FromResult<IList<AgvError>>(_errorCache.ConcurrentDict
-            .Where(kvp => agvCorrelationIds.Contains(kvp.Key))
-            .SelectMany(kvp => kvp.Value.Value)
-            .ToList());
+        return Task.FromResult<IReadOnlyList<AgvError>>(_errorCache.GetValues(agvCorrelationIds).SelectMany(x => x).ToList());
     }
 
     /// <inheritdoc />
@@ -121,7 +108,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
 
         foreach ((var agvCorrelationId, List<AgvError> errors) in errorsByAgv)
         {
-            _errorCache.ConcurrentDict[agvCorrelationId] = new Lazy<List<AgvError>>(() => errors);
+            _errorCache.AddOrUpdate(agvCorrelationId, errors);
         }
     }
 }

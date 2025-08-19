@@ -121,16 +121,16 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
         IReadOnlyCollection<Cargo> cargoList = await _agvDb.Cargos.GetCargosAsync(agvId);
         ICollection<Common.Domain.Models.Cargo> commonCargoList = cargoList.Select(cargo => _mapper.Map<Common.Domain.Models.Cargo>(cargo)).ToList();
 
-        IList<AgvError> errorList = await _agvDb.Errors.GetActiveErrorsAsync(agvId);
+        IReadOnlyList<AgvError> errorList = await _agvDb.Errors.GetActiveErrorsAsync(agvId);
 
         foreach (var triggerLocation in triggerLocations)
         {
             if (leftTrigger)
             {
-                await context.Publish(new AgvLeftTrigger(triggerLocation.TriggerId, triggerLocation.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList));
+                await context.Publish(new AgvLeftTrigger(triggerLocation.TriggerId, triggerLocation.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList.ToList()));
                 continue;
             }
-            await context.Publish(new AgvReachedTrigger(triggerLocation.TriggerId, triggerLocation.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList));
+            await context.Publish(new AgvReachedTrigger(triggerLocation.TriggerId, triggerLocation.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList.ToList()));
 
             var trigger = await _triggerRepository.GetById(triggerLocation.TriggerId);
             _logger.LogAgvInformation(LogCodes.AgvReachedTrigger, agvId, "AGV Reached Trigger",

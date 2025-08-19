@@ -20,7 +20,8 @@ public class MqttErrorProfile : Profile
             .ForMember(nameof(AgvError.ErrorCode), opt => opt.Ignore())
             .ForMember(nameof(AgvError.ErrorResolved), opt => opt.Ignore())
             .ForMember(nameof(AgvError.ErrorCategory), opt => opt.Ignore())
-            .ForMember(nameof(AgvError.ErrorFlag), opt => opt.MapFrom(src => src.ErrorDescription!.ToUpper().Contains(nameof(ErrorFlag.Battery).ToUpper()) ? ErrorFlag.Battery : ErrorFlag.Agv));
+            .ForMember(nameof(AgvError.ErrorFlag), opt => opt.MapFrom(src => src.ErrorDescription!.ToUpper().Contains(nameof(ErrorFlag.Battery).ToUpper()) ? ErrorFlag.Battery : ErrorFlag.Agv))
+            .ForMember(e => e.Source, opt => opt.MapFrom(src => AgvErrorSource.Agv));
         // Map only AgvCorrelationId to AgvError
         CreateMap<Guid, AgvError>(MemberList.None)
             .ForMember(nameof(AgvError.AgvCorrelationId), opt => opt.MapFrom(src => src));
@@ -38,6 +39,7 @@ public class MqttErrorProfile : Profile
             .ForMember(nameof(AgvError.ErrorLevel), opt => opt.MapFrom(src => ErrorLevel.Information))
             .ForMember(nameof(AgvError.ErrorDescription), opt => opt.MapFrom(src => src.InfoDescription))
             .ForMember(nameof(AgvError.ErrorReferences), opt => opt.MapFrom(src => src.InfoReferences))
-            .ForMember(nameof(AgvError.ErrorFlag), opt => opt.MapFrom(src => src.InfoDescription!.ToUpper().Contains(nameof(ErrorFlag.Battery).ToUpper()) ? ErrorFlag.Battery : ErrorFlag.Agv));
+            .ForMember(nameof(AgvError.ErrorFlag), opt => opt.MapFrom(src => src.InfoDescription!.ToUpper().Contains(nameof(ErrorFlag.Battery).ToUpper()) ? ErrorFlag.Battery : ErrorFlag.Agv))
+            .ForMember(e => e.Source, opt => opt.MapFrom(src => AgvErrorSource.Agv));
     }
 }

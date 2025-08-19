@@ -1,4 +1,3 @@
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
@@ -46,10 +45,6 @@ public class GetAgvPositionsRequestHandler :
     {
         var correlationId = context.Message.CorrelationId;
         var agvPosition = _agvPositionRepository.GetPosition(correlationId);
-        if (agvPosition == null)
-        {
-            throw new AgvNotFoundException(correlationId);
-        }
         await context.RespondAsync(new GotAgvPosition(new Messages.MessageContent.AgvPositionStatus(agvPosition.CorrelationId, agvPosition.SerialNumber, agvPosition.AgvPosition)));
     }
 }

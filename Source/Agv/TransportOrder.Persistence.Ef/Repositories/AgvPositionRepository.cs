@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using MassTransit;
@@ -27,10 +28,21 @@ public class AgvPositionRepository : BaseAgvPositionRepository
     }
 
     /// <inheritdoc />
-    public override AgvPositionStatus? GetPosition(Guid correlationId)
+    public override AgvPositionStatus? GetPositionIfExisting(Guid correlationId)
     {
         _positionDictionaryProvider.ConcurrentDict.TryGetValue(correlationId, out var agvPositionReceived);
         return agvPositionReceived;
+    }
+
+    /// <inheritdoc />
+    public override AgvPositionStatus GetPosition(Guid correlationId)
+    {
+        var agvPositionStatus = GetPositionIfExisting(correlationId);
+        if (agvPositionStatus == null)
+        {
+            throw new AgvLocationUnknownException(correlationId);
+        }
+        return agvPositionStatus;
     }
 
     /// <inheritdoc />

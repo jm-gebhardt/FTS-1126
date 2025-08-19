@@ -46,7 +46,7 @@ public class ResetAgvErrorsRequestHandlerTestFixture : MediatorTestFixture<Reset
         }
     }
 
-    public ResetAgvErrorsRequestHandlerTestFixture WithActiveAgvErrors(IList<AgvError> errors)
+    public ResetAgvErrorsRequestHandlerTestFixture WithActiveAgvErrors(IReadOnlyList<AgvError> errors)
     {
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors);
         return this;

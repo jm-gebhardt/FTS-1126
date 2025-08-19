@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -20,7 +21,15 @@ public interface IAgvPositionRepository
     /// </summary>
     /// <param name="correlationId">Correlation ID of the AGV</param>
     /// <returns>Returns the position of the requested AGV of null when no AGV with the given correlationId was found</returns>
-    AgvPositionStatus? GetPosition(Guid correlationId);
+    AgvPositionStatus? GetPositionIfExisting(Guid correlationId);
+
+    /// <summary>
+    /// Get position of AGV
+    /// </summary>
+    /// <param name="correlationId">Correlation ID of the AGV</param>
+    /// <returns>Returns the position of the requested AGV</returns>
+    /// <exception cref="AgvLocationUnknownException">Thrown when AgvPosition is unknown</exception>
+    AgvPositionStatus GetPosition(Guid correlationId);
 
     /// <summary>
     /// Returns positions of all agvs.

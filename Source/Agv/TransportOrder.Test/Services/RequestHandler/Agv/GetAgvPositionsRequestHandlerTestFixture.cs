@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using MassTransit;
@@ -22,8 +23,10 @@ public class GetAgvPositionsRequestHandlerTestFixture<TRequestClient, TConsumer>
     {
         _agvPositionRepositoryMock.Setup(x => x.GetSelectedAgvsPositions(It.IsAny<ICollection<Guid>>()))
             .Returns((ICollection<Guid> ids) => positions.Where(p => ids.Contains(p.CorrelationId)).ToList());
-        _agvPositionRepositoryMock.Setup(x => x.GetPosition(It.IsAny<Guid>()))
+        _agvPositionRepositoryMock.Setup(x => x.GetPositionIfExisting(It.IsAny<Guid>()))
             .Returns((Guid id) => positions.SingleOrDefault(p => p.CorrelationId == id));
+        _agvPositionRepositoryMock.Setup(x => x.GetPosition(It.IsAny<Guid>()))
+            .Returns((Guid id) => positions.SingleOrDefault(p => p.CorrelationId == id) ?? throw new AgvNotFoundException(id));
         return this;
     }
 

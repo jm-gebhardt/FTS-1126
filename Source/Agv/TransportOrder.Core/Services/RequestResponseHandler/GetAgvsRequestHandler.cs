@@ -66,7 +66,7 @@ public class GetAgvsRequestHandler :
         Task<IReadOnlyDictionary<Guid, GraphNode?>> agvLastNodesTask = _agvDb.Graphs.GetLastNodesForAgvsAsync(agvLastNodeIds);
 
         Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetCurrentActionGroupsWithNodesAsync(agvCorrelationIds);
-        Task<IList<AgvError>> errorsTask = _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationIds);
+        Task<IReadOnlyList<AgvError>> errorsTask = _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationIds);
         await Task.WhenAll(actionGroupsTask, errorsTask, agvLastNodesTask);
 
         Dictionary<Guid, List<AgvError>> allAgvErrors = errorsTask.Result
@@ -105,7 +105,7 @@ public class GetAgvsRequestHandler :
         var action = await _actionGroupRepository.GetCurrentAgvActionGroupWithNodesAsync(agvCorrelationId);
         _mapper.Map(action, agvMessageContent);
 
-        IList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         _mapper.Map(agvErrors, agvMessageContent);
 
         string? lastNodeId = agv.AgvStatus?.LastNodeId;

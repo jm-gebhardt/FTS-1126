@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -58,7 +59,8 @@ public class TriggerEventHandlerTestFixture : MassTransitConsumerTestFixture<Tri
 
     public TriggerEventHandlerTestFixture WithPosition(Guid agvId, AgvPositionStatus? position)
     {
-        _agvDb.Setup(a => a.Positions.GetPosition(agvId)).Returns(position);
+        _agvDb.Setup(a => a.Positions.GetPositionIfExisting(agvId)).Returns(position);
+        _agvDb.Setup(a => a.Positions.GetPosition(agvId)).Returns(position ?? throw new AgvLocationUnknownException(agvId));
         return this;
     }
 
@@ -68,7 +70,7 @@ public class TriggerEventHandlerTestFixture : MassTransitConsumerTestFixture<Tri
         return this;
     }
 
-    public TriggerEventHandlerTestFixture WithAgvErrors(Guid agvId, IList<AgvError> errors)
+    public TriggerEventHandlerTestFixture WithAgvErrors(Guid agvId, IReadOnlyList<AgvError> errors)
     {
         _agvDb.Setup(a => a.Errors.GetActiveErrorsAsync(agvId)).ReturnsAsync(errors);
         return this;

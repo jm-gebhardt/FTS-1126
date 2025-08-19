@@ -47,7 +47,12 @@ public static class MockAgvDbExtensions
         repoMock.Setup(r => r.Agvs.GetNotChargingAgvsWithCriticalBatteryLevel()).ReturnsAsync(agvs);
         repoMock.Setup(x => x.Positions.GetPosition(It.IsAny<Guid>())).Returns((Guid c) =>
         {
-            var agv = agvs.FirstOrDefault(a => a.CorrelationId == c);
+            var agv = agvs.Single(a => a.CorrelationId == c);
+            return new AgvPositionStatus(agv.CorrelationId, agv.SerialNumber, new AgvPosition(true, 1, 1, 0, 0));
+        });
+        repoMock.Setup(x => x.Positions.GetPositionIfExisting(It.IsAny<Guid>())).Returns((Guid c) =>
+        {
+            var agv = agvs.SingleOrDefault(a => a.CorrelationId == c);
             return agv == null ? null : new AgvPositionStatus(agv.CorrelationId, agv.SerialNumber, new AgvPosition(true, 1, 1, 0, 0));
         });
         repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync([]);
@@ -110,8 +115,8 @@ public static class MockAgvDbExtensions
 
     public static void AddActiveErrors(this Mock<IAgvDb> repoMock, IList<AgvError> errors)
     {
-        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors);
-        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(errors);
+        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(errors.AsReadOnly);
+        repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(errors.AsReadOnly);
     }
 
     public static Task<Agv> GetAgvAsync(this Mock<IAgvDb> repoMock, Guid agvCorrelationId)

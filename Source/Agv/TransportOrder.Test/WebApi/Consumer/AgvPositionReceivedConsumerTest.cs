@@ -40,7 +40,7 @@ public class AgvPositionReceivedConsumerTest
         var repository = fixture.Provider.GetRequiredService<IAgvPositionRepository>();
         repository.ShouldNotBeNull();
 
-        var position = repository.GetPosition(Guid.Empty);
+        var position = repository.GetPositionIfExisting(Guid.Empty);
         position.ShouldBeNull();
     }
 
@@ -84,7 +84,6 @@ public class AgvPositionReceivedConsumerTest
         repository.ShouldNotBeNull();
 
         var position = repository.GetPosition(AgvSerialNumber1.ToGuid());
-        position.ShouldNotBeNull();
         position.AgvPosition.PositionInitialized.ShouldBe(init1);
         position.AgvPosition.X.ShouldBe(x1, 0.00001);
         position.AgvPosition.Y.ShouldBe(y1, 0.00001);
@@ -93,7 +92,6 @@ public class AgvPositionReceivedConsumerTest
         position.AgvPosition.DeviationRange!.Value.ShouldBe(deviation1, 0.00001);
 
         position = repository.GetPosition(AgvSerialNumber2.ToGuid());
-        position.ShouldNotBeNull();
         position.AgvPosition.X.ShouldBe(x2, 0.00001);
         position.AgvPosition.Y.ShouldBe(y2, 0.00001);
         position.AgvPosition.Z.ShouldBe(z2, 0.00001);

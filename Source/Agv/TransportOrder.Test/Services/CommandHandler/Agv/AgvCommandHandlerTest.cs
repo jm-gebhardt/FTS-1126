@@ -108,46 +108,46 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateErrorStatus_WithErrors_SetHasErrorToTrue()
+    public async Task Consume_AgvErrorChanged_WithErrors_SetHasErrorToTrue()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Fatal);
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors, errorStatus.AgvPosition));
+        await fixture.PublishMessageAsync(new AgvErrorChanged(agv.CorrelationId, errorStatus.Errors));
         fixture.AgvDb.Verify(r =>
             r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Once());
     }
 
     [TestMethod]
-    public async Task Consume_UpdateErrorStatus_WithWarnings_DoesNotSetHasError()
+    public async Task Consume_AgvErrorChanged_WithWarnings_DoesNotSetHasError()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Warning);
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors, errorStatus.AgvPosition));
+        await fixture.PublishMessageAsync(new AgvErrorChanged(agv.CorrelationId, errorStatus.Errors));
         fixture.AgvDb.Verify(r =>
             r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Never());
     }
 
     [TestMethod]
-    public async Task Consume_UpdateErrorStatus_WhenErrorResolveAndIdle_PublishesAgvBecameIdle()
+    public async Task Consume_AgvErrorChanged_WhenErrorResolveAndIdle_PublishesAgvBecameIdle()
     {
         var agv = AgvGenerator.GenerateIdleAgv(hasError: true);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [], new AgvPosition(true, 1, 1, 1, 0)));
+        await fixture.PublishMessageAsync(new AgvErrorChanged(agv.CorrelationId, []));
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 
     [TestMethod]
-    public async Task Consume_UpdateErrorStatus_WhenErrorResolveButBusy_DoesNotPublishAgvBecameIdle()
+    public async Task Consume_AgvErrorChanged_WhenErrorResolveButBusy_DoesNotPublishAgvBecameIdle()
     {
         var agv = AgvGenerator.GenerateBusyAgv(hasError: true);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, [], new AgvPosition(true, 1, 1, 1, 0)));
+        await fixture.PublishMessageAsync(new AgvErrorChanged(agv.CorrelationId, []));
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 
@@ -610,7 +610,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgvWithZoneErrorAndResourceError_PublishesAgvOnlineChangedUpdateErrorStatusAndBecameIdle()
+    public async Task Consume_UpdateAgvStatus_AliveStateChangedForIdleAgvWithZoneErrorAndResourceError_PublishesAgvOnlineChangedUpdateSystemAgvErrorsAndBecameIdle()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
@@ -620,23 +620,20 @@ public class AgvCommandHandlerTest
             .WithCurrentStartedOrCreatedActionGroups([])
             .WithNodesStates([new NodeLock("node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
-            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
-        List<UpdateErrorStatus> updateErrorStatus = fixture.TestHarness.Published.Select<UpdateErrorStatus>().Select(c => c.Context.Message).ToList();
-        var updateForZoneError = updateErrorStatus.FirstOrDefault(es => es.Errors.Any(e => e.IsRessourceError()));
-        updateForZoneError.ShouldNotBeNull();
-        var updateForResourceError = updateErrorStatus.FirstOrDefault(es => es.Errors.Any(e => e.IsRessourceError() || e.IsZoneError()));
-        updateForResourceError.ShouldNotBeNull();
+        var update = await fixture.GetFirstPublishedMessageAsync<UpdateSystemAgvErrors>();
+        update.ErrorsToResolve.Single(e => e.IsResourceError()).ShouldBeOfType<ResourceBlockingError>();
+        update.ErrorsToResolve.Single(e => e.IsZoneError()).ShouldBeOfType<ZoneError>();
     }
 
     [TestMethod]
-    public async Task Consume_UpdateAgvStatus_ZoneIdChanges_WithZoneErrorAndResourceError_PublishesUpdateErrorStatus()
+    public async Task Consume_UpdateAgvStatus_ZoneIdChanges_WithZoneErrorAndResourceError_PublishesUpdateSystemAgvErrors()
     {
         var zoneId = Guid.NewGuid();
         var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zoneId.ToString()]);
@@ -648,15 +645,13 @@ public class AgvCommandHandlerTest
             .WithCurrentStartedOrCreatedActionGroups([])
             .WithNodesStates([new NodeLock("node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
-            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
-        List<UpdateErrorStatus> updateErrorStatus = fixture.TestHarness.Published.Select<UpdateErrorStatus>().Select(c => c.Context.Message).ToList();
-        var updateForZoneError = updateErrorStatus.FirstOrDefault(es => es.Errors.Any(e => e.IsRessourceError()));
-        updateForZoneError.ShouldNotBeNull();
+        var update = await fixture.GetFirstPublishedMessageAsync<UpdateSystemAgvErrors>();
+        update.ErrorsToResolve.Single(e => e.IsZoneError()).ShouldBeOfType<ZoneError>();
     }
 
     [TestMethod]
@@ -771,7 +766,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_GoOffline_AgvWasOnline_InZone_PublishedAgvOnlineChangedAndUpdateErrorStatus()
+    public async Task Consume_GoOffline_AgvWasOnline_InZone_PublishedAgvOnlineChangedAndUpdateSystemAgvErrors()
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
@@ -789,11 +784,11 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         agv.IsOnline.ShouldBeFalse();
         await fixture.ShouldHavePublishedAsync<AllAgvsOffline>();
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
     }
 
     [TestMethod]
-    public async Task Consume_GoOffline_AgvWasOnline_InQueue_PublishedAgvOnlineChangedAndUpdateErrorStatus()
+    public async Task Consume_GoOffline_AgvWasOnline_InQueue_PublishedAgvOnlineChangedAndUpdateSystemAgvErrors()
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
@@ -813,7 +808,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
         agv.IsOnline.ShouldBeFalse();
         await fixture.ShouldHavePublishedAsync<AllAgvsOffline>();
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
     }
 
     [TestMethod]
@@ -1026,7 +1021,7 @@ public class AgvCommandHandlerTest
             .WithActionGroup(actionGroup)
             .WithIsOnAQueueNode(true)
             .WithQueueInternalMoves([Guid.NewGuid()])
-            .WithEvacuationMoves([Guid.NewGuid()]); 
+            .WithEvacuationMoves([Guid.NewGuid()]);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -1544,7 +1539,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Maintenance));
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        
+
         var command = new SetNormalMode(agv.CorrelationId, null);
         await fixture.PublishMessageAsync(command);
 
@@ -1562,10 +1557,10 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
-        
+
         var command = new SetNormalMode(agv.CorrelationId, null);
         await fixture.PublishMessageAsync(command);
-        
+
         await fixture.ShouldHavePublishedAsync<AgvModeChanged>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         agv.Mode.Type.ShouldBe(ModeType.Normal);
@@ -1646,7 +1641,7 @@ public class AgvCommandHandlerTest
             .WithEnqueueingTarget(null);
 
         await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "a queue node"));
-        
+
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<QueueEntered>();
     }
@@ -1659,7 +1654,7 @@ public class AgvCommandHandlerTest
             .WithEnqueueingTarget(entryNode);
 
         await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), entryNode));
-        
+
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<QueueEntered>();
     }
@@ -1671,7 +1666,7 @@ public class AgvCommandHandlerTest
             .WithEnqueueingTarget("target queue node");
 
         await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "queue entry node"));
-        
+
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<QueueEntered>();
     }
@@ -1686,7 +1681,7 @@ public class AgvCommandHandlerTest
         var message = new ReceiveAgvZones(agv.CorrelationId, agv.SerialNumber, [new AgvZone("zone1", 1, [new PolygonPoint(1, 1)], []), new AgvZone("zone2", 2, [new PolygonPoint(2, 2)], [])]);
 
         await fixture.PublishMessageAsync(message);
-        
+
         await fixture.ShouldHavePublishedAsync<AddZone>();
 
         fixture.TestHarness.Published.Select<AddZone>().Count().ShouldBe(message.AgvZones.Count);
@@ -1695,7 +1690,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_RemoveAgvFromZones_ValidData_PublishesUpdateErrorStatus()
+    public async Task Consume_RemoveAgvFromZones_ValidData_PublishesUpdateSystemAgvErrors()
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
@@ -1709,14 +1704,14 @@ public class AgvCommandHandlerTest
             .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
 
         await fixture.PublishMessageAsync(new RemoveAgvFromZones(agv.CorrelationId));
-       
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+
+        await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
         fixture.VerifyAgvUpdated(Times.Once());
     }
 
     [TestMethod]
-    public async Task Consume_RemoveAgvFromZone_ValidData_PublishesUpdateErrorStatus()
+    public async Task Consume_RemoveAgvFromZone_ValidData_PublishesUpdateSystemAgvErrors()
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
@@ -1730,7 +1725,7 @@ public class AgvCommandHandlerTest
             .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
 
         await fixture.PublishMessageAsync(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId));
-        await fixture.ShouldHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
         fixture.VerifyAgvUpdated(Times.Once());
     }
@@ -1946,7 +1941,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CheckAgvLoad_MatchingState_PreviousCargoMismatchErrors_PublishesUpdateErrorStatus()
+    public async Task Consume_CheckAgvLoad_MatchingState_PreviousCargoMismatchErrors_PublishesUpdateSystemAgvErrors()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
@@ -1957,9 +1952,10 @@ public class AgvCommandHandlerTest
             .WithHasCargoStates(true)
             .WithActiveErrors([new CargoMismatchError(agv.CorrelationId, DateTime.UtcNow, false)]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateSystemAgvErrors>(new CheckAgvLoad(agv.CorrelationId));
 
-        updateErrorStatus.Errors.ShouldBeEmpty();
+        updateErrorStatus.ErrorsToAdd.ShouldBeEmpty();
+        updateErrorStatus.ErrorsToResolve.Single().ShouldBeOfType<CargoMismatchError>();
     }
 
     [TestMethod]
@@ -1980,7 +1976,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CheckAgvLoad_Mismatch_NoPreviousCargoMismatchErrors_PublishesUpdateErrorStatus()
+    public async Task Consume_CheckAgvLoad_Mismatch_NoPreviousCargoMismatchErrors_PublishesUpdateSystemAgvErrors()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, assignedAgv: agv.CorrelationId);
@@ -1991,10 +1987,10 @@ public class AgvCommandHandlerTest
             .WithHasCargoStates(false)
             .WithActiveErrors([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateSystemAgvErrors>(new CheckAgvLoad(agv.CorrelationId));
 
-        updateErrorStatus.Errors.ShouldNotBeEmpty();
-        updateErrorStatus.Errors.Any(e => e.IsCargoMismatchError()).ShouldBeTrue();
+        updateErrorStatus.ErrorsToAdd.Single().ShouldBeOfType<CargoMismatchError>();
+        updateErrorStatus.ErrorsToResolve.ShouldBeEmpty();
     }
 
     [TestMethod]
@@ -2009,10 +2005,9 @@ public class AgvCommandHandlerTest
             .WithHasCargoStates(true)
             .WithActiveErrors([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+        var update = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateSystemAgvErrors>(new CheckAgvLoad(agv.CorrelationId));
 
-        updateErrorStatus.Errors.ShouldNotBeEmpty();
-        updateErrorStatus.Errors.Any(e => e.IsCargoMismatchError()).ShouldBeTrue();
+        update.ErrorsToAdd.Single().ShouldBeOfType<CargoMismatchError>();
     }
 
     [TestMethod]
@@ -2029,12 +2024,11 @@ public class AgvCommandHandlerTest
             .WithHasCargoStates(true)
             .WithActiveErrors([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateErrorStatus>(new CheckAgvLoad(agv.CorrelationId));
+        var update = await fixture.PublishAndGetFirstMessageAsync<CheckAgvLoad, UpdateSystemAgvErrors>(new CheckAgvLoad(agv.CorrelationId));
 
-        updateErrorStatus.Errors.ShouldNotBeEmpty();
-        updateErrorStatus.Errors.Any(e => e.IsCargoMismatchError()).ShouldBeTrue();
+        update.ErrorsToAdd.Single().ShouldBeOfType<CargoMismatchError>();
     }
-    
+
     [TestMethod]
     public async Task Consume_RemoveAgvFromQueue_EscapeQueue_PublishesUpdateErrorStatus()
     {
@@ -2052,13 +2046,14 @@ public class AgvCommandHandlerTest
             .WithQueueInternalMoves([])
             .WithEvacuationMoves([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateErrorStatus>(new RemoveAgvFromQueue(agv.CorrelationId));
+        var update = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateSystemAgvErrors>(new RemoveAgvFromQueue(agv.CorrelationId));
 
-        updateErrorStatus.Errors.ShouldBeEmpty();
+        update.ErrorsToAdd.ShouldBeEmpty();
+        update.ErrorsToResolve.Single().ShouldBeOfType<QueueBlockingError>();
     }
 
     [TestMethod]
-    public async Task Consume_RemoveAgvFromQueue_RemovedFromQueueEntryNode_PublishesUpdateErrorStatus()
+    public async Task Consume_RemoveAgvFromQueue_RemovedFromQueueEntryNode_PublishesUpdateSystemAgvErrors()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
         agv.IsQueueing = true;
@@ -2070,13 +2065,14 @@ public class AgvCommandHandlerTest
             .WithQueueInternalMoves([])
             .WithEvacuationMoves([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateErrorStatus>(new RemoveAgvFromQueue(agv.CorrelationId));
+        var update = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateSystemAgvErrors>(new RemoveAgvFromQueue(agv.CorrelationId));
 
-        updateErrorStatus.Errors.ShouldBeEmpty();
+        update.ErrorsToAdd.ShouldBeEmpty();
+        update.ErrorsToResolve.Single().ShouldBeOfType<QueueBlockingError>();
     }
 
     [TestMethod]
-    public async Task Consume_RemoveAgvFromQueue_NotInQueueAnymore_DoesNotPublishUpdateErrorStatus()
+    public async Task Consume_RemoveAgvFromQueue_NotInQueueAnymore_DoesNotPublishUpdateSystemAgvErrors()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
         var fixture = new AgvCommandHandlerTestFixture()
@@ -2089,6 +2085,6 @@ public class AgvCommandHandlerTest
 
         await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
 
-        await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldNotHavePublishedAsync<UpdateSystemAgvErrors>();
     }
 }

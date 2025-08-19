@@ -1,7 +1,6 @@
-using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -12,7 +11,7 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
 {
     public EfAgvErrorRepository AgvErrorRepository { get; }
 
-    private readonly IConcurrentDictionaryProvider<Guid, Lazy<List<AgvError>>> _errorCache = new AgvErrorDictionaryProvider();
+    private readonly Cache<Guid, List<AgvError>> _errorCache = new();
 
     public AgvErrorRepositoryTestFixture()
     {
@@ -21,7 +20,7 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
 
     public AgvErrorRepositoryTestFixture WithAgvErrors(List<AgvError> errors)
     {
-        AddInitTask(AgvErrorRepository.AddOrUpdateAgvErrorStatus(errors, errors.GroupBy(e => e.AgvCorrelationId).Single().Key));
+        AddInitTask(AgvErrorRepository.AddAndUpdateAgvErrorAsync(errors, [], errors.GroupBy(e => e.AgvCorrelationId).Single().Key));
         return this;
     }
 
@@ -41,7 +40,7 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
 
     public List<AgvError> GetCachedErrors(Guid agvCorrelationId)
     {
-        _errorCache.ConcurrentDict.TryGetValue(agvCorrelationId, out Lazy<List<AgvError>>? errors);
-        return errors?.Value ?? [];
+        _errorCache.TryGet(agvCorrelationId, out List<AgvError>? errors);
+        return errors ?? [];
     }
 }

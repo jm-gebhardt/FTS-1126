@@ -52,7 +52,7 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
     /// <inheritdoc/>
     public async Task<double> GetDurationEstimate(double agvVelocity, AgvAction action, Guid agvCorrelationId)
     {
-        var agvPosition = _agvPositionRepository.GetPosition(agvCorrelationId)!.AgvPosition;
+        var agvPosition = _agvPositionRepository.GetPosition(agvCorrelationId).AgvPosition;
         if (action.IsMoveToCoordinate)
         {
             return EstimateDurationFromDistance((action.Target.Position!.X, action.Target.Position!.Y), (agvPosition.X, agvPosition.Y), agvVelocity);

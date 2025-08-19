@@ -540,7 +540,7 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AgvSetToPushOrJoystickMode_AgvHeadingTowardsQueue_NoPreviousQueueBlockingErrors_PublishesUpdateErrorStatus()
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvHeadingTowardsQueue_NoPreviousQueueBlockingErrors_PublishesAddSystemAgvErrors()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         agv.IsQueueing = true;
@@ -549,12 +549,12 @@ public class AgvEventHandlerTest
             .WithQueue(null)
             .WithActiveErrors([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, UpdateErrorStatus>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
-        updateErrorStatus.Errors.Any(e => e.IsQueueBlockingError()).ShouldBeTrue();
+        var update = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, AddSystemAgvErrors>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+        update.Errors.Single(e => e.IsQueueBlockingError()).ShouldBeOfType<QueueBlockingError>();
     }
 
     [TestMethod]
-    public async Task Consume_AgvSetToPushOrJoystickMode_AgvAtQueueHead_NoPreviousQueueBlockingErrors_PublishesUpdateErrorStatus()
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvAtQueueHead_NoPreviousQueueBlockingErrors_PublishesAddSystemAgvErrors()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         agv.IsQueueing = false;
@@ -563,12 +563,12 @@ public class AgvEventHandlerTest
             .WithQueue(new Queue())
             .WithActiveErrors([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, UpdateErrorStatus>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
-        updateErrorStatus.Errors.Any(e => e.IsQueueBlockingError()).ShouldBeTrue();
+        var update = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, AddSystemAgvErrors>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+        update.Errors.Single(e => e.IsQueueBlockingError()).ShouldBeOfType<QueueBlockingError>();
     }
 
     [TestMethod]
-    public async Task Consume_AgvSetToPushOrJoystickMode_AgvInQueue_NoPreviousQueueBlockingErrors_PublishesUpdateErrorStatus()
+    public async Task Consume_AgvSetToPushOrJoystickMode_AgvInQueue_NoPreviousQueueBlockingErrors_PublishesAddSystemAgvErrors()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         agv.IsQueueing = true;
@@ -577,8 +577,8 @@ public class AgvEventHandlerTest
             .WithQueue(new Queue())
             .WithActiveErrors([]);
 
-        var updateErrorStatus = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, UpdateErrorStatus>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
-        updateErrorStatus.Errors.Any(e => e.IsQueueBlockingError()).ShouldBeTrue();
+        var update = await fixture.PublishAndGetFirstMessageAsync<AgvSetToPushOrJoystickMode, AddSystemAgvErrors>(new AgvSetToPushOrJoystickMode(agv.CorrelationId));
+        update.Errors.Single(e => e.IsQueueBlockingError()).ShouldBeOfType<QueueBlockingError>();
     }
 
     [TestMethod]

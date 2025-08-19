@@ -29,7 +29,7 @@ public abstract class BaseAgvPositionRepository : IAgvPositionRepository
     public async Task UpdatePositionAsync(AgvPositionStatus agvPositionStatus)
     {
         var correlationId = agvPositionStatus.CorrelationId;
-        var previousAgvPosition = GetPosition(correlationId);
+        var previousAgvPosition = GetPositionIfExisting(correlationId);
 
         if (previousAgvPosition == null ||
             agvPositionStatus.CreatedDate.AddSeconds(-MaxSilenceInSeconds) >= previousAgvPosition.CreatedDate ||
@@ -49,7 +49,10 @@ public abstract class BaseAgvPositionRepository : IAgvPositionRepository
     protected abstract void UpdateInternal(AgvPositionStatus agvPositionStatus);
 
     /// <inheritdoc />
-    public abstract AgvPositionStatus? GetPosition(Guid correlationId);
+    public abstract AgvPositionStatus? GetPositionIfExisting(Guid correlationId);
+
+    /// <inheritdoc />
+    public abstract AgvPositionStatus GetPosition(Guid correlationId);
 
     /// <inheritdoc />
     public abstract ICollection<AgvPositionStatus> GetAllPositions();

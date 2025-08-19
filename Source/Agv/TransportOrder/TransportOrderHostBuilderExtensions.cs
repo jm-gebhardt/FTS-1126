@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.MassTransit;
+using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
@@ -71,7 +72,7 @@ public static class TransportOrderHostBuilderExtensions
     {
         // Configuration
         services.AddSingleton(_ => productionOptions);
-       
+
         services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
         services.AddHostedService<AgvSettingsInitializer>();
         services.AddHostedService<InMemoryCacheInitializer>();
@@ -128,7 +129,7 @@ public static class TransportOrderHostBuilderExtensions
             case OrderSelectionMode.Threshold:
                 services.AddTransient<IChooseAgvActionGroupService, FastestRouteAndThresholdChooser>();
                 break;
-        
+
             case OrderSelectionMode.Dynamic:
                 services.AddTransient<IChooseAgvActionGroupService, DynamicPrioritizationChooser>();
                 break;
@@ -191,6 +192,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient(typeof(IMessageReceiver<>), typeof(MessageReceiver<>));
         services.AddTransient(typeof(IMessageAwaiter<>), typeof(MessageAwaiter<>));
         services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+        services.AddSingleton(typeof(ICache<,>), typeof(Cache<,>));
 
         services.AddSingleton<IConcurrentDictionaryProvider<string, (double value, DateTime lastUpdated)>, DeviationCacheProvider>();
         services.AddTransient<IActionGroupDurationEstimationService, ActionGroupDurationEstimationService>();

@@ -446,14 +446,13 @@ public class AgvEventHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         if (agv.IsQueueing || await _queueRepository.GetQueueForAgv(agvCorrelationId) != null)
         {
-            List<AgvError> errors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
-            bool hasQueueBlockingError = errors.Any(e => e.IsQueueBlockingError());
+            IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+            bool hasQueueBlockingError = activeErrors.Any(e => e.IsQueueBlockingError());
             if (!hasQueueBlockingError)
             {
                 var position = _agvDb.Positions.GetPosition(agvCorrelationId);
-                errors.Add(new QueueBlockingError(agvCorrelationId, DateTime.UtcNow));
                 _logger.LogInformation("Agv {AgvCorrelationId} moved manually out of queue", agvCorrelationId);
-                await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
+                await context.Publish(new AddSystemAgvErrors(agvCorrelationId, [new QueueBlockingError(agvCorrelationId, DateTime.UtcNow)], position.AgvPosition));
             }
         }
     }

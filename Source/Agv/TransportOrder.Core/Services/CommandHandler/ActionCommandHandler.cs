@@ -730,6 +730,12 @@ public class ActionCommandHandler :
         actionGroup.CompleteAction(correlationId);
         await _actionService.TryUpdateActionGroup(actionGroup);
 
+        if (action.ActionType is ActionType.Pick or ActionType.Drop)
+        {
+            // Cargo error might be added already due to earlier mismatch
+            await context.Publish(new CheckAgvLoad(actionGroup.AssignedAgv.Value), cancellationToken);
+        }
+
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
 

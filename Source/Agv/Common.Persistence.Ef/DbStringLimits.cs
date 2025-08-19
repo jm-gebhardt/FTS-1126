@@ -10,6 +10,7 @@ public static class DbStringLimits
     public const int Hu = 200;
     public const int NodeId = 450;
     public const int Description = 400; // descriptive fields (names, types, reasons, specifications..)
+    public const int Enum = 100;
     public const int User = 200;
     public const int State = 50;
     public const int ErrorInformation = 50;

@@ -28,6 +28,18 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue>
     }
 
     /// <inheritdoc />
+    public IEnumerable<TValue> GetValues(IEnumerable<TKey> keys)
+    {
+        foreach (var key in keys)
+        {
+            if (TryGet(key, out var value))
+            {
+                yield return value;
+            }
+        }
+    }
+
+    /// <inheritdoc />
     public void RemoveOldest(Func<KeyValuePair<TKey, TValue>, bool> predicate)
     {
         KeyValuePair<TKey, (TValue Value, DateTime CreatedAt)> oldest = _cache

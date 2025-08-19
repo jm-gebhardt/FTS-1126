@@ -51,7 +51,7 @@ public class GetAgvErrorsRequestHandler :
         var correlationId = context.Message.CorrelationId;
         await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        IList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+        IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
         List<Messages.Requests.Agv.Queries.AgvError> agvErrorsMessageContent = agvErrors.Select(e => _mapper.Map<Messages.Requests.Agv.Queries.AgvError>(e)).ToList();
         await context.RespondAsync(new GotActiveAgvErrors(agvErrorsMessageContent));
     }
@@ -68,9 +68,9 @@ public class GetAgvErrorsRequestHandler :
         List<AgvErrors> agvErrors = agvErrorHistory
             .GroupBy(e => e.AgvCorrelationId)
             .Select(g => new AgvErrors(
-                g.Key, 
-                _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
-                    g.OrderByDescending(e => e.ErrorReceived).ToList())
+                    g.Key,
+                    _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
+                        g.OrderByDescending(e => e.ErrorReceived).ToList())
                 )
             )
             .ToList();
@@ -87,13 +87,13 @@ public class GetAgvErrorsRequestHandler :
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
         await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(selectedAgvs);
 
-        IList<AgvError> fetchedErrors = await _agvDb.Errors.GetActiveErrorsAsync([.. selectedAgvs]);
+        IReadOnlyList<AgvError> fetchedErrors = await _agvDb.Errors.GetActiveErrorsAsync([.. selectedAgvs]);
         List<AgvErrors> errors = fetchedErrors
             .GroupBy(e => e.AgvCorrelationId)
             .Select(g => new AgvErrors(
-                g.Key, 
-                _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
-                    g.OrderByDescending(e => e.ErrorReceived).ToList())
+                    g.Key,
+                    _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
+                        g.OrderByDescending(e => e.ErrorReceived).ToList())
                 )
             )
             .ToList();

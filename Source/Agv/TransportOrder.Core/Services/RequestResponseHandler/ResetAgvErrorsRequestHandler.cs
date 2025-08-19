@@ -64,7 +64,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
         var correlationId = context.Message.CorrelationId;
         List<Guid> errorIdsToReset = context.Message.ErrorIds.ToList();
         var cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, new CancellationTokenSource(_resetTimeout).Token).Token;
-        IList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
 
         // agv does not have any errors
         if (!activeErrors.Any())

@@ -1,22 +1,24 @@
 ﻿namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
-/// Represents a ressource blocking error
+/// Represents a resource blocking error
 /// </summary>
-public record RessourceBlockingError : AgvError
+public record ResourceBlockingError : AgvError
 {
-    /// <inheritdoc cref="RessourceBlockingError"/>>
-    public RessourceBlockingError(Guid correlationId,
+    /// <inheritdoc cref="ResourceBlockingError"/>>
+    public ResourceBlockingError(Guid correlationId,
         DateTime received, string station) : base(correlationId,
-        "Agv offline blocking ressource",
+        "Agv offline blocking resource",
         $"Agv went offline with reservation for or blocking {station}",
         "FTS-4143",
         ErrorLevel.Warning,
-        "Ressource error",
+        "Resource error",
         ErrorCategory.General,
         null,
         received,
-        ErrorFlag.Agv)
+        ErrorFlag.Agv,
+        AgvErrorSource.System
+    )
     {
     }
 }

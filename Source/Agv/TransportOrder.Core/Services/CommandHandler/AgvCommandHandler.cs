@@ -35,6 +35,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using Gebhardt.Acc.TransportOrder.Messages.Utilities;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
@@ -46,7 +47,6 @@ using RequestAgvData = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.Reque
 using RequestAgvGraph = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
 using RequestAgvZones = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvZones;
 using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
-using UpdateErrorStatus = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UpdateErrorStatus;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
@@ -56,7 +56,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class AgvCommandHandler :
     IConsumer<TryReactivateChargingAgv>,
-    IConsumer<UpdateErrorStatus>,
+    IConsumer<AgvErrorChanged>,
     IConsumer<AbortChargeAction>,
     IConsumer<UpdateAgvStatus>,
     IConsumer<SetAgvGraphExist>,
@@ -350,11 +350,11 @@ public class AgvCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="UpdateErrorStatus"/> command.
+    /// Handles the <see cref="AgvErrorChanged"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
+    public async Task Consume(ConsumeContext<AgvErrorChanged> context)
     {
-        (var correlationId, List<AgvError> errors, _) = context.Message;
+        (var correlationId, List<AgvError> errors) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         bool hadError = agv.HasError;
         bool agvHasError = errors.HasAnyError();
@@ -486,7 +486,7 @@ public class AgvCommandHandler :
 
             if (agv.IsOnline == wasOnline)
             {
-                await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
+                await UpdateOfflineErrors(context, agv, handleResourceErrors: false);
             }
         }
 
@@ -663,28 +663,31 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors = true, bool handleRessourceErrors = true, bool handleQueueBlockingErrors = false)
+    private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors = true, bool handleResourceErrors = true, bool handleQueueBlockingErrors = false)
     {
-        List<AgvError> agvErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId)).ToList();
+        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
+        List<AgvError> updatedErrors = activeErrors.ToList();
         var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
 
         if (handleZoneErrors)
         {
-            await UpdateZoneErrors(context, agv, agvErrors, position);
+            await UpdateZoneErrors(agv, updatedErrors);
         }
 
-        if (handleRessourceErrors)
+        if (handleResourceErrors)
         {
-            await UpdateRessourceBlockingErrors(context, agv, agvErrors, position);
+            await UpdateRessourceBlockingErrors(agv, updatedErrors);
         }
 
         if (handleQueueBlockingErrors)
         {
-            await UpdateQueueBlockingError(context, agv, agvErrors, position);
+            await UpdateQueueBlockingError(agv, updatedErrors);
         }
+
+        await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }
 
-    private async Task UpdateQueueBlockingError(IPublishEndpoint context, Agv agv, List<AgvError> errors, AgvPositionStatus? position)
+    private async Task UpdateQueueBlockingError(Agv agv, List<AgvError> errors)
     {
         if (agv.IsOnline)
         {
@@ -697,40 +700,37 @@ public class AgvCommandHandler :
             {
                 errors.Add(new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow));
                 _logger.LogInformation("Agv {AgvCorrelationId} went offline in queue or while heading towards queue", agv.CorrelationId);
-                await context.Publish(new UpdateErrorStatus(agv.CorrelationId, errors, position!.AgvPosition));
             }
         }
     }
 
-    private async Task UpdateRessourceBlockingErrors(IPublishEndpoint context, Agv agv, List<AgvError> agvErrors, AgvPositionStatus? position)
+    private async Task UpdateRessourceBlockingErrors(Agv agv, List<AgvError> errors)
     {
-        bool hasRessourceErrors = agvErrors.Any(e => e.IsRessourceError());
+        bool hasResourceErrors = errors.Any(e => e.IsResourceError());
 
-        // Remove RessourceBlockingError from agv errors
-        if (agv.IsOnline && hasRessourceErrors)
+        // Remove ResourceBlockingError from agv errors
+        if (agv.IsOnline && hasResourceErrors)
         {
-            _logger.LogInformation("Removing ressource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
-            agvErrors.RemoveAll(e => e.IsRessourceError());
-            await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
+            _logger.LogInformation("Removing resource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
+            errors.RemoveAll(e => e.IsResourceError());
             return;
         }
 
-        // Add RessourceBlockingError(s)
+        // Add ResourceBlockingError(s)
         ICollection<NodeLock> nodeLocks = await _nodeStateRepository.GetNodeLocksForAgv(agv.CorrelationId);
-        if (!hasRessourceErrors && !agv.IsOnline && nodeLocks.Count > 0)
+        if (!hasResourceErrors && !agv.IsOnline && nodeLocks.Count > 0)
         {
-            _logger.LogInformation("Adding ressource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
+            _logger.LogInformation("Adding resource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
             foreach (var nodeLock in nodeLocks)
             {
-                agvErrors.Add(new RessourceBlockingError(agv.CorrelationId, DateTime.UtcNow, nodeLock.NodeId));
+                errors.Add(new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, nodeLock.NodeId));
             }
-            await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
         }
     }
 
-    private async Task UpdateZoneErrors(IPublishEndpoint context, Agv agv, List<AgvError> agvErrors, AgvPositionStatus? position)
+    private async Task UpdateZoneErrors(Agv agv, List<AgvError> errors)
     {
-        bool hasZoneErrors = agvErrors.Any(e => e.IsZoneError());
+        bool hasZoneErrors = errors.Any(e => e.IsZoneError());
         bool hasZonesInStatus = !agv.AgvStatus!.ZoneIds.IsNullOrEmpty();
 
         // Add ZoneError(s) to agv errors if it is not online
@@ -740,9 +740,8 @@ public class AgvCommandHandler :
             ICollection<Zone> zones = await _agvDb.Zones.GetZones(agv.AgvStatus!.ZoneIds!.ToArray());
             foreach (var zone in zones)
             {
-                agvErrors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId));
+                errors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId));
             }
-            await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
             return;
         }
 
@@ -750,8 +749,7 @@ public class AgvCommandHandler :
         if ((agv.IsOnline || !hasZonesInStatus) && hasZoneErrors)
         {
             _logger.LogInformation("Removing zone errors for agv {AgvCorrelationId}", agv.CorrelationId);
-            agvErrors.RemoveAll(e => e.IsZoneError());
-            await context.Publish(new UpdateErrorStatus(agv.CorrelationId, agvErrors.ToList(), position!.AgvPosition));
+            errors.RemoveAll(e => e.IsZoneError());
         }
     }
 
@@ -979,7 +977,7 @@ public class AgvCommandHandler :
             new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
 
         // publish also when state was already idle, to trigger further assignments
-        _logger.LogInformation("Agv {CorrelationId} was unlocked", agvCorrelationId);
+        _logger.LogInformation("Agv {AgvCorrelationId} was unlocked", agvCorrelationId);
         await context.Publish(new AgvBecameIdle(agv.CorrelationId), context.CancellationToken);
         await context.Publish(new AgvLockedChanged(agv.CorrelationId, false));
         await context.RespondAsync(new UnlockAgvResult(agv.CorrelationId));
@@ -1284,7 +1282,7 @@ public class AgvCommandHandler :
         }
 
         agv.AgvStatus!.ResetZones();
-        await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
+        await UpdateOfflineErrors(context, agv, handleResourceErrors: false);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
 
@@ -1308,7 +1306,7 @@ public class AgvCommandHandler :
             return;
         }
 
-        await UpdateOfflineErrors(context, agv, handleRessourceErrors: false);
+        await UpdateOfflineErrors(context, agv, handleResourceErrors: false);
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         await context.Publish(new AgvZonesChanged(agv.CorrelationId, agv.AgvStatus?.ZoneIds ?? []));
     }
@@ -1641,12 +1639,12 @@ public class AgvCommandHandler :
 
             if (fallbackSwitchPosition == null)
             {
-                _logger.LogError("{Command}: Cannot use fallback of LastNodeId to switch out {ChargingAgv} with {NonChargingAgv}", nameof(SwitchChargingAgvs), chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
+                _logger.LogError("{Command}: Cannot use fallback of LastNodeId to switch out {ChargingAgvCorrelationId} with {NonChargingAgvCorrelationId}", nameof(SwitchChargingAgvs), chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
                 await context.Publish(new SwitchChargingAgvsFailed(nonChargingAgvId, chargingAgvId));
                 return;
             }
 
-            _logger.LogInformation("Using fallback of LastNodeId {LastNodeId} to switch out {ChargingAgv} with {NonChargingAgv}", fallbackSwitchPosition, chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
+            _logger.LogInformation("Using fallback of LastNodeId {LastNodeId} to switch out {ChargingAgvCorrelationId} with {NonChargingAgvCorrelationId}", fallbackSwitchPosition, chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
 
             var groupCorrelationId = Guid.NewGuid();
             var actionGroup = new ActionGroup(
@@ -1668,7 +1666,7 @@ public class AgvCommandHandler :
     {
         if (!await _nodeStateRepository.ForceReserveNodeAsync(chargingNode, nonChargingAgv.CorrelationId))
         {
-            _logger.LogError("{Command}: Cannot reserve charger {Charger} to switch out {ChargingAgv} with {NonChargingAgv}", nameof(SwitchChargingAgvs), chargingNode, chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
+            _logger.LogError("{Command}: Cannot reserve charger {Charger} to switch out {ChargingAgvCorrelationId} with {NonChargingAgvCorrelationId}", nameof(SwitchChargingAgvs), chargingNode, chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
             return;
         }
 
@@ -1764,8 +1762,9 @@ public class AgvCommandHandler :
             return;
         }
 
-        List<AgvError> errors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
-        bool hasCargoError = errors.Any(e => e.IsCargoMismatchError());
+        IReadOnlyList<AgvError> activeErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
+        List<AgvError> updatedErrors = activeErrors.ToList();
+        bool hasCargoError = activeErrors.Any(e => e.IsCargoMismatchError());
         var position = _agvDb.Positions.GetPosition(agvCorrelationId);
 
         if (actionGroup.CheckLoadStateMatches(hasCargo, agvCorrelationId))
@@ -1775,8 +1774,8 @@ public class AgvCommandHandler :
             {
                 _logger.LogInformation("Removing cargo mismatch error for agv {AgvCorrelationId}, cargo state {HasCargo} matches order state", agvCorrelationId, hasCargo);
 
-                errors.RemoveAll(e => e.IsCargoMismatchError());
-                await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
+                updatedErrors.RemoveAll(e => e.IsCargoMismatchError());
+                await context.PublishSystemAgvErrorsAsync(agvCorrelationId, activeErrors, updatedErrors, position.AgvPosition);
             }
             return;
         }
@@ -1786,8 +1785,8 @@ public class AgvCommandHandler :
             return;
         }
         _logger.LogWarning("Agv {AgvCorrelationId} has cargo mismatch error, cargo state {HasCargo} does not match state of order {ActionGroupCorrelationId}", agvCorrelationId, hasCargo, actionGroup.CorrelationId);
-        errors.Add(new CargoMismatchError(agvCorrelationId, DateTime.UtcNow, hasCargo));
-        await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
+        updatedErrors.Add(new CargoMismatchError(agvCorrelationId, DateTime.UtcNow, hasCargo));
+        await context.PublishSystemAgvErrorsAsync(agvCorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }
 
     /// <summary>
@@ -1820,9 +1819,10 @@ public class AgvCommandHandler :
             return;
         }
 
-        List<AgvError> errors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
-        errors.Remove(errors.Single(e => e.IsQueueBlockingError()));
+        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        List<AgvError> updatedErrors = activeErrors.ToList();
+        updatedErrors.Remove(activeErrors.Single(e => e.IsQueueBlockingError()));
         var position = _agvDb.Positions.GetPosition(agvCorrelationId);
-        await context.Publish(new UpdateErrorStatus(agvCorrelationId, errors, position!.AgvPosition));
+        await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }
 }

@@ -19,6 +19,13 @@ public interface ICache<TKey, TValue>
     bool TryGet(TKey key, [MaybeNullWhen(false)] out TValue value);
 
     /// <summary>
+    /// Retrieves values from the cache that correspond to the specified keys.
+    /// </summary>
+    /// <param name="keys">The collection of keys to retrieve values for.</param>
+    /// <returns>An enumeration of values associated with the provided keys.</returns>
+    IEnumerable<TValue> GetValues(IEnumerable<TKey> keys);
+
+    /// <summary>
     /// Counts the number of cache entries that match the specified predicate.
     /// </summary>
     /// <param name="predicate">A function to test each element for a condition.</param>

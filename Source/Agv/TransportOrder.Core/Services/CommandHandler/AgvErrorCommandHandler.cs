@@ -17,7 +17,11 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// Provides handlers for agv error related commands.
 /// </summary>
 [UsedImplicitly]
-public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
+public class AgvErrorCommandHandler :
+    IConsumer<UpdateErrorStatus>,
+    IConsumer<AddSystemAgvErrors>,
+    IConsumer<UpdateSystemAgvErrors>,
+    IConsumer<ResolveSystemAgvError>
 {
     private readonly IAgvDb _agvDb;
     private readonly ILogger<AgvErrorCommandHandler> _logger;
@@ -29,31 +33,6 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
         _agvDb = agvDb;
         _logger = logger;
         _metricCollector = metricCollector;
-    }
-
-    /// <summary>
-    /// Handles the <see cref="UpdateErrorStatus"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
-    {
-        (var correlationId, List<AgvError> errors, var position) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-
-        IList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
-        List<AgvError> newErrors = errors.Where(e => !activeErrors.Any(e.IsSameError)).ToList();
-        LogErrors(newErrors, agv);
-
-        (bool errorChanged, List<AgvError> newActiveErrors, List<AgvError> resolvedErrors) = await _agvDb.Errors.AddOrUpdateAgvErrorStatus(errors, correlationId);
-        _logger.LogDebug("Received {Message} with {Errors} errors. Error changed: {ErrorChanged}", nameof(UpdateErrorStatus), errors, errorChanged);
-        if (errorChanged)
-        {
-            _metricCollector.CollectSafetyFieldViolationMetrics(agv.CorrelationId, newActiveErrors, resolvedErrors);
-            await context.Publish(new AgvErrorChanged(context.Message.CorrelationId, errors));
-        }
-        foreach (var error in newActiveErrors)
-        {
-            await context.Publish(new AgvErrorReceived(error, position, agv.SerialNumber));
-        }
     }
 
     private void LogErrors(List<AgvError> errors, Agv agv)
@@ -111,5 +90,67 @@ public class AgvErrorCommandHandler : IConsumer<UpdateErrorStatus>
                     { LogLabels.ErrorDescription, agvError.ErrorDescription }
                 });
         }
+    }
+
+    private async Task HandleErrorChangesAsync(IPublishEndpoint publishEndpoint, List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid correlationId, AgvPosition position)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        bool changed = newErrors.Count > 0 || resolvedErrors.Count > 0;
+        if (changed)
+        {
+            await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrors, resolvedErrors, correlationId);
+            LogErrors(newErrors, agv);
+            _metricCollector.CollectSafetyFieldViolationMetrics(correlationId, newErrors, resolvedErrors);
+            IReadOnlyList<AgvError> allErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+            await publishEndpoint.Publish(new AgvErrorChanged(correlationId, allErrors.ToList()));
+        }
+
+        foreach (var error in newErrors)
+        {
+            await publishEndpoint.Publish(new AgvErrorReceived(error, position, agv.SerialNumber));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
+    {
+        (var correlationId, List<AgvError> errors, var position) = context.Message;
+
+        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+
+        List<AgvError> newErrors = [];
+        List<AgvError> previousErrors = activeErrors.ToList();
+        List<AgvError> resolvedErrors = previousErrors.Where(p => !errors.Any(p.IsSameError) && p.Source != AgvErrorSource.System).ToList();
+
+        if (errors.Count != 0)
+        {
+            newErrors = errors.Where(e => !previousErrors.Any(e.IsSameError)).ToList();
+        }
+
+        await HandleErrorChangesAsync(context, newErrors, resolvedErrors, correlationId, position);
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AddSystemAgvErrors> context)
+    {
+        (var correlationId, List<AgvError> newErrors, var position) = context.Message;
+
+        await HandleErrorChangesAsync(context, newErrors, [], correlationId, position);
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<UpdateSystemAgvErrors> context)
+    {
+        (var correlationId, List<AgvError> errorsToAdd, List<AgvError> errorsToResolve, var position) = context.Message;
+
+        await HandleErrorChangesAsync(context, errorsToAdd, errorsToResolve, correlationId, position);
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<ResolveSystemAgvError> context)
+    {
+        var (correlationId, error, position) = context.Message;
+
+        await HandleErrorChangesAsync(context, [], [error], correlationId, position);
     }
 }
