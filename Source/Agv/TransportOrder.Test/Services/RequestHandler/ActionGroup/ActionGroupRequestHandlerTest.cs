@@ -179,11 +179,13 @@ public class ActionGroupRequestHandlerTest
             new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging)));
     }
 
-    [TestMethod]
-    public async Task Consume_TriggerActionGroupAbortion_ValidData_ActionGroupAbortionTriggered()
+    [DataRow(ActionState.Paused)]
+    [DataRow(ActionState.Started)]
+    [DataTestMethod]
+    public async Task Consume_TriggerActionGroupAbortion_ValidData_ActionGroupAbortionTriggered(ActionState actionState)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: actionState);
 
         ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()

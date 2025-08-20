@@ -92,9 +92,9 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         var correlationId = context.Message.CorrelationId;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
 
-        if (actionGroup.State != ActionGroupState.Started)
+        if (actionGroup.State != ActionGroupState.Started && actionGroup.State != ActionGroupState.Paused)
         {
-            throw new ActionGroupStateInvalidException(actionGroup, "Cannot abort action that are not in state 'Started'.");
+            throw new ActionGroupStateInvalidException(actionGroup, $"Cannot abort action groups that are in state '{actionGroup.State}'.");
         }
         IRequestClient<AbortActionGroup>? requestClient = context.CreateRequestClient<AbortActionGroup>(_bus);
         Response<Success, AbortActionGroupFailed> response = await requestClient.GetResponse<Success, AbortActionGroupFailed>(new AbortActionGroup(correlationId, context.Message.AbortReason));
