@@ -125,7 +125,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         ICollection<string> nodesToAvoid = await GetNodesToAvoid(agv.AgvStatus?.LastNodeId);
         
         //If e.g., lastNodeId from AGV was not correct, we check if AGV is at queue head
-        //and remove queue head node explicitly agein from nodes to avoid
+        //and remove queue head node explicitly again from nodes to avoid
         if ((await _queueManager.GetAgvsAtQueueHeads()).Contains(agv.CorrelationId))
         {
             var queueAgvIsIn = await _queueRepository.GetQueueForAgv(agv.CorrelationId);

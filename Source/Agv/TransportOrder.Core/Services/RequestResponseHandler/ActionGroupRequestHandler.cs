@@ -110,11 +110,11 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<TriggerActionGroupReset> context)
     {
-        var correlationId = context.Message.CorrelationId;
+        (var correlationId, bool keepAgv) = context.Message;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
 
         IRequestClient<ResetActionGroup>? requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
-        await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId));
+        await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId, keepAgv));
         await context.RespondAsync(new ActionGroupResetTriggered(actionGroup.CorrelationId));
     }
 

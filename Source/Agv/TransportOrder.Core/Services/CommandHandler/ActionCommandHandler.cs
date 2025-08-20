@@ -918,7 +918,7 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ResetActionGroup> context)
     {
-        var correlationId = context.Message.CorrelationId;
+        (var correlationId, bool keepAgv) = context.Message;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
         Guid? agvCorrelationId = actionGroup.AssignedAgv;
         var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started);
@@ -927,7 +927,7 @@ public class ActionCommandHandler :
             await context.Publish(new ActionAborted(agvCorrelationId.Value, _mapper.Map<MessageAgvAction>(action)));
         }
 
-        actionGroup.ResetActionGroup(!actionGroup.IsManual);
+        actionGroup.ResetActionGroup(!(actionGroup.IsManual || keepAgv));
         await _actionService.TryUpdateActionGroup(actionGroup);
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))

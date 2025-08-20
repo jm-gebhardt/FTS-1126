@@ -109,13 +109,15 @@ public class ActionGroupController : Controller
     /// <summary>
     /// Reset an action group, so that it can be picked by an agv again.
     /// </summary>
+    /// <param name="correlationId">The CorrelationId of the action group.</param>
+    /// <param name="keepAgv">Optional parameter if the same agv should be kept assigned to the action group. Defaults to false.</param>
     /// <response code="200">Ok</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/reset")]
-    public async Task<ActionResult> ResetActionGroup(Guid correlationId)
+    public async Task<ActionResult> ResetActionGroup(Guid correlationId, bool keepAgv = false)
     {
-        await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId));
+        await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId, keepAgv));
         return Ok();
     }
 

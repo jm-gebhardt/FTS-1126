@@ -248,7 +248,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup)
                 .WithFakeTriggeredResetAction()
                 .BuildAsync();
-        Response<ActionGroupResetTriggered> response = await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset(actionGroup.CorrelationId));
+        Response<ActionGroupResetTriggered> response = await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset(actionGroup.CorrelationId, false));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         await fixture.ShouldHavePublishedAsync<ResetActionGroup>();
     }
@@ -264,7 +264,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup)
                 .BuildAsync();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
-            await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset("Unknown".ToGuid())));
+            await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset("Unknown".ToGuid(), false)));
     }
 
     [TestMethod]

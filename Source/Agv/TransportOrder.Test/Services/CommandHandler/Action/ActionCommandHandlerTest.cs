@@ -1602,7 +1602,9 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ResetActionGroup_StartedPickDropActionGroup_PublishesActionAbortedActionGroupChangedRespondsSuccess()
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task Consume_ResetActionGroup_StartedPickDropActionGroup_PublishesActionAbortedActionGroupChangedRespondsSuccess(bool keepAgv)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.TryTransitionToBusy(true);
@@ -1613,7 +1615,7 @@ public class ActionCommandHandlerTest
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
         var expectedResetAction = actionGroup.Actions.First(a => a.State == ActionState.Started);
 
-        await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId, keepAgv));
 
         var abortedMessage = await fixture.GetFirstPublishedMessageAsync<ActionAborted>();
         abortedMessage.CorrelationId.ShouldBe(agv.CorrelationId);
@@ -1624,13 +1626,15 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
         await fixture.ShouldHavePublishedAsync<ActionGroupReassignedOrReset>();
         actionGroup.State.ShouldBe(ActionGroupState.Created);
-        actionGroup.AssignedAgv.ShouldBeNull();
+        actionGroup.AssignedAgv.ShouldBe(keepAgv ? agv.CorrelationId : null);
         actionGroup.StartedDate.ShouldBeNull();
         actionGroup.CompletedDate.ShouldBeNull();
     }
 
     [TestMethod]
-    public async Task Consume_ResetActionGroup_CompletedPickDropActionGroup_PublishesActionGroupChangedRespondsSuccess()
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task Consume_ResetActionGroup_CompletedPickDropActionGroup_PublishesActionGroupChangedRespondsSuccess(bool keepAgv)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.TryTransitionToBusy(false);
@@ -1640,7 +1644,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Drop);
 
-        await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId, keepAgv));
 
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
@@ -1649,7 +1653,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
 
         actionGroup.State.ShouldBe(ActionGroupState.Created);
-        actionGroup.AssignedAgv.ShouldBeNull();
+        actionGroup.AssignedAgv.ShouldBe(keepAgv ? agv.CorrelationId : null);
         actionGroup.StartedDate.ShouldBeNull();
         actionGroup.CompletedDate.ShouldBeNull();
     }
@@ -1662,7 +1666,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(actionGroup)
             .AddActionGroupTargetNodeType(actionGroup, AgvGraph.NodeType.Charge);
 
-        await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId));
+        await fixture.PublishMessageAsync(new ResetActionGroup(actionGroup.CorrelationId, false));
 
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();

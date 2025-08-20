@@ -327,7 +327,7 @@ public class AgvEventHandler :
                 if (!actionGroup.IsManual && agvMode.AssignedActionGroupPolicy == AssignedActionGroupPolicy.Reset)
                 {
                     _logger.LogDebug("Resetting action group {CorrelationId}", actionGroup.CorrelationId);
-                    await context.Publish(new ResetActionGroup(actionGroup.CorrelationId));
+                    await context.Publish(new ResetActionGroup(actionGroup.CorrelationId, false));
                 }
 
                 if (actionGroup.IsManual && agvMode.CancelManualActions)
