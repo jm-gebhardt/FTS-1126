@@ -132,7 +132,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             g.IsManual,
             g.HasPriority,
             g.IsQueued,
-            g.Reasons
+            g.Reasons,
+            g.DoNotPause
         )).ToList();
 
         return result;
@@ -179,7 +180,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     actionGroup.IsManual,
                     actionGroup.HasPriority,
                     actionGroup.IsQueued,
-                    actionGroup.Reasons
+                    actionGroup.Reasons,
+                    actionGroup.DoNotPause
                 );
             });
 
@@ -267,7 +269,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.IsManual,
             actionGroup.HasPriority,
             actionGroup.IsQueued,
-            actionGroup.Reasons
+            actionGroup.Reasons,
+            actionGroup.DoNotPause
         );
 
         return result;
@@ -307,7 +310,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.IsManual,
             actionGroup.HasPriority,
             actionGroup.IsQueued,
-            actionGroup.Reasons
+            actionGroup.Reasons,
+            actionGroup.DoNotPause
         );
     }
 
@@ -345,7 +349,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.IsManual,
             actionGroup.HasPriority,
             actionGroup.IsQueued,
-            actionGroup.Reasons
+            actionGroup.Reasons,
+            actionGroup.DoNotPause
         );
     }
 

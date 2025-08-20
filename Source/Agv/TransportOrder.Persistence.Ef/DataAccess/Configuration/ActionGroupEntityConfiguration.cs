@@ -22,6 +22,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.HasIndex(g => g.AssignedAgv);
         builder.Property(e => e.IsQueued);
         builder.Property(e => e.AssignedAgv);
+        builder.Property(e => e.DoNotPause);
         builder.Property(e => e.HandlingUnit).HasMaxLength(DbStringLimits.OrderId);
         builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
 

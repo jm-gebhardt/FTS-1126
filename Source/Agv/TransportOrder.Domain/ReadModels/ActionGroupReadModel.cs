@@ -22,6 +22,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="HasPriority">The priority flag.</param>
 /// <param name="IsQueued">True, if the action group is queued.</param>
 /// <param name="Reasons">Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled.</param>
+/// <param name="DoNotPause">True, if the action group is an automatically created and short-lived.</param>
 public record ActionGroupReadModel(
     Guid CorrelationId,
     string OrderId,
@@ -37,4 +38,5 @@ public record ActionGroupReadModel(
     [UsedImplicitly] bool IsManual,
     [UsedImplicitly] bool HasPriority,
     [UsedImplicitly] bool IsQueued,
-    List<Reason> Reasons);
+    List<Reason> Reasons,
+    bool DoNotPause);

@@ -80,7 +80,8 @@ public static class AgvActionGenerator
         string? targetNodeId = null,
         ActionState actionState = ActionState.Created,
         Guid? assignedAgv = null,
-        DateTime? completedDate = null
+        DateTime? completedDate = null,
+        bool doNotPause = false
     )
     {
         var groupId = Guid.NewGuid();
@@ -93,7 +94,7 @@ public static class AgvActionGenerator
             parkAction.Nodes = [targetNodeId];
         }
         parkAction.UpdateActionState(actionState);
-        var actionGroup = new ActionGroup(groupId, string.Empty, [parkAction], ActionGroupCreator.TransportOrder) { AssignedAgv = assignedAgv };
+        var actionGroup = new ActionGroup(groupId, string.Empty, [parkAction], ActionGroupCreator.TransportOrder, doNotPause: doNotPause) { AssignedAgv = assignedAgv };
         actionGroup.UpdateActionGroupState();
         if (completedDate != null)
         {

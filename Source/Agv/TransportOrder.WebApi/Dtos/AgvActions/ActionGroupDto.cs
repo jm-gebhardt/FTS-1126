@@ -44,6 +44,14 @@ public record ActionGroupDto : DatedMessage
     public DateTime? CompletedDate { get; init; }
 
     /// <summary>
+    /// Whether this action group is only relevant in the current system context.
+    /// Action groups with this flag will be canceled/aborted in certain mode switches
+    /// and should be of a type to be recreated automatically when the mode is switched back if they are still relevant.
+    /// E.g. Queue entry action groups will be recreated when a queue is still under capacity.
+    /// </summary>
+    public bool DoNotPause { get; }
+
+    /// <summary>
     /// The estimated completion date, which is calculated by the system.
     /// </summary>
     public DateTime? EstimatedCompletionDate { get; init; }

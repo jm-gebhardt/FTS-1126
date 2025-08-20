@@ -1815,13 +1815,20 @@ public class AgvCommandHandler :
 
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+            _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(RemoveAgvFromQueue), agv.CorrelationId);
             return;
         }
 
         IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         List<AgvError> updatedErrors = activeErrors.ToList();
-        updatedErrors.Remove(activeErrors.Single(e => e.IsQueueBlockingError()));
+        var blockingError = updatedErrors.SingleOrDefault(e => e.IsQueueBlockingError());
+
+        if (blockingError == null)
+        {
+            return;
+        }
+
+        updatedErrors.Remove(blockingError);
         var position = _agvDb.Positions.GetPosition(agvCorrelationId);
         await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }

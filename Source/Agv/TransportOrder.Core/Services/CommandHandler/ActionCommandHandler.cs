@@ -411,7 +411,8 @@ public class ActionCommandHandler :
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder,
             hasPriority: false,
-            isQueued: true
+            isQueued: true,
+            doNotPause: true
         );
 
         bool agvModeProhibitsCreation = agv.IsLocked || !agv.CanStartAutomaticAction || agv.HasPendingModeSwitch;
@@ -455,7 +456,8 @@ public class ActionCommandHandler :
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder,
             hasPriority: true,
-            isQueued: true
+            isQueued: true,
+            doNotPause: true
         );
 
         bool agvModeProhibitsCreation = agv.IsLocked || !agv.CanStartAutomaticAction || agv.HasPendingModeSwitch;
@@ -572,7 +574,8 @@ public class ActionCommandHandler :
                 creator: initiator,
                 isManual: triggeredByWebApi,
                 hasPriority: triggeredByWebApi,
-                isQueued: true
+                isQueued: true,
+                doNotPause: !triggeredByWebApi
             );
 
             if (!await _actionGroupRepository.AddAsync(actionGroup))
@@ -829,6 +832,12 @@ public class ActionCommandHandler :
         }
 
         await context.Publish(new ActionAborted(agv.CorrelationId, _mapper.Map<MessageAgvAction>(action)));
+
+        if (agv.HasPendingModeSwitch)
+        {
+            await context.Publish(new SwitchMode(agv.CorrelationId));
+        }
+
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId));
         await context.RespondAsync(new Success());

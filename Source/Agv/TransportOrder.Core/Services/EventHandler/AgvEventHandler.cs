@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -56,6 +57,7 @@ public class AgvEventHandler :
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IAgvDb _agvDb;
     private readonly IQueueRepository _queueRepository;
+    private readonly IQueueManager _queueManager;
 
     /// <inheritdoc cref="AgvEventHandler"/>
     public AgvEventHandler(
@@ -64,6 +66,7 @@ public class AgvEventHandler :
         IAgvDb agvDb,
         IChargingPointManager chargingPointManager,
         IQueueRepository queueRepository,
+        IQueueManager queueManager,
         ILogger<AgvEventHandler> logger)
     {
         _actionGroupRepository = actionGroupRepository;
@@ -71,6 +74,7 @@ public class AgvEventHandler :
         _agvDb = agvDb;
         _chargingPointManager = chargingPointManager;
         _queueRepository = queueRepository;
+        _queueManager = queueManager;
         _logger = logger;
     }
 
@@ -315,13 +319,33 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvModeChangePending> context)
     {
         var (agvCorrelationId, agvMode) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
         if (agvMode.PendingType is ModeType.Normal)
         {
             return;
         }
         ICollection<ActionGroup> actionGroups = await _actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
+
+        ICollection<Guid> queueHeadAgvs = await _queueManager.GetAgvsAtQueueHeads();
+
+        bool needsToBeRemovedFromQueue = agv.IsQueueing || queueHeadAgvs.Contains(agv.CorrelationId);
+
+        if (agvMode is { PendingType: ModeType.Maintenance or ModeType.Locked } && needsToBeRemovedFromQueue)
+        {
+            await context.Publish(new RemoveAgvFromQueue(agvCorrelationId));
+        }
+
         foreach (var actionGroup in actionGroups)
         {
+            if (agvMode is { PendingType: ModeType.Maintenance or ModeType.Locked } && actionGroup.DoNotPause)
+            {
+                _logger.LogDebug("Cancelling/Aborting action group {CorrelationId} with do not pause flag during mode change to mode {mode}", actionGroup.CorrelationId, agvMode.PendingType);
+                await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
+                continue;
+            }
+
             if (actionGroup.State == ActionGroupState.Created)
             {
                 if (!actionGroup.IsManual && agvMode.AssignedActionGroupPolicy == AssignedActionGroupPolicy.Reset)

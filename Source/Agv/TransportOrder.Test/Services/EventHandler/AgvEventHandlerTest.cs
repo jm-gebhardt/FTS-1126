@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -368,10 +369,38 @@ public class AgvEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], []);
         var fixture = new AgvEventHandlerTestFixture()
-            .WithActionGroups([actionGroup]);
+            .WithActionGroups([actionGroup])
+            .WithAgv(agv);
 
         await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
         (await fixture.TestHarness.Published.Any<PauseActionGroup>()).ShouldBe(shouldPublish);
+    }
+
+    [DataRow(CurrentActionGroupPolicy.FinishActionGroup, false, false)]
+    [DataRow(CurrentActionGroupPolicy.FinishAction, false, false)]
+    [DataRow(CurrentActionGroupPolicy.Pause, false, false)]
+    [DataRow(CurrentActionGroupPolicy.FinishActionGroup, true, false)]
+    [DataRow(CurrentActionGroupPolicy.FinishAction, true, false)]
+    [DataRow(CurrentActionGroupPolicy.Pause, true, false)]
+    [DataRow(CurrentActionGroupPolicy.FinishActionGroup, false, true)]
+    [DataRow(CurrentActionGroupPolicy.FinishAction, false, true)]
+    [DataRow(CurrentActionGroupPolicy.Pause, false, true)]
+    [DataTestMethod]
+    public async Task Consume_AgvModeChangePending_StartedEphemeralActionGroup_PublishesCancelOrAbortActionGroup(CurrentActionGroupPolicy policy, bool isQueueHead, bool isQueueing)
+    {
+        var mode = new AgvMode(ModeType.Normal);
+        mode.PrepareSwitch(ModeType.Maintenance, currentActionPolicy: policy);
+        var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
+        agv.IsQueueing = isQueueing;
+        var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agv.CorrelationId, doNotPause: true);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], []);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithActionGroups([actionGroup])
+            .WithAgv(agv, isQueueHead);
+
+        await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
+        (await fixture.TestHarness.Published.Any<CancelOrAbortActionGroup>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<RemoveAgvFromQueue>()).ShouldBe(isQueueHead || isQueueing);
     }
 
     [DataRow(AssignedActionGroupPolicy.LeaveAssigned, false)]
@@ -384,7 +413,8 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvEventHandlerTestFixture()
-            .WithActionGroups([actionGroup]);
+            .WithActionGroups([actionGroup])
+            .WithAgv(agv);
 
         await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
         (await fixture.TestHarness.Published.Any<ResetActionGroup>()).ShouldBe(shouldPublish);
@@ -401,7 +431,8 @@ public class AgvEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.IsManual = true;
         var fixture = new AgvEventHandlerTestFixture()
-            .WithActionGroups([actionGroup]);
+            .WithActionGroups([actionGroup])
+            .WithAgv(agv);
 
         await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
         (await fixture.TestHarness.Published.Any<CancelActionGroup>()).ShouldBe(cancelManualActions);
@@ -416,7 +447,8 @@ public class AgvEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.IsManual = true;
         var fixture = new AgvEventHandlerTestFixture()
-            .WithActionGroups([actionGroup]);
+            .WithActionGroups([actionGroup])
+            .WithAgv(agv);
 
         await fixture.PublishMessageAsync(new AgvModeChangePending(agv.CorrelationId, agv.Mode));
         await fixture.ShouldHavePublishedAsync<SwitchMode>();

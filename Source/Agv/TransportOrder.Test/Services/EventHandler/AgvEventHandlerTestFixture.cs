@@ -32,6 +32,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
+    private readonly Mock<IQueueManager> _queueManager = new();
 
     private readonly Mock<IAgvDb> _agvDb = new();
 
@@ -53,6 +54,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         collection.AddTransient(_ => _nodeStateRepository.Object);
         collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _chargingPointManager.Object);
+        collection.AddTransient(_ => _queueManager.Object);
         return this;
     }
 
@@ -73,9 +75,10 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
           return this;
     }
     
-    public AgvEventHandlerTestFixture WithAgv(Agv agv)
+    public AgvEventHandlerTestFixture WithAgv(Agv agv, bool isOnQueueHead = false)
     {
         _agvDb.AddAgvs(new List<Agv> { agv });
+        _queueManager.Setup(x => x.GetAgvsAtQueueHeads()).ReturnsAsync(isOnQueueHead ? [agv.CorrelationId] : []);
         return this;
     }
 

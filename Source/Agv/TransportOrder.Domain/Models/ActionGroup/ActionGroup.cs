@@ -52,6 +52,14 @@ public class ActionGroup
     public ActionGroupState State { get; set; } = ActionGroupState.Created;
 
     /// <summary>
+    /// Whether this action group is only relevant in the current system context.
+    /// Action groups with this flag will be canceled/aborted in certain mode switches
+    /// and should be of a type to be recreated automatically when the mode is switched back if they are still relevant.
+    /// E.g. Queue entry action groups will be recreated when a queue is still under capacity.
+    /// </summary>
+    public bool DoNotPause { get; }
+
+    /// <summary>
     /// The first action to be executed.
     /// </summary>
     public AgvAction? FirstNotStartedAction => Actions.FirstOrDefault(a => a is { State: ActionState.Created, ShouldSkip: false });
@@ -133,7 +141,7 @@ public class ActionGroup
     public List<Reason> Reasons { get; set; } = new();
 
     /// <inheritdoc cref="ActionGroup"/>
-    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, bool isQueued = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, bool isQueued = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false, bool doNotPause = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
@@ -142,6 +150,7 @@ public class ActionGroup
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
         Actions = actions.ToList();
         Creator = creator;
+        DoNotPause = doNotPause;
     }
 
     /// <summary>

@@ -117,7 +117,8 @@ public class QueueCommandHandler(
             actions,
             assignedAgv: agvCorrelationId,
             isManual: true, // ensure agv escapes the queue
-            creator: ActionGroupCreator.TransportOrder
+            creator: ActionGroupCreator.TransportOrder,
+            doNotPause: true
         );
         await context.Publish(new QueueActionGroup(actionGroup, false));
     }
