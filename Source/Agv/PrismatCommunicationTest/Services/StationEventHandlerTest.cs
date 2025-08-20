@@ -157,30 +157,30 @@ public class StationEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consumer_FreeStation_ValidData_PublishesRemoveAgvFromStation()
+    public async Task Consumer_FreeStationOccupancy_ValidData_PublishesRemoveAgvFromStation()
     {
         var station = new Station("source", "target") { Node = "node" };
         var agv = Guid.NewGuid();
         using var fixture = new StationEventHandlerTestFixture()
             .WithOccupiedStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new FreeStation(station.Node!, agv));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy(station.Node!, agv));
 
-        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
     }
 
     [TestMethod]
-    public async Task Consumer_FreeStation_AgvOccupiesDifferentStation_DoesNotPublishRemoveAgvFromStation()
+    public async Task Consumer_FreeStationOccupancy_AgvOccupiesDifferentStation_DoesNotPublishRemoveAgvFromStation()
     {
         var station = new Station("source", "target") { Node = "node" };
         var agv = Guid.NewGuid();
         using var fixture = new StationEventHandlerTestFixture()
             .WithOccupiedStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new FreeStation("different node", agv));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy("different node", agv));
 
-        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 

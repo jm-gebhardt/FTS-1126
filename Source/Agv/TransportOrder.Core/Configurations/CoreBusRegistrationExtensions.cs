@@ -194,7 +194,7 @@ public static class CoreBusRegistrationExtensions
                 });
             });
             var nodePartitioner = c.CreatePartitioner(PartitionCount);
-            c.Message<FreeStation>(x =>
+            c.Message<FreeStationOccupancy>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station));
             c.Message<OccupyStation>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station));

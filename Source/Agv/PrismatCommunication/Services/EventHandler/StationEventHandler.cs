@@ -24,7 +24,7 @@ public class StationEventHandler(
     IConsumer<StationLocked>,
     IConsumer<StationUnlocked>,
     IConsumer<AgvLeftStation>,
-    IConsumer<FreeStation>,
+    IConsumer<FreeStationOccupancy>,
     IConsumer<UnblockStation>,
     IConsumer<OccupyStation>
 {
@@ -70,9 +70,9 @@ public class StationEventHandler(
     }
 
     /// <summary>
-    /// Handles the <see cref="FreeStation"/> message.
+    /// Handles the <see cref="FreeStationOccupancy"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<FreeStation> context)
+    public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var station = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);

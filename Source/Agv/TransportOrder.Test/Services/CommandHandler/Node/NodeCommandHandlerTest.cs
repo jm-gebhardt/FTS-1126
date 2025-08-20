@@ -316,7 +316,7 @@ public class NodeCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_FreeStation_ValidData_FreeNodeCalled()
+    public async Task Consume_FreeStationOccupancy_ValidData_FreeNodeCalled()
     {
         var agv = Guid.NewGuid();
         const string nodeId = "PS01";
@@ -324,14 +324,14 @@ public class NodeCommandHandlerTest
             .WithNodeState(new NodeLock(nodeId, NodeLockState.Occupied, false, agv, DateTime.UtcNow))
             .WithAnyStation();
 
-        await fixture.PublishMessageAsync<FreeStation, string>(new FreeStation(nodeId, agv));
+        await fixture.PublishMessageAsync<FreeStationOccupancy, string>(new FreeStationOccupancy(nodeId, agv));
 
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
     [TestMethod]
-    public async Task Consume_FreeStation_StationNotReservedOrOccupied_FreeNodeNotCalled()
+    public async Task Consume_FreeStationOccupancy_StationNotReservedOrOccupied_FreeNodeNotCalled()
     {
         var agv = Guid.NewGuid();
         const string nodeId = "APL1";
@@ -339,7 +339,7 @@ public class NodeCommandHandlerTest
             .WithNodeState(null)
             .WithAnyStation();
 
-        await fixture.PublishMessageAsync<FreeStation, string>(new FreeStation(nodeId, agv));
+        await fixture.PublishMessageAsync<FreeStationOccupancy, string>(new FreeStationOccupancy(nodeId, agv));
 
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<string>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();

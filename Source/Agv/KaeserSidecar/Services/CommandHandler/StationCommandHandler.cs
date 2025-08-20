@@ -17,7 +17,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 [UsedImplicitly]
 public class StationCommandHandler(IStationRepository stationRepository, ILogger<StationCommandHandler> logger, KaeserGraphConfiguration configuration) :
     IConsumer<OccupyStation>,
-    IConsumer<FreeStation>,
+    IConsumer<FreeStationOccupancy>,
     IConsumer<SolveResourceErrorsReceived>,
     IConsumer<StationUnlocked>,
     IConsumer<UnblockStation>
@@ -33,24 +33,24 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
             logger.LogInformation("Ignoring station occupancy for agv {Agv} at non WE station {Station} ", agvCorrelationId, station);
             return;
         }
-        logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station);
+        logger.LogInformation("{Message}: Adding agv {Agv} to station {Station}", nameof(OccupyStation), agvCorrelationId, station);
         await stationRepository.OccupyStation(station, agvCorrelationId);
     }
 
     /// <summary>
-    /// Handles the <see cref="FreeStation"/> command.
+    /// Handles the <see cref="FreeStationOccupancy"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<FreeStation> context)
+    public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         string station = context.Message.Station;
         var occupancy = await stationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         if (occupancy?.Station != station)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station {Station} at all, ignoring FreeStation command", agvCorrelationId, station);
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station {Station} at all, ignoring FreeStationOccupancy command", agvCorrelationId, station);
             return;
         }
-        logger.LogInformation("Removing agv {Agv} from station: {Station}", agvCorrelationId, station);
+        logger.LogInformation("{Message}: Removing agv {Agv} from station: {Station}", nameof(FreeStationOccupancy), agvCorrelationId, station);
 
         await stationRepository.FreeStation(occupancy.Station, agvCorrelationId);
     }
@@ -68,7 +68,8 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         {
             return;
         }
-        await context.Publish(new FreeStation(occupancy.Station, agvCorrelationId));
+        logger.LogInformation("{Message}: Removing agv {Agv} from station: {Station}", nameof(SolveResourceErrorsReceived), agvCorrelationId, occupancy.Station);
+        await context.Publish(new FreeStationOccupancy(occupancy.Station, agvCorrelationId));
     }
 
     /// <summary>
@@ -81,7 +82,7 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         {
             return;
         }
-        logger.LogInformation("Requesting jam state for unlocked station {Station}", jamStateStation);
+        logger.LogInformation("{Message}: Requesting jam state for unlocked station {Station}", nameof(StationUnlocked), jamStateStation);
         await context.Publish(new RequestJamState(jamStateStation));
     }
 

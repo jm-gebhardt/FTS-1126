@@ -157,7 +157,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
             ICollection<Agv> infiniteChargingAgvs = await agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel([agvCorrelationId.Value]);
             if (infiniteChargingAgvs.Count > 0 && actionGroup.IsQueued)
             {
-                logger.LogInformation("New queued action group {ActionGroupCorrelationId} was created for infinitely charging agv with max charge up level {AgvCorrelationId}, aborting charge action", actionGroup.CorrelationId, actionGroup.AssignedAgv);
+                logger.LogInformation("New queued action group {ActionGroupCorrelationId} was created for infinitely charging agv {AgvCorrelationId} with battery level above minimum charge up level, aborting charge action", actionGroup.CorrelationId, actionGroup.AssignedAgv);
                 await context.Publish(new AbortChargeAction(agvCorrelationId.Value));
             }
             await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));

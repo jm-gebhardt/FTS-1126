@@ -30,7 +30,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        var freeStation = await fixture.GetFirstPublishedMessageAsync<FreeStation>();
+        var freeStation = await fixture.GetFirstPublishedMessageAsync<FreeStationOccupancy>();
         freeStation.Station.ShouldBe(station);
         await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
         fixture.VerifyActionDequeued(actionGroup.Actions[0].CorrelationId, Times.Never());
@@ -52,7 +52,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldHavePublishedAsync<AgvStartedPick>();
-        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
     }
 
     [TestMethod]
@@ -89,7 +89,7 @@ public class AgvActionCommandHandlerTest
             .WithActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
-        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
     }
 
     [TestMethod]
@@ -105,7 +105,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
     }
 
     [TestMethod]
@@ -120,7 +120,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
     }
 
     [TestMethod]
@@ -136,7 +136,7 @@ public class AgvActionCommandHandlerTest
 
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
-        await fixture.ShouldNotHavePublishedAsync<FreeStation>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
     }
 
     [TestMethod]
@@ -326,6 +326,6 @@ public class AgvActionCommandHandlerTest
             .WithActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new ActionAborted(action.CorrelationId, abortedAction));
-        await fixture.ShouldHavePublishedAsync<FreeStation>();
+        await fixture.ShouldHavePublishedAsync<FreeStationOccupancy>();
     }
 }

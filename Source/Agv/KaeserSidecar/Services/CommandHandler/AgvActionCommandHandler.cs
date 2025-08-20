@@ -44,11 +44,11 @@ public class AgvActionCommandHandler(
             return;
         }
 
-        logger.LogInformation("Handling start of action {CorrelationId} for agv {AgvCorrelationId}", action.CorrelationId, agvCorrelationId);
+        logger.LogInformation("Handling start of {ActionType} action {CorrelationId} for agv {AgvCorrelationId}", action.ActionType, action.CorrelationId, agvCorrelationId);
         var lastFinishedAction = await transportOrderDb.ActionGroups.GetLastCompletedActionAsync(agvCorrelationId);
         ICollection<string> nodes = action.Nodes;
 
-        logger.LogInformation("Nodes of action: {Nodes}", string.Join(",", nodes));
+        logger.LogInformation("Nodes of {ActionType} action: {Nodes}", action.ActionType, string.Join(",", nodes));
         //start node of current order is assumed to be the target node of last completed action of this AGV
         string? startNode = lastFinishedAction?.Target.NodeId;
         if (startNode != null && !startNode.Equals(nodes.FirstOrDefault()))
@@ -57,12 +57,12 @@ public class AgvActionCommandHandler(
         }
         if (startNode == null)
         {
-            logger.LogWarning("Cannot determine start node for action {ActionCorrelationId} has no start node. Trying to get via node list", action.CorrelationId);
+            logger.LogWarning("Cannot determine start node for {ActionType} action {ActionCorrelationId} has no start node. Trying to get via node list", action.ActionType, action.CorrelationId);
 
             startNode = nodes.FirstOrDefault();
             if (startNode == null)
             {
-                logger.LogWarning("Cannot finally determine start node for action {ActionCorrelationId}", action.CorrelationId);
+                logger.LogWarning("Cannot finally determine start node for {ActionType} action {ActionCorrelationId}", action.ActionType, action.CorrelationId);
                 return;
             }
         }
@@ -74,13 +74,18 @@ public class AgvActionCommandHandler(
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
             if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
             {
-                logger.LogInformation("Agv {AgvCorrelationId} started pick {ActionCorrelationId} at station {Station}", agvCorrelationId, action.CorrelationId, targetStation);
+                logger.LogInformation("Agv {AgvCorrelationId} started {ActionType} {ActionCorrelationId} at station {Station}", agvCorrelationId, action.ActionType, action.CorrelationId, targetStation);
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
                 return;
             }
         }
-        logger.LogInformation("Agv {AgvCorrelationId} started action {ActionCorrelationId} at station {Station}", agvCorrelationId, action.CorrelationId, startNode);
-        await context.Publish(new FreeStation(startNode, agvCorrelationId));
+        if (!actionGroup.IsChargingOrder || (actionGroup.IsChargingOrder && action.Nodes.Count > 1))
+        {
+            // Do not free station when charge action starts at same node as the move to charger action ended or if AGV starts charge action group at target charger.
+            logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, free station",
+                nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, startNode);
+            await context.Publish(new FreeStationOccupancy(startNode, agvCorrelationId));
+        }
     }
 
     /// <summary>
@@ -130,8 +135,10 @@ public class AgvActionCommandHandler(
         string targetNodeId = action.Target.NodeId!;
         if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _) || actionGroup.IsManual)
         {
-            // Only publish for non-WE stations for automatic action groups, as We stations are occupied already during target selection
+            // Only publish for non-WE stations for automatic action groups, as WE stations are occupied already during target selection
             // For manual actions publish also for WE stations
+            logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} action {ActionId} for action group {ActionGroupCorrelationId}, occupying station {Station}",
+                nameof(HandleActionCompletion), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, targetNodeId);
             await context.Publish(new OccupyStation(targetNodeId, agvCorrelationId));
         }
 
@@ -213,8 +220,8 @@ public class AgvActionCommandHandler(
             // If the station is a conveyor station, we have  already occupied it during the target selection
             return;
         }
-        logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}, occupying station {Station}",
-            agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, station);
+        logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}, occupying station {Station}",
+            nameof(ActionGroupCompleted), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, station);
         await context.Publish(new OccupyStation(station, agvCorrelationId));
     }
 
@@ -234,11 +241,12 @@ public class AgvActionCommandHandler(
 
         if (agv == null)
         {
-            logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} to handle action completion", action.CorrelationId, action.ParentId);
+            logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} or no AGV assigned to handle action aborted", action.CorrelationId, action.ParentId);
             return;
         }
 
-        logger.LogInformation("Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it", action.CorrelationId, action.CorrelationId, targetNodeId);
-        await context.Publish(new FreeStation(targetNodeId, (Guid) agv));
+        logger.LogInformation("{Message}: Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it",
+            nameof(ActionAborted), action.CorrelationId, action.CorrelationId, targetNodeId);
+        await context.Publish(new FreeStationOccupancy(targetNodeId, (Guid) agv));
     }
 }

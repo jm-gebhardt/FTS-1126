@@ -34,7 +34,7 @@ public class NodeCommandHandler(
     IConsumer<ClearNodesFromAgv>,
     IConsumer<SetNodeApproachingProperties>,
     IConsumer<InitializeNodeApproachingProperties>,
-    IConsumer<FreeStation>, 
+    IConsumer<FreeStationOccupancy>, 
     IConsumer<OccupyStation>,
     IConsumer<UnblockStation>,
     IConsumer<StationReserved>
@@ -95,7 +95,7 @@ public class NodeCommandHandler(
     public async Task Consume(ConsumeContext<UpdateNodeOccupancy> context)
     {
         (var agvCorrelationId, string? oldLastNodeId, string? newLastNodeId) = context.Message;
-        logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(UpdateNodeOccupancy), agvCorrelationId, agvCorrelationId);
+        logger.LogTrace("{MessageType} for AGV {CorrelationId} received", nameof(UpdateNodeOccupancy), agvCorrelationId);
 
         ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
         var oldLastNode = nodeLocksForAgv.SingleOrDefault(n => n.NodeId == oldLastNodeId);
@@ -123,12 +123,20 @@ public class NodeCommandHandler(
             }
         }
 
-        if (newLastNode != null && newLastNode.IsReservedForAgv(agvCorrelationId))
+        if (newLastNode != null)
         {
-            logger.LogWarning("Setting {NodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
-            await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
-            await PublishNodeStateChange(context, newLastNodeId!);
-            nodeLocksForAgv.Remove(newLastNode);
+            if (newLastNode.IsReservedForAgv(agvCorrelationId))
+            {
+                logger.LogWarning("Setting {NodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
+                await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
+                await PublishNodeStateChange(context, newLastNodeId!);
+                nodeLocksForAgv.Remove(newLastNode);
+            }
+            if (newLastNode.IsOccupiedByAgv(agvCorrelationId))
+            {
+                logger.LogWarning("{NodeToLock} already occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
+                nodeLocksForAgv.Remove(newLastNode);
+            }
         }
 
         if (nodeLocksForAgv.IsNullOrEmpty())
@@ -234,9 +242,9 @@ public class NodeCommandHandler(
     }
 
     /// <summary>
-    /// Handles the <see cref="FreeStation"/> command.
+    /// Handles the <see cref="FreeStationOccupancy"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<FreeStation> context)
+    public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
         string stationName = context.Message.Station;
         var nodeState = await nodeStateRepository.GetNodeStateAsync(stationName);

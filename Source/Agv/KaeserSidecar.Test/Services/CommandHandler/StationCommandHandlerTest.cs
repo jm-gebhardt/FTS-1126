@@ -20,9 +20,9 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithOccupancies((1, agvCorrelationId));
 
-        await fixture.TestHarness.Bus.Publish(new FreeStation("WP-8", agvCorrelationId));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy("WP-8", agvCorrelationId));
 
-        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
 
         var occupancyAfter = await fixture.StationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         occupancyAfter.ShouldNotBeNull();
@@ -37,9 +37,9 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithOccupancies((1, agvCorrelationId));
 
-        await fixture.TestHarness.Bus.Publish(new FreeStation(fixture.Occupancies[0].Station, agvCorrelationId));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy(fixture.Occupancies[0].Station, agvCorrelationId));
 
-        await fixture.ShouldHaveConsumedAsync<FreeStation>();
+        await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
 
         var occupancyAfter = await fixture.StationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         occupancyAfter.ShouldBeNull();
@@ -73,7 +73,7 @@ public class StationCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<SolveResourceErrorsReceived>();
 
-        (await fixture.TestHarness.Published.Any<FreeStation>()).ShouldBeTrue();
+        (await fixture.TestHarness.Published.Any<FreeStationOccupancy>()).ShouldBeTrue();
     }
 
     [TestMethod]
