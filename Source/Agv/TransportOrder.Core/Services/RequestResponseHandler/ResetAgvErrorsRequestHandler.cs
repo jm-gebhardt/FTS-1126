@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.MassTransit;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using JetBrains.Annotations;
@@ -75,11 +76,11 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
             return;
         }
 
-        // errors to reset are specified
+        List<AgvError> errorsToReset;
         if (errorIdsToReset.Count != 0)
         {
-            // but only try to reset active ones
-            List<AgvError> errorsToReset = activeErrors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).ToList();
+            // only reset specified active errors
+            errorsToReset = activeErrors.Where(error => errorIdsToReset.Contains(error.CorrelationId)).ToList();
             if (errorsToReset.Any(e => e.IsQueueBlockingError()))
             {
                 _logger.LogInformation("Queue blocking error reset via API for agv {AgvCorrelationId}", correlationId);
@@ -91,13 +92,33 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
                 return;
             }
         }
+        else
+        {
+            // reset all active errors
+            errorsToReset = activeErrors.ToList();
+        }
 
         try
         {
+            List<IGrouping<AgvErrorSource, AgvError>> errorsBySource = errorsToReset.GroupBy(e => e.Source).ToList();
             await _agvErrorChangedAwaiter.WaitAsync(correlationId,
                 errorChange => AreAllErrorsResolved(errorIdsToReset, errorChange),
                 cancellationToken,
-                executeAfterListeningTask: async () => { await _bus.Publish(new Common.Messages.AgvManagement.Commands.ResetAgvErrors(correlationId, errorIdsToReset), cancellationToken); });
+                executeAfterListeningTask: async () =>
+                {
+                    foreach (IGrouping<AgvErrorSource, AgvError> errorGroup in errorsBySource)
+                    {
+                        if (errorGroup.Key == AgvErrorSource.System)
+                        {
+                            await _bus.Publish(new ResolveSystemAgvError(correlationId, errorGroup.ToList()), cancellationToken);
+                        }
+                        else
+                        {
+                            await _bus.Publish(new Common.Messages.AgvManagement.Commands.ResetAgvErrors(correlationId, errorGroup.Select(e => e.CorrelationId).ToList()), cancellationToken);
+                        }
+                    }
+                },
+                checkContinuouslyUntilSuccess: errorsBySource.Count > 1);
 
             int numberOfResetErrors = errorIdsToReset.Count == 0 ? activeErrors.Count : errorIdsToReset.Count;
             await context.RespondAsync(new ResetAgvErrorsResult($"{numberOfResetErrors} error{(numberOfResetErrors == 1 ? "" : "s")} were reset successfully."));

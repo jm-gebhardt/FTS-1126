@@ -92,7 +92,7 @@ public class AgvErrorCommandHandler :
         }
     }
 
-    private async Task HandleErrorChangesAsync(IPublishEndpoint publishEndpoint, List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid correlationId, AgvPosition position)
+    private async Task HandleErrorChangesAsync(IPublishEndpoint publishEndpoint, List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid correlationId, AgvPosition? position)
     {
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         bool changed = newErrors.Count > 0 || resolvedErrors.Count > 0;
@@ -107,6 +107,7 @@ public class AgvErrorCommandHandler :
 
         foreach (var error in newErrors)
         {
+            position ??= _agvDb.Positions.GetPosition(correlationId).AgvPosition;
             await publishEndpoint.Publish(new AgvErrorReceived(error, position, agv.SerialNumber));
         }
     }
@@ -149,8 +150,8 @@ public class AgvErrorCommandHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ResolveSystemAgvError> context)
     {
-        var (correlationId, error, position) = context.Message;
+        var (correlationId, errors) = context.Message;
 
-        await HandleErrorChangesAsync(context, [], [error], correlationId, position);
+        await HandleErrorChangesAsync(context, [], errors, correlationId, null);
     }
 }

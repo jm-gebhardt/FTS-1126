@@ -31,7 +31,6 @@ public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus
         bool hasResourceErrors = resourceError != null;
         var queueBlockingError = agvErrors.SingleOrDefault(e => e.IsQueueBlockingError());
         bool hasQueueBlockingError = queueBlockingError != null;
-        var position = agvDb.Positions.GetPosition(agvCorrelationId);
 
         if (!ignoreErrorState)
         {
@@ -42,8 +41,8 @@ public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus
                     logger.LogInformation("Solving resource blocking errors for agv {AgvCorrelationId} and node {NodeId}", agvCorrelationId, nodeLock.NodeId);
                     await bus.Publish(new FreeNode(nodeLock.NodeId));
                 }
-                
-                await bus.Publish(new ResolveSystemAgvError(agvCorrelationId, resourceError!, position.AgvPosition));
+
+                await bus.Publish(new ResolveSystemAgvError(agvCorrelationId, [resourceError!]));
             }
         }
 

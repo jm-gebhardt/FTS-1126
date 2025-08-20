@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -28,10 +29,10 @@ public class ResetAgvErrorsRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ResetAgvErrorsResult_WithoutSpecifiedErrorIdsToResetAndThereAreActiveErrors_ResetsAll()
+    public async Task Consume_ResetAgvErrorsResult_WithoutSpecifiedErrorIdsToResetAndThereAreActiveErrors_ResetsAllAgvErrors()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var errors = new List<AgvError> { AgvErrorGenerator.GenerateAgvError() };
+        var errors = new List<AgvError> { AgvErrorGenerator.GenerateAgvError(errorSource: AgvErrorSource.Agv) };
         var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
             .WithActiveAgvErrors(errors)
             .Build();
@@ -40,7 +41,8 @@ public class ResetAgvErrorsRequestHandlerTest
 
         var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
-        message.ErrorIds.ShouldBeEmpty();
+        message.ErrorIds.Count.ShouldBe(errors.Count);
+        message.ErrorIds.Single().ShouldBe(errors[0].CorrelationId);
     }
 
     [TestMethod]
@@ -65,6 +67,33 @@ public class ResetAgvErrorsRequestHandlerTest
         message.CorrelationId.ShouldBe(agvCorrelationId);
         message.ErrorIds.Count.ShouldBe(1);
         message.ErrorIds.ShouldContain(errorToReset);
+    }
+
+    [TestMethod]
+    public async Task Consume_ResetAgvErrorsResult_WithSystemAndAgvErrors_SendsCommandsForBoth()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var errors = new List<AgvError>
+        {
+            AgvErrorGenerator.GenerateAgvError(),
+            AgvErrorGenerator.GenerateAgvError(errorSource: AgvErrorSource.System)
+        };
+
+        var fixture = new ResetAgvErrorsRequestHandlerTestFixture()
+            .WithActiveAgvErrors(errors)
+            .Build();
+
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errors[0].CorrelationId, errors[1].CorrelationId]));
+
+        var resetAgvErrors = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
+        resetAgvErrors.CorrelationId.ShouldBe(agvCorrelationId);
+        resetAgvErrors.ErrorIds.Count.ShouldBe(1);
+        resetAgvErrors.ErrorIds.Single().ShouldBe(errors[0].CorrelationId);
+
+        var resolveSystemAgvError = await fixture.GetFirstPublishedMessageAsync<ResolveSystemAgvError>();
+        resolveSystemAgvError.CorrelationId.ShouldBe(agvCorrelationId);
+        resolveSystemAgvError.Errors.Count.ShouldBe(1);
+        resolveSystemAgvError.Errors.Single().CorrelationId.ShouldBe(errors[1].CorrelationId);
     }
 
     [TestMethod]

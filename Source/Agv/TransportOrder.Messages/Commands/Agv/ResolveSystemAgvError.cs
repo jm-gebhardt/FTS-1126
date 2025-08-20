@@ -7,6 +7,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 /// Provides a command to resolve multiple system-issued AGV errors.
 /// </summary>
 /// <param name="CorrelationId">The AGV correlation ID.</param>
-/// <param name="Error"> The AGV error to resolve.</param>
-/// <param name="Position">The AGV position where the errors occurred.</param>
-public record ResolveSystemAgvError(Guid CorrelationId, AgvError Error, AgvPosition Position) : CorrelatedBy<Guid>;
+/// <param name="Errors"> The AGV errors to resolve.</param>
+public record ResolveSystemAgvError(Guid CorrelationId, List<AgvError> Errors) : CorrelatedBy<Guid>;
