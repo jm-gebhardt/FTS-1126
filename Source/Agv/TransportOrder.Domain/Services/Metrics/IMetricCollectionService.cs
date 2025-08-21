@@ -28,4 +28,14 @@ public interface IMetricCollectionService
     /// <param name="newErrors">The list of new errors.</param>
     /// <param name="resolvedErrors">The list of resolved errors.</param>
     void CollectSafetyFieldViolationMetrics(Guid agvCorrelationId, List<AgvError> newErrors, List<AgvError> resolvedErrors);
+
+    /// <summary>
+    /// Collect station jam state metrics.
+    /// </summary>
+    /// <param name="stationId">The station id.</param>
+    /// <param name="lastChangedDate">The time the jam state changed last.</param>
+    /// <param name="previousHasPalletJam">The previous jam state.</param>
+    /// <param name="currentChangedDate">The current jam state change time.</param>
+    /// <param name="currentHasPalletJam">The current jam state.</param>
+    void CollectJamStateMetrics(Guid stationId, DateTime lastChangedDate, bool previousHasPalletJam, DateTime currentChangedDate, bool currentHasPalletJam);
 }

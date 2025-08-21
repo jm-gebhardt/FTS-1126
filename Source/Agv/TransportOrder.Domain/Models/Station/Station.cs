@@ -78,6 +78,11 @@ public class Station
     public bool HasPalletJam { get; set; }
 
     /// <summary>
+    /// The time, the pallet jam changed.
+    /// </summary>
+    public DateTime PalletJamChangedDate { get; set; }
+
+    /// <summary>
     /// Defines how already started orders will be handled that involve a locked station.
     /// </summary>
     public LockedOrderHandlingType? LockedOrderHandling { get; set; }

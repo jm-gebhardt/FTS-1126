@@ -67,13 +67,21 @@ public class ConveyorTelegramProcessor : TelegramProcessorBase<ConveyorTelegram>
         var conveyorTelegram = new ConveyorTelegram();
         conveyorTelegram.Load(telegram);
         _logger.LogInformation("Processing telegram {Telegram}", telegram);
-        
+
         if (conveyorTelegram.Func == nameof(PosStateReq))
         {
             var posStateReq = new PosStateReq();
             posStateReq.Load(telegram);
             int state = _stateValues[_random.Next(_stateValues.Count)];
             var jamState = new JamState(posStateReq.Pos, state);
+            _jamStateProcessor.EnqueueTelegram(jamState);
+        }
+        if (conveyorTelegram.Func == nameof(AgvWeStation))
+        {
+            var agvWeStation = new AgvWeStation();
+            agvWeStation.Load(telegram);
+            int state = _stateValues[_random.Next(_stateValues.Count)];
+            var jamState = new JamState(agvWeStation.Station, state);
             _jamStateProcessor.EnqueueTelegram(jamState);
         }
         CurrentTelegram = conveyorTelegram;

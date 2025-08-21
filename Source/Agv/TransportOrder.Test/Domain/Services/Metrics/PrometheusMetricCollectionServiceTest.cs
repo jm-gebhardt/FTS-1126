@@ -266,4 +266,29 @@ public class PrometheusMetricCollectionServiceTest
         PrometheusMetricCollector.AgvSafetyFieldViolationCounter.WithLabels(agv.ToString()).Value.ShouldBe(1);
         PrometheusMetricCollector.AgvSafetyFieldDurationGauge.WithLabels(agv.ToString()).Value.ShouldBeGreaterThanOrEqualTo(timePassed);
     }
+
+    [TestMethod]
+    public void CollectJamStateMetrics_PalletJam_CountUpdated()
+    {
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+        var now = DateTime.UtcNow;
+        var station = Guid.NewGuid();
+        fixture.Service.CollectJamStateMetrics(station, now.AddMinutes(-1), false, now, true);
+
+        PrometheusMetricCollector.StationJamStateCounter.WithLabels(station.ToString()).Value.ShouldBe(1);
+        PrometheusMetricCollector.StationJamStateDurationGauge.WithLabels(station.ToString()).Value.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public void CollectJamStateMetrics_PalletJamResolved_DurationUpdated()
+    {
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+        var now = DateTime.UtcNow;
+        const int duration = 60;
+        var station = Guid.NewGuid();
+        fixture.Service.CollectJamStateMetrics(station, now.AddSeconds(-duration), true, now, false);
+
+        PrometheusMetricCollector.StationJamStateCounter.WithLabels(station.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.StationJamStateDurationGauge.WithLabels(station.ToString()).Value.ShouldBe(duration);
+    }
 }

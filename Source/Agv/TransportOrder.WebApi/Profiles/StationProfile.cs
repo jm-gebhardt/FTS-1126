@@ -20,6 +20,7 @@ public class StationProfile : WebApiProfile
             ))
             .ForMember(x => x.ModifiedDate, y => y.MapFrom(z =>
                 z.NodeLock != null ? z.NodeLock.ModifiedDate : DateTime.MinValue
-            ));
+            ))
+            .ForSourceMember(x => x.PalletJamChangedDate, opt => opt.DoNotValidate());
     }
 }

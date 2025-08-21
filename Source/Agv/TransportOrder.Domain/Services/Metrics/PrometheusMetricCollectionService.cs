@@ -183,4 +183,19 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
             PrometheusMetricCollector.AgvSafetyFieldDurationGauge.WithLabels(agvCorrelationId.ToString()).Set(timePassed);
         }
     }
+
+    /// <inheritdoc cref="IMetricCollectionService"/>>
+    public void CollectJamStateMetrics(Guid stationId, DateTime lastChangedDate, bool previousHasPalletJam, DateTime currentChangedDate, bool currentHasPalletJam)
+    {
+        if (!previousHasPalletJam && currentHasPalletJam)
+        {
+            PrometheusMetricCollector.StationJamStateCounter.WithLabels(stationId.ToString()).Inc();
+        }
+
+        if (!currentHasPalletJam && previousHasPalletJam)
+        {
+            double timePassed = (currentChangedDate - lastChangedDate).TotalSeconds;
+            PrometheusMetricCollector.StationJamStateDurationGauge.WithLabels(stationId.ToString()).Set(timePassed);
+        }
+    }
 }

@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
@@ -19,6 +20,7 @@ public class StationCommandHandler(
     INodeStateRepository nodeStateRepository,
     IStationRepository stationRepository,
     IGraphRepository graphRepository,
+    IMetricCollectionService metricCollector,
     ILogger<StationCommandHandler> logger) :
     IConsumer<LockStation>,
     IConsumer<UnlockStation>,
@@ -114,8 +116,11 @@ public class StationCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateStationJamState> context)
     {
+        var now = DateTime.UtcNow;
         var station = await stationRepository.GetStation(context.Message.CorrelationId);
+        metricCollector.CollectJamStateMetrics(station.Id, station.PalletJamChangedDate, station.HasPalletJam, now, context.Message.HasPalletJam);
         station.HasPalletJam = context.Message.HasPalletJam;
+        station.PalletJamChangedDate = now;
         await stationRepository.Update(station);
         logger.LogInformation("Jam state of station {StationName} updated to {JamState}", station.Name, station.HasPalletJam);
         await context.Publish(new JamStateChanged(station.Id, station.HasPalletJam));

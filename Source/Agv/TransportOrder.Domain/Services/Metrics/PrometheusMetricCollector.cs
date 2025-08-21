@@ -78,4 +78,20 @@ public static class PrometheusMetricCollector
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
+
+    /// <summary>
+    /// The jam state by station counter.
+    /// </summary>
+    public static readonly Counter StationJamStateCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.StationJamStateCount, "Station jam state count", new CounterConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
+
+    /// <summary>
+    /// The station jam state duration gauge metric.
+    /// </summary>
+    public static readonly Gauge StationJamStateDurationGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.StationJamStateDuration, "Station jam state duration [s]", new GaugeConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
 }

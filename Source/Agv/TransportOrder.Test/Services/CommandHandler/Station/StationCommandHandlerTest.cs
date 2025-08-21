@@ -113,5 +113,6 @@ public class StationCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<JamStateChanged>();
         fixture.VerifyStationUpdated(Times.Once());
+        fixture.VerifyMetricsCollected();
     }
 }
