@@ -48,29 +48,29 @@ public class AgvControllerTest
         var agvDto = await fixture.GetControllerResultAsync(c => c.GetAgv(correlationId));
 
         var expectedAgvDto = new AgvDto(
-            correlationId, 
-            agvSerialNumber, 
-            agvSerialNumber, 
-            AgvStateType.Idle, 
-            agvDto.TimeOfStateTransition, 
-            DateTime.MinValue, 
-            false, 
-            false, 
-            true, 
-            true, 
-            10d, 
-            true, 
+            correlationId,
+            agvSerialNumber,
+            agvSerialNumber,
+            AgvStateType.Idle,
+            agvDto.TimeOfStateTransition,
+            DateTime.MinValue,
+            false,
+            false,
+            true,
+            true,
+            10d,
+            true,
             null,
-            new List<AgvErrorDto>(), 
-            new GraphNodeDto 
+            new List<AgvErrorDto>(),
+            new GraphNodeDto
             {
-                Id = "WAY1", 
-                Type = AgvGraph.NodeType.WayPoint, 
-                X = 1.0f, 
-                Y = 2.0f, 
-                Z = 0.0f, 
+                Id = "WAY1",
+                Type = AgvGraph.NodeType.WayPoint,
+                X = 1.0f,
+                Y = 2.0f,
+                Z = 0.0f,
                 Theta = 0.0f
-            }, 
+            },
             new AgvModeDto(ModeType.Normal, correlationId),
             [],
             []);
@@ -401,7 +401,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task MoveAgv_Ok()
     {
-        var targetNode = NodeGenerator.GenerateNode(nodeId:"target");
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "target");
         AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)
@@ -416,18 +416,18 @@ public class AgvControllerTest
     public async Task MoveAgvToCoordinate_Ok()
     {
         AgvControllerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
-            .SetupAgvDbWithDefaultData(setUserMode:true)
+            .SetupAgvDbWithDefaultData(setUserMode: true)
             .Build();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
-        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgvToCoordinate(correlationId, 1,1,0));
+        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgvToCoordinate(correlationId, 1, 1, 0));
         result.Value.ShouldBeOfType<Guid>();
     }
 
     [TestMethod]
     public async Task ChargeAgvAtCharger_Ok()
     {
-        var targetNode =  NodeGenerator.GenerateNode(nodeId:"target", nodeType:AgvGraph.NodeType.Charge);
+        var targetNode = NodeGenerator.GenerateNode(nodeId: "target", nodeType: AgvGraph.NodeType.Charge);
         AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)
@@ -484,7 +484,7 @@ public class AgvControllerTest
         AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
-        var actionResult = await fixture.Controller.UpdateAgvSettings(fixture.AgvSerialNumbers[2].ToGuid(), new AgvSettingsDto(false, batteryLevelCritical:13));
+        var actionResult = await fixture.Controller.UpdateAgvSettings(fixture.AgvSerialNumbers[2].ToGuid(), new AgvSettingsDto(false, batteryLevelCritical: 13));
         var result = actionResult as OkObjectResult;
         result.ShouldBeAssignableTo<OkResult>();
     }
@@ -573,35 +573,35 @@ public class AgvControllerTest
     }
 
     [TestMethod]
-    public async Task RequestAgvRemoval_ValidData_RemoveAgvFromStation()
+    public async Task RemoveFromStation_ValidData_RemoveAgvFromStation()
     {
         AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        await fixture.GetControllerResultAsync<ActionResult>(c => c.RequestAgvRemoval(fixture.AgvSerialNumbers[0].ToGuid(), "station"));
+        await fixture.GetControllerResultAsync<ActionResult>(c => c.RemoveFromStation(fixture.AgvSerialNumbers[0].ToGuid(), "station"));
 
         (await fixture.MediatorTestHarness.Consumed.Any<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<RemoveAgvFromStation>()).ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task RequestAgvRemoval_NoAgv_ThrowsAgvNotFound()
+    public async Task RemoveFromStation_NoAgv_ThrowsAgvNotFound()
     {
         AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetControllerResultAsync<ActionResult>(c => c.RequestAgvRemoval(Guid.Empty, "station")));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetControllerResultAsync<ActionResult>(c => c.RemoveFromStation(Guid.Empty, "station")));
     }
 
     [TestMethod]
-    public async Task RequestAgvRemoval_NoOnlineAgv_ThrowsAllAgvOfflineException()
+    public async Task RemoveFromStation_NoOnlineAgv_ThrowsAllAgvOfflineException()
     {
         AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
             .SetupAgvDbWithDefaultData(allAgvsOffline: true)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AllAgvsOfflineException>(async () => await fixture.GetControllerResultAsync<ActionResult>(c => c.RequestAgvRemoval(fixture.AgvSerialNumbers[0].ToGuid(), "station")));
+        await MediatorShould.ThrowRequestExceptionAsync<AllAgvsOfflineException>(async () => await fixture.GetControllerResultAsync<ActionResult>(c => c.RemoveFromStation(fixture.AgvSerialNumbers[0].ToGuid(), "station")));
     }
 }

@@ -676,7 +676,7 @@ public class AgvCommandHandler :
 
         if (handleResourceErrors)
         {
-            await UpdateRessourceBlockingErrors(agv, updatedErrors);
+            await UpdateResourceBlockingErrors(agv, updatedErrors);
         }
 
         if (handleQueueBlockingErrors)
@@ -704,7 +704,7 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task UpdateRessourceBlockingErrors(Agv agv, List<AgvError> errors)
+    private async Task UpdateResourceBlockingErrors(Agv agv, List<AgvError> errors)
     {
         bool hasResourceErrors = errors.Any(e => e.IsResourceError());
 
