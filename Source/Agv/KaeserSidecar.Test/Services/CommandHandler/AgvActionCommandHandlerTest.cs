@@ -192,7 +192,7 @@ public class AgvActionCommandHandlerTest
             .WithActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.NodeId == station).CorrelationId, DateTime.UtcNow));
-        
+
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(times: Times.Never());
     }
@@ -254,7 +254,7 @@ public class AgvActionCommandHandlerTest
             .WithActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTime.UtcNow));
-        
+
         await fixture.ShouldHavePublishedAsync<OccupyStation>();
         fixture.VerifyReportingToConveyors(order.Hu, orderDetails.Destination, station, Times.Never());
     }
@@ -301,9 +301,10 @@ public class AgvActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionGroupCompleted_ManualMove_PublishesOccupyStation()
+    public async Task Consume_ActionGroupCompleted_ManualMove_TargetIsOccupancyLimited_PublishesOccupyStation()
     {
-        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(assignedAgv:Guid.NewGuid());
+        string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
         actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId);
         actionGroup.IsManual = true;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
@@ -316,7 +317,22 @@ public class AgvActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionAborted_ValidData_PublishesFreeStation()
+    public async Task Consume_ActionAborted_TargetIsOccupancyLimited_PublishesFreeStation()
+    {
+        string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source:station);
+        var action = actionGroup.Actions.First();
+        var actionGroupMessage = AgvActionGenerator.ConvertToMessage(actionGroup);
+        var abortedAction = actionGroupMessage.Actions.First();
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new ActionAborted(action.CorrelationId, abortedAction));
+        await fixture.ShouldHavePublishedAsync<FreeStationOccupancy>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionAborted_TargetIsNotOccupancyLimited_DoesNotPublishFreeStation()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         var action = actionGroup.Actions.First();
@@ -326,6 +342,6 @@ public class AgvActionCommandHandlerTest
             .WithActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new ActionAborted(action.CorrelationId, abortedAction));
-        await fixture.ShouldHavePublishedAsync<FreeStationOccupancy>();
+        await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
     }
 }

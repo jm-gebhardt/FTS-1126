@@ -79,9 +79,9 @@ public class AgvActionCommandHandler(
                 return;
             }
         }
-        if (!actionGroup.IsChargingOrder || (actionGroup.IsChargingOrder && action.Nodes.Count > 1))
+        if (configuration.IsOccupancyLimitedNode(startNode))
         {
-            // Do not free station when charge action starts at same node as the move to charger action ended or if AGV starts charge action group at target charger.
+            // free station only in case the start node is limited by agv occupancy.
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, free station",
                 nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, startNode);
             await context.Publish(new FreeStationOccupancy(startNode, agvCorrelationId));
@@ -220,9 +220,12 @@ public class AgvActionCommandHandler(
             // If the station is a conveyor station, we have  already occupied it during the target selection
             return;
         }
-        logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}, occupying station {Station}",
-            nameof(ActionGroupCompleted), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, station);
-        await context.Publish(new OccupyStation(station, agvCorrelationId));
+        if (configuration.IsOccupancyLimitedNode(station))
+        {
+            logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}, occupying station {Station}",
+                nameof(ActionGroupCompleted), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, station);
+            await context.Publish(new OccupyStation(station, agvCorrelationId));
+        }
     }
 
     /// <summary>
@@ -244,9 +247,11 @@ public class AgvActionCommandHandler(
             logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} or no AGV assigned to handle action aborted", action.CorrelationId, action.ParentId);
             return;
         }
-
-        logger.LogInformation("{Message}: Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it",
-            nameof(ActionAborted), action.CorrelationId, action.CorrelationId, targetNodeId);
-        await context.Publish(new FreeStationOccupancy(targetNodeId, (Guid) agv));
+        if (configuration.IsOccupancyLimitedNode(targetNodeId))
+        {
+            logger.LogInformation("{Message}: Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it",
+                nameof(ActionAborted), action.CorrelationId, action.CorrelationId, targetNodeId);
+            await context.Publish(new FreeStationOccupancy(targetNodeId, (Guid)agv));
+        }
     }
 }

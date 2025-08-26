@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
@@ -69,5 +70,29 @@ public class KaeserGraphConfigurationTest
     {
         var kaeserGraph = new KaeserGraphConfiguration();
         kaeserGraph.IsPickAtAkl(target).ShouldBe(expected);
+    }
+
+    [TestMethod]
+    public void IsOccupancyLimitedNode_ConveyorStation_ReturnsTrue()
+    {
+        var kaeserGraph = OrderGenerator.KaeserConfiguration;
+
+        kaeserGraph.IsOccupancyLimitedNode(kaeserGraph.ConveyorStationMapping.Keys.First()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void IsOccupancyLimitedNode_KaeserPickDropStation_ReturnsTrue()
+    {
+        var kaeserGraph = OrderGenerator.KaeserConfiguration;
+
+        kaeserGraph.IsOccupancyLimitedNode(kaeserGraph.StationMapping.Values.First()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void IsOccupancyLimitedNode_ChargerOrWaypoint_ReturnsFalse()
+    {
+        var kaeserGraph = OrderGenerator.KaeserConfiguration;
+
+        kaeserGraph.IsOccupancyLimitedNode("Waypoint").ShouldBeFalse();
     }
 }

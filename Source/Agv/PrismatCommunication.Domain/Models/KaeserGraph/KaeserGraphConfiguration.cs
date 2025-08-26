@@ -552,4 +552,14 @@ public class KaeserGraphConfiguration
     {
         return AklDoppelspielPickTargets.ContainsValue(target);
     }
+
+    /// <summary>
+    /// Checks if the given node is limited by agv occupancy.
+    /// </summary>
+    /// <param name="nodeId">The node id.</param>
+    /// <returns>True, if the node is occupancy-limited.</returns>
+    public bool IsOccupancyLimitedNode(string nodeId)
+    {
+        return ConveyorStationMapping.ContainsKey(nodeId) || StationMapping.ContainsValue(nodeId);
+    }
 }
