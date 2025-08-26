@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Common.Domain.Models;
 /// </summary>
 public record AgvError : CorrelatedBy<Guid>
 {
-    private const string JoystickMode = "Joystick";
+    private const string JoystickMode = "Joystick ist aktiv";
     private const string PushMode = "Schiebemodus";
 
     /// <summary>
@@ -147,9 +147,9 @@ public record AgvError : CorrelatedBy<Guid>
     }
 
     /// <summary>
-    /// Check if the error reports that an agv was pushed manually via joystick or in pushmode.
+    /// Check if the error reports that an agv was pushed manually via joystick or in push mode.
     /// </summary>
-    /// <returns>True, if description reports a joystick or pushmode move of agv.</returns>
+    /// <returns>True, if description reports a joystick or push mode move of agv.</returns>
     public bool IsPushedManually()
     {
         return (ErrorDescription?.Contains(JoystickMode) ?? false) || (ErrorDescription?.Contains(PushMode) ?? false);
