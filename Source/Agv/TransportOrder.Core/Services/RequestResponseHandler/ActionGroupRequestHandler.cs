@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -21,6 +22,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<GetActionGroups>,
     IConsumer<GetActionGroupCountsByState>,
+    IConsumer<GetHandlingUnits>,
     IConsumer<TriggerActionGroupAbortion>,
     IConsumer<TriggerActionGroupReset>,
     IConsumer<TryReassignActionGroup>,
@@ -82,6 +84,23 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetHandlingUnits"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetHandlingUnits> context)
+    {
+        string query = context.Message.Query.Trim();
+        if (query.Length < 3)
+        {
+            throw new BadRequestException("Query must be at least 3 characters.");
+        }
+
+        int maxItems = Math.Clamp(context.Message.Limit, 1, 100);
+
+        List<string> hus = await _actionGroupRepository.GetHandlingUnitsAsync(query, maxItems);
+        await context.RespondAsync(new GotHandlingUnits(hus));
     }
 
     /// <summary>

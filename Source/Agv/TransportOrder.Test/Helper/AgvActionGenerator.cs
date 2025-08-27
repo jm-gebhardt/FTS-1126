@@ -116,6 +116,14 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
+    public static IEnumerable<ActionGroup> GenerateByHandlingUnits(params string[] handlingUnits)
+    {
+        foreach (string handlingUnit in handlingUnits)
+        {
+            yield return GeneratePickDropActionGroup(handlingUnit: handlingUnit);
+        }
+    }
+
     public static ActionGroup GeneratePickDropActionGroup(
         ActionState pickActionState = ActionState.Created,
         ActionState dropActionState = ActionState.Created,
@@ -131,7 +139,8 @@ public static class AgvActionGenerator
         bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null,
         Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null,
-        string orderId = "orderId"
+        string orderId = "orderId",
+        string? handlingUnit = null
     )
     {
         var groupId = Guid.NewGuid();
@@ -163,7 +172,8 @@ public static class AgvActionGenerator
         {
             AssignedAgv = assignedAgv,
             EstimatedDuration = duration,
-            HasPriority = hasPriority
+            HasPriority = hasPriority,
+            HandlingUnit = handlingUnit
         };
         if (isQueued)
         {

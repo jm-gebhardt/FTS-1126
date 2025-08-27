@@ -168,6 +168,66 @@ public class ActionGroupRequestHandlerTest
         }
     }
 
+    [DataTestMethod]
+    [DataRow("906", new[] { "906000000136", "906000000999" })]
+    [DataRow("136", new[] { "906000000136" })]
+    [DataRow("999", new[] { "906000000999" })]
+    [DataRow("000", new[] { "906000000136", "906000000999" })]
+    [DataRow("XYZ", new string[0])]
+    public async Task Consume_GetHandlingUnits_VariousQueries_ReturnsExpected(string query, string[] expected)
+    {
+        string[] handlingUnits = ["906000000136", "906000000999"];
+
+        ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler>()
+            .WithActionGroups(AgvActionGenerator.GenerateByHandlingUnits(handlingUnits).ToArray())
+            .BuildAsync();
+
+        Response<GotHandlingUnits> response = await fixture.GetResponseAsync<GotHandlingUnits>(new GetHandlingUnits(query));
+        response.Message.HandlingUnits.ShouldBe(expected);
+    }
+
+    [TestMethod]
+    public async Task Consume_GetHandlingUnits_ResultsAreOrderedAscending()
+    {
+        string[] handlingUnits = ["ZZZ0001", "AAA0002", "MMM0003"];
+
+        ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler>()
+            .WithActionGroups(AgvActionGenerator.GenerateByHandlingUnits(handlingUnits).ToArray())
+            .BuildAsync();
+
+        Response<GotHandlingUnits> response = await fixture.GetResponseAsync<GotHandlingUnits>(new GetHandlingUnits("000", 10));
+
+        response.Message.HandlingUnits.ShouldBe(["AAA0002", "MMM0003", "ZZZ0001"]);
+    }
+
+    [TestMethod]
+    public async Task Consume_GetHandlingUnits_LimitZero_DefaultsToOne()
+    {
+        string[] handlingUnits = ["HU(123)", "HU(1234)"];
+
+        ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler>()
+            .WithActionGroups(AgvActionGenerator.GenerateByHandlingUnits(handlingUnits).ToArray())
+            .BuildAsync();
+
+        Response<GotHandlingUnits> response = await fixture.GetResponseAsync<GotHandlingUnits>(new GetHandlingUnits("123", 0));
+
+        response.Message.HandlingUnits.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task Consume_GetHandlingUnits_LimitAbove100_IsClampedTo100()
+    {
+        string[] handlingUnits = Enumerable.Range(0, 200).Select(i => $"HU({i})").ToArray();
+
+        ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler> fixture = await new ActionGroupRequestHandlerTestFixture<GetHandlingUnits, ActionGroupRequestHandler>()
+            .WithActionGroups(AgvActionGenerator.GenerateByHandlingUnits(handlingUnits).ToArray())
+            .BuildAsync();
+
+        Response<GotHandlingUnits> response = await fixture.GetResponseAsync<GotHandlingUnits>(new GetHandlingUnits("HU(", 9999));
+
+        response.Message.HandlingUnits.Count.ShouldBe(100);
+    }
+
     [TestMethod]
     public async Task Consume_TriggerActionGroupAbortion_UnknownActionGroup_ThrowsActionGroupNotFoundException()
     {
@@ -436,9 +496,9 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup)
                 .WithFakeTriggeredActionCompletion()
                 .BuildAsync();
-        
+
         await fixture.GetResponseAsync<Success>(new TriggerActionCompletion(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId));
-        
+
         await fixture.ShouldHavePublishedAsync<CompleteActionOfActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
     }

@@ -113,8 +113,15 @@ public interface IActionGroupRepository
     /// Get the ActionGroup.
     /// </summary>
     /// <param name="correlationId">The correlation id of the ActionGroup.</param>
-    /// <returns></returns>
+    /// <returns>Returns ActionGroup with the given correlation id or null when not found.</returns>
     Task<ActionGroup?> GetActionGroupAsync(Guid correlationId);
+
+    /// <summary>
+    /// Get the handling units that match the given query.
+    /// </summary>
+    /// <param name="query">The substring to search for (case-insensitive).</param>
+    /// <param name="maxItems">The maximum number of handling unit results to return.</param>
+    Task<List<string>> GetHandlingUnitsAsync(string query, int maxItems);
 
     /// <summary>
     /// Get the ActionGroup.

@@ -144,7 +144,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                     .GroupBy(a => a.ActionType)
                     .ToDictionary(
                         g => g.Key,
-                        g => (ICollection<double>)g.Select(a => a.Duration == null ? 0 : a.Duration!.Value.TotalSeconds).ToList()
+                        g => (ICollection<double>) g.Select(a => a.Duration == null ? 0 : a.Duration!.Value.TotalSeconds).ToList()
                     );
         }
 
@@ -263,6 +263,20 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
+    public async Task<List<string>> GetHandlingUnitsAsync(string query, int maxItems)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<ActionGroup>()
+            .AsNoTracking()
+            .Where(ag => ag.HandlingUnit != null && ag.HandlingUnit.Contains(query))
+            .Select(a => a.HandlingUnit!)
+            .Distinct()
+            .OrderBy(s => s)
+            .Take(maxItems)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<ActionGroup> GetRequiredActionGroupByIdAsync(Guid correlationId)
     {
         var actionGroup = await GetActionGroupAsync(correlationId);
@@ -297,8 +311,8 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
-                .Where(ag => ag.State == ActionGroupState.Started && ag.Actions.Any(a =>
-                    a.ActionType == ActionType.Charge && a.State == ActionState.Started)).ToListAsync();
+            .Where(ag => ag.State == ActionGroupState.Started && ag.Actions.Any(a =>
+                a.ActionType == ActionType.Charge && a.State == ActionState.Started)).ToListAsync();
     }
 
     /// <inheritdoc cref="IActionGroupRepository"/>
@@ -657,8 +671,8 @@ public class EfActionGroupRepository : IActionGroupRepository
         return await actionGroups
             .OrderByDescending(ag => ag.StartedDate)
             .FirstOrDefaultAsync(ag =>
-            ag.AssignedAgv == agvCorrelationId
-            && ag.State == ActionGroupState.Started);
+                ag.AssignedAgv == agvCorrelationId
+                && ag.State == ActionGroupState.Started);
     }
 
     /// <inheritdoc/>
