@@ -91,7 +91,7 @@ public class WcsCommunicatorTest
         context.ToAgv.Add(latestOrder);
 
         await context.SaveChangesAsync();
-        string error = HostOrderHandlingFailedErrorCode.OrderAlreadyExists.ToString();
+        const string error = nameof(HostOrderHandlingFailedErrorCode.OrderAlreadyExists);
 
         (await fixture.Communicator.TransmitHostOrderHandlingFailure(latestOrder.OrderId, error)).ShouldBeTrue();
 
@@ -157,7 +157,7 @@ public class WcsCommunicatorTest
 
         await context.SaveChangesAsync();
 
-        (await fixture.Communicator.TransmitHostOrderCancellationFailure(latestOrder.OrderId, HostOrderCancelFailedErrorCode.OrderAlreadyCanceled.ToString())).ShouldBeTrue();
+        (await fixture.Communicator.TransmitHostOrderCancellationFailure(latestOrder.OrderId, nameof(HostOrderCancelFailedErrorCode.OrderAlreadyCanceled))).ShouldBeTrue();
 
         context.FromAgv.Count().ShouldBe(1);
         var entry = context.FromAgv.First();
@@ -176,7 +176,7 @@ public class WcsCommunicatorTest
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Should.Throw<OrderNotFoundException>(async () => await fixture.Communicator.TransmitHostOrderCancellationFailure("unknownOrder", HostOrderCancelFailedErrorCode.OrderAlreadyCanceled.ToString()));
+        Should.Throw<OrderNotFoundException>(async () => await fixture.Communicator.TransmitHostOrderCancellationFailure("unknownOrder", nameof(HostOrderCancelFailedErrorCode.OrderAlreadyCanceled)));
 
         context.FromAgv.Count().ShouldBe(0);
     }

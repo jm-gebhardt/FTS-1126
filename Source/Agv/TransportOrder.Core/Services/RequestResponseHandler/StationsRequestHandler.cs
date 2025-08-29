@@ -56,7 +56,7 @@ public class StationsRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<TryLockStation> context)
     {
-        (var id, string? user, string reason, string lockDescription, var lockOrderHandling) = context.Message;
+        (var id, string user, string reason, string lockDescription, var lockOrderHandling) = context.Message;
         var station = await stationRepository.GetStation(id);
         if (station.IsLocked)
         {
@@ -120,7 +120,7 @@ public class StationsRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<TryUnlockStation> context)
     {
-        (var id, string? user) = context.Message;
+        (var id, string user) = context.Message;
 
         var station = await stationRepository.GetStation(id);
         if (station.IsLocked)

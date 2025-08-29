@@ -101,7 +101,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             actionGroups = actionGroups.Where(ag => ag.Actions.Any(a => allowedActionTypes.Contains(a.ActionType)));
         }
 
-        actionGroups = actionGroups.OrderByProperty(SortBy.CreatedDate.ToString(), isDescending: false).ThenByDescending(g => g.HasPriority);
+        actionGroups = actionGroups.OrderByProperty(nameof(SortBy.CreatedDate), isDescending: false).ThenByDescending(g => g.HasPriority);
         return actionGroups.FirstOrDefault();
     }
 

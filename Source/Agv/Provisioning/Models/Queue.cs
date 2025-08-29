@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.Provisioning.Models;
 /// <summary>
 /// A queue
 /// </summary>
-[UsedImplicitly]
+[PublicAPI]
 public class Queue
 {
     /// <summary>

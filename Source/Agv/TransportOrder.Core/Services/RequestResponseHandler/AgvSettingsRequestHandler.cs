@@ -151,7 +151,7 @@ public class AgvSettingsRequestHandler :
 
     private void LogSettingsUpdateForAgv(Guid correlationId, AgvSettingsReadModel settings)
     {
-        foreach ((string? name, object? value) in settings.GetValidPropertiesInformation())
+        foreach ((string name, object? value) in settings.GetValidPropertiesInformation())
         {
             _logger.LogAgvInformation(LogCodes.AgvSettingUpdated, correlationId, "AGV Setting Updated", $"{name} updated to {value}",
             new Dictionary<string, object?> { { LogLabels.PropertyName, name }, {LogLabels.PropertyValue, value} });

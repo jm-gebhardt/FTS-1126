@@ -90,7 +90,7 @@ public static class XmlDocResolver
     {
         int lastDotIndex = nameAttribute.LastIndexOf(".", StringComparison.InvariantCulture);
         string memberName = nameAttribute[(lastDotIndex + 1)..];
-        string typeName = nameAttribute.Substring(2, lastDotIndex - 2);
+        string typeName = nameAttribute[2..lastDotIndex];
         string prefix = nameAttribute[..2];
 
         foreach (var assembly in assemblies)

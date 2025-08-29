@@ -66,7 +66,7 @@ public class HostOrderCommandHandler :
         var correlationId = context.Message.CorrelationId;
         var hostOrder = await _hostOrderRepository.GetByIdAsync(correlationId);
         await _hostOrderRepository.RemoveAsync(hostOrder);
-        await _hostCommunicator.TransmitHostOrderHandlingFailure(hostOrder.OrderId, HostOrderHandlingFailedErrorCode.InvalidOrderData.ToString());
+        await _hostCommunicator.TransmitHostOrderHandlingFailure(hostOrder.OrderId, nameof(HostOrderHandlingFailedErrorCode.InvalidOrderData));
     }
 
     /// <summary>

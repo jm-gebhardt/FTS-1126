@@ -5,4 +5,4 @@ namespace Gebhardt.Acc.Common.Exceptions;
 /// <summary>
 /// No free charge station available.
 /// </summary>
-public class NoChargeStationAvailableException() : NoNodesAvailableException(AgvGraph.NodeType.Charge.ToString());
+public class NoChargeStationAvailableException() : NoNodesAvailableException(nameof(AgvGraph.NodeType.Charge));

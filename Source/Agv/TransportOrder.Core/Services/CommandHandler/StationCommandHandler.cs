@@ -32,7 +32,7 @@ public class StationCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<LockStation> context)
     {
-        (var id, string? user, string reason, string lockDescription, var lockOrderHandling) = context.Message;
+        (var id, string user, string reason, string lockDescription, var lockOrderHandling) = context.Message;
 
         var station = await stationRepository.GetStation(id);
 
@@ -66,7 +66,7 @@ public class StationCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<UnlockStation> context)
     {
-        (var id, string? user) = context.Message;
+        (var id, string user) = context.Message;
 
         var station = await stationRepository.GetStation(id);
 

@@ -296,12 +296,7 @@ public class AStar : BaseRouteAlgorithm
 
         time += CalculateEntryCost(current, edge, maximumEdgeVelocity, out double actualEntryVelocity);
 
-        time += edge.Variant switch
-        {
-            EdgeType.Direct => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
-            EdgeType.Bezier2 or EdgeType.Bezier3 or EdgeType.Bezier5 => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost),
-            _ => CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost)
-        };
+        time += CalculateTimeAndExitParametersForDistance(edge.Length, actualEntryVelocity, maximumEdgeVelocity, Acceleration, out finalVelocity, out decelerationCost);
 
         return time;
     }
