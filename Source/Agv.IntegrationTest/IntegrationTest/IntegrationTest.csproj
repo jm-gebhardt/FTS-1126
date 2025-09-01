@@ -19,6 +19,6 @@
       <PackageReference Include="MSTest" Version="3.10.3" />
       <PackageReference Include="Shouldly" Version="4.2.1" />
       <PackageReference Include="System.Formats.Asn1" Version="8.0.2" />
-      <PackageReference Include="System.Text.Json" Version="8.0.5" />
+      <PackageReference Include="System.Text.Json" Version="8.0.6" />
     </ItemGroup>
 </Project>
