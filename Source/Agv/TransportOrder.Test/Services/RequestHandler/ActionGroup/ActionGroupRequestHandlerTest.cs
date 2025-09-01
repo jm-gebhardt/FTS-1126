@@ -12,7 +12,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 
@@ -168,7 +167,7 @@ public class ActionGroupRequestHandlerTest
         }
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("906", new[] { "906000000136", "906000000999" })]
     [DataRow("136", new[] { "906000000136" })]
     [DataRow("999", new[] { "906000000999" })]
@@ -241,7 +240,7 @@ public class ActionGroupRequestHandlerTest
 
     [DataRow(ActionState.Paused)]
     [DataRow(ActionState.Started)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_TriggerActionGroupAbortion_ValidData_ActionGroupAbortionTriggered(ActionState actionState)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -348,7 +347,7 @@ public class ActionGroupRequestHandlerTest
     [DataRow(ActionState.Canceled)]
     [DataRow(ActionState.Completed)]
     [DataRow(ActionState.Invalid)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_TryReassignActionGroup_PickActionNotStarted_ThrowsActionGroupStateInvalidException(ActionState pickActionState)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: pickActionState);
@@ -365,7 +364,7 @@ public class ActionGroupRequestHandlerTest
     [DataRow(ActionState.Paused, false)]
     [DataRow(ActionState.Started, true)]
     [DataRow(ActionState.Paused, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_TryReassignActionGroup_ValidData_PublishesReassignActionGroup(ActionState pickActionState, bool assignedAgv)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: pickActionState);

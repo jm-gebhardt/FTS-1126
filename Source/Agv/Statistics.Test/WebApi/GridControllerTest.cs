@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using Gebhardt.Acc.Statistics.WebApi.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.WebApi;

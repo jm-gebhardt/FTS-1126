@@ -10,7 +10,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;

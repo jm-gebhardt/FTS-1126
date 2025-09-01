@@ -2,7 +2,6 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
@@ -120,7 +119,7 @@ public class QueueTest
     [DataRow(NodeLockState.Occupied, NodeLockState.Reserved, NodeLockState.Free)]
     [DataRow(NodeLockState.Reserved, NodeLockState.Reserved, NodeLockState.Free)]
     [DataRow(NodeLockState.Occupied, NodeLockState.Occupied, NodeLockState.Free)]
-    [DataTestMethod]
+    [TestMethod]
     public void TryEnqueue_LastSlotInQueue_ReturnsTrueTargetIsFormerTail(params NodeLockState[] lockStates)
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: lockStates);
@@ -137,7 +136,7 @@ public class QueueTest
 
     [DataRow(NodeLockState.Occupied, NodeLockState.Free, NodeLockState.Free)]
     [DataRow(NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free)]
-    [DataTestMethod]
+    [TestMethod]
     public void TryEnqueue_MultipleSlotsInQueue_ReturnsTrueTargetIsFormerTail(params NodeLockState[] lockStates)
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: lockStates);
@@ -193,7 +192,7 @@ public class QueueTest
     [DataRow(NodeLockState.Reserved, NodeLockState.Occupied, NodeLockState.Occupied)]
     [DataRow(NodeLockState.Reserved, NodeLockState.Occupied, NodeLockState.Free)]
     [DataRow(NodeLockState.Reserved, NodeLockState.Free)]
-    [DataTestMethod]
+    [TestMethod]
     public void TryDequeue_HeadNodeNotOccupied_ReturnsNullNoNewAgvMoves(params NodeLockState[] lockStates)
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: lockStates);
@@ -216,7 +215,7 @@ public class QueueTest
 
     [DataRow(NodeLockState.Occupied, NodeLockState.Reserved, NodeLockState.Free)]
     [DataRow(NodeLockState.Occupied, NodeLockState.Occupied, NodeLockState.Free)]
-    [DataTestMethod]
+    [TestMethod]
     public void TryDequeue_QueueNotFull_ReturnsAgvFromHeadNoAgvMoves(params NodeLockState[] lockStates)
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: lockStates);
@@ -289,7 +288,7 @@ public class QueueTest
     [DataRow(NodeLockState.Occupied, true)]
     [DataRow(NodeLockState.Reserved, true)]
     [DataRow(NodeLockState.Free, false)]
-    [DataTestMethod]
+    [TestMethod]
     public void IsEnqueued_ValidData_ReturnsAccordingToNodeState(NodeLockState lockState, bool expectedResult)
     {
         var agv = Guid.NewGuid();

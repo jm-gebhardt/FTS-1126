@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.ActionGroup;

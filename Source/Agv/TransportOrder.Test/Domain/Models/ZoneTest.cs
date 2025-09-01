@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;

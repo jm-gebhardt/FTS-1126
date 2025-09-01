@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using RemoveAgvFromZones = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZones;
 using RemoveAgvFromZone = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZone;

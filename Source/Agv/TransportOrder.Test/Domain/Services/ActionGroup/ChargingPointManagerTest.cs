@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

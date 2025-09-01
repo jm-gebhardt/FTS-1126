@@ -7,7 +7,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 

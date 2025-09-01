@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -1186,7 +1185,7 @@ public class ActionGroupRepositoryTest
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task AgvHasPendingActions_CreatedActionGroupWithoutAssignedAgv_ReturnsExpectedValue(bool isQueued)
     {
         var agv = Guid.NewGuid();
@@ -1214,7 +1213,7 @@ public class ActionGroupRepositoryTest
     [DataRow(ActionState.Completed, ActionState.Started, false)]
     [DataRow(ActionState.Completed, ActionState.Completed, false)]
     [DataRow(ActionState.Created, ActionState.Created, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task AgvHasPendingActions_ActionGroupWithAssignedAgv_ReturnsExpectedValue(ActionState pickActionState, ActionState dropActionState, bool expected)
     {
         var agv = Guid.NewGuid();
@@ -1228,7 +1227,7 @@ public class ActionGroupRepositoryTest
         
     [DataRow(ActionState.Started)]
     [DataRow(ActionState.Created)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task FilterAgvsWithPriorityActionGroups_ValidData_ReturnsAgvsWithPriorityActionGroups(ActionState pickActionState)
     {
         var agvWithPriorityGroup = Guid.NewGuid();
@@ -1250,7 +1249,7 @@ public class ActionGroupRepositoryTest
     [DataRow(ActionState.Aborted)]
     [DataRow(ActionState.Completed)]
     [DataRow(ActionState.Canceled)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task FilterAgvsWithPriorityActionGroups_NoPriorityActionGroupsInValidState_ReturnsAgvsWithPriorityActionGroups(ActionState actionState)
     {
         var agvWithPriorityGroup = Guid.NewGuid();

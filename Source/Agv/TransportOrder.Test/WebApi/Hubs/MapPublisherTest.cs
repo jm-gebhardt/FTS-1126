@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Hubs;

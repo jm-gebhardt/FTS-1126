@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Extensions;
@@ -9,7 +8,7 @@ namespace Gebhardt.Acc.CommonTest.Extensions;
 [TestClass]
 public class NodeExtensionTest
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Pick)]
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsPickStation_PickTypes_True(AgvGraph.NodeType nodeType)
@@ -17,7 +16,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsPickStation().ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop })]
     [DataRow(new[] { AgvGraph.NodeType.Park, AgvGraph.NodeType.Pick })]
     public void IsPickStation_PickTypesAdditionalType_True(ICollection<AgvGraph.NodeType> nodeTypes)
@@ -25,7 +24,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).IsPickStation().ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Drop)]
     [DataRow(AgvGraph.NodeType.Charge)]
     [DataRow(AgvGraph.NodeType.WayPoint)]
@@ -34,7 +33,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsPickStation().ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Drop)]
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsDropStation_DropTypes_True(AgvGraph.NodeType nodeType)
@@ -42,7 +41,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsDropStation().ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop })]
     [DataRow(new[] { AgvGraph.NodeType.Drop, AgvGraph.NodeType.Pick })]
     public void IsDropStation_DropTypesAdditionalType_True(ICollection<AgvGraph.NodeType> nodeTypes)
@@ -50,7 +49,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).IsDropStation().ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Pick)]
     [DataRow(AgvGraph.NodeType.Charge)]
     [DataRow(AgvGraph.NodeType.WayPoint)]
@@ -59,7 +58,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsDropStation().ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop })]
     [DataRow(new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.WayPoint })]
     [DataRow(new[] { AgvGraph.NodeType.WayPoint, AgvGraph.NodeType.Pick })]
@@ -70,7 +69,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).IsStation().ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Drop)]
     [DataRow(AgvGraph.NodeType.PickDrop)]
     [DataRow(AgvGraph.NodeType.Pick)]
@@ -82,14 +81,14 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsStation().ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.WayPoint)]
     public void IsStation_Waypoint_False(AgvGraph.NodeType nodeType)
     {
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsStation().ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop }, false)]
     [DataRow(new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.WayPoint }, true)]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Charge }, true)]
@@ -99,7 +98,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).NeedsReservation().ShouldBe(expected);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop }, false)]
     [DataRow(new[] { AgvGraph.NodeType.Park, AgvGraph.NodeType.WayPoint }, true)]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Park }, true)]
@@ -109,7 +108,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).IsParker().ShouldBe(expected);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop }, false)]
     [DataRow(new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.WayPoint }, true)]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Charge }, true)]
@@ -119,7 +118,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).IsCharger().ShouldBe(expected);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop }, AgvGraph.NodeType.Pick)]
     [DataRow(new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.WayPoint }, AgvGraph.NodeType.Charge)]
     [DataRow(new[] { AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park }, AgvGraph.NodeType.PickDrop)]
@@ -128,7 +127,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).GetPrimaryType().ShouldBe(expected);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Pick, AgvGraph.NodeType.Pick)]
     [DataRow(AgvGraph.NodeType.Charge, AgvGraph.NodeType.Charge)]
     [DataRow(AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.PickDrop)]
@@ -137,7 +136,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).GetPrimaryType().ShouldBe(expected);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop }, new[] { AgvGraph.NodeType.Drop })]
     [DataRow(new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.WayPoint }, new[] { AgvGraph.NodeType.WayPoint })]
     [DataRow(new[] { AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park, AgvGraph.NodeType.Maintenance }, new[] { AgvGraph.NodeType.Park, AgvGraph.NodeType.Maintenance })]
@@ -152,7 +151,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: AgvGraph.NodeType.Charge).GetAdditionalTypes().ShouldBeEmpty();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.WayPoint }, new[] { AgvGraph.NodeType.Charge })]
     [DataRow(new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }, new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park })]
     [DataRow(new[] { AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park, AgvGraph.NodeType.Maintenance }, new[] { AgvGraph.NodeType.Park })]
@@ -161,7 +160,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).GetReservableNodeTypes().ShouldBe(expected);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.WayPoint })]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop })]
     public void GetReservableNodeTypes_AdditionalType_NoReservableTypes_Empty(ICollection<AgvGraph.NodeType> nodeTypes)
@@ -169,7 +168,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNodeWithMultipleTypes(nodeId: "id", nodeTypes: nodeTypes.ToList()).GetReservableNodeTypes().ShouldBeEmpty();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Drop)]
     [DataRow(AgvGraph.NodeType.PickDrop)]
     [DataRow(AgvGraph.NodeType.Pick)]
@@ -180,7 +179,7 @@ public class NodeExtensionTest
         NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).GetReservableNodeTypes().ShouldBeEmpty();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Charge)]
     [DataRow(AgvGraph.NodeType.Park)]
     public void GetReservableNodeTypes_AdditionalType_ReservableTypes_ReturnsNodeTypes(AgvGraph.NodeType nodeType)

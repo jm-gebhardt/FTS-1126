@@ -11,7 +11,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
@@ -185,7 +184,7 @@ public class MoveAgvRequestHandlerTest
             new ChargeAgv(agv.CorrelationId, charger.Id)));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.PickDrop)]
     [DataRow(AgvGraph.NodeType.Drop)]
     [DataRow(AgvGraph.NodeType.Pick)]

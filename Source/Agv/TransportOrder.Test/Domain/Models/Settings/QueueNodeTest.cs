@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.Settings;

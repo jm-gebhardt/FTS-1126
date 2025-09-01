@@ -11,7 +11,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 using AgvMode = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvMode;
@@ -360,7 +359,7 @@ public class AgvEventHandlerTest
     [DataRow(CurrentActionGroupPolicy.FinishActionGroup, false)]
     [DataRow(CurrentActionGroupPolicy.FinishAction, false)]
     [DataRow(CurrentActionGroupPolicy.Pause, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvModeChangePending_StartedActionGroup_PublishesPauseActionGroupDependingOnCurrentActionGroupPolicy(CurrentActionGroupPolicy policy, bool shouldPublish)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -385,7 +384,7 @@ public class AgvEventHandlerTest
     [DataRow(CurrentActionGroupPolicy.FinishActionGroup, false, true)]
     [DataRow(CurrentActionGroupPolicy.FinishAction, false, true)]
     [DataRow(CurrentActionGroupPolicy.Pause, false, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvModeChangePending_StartedEphemeralActionGroup_PublishesCancelOrAbortActionGroup(CurrentActionGroupPolicy policy, bool isQueueHead, bool isQueueing)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -405,7 +404,7 @@ public class AgvEventHandlerTest
 
     [DataRow(AssignedActionGroupPolicy.LeaveAssigned, false)]
     [DataRow(AssignedActionGroupPolicy.Reset, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvModeChangePending_CreatedAutomaticActionGroup_PublishesResetActionGroupDependingOnAssignedActionGroupsPolicy(AssignedActionGroupPolicy policy, bool shouldPublish)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -422,7 +421,7 @@ public class AgvEventHandlerTest
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvModeChangePending_CreatedAutomaticActionGroup_PublishesResetActionGroupDependingOnCancelManualActionsPolicy(bool cancelManualActions)
     {
         var mode = new AgvMode(ModeType.Normal);

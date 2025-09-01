@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
@@ -24,7 +23,7 @@ public class StationExtensionTest
     [DataRow(Function.Pick, AgvGraph.NodeType.Pick)]
     [DataRow(Function.Drop, AgvGraph.NodeType.Drop)]
     [DataRow(Function.Charge, AgvGraph.NodeType.Charge)]
-    [DataTestMethod]
+    [TestMethod]
     public void ToGraphNode_ValidData_ConvertsStationTypeCorrectly(Function function, AgvGraph.NodeType nodeType)
     {
         const float yaxis = 1;

@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.ActionGroup;

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using System.Globalization;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
@@ -96,7 +95,7 @@ public class AgvActionExtensionTest
     [DataRow(ActionType.Drop)]
     [DataRow(ActionType.Move)]
     [DataRow(ActionType.Charge)]
-    [DataTestMethod]
+    [TestMethod]
     public void GetSourceStation_IsNotPick_ReturnsNull(ActionType actionType)
     {
         var action = new AgvAction(Guid.NewGuid(), actionType, "a node", Guid.NewGuid());
@@ -105,7 +104,7 @@ public class AgvActionExtensionTest
 
     [DataRow(OrderRecordType.OrderUpdate)]
     [DataRow(OrderRecordType.Order)]
-    [DataTestMethod]
+    [TestMethod]
     public void ConvertToMoveToCoordinateOrder_ValidData_ReturnsMqttOrder(OrderRecordType recordType)
     {
         const string agvSerialNumber = "serialNumber";
@@ -133,7 +132,7 @@ public class AgvActionExtensionTest
     [DataRow(ActionType.Drop)]
     [DataRow(ActionType.Move)]
     [DataRow(ActionType.Charge)]
-    [DataTestMethod]
+    [TestMethod]
     public void ConvertToMoveToCoordinateOrder_NotMoveToCoordinate_ThrowsInvalidOperationException(ActionType actionType)
     {
         var action = new AgvAction(Guid.NewGuid(), actionType, "a node", Guid.NewGuid());
@@ -144,7 +143,7 @@ public class AgvActionExtensionTest
 
     [DataRow(OrderRecordType.OrderUpdate)]
     [DataRow(OrderRecordType.Order)]
-    [DataTestMethod]
+    [TestMethod]
     public void ConvertToMoveToStationsOrder_ValidData_ReturnsMqttOrder(OrderRecordType recordType)
     {
         var actionCorrelationId = Guid.NewGuid();
@@ -178,7 +177,7 @@ public class AgvActionExtensionTest
 
     [DataRow(OrderRecordType.OrderUpdate)]
     [DataRow(OrderRecordType.Order)]
-    [DataTestMethod]
+    [TestMethod]
     public void ConvertToOrder_IsMoveToCoordinate_ReturnsMqttOrder(OrderRecordType recordType)
     {
         const string agvSerialNumber = "serialNumber";
@@ -205,7 +204,7 @@ public class AgvActionExtensionTest
 
     [DataRow(OrderRecordType.OrderUpdate)]
     [DataRow(OrderRecordType.Order)]
-    [DataTestMethod]
+    [TestMethod]
     public void ConvertToOrder_IsNotMoveToCoordinate_ReturnsMqttOrder(OrderRecordType recordType)
     {
         var actionCorrelationId = Guid.NewGuid();

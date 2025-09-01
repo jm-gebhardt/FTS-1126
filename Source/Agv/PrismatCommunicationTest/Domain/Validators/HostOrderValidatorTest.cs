@@ -4,7 +4,6 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Validators;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Domain.Validators;

@@ -2,7 +2,6 @@
 using Gebhardt.Acc.TransportOrder.Messages.Events.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.RestrictedArea;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;

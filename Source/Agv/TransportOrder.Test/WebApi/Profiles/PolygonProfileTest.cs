@@ -3,7 +3,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 

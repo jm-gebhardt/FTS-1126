@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.CommandHandler;

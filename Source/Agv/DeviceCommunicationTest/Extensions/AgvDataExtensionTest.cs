@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;

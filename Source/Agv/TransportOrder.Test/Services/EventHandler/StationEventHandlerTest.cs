@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 

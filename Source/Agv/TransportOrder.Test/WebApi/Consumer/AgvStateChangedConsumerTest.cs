@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;

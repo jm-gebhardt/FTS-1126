@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.KaeserSidecar.Domain.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Repositories;

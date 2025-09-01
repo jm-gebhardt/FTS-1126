@@ -1,5 +1,4 @@
 using Gebhardt.Acc.Common;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest;

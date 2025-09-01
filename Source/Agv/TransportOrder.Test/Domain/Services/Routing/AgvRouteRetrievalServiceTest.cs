@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Repositories;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 

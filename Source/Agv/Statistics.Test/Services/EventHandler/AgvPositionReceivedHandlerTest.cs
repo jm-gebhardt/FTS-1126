@@ -5,7 +5,6 @@ using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Messages.Events;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Services.EventHandler;

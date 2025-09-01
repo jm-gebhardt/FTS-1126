@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
@@ -7,7 +6,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 [TestClass]
 public class PolygonExtensionTest
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(2, 2, true)]
     [DataRow(4, 2, false)]
     public void PointIsInPolygon_SimplePolygon_ReturnsExpectedValue(float x, float y, bool expectedValue)
@@ -29,7 +28,7 @@ public class PolygonExtensionTest
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(6, 4, true)]
     [DataRow(8, 4, false)]
     public void PointIsInPolygon_OnThreshold_ReturnsExpectedValue(float x, float y, bool expectedValue)
@@ -60,7 +59,7 @@ public class PolygonExtensionTest
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(9, 5, true)]
     [DataRow(6, 5, false)]
     public void PointIsInPolygon_Concave_ReturnsExpectedValue(float x, float y, bool expectedValue)
@@ -93,7 +92,7 @@ public class PolygonExtensionTest
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(4, 6, true)]
     [DataRow(5, 4, false)]
     public void PointIsInPolygon_CrossingLines_ReturnsExpectedValue(float x, float y, bool expectedValue)
@@ -124,7 +123,7 @@ public class PolygonExtensionTest
         polygon.PointIsInPolygon(x, y).ShouldBe(expectedValue);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(6, 6, true)]
     [DataRow(6, 4, false)]
     public void PointIsInPolygon_Clockwise_ReturnsExpectedValue(float x, float y, bool expectedValue)

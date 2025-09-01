@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;

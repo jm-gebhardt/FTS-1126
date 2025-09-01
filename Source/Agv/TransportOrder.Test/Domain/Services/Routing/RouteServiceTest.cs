@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Routing.Exceptions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;

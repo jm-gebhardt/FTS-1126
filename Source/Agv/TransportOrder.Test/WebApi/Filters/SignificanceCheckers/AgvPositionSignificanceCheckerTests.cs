@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvPositionSignificanceChecker = Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
 

@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

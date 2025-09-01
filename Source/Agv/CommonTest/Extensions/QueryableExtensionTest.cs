@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Extensions;

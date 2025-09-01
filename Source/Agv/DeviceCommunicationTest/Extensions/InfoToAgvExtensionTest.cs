@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
@@ -9,7 +8,7 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
 [TestClass]
 public class InfoToAgvMessageExtension
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("1.0", true)]
     [DataRow("0", false)]
     [DataRow("", false)]
@@ -42,7 +41,7 @@ public class InfoToAgvMessageExtension
         rotationNeeded.ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("1", 1d)]
     [DataRow("1.5", 1.5d)]
     [DataRow("3.35", 3.35d)]
@@ -64,7 +63,7 @@ public class InfoToAgvMessageExtension
         infoToAgv.GetDockFront().ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("true", true)]
     [DataRow("false", false)]
     [DataRow("any other string", true)]

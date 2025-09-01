@@ -2,7 +2,6 @@
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
@@ -18,7 +17,7 @@ public class EfRestrictedAreaRepositoryTest
         (await fixture.Repository.IsPointInRestrictedArea(1,1)).ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(2,2,true)]
     [DataRow(4,2,false)]
     public async Task IsPointInRestrictedArea_ValidData_ReturnsExpectedValue(float x, float y, bool expectedValue)

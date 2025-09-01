@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
@@ -8,7 +7,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 [TestClass]
 public class NodeTyperHelperTest
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Pick)]
     [DataRow(AgvGraph.NodeType.Drop)]
     [DataRow(AgvGraph.NodeType.PickDrop)]
@@ -18,7 +17,7 @@ public class NodeTyperHelperTest
         isSource.ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.WayPoint)]
     [DataRow(AgvGraph.NodeType.Charge)]
     [DataRow(AgvGraph.NodeType.Park)]
@@ -28,7 +27,7 @@ public class NodeTyperHelperTest
         isSource.ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Pick)]
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsSource_ReturnsTrue_WhenNodeTypeIsSource(AgvGraph.NodeType nodeType)
@@ -37,7 +36,7 @@ public class NodeTyperHelperTest
         isSource.ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.WayPoint)]
     [DataRow(AgvGraph.NodeType.Charge)]
     [DataRow(AgvGraph.NodeType.Drop)]
@@ -48,7 +47,7 @@ public class NodeTyperHelperTest
         isSource.ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.Drop)]
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsDestination_ReturnsTrue_WhenNodeTypeIsDestination(AgvGraph.NodeType nodeType)
@@ -57,7 +56,7 @@ public class NodeTyperHelperTest
         isSource.ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(AgvGraph.NodeType.WayPoint)]
     [DataRow(AgvGraph.NodeType.Charge)]
     [DataRow(AgvGraph.NodeType.Pick)]

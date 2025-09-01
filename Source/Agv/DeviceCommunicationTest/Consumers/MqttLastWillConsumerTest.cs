@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ConnectionState = Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums.ConnectionState;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
@@ -13,7 +12,7 @@ public class MqttLastWillConsumerTest
 {
     [DataRow(ConnectionState.Offline)]
     [DataRow(ConnectionState.ConnectionBroken)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_MqttAgvLastWill_ValidData_PublishesAgvLastWillReceived(ConnectionState connectionState)
     {
         var fixture = new LastWillConsumerTestFixture();

@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

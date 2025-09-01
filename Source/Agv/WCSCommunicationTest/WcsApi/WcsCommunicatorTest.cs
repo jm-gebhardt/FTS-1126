@@ -2,7 +2,6 @@
 using Gebhardt.Acc.WCSCommunication.Domain.Exceptions;
 using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using Gebhardt.Acc.WCSCommunicationTest.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.WCSCommunicationTest.WcsApi;

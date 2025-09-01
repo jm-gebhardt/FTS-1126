@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Messages;
 

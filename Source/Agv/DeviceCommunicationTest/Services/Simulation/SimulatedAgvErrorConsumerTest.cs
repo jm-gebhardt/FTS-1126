@@ -5,7 +5,6 @@ using Gebhardt.Acc.DeviceCommunication.SimAgv.Commands;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

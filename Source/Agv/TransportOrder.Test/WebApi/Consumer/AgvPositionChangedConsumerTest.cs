@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;

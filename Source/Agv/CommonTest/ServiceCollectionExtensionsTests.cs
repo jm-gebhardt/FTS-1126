@@ -2,7 +2,7 @@ using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest;
 
@@ -16,14 +16,13 @@ public class ServiceCollectionExtensionsTests
     /// Test no RabbitMQ config provided
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
     public void ConfigureServices_NoConfigProvided()
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(
             new Dictionary<string, string?>()
         ).Build();
         ServiceCollection services = new();
-        services.ConfigureServicesMassTransit(configuration);
+        Should.Throw<InvalidOperationException>(() => services.ConfigureServicesMassTransit(configuration));
     }
 
     /// <summary>

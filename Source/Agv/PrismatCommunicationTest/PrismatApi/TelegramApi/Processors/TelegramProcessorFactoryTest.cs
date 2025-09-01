@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.PrismatApi.TelegramApi.Processors;

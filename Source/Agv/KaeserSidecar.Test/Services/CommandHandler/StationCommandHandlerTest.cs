@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.CommandHandler;

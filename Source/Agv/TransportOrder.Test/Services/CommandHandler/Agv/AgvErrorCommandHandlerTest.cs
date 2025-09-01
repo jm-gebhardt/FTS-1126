@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

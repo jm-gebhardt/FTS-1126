@@ -7,7 +7,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;

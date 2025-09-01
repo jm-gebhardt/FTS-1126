@@ -8,7 +8,6 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Profiles;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

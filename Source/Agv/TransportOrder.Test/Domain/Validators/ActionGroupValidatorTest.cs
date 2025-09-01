@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -501,7 +500,7 @@ public class ActionGroupValidatorTest
 
     [DataRow(ActionType.Pick)]
     [DataRow(ActionType.Drop)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task ValidateAsync_OnlyPickOrDrop_CreatedByWebApi_Passes(ActionType actionType)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -535,7 +534,7 @@ public class ActionGroupValidatorTest
 
     [DataRow(ActionType.Pick)]
     [DataRow(ActionType.Drop)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task ValidateAsync_OnlyPickOrDrop_NotCreatedByWebApi_Fails(ActionType actionType)
     {
         var agv = AgvGenerator.GenerateIdleAgv();

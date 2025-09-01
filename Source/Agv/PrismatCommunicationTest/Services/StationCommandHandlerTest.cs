@@ -3,7 +3,6 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

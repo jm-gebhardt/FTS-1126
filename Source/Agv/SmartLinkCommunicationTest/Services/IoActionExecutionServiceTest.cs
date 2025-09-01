@@ -1,7 +1,6 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Gebhardt.Acc.SmartLinkCommunicationTest.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.SmartLinkCommunicationTest.Services;

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Statistics.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Extensions;

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
@@ -26,7 +25,7 @@ public class RestrictedAreaTest
         }
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(2, 2, true)]
     [DataRow(4, 2, false)]
     public void IsPositionInside_ValidData_ReturnsExpectedValue(float x, float y, bool expectedValue)

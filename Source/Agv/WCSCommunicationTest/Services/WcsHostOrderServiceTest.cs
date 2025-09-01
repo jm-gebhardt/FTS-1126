@@ -3,7 +3,6 @@ using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
 using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 using MassTransit.Testing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

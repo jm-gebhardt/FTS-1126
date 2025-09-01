@@ -9,7 +9,6 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
@@ -43,7 +42,7 @@ public class HostOrderCommandHandlerTest
 
     [DataRow(KaeserGraphConfiguration.ErrorCodeTargetUnknown)]
     [DataRow(KaeserGraphConfiguration.ErrorCodeSourceUnknown)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateHostOrder_ValidationError_CreatesOrder(int errorCode)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
@@ -233,7 +232,7 @@ public class HostOrderCommandHandlerTest
 
     [DataRow(0)] //1020
     [DataRow(1)] //1040
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup(int input)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
@@ -264,7 +263,7 @@ public class HostOrderCommandHandlerTest
 
     [DataRow(0)] //1020
     [DataRow(1)] //1040
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_PublishesCreateActionGroup(int input)
     {
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
@@ -286,7 +285,7 @@ public class HostOrderCommandHandlerTest
 
     [DataRow(0)] //1050
     [DataRow(1)] //1060
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_NoDropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueActionGroup(int output)
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
@@ -317,7 +316,7 @@ public class HostOrderCommandHandlerTest
 
     [DataRow(0)] //1050
     [DataRow(1)] //1060
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsEmpty_PublishesCreateActionGroup(int output)
     {
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
@@ -340,7 +339,7 @@ public class HostOrderCommandHandlerTest
 
     [DataRow(0)] //1050
     [DataRow(1)] //1060
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsNotEmpty_QueueActionGroup(int output)
     {
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
@@ -520,7 +519,7 @@ public class HostOrderCommandHandlerTest
 
     [DataRow(0)] //1020
     [DataRow(1)] //1040
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_PassTriggerPoint_ShouldPickNext_LongCircuitWE_PublishesQueueActionGroup(int input)
     {
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());

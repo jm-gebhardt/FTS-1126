@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.RestrictedArea;

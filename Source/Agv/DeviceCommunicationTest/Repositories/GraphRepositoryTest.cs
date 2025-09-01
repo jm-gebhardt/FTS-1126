@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;

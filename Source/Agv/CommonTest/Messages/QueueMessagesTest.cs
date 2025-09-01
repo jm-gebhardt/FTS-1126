@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.CommonTest.Messages;
 

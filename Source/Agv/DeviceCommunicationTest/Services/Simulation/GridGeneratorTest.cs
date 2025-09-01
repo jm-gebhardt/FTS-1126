@@ -1,7 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Maps;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
@@ -178,7 +177,6 @@ public class GridGeneratorTest
     }
 
     [TestMethod]
-    [ExpectedException(typeof(IndexOutOfRangeException))]
     public void GenerateGrid_WithThreeServiceNode_GridLengthOne_ExpectIndexOutOfRangeException()
     {
         string[] sources = GenerateNodeIds("S", 2);
@@ -186,7 +184,7 @@ public class GridGeneratorTest
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 1,
             new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Charge, AgvGraph.NodeType.Charge }
         );
-        generator.Generate(Guid.NewGuid());
+        Should.Throw<IndexOutOfRangeException>(() => generator.Generate(Guid.NewGuid()));
     }
 
     private static string[] GenerateNodeIds(string suffix, int count)

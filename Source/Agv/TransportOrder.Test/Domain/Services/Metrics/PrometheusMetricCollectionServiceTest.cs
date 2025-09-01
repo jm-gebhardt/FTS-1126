@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 
@@ -110,7 +109,7 @@ public class PrometheusMetricCollectionServiceTest
 
     [DataRow(ActionState.Completed)]
     [DataRow(ActionState.Aborted)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task CollectOrderCompletionMetrics_ChargingOrder_MetricsUpdated(ActionState chargeActionState)
     {
         var agvId = Guid.NewGuid();

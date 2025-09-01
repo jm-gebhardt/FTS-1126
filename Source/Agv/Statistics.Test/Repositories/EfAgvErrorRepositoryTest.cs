@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvError = Gebhardt.Acc.Statistics.Domain.Models.AgvError;
 

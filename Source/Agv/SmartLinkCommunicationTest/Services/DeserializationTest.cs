@@ -1,5 +1,4 @@
 using Gebhardt.Acc.SmartLinkCommunication.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Shouldly;
 

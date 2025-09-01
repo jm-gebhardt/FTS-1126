@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -65,7 +64,7 @@ public class ActionGroupDurationEstimationServiceTest
 
     [DataRow(0, 0)]
     [DataRow(1, 1)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task GetDurationEstimate_MoveToCoordinate_ReturnsDuration(double velocity, double expectedDuration)
     {
         var agvPositionStatus = new AgvPositionStatus(Guid.NewGuid(), "agv", new AgvPosition(true, 0, 1, 0, 0));
@@ -79,7 +78,7 @@ public class ActionGroupDurationEstimationServiceTest
 
     [DataRow(0, 0)]
     [DataRow(1, 1)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task GetDurationEstimate_MoveFromCoordinateToGraph_ReturnsDuration(double velocity, double expectedDuration)
     {
         var node = new GraphNode("a node", 1, 1, 0, AgvGraph.NodeType.WayPoint, null, null, null);

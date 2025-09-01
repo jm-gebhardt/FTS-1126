@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
@@ -11,7 +10,7 @@ public class CargoTriggerPointEventHandlerTest
 {
     [DataRow(0)] //1050
     [DataRow(1)] //1060
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvPassedCargoTriggerPoint_PickAt9060_ReportsToConveyor(int output)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output));
@@ -31,7 +30,7 @@ public class CargoTriggerPointEventHandlerTest
 
     [DataRow(0)] //1020
     [DataRow(1)] //1040
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvPassedCargoTriggerPoint_PickAt1040Or1060_DoesNotReportToConveyor(int input)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input));
@@ -51,7 +50,7 @@ public class CargoTriggerPointEventHandlerTest
 
     [DataRow(0)] //1020
     [DataRow(1)] //1040
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvPassedCargoTriggerPoint_DropAt9070_ReportsToConveyor(int input)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder(pickTarget: input));
@@ -71,7 +70,7 @@ public class CargoTriggerPointEventHandlerTest
 
     [DataRow(0)] //1050
     [DataRow(1)] //1060
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvPassedCargoTriggerPoint_DropAt1060Or1050_ReportsToConveyor(int output)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output));

@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

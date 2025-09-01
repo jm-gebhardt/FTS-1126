@@ -4,7 +4,6 @@ using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using Gebhardt.Acc.Statistics.Messages.Requests;
 using Gebhardt.Acc.Statistics.Services.RequestResponseHandler;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Services.RequestHandler;

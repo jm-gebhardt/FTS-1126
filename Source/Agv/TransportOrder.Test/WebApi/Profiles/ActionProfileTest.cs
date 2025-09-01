@@ -4,7 +4,6 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using ActionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.ActionProfile;

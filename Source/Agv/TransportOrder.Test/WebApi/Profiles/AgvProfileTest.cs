@@ -9,7 +9,6 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvErrorProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvErrorProfile;
 using AgvProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvProfile;

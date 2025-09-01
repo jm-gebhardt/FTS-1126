@@ -1,6 +1,5 @@
 using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Gebhardt.Acc.SmartLinkCommunicationTest.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

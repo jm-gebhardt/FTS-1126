@@ -6,7 +6,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;

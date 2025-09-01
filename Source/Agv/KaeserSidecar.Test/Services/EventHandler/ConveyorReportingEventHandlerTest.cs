@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 
@@ -11,7 +10,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
 [TestClass]
 public class ConveyorReportingEventHandlerTest
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(false, "1020")]
     [DataRow(true, null)]
     public async Task Consume_DroppingAgvPassedDoppelspielTriggerPoint_DropAt1050DroppingNextPickAvailable_ReportsToConveyor(bool hasLowBatteryLevel, string? pickStation)

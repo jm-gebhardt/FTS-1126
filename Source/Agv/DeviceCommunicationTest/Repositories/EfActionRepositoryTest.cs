@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Repositories;

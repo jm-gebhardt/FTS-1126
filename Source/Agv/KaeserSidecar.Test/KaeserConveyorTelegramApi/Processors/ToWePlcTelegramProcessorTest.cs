@@ -2,7 +2,6 @@
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi.Processors;

@@ -2,7 +2,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;

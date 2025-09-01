@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;

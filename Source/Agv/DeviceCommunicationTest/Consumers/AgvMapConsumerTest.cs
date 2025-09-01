@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;

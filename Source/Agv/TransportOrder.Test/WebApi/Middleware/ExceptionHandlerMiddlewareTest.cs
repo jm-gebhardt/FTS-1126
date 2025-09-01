@@ -7,7 +7,6 @@ using Gebhardt.Acc.TransportOrder.Routing.Exceptions;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

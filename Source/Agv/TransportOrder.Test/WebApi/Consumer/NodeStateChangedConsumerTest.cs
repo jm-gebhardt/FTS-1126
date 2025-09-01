@@ -2,7 +2,6 @@
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

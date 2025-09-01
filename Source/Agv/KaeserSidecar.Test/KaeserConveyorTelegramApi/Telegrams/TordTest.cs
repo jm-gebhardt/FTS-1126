@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.KaeserConveyorTelegramApi.Telegrams;

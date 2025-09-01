@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.Agv;
@@ -466,7 +465,7 @@ public class AgvTest
     [DataRow(ModeType.Maintenance, ModeType.Normal, true)]
     [DataRow(ModeType.Maintenance, ModeType.UserMode, true)]
     [DataRow(ModeType.Maintenance, ModeType.Locked, true)]
-    [DataTestMethod]
+    [TestMethod]
     public void ShouldStartManualAction_ValidData_ValueDependsOnPendingAndCurrentMode(ModeType currentMode, ModeType? pendingMode, bool expectedValue)
     {
         var mode = new AgvMode(currentMode, Guid.NewGuid());

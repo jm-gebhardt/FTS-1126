@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Domain.Models;
@@ -44,7 +43,7 @@ public class KaeserGraphConfigurationTest
     [DataRow("1040", false)]
     [DataRow("9060", false)]
     [DataRow("9070", false)]
-    [DataTestMethod]
+    [TestMethod]
     public void IsDropAtAkl_ReturnsExpectedValue(string target, bool expected)
     {
         var kaeserGraph = new KaeserGraphConfiguration();
@@ -65,7 +64,7 @@ public class KaeserGraphConfigurationTest
     [DataRow("1040", false)]
     [DataRow("9060", false)]
     [DataRow("9070", false)]
-    [DataTestMethod]
+    [TestMethod]
     public void IsPickAtAkl_ReturnsExpectedValue(string target, bool expected)
     {
         var kaeserGraph = new KaeserGraphConfiguration();

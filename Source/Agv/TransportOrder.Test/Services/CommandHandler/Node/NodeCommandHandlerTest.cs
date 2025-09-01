@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Node;
@@ -33,7 +32,7 @@ public class NodeCommandHandlerTest
 
     [DataRow(NodeLockState.Occupied)]
     [DataRow(NodeLockState.Free)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_FreeNodeReservedOnly_NotReserved_FreeNodeNotCalled(NodeLockState state)
     {
         const string nodeId = "Charge-0";

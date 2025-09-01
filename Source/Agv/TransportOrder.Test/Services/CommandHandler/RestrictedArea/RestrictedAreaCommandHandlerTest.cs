@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Events.RestrictedArea;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.RestrictedArea;
 

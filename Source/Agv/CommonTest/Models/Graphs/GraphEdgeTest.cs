@@ -1,5 +1,4 @@
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using System.Numerics;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;

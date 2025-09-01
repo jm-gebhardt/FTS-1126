@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Validators;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Domain.Validators;
 
@@ -12,7 +11,7 @@ public class HostOrderActionValidatorTest
 {
     [DataRow(ActionType.Pick)]
     [DataRow(ActionType.Drop)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task ValidateAsync_ActionIsValid_Passes(ActionType actionType)
     {
         var config = OrderGenerator.KaeserConfiguration;
@@ -32,7 +31,7 @@ public class HostOrderActionValidatorTest
 
     [DataRow(ActionType.Drop, KaeserGraphConfiguration.ErrorCodeTargetUnknown)]
     [DataRow(ActionType.Pick, KaeserGraphConfiguration.ErrorCodeSourceUnknown)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task ValidateAsync_ActionHasUnknownNode_Fails(ActionType actionType, int errorCode)
     {
         var config = OrderGenerator.KaeserConfiguration;

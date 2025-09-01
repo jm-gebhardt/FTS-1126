@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Services;
@@ -8,7 +7,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Services;
 [TestClass]
 public class AgvSettingsServiceTest
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(-1, true)]
     [DataRow(0, true)]
     [DataRow(1, false)]

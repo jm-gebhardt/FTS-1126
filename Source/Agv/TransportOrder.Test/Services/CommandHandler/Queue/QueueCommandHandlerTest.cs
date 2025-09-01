@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Queue;

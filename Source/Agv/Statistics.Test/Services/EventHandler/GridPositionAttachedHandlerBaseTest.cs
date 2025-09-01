@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Statistics.Messages.Events;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
 using Gebhardt.Acc.Statistics.Test.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

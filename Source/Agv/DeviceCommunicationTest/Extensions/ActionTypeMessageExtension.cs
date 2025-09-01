@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;

@@ -3,7 +3,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

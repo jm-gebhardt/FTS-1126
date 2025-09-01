@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles.Resolver;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Profiles;

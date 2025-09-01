@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;

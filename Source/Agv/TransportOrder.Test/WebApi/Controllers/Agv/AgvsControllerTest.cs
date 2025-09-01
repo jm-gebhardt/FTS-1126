@@ -6,7 +6,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Significance;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Common.Testing.Services.Filters;
@@ -22,7 +21,7 @@ public class AgvPositionSignificanceCheckerTest
         _checker = new AgvPositionSignificanceChecker(_config);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(nameof(AgvPosition.X), 0.5f, true)]
     [DataRow(nameof(AgvPosition.X), -0.5f, true)]
     [DataRow(nameof(AgvPosition.X), 0.4999f, false)]

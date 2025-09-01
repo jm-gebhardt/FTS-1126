@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using Graph = Gebhardt.Acc.Common.Domain.Models.Graphs.Graph;
 using GraphNode = Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode;

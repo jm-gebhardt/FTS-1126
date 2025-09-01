@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Testing.Filters;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Services.Filters;

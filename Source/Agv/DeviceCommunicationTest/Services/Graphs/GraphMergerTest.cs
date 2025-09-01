@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Graphs;

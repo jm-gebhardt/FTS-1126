@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.Settings;

@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
 using Gebhardt.Acc.Statistics.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Repositories;

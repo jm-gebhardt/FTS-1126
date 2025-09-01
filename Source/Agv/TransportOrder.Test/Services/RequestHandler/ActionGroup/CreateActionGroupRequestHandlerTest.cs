@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using ValidationResult = FluentValidation.Results.ValidationResult;
@@ -207,7 +206,7 @@ public class CreateActionGroupRequestHandlerTest
 
     [DataRow(AgvGraph.NodeType.Pick, "source", null)]
     [DataRow(AgvGraph.NodeType.Drop, null, "target")]
-    [DataTestMethod]
+    [TestMethod]
     public async Task CreatePickDropActionGroup_OnlyPickOrDrop_NoAssignedAgv_ThrowsAgvNotAssignedToActionGroupException(AgvGraph.NodeType nodeType, string? source, string? target)
     {
         var node = new GraphNode("a known node") { Type = nodeType };
@@ -254,7 +253,7 @@ public class CreateActionGroupRequestHandlerTest
 
     [DataRow(AgvGraph.NodeType.Pick, "source", null)]
     [DataRow(AgvGraph.NodeType.Drop, null, "target")]
-    [DataTestMethod]
+    [TestMethod]
     public async Task CreatePickDropActionGroup_OnlyPickOrDrop_AssignedAgvNotInOrPendingMaintenanceMode_ThrowsActionNotAllowedInModeException(AgvGraph.NodeType nodeType, string? source, string? target)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -283,7 +282,7 @@ public class CreateActionGroupRequestHandlerTest
 
     [DataRow(AgvGraph.NodeType.Pick, "source", null)]
     [DataRow(AgvGraph.NodeType.Drop, null, "target")]
-    [DataTestMethod]
+    [TestMethod]
     public async Task CreatePickDropActionGroup_OnlyPickOrDrop_ValidData_PublishesActionGroupCreated(AgvGraph.NodeType nodeType, string? source, string? target)
     {
         var agv = AgvGenerator.GenerateIdleAgv();

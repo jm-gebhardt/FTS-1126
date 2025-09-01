@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Reflection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AutoFixture;
 using AutoFixture.Kernel;
@@ -126,7 +125,7 @@ public sealed class MqttStatusSignificanceCheckerTests
     /// <summary>
     /// Ensure that a newly added property in MqttState automatically makes the test fail
     /// </summary>
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(GetPublicProperties), DynamicDataSourceType.Method)]
     public void HasSignificantChanges_ReturnsTrue_WhenSinglePropertyChanges(PropertyInfo property)
     {

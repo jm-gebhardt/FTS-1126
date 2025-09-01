@@ -11,7 +11,6 @@ using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

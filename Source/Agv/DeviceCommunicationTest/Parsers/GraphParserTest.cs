@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.MessageParsers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Parsers;

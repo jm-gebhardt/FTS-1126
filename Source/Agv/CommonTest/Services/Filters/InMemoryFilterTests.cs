@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shouldly;
+﻿using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Services.Filters;
 

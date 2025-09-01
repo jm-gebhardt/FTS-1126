@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Trigger;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Trigger;

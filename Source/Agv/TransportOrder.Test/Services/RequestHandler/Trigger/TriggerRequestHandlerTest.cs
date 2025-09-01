@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 

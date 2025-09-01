@@ -1,5 +1,4 @@
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.WCSCommunicationTest.Services;

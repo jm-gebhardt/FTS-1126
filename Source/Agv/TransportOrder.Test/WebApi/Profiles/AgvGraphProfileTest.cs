@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using Graph = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Graph;
 using GraphEdge = Gebhardt.Acc.TransportOrder.Messages.MessageContent.GraphEdge;

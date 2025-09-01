@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

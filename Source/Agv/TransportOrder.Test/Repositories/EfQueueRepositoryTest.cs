@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
@@ -97,7 +96,7 @@ public class EfQueueRepositoryTest
 
     [DataRow(NodeLockState.Free, NodeLockState.Occupied)]
     [DataRow(NodeLockState.Free, NodeLockState.Reserved)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task GetQueueForAgv_AgvHasNodeInQueue_ReturnsQueue(params NodeLockState[] lockStates)
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(name: "capacity", lockStates: lockStates);

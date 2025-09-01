@@ -2,7 +2,6 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

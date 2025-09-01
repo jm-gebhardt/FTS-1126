@@ -18,7 +18,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
@@ -542,7 +541,7 @@ public class AgvCommandHandlerTest
     [DataRow(new[] { "PS01" }, new string[] { })]
     [DataRow(new[] { "PS01" }, null)]
     [DataRow(new[] { "PS01", "APL1" }, new[] { "APL1" })]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_UpdateAgvStatus_StationIdsChanged_StatusStoredPublishesAgvStationsChanged(ICollection<string>? previous, ICollection<string>? current)
     {
         var agvCorrelationId = Guid.NewGuid();
@@ -568,7 +567,7 @@ public class AgvCommandHandlerTest
     [DataRow(new string[] { }, new string[] { })]
     [DataRow(new[] { "PS01" }, new[] { "PS01" })]
     [DataRow(new[] { "PS01", "APL1" }, new[] { "PS01", "APL1" })]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_UpdateAgvStatus_StationIdsUnchanged_DoesNotPublishAgvStationsChanged(ICollection<string>? previous, ICollection<string>? current)
     {
         var agvCorrelationId = Guid.NewGuid();
@@ -1286,7 +1285,7 @@ public class AgvCommandHandlerTest
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_PrepareIdleActionOfAgv_AgvIsLocked_DoesNotPublishIdleNodeSelectedForAgv(bool infiniteCharging)
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
@@ -1310,7 +1309,7 @@ public class AgvCommandHandlerTest
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_PrepareIdleActionOfAgv_HasAssignedActionGroup_DoesNotPublishParkingNodeSelectedForAgv(bool infiniteCharging)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -1614,7 +1613,7 @@ public class AgvCommandHandlerTest
     [DataRow(ModeType.Normal, ModeType.UserMode)]
     [DataRow(ModeType.Normal, ModeType.Locked)]
     [DataRow(ModeType.Maintenance, ModeType.Locked)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_SwitchMode_ValidData_PublishesAgvModeChanged(ModeType previousType, ModeType pendingType)
     {
         var mode = new AgvMode(previousType, Guid.NewGuid());

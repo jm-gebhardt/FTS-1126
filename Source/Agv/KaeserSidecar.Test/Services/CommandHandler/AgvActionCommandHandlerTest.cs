@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;

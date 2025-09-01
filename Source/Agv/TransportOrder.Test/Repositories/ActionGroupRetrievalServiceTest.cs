@@ -9,7 +9,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;

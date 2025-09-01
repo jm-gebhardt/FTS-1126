@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Routing;
@@ -17,7 +16,7 @@ public class RoutingPlausibilityCheckerTest
         _routingPlausibilityChecker = new RoutingPlausibilityChecker();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(NoneIsActionType), DynamicDataSourceType.Method)]
     public void IsPlausible_ReturnsTrue_WhenNoneIsOfActionType(GraphNode source, GraphNode destination)
     {
@@ -25,7 +24,7 @@ public class RoutingPlausibilityCheckerTest
         isPlausible.ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(SourcesGoesToDestination), DynamicDataSourceType.Method)]
     public void IsPlausible_ReturnsTrue_WhenSourceGoesToDestination(GraphNode source, GraphNode destination)
     {
@@ -33,7 +32,7 @@ public class RoutingPlausibilityCheckerTest
         isPlausible.ShouldBeTrue();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(SourcesGoesNotToDestination), DynamicDataSourceType.Method)]
     [DynamicData(nameof(NoSourcesGoesToDestination), DynamicDataSourceType.Method)]
     public void IsPlausible_ReturnsFalse_WhenSourceGoesNotToDestination(GraphNode source, GraphNode destination)
@@ -42,7 +41,7 @@ public class RoutingPlausibilityCheckerTest
         isPlausible.ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(OnlyOneIsActionType), DynamicDataSourceType.Method)]
     public void IsPlausible_ReturnsFalse_WhenSourceGoesToDestination(GraphNode source, GraphNode destination)
     {

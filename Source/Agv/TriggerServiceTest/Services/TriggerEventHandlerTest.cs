@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TriggerService.Services;
 using Gebhardt.Acc.TriggerService.Test.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.TriggerService.Test.Services;
 

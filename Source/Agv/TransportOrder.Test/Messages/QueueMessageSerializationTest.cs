@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using QueueNode = Gebhardt.Acc.Common.Messages.Queue.QueueNode;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Messages;

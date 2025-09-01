@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
@@ -13,7 +12,7 @@ public class DoppelspielTriggerPointEventHandlerTest
 {
     [DataRow(ActionState.Started)]
     [DataRow(ActionState.Completed)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_AgvPassedDoppelspielTriggerPoint_DroppingDoppelspielPartner_StationGroupNotOccupied_PublishesDroppingAgvPassedDoppelspielTriggerPoint(ActionState actionState)
     {
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());

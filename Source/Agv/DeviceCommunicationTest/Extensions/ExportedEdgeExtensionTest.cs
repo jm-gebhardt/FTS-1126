@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
@@ -11,7 +10,7 @@ public class ExportedEdgeExtensionTest
 {
     [DataRow(EdgeType.Bezier5)]
     [DataRow(EdgeType.Direct)]
-    [DataTestMethod]
+    [TestMethod]
     public void ToGraphEdges_ValidData_CreatesEdgeOrCorrectType(EdgeType edgeType)
     {
         var startNode = new GraphNode("start");
@@ -32,7 +31,7 @@ public class ExportedEdgeExtensionTest
     [DataRow(EdgeType.Bezier2)]
     [DataRow(EdgeType.Slanted)]
     [DataRow(EdgeType.Polypath)]
-    [DataTestMethod]
+    [TestMethod]
     public void ToGraphEdges_NotSupportedType_ReturnsEmptyCollection(EdgeType edgeType)
     {
         var startNode = new GraphNode("start");
@@ -51,7 +50,7 @@ public class ExportedEdgeExtensionTest
 
     [DataRow(true, 2)]
     [DataRow(false, 1)]
-    [DataTestMethod]
+    [TestMethod]
     public void ToGraphEdges_Bidirectional_ReturnsCorrectNumberOfEdges(bool isBidirectional, int expectedNumberOfEdges)
     {
         var startNode = new GraphNode("start");

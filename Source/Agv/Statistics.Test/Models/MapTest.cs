@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Models;
 using JetBrains.Annotations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Models;
@@ -9,7 +8,7 @@ namespace Gebhardt.Acc.Statistics.Test.Models;
 [TestSubject(typeof(Map))]
 public class MapTest
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(20, 30, 1, true)]
     [DataRow(15, 70, 1, true)]
     [DataRow(45, 45, 1, true)]

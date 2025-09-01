@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Events.RestrictedArea;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Messages;
 

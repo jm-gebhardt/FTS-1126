@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Extensions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using System.Globalization;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
@@ -562,7 +561,7 @@ public class ActionGroupTests
     [DataRow(false, DockingDirection.Both, true, false)] // target node allows both directions, false on last action of previous action group, pick: true, drop: false
     [DataRow(false, DockingDirection.Front, true, true)] // target node docking is front, false on last action of previous action group, pick: true, drop: true
     [DataRow(false, DockingDirection.Back, false, false)] // target node docking is back, false on last action of previous action group, pick: false, drop: false
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_PickDropActionGroup_NoRotationNeeded_DockFrontSet(bool? previous, DockingDirection? nodeDockingDirection, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
@@ -582,7 +581,7 @@ public class ActionGroupTests
 
     [DataRow(true, true, false)] // true on last action of previous action group, pick: true, drop: true
     [DataRow(false, false, true)] //  false on last action of previous action group, pick: false, drop: true
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_PickDropActionGroup_Doppelspiel_DockFrontSet(bool? previous, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
@@ -605,7 +604,7 @@ public class ActionGroupTests
     [DataRow(null, DockingDirection.Back, true)]
     [DataRow(true, DockingDirection.Back, true)]
     [DataRow(false, DockingDirection.Back, false)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_ManualPickDropActionGroup_ExternalValue_DockFrontSetToExternalValueNodeDockingDirectionIgnored(bool? previous, DockingDirection? nodeDockingDirection, bool externalValue)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
@@ -627,7 +626,7 @@ public class ActionGroupTests
     [DataRow(null, true, false)] // no previous action group, pick: true, drop: false
     [DataRow(true, false, true)] // true on last action of previous action group, pick: false, drop: true
     [DataRow(false, true, false)] // false on last action of previous action group, pick: true, drop: false
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_AutomaticPickDropActionGroup_ExternalValue_DockFrontSet_ExternalValueIgnored(bool? previous, bool pick, bool drop)
     {
         const bool external = true;
@@ -653,7 +652,7 @@ public class ActionGroupTests
     [DataRow(false, DockingDirection.Both, true, false)] // target node allows both directions, false on last action of previous action group, pick: true, drop: false
     [DataRow(false, DockingDirection.Front, true, true)] // target node docking is front, false on last action of previous action group, pick: true, drop: true
     [DataRow(false, DockingDirection.Back, false, false)] // target node docking is back, false on last action of previous action group, pick: false, drop: false
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_PickDropActionGroup_NoRotationNeeded_ForceDropBackWards_DockFrontSet(bool? previous, DockingDirection? nodeDockingDirection, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropInfoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.ForceDroppingBackwards, true.ToString(CultureInfo.InvariantCulture) } });
@@ -674,7 +673,7 @@ public class ActionGroupTests
     [DataRow(false, DockingDirection.Both, true, true)] // target node allows both directions, false on last action of previous action group, pick: true, drop: true
     [DataRow(false, DockingDirection.Front, true, true)] // target node docking is front, false on last action of previous action group, pick: true, drop: true
     [DataRow(false, DockingDirection.Back, false, false)] // target node docking is back, false on last action of previous action group, pick: false, drop: false
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_PickDropActionGroup_RotationNeeded_DockFrontSet(bool? previous, DockingDirection? nodeDockingDirection, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
@@ -697,7 +696,7 @@ public class ActionGroupTests
     [DataRow(false, DockingDirection.Both, true, false)] // target node allows both directions, false on last action of previous action group, pick: true, drop: false
     [DataRow(false, DockingDirection.Front, true, true)] // target node docking is front, false on last action of previous action group, pick: true, drop: true
     [DataRow(false, DockingDirection.Back, false, false)] // target node docking is back, false on last action of previous action group, pick: false, drop: false
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_PickDropActionGroup_RotationNeeded_ForceDropBackWards_DockFrontSet(bool? previous, DockingDirection? nodeDockingDirection, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(infoToAgv: new Dictionary<InfoToAgvKey, string>
@@ -728,7 +727,7 @@ public class ActionGroupTests
     [DataRow(null, true, false, false)]
     [DataRow(true, false, true, true)]
     [DataRow(false, true, false, false)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompleteDropActionGroup_NoRotationNeeded_DockFrontSet(bool? previous, bool pick, bool move, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
@@ -755,7 +754,7 @@ public class ActionGroupTests
     [DataRow(null, true, false, true)]
     [DataRow(true, false, true, false)]
     [DataRow(false, true, false, true)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompleteDropActionGroup_RotationNeeded_DockFrontSet(bool? previous, bool move, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
@@ -782,7 +781,7 @@ public class ActionGroupTests
     [DataRow(null, true, true, false)] // no previous action group, move: true, pick: true, drop: false
     [DataRow(true, false, false, true)] // true on last action of previous action group, move false:, pick: false, drop: false
     [DataRow(false, true, true, false)] // false on last action of previous action group, pick, move: true, drop: false
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompletePickActionGroup_NoDoppelspiel_NoRotationNeeded_DockFrontSet(bool? previous, bool move, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
@@ -809,7 +808,7 @@ public class ActionGroupTests
     [DataRow(null, true, true, true)] // no previous action group, pick, move: true, drop: true
     [DataRow(true, false, false, false)] // true on last action of previous action group, pick, move: false, drop: false
     [DataRow(false, true, true, true)] // false on last action of previous action group, pick, move: true, drop: true
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompletePickActionGroup_RotationNeeded_DockFrontSet(bool? previous, bool move, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
@@ -836,7 +835,7 @@ public class ActionGroupTests
     [DataRow(null, true, true, true)] // no previous action group, move: true, pick: true, drop: true
     [DataRow(true, false, false, false)] // true on last action of previous action group, move false:, pick: false, drop: false
     [DataRow(false, true, true, true)] // false on last action of previous action group, pick, move: true, drop: true
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompletePickActionGroup_UpdateOfMoveAction_NeedsRotation_DockFrontSet(bool? previous, bool move, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
@@ -868,7 +867,7 @@ public class ActionGroupTests
     [DataRow(null, true, true, false)] // no previous action group, move: true, pick: true, drop: false
     [DataRow(true, false, false, true)] // true on last action of previous action group, move false:, pick: false, drop: true
     [DataRow(false, true, true, false)] // false on last action of previous action group, pick, move: true, drop: false
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompletePickActionGroup_UpdateOfMoveAction_NeedsNoRotation_DockFrontSet(bool? previous, bool move, bool pick, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 0d.ToString(CultureInfo.InvariantCulture) } });
@@ -900,7 +899,7 @@ public class ActionGroupTests
     [DataRow(null, true, false, true)]
     [DataRow(true, false, true, false)]
     [DataRow(false, true, false, true)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompleteDropActionGroup_UpdateOfMoveAction_NeedsRotation_DockFrontSet(bool? previous, bool pick, bool move, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 1d.ToString(CultureInfo.InvariantCulture) } });
@@ -932,7 +931,7 @@ public class ActionGroupTests
     [DataRow(null, true, false, false)]
     [DataRow(true, false, true, true)]
     [DataRow(false, true, false, false)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_IncompleteDropActionGroup_UpdateOfMoveAction_NoRotationNeeded_DockFrontSet(bool? previous, bool pick, bool move, bool drop)
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, 0d.ToString(CultureInfo.InvariantCulture) } });
@@ -964,7 +963,7 @@ public class ActionGroupTests
     [DataRow(null)]
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_ChargeActionGroup_DockFrontSet(bool? previous)
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
@@ -983,7 +982,7 @@ public class ActionGroupTests
     [DataRow(null, true)]
     [DataRow(true, false)]
     [DataRow(false, true)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_ParkActionGroup_DockFrontSet(bool? previous, bool park)
     {
         var parkAction = AgvActionGenerator.GenerateParkAction();
@@ -998,7 +997,7 @@ public class ActionGroupTests
     [DataRow(false, true, true)]
     [DataRow(false, false, false)]
     [DataRow(true, false, true)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_QueueActionGroup_DockFrontSet(bool startIsStation, bool? previous, bool move)
     {
         var queueAction = AgvActionGenerator.GenerateParkAction();
@@ -1013,7 +1012,7 @@ public class ActionGroupTests
     [DataRow(false, true, true)]
     [DataRow(false, false, false)]
     [DataRow(true, false, true)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetDockFrontOfAction_ManualMove_DockFrontSet(bool startIsStation, bool? previous, bool move)
     {
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual: true);
@@ -1176,7 +1175,7 @@ public class ActionGroupTests
     [DataRow(1457.331, null, 1457.331)]
     [DataRow(null, 1457.331, 1457.331)]
     [DataRow(null, null, null)]
-    [DataTestMethod]
+    [TestMethod]
     public void SetCargoLiftHeightForAction_MoveAction_LiftHeightSet(double? pickLiftHeight, double? dropLiftHeight, double? expected)
     {
         var actionGroup = AgvActionGenerator.GenerateParkActionGroup();
@@ -1197,7 +1196,7 @@ public class ActionGroupTests
     [DataRow(ActionState.Paused, ActionState.Created, false)]
     [DataRow(ActionState.Aborted, ActionState.Created, false)]
     [DataRow(ActionState.Started, ActionState.Completed, false)] // Drop  manually completed via FE 
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_HasCargo_ReturnsExpectedValue(ActionState pickActionState, ActionState dropActionState, bool expected)
     {
         var agv = Guid.NewGuid();
@@ -1215,7 +1214,7 @@ public class ActionGroupTests
     [DataRow(ActionState.Paused, ActionState.Created, true)]
     [DataRow(ActionState.Aborted, ActionState.Created, true)]
     [DataRow(ActionState.Started, ActionState.Completed, true)] // Drop  manually completed via FE 
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_HasNoCargo_ReturnsExpectedValue(ActionState pickActionState, ActionState dropActionState, bool expected)
     {
         var agv = Guid.NewGuid();
@@ -1240,7 +1239,7 @@ public class ActionGroupTests
     [DataRow(false, ActionType.Drop, ActionState.Created, false)]
     [DataRow(true, ActionType.Drop, ActionState.Paused, true)]
     [DataRow(false, ActionType.Drop, ActionState.Paused, false)]
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_OnlyPickOrDrop_ReturnsExpectedValue(bool hasCargo, ActionType actionType, ActionState actionState, bool expected)
     {
         var agv = Guid.NewGuid();
@@ -1261,7 +1260,7 @@ public class ActionGroupTests
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_ChargeActionGroup_ReturnsExpectedValue(bool hasCargo)
     {
         var agv = Guid.NewGuid();
@@ -1272,7 +1271,7 @@ public class ActionGroupTests
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_MoveActionGroup_ReturnsExpectedValue(bool hasCargo)
     {
         var agv = Guid.NewGuid();
@@ -1285,7 +1284,7 @@ public class ActionGroupTests
     [DataRow(ActionType.Drop, true, true)]
     [DataRow(ActionType.Pick, false, true)]
     [DataRow(ActionType.Drop, false, false)]
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_OnlyPickOrDrop_CreatedState_ReturnsExpectedValue(ActionType actionType, bool hasCargo, bool expected)
     {
         var agv = Guid.NewGuid();
@@ -1314,7 +1313,7 @@ public class ActionGroupTests
     [DataRow(ActionType.Drop, true, true)]
     [DataRow(ActionType.Pick, false, true)]
     [DataRow(ActionType.Drop, false, false)]
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_OnlyPickOrDrop_StartedState_ReturnsExpectedValue(ActionType actionType, bool hasCargo, bool expected)
     {
         var agv = Guid.NewGuid();
@@ -1345,7 +1344,7 @@ public class ActionGroupTests
     [DataRow(ActionType.Drop, true, false)]
     [DataRow(ActionType.Pick, false, false)]
     [DataRow(ActionType.Drop, false, true)]
-    [DataTestMethod]
+    [TestMethod]
     public void CheckLoadStateMatches_OnlyPickOrDrop_CompletedState_ReturnsExpectedValue(ActionType actionType, bool hasCargo, bool expected)
     {
         var agv = Guid.NewGuid();

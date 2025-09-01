@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using Gebhardt.Acc.DeviceCommunication.Common.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Common.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Helper;

@@ -18,7 +18,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;

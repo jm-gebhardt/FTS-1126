@@ -6,7 +6,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

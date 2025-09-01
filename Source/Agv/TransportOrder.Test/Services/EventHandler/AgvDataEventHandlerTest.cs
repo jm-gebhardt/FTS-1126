@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 

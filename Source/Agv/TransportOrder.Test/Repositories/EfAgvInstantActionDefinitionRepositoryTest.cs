@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;

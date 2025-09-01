@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Maps;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;

@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Profiles;

@@ -2,7 +2,6 @@
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Services;
 

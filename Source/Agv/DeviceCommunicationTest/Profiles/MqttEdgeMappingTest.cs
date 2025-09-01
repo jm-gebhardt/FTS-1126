@@ -2,7 +2,6 @@
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Profiles;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Profiles;

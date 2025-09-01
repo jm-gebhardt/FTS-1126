@@ -7,7 +7,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
@@ -177,7 +176,7 @@ public class ActionEventHandlerTest
 
     [DataRow(ActionState.Completed)]
     [DataRow(ActionState.Canceled)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_ActionCanceled_ActionNotStarted_DoesNotPublishHandleActionCompletion(ActionState state)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: state);

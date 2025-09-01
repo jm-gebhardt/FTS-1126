@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;

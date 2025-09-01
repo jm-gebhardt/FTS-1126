@@ -5,7 +5,6 @@ using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using Gebhardt.Acc.WCSCommunication.Services.EventHandler;
 using Gebhardt.Acc.WCSCommunicationTest.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

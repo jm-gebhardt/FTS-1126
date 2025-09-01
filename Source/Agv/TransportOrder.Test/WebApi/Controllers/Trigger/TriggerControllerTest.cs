@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Trigger;

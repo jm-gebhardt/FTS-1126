@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Domain.Models;
@@ -17,7 +16,7 @@ public class HostOrderTest
     [DataRow("1040", "2310")]
     [DataRow("1020", "2410")]
     [DataRow("1040", "2410")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AklDrop_MovePickDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
@@ -52,7 +51,7 @@ public class HostOrderTest
     [DataRow("1040", "2310")]
     [DataRow("1020", "2410")]
     [DataRow("1040", "2410")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AklDrop_DoppelspielAtSource_PickDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
@@ -85,7 +84,7 @@ public class HostOrderTest
     [DataRow("2330", "1050")]
     [DataRow("2430", "1020")]
     [DataRow("2430", "1050")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AklPick_PickMoveDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
@@ -120,7 +119,7 @@ public class HostOrderTest
     [DataRow("2330", "1050")]
     [DataRow("2430", "1020")]
     [DataRow("2430", "1050")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AklPick_DoppelspielAtSource_PickMoveDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
@@ -150,7 +149,7 @@ public class HostOrderTest
 
     [DataRow("9060", "1050")]
     [DataRow("9060", "1060")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AplPick_PickMoveDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
@@ -179,7 +178,7 @@ public class HostOrderTest
 
     [DataRow("9060", "1050")]
     [DataRow("9060", "1060")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AplPick_DoppelspielAtSource_PickMoveDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
@@ -209,7 +208,7 @@ public class HostOrderTest
 
     [DataRow("1020", "9070")]
     [DataRow("1040", "9070")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AplDrop_MovePickDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
@@ -238,7 +237,7 @@ public class HostOrderTest
 
     [DataRow("1020", "9070")]
     [DataRow("1040", "9070")]
-    [DataTestMethod]
+    [TestMethod]
     public void CreateActionGroup_AplDrop_DoppelspielAtSource_PickDropActionGroup(string source, string target)
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));

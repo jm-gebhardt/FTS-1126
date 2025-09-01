@@ -1,5 +1,4 @@
 using Gebhardt.Acc.Common.Configurations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Configurations.Attributes;
@@ -7,7 +6,7 @@ namespace Gebhardt.Acc.CommonTest.Configurations.Attributes;
 [TestClass]
 public class AutoSeedToDatabaseTests
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("TestSettingWithAutoSeedAttributeFalse", false)]
     [DataRow("TestSettingWithAutoSeedAttributeTrue", true)]
     [DataRow("TestSettingWithoutAutoSeedAttribute", true)]
@@ -20,7 +19,7 @@ public class AutoSeedToDatabaseTests
         configurationType.AutoSeedToDatabase.ShouldBe(expectedAutoSeedToDatabase);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("TestSettingWithAutoSeedAttributeFalseForProperty", false)]
     [DataRow("TestSettingWithAutoSeedAttributeTrueForProperty", true)]
     public void InitializeConfigurationTypes_WhereAttributePropertyIsAppliedToProperty_SetsCorrectAutoSeedToDatabaseInConfigurationType(string configurationTypeName, bool expectedAutoSeedToDatabase)

@@ -9,7 +9,6 @@ using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;

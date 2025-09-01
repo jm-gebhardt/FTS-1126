@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

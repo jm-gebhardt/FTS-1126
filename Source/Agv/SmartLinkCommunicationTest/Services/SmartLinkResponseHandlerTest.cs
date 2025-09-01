@@ -1,5 +1,4 @@
 using Gebhardt.Acc.SmartLinkCommunicationTest.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.SmartLinkCommunicationTest.Services;

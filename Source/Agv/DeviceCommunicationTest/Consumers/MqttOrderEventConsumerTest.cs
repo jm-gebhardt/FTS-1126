@@ -7,7 +7,6 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using MassTransit.Testing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;

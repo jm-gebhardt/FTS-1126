@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Utilities;
@@ -18,7 +17,7 @@ public class StringExtensionsTest
         expectedGuid.ShouldBe(guid);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DynamicData(nameof(InputStrings), DynamicDataSourceType.Method)]
     public void ToGuid_ShouldRemainTheSameParsedGuid_WhenParsingTheInputStringMultipleTimes(string inputString)
     {
@@ -38,7 +37,7 @@ public class StringExtensionsTest
         yield return new object[] { "!@#$%^&*()" };
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("InstaPick-1", "78f7b2bd-8cce-4bac-8928-af6903af6f85")]
     [DataRow("InstaPick-2", "7115cec3-30c7-6e6d-db6d-85d2ac1efdbf")]
     [DataRow("KARIS-AMR-1", "e9c4beb6-446c-9cf6-6304-d55fdd8736d6")]

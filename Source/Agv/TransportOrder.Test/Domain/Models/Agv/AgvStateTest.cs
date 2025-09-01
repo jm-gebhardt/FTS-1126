@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.Agv;
@@ -8,7 +7,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.Agv;
 [TestClass]
 public class AgvStateTest
 {
-    [DataTestMethod]
+    [TestMethod]
     // From Initial
     [DataRow(AgvState.Initial, AgvState.Discovered)]
     // From Discovered
@@ -22,7 +21,7 @@ public class AgvStateTest
         result.ShouldBe(next);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     // From Initial
     [DataRow(AgvState.Initial, AgvState.Busy)]
     [DataRow(AgvState.Initial, AgvState.Idle)]

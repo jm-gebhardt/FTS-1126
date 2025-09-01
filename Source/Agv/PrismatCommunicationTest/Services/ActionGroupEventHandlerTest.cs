@@ -8,7 +8,6 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

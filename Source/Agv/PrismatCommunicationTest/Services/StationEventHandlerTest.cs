@@ -7,7 +7,6 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Events;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

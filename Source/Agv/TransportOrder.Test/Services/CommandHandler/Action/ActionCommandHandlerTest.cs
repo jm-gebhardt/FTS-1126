@@ -17,7 +17,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -301,7 +300,7 @@ public class ActionCommandHandlerTest
     [DataRow(ModeType.Normal, CurrentActionGroupPolicy.FinishAction, true)]
     [DataRow(ModeType.Normal, CurrentActionGroupPolicy.FinishActionGroup, true)]
     [DataRow(ModeType.Normal, CurrentActionGroupPolicy.Pause, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_TryStartNextActionInGroup_PendingModeChange_PublishesDependingOnModeAndCurrentActionGroupPolicy(ModeType pendingMode, CurrentActionGroupPolicy currentActionGroupPolicy, bool shouldPublish)
     {
         var mode = new AgvMode(ModeType.Normal, Guid.NewGuid());
@@ -508,7 +507,7 @@ public class ActionCommandHandlerTest
     [DataRow(CurrentActionGroupPolicy.Pause, false)]
     [DataRow(CurrentActionGroupPolicy.FinishActionGroup, false)]
     [DataRow(CurrentActionGroupPolicy.FinishAction, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CompleteActionOfActionGroup_ActionGroupNotComplete_AgvHasPendingModeSwitch_PublishesSwitchModeDependingOnCurrentActionPolicy(CurrentActionGroupPolicy policy, bool shouldPublish)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -528,7 +527,7 @@ public class ActionCommandHandlerTest
     [DataRow(CurrentActionGroupPolicy.Pause, false)]
     [DataRow(CurrentActionGroupPolicy.FinishActionGroup, true)]
     [DataRow(CurrentActionGroupPolicy.FinishAction, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CompleteActionOfActionGroup_ActionGroupComplete_AgvHasPendingModeSwitch_PublishesSwitchModeDependingOnCurrentActionPolicy(CurrentActionGroupPolicy policy, bool shouldPublish)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -1138,7 +1137,7 @@ public class ActionCommandHandlerTest
     [DataRow(ModeType.UserMode)]
     [DataRow(ModeType.Maintenance)]
     [DataRow(ModeType.Locked)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateChargingActionGroup_PendingModeChange_ActionNotTriggeredByWebApi_DoesNotPublishActionGroupCreated(ModeType pendingMode)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -1163,7 +1162,7 @@ public class ActionCommandHandlerTest
     [DataRow(ModeType.UserMode)]
     [DataRow(ModeType.Maintenance)]
     [DataRow(ModeType.Locked)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateChargingActionGroup_PendingModeChange_ActionTriggeredByWebApi_PublishesActionGroupCreated(ModeType pendingMode)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -1312,7 +1311,7 @@ public class ActionCommandHandlerTest
     [DataRow(ModeType.Maintenance)]
     [DataRow(ModeType.UserMode)]
     [DataRow(ModeType.Locked)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateParkingActionGroup_PendingModeChange_DoesNotPublishActionGroupCreated(ModeType pendingMode)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -1353,7 +1352,7 @@ public class ActionCommandHandlerTest
     [DataRow(ModeType.Maintenance)]
     [DataRow(ModeType.UserMode)]
     [DataRow(ModeType.Locked)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_CreateQueueingActionGroup_PendingModeChange_DoesNotPublishActionGroupCreated(ModeType pendingMode)
     {
         var mode = new AgvMode(ModeType.Normal);
@@ -1418,7 +1417,7 @@ public class ActionCommandHandlerTest
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_TryStartNewActionGroup_ValidData_PublishesNodesSelectedForAction(bool lastActionWasMoveToCoordinate)
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
@@ -1441,7 +1440,7 @@ public class ActionCommandHandlerTest
 
     [DataRow(true)]
     [DataRow(false)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_TryStartNewActionGroup_MoveToCoordinates_PublishesNodesSelectedForAction(bool lastActionWasMoveToCoordinate)
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
@@ -1807,7 +1806,7 @@ public class ActionCommandHandlerTest
 
     [DataRow(ActionState.Started)]
     [DataRow(ActionState.Created)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_SetTargetForAction_TargetResetForStartedAction_PublishesUpdateActionGroup(ActionState state)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -1840,7 +1839,7 @@ public class ActionCommandHandlerTest
     [DataRow(ActionType.Drop, ActionState.Started)]
     [DataRow(ActionType.Pick, ActionState.Created)]
     [DataRow(ActionType.Drop, ActionState.Created)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_SetTargetForAction_TargetResetForStartedAction_OnlyPickOrDrop_PublishesUpdateActionGroup(ActionType actionType, ActionState state)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -1965,7 +1964,7 @@ public class ActionCommandHandlerTest
     [DataRow(CurrentActionGroupPolicy.FinishActionGroup, false)]
     [DataRow(CurrentActionGroupPolicy.FinishAction, false)]
     [DataRow(CurrentActionGroupPolicy.Pause, true)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task Consume_PendingAgvModeChange_PublishesSwitchModeDependingOnCurrentActionGroupPolicy(CurrentActionGroupPolicy policy, bool shouldPublish)
     {
         var mode = new AgvMode(ModeType.Normal);

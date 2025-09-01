@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Utilities;

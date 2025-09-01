@@ -8,7 +8,6 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using MassTransit;
 using MassTransit.Testing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;

@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.TriggerService.Test.Fixtures;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

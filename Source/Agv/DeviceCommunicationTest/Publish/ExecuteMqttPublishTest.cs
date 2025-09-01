@@ -6,7 +6,6 @@ using MassTransit;
 using MassTransit.Serialization;
 using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Publish;

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using PosStateReq = Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams.PosStateReq;
 

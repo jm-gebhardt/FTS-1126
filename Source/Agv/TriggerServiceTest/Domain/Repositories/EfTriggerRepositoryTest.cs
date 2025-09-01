@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.TriggerService.Domain.Exceptions;
 using Gebhardt.Acc.TriggerService.Test.Fixtures;
 using Gebhardt.Acc.TriggerService.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TriggerService.Test.Domain.Repositories;

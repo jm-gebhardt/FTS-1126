@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

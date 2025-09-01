@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Maps;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
@@ -76,10 +75,9 @@ public class GeneratedMapGeneratorTest
     }
 
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
     public void GenerateMap_EmptyGraph_Failure()
     {
         var graph = new AgvGraph(Guid.Empty, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>());
-        new GeneratedMapGenerator().Generate(Guid.Empty, "", graph);
+        Should.Throw<InvalidOperationException>( ()  =>  new GeneratedMapGenerator().Generate(Guid.Empty, "", graph));
     }
 }

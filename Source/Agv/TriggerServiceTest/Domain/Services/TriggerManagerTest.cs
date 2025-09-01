@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TriggerService.Test.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TriggerService.Test.Domain.Services;

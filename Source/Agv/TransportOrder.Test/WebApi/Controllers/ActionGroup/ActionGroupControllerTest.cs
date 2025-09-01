@@ -10,7 +10,6 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.ActionGroup;

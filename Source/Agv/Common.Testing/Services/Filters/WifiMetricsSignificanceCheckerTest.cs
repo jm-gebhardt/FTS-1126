@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.Common.Testing.Services.Filters;
@@ -33,7 +32,7 @@ public class WifiMetricsSignificanceCheckerTest
         _checker.HasSignificantChanges(modified, baseMetrics).ShouldBeFalse();
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(nameof(WifiMetrics.BeaconSignalAverage), 5, true)]
     [DataRow(nameof(WifiMetrics.BeaconSignalAverage), -5, true)]
     [DataRow(nameof(WifiMetrics.BeaconSignalAverage), 4, false)]

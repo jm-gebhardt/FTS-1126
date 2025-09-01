@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Services;

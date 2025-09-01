@@ -2,7 +2,6 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -283,7 +282,7 @@ public class QueueManagerTest
     [DataRow(NodeLockState.Occupied, true)]
     [DataRow(NodeLockState.Reserved, false)]
     [DataRow(NodeLockState.Free, false)]
-    [DataTestMethod]
+    [TestMethod]
     public async Task IsOnAQueueNode_ValidData_ReturnsAccordingToNodes(NodeLockState lockState, bool expectedResult)
     {
         var agv = Guid.NewGuid();

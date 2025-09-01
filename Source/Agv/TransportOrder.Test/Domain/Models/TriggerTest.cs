@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 

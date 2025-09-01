@@ -10,7 +10,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Shouldly;
 

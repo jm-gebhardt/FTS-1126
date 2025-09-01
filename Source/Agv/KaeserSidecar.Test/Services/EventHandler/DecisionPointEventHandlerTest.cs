@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
