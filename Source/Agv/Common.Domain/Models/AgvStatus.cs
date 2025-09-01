@@ -116,6 +116,14 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// </summary>
     public ICollection<string>? StationIds { get; }
 
+    /// <summary>Total distance since commissioning [km].</summary>
+    [UsedImplicitly]
+    public float TotalDistance { get; init; }
+
+    /// <summary>Total lifetime since commissioning [h].</summary>
+    [UsedImplicitly]
+    public float TotalLifetime { get; init; }
+
     /// <inheritdoc cref="AgvStatus"/>
     /// <param name="correlationId">AGV correlation id.</param>
     /// <param name="orderId">Internally we are using the ActionCorrelationId</param>
@@ -132,6 +140,8 @@ public record AgvStatus : CorrelatedBy<Guid>
     /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
     /// <param name="zoneIds">The ids of the zones the agv is in, if any.</param>
     /// <param name="stationIds">The ids of the station the agv reserved, if any.</param>
+    /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
+    /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
     [JsonConstructor]
     public AgvStatus(Guid correlationId,
         string? orderId,
@@ -147,7 +157,9 @@ public record AgvStatus : CorrelatedBy<Guid>
         DateTime? estimatedFullyChargedTime = null,
         DateTime? lastBatteryReplacement = null,
         ICollection<string>? zoneIds = null,
-        ICollection<string>? stationIds = null
+        ICollection<string>? stationIds = null,
+        float totalDistance = 0,
+        float totalLifetime = 0
     )
     {
         CorrelationId = correlationId;
@@ -165,6 +177,8 @@ public record AgvStatus : CorrelatedBy<Guid>
         LastBatteryReplacement = lastBatteryReplacement;
         ZoneIds = zoneIds;
         StationIds = stationIds;
+        TotalDistance = totalDistance;
+        TotalLifetime = totalLifetime;
     }
 
     /// <summary>
@@ -180,5 +194,7 @@ public record AgvStatus : CorrelatedBy<Guid>
         Charging = false;
         Disturbed = false;
         LastNodeId = null;
+        TotalDistance = 0;
+        TotalLifetime = 0;
     }
 }

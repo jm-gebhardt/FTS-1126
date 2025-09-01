@@ -102,6 +102,16 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     public DateTime TimeOfLockStateChanged { get; set; } = DateTime.UtcNow;
 
     /// <summary>
+    /// Gets the commissioning date of the agv.
+    /// </summary>
+    public DateTime CommissioningDate { get; set; }
+
+    /// <summary>
+    /// Gets the total distance driven by the agv since commissioning.
+    /// </summary>
+    public float TotalDistance { get; set; }
+
+    /// <summary>
     /// Last received agv status.
     /// </summary>
     public AgvStatus AgvStatus { get; private set; }
@@ -399,6 +409,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         _timeProvider = timeProvider;
         CorrelationId = agv.CorrelationId;
         SerialNumber = agv.SerialNumber;
+        CommissioningDate = agv.CommissioningDate;
         CurrentNode = currentNode;
         SpawnNodeIds = spawnNodeIds;
         AgvGraph = agv.AgvGraph;
@@ -419,7 +430,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             GetOrderId(),
             false,
             true,
-            (int) SimulatedBatteryCharge,
+            (int)SimulatedBatteryCharge,
             charging,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
@@ -432,7 +443,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         _agvZones = [];
     }
 
-    private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
+    private static float GetRandomNoise(double maxValue) => (float)(maxValue * (2 * Random.Shared.NextDouble() - 1));
 
     private string? GetOrderId() => Action?.CorrelationId.ToString();
 
@@ -479,6 +490,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             TravelSimulator.UpdatePosition();
             CurrentNode = TravelSimulator.CurrentNode!;
             Position = TravelSimulator.Position;
+            TotalDistance += TravelSimulator.CurrentEdgeDistance;
         }
     }
 
@@ -548,7 +560,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         SetAgvStatus(false);
     }
 
-    private ICollection<string>? GetZoneIds ()
+    private ICollection<string>? GetZoneIds()
     {
         if (Position == null)
         {
@@ -577,7 +589,10 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             LastNodeId,
             GetEstimatedFullyChargedTime(charging),
             null,
-            AgvRemovedFromZones ? null : GetZoneIds()
+            AgvRemovedFromZones ? null : GetZoneIds(),
+            null,
+            TotalDistance,
+            (float)(DateTime.UtcNow - CommissioningDate).TotalHours
         );
     }
 }

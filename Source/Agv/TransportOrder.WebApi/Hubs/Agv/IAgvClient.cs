@@ -114,4 +114,11 @@ public interface IAgvClient
     /// <param name="agvStations">The agv stations.</param>
     [SignalRMethod("AgvStationsChanged")]
     Task AgvStationsChanged(AgvStationsDto agvStations);
+
+    /// <summary>
+    /// Publishes the operating data status of an Agv to all clients.
+    /// </summary>
+    /// <param name="agvOperatingDataStatus">The agv operating data status.</param>
+    [SignalRMethod("AgvOperatingDataStatusChanged")]
+    Task AgvOperatingDataStatusChanged(AgvOperatingDataStatusDto agvOperatingDataStatus);
 }

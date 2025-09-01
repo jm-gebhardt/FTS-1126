@@ -35,7 +35,7 @@ public static class AgvInformationGenerator
         string state = _agvStates[i];
         var correlationId = agvCorrelationId != Guid.Empty ? agvCorrelationId : agvSerialNumber.ToGuid();
         var actionGroupId = Guid.Empty;
-        var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], 48, _chargingState[i] ? 20 : -10, 20, false, _sources[i]);
+        var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], 48, _chargingState[i] ? 20 : -10, 20, false, _sources[i], null, null, null, null, 42f, 30f);
         var agvGraph = new AgvGraph(correlationId, GetNodes(), GetEdges());
         var agvAction = new AgvAction($"Action#{agvSerialNumber}".ToGuid(), ActionType.Pick, "Drop5", actionGroupId);
         var agvInformation = GetAgvInformation(agvStatus, agvGraph, agvAction);

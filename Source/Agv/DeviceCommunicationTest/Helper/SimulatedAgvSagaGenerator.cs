@@ -50,6 +50,7 @@ public static class SimulatedAgvSagaGenerator
             true,
             DateTime.MinValue,
             DateTime.MinValue,
+            DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
         var simulatedAgvSaga = new SimulatedAgvSaga(agv, simulationSpeed, initialSoc, batteryChargeRate, timeProvider ?? new DateTimeNowUtcProvider(), currentNode)
         {

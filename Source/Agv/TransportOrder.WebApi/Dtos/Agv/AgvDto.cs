@@ -75,6 +75,14 @@ public record AgvDto : DatedMessage
     /// </summary>
     public AgvModeDto AgvMode { get; init; }
 
+    /// <summary>Total distance driven by AGV since commissioning [km].</summary>
+    [UsedImplicitly]
+    public float TotalDistance { get; init; }
+
+    /// <summary>Total lifetime driven by AGV since commissioning [h].</summary>
+    [UsedImplicitly]
+    public float TotalLifetime { get; init; }
+
     /// <param name="correlationId">CorrelationId.</param>
     /// <param name="serialNumber">AGV Serial Number.</param>
     /// <param name="name">The name of the agv.</param>
@@ -93,6 +101,8 @@ public record AgvDto : DatedMessage
     /// <param name="mode">The agv mode.</param>
     /// <param name="zones">The zones that the agv is in .</param>
     /// <param name="stations">The stations that the agv reserved.</param>
+    /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
+    /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
     [PublicAPI]
     public AgvDto(Guid correlationId,
         string serialNumber,
@@ -111,7 +121,9 @@ public record AgvDto : DatedMessage
         GraphNodeDto? lastNode,
         AgvModeDto mode,
         List<string> zones,
-        List<string> stations)
+        List<string> stations,
+        float totalDistance,
+        float totalLifetime)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -131,6 +143,8 @@ public record AgvDto : DatedMessage
         AgvMode = mode;
         Zones = zones;
         Stations = stations;
+        TotalDistance = totalDistance;
+        TotalLifetime = totalLifetime;
     }
 
     /// <summary>
@@ -143,5 +157,7 @@ public record AgvDto : DatedMessage
         AgvMode = null!;
         Zones = [];
         Stations = [];
+        TotalDistance = 0;
+        TotalLifetime = 0;
     }
 }

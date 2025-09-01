@@ -439,7 +439,7 @@ public class AgvCommandHandler :
             await context.Publish(new CheckAgvLoad(agv.CorrelationId));
         }
         bool wasReady = agv.IsReady;
-        (bool batteryStatusChanged, bool batteryChargeChanged, bool lastNodeIdChanged) = agv.UpdateAgvStatus(agvStatus);
+        (bool batteryStatusChanged, bool batteryChargeChanged, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(agvStatus);
         bool isReady = agv.IsReady;
 
         LogBatteryStates(oldStatus, agv.AgvStatus, agvSettings);
@@ -495,7 +495,8 @@ public class AgvCommandHandler :
             await context.Publish(new AgvStationsChanged(agv.CorrelationId, agvStatus.StationIds!));
         }
 
-        if (stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
+        if (stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged  || operatingDataChanged
+            || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
         {
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {
@@ -511,7 +512,10 @@ public class AgvCommandHandler :
                 }
             }
         }
-        await PublishAgvStatusUpdateEvents(context, agv, batteryStatusChanged, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline);
+        _logger.LogTrace("{Command}: Agv {AgvCorrelationId}, operatingDataChanged: {OperatingDataChanged}, BatteryStatusChanged: {BatteryStatusChanged}, batteryChargeChanged: {BatteryChargeChanged}, lastNodeIdChanged: {LastNodeIdChanged}, wasOnline: {wWsOnline}", 
+            nameof(UpdateAgvStatus), agv.CorrelationId, operatingDataChanged, batteryStatusChanged, batteryChargeChanged, lastNodeIdChanged, wasOnline);
+
+        await PublishAgvStatusUpdateEvents(context, agv, batteryStatusChanged, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, operatingDataChanged);
 
         await TryAutoAccept(context, agv, context.CancellationToken);
     }
@@ -527,7 +531,8 @@ public class AgvCommandHandler :
         bool batteryChargeChanged,
         AgvStatus? oldStatus,
         bool lastNodeIdChanged,
-        bool wasOnline)
+        bool wasOnline,
+        bool operatingDataChanged)
     {
         var agvStatus = agv.AgvStatus!;
 
@@ -545,6 +550,13 @@ public class AgvCommandHandler :
         {
             await PublishLastNodeIdChange(context, agv, oldStatus!.LastNodeId, agvStatus.LastNodeId);
         }
+
+        if (operatingDataChanged)
+        {
+            var agvOperatingDataStatus = new AgvOperatingDataStatus(_mapper.Map<Gebhardt.Acc.Common.Domain.Models.AgvStatus>(agvStatus));
+            await context.Publish(new AgvOperatingDataStatusChanged(agvStatus.CorrelationId, agvOperatingDataStatus));
+        }
+
         bool isIdle = agv.CurrentAgvState == AgvState.Idle && !agvStatus.Busy;
         if (isIdle && oldStatus!.Busy)
         {

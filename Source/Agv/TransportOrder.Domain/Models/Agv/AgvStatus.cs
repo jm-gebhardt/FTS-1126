@@ -6,12 +6,12 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 /// <summary>
 /// AGV Status
 /// </summary>
+[PublicAPI]
 public record AgvStatus
 {
     /// <summary>
     /// AGV correlation ID
     /// </summary>
-    [UsedImplicitly]
     public Guid CorrelationId { get; }
 
     /// <summary>
@@ -21,7 +21,6 @@ public record AgvStatus
     /// VDA5050.state.schema.orderId
     /// The order ID is kept until a new order is received.
     /// </remarks>
-    [UsedImplicitly]
     public string? OrderId { get; }
 
     /// <summary>
@@ -31,7 +30,6 @@ public record AgvStatus
     /// VDA5050.state.schema.actionStates.actionStatus 
     /// There is at least one action pending (neither finished no failed).
     /// </remarks>
-    [UsedImplicitly]
     public bool Busy { get; }
 
     /// <summary>
@@ -41,7 +39,6 @@ public record AgvStatus
     /// VDA5050.state.schema.operatingMode 
     /// Only mode "AUTOMATIC" is regarded.
     /// </remarks>
-    [UsedImplicitly]
     public bool Automatic { get; }
 
     /// <summary>
@@ -51,7 +48,6 @@ public record AgvStatus
     /// VDA5050.state.schema.batteryState.batteryCharge
     /// Battery charge level in [%].
     /// </remarks>
-    [UsedImplicitly]
     public double BatteryCharge { get; init; }
 
     /// <summary>
@@ -61,27 +57,21 @@ public record AgvStatus
     /// VDA5050.state.schema.batteryState.charging
     /// The charging is in progress.
     /// </remarks>
-    [UsedImplicitly]
     public bool Charging { get; }
 
     /// <summary>Battery voltage [V].</summary>
-    [UsedImplicitly]
     public double BatteryVoltage { get; init; }
 
     /// <summary>Battery current [A].</summary>
-    [UsedImplicitly]
     public double BatteryCurrent { get; init; }
 
     /// <summary>Battery temperature [°C].</summary>
-    [UsedImplicitly]
     public double BatteryTemperature { get; init; }
 
     /// <summary>Time when the Agv is fully charged.</summary>
-    [UsedImplicitly]
     public DateTime? EstimatedFullyChargedTime { get; init; }
 
     /// <summary>The date when the battery was replaced the last time.</summary>
-    [UsedImplicitly]
     public DateTime? LastBatteryReplacement { get; init; }
 
     /// <summary>
@@ -91,7 +81,6 @@ public record AgvStatus
     /// VDA5050.state.schema.errors.errorLevel
     /// There is at least one error with level "FATAL".
     /// </remarks>
-    [UsedImplicitly]
     public bool Disturbed { get; }
 
     /// <summary>
@@ -113,6 +102,12 @@ public record AgvStatus
     /// </summary>
     public ICollection<string>? StationIds { get; private set; }
 
+    /// <summary>Total distance driven by AGV since commissioning [km].</summary>
+    public float TotalDistance { get; init; }
+
+    /// <summary>Total lifetime driven by AGV since commissioning [h].</summary>
+    public float TotalLifetime { get; init; }
+
     /// <summary>
     /// Constructor of AgvStatus
     /// </summary>
@@ -131,6 +126,8 @@ public record AgvStatus
     /// <param name="lastBatteryReplacement">The date when the battery was replaced the last time.</param>
     /// <param name="zoneIds">The ids of the zones the agv is in, if any.</param>
     /// <param name="stationIds">The ids of the stations the agv reserved, if any.</param>
+    /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
+    /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
     [JsonConstructor]
     public AgvStatus(Guid correlationId,
         string? orderId,
@@ -146,7 +143,9 @@ public record AgvStatus
         DateTime? estimatedFullyChargedTime = null,
         DateTime? lastBatteryReplacement = null,
         ICollection<string>? zoneIds = null,
-        ICollection<string>? stationIds = null
+        ICollection<string>? stationIds = null,
+        float totalDistance = 0,
+        float totalLifetime = 0
     ) : this()
     {
         CorrelationId = correlationId;
@@ -168,6 +167,8 @@ public record AgvStatus
         }
         ZoneIds = zoneIds;
         StationIds = stationIds;
+        TotalDistance = totalDistance;
+        TotalLifetime = totalLifetime;
     }
 
     /// <summary>
@@ -184,6 +185,8 @@ public record AgvStatus
         Disturbed = false;
         LastNodeId = null;
         LastBatteryReplacement = DateTime.UtcNow.AddDays(-2);
+        TotalDistance = 0;
+        TotalLifetime = 0;
     }
 
     /// <summary>

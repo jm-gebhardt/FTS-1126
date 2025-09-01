@@ -599,6 +599,23 @@
                     "type": "string"
                 }
             ]
+        },
+        "wifiState": {
+            "$ref": "wifi_status.schema"
+        },
+        "operatingData": {
+            "type": "object",
+            "description": "The operating data of this agv.",
+            "properties": {
+                "totalDistance": {
+                    "type": "number",
+                    "description": "Total distance driven by agv since commissioning [km]."
+                },
+                "totalLifetime": {
+                    "type": "number",
+                    "description": "Total lifetime driven by agv since commissioning [h]."
+                }
+            }
         }
     }
 }

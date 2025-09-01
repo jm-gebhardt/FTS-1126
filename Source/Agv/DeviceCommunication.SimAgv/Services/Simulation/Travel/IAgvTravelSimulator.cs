@@ -24,6 +24,11 @@ public interface IAgvTravelSimulator
     TimeSpan? TravelDuration { get; }
 
     /// <summary>
+    /// The travel distance at the end of an edge.
+    /// </summary>
+    float CurrentEdgeDistance { get; }
+
+    /// <summary>
     /// Total time the agv was paused / not driving. Zero if there was no pause.
     /// </summary>
     TimeSpan PauseTime { get; }

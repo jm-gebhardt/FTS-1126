@@ -37,5 +37,6 @@ public class AgvProfile : WebApiProfile
         CreateMap<(AgvBatteryStatus, AgvSettingsReadModel), AgvBatteryStatusDto>()
             .IncludeMembers(s => s.Item1, s => s.Item2);
         CreateMap<AgvMode, AgvModeDto>().ReverseMap();
+        CreateMap<AgvOperatingDataStatus, AgvOperatingDataStatusDto>();
     }
 }

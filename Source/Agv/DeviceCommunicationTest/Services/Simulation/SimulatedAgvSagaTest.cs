@@ -28,6 +28,7 @@ public class SimulatedAgvSagaTest
             true,
             DateTime.MinValue,
             DateTime.MinValue,
+            DateTime.UtcNow,
             AgvGraph: null, AgvData: agvData);
         var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider());
 
@@ -243,6 +244,7 @@ public class SimulatedAgvSagaTest
             true,
             DateTime.MinValue,
             DateTime.MinValue,
+            DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
             var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node2.Id]);
             saga.SpawnNodeIds.ShouldNotBeNull();
@@ -269,6 +271,7 @@ public class SimulatedAgvSagaTest
             true,
             DateTime.MinValue,
             DateTime.MinValue,
+            DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
  
         Should.Throw<ArgumentException>(() => new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node1.Id, node2.Id, unknownNode]));

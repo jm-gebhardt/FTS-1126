@@ -373,12 +373,20 @@ public class ActionCommandHelper
             _logger.LogInformation("Not triggering late Doppelspiel, agv {AgvCorrelationId} must charge", agv.CorrelationId);
             return;
         }
-        IRequestClient<TriggerDoppelspielpartnerQueueing>? requestClient = context.CreateRequestClient<TriggerDoppelspielpartnerQueueing>(_bus);
-        Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielpartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.NodeId!), cancellationToken);
-        if (response.Message.CorrelationId == null)
+
+        try
         {
-            return;
+            IRequestClient<TriggerDoppelspielpartnerQueueing>? requestClient = context.CreateRequestClient<TriggerDoppelspielpartnerQueueing>(_bus);
+            Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielpartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.NodeId!), cancellationToken);
+            if (response.Message.CorrelationId == null)
+            {
+                return;
+            }
+            _logger.LogInformation("ActionGroup {ActionGroupCorrelationId} has been queued for agv {AgvCorrelationId}", response.Message.CorrelationId, actionGroup.AssignedAgv);
         }
-        _logger.LogInformation("ActionGroup {ActionGroupCorrelationId} has been queued for agv {AgvCorrelationId}", response.Message.CorrelationId, actionGroup.AssignedAgv);
+        catch (Exception)
+        {
+            // ignored for simulation mode
+        }
     }
 }

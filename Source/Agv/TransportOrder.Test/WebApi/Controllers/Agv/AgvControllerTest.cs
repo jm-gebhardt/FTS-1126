@@ -72,7 +72,9 @@ public class AgvControllerTest
             },
             new AgvModeDto(ModeType.Normal, correlationId),
             [],
-            []);
+            [],
+            42,
+            24);
 
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);
@@ -90,6 +92,8 @@ public class AgvControllerTest
         agvDto.Errors.ShouldBe(expectedAgvDto.Errors);
         agvDto.TimeOfLockStateChanged.ShouldBe(DateTime.MinValue);
         agvDto.LastNode.ShouldNotBeNull();
+        agvDto.TotalDistance.ShouldBe(expectedAgvDto.TotalDistance);
+        agvDto.TotalLifetime.ShouldBe(expectedAgvDto.TotalLifetime);
     }
 
     [TestMethod]

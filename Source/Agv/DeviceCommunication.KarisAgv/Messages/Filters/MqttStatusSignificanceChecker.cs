@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 
 // ReSharper disable EnforceIfStatementBraces
@@ -10,8 +11,6 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Filters;
 /// </summary>
 public class MqttStatusSignificanceChecker : ISignificanceChecker<MqttState>
 {
-    private const float Epsilon = 1E-5f;
-
     /// <inheritdoc cref="ISignificanceChecker{T}"/>>
     public bool HasSignificantChanges(MqttState a, MqttState b)
     {
@@ -43,6 +42,7 @@ public class MqttStatusSignificanceChecker : ISignificanceChecker<MqttState>
         if (!AreListsEqual(a.ZoneIds, b.ZoneIds, (x, y) => x.Equals(y))) return true;
         if (!AreListsEqual(a.StationIds, b.StationIds, EqualsIgnoreCase)) return true;
         if (!WifiStatusEqual(a.WifiState, b.WifiState)) return true;
+        if (!OperatingDataEqual(a.OperatingData, b.OperatingData)) return true;
         return false;
     }
 
@@ -50,7 +50,7 @@ public class MqttStatusSignificanceChecker : ISignificanceChecker<MqttState>
 
     private static bool AreIntsEqual(int? x, int? y) => x.GetValueOrDefault() == y.GetValueOrDefault();
 
-    private static bool AreFloatsEqual(float? x, float? y) => Math.Abs(x.GetValueOrDefault() - y.GetValueOrDefault()) < Epsilon;
+    private static bool AreFloatsEqual(float? x, float? y) => Math.Abs(x.GetValueOrDefault() - y.GetValueOrDefault()) < Mathematics.FloatComparator;
 
     private static bool AreTimestampsEqual(DateTimeOffset x, DateTimeOffset y) => x.UtcDateTime == y.UtcDateTime;
 
@@ -141,5 +141,14 @@ public class MqttStatusSignificanceChecker : ISignificanceChecker<MqttState>
                a.BeaconSignalAverage == b.BeaconSignalAverage &&
                a.Quality == b.Quality &&
                a.Noise == b.Noise;
+    }
+
+    private static bool OperatingDataEqual(MqttOperatingData? a, MqttOperatingData? b)
+    {
+        if (ReferenceEquals(a, b)) return true;
+        if (a is null || b is null) return false;
+
+        return AreFloatsEqual(a.TotalDistance, b.TotalDistance) &&
+               AreFloatsEqual(a.TotalLifetime, b.TotalLifetime);
     }
 }

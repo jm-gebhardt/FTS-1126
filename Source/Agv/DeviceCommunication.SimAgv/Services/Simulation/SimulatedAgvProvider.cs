@@ -99,6 +99,7 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
             true,
             DateTime.MinValue,
             DateTime.MinValue,
+            DateTime.UtcNow,
             AgvGraph: grid,
             AgvData: _agvDataGenerator.Generate(agvIndex, correlationId)
         );

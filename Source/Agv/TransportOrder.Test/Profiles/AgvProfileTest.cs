@@ -37,7 +37,7 @@ public class AgvProfileTest
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDtoIsMappedToAgvWithAgvStatus()
     {
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123");
+        var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123", 12.0, 13.5, 20.1, null, null, null, null, 35, totalLifetime: 2);
         var agv = AgvGenerator.GenerateIdleAgv(agvStatus);
 
         var agvMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Agv>(agv);
@@ -54,7 +54,9 @@ public class AgvProfileTest
             o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
             o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
             o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging),
-            o => o.LastNodeId.ShouldBe(agvStatus.LastNodeId)
+            o => o.LastNodeId.ShouldBe(agvStatus.LastNodeId),
+            o => o.TotalDistance.ShouldBe(agv.AgvStatus!.TotalDistance),
+            o => o.TotalLifetime.ShouldBe(agv.AgvStatus!.TotalLifetime)
         );
     }
 

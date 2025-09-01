@@ -164,4 +164,12 @@ public class AgvPublisher : IAgvPublisher
         _hubBroadcaster.Broadcast(c => c.AgvStationsChanged(dto));
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc/>
+    public Task SendAgvOperatingDataStatusAsync(AgvOperatingDataStatusChanged agvOperatingDataStatusChanged)
+    {
+        var dto = _mapper.Map<AgvOperatingDataStatusDto>(agvOperatingDataStatusChanged.AgvOperatingDataStatus);
+        _hubBroadcaster.Broadcast(c => c.AgvOperatingDataStatusChanged(dto));
+        return Task.CompletedTask;
+    }
 }

@@ -175,9 +175,14 @@ public record MqttState
     public List<string>? StationIds { get; set; }
 
     /// <summary>
-    /// The Wi-Fistatus of the AGV.
+    /// The Wi-Fi status of the AGV.
     /// </summary>
     public MqttWifiStatus? WifiState { get; set; }
+
+    /// <summary>
+    /// The AGVs operating data.
+    /// </summary>
+    public MqttOperatingData? OperatingData { get; set; }
 
     /// <summary>
     /// Initializes a new instance of <see cref="MqttState"/>.
@@ -830,4 +835,21 @@ public record MqttWifiStatus
     /// Noise level in dBm.
     /// </summary>
     public int Noise { get; set; }
+}
+
+/// <summary>
+/// The AGVs operational data.
+/// </summary>
+[PublicAPI]
+public record MqttOperatingData
+{
+    /// <summary>
+    /// The total distance driven by this agv since commissioning [km].
+    /// </summary>
+    public float TotalDistance { get; set; }
+
+    /// <summary>
+    /// The total lifetime driven by this agv since commissioning [h].
+    /// </summary>
+    public float TotalLifetime { get; set; }
 }

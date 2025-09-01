@@ -34,6 +34,7 @@
         <PackageReference Include="Swashbuckle.AspNetCore" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\DeviceCommunication.Common\DeviceCommunication.Common.csproj" />
     </ItemGroup>

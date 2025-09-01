@@ -17,6 +17,7 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 /// <param name="GraphExists">Flag indicating if the graph of the agv exists.</param>
 /// <param name="TimeOfStateTransition">The time stamp of the last state transition.</param>
 /// <param name="TimeOfLockStateChanged">The time stamp of the last lock state change.</param>
+/// <param name="CommissioningDate">The UTC date when agv was commissioned.</param>
 /// <param name="AgvStatus">The agv status.</param>
 /// <param name="AgvGraph">The agv graph.</param>
 /// <param name="AgvData">The agv data.</param>
@@ -31,6 +32,7 @@ public record SimulatedAgv(
     bool GraphExists,
     DateTime TimeOfStateTransition,
     DateTime TimeOfLockStateChanged,
+    DateTime CommissioningDate,
     AgvStatus? AgvStatus = null,
     AgvGraph? AgvGraph = null,
     AgvData? AgvData = null

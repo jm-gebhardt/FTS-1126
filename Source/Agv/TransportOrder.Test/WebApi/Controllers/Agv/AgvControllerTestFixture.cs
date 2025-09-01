@@ -143,7 +143,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvSerialNumber);
-            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3");
+            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3", 2.5, 11.3, 20.5, null, null, null, null, 42, 24);
             var agvData = AgvDataGenerator.GenerateAgvData(correlationId: correlationId, ipV4Address: ip);
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);

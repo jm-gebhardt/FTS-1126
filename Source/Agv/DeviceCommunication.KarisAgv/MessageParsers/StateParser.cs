@@ -134,8 +134,9 @@ public class StateParser(ILogger logger, IMapper mapper)
             null,
             null,
             state.ZoneIds,
-            state.StationIds
-        );
+            state.StationIds,
+            state.OperatingData?.TotalDistance ?? 0,
+            state.OperatingData?.TotalLifetime ?? 0);
     }
 
     private bool GetBusy(MqttState state)

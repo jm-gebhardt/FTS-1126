@@ -254,6 +254,16 @@ public class Agv : IAgv
     public const long BatteryStatusTicksThreshold = 60 * TimeSpan.TicksPerSecond;
 
     /// <summary>
+    /// The threshold for considering an operating data total distance change significant [km].
+    /// </summary>
+    public const float OperatingDataTotalDistanceThreshold = 0.1f;
+
+    /// <summary>
+    /// The threshold for considering an operating data total lifetime change significant [h].
+    /// </summary>
+    public const float OperatingDataTotalLifetimeThreshold = 0.25f;
+
+    /// <summary>
     /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are already given
     /// </summary>
     /// <remarks>Interval indicated in seconds</remarks>
@@ -397,6 +407,26 @@ public class Agv : IAgv
         return AgvStatus.LastNodeId != newLastNodeId;
     }
 
+    private bool CheckOperatingDataTotalDistanceChanged(float  newTotalDistance)
+    {
+        if (AgvStatus == null)
+        {
+            return true;
+        }
+
+        return Math.Abs(newTotalDistance - AgvStatus.TotalDistance) > OperatingDataTotalDistanceThreshold;
+    }
+
+    private bool CheckOperatingDataTotalLifetimeChanged(float newTotalLifetime)
+    {
+        if (AgvStatus == null)
+        {
+            return true;
+        }
+
+        return Math.Abs(newTotalLifetime - AgvStatus.TotalLifetime) > OperatingDataTotalLifetimeThreshold;
+    }
+
     private bool SetIdle()
     {
         var previousState = CurrentAgvState;
@@ -408,17 +438,19 @@ public class Agv : IAgv
     /// Update the agv status.
     /// </summary>
     /// <param name="newStatus"></param>
-    public (bool batteryStatusChanged, bool batteryChargeChanged, bool lastNodeIdChanged) UpdateAgvStatus(AgvStatus newStatus)
+    public (bool batteryStatusChanged, bool batteryChargeChanged, bool lastNodeIdChanged, bool operatingDataChanged) UpdateAgvStatus(AgvStatus newStatus)
     {
         bool batteryChargeChanged = CheckBatteryChargeChange(newStatus.BatteryCharge);
-        if (!batteryChargeChanged && AgvStatus != null)
+        bool operatingDataTotalDistanceChanged = CheckOperatingDataTotalDistanceChanged(newStatus.TotalDistance);
+        bool operatingDataTotalLifetimeChanged = CheckOperatingDataTotalLifetimeChanged(newStatus.TotalLifetime);
+        if (AgvStatus != null)
         {
             newStatus = new AgvStatus(newStatus.CorrelationId,
                 newStatus.OrderId,
                 newStatus.Busy,
                 newStatus.Automatic,
-                // use old battery charge, do not update if it is not considered significant
-                AgvStatus.BatteryCharge,
+                // use old battery charge, it is not considered significant
+                batteryChargeChanged ? newStatus.BatteryCharge : AgvStatus.BatteryCharge,
                 newStatus.Charging,
                 newStatus.Disturbed,
                 newStatus.LastNodeId,
@@ -427,15 +459,19 @@ public class Agv : IAgv
                 newStatus.BatteryTemperature,
                 newStatus.EstimatedFullyChargedTime,
                 newStatus.LastBatteryReplacement,
-                newStatus.ZoneIds, 
-                newStatus.StationIds
+                newStatus.ZoneIds,
+                newStatus.StationIds,
+                // use old operating data if it is not considered significant
+                operatingDataTotalDistanceChanged ? newStatus.TotalDistance : AgvStatus.TotalDistance,
+                operatingDataTotalLifetimeChanged ? newStatus.TotalLifetime : AgvStatus.TotalLifetime
             );
         }
 
         bool batteryStatusChanged = batteryChargeChanged || CheckBatteryStatusChange(newStatus);
+        bool operatingDataChanged = operatingDataTotalDistanceChanged || operatingDataTotalLifetimeChanged; 
         bool lastNodeIdChanged = CheckLastNodeIdChanged(newStatus.LastNodeId);
         AgvStatus = newStatus;
-        return (batteryStatusChanged, batteryChargeChanged, lastNodeIdChanged);
+        return (batteryStatusChanged, batteryChargeChanged, lastNodeIdChanged, operatingDataChanged);
     }
 
     /// <summary>

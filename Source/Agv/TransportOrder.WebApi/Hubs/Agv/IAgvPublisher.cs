@@ -105,4 +105,10 @@ public interface IAgvPublisher
     /// <param name="correlationId">The correlationId of the agv.</param>
     /// <param name="stations">The new stations of the agv.</param>
     Task SendAgvStationsChangedAsync(Guid correlationId, ICollection<string> stations);
+
+    /// <summary>
+    /// Publishes the operating data status of an Agv to all clients.
+    /// </summary>
+    /// <param name="operatingDataStatusChanged">The operating data changed object.</param>
+    Task SendAgvOperatingDataStatusAsync(AgvOperatingDataStatusChanged operatingDataStatusChanged);
 }
