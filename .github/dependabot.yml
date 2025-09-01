@@ -16,7 +16,10 @@ updates:
      - dependency-name: "Microsoft.Extensions*"
        update-types: ["version-update:semver-major"]    
      - dependency-name: "System.*"
-       update-types: ["version-update:semver-major"]      
+       update-types: ["version-update:semver-major"]    
+     - dependency-name: "MassTransit*" 
+       update-types: ["version-update:semver-minor"] 
+       versions: ["<8.5.0"]  # ensure masstransit does not require .net9  
     groups:
       masstransit:
           patterns:
