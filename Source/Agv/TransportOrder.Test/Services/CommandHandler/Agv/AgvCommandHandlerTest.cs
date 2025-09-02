@@ -762,6 +762,7 @@ public class AgvCommandHandlerTest
         agv.IsOnline.ShouldBeFalse();
         await fixture.ShouldHavePublishedAsync<AllAgvsOffline>();
         await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
+        await fixture.ShouldNotHavePublishedAsync<AgvWentOfflineInZones>();
     }
 
     [TestMethod]
@@ -784,6 +785,7 @@ public class AgvCommandHandlerTest
         agv.IsOnline.ShouldBeFalse();
         await fixture.ShouldHavePublishedAsync<AllAgvsOffline>();
         await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
+        await fixture.ShouldHavePublishedAsync<AgvWentOfflineInZones>();
     }
 
     [TestMethod]
@@ -1702,7 +1704,7 @@ public class AgvCommandHandlerTest
             .WithZones([zone])
             .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
 
-        await fixture.PublishMessageAsync(new RemoveAgvFromZones(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new RemoveAgvFromAllZones(agv.CorrelationId));
 
         await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
@@ -2085,5 +2087,19 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
 
         await fixture.ShouldNotHavePublishedAsync<UpdateSystemAgvErrors>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromZones_ValidData_AgvUpdated()
+    {
+        const string zone = "zone";
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone]);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new RemoveAgvFromZones(agv.CorrelationId, [zone]));
+
+        agv.AgvStatus?.ZoneIds.ShouldBeEmpty();
+        fixture.VerifyAgvUpdated(Times.Once());
     }
 }

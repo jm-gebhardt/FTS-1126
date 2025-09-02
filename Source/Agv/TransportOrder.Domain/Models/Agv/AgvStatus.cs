@@ -207,6 +207,17 @@ public record AgvStatus
     }
 
     /// <summary>
+    /// Remoe zones
+    /// </summary>
+    public void RemoveZones(ICollection<string> removedZones)
+    {
+        if (ZoneIds?.Count > 0)
+        {
+            ZoneIds = ZoneIds.Except(removedZones).ToList();
+        }
+    }
+
+    /// <summary>
     /// Removes the provided zone.
     /// </summary>
     /// <param name="zoneId">The zone to remove.</param>

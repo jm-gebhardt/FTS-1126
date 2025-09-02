@@ -3,7 +3,8 @@
 namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 
 /// <summary>
-/// Provides a request to remove an agv from all zones.
+/// Provides a command to remove the agv from given zones.
 /// </summary>
-/// <param name="CorrelationId">The correlation id of the agv.</param>
-public record RemoveAgvFromZones(Guid CorrelationId) : CorrelatedBy<Guid>;
+/// <param name="CorrelationId">The agv correlation id.</param>
+/// <param name="Zones">The zones the agv was removed from.</param>);
+public record RemoveAgvFromZones(Guid CorrelationId, ICollection<string> Zones) : CorrelatedBy<Guid>;

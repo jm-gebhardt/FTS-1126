@@ -14,13 +14,13 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// </summary>
 [UsedImplicitly]
 public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus bus, IAgvDb agvDb):
-    IConsumer<RemoveAgvFromZones>,
+    IConsumer<RemoveAgvFromAllZones>,
     IConsumer<RemoveAgvFromZone>
 {
     /// <summary>
-    /// Handles the <see cref="RemoveAgvFromZones"/> request.
+    /// Handles the <see cref="RemoveAgvFromAllZones"/> request.
     /// </summary>
-    public async Task Consume(ConsumeContext<RemoveAgvFromZones> context)
+    public async Task Consume(ConsumeContext<RemoveAgvFromAllZones> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
         logger.LogInformation("Removing agv {AgvCorrelationId} from zones", agvCorrelationId);
@@ -34,7 +34,7 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
         // trigger removal on device side
         List<Task> publishTasks = offlineAgv.AgvStatus!.ZoneIds!.Select(z => bus.Publish(new Common.Messages.AgvManagement.Commands.RemoveAgvFromZone(onlineAgv.CorrelationId, onlineAgv.SerialNumber, offlineAgv.SerialNumber, z))).ToList();
         // trigger cleanup of agv status and error
-        publishTasks.Add(bus.Publish(new RemoveAgvFromZones(agvCorrelationId)));
+        publishTasks.Add(bus.Publish(new RemoveAgvFromAllZones(agvCorrelationId)));
         // respond
         publishTasks.Add(context.RespondAsync(new Success()));
         await Task.WhenAll(publishTasks);
@@ -63,7 +63,10 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
             throw new AllAgvsOfflineException();
         }
 
-        await bus.Publish(new RemoveAgvFromZone(agvCorrelationId, zoneId));
+        if (agv.IsOnline)
+        {
+            await bus.Publish(new RemoveAgvFromZone(agvCorrelationId, zoneId));
+        }
 
         await bus.Publish(new Common.Messages.AgvManagement.Commands.RemoveAgvFromZone(onlineAgv.CorrelationId, onlineAgv.SerialNumber, agv.SerialNumber, zoneId));
 

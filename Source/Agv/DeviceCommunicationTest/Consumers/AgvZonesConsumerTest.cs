@@ -1,7 +1,10 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
 
@@ -30,8 +33,11 @@ public class AgvZonesConsumerTest
 
     private class AgvZonesConsumerTestFixture : MassTransitConsumerTestFixture<AgvZonesConsumer>
     {
+        private readonly Mock<IZoneRefreshStateService> _zonesRefreshStateService = new();
+
         public AgvZonesConsumerTestFixture()
         {
+            AddServices(s => s.AddTransient(_ => _zonesRefreshStateService.Object));
             Build();
         }
     }

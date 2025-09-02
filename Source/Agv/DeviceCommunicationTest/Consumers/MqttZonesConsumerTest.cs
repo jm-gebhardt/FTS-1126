@@ -2,8 +2,11 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
@@ -26,12 +29,14 @@ public class MqttZonesConsumerTest
     [TestMethod]
     public async Task Consume_MqttZones_ValidData_PublishAgvZonesReceived()
     {
-        var fixture = new MqttZonesConsumerTestFixture();
+        var fixture = new MqttZonesConsumerTestFixture()
+            .WithRemovedZonesByAgv(new Dictionary<Guid, ICollection<string>> {{Guid.NewGuid(), ["zone"] }});
 
         var message = new MqttZones("serial number", "request id", [new MqttZone("zone id", 1, [new MqttPolygonPoint(1, 0, null), new MqttPolygonPoint(1, 1, null), new MqttPolygonPoint(0, 0, null)], [])]);
 
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
         await fixture.ShouldHaveConsumedAsync<MqttZones>();
+        await fixture.ShouldHavePublishedAsync<AgvRemovedFromZones>();
         var publishedMessage = await fixture.GetFirstPublishedMessageAsync<AgvZonesReceived>();
         publishedMessage.CorrelationId.ShouldBe(message.SerialNumber.ToGuid());
         publishedMessage.SerialNumber.ShouldBe(message.SerialNumber);
@@ -48,9 +53,18 @@ public class MqttZonesConsumerTest
 
     private class MqttZonesConsumerTestFixture : MqttConsumerTestFixture<MqttZonesConsumer>
     {
+        private readonly Mock<IZoneRefreshStateService> _zonesRefreshStateService = new();
+
         public MqttZonesConsumerTestFixture()
         {
+            AddServices(s => s.AddTransient(_ => _zonesRefreshStateService.Object));
             Build();
+        }
+
+        public MqttZonesConsumerTestFixture WithRemovedZonesByAgv(Dictionary<Guid, ICollection<string>> removedZonesByAgv)
+        {
+            _zonesRefreshStateService.Setup(x => x.UpdateAgvsFromRefreshedZones(It.IsAny<ICollection<MqttZone>>())).ReturnsAsync(removedZonesByAgv);
+            return this;
         }
     }
 }

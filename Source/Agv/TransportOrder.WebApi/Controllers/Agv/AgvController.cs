@@ -69,7 +69,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetAgvInstantActionDefinitions> _getInstantActionsClient;
     private readonly IRequestClient<StartInstantAction> _startInstantActionsClient;
     private readonly IRequestClient<ResendAction> _resendActionClient;
-    private readonly IRequestClient<RemoveAgvFromZones> _removeAgvFromZonesClient;
+    private readonly IRequestClient<RemoveAgvFromAllZones> _removeAgvFromZonesClient;
     private readonly IRequestClient<SolveResourceBlockingErrors> _resourceBlockingClient;
     private readonly IRequestClient<RemoveAgvFromZone> _removeAgvFromZoneClient;
     private readonly IRequestClient<RemoveAgvFromStation> _removeAgvFromStationClient;
@@ -111,7 +111,7 @@ public class AgvController : Controller
         IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient,
         IRequestClient<StartInstantAction> startInstantActionsClient,
         IRequestClient<ResendAction> resendActionClient,
-        IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient,
+        IRequestClient<RemoveAgvFromAllZones> removeAgvFromZonesClient,
         IRequestClient<SolveResourceBlockingErrors> resourceBlockingClient,
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient,
         IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient
@@ -274,7 +274,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/settings/removeFromZones")]
     public async Task<ActionResult> RemoveAgvFromZones([FromRoute] Guid correlationId)
     {
-        await _removeAgvFromZonesClient.GetResponse<Success>(new RemoveAgvFromZones(correlationId));
+        await _removeAgvFromZonesClient.GetResponse<Success>(new RemoveAgvFromAllZones(correlationId));
         return Ok();
     }
 

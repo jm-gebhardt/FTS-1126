@@ -24,7 +24,7 @@ public class AgvEventHandlerTest
     {
         using var fixture = new HostOrderConsumerTestFixture<AgvEventHandler>();
 
-        await fixture.TestHarness.Bus.Publish(new AgvWentOnline());
+        await fixture.TestHarness.Bus.Publish(new AgvWentOnline(Guid.NewGuid()));
 
         await fixture.ShouldHaveConsumedAsync<AgvWentOnline>();
         await fixture.ShouldHavePublishedAsync<SetReady>();

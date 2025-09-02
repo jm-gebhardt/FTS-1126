@@ -14,6 +14,7 @@ using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Filters;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
@@ -90,6 +91,9 @@ try
 
                     services.AddSingleton<ISignificanceChecker<AgvSetToPushOrJoystickMode>, PushModeSignificanceChecker<AgvSetToPushOrJoystickMode>>();
                     services.AddSingleton<UnTimedInMemoryFilter<AgvSetToPushOrJoystickMode>>();
+
+                    services.AddSingleton<IZoneRefreshStateService, ZoneRefreshStateService>();
+                    services.AddHostedService<ZoneRefreshBackgroundService>();
 
                     services.AddTransient<IActionRepository, EfActionRepository>();
                     services.ConfigureServicesMassTransit(context.Configuration,

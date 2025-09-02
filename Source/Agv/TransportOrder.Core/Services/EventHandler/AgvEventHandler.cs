@@ -49,7 +49,8 @@ public class AgvEventHandler :
     IConsumer<CriticalAgvHasNoCharger>,
     IConsumer<AgvBatteryChargedToMinimum>,
     IConsumer<SwitchChargingAgvsFailed>,
-    IConsumer<AgvSetToPushOrJoystickMode>
+    IConsumer<AgvSetToPushOrJoystickMode>,
+    IConsumer<AgvRemovedFromZones>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -479,5 +480,13 @@ public class AgvEventHandler :
                 await context.Publish(new AddSystemAgvErrors(agvCorrelationId, [new QueueBlockingError(agvCorrelationId, DateTime.UtcNow)], position.AgvPosition));
             }
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvRemovedFromZones"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvRemovedFromZones> context)
+    {
+        await context.Publish(new RemoveAgvFromZones(context.Message.CorrelationId, context.Message.Zones));
     }
 }

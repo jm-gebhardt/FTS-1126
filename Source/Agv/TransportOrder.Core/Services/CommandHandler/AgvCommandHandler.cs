@@ -81,12 +81,13 @@ public class AgvCommandHandler :
     IConsumer<SwitchMode>,
     IConsumer<TryEnqueueAgv>,
     IConsumer<ReceiveAgvZones>,
-    IConsumer<RemoveAgvFromZones>,
+    IConsumer<RemoveAgvFromAllZones>,
     IConsumer<RemoveAgvFromZone>,
     IConsumer<LeaveQueue>,
     IConsumer<SwitchChargingAgvs>,
     IConsumer<CheckAgvLoad>,
-    IConsumer<RemoveAgvFromQueue>
+    IConsumer<RemoveAgvFromQueue>,
+    IConsumer<RemoveAgvFromZones>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -508,7 +509,7 @@ public class AgvCommandHandler :
             {
                 if (await _agvDb.Agvs.HasOnlineAgvs())
                 {
-                    await context.Publish(new AgvWentOnline());
+                    await context.Publish(new AgvWentOnline(agv.CorrelationId));
                 }
             }
         }
@@ -639,7 +640,7 @@ public class AgvCommandHandler :
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         if (await _agvDb.Agvs.HasOnlineAgvs())
         {
-            await context.Publish(new AgvWentOnline());
+            await context.Publish(new AgvWentOnline(Guid.NewGuid()));
         }
     }
 
@@ -660,6 +661,11 @@ public class AgvCommandHandler :
             {
                 _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(GoOffline), agv.CorrelationId);
                 return;
+            }
+            if (agv.AgvStatus?.ZoneIds?.Count > 0)
+            {
+                List<string> onlineAgvs = (await _agvDb.Agvs.GetAllAgvsAsync()).Where(a => a.IsOnline).Select(a => a.SerialNumber).ToList();
+                await context.Publish(new AgvWentOfflineInZones(agv.CorrelationId, agv.SerialNumber, agv.AgvStatus!.ZoneIds, onlineAgvs));
             }
             await context.Publish(new ClearNodesFromAgv(agv.CorrelationId));
             await context.Publish(new AgvOnlineChanged(agv.CorrelationId, false));
@@ -1281,9 +1287,9 @@ public class AgvCommandHandler :
     }
 
     /// <summary>
-    /// Handles the <see cref="RemoveAgvFromZones"/> command.
+    /// Handles the <see cref="RemoveAgvFromAllZones"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<RemoveAgvFromZones> context)
+    public async Task Consume(ConsumeContext<RemoveAgvFromAllZones> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
@@ -1843,5 +1849,32 @@ public class AgvCommandHandler :
         updatedErrors.Remove(blockingError);
         var position = _agvDb.Positions.GetPosition(agvCorrelationId);
         await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
+    }
+
+    /// <summary>
+    /// Handles the agv <see cref="RemoveAgvFromZones"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RemoveAgvFromZones> context)
+    {
+        (var agvCorrelationId, ICollection<string> removedZones) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        if (agv.AgvStatus?.ZoneIds?.Count > 0)
+        {
+            _logger.LogInformation("Remove zones {Zones} from status of agv {AgvCorrelationId}", string.Join(",", removedZones), agvCorrelationId);
+            agv.AgvStatus.RemoveZones(removedZones);
+
+            if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+            {
+                _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
+                return;
+            }
+
+            await PublishAgvZonesChanged(context, agv.CorrelationId, agv.AgvStatus.ZoneIds);
+        }
+        if (agv.AgvStatus?.ZoneIds?.Count == 0)
+        {
+            await UpdateOfflineErrors(context, agv, handleResourceErrors: false);
+        }
     }
 }

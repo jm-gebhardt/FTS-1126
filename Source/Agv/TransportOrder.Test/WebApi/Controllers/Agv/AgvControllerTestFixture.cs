@@ -262,7 +262,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetAgvInstantActionDefinitions> getInstantActionsClient = GetRequestClient<GetAgvInstantActionDefinitions>();
         IRequestClient<StartInstantAction> startInstantActionsClient = GetRequestClient<StartInstantAction>();
         IRequestClient<ResendAction> resendActionClient = GetRequestClient<ResendAction>();
-        IRequestClient<RemoveAgvFromZones> removeAgvFromZonesClient = GetRequestClient<RemoveAgvFromZones>();
+        IRequestClient<RemoveAgvFromAllZones> removeAgvFromZonesClient = GetRequestClient<RemoveAgvFromAllZones>();
         IRequestClient<SolveResourceBlockingErrors> resourceBlockingClient = GetRequestClient<SolveResourceBlockingErrors>();
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient = GetRequestClient<RemoveAgvFromZone>();
         IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient = GetRequestClient<RemoveAgvFromStation>();

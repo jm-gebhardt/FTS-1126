@@ -2,9 +2,9 @@
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
-using RemoveAgvFromZones = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZones;
 using RemoveAgvFromZone = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZone;
 using CommonRemoveAgvFromZone = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RemoveAgvFromZone;
 
@@ -19,12 +19,12 @@ public class AgvZonesRequestHandlerTest
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
         var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
-        AgvRequestsHandlerTestFixture<RemoveAgvFromZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZones, AgvZonesRequestHandler>()
+        AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
             .WithAgv(agv)
             .WithOnlineAgv(null)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new RemoveAgvFromZones(agv.CorrelationId)));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new RemoveAgvFromAllZones(agv.CorrelationId)));
     }
 
     [TestMethod]
@@ -35,15 +35,15 @@ public class AgvZonesRequestHandlerTest
         var offlineAgv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
         offlineAgv.GoOffline();
         var onlineAgv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<RemoveAgvFromZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZones, AgvZonesRequestHandler>()
+        AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
             .WithAgv(offlineAgv)
             .WithOnlineAgv(onlineAgv)
             .Build();
         
-        await fixture.GetResponseAsync<Success>(new RemoveAgvFromZones(offlineAgv.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new RemoveAgvFromAllZones(offlineAgv.CorrelationId));
 
         await fixture.ShouldHavePublishedAsync<CommonRemoveAgvFromZone>();
-        await fixture.ShouldHavePublishedAsync<RemoveAgvFromZones>();
+        await fixture.ShouldHavePublishedAsync<RemoveAgvFromAllZones>();
         var commandToDevice = fixture.TestHarness.Published.Select<CommonRemoveAgvFromZone>().First().Context.Message;
         commandToDevice.AgvToRemove.ShouldBe(offlineAgv.SerialNumber);
         commandToDevice.CorrelationId.ShouldBe(onlineAgv.CorrelationId);
