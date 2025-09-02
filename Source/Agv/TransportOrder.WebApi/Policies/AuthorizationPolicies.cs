@@ -23,6 +23,11 @@ public static class AuthorizationPolicies
     public const string MapFullAccess = "MapFullAccess";
 
     /// <summary>
+    /// Policy name for allowing full access to maintenance log endpoints.
+    /// </summary>
+    public const string MaintenanceLogFullAccess = "MaintenanceLogFullAccess";
+
+    /// <summary>
     /// Policy name for allowing updates to node properties.
     /// </summary>
     public const string NodePropertiesUpdate = "NodePropertiesUpdate";
@@ -38,7 +43,8 @@ public static class AuthorizationPolicies
         new (TriggersFullAccess, "fm-triggers-full", ClaimTypes.ResourceAccess),
         new (RestrictedAreasFullAccess, "fm-restrictedAreas-full", ClaimTypes.ResourceAccess),
         new (MapFullAccess, "fm-map-full", ClaimTypes.ResourceAccess),
-        new (NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess)
+        new (NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess),
+        new (MaintenanceLogFullAccess, "fm-maintenanceLogs-full", ClaimTypes.ResourceAccess)
     ];
 
     private static void AddNewPolicy(this AuthorizationOptions options, Policy newPolicy)

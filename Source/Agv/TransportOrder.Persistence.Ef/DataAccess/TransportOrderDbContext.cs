@@ -57,6 +57,7 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new QueueEntityConfiguration());
         modelBuilder.ApplyConfiguration(new InstantActionDefinitionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ZoneEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new MaintenanceLogEntityConfiguration());
     }
 
     /// <summary>

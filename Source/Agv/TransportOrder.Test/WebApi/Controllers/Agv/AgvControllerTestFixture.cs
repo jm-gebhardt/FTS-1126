@@ -24,6 +24,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -266,6 +267,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<SolveResourceBlockingErrors> resourceBlockingClient = GetRequestClient<SolveResourceBlockingErrors>();
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient = GetRequestClient<RemoveAgvFromZone>();
         IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient = GetRequestClient<RemoveAgvFromStation>();
+        IRequestClient<TriggerAddingMaintenanceLog> addMaintenanceLogClient = GetRequestClient<TriggerAddingMaintenanceLog>();
+        IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient = GetRequestClient<GetMaintenanceLogsForAgv>();
 
         var controller = new AgvController(Mapper,
             getAgvRequestClient,
@@ -302,7 +305,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             removeAgvFromZonesClient,
             resourceBlockingClient,
             removeAgvFromZoneClient,
-            removeAgvFromStationClient
+            removeAgvFromStationClient,
+            addMaintenanceLogClient,
+            getMaintenanceLogsClient
         )
         {
             ControllerContext = new ControllerContext(

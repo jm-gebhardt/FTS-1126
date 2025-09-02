@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using MassTransit;
@@ -38,6 +40,7 @@ public class AgvsController : Controller
     private readonly IRequestClient<UpdateAgvsSettings> _updateAgvsSettingsClient;
     private readonly IRequestClient<ResetAgvsSettingToDefault> _resetSettingsToDefaultClient;
     private readonly IRequestClient<GetAgvsInstantActionsDefinitions> _instantActionsClient;
+    private readonly IRequestClient<GetMaintenanceLogsForAgvs> _getMaintenanceLogsClient;
 
     private readonly IMapper _mapper;
 
@@ -59,7 +62,8 @@ public class AgvsController : Controller
         IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsClient,
         IRequestClient<UpdateAgvsSettings> updateAgvsSettingsClient,
         IRequestClient<ResetAgvsSettingToDefault> resetSettingsToDefaultClient,
-        IRequestClient<GetAgvsInstantActionsDefinitions> instantActionsClient
+        IRequestClient<GetAgvsInstantActionsDefinitions> instantActionsClient,
+        IRequestClient<GetMaintenanceLogsForAgvs> getMaintenanceLogsClient
     )
     {
         _getAgvsClient = getAgvsClient;
@@ -78,6 +82,7 @@ public class AgvsController : Controller
         _updateAgvsSettingsClient = updateAgvsSettingsClient;
         _resetSettingsToDefaultClient = resetSettingsToDefaultClient;
         _instantActionsClient = instantActionsClient;
+        _getMaintenanceLogsClient = getMaintenanceLogsClient;
     }
 
     /// <summary>
@@ -338,5 +343,30 @@ public class AgvsController : Controller
             instantActions.Add(agv, _mapper.Map<List<AgvInstantActionDefinitionDto>>(instantActionDefinitions));
         }
         return Ok(instantActions);
+    }
+
+    /// <summary>
+    /// Get all maintenance log entries for given agvs.
+    /// </summary>
+    /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
+    /// <param name="maintenanceType">Optional filter for the type of maintenance done.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    [HttpPost]
+    [Route("/agvs/maintenanceLog")]
+    public async Task<ActionResult<Dictionary<Guid, ICollection<AgvMaintenanceLogDto>>>> GetMaintenanceLog([FromQuery] ICollection<Guid> correlationIds, [FromQuery] MaintenanceType? maintenanceType)
+    {
+        Response<GotMaintenanceLogs> response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgvs(correlationIds, maintenanceType));
+        Dictionary<Guid, ICollection<AgvMaintenanceLogDto>> logs = response.Message.MaintenanceLogs
+            .GroupBy(log => log.AgvCorrelationId)
+            .ToDictionary(
+                group => group.Key, 
+                group => (ICollection<AgvMaintenanceLogDto>)group
+                    .Select(log => _mapper.Map<AgvMaintenanceLogDto>(log))
+                    .ToList()
+                    .OrderByDescending(l => l.ExecutionDate)
+                    .ToList()
+            );
+        return Ok(logs);
     }
 }

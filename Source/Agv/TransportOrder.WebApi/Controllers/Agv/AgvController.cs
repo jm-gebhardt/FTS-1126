@@ -4,6 +4,7 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
@@ -12,12 +13,14 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Routing;
 using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
+using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -73,6 +76,8 @@ public class AgvController : Controller
     private readonly IRequestClient<SolveResourceBlockingErrors> _resourceBlockingClient;
     private readonly IRequestClient<RemoveAgvFromZone> _removeAgvFromZoneClient;
     private readonly IRequestClient<RemoveAgvFromStation> _removeAgvFromStationClient;
+    private readonly IRequestClient<TriggerAddingMaintenanceLog> _addMaintenanceLogClient;
+    private readonly IRequestClient<GetMaintenanceLogsForAgv> _getMaintenanceLogsClient;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -114,7 +119,9 @@ public class AgvController : Controller
         IRequestClient<RemoveAgvFromAllZones> removeAgvFromZonesClient,
         IRequestClient<SolveResourceBlockingErrors> resourceBlockingClient,
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient,
-        IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient
+        IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient,
+        IRequestClient<TriggerAddingMaintenanceLog> addMaintenanceLogClient,
+        IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient
     )
     {
         _getAgvClient = getAgvClient;
@@ -153,6 +160,8 @@ public class AgvController : Controller
         _removeAgvFromZoneClient = removeAgvFromZoneClient;
         _resourceBlockingClient = resourceBlockingClient;
         _removeAgvFromStationClient = removeAgvFromStationClient;
+        _addMaintenanceLogClient = addMaintenanceLogClient;
+        _getMaintenanceLogsClient = getMaintenanceLogsClient;
     }
 
     /// <summary>
@@ -766,5 +775,38 @@ public class AgvController : Controller
         await _removeAgvFromStationClient.GetResponse<Success>(new RemoveAgvFromStation(stationName, correlationId));
 
         return Ok();
+    }
+
+    /// <summary>
+    /// Add a maintenance log entry for an agv.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="maintenanceType">The type of maintenance done.</param>
+    /// <param name="executionDate">The date and time the maintenance was done.</param>
+    /// <param name="comment">Optional comment on the maintenance.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    [Authorize(Policy = AuthorizationPolicies.MaintenanceLogFullAccess)]
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/maintenanceLog")]
+    public async Task<ActionResult> AddMaintenanceLog([FromRoute] Guid correlationId, [FromQuery] MaintenanceType maintenanceType, [FromQuery] DateTime executionDate, [FromQuery] string? comment)
+    {
+        await _addMaintenanceLogClient.GetResponse<Success>(new TriggerAddingMaintenanceLog(User.GetEmail() ?? string.Empty, correlationId, maintenanceType, executionDate, comment));
+        return Ok();
+    }
+
+    /// <summary>
+    /// Get all maintenance log entries for an agv.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="maintenanceType">Optional filter for the type of maintenance done.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Agv with given correlationId not found.</response>
+    [HttpGet]
+    [Route("/agv/{correlationId:guid}/maintenanceLog")]
+    public async Task<ActionResult<ICollection<AgvMaintenanceLogDto>>> GetMaintenanceLog([FromRoute] Guid correlationId, [FromQuery] MaintenanceType? maintenanceType)
+    {
+        Response<GotMaintenanceLogs> response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv( correlationId, maintenanceType));
+        return Ok(_mapper.Map<List<AgvMaintenanceLogDto>>(response.Message.MaintenanceLogs));
     }
 }

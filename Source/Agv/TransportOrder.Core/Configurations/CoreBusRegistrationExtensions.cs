@@ -12,6 +12,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
@@ -24,6 +25,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
@@ -130,6 +132,13 @@ public static class CoreBusRegistrationExtensions
             {
                 var partitioner = c.CreatePartitioner(PartitionCount);
                 partitioner.PartitionMessageById<AgvInstantActionDefinitionReceived, InstantActionsCommandHandler>(c);
+            }
+        );
+
+        busRegistrationConfigurator.AddConsumer<MaintenanceLogCommandHandler>(c =>
+            {
+                var partitioner = c.CreatePartitioner(PartitionCount);
+                partitioner.PartitionMessageById<AddMaintenanceLog, MaintenanceLogCommandHandler>(c);
             }
         );
 
@@ -430,6 +439,11 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<StartInstantAction>();
         configurator.AddConsumer<ResendActionRequestHandler>();
         configurator.AddRequestClient<ResendAction>();
+
+        configurator.AddConsumer<MaintenanceLogRequestHandler>();
+        configurator.AddRequestClient<TriggerAddingMaintenanceLog>();
+        configurator.AddRequestClient<GetMaintenanceLogsForAgv>();
+        configurator.AddRequestClient<GetMaintenanceLogsForAgvs>();
     }
 
     private static void RegisterMediatorRoutingRequestHandlers(IMediatorRegistrationConfigurator configurator)

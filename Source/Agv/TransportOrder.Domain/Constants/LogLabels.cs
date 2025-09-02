@@ -21,5 +21,8 @@ public static class LogLabels
     public const string TriggerName = "TriggerName";
     public const string PropertyName = "PropertyName";
     public const string PropertyValue = "PropertyValue";
+    public const string MaintenanceType = "MaintenanceType";
+    public const string MaintenanceComment = "MaintenanceComment";
+    public const string MaintenanceExecutionDate = "MaintenanceExecutionDate";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
