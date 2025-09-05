@@ -516,24 +516,6 @@ public class KaeserGraphConfiguration
     }
 
     /// <summary>
-    /// Set <see cref="QueueIsOccupied"/>.
-    /// </summary>
-    /// <param name="isOccupied">The new value.</param>
-    public void SetQueueIsOccupied(bool isOccupied)
-    {
-        QueueIsOccupied = isOccupied;
-    }
-
-    /// <summary>
-    /// If true, skip Doppelspiel
-    /// </summary>
-    /// <param name="target">Target station.</param>
-    public bool SkipDoppelspiel(string target)
-    {
-        return target == "9070" && QueueIsOccupied;
-    }
-
-    /// <summary>
     /// Checks if the given target is a drop at AKL
     /// </summary>
     /// <param name="target">Target station.</param>

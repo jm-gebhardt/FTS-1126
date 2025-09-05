@@ -22,7 +22,6 @@ public class InitializationProvider(
     IShortLoopWeTargetStationRepository targetStationRepository,
     ILogger<InitializationProvider> logger,
     IRequestClient<AddOrUpdateStationGroup> stationGroupRequestClient,
-    IRequestClient<GetQueueFillQuantities> queueRequestClient,
     IRequestClient<GetTriggerMapping> triggerRequestClient,
     IBus bus
 ) : BackgroundService
@@ -32,7 +31,7 @@ public class InitializationProvider(
     /// <inheritdoc cref="BackgroundService"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.WhenAll(InitializeStationGroups(), InitializeShortLoopTargetStation(), InitializeQueue(), InitializeTriggerMapping());
+        await Task.WhenAll(InitializeStationGroups(), InitializeShortLoopTargetStation(), InitializeTriggerMapping());
     }
 
     private async Task InitializeStationGroups()
@@ -68,29 +67,6 @@ public class InitializationProvider(
             var shortLoopTarget = new ShortLoopWeTargetStation(defaultTarget, defaultTarget);
             targetStationRepository.Add(shortLoopTarget);
             await targetStationRepository.SaveAsync();
-        }
-    }
-
-    private async Task InitializeQueue()
-    {
-        logger.LogInformation("Initializing queue occupation");
-        configuration.SetQueueIsOccupied(false);
-        try
-        {
-            Response<GotQueueFillQuantities> response = await queueRequestClient.GetResponse<GotQueueFillQuantities>(new GetQueueFillQuantities());
-            if (response.Message.FillQuantities.Count > 0)
-            {
-                var queue = response.Message.FillQuantities.First();
-                if (queue.Quantity > 0)
-                {
-                    configuration.SetQueueIsOccupied(true);
-                    logger.LogInformation("Queue is occupied");
-                }
-            }
-        }
-        catch (RequestTimeoutException)
-        {
-            logger.LogWarning("Got request time out, assuming queue is empty or there is no queue");
         }
     }
 

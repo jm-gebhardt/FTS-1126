@@ -89,7 +89,7 @@ public class HostOrderCommandHandler(
             logger.LogInformation("Host order for order {Hu} created: {OrderCorrelationId}, Doppelspiel drop target corresponding to current pick {Pick} : {Target}", hu, hostOrder.CorrelationId, hostOrder.Source, doppelSpielDropTarget);
 
             Guid? dropOrderId = await hostOrderRepository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelSpielDropTarget);
-            if (dropOrderId != null && !configuration.SkipDoppelspiel(doppelSpielDropTarget))
+            if (dropOrderId != null)
             {
                 var dropOrder = await hostOrderRepository.GetByIdAsync(dropOrderId.Value);
                 dropOrder.RegisterForDoppelspiel();

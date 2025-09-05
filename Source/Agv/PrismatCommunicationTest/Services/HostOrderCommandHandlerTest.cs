@@ -317,7 +317,7 @@ public class HostOrderCommandHandlerTest
     [DataRow(0)] //1050
     [DataRow(1)] //1060
     [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsEmpty_PublishesCreateActionGroup(int output)
+    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_PublishesCreateActionGroup(int output)
     {
         var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
@@ -326,7 +326,6 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderWithSameHu(null)
             .WithValidationError(null)
             .WithHostCommunicator();
-        fixture.Configuration.SetQueueIsOccupied(false);
 
         var order = OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output);
 
@@ -334,30 +333,6 @@ public class HostOrderCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
         await fixture.ShouldHavePublishedAsync<CreateActionGroup>();
-        fixture.VerifyHostOrderAdded();
-    }
-
-    [DataRow(0)] //1050
-    [DataRow(1)] //1060
-    [TestMethod]
-    public async Task Consume_CreateHostOrder_OrderWithUnknownDropTarget_DropOrdersHeadingTowardsDoppelSpielTriggerPoint_QueueIsNotEmpty_QueueActionGroup(int output)
-    {
-        var dropOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
-            .WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(dropOrder.CorrelationId)
-            .WithHostOrders([dropOrder])
-            .WithHostOrderRepository(null)
-            .WithHostOrderWithSameHu(null)
-            .WithValidationError(null)
-            .WithHostCommunicator();
-        fixture.Configuration.SetQueueIsOccupied(true);
-
-        var order = OrderGenerator.GenerateUnknownDropTargetOrder(dropTarget: output);
-
-        await fixture.TestHarness.Bus.Publish(new CreateHostOrder("Hu", order));
-        await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
-        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
-        await fixture.ShouldNotHavePublishedAsync<CreateActionGroup>();
         fixture.VerifyHostOrderAdded();
     }
 

@@ -6,6 +6,7 @@ namespace Gebhardt.Acc.Common.Messages.Graphs.Requests;
 /// Represents the response to <see cref="GetQueueFillQuantities"/>.
 /// </summary>
 /// <param name="FillQuantities">The fill quantities of all queues.</param>
+[PublicAPI]
 public record GotQueueFillQuantities(ICollection<QueueFillQuantity> FillQuantities);
 
 /// <summary>

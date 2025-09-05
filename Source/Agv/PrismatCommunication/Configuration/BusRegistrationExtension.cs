@@ -47,7 +47,6 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<AgvEventHandler>();
         cfg.AddConsumer<ActionGroupEventHandler>();
         cfg.AddConsumer<TriggerEventHandler>();
-        cfg.AddConsumer<QueueEventHandler>();
         cfg.AddConsumer<StationEventHandler>();
         cfg.AddConsumer<StationCommandHandler>(c =>
         {
@@ -57,7 +56,6 @@ public static class BusRegistrationExtension
         });
 
         cfg.AddRequestClient<AddOrUpdateStationGroup>();
-        cfg.AddRequestClient<GetQueueFillQuantities>();
         cfg.AddRequestClient<GetTriggerMapping>();
         return cfg;
     }
