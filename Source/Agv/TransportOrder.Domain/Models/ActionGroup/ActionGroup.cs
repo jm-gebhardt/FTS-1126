@@ -401,8 +401,8 @@ public class ActionGroup
     /// <summary>
     /// Set the dock front information for an action.
     /// </summary>
-    /// <param name="actionId">The id of the action for which dockfront is to be set.</param>
-    /// <param name="dockFrontPreviousActionGroup">The value of dockfront of the last action of the previous action group.</param>
+    /// <param name="actionId">The id of the action for which DockFront is to be set.</param>
+    /// <param name="dockFrontPreviousActionGroup">The value of DockFront of the last action of the previous action group.</param>
     /// <param name="nodeDockingDirection">The docking direction as given by the node.</param>
     /// <param name="startIsStation">True, if the start node is a station.</param>
     public void SetDockFrontOfAction(Guid actionId, bool? dockFrontPreviousActionGroup, DockingDirection? nodeDockingDirection, bool startIsStation = false)

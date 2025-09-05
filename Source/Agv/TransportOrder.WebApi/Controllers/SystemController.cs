@@ -87,7 +87,7 @@ public class SystemController(
     /// <summary>
     /// Get certificate expiration information.
     /// </summary>
-    /// <response code="200">Returns a list of known certificates with it's expiration dates</response>
+    /// <response code="200">Returns a list of known certificates with its expiration dates</response>
     [HttpGet]
     [Route("/system/monitoring/certificates")]
     public async Task<ActionResult<IEnumerable<CertificateExpirationDto>>> GetCertificateExpirations()

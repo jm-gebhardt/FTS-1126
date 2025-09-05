@@ -1752,19 +1752,19 @@ public class ActionCommandHandlerTest
             assignedAgv: null,
             pickActionState: ActionState.Created,
             moveActionState: ActionState.Created);
-        const string newtargetNode = "target";
+        const string newTargetNode = "target";
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, newtargetNode));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, newTargetNode));
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[2].Target.NodeId == newtargetNode)), Times.Once);
+            ag.Actions[2].Target.NodeId == newTargetNode)), Times.Once);
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }

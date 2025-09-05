@@ -3,7 +3,7 @@
 namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 
 /// <summary>
-/// The WE target station of the short loop.
+/// The 'WE' target station of the short loop.
 /// </summary>
 public class ShortLoopWeTargetStation
 {

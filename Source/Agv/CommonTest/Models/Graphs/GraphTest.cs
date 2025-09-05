@@ -118,7 +118,7 @@ public class GraphTest
     }
     
     [TestMethod]
-    public void Merge_WithRemovedEdge_DontRemoveEdge()
+    public void Merge_WithRemovedEdge_DoNotRemoveEdge()
     {
         var fixture = new GraphTestFixture()
             .WithGraphEdges(EdgeGenerator.Generate())
@@ -130,7 +130,7 @@ public class GraphTest
     }
     
     [TestMethod]
-    public void Merge_WithRemovedNode_DontRemoveNode()
+    public void Merge_WithRemovedNode_DoNotRemoveNode()
     {
         var fixture = new GraphTestFixture()
             .WithGraphNodes(NodeGenerator.GenerateNode())

@@ -5,7 +5,7 @@ using Gebhardt.Acc.Common.Services.Significance;
 namespace Gebhardt.Acc.Common.Services.Filters;
 
 /// <summary>
-/// Filter for <see cref="AgvWifiMetricsReceived"/> events based on significance of the WiFi metrics.
+/// Filter for <see cref="AgvWifiMetricsReceived"/> events based on significance of the Wi-Fi metrics.
 /// </summary>
 public class AgvWifiMetricsReceivedFilter : InMemoryFilter<AgvWifiMetricsReceived>
 {

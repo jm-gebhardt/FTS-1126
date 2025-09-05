@@ -207,7 +207,7 @@ public record AgvStatus
     }
 
     /// <summary>
-    /// Remoe zones
+    /// Remove zones
     /// </summary>
     public void RemoveZones(ICollection<string> removedZones)
     {

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.DataAccess;
 
 /// <summary>
-/// Db Context for Kaesersidecar
+/// Db Context for KaeserSidecar
 /// </summary>
 public class KaeserSidecarDbContext: DbContext
 {

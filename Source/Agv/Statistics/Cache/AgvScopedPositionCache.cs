@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.Statistics.Cache;
 
-/// Represents a cache for storing and managing items isolated by AGV and it's position.
+/// Represents a cache for storing and managing items isolated by AGV, and its position.
 /// The cache ensures that the number of items per AGV does not exceed a specified limit, and it automatically removes
 /// the oldest entries when the limit is exceeded.
 public class AgvScopedPositionCache<TItem> : IAgvScopedPositionCache<TItem>
