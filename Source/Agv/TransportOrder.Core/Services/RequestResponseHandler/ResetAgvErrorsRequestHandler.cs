@@ -1,7 +1,9 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.MassTransit;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -63,6 +65,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
     public async Task Consume(ConsumeContext<ResetAgvErrors> context)
     {
         var correlationId = context.Message.CorrelationId;
+        string user = context.Message.User;
         List<Guid> errorIdsToReset = context.Message.ErrorIds.ToList();
         var cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, new CancellationTokenSource(_resetTimeout).Token).Token;
         IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
@@ -121,6 +124,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
                 checkContinuouslyUntilSuccess: errorsBySource.Count > 1);
 
             int numberOfResetErrors = errorIdsToReset.Count == 0 ? activeErrors.Count : errorIdsToReset.Count;
+            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvErrorReset} });
             await context.RespondAsync(new ResetAgvErrorsResult($"{numberOfResetErrors} error{(numberOfResetErrors == 1 ? "" : "s")} were reset successfully."));
         }
         catch (WaitForMessageFailedException<AgvErrorChanged> e)

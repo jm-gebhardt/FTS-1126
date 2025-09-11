@@ -5,7 +5,7 @@
 /// </summary>
 public static class LogCodes
 {
-  #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member  
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member  
     // Battery 
     public const int BatteryCriticalChargeLevel = 200;
     public const int BatteryStartedCharging = 201;
@@ -37,6 +37,17 @@ public static class LogCodes
     public const int AgvModeChangePending = 316;
     public const int AgvInformation = 317;
     public const int AgvMaintenanceLogCreated = 318;
+    public const int AgvErrorReset = 319;
+    public const int AgvAccept = 320;
+    public const int AgvGraphRequested = 321;
+    public const int AgvDataRequested = 322;
+    public const int AgvZonesRequested = 323;
+    public const int AgvManualMove = 324;
+    public const int AgvManualCharge = 325;
+    public const int AgvStartInstantAction = 326;
+    public const int AgvRemoveFromZone = 327;
+    public const int AgvRemoveFromNode = 328;
+    public const int AgvOperatorInteraction = 329;
 
     // Order
     public const int OrderCreated = 100;
@@ -55,15 +66,37 @@ public static class LogCodes
     public const int OrderReset = 113;
     public const int OrderReassigned = 114;
     public const int OrderQueued = 115;
+    public const int OrderTargetSet = 116;
+    public const int OrderOperatorInteraction = 117;
 
     //Station
     public const int StationStateChanged = 400;
     public const int StationAgvDropping = 401;
     public const int StationAgvPicking = 402;
     public const int StationAgvCharging = 403;
-    public const int StationAgvMoving= 404;
-    public const int StationAgvReached= 405;
-    public const int StationAgvLeft= 406;
+    public const int StationAgvMoving = 404;
+    public const int StationAgvReached = 405;
+    public const int StationAgvLeft = 406;
     public const int StationLocked = 407;
     public const int StationUnlocked = 408;
+    public const int StationUnblocked = 409;
+    public const int StationOperatorInteraction = 410;
+
+    //System
+    public const int SystemOperatorInteraction = 500;
+    public const int SystemAgvDefaultSettingUpdated = 501;
+    public const int SystemMapBackgroundImageUpdated = 502;
+    public const int SystemMapBackgroundImageDeleted = 503;
+    public const int SystemMapUpdated = 504;
+    public const int SystemNodeApproachingPropertiesUpdated = 505;
+    public const int SystemQueueAdded = 506;
+    public const int SystemQueueDeleted = 507;
+    public const int SystemRestrictedAreaAdded = 508;
+    public const int SystemRestrictedAreaDeleted = 509;
+    public const int SystemRestrictedAreaUpdated = 510;
+    public const int SystemTriggerAssignedToLocation = 511;
+    public const int SystemTriggerLocationRemoved = 512;
+    public const int SystemTriggerLocationConfigurationUpdated = 513;
+    public const int SystemTriggerLocationConfigurationReset = 514;
+    public const int SystemTriggerDefaultConfigurationUpdated = 514;
 }

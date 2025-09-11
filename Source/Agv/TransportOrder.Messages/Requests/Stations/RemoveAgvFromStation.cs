@@ -5,4 +5,5 @@
 /// </summary>
 /// <param name="StationName">The station name.</param>
 /// <param name="AgvId">The agv id.</param>
-public record RemoveAgvFromStation(string StationName, Guid AgvId);
+/// <param name="User">The user who removed the agv from a station.</param>
+public record RemoveAgvFromStation(string StationName, Guid AgvId, string User);

@@ -10,7 +10,7 @@ public class InstantActionMessageSerializationTest
     [TestMethod]
     public void StartInstantAction_NoParameters_SerializesAllProperties()
     {
-        var message = new StartInstantAction(Guid.NewGuid(), "action Type", null, null);
+        var message = new StartInstantAction(Guid.NewGuid(), "action Type", null, null, "user");
 
         var fixture = new MessageSerialisationTestFixture();
 
@@ -20,7 +20,7 @@ public class InstantActionMessageSerializationTest
     [TestMethod]
     public void StartInstantAction_BlockingType_SerializesAllProperties()
     {
-        var message = new StartInstantAction(Guid.NewGuid(), "action Type", null, ActionBlockingType.Hard);
+        var message = new StartInstantAction(Guid.NewGuid(), "action Type", null, ActionBlockingType.Hard, "user");
 
         var fixture = new MessageSerialisationTestFixture();
 
@@ -36,7 +36,7 @@ public class InstantActionMessageSerializationTest
             {"integer", 42},
             {"float", 42.42},
             {"bool", true}
-        }, null);
+        }, null, "user");
         var fixture = new MessageSerialisationTestFixture();
 
         fixture.ValidateSerialization(message);

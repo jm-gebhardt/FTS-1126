@@ -26,7 +26,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<MoveAgv>(
-            new MoveAgv("unknown agv".ToGuid(), "known target", ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgv("unknown agv".ToGuid(), "known target", ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -40,7 +40,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () => await fixture.GetResponseAsync<MoveAgv>(
-            new MoveAgv(agv.CorrelationId, "unknown target", ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgv(agv.CorrelationId, "unknown target", ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -52,7 +52,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<MoveAgv>(
-            new MoveAgv(agv.CorrelationId, "known target", ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgv(agv.CorrelationId, "known target", ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -65,7 +65,7 @@ public class MoveAgvRequestHandlerTest
             .WithNode(targetNode)
             .BuildAsync();
 
-        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi, "user"));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
     }
 
@@ -79,7 +79,7 @@ public class MoveAgvRequestHandlerTest
             .WithNode(targetNode)
             .BuildAsync();
 
-        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi, "user"));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Park, targetNode, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
@@ -95,7 +95,7 @@ public class MoveAgvRequestHandlerTest
             .WithNode(targetNode)
             .BuildAsync();
 
-        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi, "user"));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Park, targetNode, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
@@ -111,7 +111,7 @@ public class MoveAgvRequestHandlerTest
             .WithNode(targetNode)
             .BuildAsync();
 
-        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, targetNode.Id, ActionGroupCreator.TransportOrderWebApi, "user"));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Park, targetNode, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
@@ -129,7 +129,7 @@ public class MoveAgvRequestHandlerTest
         fixture.ParkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<string>(), agv.CorrelationId)).ThrowsAsync(new ParkNodeNotAvailableException(""));
 
         await MediatorShould.ThrowRequestExceptionAsync<ParkNodeNotAvailableException>(async () => await fixture.GetResponseAsync<MoveAgv>(
-            new MoveAgv(agv.CorrelationId, "known target", ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgv(agv.CorrelationId, "known target", ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -140,7 +140,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
-            new ChargeAgv("unknown agv".ToGuid(), "known charger")));
+            new ChargeAgv("unknown agv".ToGuid(), "known charger", "user")));
     }
 
     [TestMethod]
@@ -154,7 +154,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
-            new ChargeAgv(agv.CorrelationId, "unknown charger")));
+            new ChargeAgv(agv.CorrelationId, "unknown charger", "user")));
     }
 
     [TestMethod]
@@ -166,7 +166,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
-            new ChargeAgv(agv.CorrelationId, "known charger")));
+            new ChargeAgv(agv.CorrelationId, "known charger", "user")));
     }
 
     [TestMethod]
@@ -181,7 +181,7 @@ public class MoveAgvRequestHandlerTest
         fixture.ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<GraphNode>(), It.IsAny<Guid>())).ThrowsAsync(new ChargeStationNotAvailableException(""));
 
         await MediatorShould.ThrowRequestExceptionAsync<ChargeStationNotAvailableException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
-            new ChargeAgv(agv.CorrelationId, charger.Id)));
+            new ChargeAgv(agv.CorrelationId, charger.Id, "user")));
     }
 
     [TestMethod]
@@ -200,7 +200,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
-            new ChargeAgv(agv.CorrelationId, node.Id)));
+            new ChargeAgv(agv.CorrelationId, node.Id, "user")));
     }
 
     [TestMethod]
@@ -214,7 +214,7 @@ public class MoveAgvRequestHandlerTest
             .WithNode(charger)
             .BuildAsync();
 
-        await fixture.GetResponseAsync<AgvMoveSuccessful>(new ChargeAgv(agv.CorrelationId, charger.Id));
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new ChargeAgv(agv.CorrelationId, charger.Id, "user"));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         fixture.VerifyNodeWasReserved(AgvGraph.NodeType.Charge, charger, agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
@@ -228,7 +228,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
-            new MoveAgvToCoordinate("unknown agv".ToGuid(), 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgvToCoordinate("unknown agv".ToGuid(), 1, 1, 0, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -240,7 +240,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
-            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -252,7 +252,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
-            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -266,7 +266,7 @@ public class MoveAgvRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<PositionIsInRestrictedAreaException>(async () => await fixture.GetResponseAsync<MoveAgvToCoordinate>(
-            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi)));
+            new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -279,7 +279,7 @@ public class MoveAgvRequestHandlerTest
             .WithInsideRestrictedArea(false)
             .BuildAsync();
 
-        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi, "user"));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
     }
 
@@ -292,7 +292,7 @@ public class MoveAgvRequestHandlerTest
             .WithInsideRestrictedArea(false)
             .BuildAsync();
 
-        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi));
+        await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgvToCoordinate(agv.CorrelationId, 1, 1, 0, ActionGroupCreator.TransportOrderWebApi, "user"));
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
     }
 }

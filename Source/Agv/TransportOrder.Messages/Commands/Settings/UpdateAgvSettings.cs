@@ -7,4 +7,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="UpdatedSettings">The updated settings.</param>
-public record UpdateAgvSettings(Guid CorrelationId, AgvSettingsReadModel UpdatedSettings);
+/// <param name="User">The user who updated the settings.</param>
+public record UpdateAgvSettings(Guid CorrelationId, AgvSettingsReadModel UpdatedSettings, string User);

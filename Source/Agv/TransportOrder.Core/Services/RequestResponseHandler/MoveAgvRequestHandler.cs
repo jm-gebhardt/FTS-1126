@@ -1,10 +1,10 @@
-﻿using System.Globalization;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -13,6 +13,8 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
+using System.Globalization;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -22,6 +24,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// <inheritdoc cref="MoveAgvRequestHandler"/>>
 [UsedImplicitly]
 public class MoveAgvRequestHandler(
+    ILogger<MoveAgvRequestHandler> logger,
     IAgvDb agvDb,
     IBus bus,
     INodeStateRepository nodeStateRepository,
@@ -39,7 +42,7 @@ public class MoveAgvRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<MoveAgv> context)
     {
-        (var agvCorrelationId, string targetNodeId, var creator, double theta) = context.Message;
+        (var agvCorrelationId, string targetNodeId, var creator, string user, double theta) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -70,6 +73,8 @@ public class MoveAgvRequestHandler(
             agvCorrelationId,
             creator,
             actionGroupId);
+        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
+
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
 
@@ -78,7 +83,7 @@ public class MoveAgvRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<ChargeAgv> context)
     {
-        (var agvCorrelationId, string chargerId) = context.Message;
+        (var agvCorrelationId, string chargerId, string user) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -115,6 +120,8 @@ public class MoveAgvRequestHandler(
             agvCorrelationId,
             ActionGroupCreator.TransportOrderWebApi,
             actionGroupId);
+        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
+
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
 
@@ -123,7 +130,7 @@ public class MoveAgvRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<MoveAgvToCoordinate> context)
     {
-        (var agvCorrelationId, float x, float y, float theta, var creator) = context.Message;
+        (var agvCorrelationId, float x, float y, float theta, var creator, string user) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -149,6 +156,8 @@ public class MoveAgvRequestHandler(
             agvCorrelationId,
             creator,
             actionGroupId);
+        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
+
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
 

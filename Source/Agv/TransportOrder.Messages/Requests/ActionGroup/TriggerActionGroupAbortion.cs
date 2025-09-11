@@ -7,4 +7,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the action group.</param>
 /// <param name="AbortReason">The reason for the abort.</param>
-public record TriggerActionGroupAbortion(Guid CorrelationId, AbortReason AbortReason);
+/// <param name="User">The user that triggered the abortion.</param>
+public record TriggerActionGroupAbortion(Guid CorrelationId, AbortReason AbortReason, string User);

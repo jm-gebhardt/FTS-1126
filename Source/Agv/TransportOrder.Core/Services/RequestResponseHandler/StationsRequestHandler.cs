@@ -1,5 +1,7 @@
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -9,6 +11,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -18,6 +21,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// </summary>
 [UsedImplicitly]
 public class StationsRequestHandler(
+    ILogger<StationsRequestHandler> logger,
     IMapRepository mapRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository,
@@ -65,6 +69,7 @@ public class StationsRequestHandler(
         }
         await HandleOrders(station.Name, lockOrderHandling);
         await bus.Publish(new LockStation(id, user ,reason, lockDescription, lockOrderHandling));
+        logger.LogStationInformation(LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationLocked } });
         await context.RespondAsync(new LockedUnlockedStation(true));
     }
 
@@ -128,6 +133,7 @@ public class StationsRequestHandler(
             await HandleOrdersWithPausedAction(station.Name, user);
 
             await bus.Publish(new UnlockStation(id, user));
+            logger.LogStationInformation(LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationUnlocked } });
             await context.RespondAsync(new LockedUnlockedStation(true));
             return;
         }
@@ -150,6 +156,10 @@ public class StationsRequestHandler(
     public async Task Consume(ConsumeContext<UnblockStation> context)
     {
         var station = await stationRepository.GetStation(context.Message.StationId);
+        string user = context.Message.User;
+
+        logger.LogStationInformation(LogCodes.StationUnblocked, station.Id, "Station Unblocked", "Station was unblocked", new Dictionary<string, object?>{{LogLabels.User, user}});
+        logger.LogStationInformation(LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationUnblocked}});
 
         await bus.Publish(new Common.Messages.Stations.UnblockStation(station.Name));
 

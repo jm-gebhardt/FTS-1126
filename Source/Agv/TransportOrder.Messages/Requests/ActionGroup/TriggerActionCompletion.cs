@@ -7,5 +7,6 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 /// </summary>
 /// <param name="ActionGroupCorrelationId">The correlation id of the action group.</param>
 /// <param name="ActionCorrelationId">The correlation id of the action.</param>
+/// <param name="User">The user who completed the action group.</param>
 [UsedImplicitly]
-public record TriggerActionCompletion(Guid ActionGroupCorrelationId, Guid ActionCorrelationId);
+public record TriggerActionCompletion(Guid ActionGroupCorrelationId, Guid ActionCorrelationId, string User);

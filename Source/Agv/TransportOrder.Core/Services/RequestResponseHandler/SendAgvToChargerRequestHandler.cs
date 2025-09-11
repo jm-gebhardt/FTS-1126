@@ -1,6 +1,8 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -9,6 +11,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -24,9 +27,12 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly IStationRepository _stationRepository;
     private readonly IBus _bus;
+    private readonly ILogger<SendAgvToChargerRequestHandler> _logger;
 
     /// <inheritdoc cref="SendAgvToChargerRequestHandler"/>
-    public SendAgvToChargerRequestHandler(IAgvDb agvDb,
+    public SendAgvToChargerRequestHandler(
+        ILogger<SendAgvToChargerRequestHandler> logger,
+        IAgvDb agvDb,
         IActionGroupRepository actionGroupDb,
         IChargingPointManager chargingPointManager,
         IStationRepository stationRepository,
@@ -38,6 +44,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         _actionGroupDb = actionGroupDb;
         _chargingPointManager = chargingPointManager;
         _nodeStateRepository = nodeStateRepository;
+        _logger = logger;
         _stationRepository = stationRepository;
         _bus = bus;
     }
@@ -46,6 +53,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     public async Task Consume(ConsumeContext<SendAgvToCharger> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
+        string user = context.Message.User;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -60,6 +68,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         await PublishNodeStateChange(charger.Id);
 
         await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi));
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
 
         await context.RespondAsync(new Success());
     }

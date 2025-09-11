@@ -10,9 +10,15 @@ public record RequestAgvZones : CorrelatedBy<Guid>
     /// <inheritdoc/>
     public Guid CorrelationId { get; }
 
+    /// <summary>
+    /// The user, who emitted the request.
+    /// </summary>
+    public string User { get; }
+
     /// <inheritdoc cref="RequestAgvZones"/>
-    public RequestAgvZones(Guid correlationId)
+    public RequestAgvZones(Guid correlationId, string user)
     {
         CorrelationId = correlationId;
+        User = user;
     }
 }

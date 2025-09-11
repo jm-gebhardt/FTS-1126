@@ -1,7 +1,9 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -24,7 +26,7 @@ public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus
     /// </summary>
     public async Task Consume(ConsumeContext<SolveResourceBlockingErrors> context)
     {
-        (var agvCorrelationId, bool ignoreErrorState) = context.Message;
+        (var agvCorrelationId, string user, bool ignoreErrorState) = context.Message;
         ICollection<NodeLock> nodeLocks = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
         IReadOnlyList<AgvError> agvErrors = await agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         var resourceError = agvErrors.SingleOrDefault(e => e.IsResourceError());
@@ -52,6 +54,7 @@ public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus
         }
 
         await bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));
+        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode} });
 
         await context.RespondAsync(new Success());
     }

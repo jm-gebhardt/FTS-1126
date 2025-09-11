@@ -1,5 +1,7 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using JetBrains.Annotations;
@@ -23,6 +25,7 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
     public async Task Consume(ConsumeContext<RemoveAgvFromAllZones> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
+        string user = context.Message.User;
         logger.LogInformation("Removing agv {AgvCorrelationId} from zones", agvCorrelationId);
         var offlineAgv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         var onlineAgv = await agvDb.Agvs.GetAnyOnlineAgv();
@@ -34,9 +37,10 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
         // trigger removal on device side
         List<Task> publishTasks = offlineAgv.AgvStatus!.ZoneIds!.Select(z => bus.Publish(new Common.Messages.AgvManagement.Commands.RemoveAgvFromZone(onlineAgv.CorrelationId, onlineAgv.SerialNumber, offlineAgv.SerialNumber, z))).ToList();
         // trigger cleanup of agv status and error
-        publishTasks.Add(bus.Publish(new RemoveAgvFromAllZones(agvCorrelationId)));
+        publishTasks.Add(bus.Publish(new RemoveAgvFromAllZones(agvCorrelationId, user)));
         // respond
         publishTasks.Add(context.RespondAsync(new Success()));
+        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromZone } });
         await Task.WhenAll(publishTasks);
     }
 
@@ -45,7 +49,7 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
     /// </summary>
     public async Task Consume(ConsumeContext<RemoveAgvFromZone> context)
     {
-        (var agvCorrelationId, string zoneId) = context.Message;
+        (var agvCorrelationId, string zoneId, string user) = context.Message;
         logger.LogInformation("Removing agv {AgvCorrelationId} from zones", agvCorrelationId);
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -65,10 +69,11 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
 
         if (agv.IsOnline)
         {
-            await bus.Publish(new RemoveAgvFromZone(agvCorrelationId, zoneId));
+            await bus.Publish(new RemoveAgvFromZone(agvCorrelationId, zoneId, user));
         }
 
         await bus.Publish(new Common.Messages.AgvManagement.Commands.RemoveAgvFromZone(onlineAgv.CorrelationId, onlineAgv.SerialNumber, agv.SerialNumber, zoneId));
+        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromZone } });
 
         await context.RespondAsync(new Success());
     }

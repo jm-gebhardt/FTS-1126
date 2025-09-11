@@ -865,7 +865,7 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CancelActionGroup> context)
     {
-        var (actionGroupId, cancelReason) = context.Message;
+        var (actionGroupId, cancelReason, user) = context.Message;
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionGroupId);
 
         if (actionGroup == null)
@@ -910,6 +910,10 @@ public class ActionCommandHandler :
                 { LogLabels.Reason, context.Message.CancelReason },
                 { LogLabels.ReasonDescription, context.Message.CancelReason }
             });
+        if (user != null)
+        {
+            _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderCanceled } });
+        }
 
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))

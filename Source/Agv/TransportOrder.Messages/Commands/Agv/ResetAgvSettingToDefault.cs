@@ -5,4 +5,5 @@
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="Property">The setting property name.</param>
-public record ResetAgvSettingToDefault(Guid CorrelationId, string Property);
+/// <param name="User">The user who reset the settings.</param>
+public record ResetAgvSettingToDefault(Guid CorrelationId, string Property, string User);

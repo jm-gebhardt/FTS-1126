@@ -80,9 +80,11 @@ public class AgvSettingsRequestHandler :
     public async Task Consume(ConsumeContext<UpdateDefaultAgvSettings> context)
     {
         var settings = context.Message.UpdatedSettings;
+        string user = context.Message.User;
 
         var defaultSettingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
         await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, defaultSettingsGroup.GroupType, defaultSettingsGroup.Identifier);
+        _logger.LogSystemInformation(LogCodes.AgvOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.SystemAgvDefaultSettingUpdated } });
         _logger.LogInformation("Default agv settings changed." );
         await context.RespondAsync(new Success());
     }
@@ -92,8 +94,9 @@ public class AgvSettingsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateAgvSettings> context)
     {
-        var (correlationId, settings) = context.Message;
+        var (correlationId, settings, user) = context.Message;
         await UpdateAgvSetting(correlationId, settings);
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
         await context.RespondAsync(new Success());
     }
 
@@ -102,11 +105,15 @@ public class AgvSettingsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateAgvsSettings> context)
     {
-        (ICollection<Guid> correlationIds, var settings) = context.Message;
+        (ICollection<Guid> correlationIds, var settings, string user) = context.Message;
         List<Task> updateTasks = correlationIds
             .Select(correlationId => Task.Run(() => UpdateAgvSetting(correlationId, settings))).ToList();
 
         await Task.WhenAll(updateTasks);
+        foreach (var correlationId in correlationIds)
+        {
+            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
+        }
         await context.RespondAsync(new Success());
     }
 
@@ -115,8 +122,10 @@ public class AgvSettingsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ResetAgvSettingToDefault> context)
     {
-        (var correlationId, string propertyName) = context.Message;
+        (var correlationId, string propertyName, string user) = context.Message;
         await ResetAgvSettingToDefault(correlationId, propertyName);
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
+
         await context.RespondAsync(new Success());
     }
 
@@ -125,11 +134,15 @@ public class AgvSettingsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ResetAgvsSettingToDefault> context)
     {
-        (ICollection<Guid> correlationIds, string propertyName) = context.Message;
+        (ICollection<Guid> correlationIds, string propertyName, string user) = context.Message;
         List<Task> updateTasks = correlationIds
             .Select(correlationId => Task.Run(() => ResetAgvSettingToDefault(correlationId, propertyName))).ToList();
 
         await Task.WhenAll(updateTasks);
+        foreach (var correlationId in correlationIds)
+        {
+            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
+        }
         await context.RespondAsync(new Success());
     }
 

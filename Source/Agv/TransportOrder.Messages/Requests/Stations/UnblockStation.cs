@@ -4,4 +4,5 @@
 /// Unblocks the station.
 /// </summary>
 /// <param name="StationId">The station id to unblock.</param>
-public record UnblockStation(Guid StationId);
+/// <param name="User">The user that requested the unblocking.</param>
+public record UnblockStation(Guid StationId, string User);

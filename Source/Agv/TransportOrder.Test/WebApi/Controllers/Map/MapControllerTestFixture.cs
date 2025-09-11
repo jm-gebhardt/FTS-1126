@@ -11,6 +11,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Map;
@@ -37,6 +38,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetMapStations> getStationsClient = GetRequestClient<GetMapStations>();
         IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
         var controller = new MapController(Mapper,
+            new Mock<ILogger<MapController>>().Object,
             getBackgroundImageRequestClient,
             setBackgroundRequestClient,
             deleteBackgroundRequestClient,

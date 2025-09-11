@@ -9,5 +9,6 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 /// </summary>
 /// <param name="CorrelationId">Agv correlation id.</param>
 /// <param name="ErrorIds">List of error Ids to reset. If empty, resets all agv errors for the specified agv.</param>
+/// <param name="User">The user who reset the errors.</param>
 [UsedImplicitly]
-public record ResetAgvErrors(Guid CorrelationId, Collection<Guid> ErrorIds) : CorrelatedBy<Guid>;
+public record ResetAgvErrors(Guid CorrelationId, Collection<Guid> ErrorIds, string User) : CorrelatedBy<Guid>;

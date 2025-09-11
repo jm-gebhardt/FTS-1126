@@ -42,7 +42,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        (await fixture.GetResponseAsync<Success>(new UpdateAgvSettings(agv.CorrelationId, EfAgvSettingsProvider.DefaultSettings))).ShouldNotBeNull();
+        (await fixture.GetResponseAsync<Success>(new UpdateAgvSettings(agv.CorrelationId, EfAgvSettingsProvider.DefaultSettings, "user"))).ShouldNotBeNull();
         await fixture.ShouldHavePublishedAsync<UpdateAgvSettingsGroupReference>();
     }
 
@@ -54,7 +54,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new UpdateAgvSettings("unknown".ToGuid(), EfAgvSettingsProvider.DefaultSettings)));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new UpdateAgvSettings("unknown".ToGuid(), EfAgvSettingsProvider.DefaultSettings, "user")));
         await fixture.ShouldNotHavePublishedAsync<UpdateAgvSettingsGroupReference>();
     }
 
@@ -66,7 +66,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        (await fixture.GetResponseAsync<Success>(new UpdateAgvsSettings([agv.CorrelationId], EfAgvSettingsProvider.DefaultSettings))).ShouldNotBeNull();
+        (await fixture.GetResponseAsync<Success>(new UpdateAgvsSettings([agv.CorrelationId], EfAgvSettingsProvider.DefaultSettings, "user"))).ShouldNotBeNull();
         await fixture.ShouldHavePublishedAsync<UpdateAgvSettingsGroupReference>();
     }
 
@@ -78,7 +78,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new UpdateAgvsSettings(["unknown".ToGuid(), agv.CorrelationId], EfAgvSettingsProvider.DefaultSettings)));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new UpdateAgvsSettings(["unknown".ToGuid(), agv.CorrelationId], EfAgvSettingsProvider.DefaultSettings, "user")));
         (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>(m => m.Context.Message == new UpdateAgvSettingsGroupReference("unknown".ToGuid()))).ShouldBeFalse();
         (await fixture.TestHarness.Published.Any<UpdateAgvSettingsGroupReference>(m => m.Context.Message == new UpdateAgvSettingsGroupReference(agv.CorrelationId))).ShouldBeTrue();
     }
@@ -91,7 +91,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        var command = new ResetAgvSettingToDefault(agv.CorrelationId, "a known property name");
+        var command = new ResetAgvSettingToDefault(agv.CorrelationId, "a known property name", "user");
         (await fixture.GetResponseAsync<Success>(command)).ShouldNotBeNull();
         fixture.VerifyAgvSettingsPropertyReset(agv.AgvSettingsGroup, command.Property);
     }
@@ -104,7 +104,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        var command = new ResetAgvSettingToDefault("unknown".ToGuid(), "a known property name");
+        var command = new ResetAgvSettingToDefault("unknown".ToGuid(), "a known property name", "user");
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(command));
     }
 
@@ -116,7 +116,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgvs(agvs)
             .Build();
 
-        var command = new ResetAgvsSettingToDefault(agvs.Select(a => a.CorrelationId).ToList(), "a known property name");
+        var command = new ResetAgvsSettingToDefault(agvs.Select(a => a.CorrelationId).ToList(), "a known property name", "user");
         (await fixture.GetResponseAsync<Success>(command)).ShouldNotBeNull();
         foreach (var agv in agvs)
         {
@@ -132,7 +132,7 @@ public class AgvSettingsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        var command = new ResetAgvsSettingToDefault([agv.CorrelationId, "unknown".ToGuid()], "a known property name");
+        var command = new ResetAgvsSettingToDefault([agv.CorrelationId, "unknown".ToGuid()], "a known property name", "user");
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(command));
     }
 
@@ -146,7 +146,7 @@ public class AgvSettingsRequestHandlerTest
             .Build();
 
         var settings = new AgvSettingsReadModel(batteryLevelCritical: 10);
-        Response<Success> response = await fixture.GetResponseAsync<Success>(new UpdateDefaultAgvSettings(settings));
+        Response<Success> response = await fixture.GetResponseAsync<Success>(new UpdateDefaultAgvSettings(settings, "user"));
         response.ShouldNotBeNull();
         fixture.VerifyAgvSettingsUpdated(group.GroupType, group.Identifier, settings);
     }

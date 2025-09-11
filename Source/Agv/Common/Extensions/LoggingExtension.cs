@@ -288,6 +288,28 @@ public static class LoggingExtension
         WriteLogLine(logger, LogLevel.Error, message, parameters);
     }
 
+    /// <summary>
+    /// Log messages for the system, with information severity.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    /// <param name="code">The log message code.</param>
+    /// <param name="title">The title.</param>
+    /// <param name="message">The message.</param>
+    /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
+    public static void LogSystemInformation(this ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            { "Timestamp:yyyy-MM-dd HH:mm:ss.fffff", DateTime.UtcNow },
+            { "LogCode", code },
+            { "LogCategory", nameof(Categories.System) },
+            { "Title", title },
+            { "Message", message }
+        };
+        AddLabels(parameters, additionalLabels);
+        WriteLogLine(logger, LogLevel.Information, message, parameters);
+    }
+
     private static void WriteLogLine(ILogger logger, LogLevel severity, string message, Dictionary<string, object?> parameters)
     {
         logger.Log(severity, new EventId(), parameters, null, (state, _) =>
@@ -337,5 +359,10 @@ public enum Categories
     /// <summary>
     /// Station related logs.
     /// </summary>
-    Station
+    Station,
+
+    /// <summary>
+    /// System related logs.
+    /// </summary>
+    System
 }

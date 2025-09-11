@@ -22,7 +22,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agv.CorrelationId, []));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agv.CorrelationId, [], "user"));
 
         (await fixture.TestHarness.Published.Any<Common.Messages.AgvManagement.Commands.ResetAgvErrors>()).ShouldBeFalse();
     }
@@ -36,7 +36,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .WithActiveAgvErrors(errors)
             .Build();
 
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, []));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [], "user"));
 
         var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
@@ -60,7 +60,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .Build();
 
         var errorToReset = errors[0].CorrelationId;
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errorToReset]));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errorToReset], "user"));
 
         var message = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         message.CorrelationId.ShouldBe(agvCorrelationId);
@@ -82,7 +82,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .WithActiveAgvErrors(errors)
             .Build();
 
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errors[0].CorrelationId, errors[1].CorrelationId]));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errors[0].CorrelationId, errors[1].CorrelationId], "user"));
 
         var resetAgvErrors = await fixture.GetFirstPublishedMessageAsync<Common.Messages.AgvManagement.Commands.ResetAgvErrors>();
         resetAgvErrors.CorrelationId.ShouldBe(agvCorrelationId);
@@ -110,7 +110,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .Build();
 
         var errorToReset = Guid.NewGuid();
-        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errorToReset]));
+        await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [errorToReset], "user"));
 
         (await fixture.TestHarness.Published.Any<Common.Messages.AgvManagement.Commands.ResetAgvErrors>()).ShouldBeFalse();
     }
@@ -125,7 +125,7 @@ public class ResetAgvErrorsRequestHandlerTest
             .WithWaitForMessageAction(() => throw new WaitForMessageFailedException<AgvErrorChanged>("Error did not changed"))
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<ResetAgvErrorFailedException>(async () => await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [])));
+        await MediatorShould.ThrowRequestExceptionAsync<ResetAgvErrorFailedException>(async () => await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(agvCorrelationId, [], "user")));
     }
 
     [TestMethod]
@@ -137,6 +137,6 @@ public class ResetAgvErrorsRequestHandlerTest
             .WithAgv(agv)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(Guid.NewGuid(), [])));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<ResetAgvErrorsResult>(new ResetAgvErrors(Guid.NewGuid(), [], "user")));
     }
 }

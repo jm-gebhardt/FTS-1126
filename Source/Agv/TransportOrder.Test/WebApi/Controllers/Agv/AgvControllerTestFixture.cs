@@ -272,7 +272,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<TriggerAddingMaintenanceLog> addMaintenanceLogClient = GetRequestClient<TriggerAddingMaintenanceLog>();
         IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient = GetRequestClient<GetMaintenanceLogsForAgv>();
 
-        var controller = new AgvController(Mapper,
+        var controller = new AgvController(new Mock<ILogger<AgvController>>().Object,
+            Mapper,
             getAgvRequestClient,
             getAgvGraphRequestClient,
             getAgvDataRequestClient,

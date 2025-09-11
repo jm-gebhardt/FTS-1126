@@ -8,5 +8,6 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="ZoneId">The zone id.</param>
+/// <param name="User">The user who removed the agv from a zone.</param>
 [UsedImplicitly]
-public record RemoveAgvFromZone(Guid CorrelationId, string ZoneId) : CorrelatedBy<Guid>;
+public record RemoveAgvFromZone(Guid CorrelationId, string ZoneId, string User) : CorrelatedBy<Guid>;

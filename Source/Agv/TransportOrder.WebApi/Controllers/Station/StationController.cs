@@ -100,12 +100,19 @@ public class StationController : Controller
     /// Unblock a station.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Station with given id not found.</response>
     [HttpPatch]
     [Route("/station/{id:Guid}/unblock")]
     public async Task<ActionResult> UnblockStation([Required] Guid id)
     {
-        await _unblockStationClient.GetResponse<Success>(new UnblockStation(id));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _unblockStationClient.GetResponse<Success>(new UnblockStation(id, email));
 
         return Ok();
     }

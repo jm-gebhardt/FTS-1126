@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -7,9 +6,11 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using ActionGroupCreated = Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup.ActionGroupCreated;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
@@ -77,13 +78,19 @@ public class ActionGroupController : Controller
     /// Abort an action group.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     /// <response code="400">Action group abortion failed because of the current group state (details in error message).</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/abort")]
     public async Task<ActionResult> AbortActionGroup(Guid correlationId)
     {
-        await _abortionRequestClient.GetResponse<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(correlationId, AbortReason.WebApi));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _abortionRequestClient.GetResponse<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(correlationId, AbortReason.WebApi, email));
         return Ok();
     }
 
@@ -91,13 +98,19 @@ public class ActionGroupController : Controller
     /// Cancel an action group.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     /// <response code="400">Action group cancellation failed because of the current group state (details in error message).</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/cancel")]
     public async Task<ActionResult> CancelActionGroup(Guid correlationId)
     {
-        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId, CancelReason.WebApi));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId, CancelReason.WebApi, User.GetEmail()));
         return response.Message switch
         {
             ActionGroupCanceled => Ok(),
@@ -112,12 +125,18 @@ public class ActionGroupController : Controller
     /// <param name="correlationId">The CorrelationId of the action group.</param>
     /// <param name="keepAgv">Optional parameter if the same agv should be kept assigned to the action group. Defaults to false.</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/reset")]
     public async Task<ActionResult> ResetActionGroup(Guid correlationId, bool keepAgv = false)
     {
-        await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId, keepAgv));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId, keepAgv, email));
         return Ok();
     }
 
@@ -140,6 +159,7 @@ public class ActionGroupController : Controller
     /// Or the agv is not in maintenance or normal mode.
     /// Or no source or target is given.
     /// Or only a source or only a target is given, but no assigned agv.</response>
+    /// <response code="401">Unauthorized .</response>
     /// <response code="404">AGV with given correlationId not found .</response>
     [HttpPost]
     [Route("/actionGroup")]
@@ -154,7 +174,12 @@ public class ActionGroupController : Controller
         Guid? agvCorrelationId
     )
     {
-        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, additionalPickInfo, additionalDropInfo, false, ActionGroupCreator.TransportOrderWebApi));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, additionalPickInfo, additionalDropInfo, false, ActionGroupCreator.TransportOrderWebApi, email));
         return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
     }
 
@@ -163,13 +188,19 @@ public class ActionGroupController : Controller
     /// Optionally, provide the one to assign it to.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     /// <response code="400">The pick action of the action group is not in state started.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/reassign")]
     public async Task<ActionResult> ReassignActionGroup(Guid correlationId, [FromQuery] Guid? assignedAgv)
     {
-        await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId, assignedAgv));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId, assignedAgv, email));
         return Ok();
     }
 
@@ -177,12 +208,18 @@ public class ActionGroupController : Controller
     /// Complete an action of an action group.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId or the action was not found.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId}/complete")]
     public async Task<ActionResult> CompleteAction(Guid correlationId, Guid actionCorrelationId)
     {
-        await _actionCompletionClient.GetResponse<Success>(new TriggerActionCompletion(correlationId, actionCorrelationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _actionCompletionClient.GetResponse<Success>(new TriggerActionCompletion(correlationId, actionCorrelationId, email));
         return Ok();
     }
 
@@ -190,12 +227,18 @@ public class ActionGroupController : Controller
     /// Queue action group.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/queue")]
     public async Task<ActionResult> QueueActionGroup(Guid correlationId)
     {
-        await _actionGroupQueueingClient.GetResponse<Success>(new TriggerActionGroupQueueing(correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _actionGroupQueueingClient.GetResponse<Success>(new TriggerActionGroupQueueing(correlationId, email));
         return Ok();
     }
 
@@ -203,13 +246,19 @@ public class ActionGroupController : Controller
     /// Set target for action of action group.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group or action with given correlationId not found or the given target node has not been found.</response>
     /// <response code="400">The action has already been completed.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId:guid}/setTarget")]
     public async Task<ActionResult> SetTarget(Guid correlationId, Guid actionCorrelationId, [FromQuery] [Required] string targetNode)
     {
-        await _setTargetClient.GetResponse<Success>(new TriggerSetTarget(correlationId, actionCorrelationId, targetNode));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _setTargetClient.GetResponse<Success>(new TriggerSetTarget(correlationId, actionCorrelationId, targetNode, email));
         return Ok();
     }
 }

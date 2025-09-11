@@ -11,6 +11,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -288,11 +289,17 @@ public class AgvsController : Controller
     /// </summary>
     /// <param name="updatedSettings">The updated settings. </param>
     /// <response code="200">Settings updated.</response>
+    /// <response code="401">Unauthorized</response>
     [HttpPatch]
     [Route("/agvs/defaultSettings")]
     public async Task<ActionResult> UpdateDefaultSettings([FromBody] AgvSettingsDto updatedSettings)
     {
-        await _updateDefaultSettingsClient.GetResponse<Success>(new UpdateDefaultAgvSettings(_mapper.Map<AgvSettingsReadModel>(updatedSettings)));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _updateDefaultSettingsClient.GetResponse<Success>(new UpdateDefaultAgvSettings(_mapper.Map<AgvSettingsReadModel>(updatedSettings), email));
         return Ok();
     }
 
@@ -302,12 +309,19 @@ public class AgvsController : Controller
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <param name="updatedSettings">The updated settings.</param>
     /// <response code="400">One or more of given correlation ids is unknown.</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="200">Settings updated.</response>
     [HttpPatch]
     [Route("/agvs/settings")]
     public async Task<ActionResult> UpdateSettings([FromQuery] ICollection<Guid> correlationIds, [FromBody] AgvSettingsDto updatedSettings)
     {
-        await _updateAgvsSettingsClient.GetResponse<Success>(new UpdateAgvsSettings(correlationIds, _mapper.Map<AgvSettingsReadModel>(updatedSettings)));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _updateAgvsSettingsClient.GetResponse<Success>(new UpdateAgvsSettings(correlationIds, _mapper.Map<AgvSettingsReadModel>(updatedSettings), email));
         return Ok();
     }
 
@@ -317,13 +331,20 @@ public class AgvsController : Controller
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <param name="propertyName">The settings property name to reset to default.</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <response code="400">Invalid (unknown) agv settings property name.</response>
     [HttpPatch]
     [Route("/agvs/settings/reset")]
     public async Task<ActionResult> ResetAgvsSettingToDefault([FromQuery] ICollection<Guid> correlationIds, [FromQuery] string propertyName)
     {
-        await _resetSettingsToDefaultClient.GetResponse<Success>(new ResetAgvsSettingToDefault(correlationIds, propertyName));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _resetSettingsToDefaultClient.GetResponse<Success>(new ResetAgvsSettingToDefault(correlationIds, propertyName, email));
         return Ok();
     }
 

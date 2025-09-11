@@ -1309,7 +1309,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<RemoveAgvFromZone> context)
     {
-        (var agvCorrelationId, string zoneId) = context.Message;
+        (var agvCorrelationId, string zoneId, _) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (agv.IsOnline)

@@ -16,6 +16,7 @@ public static class LogLabels
     public const string ReasonDescription = "ReasonDescription";
     public const string NodeState = "NodeState";
     public const string User = "User";
+    public const string Operation = "Operation";
     public const string AgvMode = "AgvMode";
     public const string CargoState = "CargoState";
     public const string TriggerName = "TriggerName";

@@ -235,7 +235,7 @@ public class ActionGroupRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging)));
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging, "user")));
     }
 
     [DataRow(ActionState.Paused)]
@@ -251,7 +251,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup)
                 .WithFakeTriggeredAbortAction()
                 .BuildAsync();
-        Response<ActionGroupAbortionTriggered> response = await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.WebApi));
+        Response<ActionGroupAbortionTriggered> response = await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.WebApi, "user"));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         await fixture.ShouldHavePublishedAsync<AbortActionGroup>();
     }
@@ -265,7 +265,7 @@ public class ActionGroupRequestHandlerTest
             .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging)));
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging, "user")));
     }
 
     [TestMethod]
@@ -279,7 +279,7 @@ public class ActionGroupRequestHandlerTest
                 .WithFakeFailedAbortAction()
                 .BuildAsync();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging)));
+            new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging, "user")));
     }
 
     [TestMethod]
@@ -295,7 +295,7 @@ public class ActionGroupRequestHandlerTest
                 .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () => await fixture.GetResponseAsync<ActionGroupAbortionTriggered>(
-            new TriggerActionGroupAbortion(actionGroupWithStartedAction.CorrelationId, AbortReason.ReactivatedFromCharging)));
+            new TriggerActionGroupAbortion(actionGroupWithStartedAction.CorrelationId, AbortReason.ReactivatedFromCharging, "user")));
     }
 
     [TestMethod]
@@ -309,7 +309,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup)
                 .WithFakeTriggeredResetAction()
                 .BuildAsync();
-        Response<ActionGroupResetTriggered> response = await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset(actionGroup.CorrelationId, false));
+        Response<ActionGroupResetTriggered> response = await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset(actionGroup.CorrelationId, false, "user"));
         response.Message.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         await fixture.ShouldHavePublishedAsync<ResetActionGroup>();
     }
@@ -325,7 +325,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup)
                 .BuildAsync();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
-            await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset("Unknown".ToGuid(), false)));
+            await fixture.GetResponseAsync<ActionGroupResetTriggered>(new TriggerActionGroupReset("Unknown".ToGuid(), false, "user")));
     }
 
     [TestMethod]
@@ -338,7 +338,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup).BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup("Unknown".ToGuid(), null)));
+            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup("Unknown".ToGuid(), null, "user")));
     }
 
     [DataRow(ActionState.Created)]
@@ -357,7 +357,7 @@ public class ActionGroupRequestHandlerTest
                 .WithActionGroups(actionGroup).BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId, null)));
+            await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId, null, "user")));
     }
 
     [DataRow(ActionState.Started, false)]
@@ -372,7 +372,7 @@ public class ActionGroupRequestHandlerTest
             await new ActionGroupRequestHandlerTestFixture<TryReassignActionGroup, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup).BuildAsync();
 
-        await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId, assignedAgv ? Guid.NewGuid() : null));
+        await fixture.GetResponseAsync<Success>(new TryReassignActionGroup(actionGroup.CorrelationId, assignedAgv ? Guid.NewGuid() : null, "user"));
 
         await fixture.ShouldHavePublishedAsync<ReassignActionGroup>();
     }
@@ -385,7 +385,7 @@ public class ActionGroupRequestHandlerTest
             await new ActionGroupRequestHandlerTestFixture<TriggerActionGroupQueueing, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup).BuildAsync();
 
-        await fixture.GetResponseAsync<Success>(new TriggerActionGroupQueueing(actionGroup.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new TriggerActionGroupQueueing(actionGroup.CorrelationId, "user"));
 
         await fixture.ShouldHavePublishedAsync<ForceQueueActionGroup>();
     }
@@ -400,7 +400,7 @@ public class ActionGroupRequestHandlerTest
             .BuildAsync();
 
         string node = fixture.GetExistingNode()!;
-        await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node));
+        await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node, "user"));
 
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
     }
@@ -418,7 +418,7 @@ public class ActionGroupRequestHandlerTest
 
         string node = fixture.GetExistingNode()!;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TriggerSetTarget("unknown".ToGuid(), actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node)));
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget("unknown".ToGuid(), actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node, "user")));
     }
 
     [TestMethod]
@@ -434,7 +434,7 @@ public class ActionGroupRequestHandlerTest
 
         string node = fixture.GetExistingNode()!;
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotFoundException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, "unknown".ToGuid(), node)));
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, "unknown".ToGuid(), node, "user")));
     }
 
     [TestMethod]
@@ -449,7 +449,7 @@ public class ActionGroupRequestHandlerTest
                 .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "unknown")));
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "unknown", "user")));
     }
 
     [TestMethod]
@@ -465,7 +465,7 @@ public class ActionGroupRequestHandlerTest
 
         string node = fixture.GetExistingNode()!;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node)));
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node, "user")));
     }
 
     [TestMethod]
@@ -481,7 +481,7 @@ public class ActionGroupRequestHandlerTest
 
         string node = fixture.GetExistingNode()!;
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ShouldSkip).CorrelationId, node)));
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ShouldSkip).CorrelationId, node, "user")));
     }
 
     [TestMethod]
@@ -496,7 +496,7 @@ public class ActionGroupRequestHandlerTest
                 .WithFakeTriggeredActionCompletion()
                 .BuildAsync();
 
-        await fixture.GetResponseAsync<Success>(new TriggerActionCompletion(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId));
+        await fixture.GetResponseAsync<Success>(new TriggerActionCompletion(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId, "user"));
 
         await fixture.ShouldHavePublishedAsync<CompleteActionOfActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionAborted>();

@@ -8,4 +8,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the action group.</param>
 /// <param name="CancelReason">The reason for the cancel.</param>
-public record CancelActionGroup(Guid CorrelationId, CancelReason CancelReason) : CorrelatedBy<Guid>;
+/// <param name="User">The user who cancelled the action group, if initiated by via WebApi.</param>
+public record CancelActionGroup(Guid CorrelationId, CancelReason CancelReason, string? User=null) : CorrelatedBy<Guid>;

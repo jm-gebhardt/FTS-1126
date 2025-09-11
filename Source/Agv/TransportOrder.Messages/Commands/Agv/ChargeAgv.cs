@@ -5,4 +5,5 @@
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="ChargerId">The node id of the charger.</param>
-public record ChargeAgv(Guid CorrelationId, string ChargerId);
+/// <param name="User">The user who charged the agv.</param>
+public record ChargeAgv(Guid CorrelationId, string ChargerId, string User);

@@ -24,7 +24,7 @@ public class RouteRequestHandlerTest
             .WithAgv(agv)
             .WithCurrentAction(currentAction);
 
-        await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId, "user"));
 
         fixture.ChargingPointManager.Verify(x => x.ReserveChargerAsync(agv, node), Times.Once);
     }
@@ -41,7 +41,7 @@ public class RouteRequestHandlerTest
             .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
 
         var nodeStateChanged = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, NodeStateChanged>(
-            new SendAgvToCharger(agv.CorrelationId));
+            new SendAgvToCharger(agv.CorrelationId, "user"));
         
         nodeStateChanged.NodeLock.NodeId.ShouldBe(chargingNode.Id);
         nodeStateChanged.NodeLock.NodeState.ShouldBe(NodeLockState.Reserved);
@@ -59,7 +59,7 @@ public class RouteRequestHandlerTest
             .ReserveChargerReturns(chargingNode)
             .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
 
-        await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId, "user"));
         await fixture.ShouldHaveConsumedAsync<SendAgvToCharger>();
         await fixture.ShouldNotHaveConsumedAsync<NodeStateChanged>();
     }
@@ -76,7 +76,7 @@ public class RouteRequestHandlerTest
             .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
 
         var createChargingActionGroup = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, CreateChargingActionGroup>(
-            new SendAgvToCharger(agv.CorrelationId));
+            new SendAgvToCharger(agv.CorrelationId, "user"));
 
         createChargingActionGroup.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         createChargingActionGroup.ChargeStationId.ShouldBe(chargingNode.Id);

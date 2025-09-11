@@ -1704,7 +1704,7 @@ public class AgvCommandHandlerTest
             .WithZones([zone])
             .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
 
-        await fixture.PublishMessageAsync(new RemoveAgvFromAllZones(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new RemoveAgvFromAllZones(agv.CorrelationId, "user"));
 
         await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
@@ -1725,7 +1725,7 @@ public class AgvCommandHandlerTest
             .WithZones([zone])
             .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
 
-        await fixture.PublishMessageAsync(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId));
+        await fixture.PublishMessageAsync(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId, "user"));
         await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
         fixture.VerifyAgvUpdated(Times.Once());

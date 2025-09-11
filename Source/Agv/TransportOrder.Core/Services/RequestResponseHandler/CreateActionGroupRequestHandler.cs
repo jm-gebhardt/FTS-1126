@@ -55,7 +55,7 @@ public class CreateActionGroupRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (string? sourceNode, string? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, var creator) = await ValidateMessageContent(context);
+        (string? sourceNode, string? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, var creator, string user) = await ValidateMessageContent(context);
 
         var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, infoPick, infoDrop, hasPriority, creator);
         actionGroup.Queue();
@@ -70,12 +70,13 @@ public class CreateActionGroupRequestHandler :
             new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
         await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agvCorrelationId));
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderCreated } });
         await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));
     }
 
     private async Task<CreatePickDropActionGroup> ValidateMessageContent(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (string? source, string? target, _, _, _, Guid? agvCorrelationId, _, _, _, _) = context.Message;
+        (string? source, string? target, _, _, _, Guid? agvCorrelationId, _, _, _, _, _) = context.Message;
 
         // validate agv existence 
         if (agvCorrelationId != null)

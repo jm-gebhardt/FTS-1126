@@ -24,7 +24,7 @@ public class AgvZonesRequestHandlerTest
             .WithOnlineAgv(null)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new RemoveAgvFromAllZones(agv.CorrelationId)));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new RemoveAgvFromAllZones(agv.CorrelationId, "user")));
     }
 
     [TestMethod]
@@ -40,7 +40,7 @@ public class AgvZonesRequestHandlerTest
             .WithOnlineAgv(onlineAgv)
             .Build();
         
-        await fixture.GetResponseAsync<Success>(new RemoveAgvFromAllZones(offlineAgv.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new RemoveAgvFromAllZones(offlineAgv.CorrelationId, "user"));
 
         await fixture.ShouldHavePublishedAsync<CommonRemoveAgvFromZone>();
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromAllZones>();
@@ -62,7 +62,7 @@ public class AgvZonesRequestHandlerTest
             .WithOnlineAgv(null)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AllAgvsOfflineException>(() => fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId)));
+        await MediatorShould.ThrowRequestExceptionAsync<AllAgvsOfflineException>(() => fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId, "user")));
     }
 
     [TestMethod]
@@ -78,7 +78,7 @@ public class AgvZonesRequestHandlerTest
             .WithOnlineAgv(onlineAgv)
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(offlineAgv.CorrelationId, zone.ZoneId));
+        await fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(offlineAgv.CorrelationId, zone.ZoneId, "user"));
 
         await fixture.ShouldHavePublishedAsync<CommonRemoveAgvFromZone>();
         var commandToDevice = fixture.TestHarness.Published.Select<CommonRemoveAgvFromZone>().First().Context.Message;
@@ -99,6 +99,6 @@ public class AgvZonesRequestHandlerTest
             .WithOnlineAgv(onlineAgv)
             .Build();
         
-        await MediatorShould.ThrowRequestExceptionAsync<AgvNotInZoneException>( () => fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(offlineAgv.CorrelationId, "test")));
+        await MediatorShould.ThrowRequestExceptionAsync<AgvNotInZoneException>( () => fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(offlineAgv.CorrelationId, "test", "user")));
     }
 }

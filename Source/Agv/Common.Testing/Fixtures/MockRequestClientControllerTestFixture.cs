@@ -1,9 +1,14 @@
 ﻿using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
+using System.Security.Claims;
+using RouteData = Microsoft.AspNetCore.Routing.RouteData;
 
 namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
@@ -25,7 +30,11 @@ public abstract class MockRequestClientControllerTestFixture<TController> : Fixt
     protected MockRequestClientControllerTestFixture<TController> AddRequestClientMock<TMessage>(Mock<IRequestClient<TMessage>> clientMock)
         where TMessage : class
     {
-        AddServices(s => s.AddTransient<IRequestClient<TMessage>>(_ => clientMock.Object));
+        AddServices(s =>
+        {
+            s.AddTransient(_ => new Mock<ILogger<TController>>().Object);
+            s.AddTransient<IRequestClient<TMessage>>(_ => clientMock.Object);
+        });
         return this;
     }
 
@@ -54,6 +63,21 @@ public abstract class MockRequestClientControllerTestFixture<TController> : Fixt
         SetupController();
         base.Build();
         _controller = ActivatorUtilities.CreateInstance<TController>(Provider);
+        var httpContext =new DefaultHttpContext();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Email, "test@example.com")
+        };
+
+        var identity = new ClaimsIdentity(claims, "TestAuthentication");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+
+        httpContext.User = claimsPrincipal;
+        _controller.ControllerContext = new ControllerContext(
+            new ActionContext(
+                httpContext,
+                new RouteData(),
+                new ControllerActionDescriptor()));
     }
 
     [PublicAPI]

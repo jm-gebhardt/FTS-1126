@@ -1,8 +1,10 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -121,6 +123,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         {
             throw new ActionGroupStateInvalidException(actionGroup, failed.Reason);
         }
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId,  "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderAborted } });
         await context.RespondAsync(new ActionGroupAbortionTriggered(correlationId));
     }
 
@@ -129,11 +132,12 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<TriggerActionGroupReset> context)
     {
-        (var correlationId, bool keepAgv) = context.Message;
+        (var correlationId, bool keepAgv, string user) = context.Message;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
 
         IRequestClient<ResetActionGroup>? requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
         await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId, keepAgv));
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId,  "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderReset } });
         await context.RespondAsync(new ActionGroupResetTriggered(actionGroup.CorrelationId));
     }
 
@@ -151,6 +155,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         }
 
         await _bus.Publish(new ReassignActionGroup(actionGroup.CorrelationId, context.Message.AssignedAgv));
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderReassigned } });
 
         await context.RespondAsync(new Success());
     }
@@ -160,7 +165,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<TriggerActionCompletion> context)
     {
-        var (correlationId, actionCorrelationId) = context.Message;
+        var (correlationId, actionCorrelationId, user) = context.Message;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
         if (actionGroup.Actions.All(a => a.CorrelationId != actionCorrelationId))
         {
@@ -175,6 +180,8 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         }
 
         await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId, ActionGroupCreator.TransportOrderWebApi));
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderActionCompleted } });
+
         await context.RespondAsync(new Success());
     }
 
@@ -184,8 +191,10 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<TriggerActionGroupQueueing> context)
     {
         var actionGroupCorrelationId = context.Message.CorrelationId;
-        await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
         await _bus.Publish(new ForceQueueActionGroup(actionGroupCorrelationId));
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderQueued } });
+
         await context.RespondAsync(new Success());
     }
 
@@ -194,7 +203,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<TriggerSetTarget> context)
     {
-        (var correlationId, var actionCorrelationId, string targetNode) = context.Message;
+        (var correlationId, var actionCorrelationId, string targetNode, string user) = context.Message;
 
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
         if (actionGroup.Actions.All(a => a.CorrelationId != actionCorrelationId))
@@ -217,6 +226,8 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         _logger.LogInformation("Triggering setting target {TargetNode} for action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", targetNode, actionCorrelationId, correlationId);
         await _bus.Publish(new SetTargetForAction(actionCorrelationId, correlationId, actionGroup.AssignedAgv, targetNode));
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderTargetSet } });
+
         await context.RespondAsync(new Success());
     }
 }

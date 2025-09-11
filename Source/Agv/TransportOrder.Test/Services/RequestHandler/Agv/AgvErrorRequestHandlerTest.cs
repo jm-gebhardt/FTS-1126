@@ -24,7 +24,7 @@ public class AgvErrorRequestHandlerTest
             .WithNodesStates([new NodeLock("a node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)])
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId, "user"));
         await fixture.ShouldHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
@@ -43,7 +43,7 @@ public class AgvErrorRequestHandlerTest
             .WithNodesStates([])
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId, "user"));
         await fixture.ShouldNotHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
@@ -62,7 +62,7 @@ public class AgvErrorRequestHandlerTest
             .WithNodesStates([])
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId, IgnoreErrorState:true));
+        await fixture.GetResponseAsync<Success>(new SolveResourceBlockingErrors(agv.CorrelationId, "user", IgnoreErrorState:true));
         await fixture.ShouldNotHavePublishedAsync<FreeNode>();
         await fixture.ShouldHavePublishedAsync<SolveResourceErrorsReceived>();
         await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();

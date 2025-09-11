@@ -15,4 +15,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 /// <param name="AdditionalDropInfo">Additional information to attach to the drop(optional).</param>
 /// <param name="HasPriority">True, if the created action group is supposed to have priority (to be started immediately)</param>
 /// <param name="Creator">The creator of the action group.</param>
-public record CreatePickDropActionGroup(string? Source, string? Target, bool DockFrontPick, bool DockFrontDrop, string? HandlingUnit, Guid? AssignedAgv, string? AdditionalPickInfo, string? AdditionalDropInfo, bool HasPriority, ActionGroupCreator Creator);
+/// <param name="User">The user who created the action group.</param>
+public record CreatePickDropActionGroup(string? Source, string? Target, bool DockFrontPick, bool DockFrontDrop, string? HandlingUnit, Guid? AssignedAgv, string? AdditionalPickInfo, string? AdditionalDropInfo, bool HasPriority, ActionGroupCreator Creator, string User);

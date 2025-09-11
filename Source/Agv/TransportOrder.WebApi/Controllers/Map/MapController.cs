@@ -1,14 +1,18 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
 
@@ -30,11 +34,13 @@ public class MapController : Controller
     private readonly IRequestClient<GetMapStations> _getMapStationsClient;
     private readonly IRequestClient<TrySettingNodeApproachingProperties> _nodeApproachingPropertiesClient;
     private readonly IMapper _mapper;
+    private readonly ILogger<MapController> _logger;
 
     /// <summary>
     /// Initializes a new <see cref="MapController"/> instance.
     /// </summary>
     public MapController(IMapper mapper,
+        ILogger<MapController> logger,
         IRequestClient<GetBackgroundImage> getBackgroundImageClient,
         IRequestClient<SetBackground> setBackgroundClient,
         IRequestClient<DeleteBackground> deleteBackgroundClient,
@@ -46,6 +52,7 @@ public class MapController : Controller
         IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient)
     {
         _mapper = mapper;
+        _logger = logger;
         _getBackgroundImageClient = getBackgroundImageClient;
         _setBackgroundClient = setBackgroundClient;
         _deleteBackgroundClient = deleteBackgroundClient;
@@ -99,6 +106,7 @@ public class MapController : Controller
             opts.Items[nameof(Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image.SetBackground.Image)] = imageBytes;
         });
         await _setBackgroundClient.GetResponse<Success>(setBackground);
+        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemMapBackgroundImageUpdated } });
 
         return Ok();
     }
@@ -116,6 +124,8 @@ public class MapController : Controller
     public async Task<ActionResult> DeleteBackground(Guid correlationId)
     {
         await _deleteBackgroundClient.GetResponse<Success>(new DeleteBackground(correlationId));
+        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemMapBackgroundImageDeleted} });
+
         return NoContent();
     }
 
@@ -149,6 +159,8 @@ public class MapController : Controller
         var updateMap = _mapper.Map<UpdateMap>(dto, opts => { opts.Items[nameof(Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image.SetBackground.CorrelationId)] = correlationId; });
 
         await _updateMapClient.GetResponse<Success>(updateMap);
+        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemMapUpdated} });
+
         return NoContent();
     }
 
@@ -219,6 +231,8 @@ public class MapController : Controller
     public async Task<ActionResult> SetApproachProperties(Guid correlationId, [FromQuery] string nodeId, [FromQuery] double? pickLiftHeight, [FromQuery] double? dropLiftHeight, [FromQuery] DockingDirection? dockingDirection)
     {
         await _nodeApproachingPropertiesClient.GetResponse<Success>(new TrySettingNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemNodeApproachingPropertiesUpdated } });
+
         return Ok();
     }
 }

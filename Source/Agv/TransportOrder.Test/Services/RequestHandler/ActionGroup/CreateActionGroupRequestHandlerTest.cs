@@ -26,7 +26,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup("a known source", "a known target", false, false, null, "unknown agv".ToGuid(), null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup("a known source", "a known target", false, false, null, "unknown agv".ToGuid(), null, null, false, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -42,7 +42,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotAllowedInModeException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup("an unknown source", targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup("an unknown source", targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -69,7 +69,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -83,7 +83,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, "an unknown target", false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup(sourceNode.Id, "an unknown target", false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -97,7 +97,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -112,7 +112,7 @@ public class CreateActionGroupRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupInvalidException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
-                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi)));
+                new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -127,7 +127,7 @@ public class CreateActionGroupRequestHandlerTest
             .WithValidationResult(new ValidationResult())
             .Build();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, false, ActionGroupCreator.TransportOrderWebApi));
+        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user"));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
         response.Message.ActionGroup.HasPriority.ShouldBeFalse();
@@ -155,7 +155,7 @@ public class CreateActionGroupRequestHandlerTest
             .WithValidationResult(new ValidationResult())
             .Build();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi));
+        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, false, ActionGroupCreator.TransportOrderWebApi, "user"));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBeNull();
         response.Message.ActionGroup.HasPriority.ShouldBeFalse();
@@ -186,7 +186,7 @@ public class CreateActionGroupRequestHandlerTest
             .WithValidationResult(new ValidationResult())
             .Build();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, true, ActionGroupCreator.TransportOrderWebApi));
+        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, true, ActionGroupCreator.TransportOrderWebApi, "user"));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
         response.Message.ActionGroup.HasPriority.ShouldBeTrue();
@@ -226,7 +226,7 @@ public class CreateActionGroupRequestHandlerTest
                     null,
                     null,
                     false,
-                    ActionGroupCreator.TransportOrderWebApi)));
+                    ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [TestMethod]
@@ -248,7 +248,7 @@ public class CreateActionGroupRequestHandlerTest
                     null,
                     null,
                     false,
-                    ActionGroupCreator.TransportOrderWebApi)));
+                    ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [DataRow(AgvGraph.NodeType.Pick, "source", null)]
@@ -277,7 +277,7 @@ public class CreateActionGroupRequestHandlerTest
                     null,
                     null,
                     false,
-                    ActionGroupCreator.TransportOrderWebApi)));
+                    ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
     [DataRow(AgvGraph.NodeType.Pick, "source", null)]
@@ -307,7 +307,7 @@ public class CreateActionGroupRequestHandlerTest
                     null,
                     null,
                     false,
-                    ActionGroupCreator.TransportOrderWebApi));
+                    ActionGroupCreator.TransportOrderWebApi, "user"));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
         response.Message.ActionGroup.HasPriority.ShouldBeFalse();

@@ -30,25 +30,32 @@ public class StartInstantAction
     /// <summary>
     /// The blocking type of the action.
     /// </summary>
-    public ActionBlockingType? BlockingType { get; set; } 
+    public ActionBlockingType? BlockingType { get; set; }
+
+    /// <summary>
+    /// The user who started the instant action.
+    /// </summary>
+    public string User { get; set; }
 
     /// <inheritdoc cref="StartInstantAction"/>>
-    public StartInstantAction(Guid agvCorrelationId, string agvInstantActionType, Dictionary<string, object>? parameters, ActionBlockingType? blockingType)
+    public StartInstantAction(Guid agvCorrelationId, string agvInstantActionType, Dictionary<string, object>? parameters, ActionBlockingType? blockingType, string user)
     {
         AgvInstantActionType = agvInstantActionType;
         AgvCorrelationId = agvCorrelationId;
         Parameters = parameters;
         BlockingType = blockingType;
+        User = user;
     }
 
     /// <summary>
     /// Deconstruct the message.
     /// </summary>
-    public void Deconstruct(out Guid agvCorrelationId, out string agvInstantActionType, out Dictionary<string, object>? parameters, out ActionBlockingType? blockingType)
+    public void Deconstruct(out Guid agvCorrelationId, out string agvInstantActionType, out Dictionary<string, object>? parameters, out ActionBlockingType? blockingType, out string user)
     {
         agvCorrelationId = AgvCorrelationId;
         agvInstantActionType = AgvInstantActionType;
         parameters = Parameters;
         blockingType = BlockingType;
+        user = User;
     }
 }

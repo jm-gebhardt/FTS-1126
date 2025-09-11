@@ -11,4 +11,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 /// <param name="Y">The y coordinate.</param>
 /// <param name="Theta">The orientation.</param>
 /// <param name="Creator">The creator of the action group.</param>
-public record MoveAgvToCoordinate(Guid CorrelationId, float X, float Y, float Theta, ActionGroupCreator Creator): CorrelatedBy<Guid>;
+/// <param name="User">The user who moved the agv.</param>
+public record MoveAgvToCoordinate(Guid CorrelationId, float X, float Y, float Theta, ActionGroupCreator Creator, string User) : CorrelatedBy<Guid>;

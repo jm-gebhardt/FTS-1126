@@ -5,4 +5,5 @@
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the agv.</param>
 /// <param name="IgnoreErrorState">If the error state should be ignored when clearing the resources. Default false.</param>
-public record SolveResourceBlockingErrors(Guid CorrelationId, bool IgnoreErrorState = false);
+/// <param name="User">The user who initiated the request.</param>
+public record SolveResourceBlockingErrors(Guid CorrelationId, string User, bool IgnoreErrorState = false);

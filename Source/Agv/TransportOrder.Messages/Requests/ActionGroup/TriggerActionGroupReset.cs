@@ -5,4 +5,5 @@
 /// </summary>
 /// <param name="CorrelationId">The action group correlation id.</param>
 /// <param name="KeepAgv">Whether to keep the same agv.</param>
-public record TriggerActionGroupReset(Guid CorrelationId, bool KeepAgv);
+/// <param name="User">The user who triggered resetting the action group.</param>
+public record TriggerActionGroupReset(Guid CorrelationId, bool KeepAgv, string User);

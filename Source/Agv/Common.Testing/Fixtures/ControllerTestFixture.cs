@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -31,11 +32,20 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
     public override MediatorTestFixture<TRequest, TRequestHandler, MockConsumer> Build()
     {
         base.Build();
+        var httpContext = HttpContextOverride ?? new DefaultHttpContext();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Email, "test@example.com")
+        };
 
+        var identity = new ClaimsIdentity(claims, "TestAuthentication");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+
+        httpContext.User = claimsPrincipal;
         Controller = GetController();
         Controller.ControllerContext = new ControllerContext(
             new ActionContext(
-                HttpContextOverride ?? new DefaultHttpContext(),
+                httpContext,
                 new RouteData(),
                 new ControllerActionDescriptor()));
 

@@ -1,8 +1,7 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
@@ -24,6 +23,10 @@ using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using Gebhardt.Acc.Common.Extensions;
+using Microsoft.Extensions.Logging;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
@@ -79,11 +82,13 @@ public class AgvController : Controller
     private readonly IRequestClient<TriggerAddingMaintenanceLog> _addMaintenanceLogClient;
     private readonly IRequestClient<GetMaintenanceLogsForAgv> _getMaintenanceLogsClient;
     private readonly IMapper _mapper;
+    private readonly ILogger<AgvController> _logger;
 
     /// <summary>
     /// Init controller
     /// </summary>
     public AgvController(
+        ILogger<AgvController> logger,
         IMapper mapper,
         IRequestClient<GetAgv> getAgvClient,
         IRequestClient<GetAgvGraph> getAgvGraphClient,
@@ -124,6 +129,7 @@ public class AgvController : Controller
         IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient
     )
     {
+        _logger = logger;
         _getAgvClient = getAgvClient;
         _getAgvGraphClient = getAgvGraphClient;
         _getAgvDataClient = getAgvDataClient;
@@ -248,12 +254,18 @@ public class AgvController : Controller
     /// <param name="correlationId">The agv correlation id.</param>
     /// <param name="settings">The updated settings (Provide only setting properties to update).</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/settings")]
     public async Task<ActionResult> UpdateAgvSettings([FromRoute] Guid correlationId, [FromBody] AgvSettingsDto settings)
     {
-        await _updateAgvSettingsClient.GetResponse<Success>(new UpdateAgvSettings(correlationId, _mapper.Map<AgvSettingsReadModel>(settings)));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _updateAgvSettingsClient.GetResponse<Success>(new UpdateAgvSettings(correlationId, _mapper.Map<AgvSettingsReadModel>(settings), email));
         return Ok();
     }
 
@@ -263,13 +275,19 @@ public class AgvController : Controller
     /// <param name="correlationId">The agv correlation id.</param>
     /// <param name="propertyName">The settings property name to reset to default.</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <response code="400">Invalid (unknown) agv settings property name.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/settings/reset")]
     public async Task<ActionResult> ResetAgvSettingToDefault([FromRoute] Guid correlationId, [FromQuery] string propertyName)
     {
-        await _resetSettingToDefaultClient.GetResponse<Success>(new ResetAgvSettingToDefault(correlationId, propertyName));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _resetSettingToDefaultClient.GetResponse<Success>(new ResetAgvSettingToDefault(correlationId, propertyName, email));
         return Ok();
     }
 
@@ -278,12 +296,18 @@ public class AgvController : Controller
     /// </summary>
     /// <param name="correlationId">The agv correlation id.</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found or no online agv found to remove agv from zone.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/settings/removeFromZones")]
     public async Task<ActionResult> RemoveAgvFromZones([FromRoute] Guid correlationId)
     {
-        await _removeAgvFromZonesClient.GetResponse<Success>(new RemoveAgvFromAllZones(correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _removeAgvFromZonesClient.GetResponse<Success>(new RemoveAgvFromAllZones(correlationId, email));
         return Ok();
     }
 
@@ -362,13 +386,19 @@ public class AgvController : Controller
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <param name="errorIds">If specified, resets all specified errors. If no errors are explicitly specified, it resets all active errors.</param>
     /// <response code="200">All errors were reset successfully.</response>
+    /// <response code="401">Unauthorized.</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <returns>The description of the result.</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/errors/reset")]
     public async Task<ActionResult<string>> ResetAgvErrors(Guid correlationId, Collection<Guid>? errorIds = null)
     {
-        Response<ResetAgvErrorsResult> response = await _resetAgvErrorsClient.GetResponse<ResetAgvErrorsResult>(new ResetAgvErrors(correlationId, errorIds ?? new Collection<Guid>()));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        Response<ResetAgvErrorsResult> response = await _resetAgvErrorsClient.GetResponse<ResetAgvErrorsResult>(new ResetAgvErrors(correlationId, errorIds ?? new Collection<Guid>(), email));
         return Ok(response.Message.Description);
     }
 
@@ -392,17 +422,24 @@ public class AgvController : Controller
     /// Accept discovered agv to allow it to be assigned to transport orders.
     /// </summary>
     /// <response code="200">Ok: agv status was successfully set to Idle</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <response code="409">Conflict: Agv is not in state 'Discovered'</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/accept")]
     public async Task<ActionResult> AcceptAgv(Guid correlationId)
     {
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
         Response<AcceptAgvSucceeded, AcceptAgvRejected, AgvNotFoundResult> response =
             await _acceptAgvClient.GetResponse<AcceptAgvSucceeded, AcceptAgvRejected, AgvNotFoundResult>(new AcceptAgvCommand(correlationId));
 
         if (response.Message is AcceptAgvSucceeded)
         {
+            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, email }, { LogLabels.Operation, LogCodes.AgvAccept } });
             return Ok();
         }
 
@@ -450,6 +487,8 @@ public class AgvController : Controller
         {
             return NotFound();
         }
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvLocked } });
+
         return Ok();
     }
 
@@ -468,6 +507,8 @@ public class AgvController : Controller
         [FromQuery] bool cancelManualActions = false)
     {
         await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, User.GetEmail(), assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
+
         return Ok();
     }
 
@@ -497,6 +538,7 @@ public class AgvController : Controller
             cancelManualActions);
 
         await _setMaintenanceModeClient.GetResponse<Success>(setMaintenanceModeCommand);
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
 
         return Ok();
     }
@@ -511,6 +553,8 @@ public class AgvController : Controller
     public async Task<ActionResult> SetNormalMode(Guid correlationId)
     {
         await _setNormalModeClient.GetResponse<Success>(new SetNormalMode(correlationId, null));
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
+
         return Ok();
     }
 
@@ -523,7 +567,12 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/emitRequestData")]
     public async Task<ActionResult> EmitRequestData(Guid correlationId)
     {
-        await _emitRequestDataClient.GetResponse<RequestedAgvData>(new RequestAgvData(correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _emitRequestDataClient.GetResponse<RequestedAgvData>(new RequestAgvData(correlationId, email));
         return Ok();
     }
 
@@ -531,12 +580,18 @@ public class AgvController : Controller
     /// Emit RequestAgvGraph message.
     /// </summary>
     /// <response code="200">Ok: Telegram was successfully emitted</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/emitRequestGraph")]
     public async Task<ActionResult> EmitRequestGraph(Guid correlationId)
     {
-        await _emitRequestGraphClient.GetResponse<RequestAgvGraphResult>(new RequestAgvGraph(correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _emitRequestGraphClient.GetResponse<RequestAgvGraphResult>(new RequestAgvGraph(correlationId, email));
         return Ok();
     }
 
@@ -544,12 +599,18 @@ public class AgvController : Controller
     /// Emit RequestAgvZones message.
     /// </summary>
     /// <response code="200">Ok: Telegram was successfully emitted</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/emitRequestZones")]
     public async Task<ActionResult> EmitRequestZones(Guid correlationId)
     {
-        await _emitRequestZonesClient.GetResponse<Success>(new RequestAgvZones(correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _emitRequestZonesClient.GetResponse<Success>(new RequestAgvZones(correlationId, email));
         return Ok();
     }
 
@@ -561,6 +622,7 @@ public class AgvController : Controller
     /// <param name="theta">Angle in rad.</param>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
     /// <response code="400">Target node does not exist or is reserved or occupied or agv is locked.</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <response code="409">Destination node needs reservation, but is currently not available.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
@@ -568,7 +630,12 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/move")]
     public async Task<ActionResult<Guid>> MoveAgv(Guid correlationId, string destinationNodeId, [FromQuery] double theta = 0)
     {
-        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi, theta));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi, email, theta));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -579,6 +646,7 @@ public class AgvController : Controller
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed</response>
     /// <response code="400">The position is inside a restricted area.
     /// Or the agv is not in user or maintenance mode.</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <returns>The CorrelationId of the created ActionGroup</returns>
     [HttpPatch]
@@ -589,7 +657,12 @@ public class AgvController : Controller
         [FromQuery] [Required] float y,
         [FromQuery] [Required] float theta)
     {
-        Response<AgvMoveSuccessful> response = await _moveAgvToCoordinateClient.GetResponse<AgvMoveSuccessful>(new MoveAgvToCoordinate(correlationId, x, y, theta, ActionGroupCreator.TransportOrderWebApi));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        Response<AgvMoveSuccessful> response = await _moveAgvToCoordinateClient.GetResponse<AgvMoveSuccessful>(new MoveAgvToCoordinate(correlationId, x, y, theta, ActionGroupCreator.TransportOrderWebApi, email));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -600,6 +673,7 @@ public class AgvController : Controller
     /// <param name="correlationId">The correlation ID of the AGV.</param>
     /// <param name="chargerId">The identifier of the charger.</param>
     /// <response code="200">Ok: The ActionGroup for the move was created and is going to be processed.</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="400">ChargerId does not correspond to a charger or does not exist at all or agv is locked.</response>
     /// <response code="404">AGV with given correlationId not found.</response>
     /// <response code="409">Charger is currently not available.</response>
@@ -610,7 +684,12 @@ public class AgvController : Controller
         Guid correlationId,
         string chargerId)
     {
-        Response<AgvMoveSuccessful> response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        Response<AgvMoveSuccessful> response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId, email));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -630,6 +709,8 @@ public class AgvController : Controller
         {
             return NotFound();
         }
+        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvIdle } });
+
         return Ok();
     }
 
@@ -667,13 +748,19 @@ public class AgvController : Controller
     /// </summary>
     /// <param name="correlationId">The correlation ID of the AGV.</param>
     /// <response code="200">Ok: The ActionGroup for the charge was created and is going to be processed.</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">AGV with given correlationId not found.</response>
     /// <response code="409">No charger is currently available.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/charge")]
     public async Task<ActionResult> SendAgvToCharger(Guid correlationId)
     {
-        await _sendAgvToChargerClient.GetResponse<Success>(new SendAgvToCharger(correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _sendAgvToChargerClient.GetResponse<Success>(new SendAgvToCharger(correlationId, email));
         return Ok();
     }
 
@@ -698,16 +785,24 @@ public class AgvController : Controller
     /// </summary>
     /// <response code="200">Ok</response>
     /// <response code="204">No Content</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">AGV with given correlationId not found or instant action of this type not found or given parameter not found.</response>
     /// <returns>The id of the instant action.</returns>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/instantActions")]
     public async Task<ActionResult<string>> StartInstantAction(Guid correlationId, [FromBody] AgvInstantActionDto action)
     {
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
         await _startInstantActionsClient.GetResponse<Success>(new StartInstantAction(correlationId,
             action.ActionType,
             action.Parameters?.ToDictionary(k => k.Key, v => v.Value),
-            action.BlockingType));
+            action.BlockingType,
+            email));
         return Ok();
     }
 
@@ -735,12 +830,19 @@ public class AgvController : Controller
     /// <param name="correlationId">The agv correlation id.</param>
     /// <param name="ignoreErrorState">If the error state should be ignored when removing resource locks.</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/solveResourceErrors")]
     public async Task<ActionResult> SolveResourceErrors([FromRoute] Guid correlationId, bool ignoreErrorState = false)
     {
-        await _resourceBlockingClient.GetResponse<Success>(new SolveResourceBlockingErrors(correlationId, ignoreErrorState));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _resourceBlockingClient.GetResponse<Success>(new SolveResourceBlockingErrors(correlationId, email, ignoreErrorState));
         return Ok();
     }
 
@@ -750,13 +852,20 @@ public class AgvController : Controller
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <param name="zoneId">The id of the zone.</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlation id not found.</response>
     /// <response code="409">Agv is not in the provided zone or all agvs are offline.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/removeFromZone")]
     public async Task<ActionResult> RemoveFromZone([FromRoute] Guid correlationId, [Required] string zoneId)
     {
-        await _removeAgvFromZoneClient.GetResponse<Success>(new RemoveAgvFromZone(correlationId, zoneId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _removeAgvFromZoneClient.GetResponse<Success>(new RemoveAgvFromZone(correlationId, zoneId, email));
         return Ok();
     }
 
@@ -766,13 +875,20 @@ public class AgvController : Controller
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <param name="stationName">The station name.</param>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Station/Agv with given id not found.</response>
     /// <response code="409">All agvs are offline.</response>
     [HttpPatch]
     [Route("/agv/{correlationId:guid}/removeFromStation")]
     public async Task<ActionResult> RemoveFromStation([FromRoute] Guid correlationId, [Required] string stationName)
     {
-        await _removeAgvFromStationClient.GetResponse<Success>(new RemoveAgvFromStation(stationName, correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _removeAgvFromStationClient.GetResponse<Success>(new RemoveAgvFromStation(stationName, correlationId, email));
 
         return Ok();
     }
