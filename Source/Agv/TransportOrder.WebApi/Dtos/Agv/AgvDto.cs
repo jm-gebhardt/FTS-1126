@@ -83,6 +83,11 @@ public record AgvDto : DatedMessage
     [UsedImplicitly]
     public float TotalLifetime { get; init; }
 
+    /// <summary>
+    /// The last maintenance of the agv.
+    /// </summary>
+    public MaintenanceDto? LastMaintenance { get; init; }
+
     /// <param name="correlationId">CorrelationId.</param>
     /// <param name="serialNumber">AGV Serial Number.</param>
     /// <param name="name">The name of the agv.</param>
@@ -103,6 +108,7 @@ public record AgvDto : DatedMessage
     /// <param name="stations">The stations that the agv reserved.</param>
     /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
     /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
+    /// <param name="lastMaintenance">Last maintenance information.</param>
     [PublicAPI]
     public AgvDto(Guid correlationId,
         string serialNumber,
@@ -123,7 +129,8 @@ public record AgvDto : DatedMessage
         List<string> zones,
         List<string> stations,
         float totalDistance,
-        float totalLifetime)
+        float totalLifetime,
+        MaintenanceDto? lastMaintenance)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -145,6 +152,7 @@ public record AgvDto : DatedMessage
         Stations = stations;
         TotalDistance = totalDistance;
         TotalLifetime = totalLifetime;
+        LastMaintenance = lastMaintenance;
     }
 
     /// <summary>

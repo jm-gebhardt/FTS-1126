@@ -9,6 +9,7 @@ namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 /// <summary>
 /// Represents a message content for an agv.
 /// </summary>
+[PublicAPI]
 public record Agv : IAgv
 {
     /// <summary>Is agv disturbed. There is at least one error with level "FATAL"</summary>
@@ -79,12 +80,15 @@ public record Agv : IAgv
     public List<string> Stations { get; init; } = [];
 
     /// <summary>Total distance driven by AGV since commissioning [km].</summary>
-    [UsedImplicitly]
     public float TotalDistance { get; init; }
 
     /// <summary>Total lifetime driven by AGV since commissioning [h].</summary>
-    [UsedImplicitly]
     public float TotalLifetime { get; init; }
+
+    /// <summary>
+    /// The last maintenance of the agv.
+    /// </summary>
+    public Maintenance? LastMaintenance { get; init; }
 
     /// <param name="correlationId">CorrelationId</param>
     /// <param name="serialNumber">The serial number of the agv.</param>

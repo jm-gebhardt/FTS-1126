@@ -74,7 +74,8 @@ public class AgvControllerTest
             [],
             [],
             42,
-            24);
+            24,
+            null);
 
         agvDto.ShouldNotBeNull();
         agvDto.CorrelationId.ShouldBe(expectedAgvDto.CorrelationId);

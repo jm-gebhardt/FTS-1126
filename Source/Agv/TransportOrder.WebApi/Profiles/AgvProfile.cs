@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -19,6 +20,8 @@ public class AgvProfile : WebApiProfile
         CreateMap<Messages.MessageContent.Agv, AgvDto>().ReverseMap();
         CreateMap<AgvData, AgvDataDto>().ReverseMap();
         CreateMap<Messages.MessageContent.Agv, AgvStateDto>();
+        CreateMap<Messages.MessageContent.Maintenance, MaintenanceDto>();
+        CreateMap<MaintenanceLog, AgvMaintenanceLogDto>();
         CreateMap<CurrentAgvRouteReadModel, CurrentRouteDto>();
         CreateMap<CurrentAgvRouteReadModel, CurrentAgvRouteDto>()
             .ForMember(c => c.CurrentRoute, c => c.MapFrom(o => o));

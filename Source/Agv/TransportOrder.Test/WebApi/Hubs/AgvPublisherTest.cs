@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -249,5 +250,32 @@ public class AgvPublisherTest
         var fixture = new AgvPublisherTestFixture();
         await fixture.Publisher.SendAgvStationsChangedAsync(agvCorrelationId, stations);
         fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvStationsChanged(It.Is<AgvStationsDto>(dto => dto.CorrelationId == agvCorrelationId && dto.Stations.Contains(stations.Single()))));
+    }
+
+    [TestMethod]
+    public async Task SendAgvMaintainedAsync_ValidData_BroadCastAgvMaintained()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var maintenance = new Maintenance { ExecutionDate = DateTime.UtcNow, MaintenanceType = MaintenanceType.BatteryReplaced };
+
+        var fixture = new AgvPublisherTestFixture(useAutoMapper: true);
+
+        await fixture.Publisher.SendAgvMaintainedAsync(agvCorrelationId, maintenance);
+        fixture.HubContextMock.Verify(c =>
+            c.Clients.Client(fixture.TestConnectionId).AgvMaintained(It.Is<AgvMaintainedDto>(dto =>
+                dto.CorrelationId == agvCorrelationId && dto.Maintenance.ExecutionDate == maintenance.ExecutionDate && dto.Maintenance.MaintenanceType == maintenance.MaintenanceType)));
+    }
+
+    [TestMethod]
+    public async Task SendMaintenanceLogCreated_ValidData_BroadCastAgvMaintenanceLogCreated()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var maintenanceLog = new MaintenanceLog(Guid.NewGuid(), "user", agvCorrelationId, DateTime.UtcNow.AddHours(-1), DateTime.UtcNow, MaintenanceType.BatteryReplaced, null);
+        var fixture = new AgvPublisherTestFixture(useAutoMapper: true);
+
+        await fixture.Publisher.SendMaintenanceLogCreated(agvCorrelationId, maintenanceLog);
+        fixture.HubContextMock.Verify(c =>
+            c.Clients.Client(fixture.TestConnectionId).AgvMaintenanceLogCreated(It.Is<MaintenanceLogCreatedDto>(dto =>
+                dto.AgvCorrelationId == agvCorrelationId && dto.MaintenanceLog.ExecutionDate == maintenanceLog.ExecutionDate && dto.MaintenanceLog.MaintenanceType == maintenanceLog.MaintenanceType)));
     }
 }

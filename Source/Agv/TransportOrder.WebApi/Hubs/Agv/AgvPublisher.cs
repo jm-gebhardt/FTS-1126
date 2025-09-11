@@ -2,8 +2,10 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using AgvPositionStatus = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvPositionStatus;
@@ -170,6 +172,22 @@ public class AgvPublisher : IAgvPublisher
     {
         var dto = _mapper.Map<AgvOperatingDataStatusDto>(agvOperatingDataStatusChanged.AgvOperatingDataStatus);
         _hubBroadcaster.Broadcast(c => c.AgvOperatingDataStatusChanged(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendAgvMaintainedAsync(Guid correlationId, Maintenance maintenance)
+    {
+        var dto = new AgvMaintainedDto(correlationId, _mapper.Map<MaintenanceDto>(maintenance));
+        _hubBroadcaster.Broadcast(c => c.AgvMaintained(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendMaintenanceLogCreated(Guid correlationId, MaintenanceLog maintenanceLog)
+    {
+        var dto = new MaintenanceLogCreatedDto(_mapper.Map<AgvMaintenanceLogDto>(maintenanceLog), correlationId);
+        _hubBroadcaster.Broadcast(c => c.AgvMaintenanceLogCreated(dto));
         return Task.CompletedTask;
     }
 }

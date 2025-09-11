@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using AgvPositionStatus = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvPositionStatus;
 using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
@@ -111,4 +113,20 @@ public interface IAgvPublisher
     /// </summary>
     /// <param name="operatingDataStatusChanged">The operating data changed object.</param>
     Task SendAgvOperatingDataStatusAsync(AgvOperatingDataStatusChanged operatingDataStatusChanged);
+
+    /// <summary>
+    /// Publishes the last maintenance of an agv to all clients.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <param name="maintenance">The last maintenance.</param>
+    /// <returns></returns>
+    Task SendAgvMaintainedAsync(Guid correlationId, Maintenance maintenance);
+
+    /// <summary>
+    /// Publishes the last created maintenance log to all clients.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <param name="maintenanceLog">The maintenance log.</param>
+    /// <returns></returns>
+    Task SendMaintenanceLogCreated(Guid correlationId, MaintenanceLog maintenanceLog);
 }

@@ -48,4 +48,9 @@ public interface IAgvDb : IUnitOfWork
     /// Gets the <see cref="IAgvPositionRepository"/>.
     /// </summary>
     public IAgvPositionRepository Positions { get; }
+
+    /// <summary>
+    /// Gets the <see cref="IMaintenanceLogRepository"/>.
+    /// </summary>
+    public IMaintenanceLogRepository MaintenanceLogs { get; }
 }

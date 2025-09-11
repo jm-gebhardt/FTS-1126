@@ -31,6 +31,9 @@ public class AgvDb : IAgvDb
     public IAgvPositionRepository Positions { get; }
 
     /// <inheritdoc cref="IAgvDb"/>>
+    public IMaintenanceLogRepository MaintenanceLogs { get; }
+
+    /// <inheritdoc cref="IAgvDb"/>>
     public AgvDb(IAgvDataRepository data,
         IAgvErrorRepository errors, 
         ICargoRepository cargos,
@@ -38,7 +41,8 @@ public class AgvDb : IAgvDb
         IAgvRepository agvs,
         IAgvSettingsProvider settings,
         IZoneRepository zones,
-        IAgvPositionRepository positions)
+        IAgvPositionRepository positions,
+        IMaintenanceLogRepository maintenanceLogs)
     {
         Data = data;
         Errors = errors;
@@ -48,6 +52,7 @@ public class AgvDb : IAgvDb
         AgvSettings = settings;
         Zones = zones;
         Positions = positions;
+        MaintenanceLogs=maintenanceLogs;
     }
 
     /// <inheritdoc cref="IAgvDb"/>>

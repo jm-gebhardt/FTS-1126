@@ -19,6 +19,7 @@
     <ItemGroup>
       <Folder Include="Commands\Zones\" />
       <Folder Include="Commands\RestrictedArea\" />
+      <Folder Include="Events\MaintenanceLog\" />
       <Folder Include="Requests\RestrictedArea\" />
       <Folder Include="Requests\Zone\Queries\" />
     </ItemGroup>

@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.MaintenanceLog;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -36,7 +39,7 @@ public class AgvChangedConsumerTest
         }
 
         var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<Agv>(agv);
 
         var mockGetAgvsClient = new Mock<IRequestClient<GetAgvs>>();
         var responseMock = new Mock<Response<GotAgvs>>();
@@ -100,6 +103,30 @@ public class AgvChangedConsumerTest
         (await fixture.ConsumerHarness.Consumed.Any<AgvStationsChanged>()).ShouldBeTrue();
         fixture.PublisherMock.Verify(h => h.SendAgvStationsChangedAsync(agvCorrelationId, stations),
             Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvMaintained_ValidData_SendAgvMaintainedAsync()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var maintenance = new Maintenance{ MaintenanceType = MaintenanceType.BatteryReplaced, ExecutionDate = DateTime.UtcNow };
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+
+        await fixture.PublishMessageAsync(new AgvMaintained(agvCorrelationId, maintenance));
+
+        fixture.PublisherMock.Verify(h => h.SendAgvMaintainedAsync(agvCorrelationId, maintenance), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_MaintenanceLogCreated_ValidData_SendMaintenanceLogCreated()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var log = new MaintenanceLog(Guid.NewGuid(), "user", agvCorrelationId, DateTime.UtcNow, DateTime.UtcNow, MaintenanceType.DrivesReplaced, null);
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+
+        await fixture.PublishMessageAsync(new MaintenanceLogCreated(agvCorrelationId, log));
+
+        fixture.PublisherMock.Verify(h => h.SendMaintenanceLogCreated(agvCorrelationId, log), Times.Once);
     }
 
     private static Mapper GetMapper()

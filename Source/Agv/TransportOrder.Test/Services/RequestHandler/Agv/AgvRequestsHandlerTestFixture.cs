@@ -61,6 +61,24 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         _agvDb.Setup(x => x.AgvSettings.ResetSettingPropertyToDefaultAsync(It.IsAny<Guid>(), It.IsAny<string>())).Verifiable();
     }
 
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithLastMaintenance(TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog? maintenanceLog = null)
+    {
+        _agvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(maintenanceLog);
+        return this;
+    }
+
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithLastMaintenances(ICollection<TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog> maintenanceLogs)
+    {
+        _agvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(
+            maintenanceLogs
+                .GroupBy(log => log.AgvCorrelationId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.FirstOrDefault()
+            ));
+        return this;
+    }
+
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
         serviceCollection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());

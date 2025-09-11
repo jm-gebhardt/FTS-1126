@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
@@ -67,7 +68,8 @@ public class GetAgvsRequestHandler :
 
         Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetCurrentActionGroupsWithNodesAsync(agvCorrelationIds);
         Task<IReadOnlyList<AgvError>> errorsTask = _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationIds);
-        await Task.WhenAll(actionGroupsTask, errorsTask, agvLastNodesTask);
+        Task<Dictionary<Guid, MaintenanceLog?>> maintenanceTask = _agvDb.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(agvCorrelationIds);
+        await Task.WhenAll(actionGroupsTask, errorsTask, agvLastNodesTask, maintenanceTask);
 
         Dictionary<Guid, List<AgvError>> allAgvErrors = errorsTask.Result
             .GroupBy(e => e.AgvCorrelationId)
@@ -81,6 +83,11 @@ public class GetAgvsRequestHandler :
             if (allAgvErrors.TryGetValue(agv.CorrelationId, out List<AgvError>? agvErrors) && agvErrors.Count != 0)
             {
                 _mapper.Map(agvErrors, agvMessageContent);
+            }
+
+            if (maintenanceTask.Result.TryGetValue(agv.CorrelationId, out var maintenanceLog))
+            {
+                _mapper.Map(maintenanceLog, agvMessageContent);
             }
 
             _mapper.Map(agvLastNodesTask.Result[agv.CorrelationId], agvMessageContent);
@@ -107,6 +114,9 @@ public class GetAgvsRequestHandler :
 
         IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         _mapper.Map(agvErrors, agvMessageContent);
+
+        var maintenanceLog = await _agvDb.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(agvCorrelationId);
+        _mapper.Map(maintenanceLog, agvMessageContent);
 
         string? lastNodeId = agv.AgvStatus?.LastNodeId;
         if (lastNodeId != null)

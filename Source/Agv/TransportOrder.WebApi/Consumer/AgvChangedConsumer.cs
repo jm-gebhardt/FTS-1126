@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using JetBrains.Annotations;
@@ -23,7 +24,9 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvModeChanged>,
     IConsumer<AgvModeChangePending>,
     IConsumer<AgvZonesChanged>,
-    IConsumer<AgvStationsChanged>
+    IConsumer<AgvStationsChanged>,
+    IConsumer<AgvMaintained>,
+    IConsumer<MaintenanceLogCreated>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -156,5 +159,23 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     {
         (var correlationId, ICollection<string> stations) = context.Message;
         await _agvPublisher.SendAgvStationsChangedAsync(correlationId, stations);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvMaintained"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<AgvMaintained> context)
+    {
+        var (correlationId, maintenance) = context.Message;
+        await _agvPublisher.SendAgvMaintainedAsync(correlationId, maintenance);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="MaintenanceLogCreated"/> event.
+    /// </summary>
+    public async Task Consume(ConsumeContext<MaintenanceLogCreated> context)
+    {
+        var (correlationId, maintenanceLog) = context.Message;
+        await _agvPublisher.SendMaintenanceLogCreated(correlationId, maintenanceLog);
     }
 }

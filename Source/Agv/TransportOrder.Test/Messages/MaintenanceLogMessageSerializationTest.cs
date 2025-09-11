@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Messages;
@@ -11,6 +12,15 @@ public class MaintenanceLogMessageSerializationTest
     public void GotMaintenanceLogs_ValidData_SerializesAllProperties()
     {
         var message = new GotMaintenanceLogs([new MaintenanceLog("user", Guid.NewGuid(), DateTime.UtcNow, MaintenanceType.TiresReplaced, "comment")]);
+        var fixture = new MessageSerialisationTestFixture();
+
+        fixture.ValidateSerialization(message);
+    }
+
+    [TestMethod]
+    public void AddMaintenanceLog_ValidData_SerializesAllProperties()
+    {
+        var message = new AddMaintenanceLog(new MaintenanceLog("user", Guid.NewGuid(), DateTime.UtcNow, MaintenanceType.TiresReplaced, "comment"));
         var fixture = new MessageSerialisationTestFixture();
 
         fixture.ValidateSerialization(message);

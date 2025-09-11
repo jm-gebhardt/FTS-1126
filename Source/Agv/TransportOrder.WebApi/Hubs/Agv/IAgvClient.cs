@@ -121,4 +121,18 @@ public interface IAgvClient
     /// <param name="agvOperatingDataStatus">The agv operating data status.</param>
     [SignalRMethod("AgvOperatingDataStatusChanged")]
     Task AgvOperatingDataStatusChanged(AgvOperatingDataStatusDto agvOperatingDataStatus);
+
+    /// <summary>
+    /// Publishes the last created maintenance log to all clients.
+    /// </summary>
+    /// <param name="maintenanceLogCreated">The created agv maintenance log.</param>
+    [SignalRMethod("AgvMaintenanceLogCreated")]
+    Task AgvMaintenanceLogCreated(MaintenanceLogCreatedDto maintenanceLogCreated);
+
+    /// <summary>
+    /// Publishes the last created maintenance log to all clients.
+    /// </summary>
+    /// <param name="maintenance">The agv maintenance.</param>
+    [SignalRMethod("AgvMaintained")]
+    Task AgvMaintained(AgvMaintainedDto maintenance);
 }

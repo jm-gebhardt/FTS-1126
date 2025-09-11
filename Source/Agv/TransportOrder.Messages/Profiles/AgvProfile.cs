@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 using GraphNode = Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode;
@@ -51,6 +52,16 @@ public class AgvProfile : Profile
 
         CreateMap<IList<AgvError>, MessageContent.Agv>(MemberList.None)
             .ForMember(d => d.Errors, opt => opt.MapFrom(s => s));
+
+        CreateMap<MaintenanceLog, MessageContent.Agv>(MemberList.None)
+            .ForMember(a => a.LastMaintenance, opt => opt.MapFrom(src => src));
+
+        CreateMap<MaintenanceLog, MessageContent.Maintenance>()
+            .ForSourceMember(s => s.User, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.AgvCorrelationId, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.CreationDate, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.Comment, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.Id, opt => opt.DoNotValidate());
 
         CreateMap<AgvData, Requests.Agv.Queries.AgvData>();
     }
