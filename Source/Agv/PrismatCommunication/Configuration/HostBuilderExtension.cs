@@ -8,7 +8,6 @@ using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
-using Gebhardt.Acc.PrismatCommunication.SimulationMode;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +22,7 @@ using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.PrismatCommunication.Simulation;
 
 namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 
@@ -36,17 +36,14 @@ public static class HostBuilderExtension
     /// <summary>
     /// Add MassTransit configuration.
     /// </summary>
-    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
+    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger, SimulateOptions? simulateOptions = null)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
             try
             {
                 services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
-                services.ConfigureServicesMassTransit(context.Configuration, x =>
-                {
-                    x.AddBusConsumers();
-                }, rabbitMqConfiguration: (ctx, cfg) =>
+                services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(simulateOptions != null); }, rabbitMqConfiguration: (ctx, cfg) =>
                 {
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
                     cfg.UseConsumeFilter<ActionGroupEventConsumeFilter>(ctx);
@@ -71,14 +68,6 @@ public static class HostBuilderExtension
     /// <summary>
     /// Add service specific configurations.
     /// </summary>
-    public static IHostBuilder AddPrismatCommunication(this IHostBuilder hostBuilder)
-    {
-        return hostBuilder.AddPrismatCommunication(null);
-    }
-
-    /// <summary>
-    /// Add service specific configurations.
-    /// </summary>
     /// <param name="hostBuilder">This <see cref="IHostBuilder"/>.</param>
     /// <param name="simulateOptions">The <see cref="SimulateOptions"/> if in simulation mode.</param>
     public static IHostBuilder AddPrismatCommunication(this IHostBuilder hostBuilder, SimulateOptions? simulateOptions)
@@ -88,7 +77,7 @@ public static class HostBuilderExtension
         hostBuilder.ConfigureServices((context, services) =>
         {
             services.AddConfigurationTypeManager();
-          
+
             void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
             {
                 string? connectionString = context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName);
@@ -103,7 +92,7 @@ public static class HostBuilderExtension
 
             services.AddDbContext<PrismatCommunicationDbContext>(ConfigureDbContextOptions);
             services.AddDbContextFactory<PrismatCommunicationDbContext>(ConfigureDbContextOptions);
-            
+
             services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
             services.AddTransient<ISystemStatusRepository, EfSystemStatusRepository>();
             services.AddTransient<IStationRepository, EfStationRepository>();
@@ -113,7 +102,7 @@ public static class HostBuilderExtension
             services.AddSingleton<ObservableConcurrentQueue<PrismatTelegram>>();
             services.AddSingleton<TelegramQueuePersistenceService>();
             services.AddHostedService<InitializationProvider>();
-            
+
             // Filters
             services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
             services.AddSingleton<ISignificanceChecker<ActionGroupCompleted>, ActionGroupEventSignificanceChecker<ActionGroupCompleted>>();
@@ -126,7 +115,7 @@ public static class HostBuilderExtension
             services.AddSingleton<UnTimedInMemoryFilter<PickActionCompleted>>();
 
             services.AddTransient<IAklAgvLimitGuard, AklAgvLimitGuard>();
-            
+
             services.RegisterValidators();
 
             if (simulateOptions == null)
@@ -138,26 +127,30 @@ public static class HostBuilderExtension
 
             services.AddSingleton<IHostCommunicator, SimulationHostCommunicator>();
             services.AddSingleton(_ => simulateOptions);
-            if (!simulateOptions.AplLoopOnly)
+
+            services.AddHostOrderCreator<LongLoopSimulator>();
+            switch (simulateOptions.AplLoopOnly)
             {
-                services.AddHostedService<PollingBackgroundService<LongLoopSimulator>>();
-                services.AddHostedService<PollingBackgroundService<ShortLoopSimulator>>();
-                services.AddHostedService<PollingBackgroundService<InputLoopSimulator>>();
+                case false:
+                    services.AddHostOrderCreator<ShortLoopSimulator>()
+                        .AddHostOrderCreator<InputLoopSimulator>();
+                    break;
 
-                services.AddSingleton<LongLoopSimulator>();
-                services.AddSingleton<ShortLoopSimulator>();
-                services.AddSingleton<InputLoopSimulator>();
-            }
-
-            if (simulateOptions.AplLoopOnly)
-            {
-                services.AddHostedService<PollingBackgroundService<LongLoopSimulator>>();
-                services.AddHostedService<PollingBackgroundService<LongLoopInputSimulator>>();
-
-                services.AddSingleton<LongLoopSimulator>();
-                services.AddSingleton<LongLoopInputSimulator>();
+                case true:
+                    services.AddHostOrderCreator<LongLoopInputSimulator>();
+                    break;
             }
         });
         return hostBuilder;
+    }
+
+    private static IServiceCollection AddHostOrderCreator<T>(this IServiceCollection services)
+        where T : class, IHostOrderCreator
+    {
+        services.AddHostedService<PollingBackgroundService<T>>();
+        services.AddSingleton<T>();
+        services.AddSingleton<IHostOrderCreator, T>(sp => sp.GetRequiredService<T>());
+
+        return services;
     }
 }

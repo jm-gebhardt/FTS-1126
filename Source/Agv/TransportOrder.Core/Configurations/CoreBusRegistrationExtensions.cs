@@ -210,8 +210,8 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station));
             c.Message<StationReserved>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.StationName));
-            c.Message<Common.Messages.Stations.UnblockStation>(x => 
-                x.UsePartitioner(nodePartitioner, p=>p.Message.Station));
+            c.Message<Common.Messages.Stations.UnblockStation>(x =>
+                x.UsePartitioner(nodePartitioner, p => p.Message.Station));
         });
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 
@@ -224,6 +224,7 @@ public static class CoreBusRegistrationExtensions
         });
 
         busRegistrationConfigurator.AddConsumer<QueueCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<SimulationCommandHandler>();
     }
 
     private static void RegisterCoreActionGroupHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
@@ -317,6 +318,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetSystemTime>();
         configurator.AddConsumer<FactoryTimeRequestHandler>();
         configurator.AddRequestClient<GetFactoryTimeZone>();
+        configurator.AddRequestClient<UpdateHostOrderGeneration>();
         configurator.AddRequestClient<UpdateFactoryTimeZone>();
 
         configurator.AddRequestClient<GetCertificateExpirations>();

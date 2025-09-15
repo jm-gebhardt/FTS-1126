@@ -16,40 +16,37 @@ var initialLogger = InitialLogger.Create<Program>();
 
 try
 {
-    IHostBuilder? hostBuilder = null;
+    bool failedToParseArguments = false;
+    SimulateOptions? simulationOptions = null;
     Parser.Default.ParseArguments<ProductionOptions, SimulateOptions>(args)
-        .WithParsed<SimulateOptions>(o =>
+        .WithParsed<SimulateOptions>(o => { simulationOptions = o; })
+        .WithParsed<ProductionOptions>(_ => { })
+        .WithNotParsed(errors =>
         {
-            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
-                .AddMassTransit(initialLogger)
-                .AddPrismatCommunication(o)
-                .ConfigureWebHost(h =>
-                    h.UseKestrel()
-                        .Configure(app =>
-                        {
-                            app.UseMetricServer();
-                            app.UseDeveloperExceptionPage();
-                        }));
-        })
-        .WithParsed<ProductionOptions>(_ =>
-        {
-            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
-                .AddMassTransit(initialLogger)
-                .AddPrismatCommunication()
-                .ConfigureWebHost(h =>
-                    h.UseKestrel()
-                        .Configure(app =>
-                        {
-                            app.UseMetricServer();
-                        }));
+            initialLogger.LogError("Failed to parse command line arguments: {Errors}", string.Join(", ", errors));
+            failedToParseArguments = true;
         });
-    if (hostBuilder == null)
+
+    if (failedToParseArguments)
     {
-        initialLogger.LogWarning("Invalid command line argument(s)");
         return 1;
     }
 
-    var host = hostBuilder.Build();
+    var host = GebhardtStartup.CreateHostBuilder(args)
+        .AddMassTransit(initialLogger, simulationOptions)
+        .AddPrismatCommunication(simulationOptions)
+        .ConfigureWebHost(h =>
+            h.UseKestrel()
+                .Configure(app =>
+                {
+                    app.UseMetricServer();
+                    if (simulationOptions != null)
+                    {
+                        app.UseDeveloperExceptionPage();
+                    }
+                }))
+        .Build();
+
     using (var scope = host.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<PrismatCommunicationDbContext>();

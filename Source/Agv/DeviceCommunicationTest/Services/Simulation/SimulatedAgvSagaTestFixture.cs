@@ -97,7 +97,7 @@ public class SimulatedAgvSagaTestFixture
             nodes.AddRange(_nodes.Select(n => n.Id));
         }
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes, _graph.Edges.ToList());
-        Saga.TravelSimulator.EstimateTravelTimes(nodes, edges, _startTime, 0);
+        Saga.TravelSimulator.EstimateTravelTimes(nodes, edges, _startTime, Saga.AgvData!, 0);
         return this;
     }
 

@@ -19,49 +19,56 @@ var initialLogger = InitialLogger.Create<Program>();
 
 try
 {
-    IHostBuilder? hostBuilder = null;
+    ProductionOptions? productionOptions = null;
+    SimulationOptions? simulationOptions = null;
+    Parser.Default.ParseArguments<ProductionOptions, SimulationOptions>(args)
+        .WithParsed<ProductionOptions>(options => { productionOptions = options; })
+        .WithParsed<SimulationOptions>(options => { simulationOptions = options; })
+        .WithNotParsed(errors => { initialLogger.LogWarning("Invalid command line argument(s): {Errors}", string.Join(", ", errors)); });
 
-    Parser.Default.ParseArguments<ProductionOptions>(args)
-        .WithParsed(productionOptions =>
-        {
-            hostBuilder = GebhardtStartup.CreateHostBuilder(args)
-                .AddMassTransit(initialLogger)
-                .AddTransportOrderCore(productionOptions);
-        });
-
-    // By using the generic overload of WithParsed above hostBuilder will be null for invalid command line arguments.
-    if (hostBuilder != null)
+    if (productionOptions == null && simulationOptions == null)
     {
-        hostBuilder.ConfigureWebHost(host =>
-        {
-            host.UseKestrel()
-                .AddTransportOrderWebApi()
-                .ConfigureAppConfiguration((_, config) =>
-                {
-                    ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-                    config.AddDefaultConfiguration(ConfigurationTypeManager.Instance);
-                })
-                .Configure(app =>
-                {
-                    app.UseMetricServer();
-                    app.UseTransportOrderWebApi();
-                    app.UseDeveloperExceptionPage();
-                });
-        });
-
-        var host = hostBuilder.Build();
-
-        using (var scope = host.Services.CreateScope())
-        {
-            var transportOrderDb = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
-            await transportOrderDb.Database.MigrateAsync();
-        }
-
-        host.Run();
-        return 0;
+        initialLogger.LogError("Must run in either production or simulation mode");
+        return 1;
     }
-    initialLogger.LogWarning("Invalid command line argument(s)");
-    return 1;
+
+    if (productionOptions != null && simulationOptions != null)
+    {
+        initialLogger.LogError("Cannot run in both production and simulation mode");
+        return 1;
+    }
+
+    var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+        .AddMassTransit(initialLogger)
+        .AddTransportOrderCore(productionOptions != null ? productionOptions : simulationOptions!);
+
+    hostBuilder.ConfigureWebHost(host =>
+    {
+        host.UseKestrel()
+            .AddTransportOrderWebApi(simulationOptions != null)
+            .ConfigureAppConfiguration((_, config) =>
+            {
+                ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+                config.AddDefaultConfiguration(ConfigurationTypeManager.Instance);
+            })
+            .Configure(app =>
+            {
+                app.UseMetricServer();
+                app.UseTransportOrderWebApi();
+                app.UseDeveloperExceptionPage();
+            });
+    });
+
+    var host = hostBuilder.Build();
+
+    using (var scope = host.Services.CreateScope())
+    {
+        var transportOrderDb = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
+        await transportOrderDb.Database.MigrateAsync();
+    }
+
+    host.Run();
+    return 0;
 }
 catch (Exception ex)
 {

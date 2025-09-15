@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.System.Monitoring;
 using Microsoft.AspNetCore.Authorization;
@@ -21,8 +22,9 @@ public class SystemController(
     IRequestClient<GetSystemTime> getSystemTimeClient,
     IRequestClient<GetFactoryTimeZone> getFactoryTimeClient,
     IRequestClient<UpdateFactoryTimeZone> updateFactoryTimeClient,
+    IRequestClient<UpdateHostOrderGeneration> updateHostOrderGenerationClient,
     IRequestClient<GetCertificateExpirations> getCertificateExpirationClient
-    ) : Controller
+) : Controller
 {
     /// <summary>
     /// Get system time in ISO 8601 format.
@@ -83,7 +85,21 @@ public class SystemController(
         Response<GotFactoryTimeZone> response = await getFactoryTimeClient.GetResponse<GotFactoryTimeZone>(new GetFactoryTimeZone());
         return response.Message.Dirty ? StatusCode(203, response.Message.FactoryTime) : Ok(response.Message.FactoryTime);
     }
-    
+
+    /// <summary>
+    /// Updates the HostOrder generation setting.
+    /// </summary>
+    /// <param name="isEnabled">Indicates whether HostOrder generation should be enabled or disabled.</param>
+    /// <response code="204">No Content</response>
+    [HttpPut]
+    [Route("/simulation/hostOrderGeneration")]
+    public async Task<IActionResult> UpdateHostOrderGeneration([FromQuery] bool isEnabled)
+    {
+        var command = new UpdateHostOrderGeneration(isEnabled);
+        await updateHostOrderGenerationClient.GetResponse<Success>(command);
+        return NoContent();
+    }
+
     /// <summary>
     /// Get certificate expiration information.
     /// </summary>

@@ -62,10 +62,10 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
 
     private readonly Mock<IMapRepository> _mapRepository = new();
-    
+
     private readonly Mock<IStationRepository> _stationRepository = new();
 
-    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
+    private readonly SystemOptions _productionOptions = new() { AutoAccept = true };
 
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
 
@@ -75,7 +75,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly Mock<IQueueManager> _queueManager = new();
 
-    private readonly Mock<IRouteService> _routeService  = new();
+    private readonly Mock<IRouteService> _routeService = new();
 
     public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
@@ -90,7 +90,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private Mock<IActionGroupRepository> ActionGroupRepository { get; }
 
-    private  readonly Mock<IQueueRepository> _queueRepository = new();
+    private readonly Mock<IQueueRepository> _queueRepository = new();
 
     private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
 
@@ -117,11 +117,11 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb = new Mock<IAgvDb>();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
         _agvPositionRepository = GetAgvPositionRepository().Object;
         ActionGroupRepository = new Mock<IActionGroupRepository>();
         ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<bool?>())).ReturnsAsync([]);
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?)null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?) null));
         ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(_chargeAction);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
@@ -129,8 +129,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(It.IsAny<Guid>())).Verifiable();
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
         ChargingPointManager = new Mock<IChargingPointManager>();
-        ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId:"Charger-1"));
-        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId:"Charger-1"));
+        ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId: "Charger-1"));
+        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId: "Charger-1"));
         _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>())).ReturnsAsync(false);
     }
 
@@ -167,7 +167,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             data.TryGetValue(correlationId, out var agvData);
             return agvData;
         });
-        
+
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
 
         AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
@@ -175,7 +175,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
         if (allAgvsOffline)
         {
-            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv()).ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv?)null);
+            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv()).ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv?) null);
         }
         else
         {
@@ -299,8 +299,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sendAgvToChargerClient,
             updateAgvSettingsClient,
             resetAgvSettingsClient,
-            setUserModeClient, 
-            setMaintenanceModeClient, 
+            setUserModeClient,
+            setMaintenanceModeClient,
             setNormalModeClient,
             getInstantActionsClient,
             startInstantActionsClient,
@@ -322,21 +322,21 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
         return controller;
     }
-    
+
     protected override IEnumerable<Profile> GetProfiles() =>
-        [
-            new AgvProfile(), 
-            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvProfile(),
-            new AgvStatusProfile(),
-            new AgvSettingsProfile(),
-            new AgvGraphProfile(),
-            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvGraphProfile(),
-            new AgvPositionProfile(),
-            new AgvErrorProfile(),
-            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
-            new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
-            new ActionProfile()
-        ];
+    [
+        new AgvProfile(),
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvProfile(),
+        new AgvStatusProfile(),
+        new AgvSettingsProfile(),
+        new AgvGraphProfile(),
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvGraphProfile(),
+        new AgvPositionProfile(),
+        new AgvErrorProfile(),
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
+        new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
+        new ActionProfile()
+    ];
 
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
     {

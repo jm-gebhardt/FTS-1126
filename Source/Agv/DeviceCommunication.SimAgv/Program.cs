@@ -18,6 +18,7 @@ using MassTransit.Serialization;
 using Quartz;
 using Prometheus;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Configuration;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Speed;
 
 const string quartzSchedulerName = "MassTransit-DeviceCommunication";
 const string quartzSchedulerId = "AUTO";
@@ -97,6 +98,7 @@ try
                                 .InMemoryRepository();
                             configurator.AddMqttConsumer<MqttSimulateAgvErrorConsumer>();
                             configurator.AddConsumer<SimulatedAgvProvider>();
+                            configurator.AddConsumer<SetSimulationSpeedConsumer>();
                         }, rabbitMqConfiguration: (_, cfg) => { cfg.UsePublishMessageScheduler(); });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
                 }).ConfigureWebHost(host =>

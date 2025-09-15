@@ -44,11 +44,11 @@ public static class TransportOrderHostBuilderExtensions
     /// <summary>
     /// Configures the HostBuilder used by the TransportOrderCore <paramref name="hostBuilder" />
     /// </summary>
-    public static IHostBuilder AddTransportOrderCore(this IHostBuilder hostBuilder, ProductionOptions productionOptions)
+    public static IHostBuilder AddTransportOrderCore(this IHostBuilder hostBuilder, SystemOptions systemOptions)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
-            RegisterConfigurationServices(productionOptions, services, context);
+            RegisterConfigurationServices(systemOptions, services, context);
 
             RegisterMapServices(services);
 
@@ -68,10 +68,9 @@ public static class TransportOrderHostBuilderExtensions
         return hostBuilder;
     }
 
-    private static void RegisterConfigurationServices(ProductionOptions productionOptions, IServiceCollection services, HostBuilderContext context)
+    private static void RegisterConfigurationServices(SystemOptions systemOptions, IServiceCollection services, HostBuilderContext context)
     {
-        // Configuration
-        services.AddSingleton(_ => productionOptions);
+        services.AddSingleton(_ => systemOptions);
 
         services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
         services.AddHostedService<AgvSettingsInitializer>();

@@ -169,7 +169,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             {
                 return;
             }
-            var zonePoints = new List<PolygonPoint> { new(singleAgvNode.X -1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y-1), new(singleAgvNode.X +1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y+1) };
+            var zonePoints = new List<PolygonPoint> { new(singleAgvNode.X - 1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y - 1), new(singleAgvNode.X + 1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y + 1) };
 
             var agvZone = new AgvZone(singleAgvNode.Id, 1, zonePoints, []);
             _agvZones = [agvZone];
@@ -233,7 +233,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <summary>
     /// The data of the agv.
     /// </summary>
-    public AgvData? AgvData { get; }
+    public AgvData? AgvData { get; set; }
 
     /// <summary>
     /// Current action (this is not reset after finish)
@@ -363,7 +363,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         _timeProvider = timeProvider;
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
-        SimulationSpeed = simulationSpeed;
+        SetSimulationSpeed(simulationSpeed);
         CurrentState = currentState ?? "";
         CurrentNode = currentNode;
         SpawnNodeIds = spawnNodeIds;
@@ -391,7 +391,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             LastNodeId,
             GetEstimatedFullyChargedTime(charging)
         );
-        TravelSimulator = new AgvTravelSimulator(agvGraph, agvData!, Position!, _timeProvider);
+        TravelSimulator = new AgvTravelSimulator(agvGraph, Position!, _timeProvider);
     }
 
     /// <summary>
@@ -413,14 +413,9 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         CurrentNode = currentNode;
         SpawnNodeIds = spawnNodeIds;
         AgvGraph = agv.AgvGraph;
-        var agvData = agv.AgvData;
-        if (agv.AgvData != null)
-        {
-            agvData = agv.AgvData!.SetSimulationSpeed(simulationSpeed);
-        }
-        AgvData = agvData;
+        AgvData = agv.AgvData;
+        SetSimulationSpeed(simulationSpeed);
         CurrentState = agv.CurrentState;
-        SimulationSpeed = simulationSpeed;
         SimulatedBatteryCharge = initialBatteryCharge;
         BatteryChargeRate = batteryChargeRate;
 
@@ -430,7 +425,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             GetOrderId(),
             false,
             true,
-            (int)SimulatedBatteryCharge,
+            (int) SimulatedBatteryCharge,
             charging,
             GetBatteryVoltage(),
             GetBatteryCurrent(),
@@ -439,11 +434,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             LastNodeId,
             GetEstimatedFullyChargedTime(charging)
         );
-        TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, agvData!, Position!, _timeProvider);
+        TravelSimulator = new AgvTravelSimulator(agv.AgvGraph, Position!, _timeProvider);
         _agvZones = [];
     }
 
-    private static float GetRandomNoise(double maxValue) => (float)(maxValue * (2 * Random.Shared.NextDouble() - 1));
+    private static float GetRandomNoise(double maxValue) => (float) (maxValue * (2 * Random.Shared.NextDouble() - 1));
 
     private string? GetOrderId() => Action?.CorrelationId.ToString();
 
@@ -471,6 +466,19 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     }
 
     /// <summary>
+    /// Sets the simulation speed for the AGV.
+    /// </summary>
+    /// <param name="simulationSpeed">The factor applied to agv velocities and acceleration to control the speed of the simulation.</param>
+    public void SetSimulationSpeed(int simulationSpeed)
+    {
+        SimulationSpeed = simulationSpeed;
+        if (AgvData != null)
+        {
+            AgvData = AgvData!.SetSimulationSpeed(simulationSpeed);
+        }
+    }
+
+    /// <summary>
     /// Reset action
     /// </summary>
     public void ResetAction()
@@ -487,7 +495,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     {
         if (Action != null && TravelSimulator.CurrentEdge != null!)
         {
-            TravelSimulator.UpdatePosition();
+            TravelSimulator.UpdatePosition(AgvData!);
             CurrentNode = TravelSimulator.CurrentNode!;
             Position = TravelSimulator.Position;
             TotalDistance += TravelSimulator.CurrentEdgeDistance;
@@ -592,7 +600,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             AgvRemovedFromZones ? null : GetZoneIds(),
             null,
             TotalDistance,
-            (float)(DateTime.UtcNow - CommissioningDate).TotalHours
+            (float) (DateTime.UtcNow - CommissioningDate).TotalHours
         );
     }
 }

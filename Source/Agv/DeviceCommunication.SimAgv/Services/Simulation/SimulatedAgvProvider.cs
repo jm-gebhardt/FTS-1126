@@ -79,7 +79,7 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
                 _logger?.LogError("Could not create AGV[{AgvId}]", agv.SerialNumber);
             }
         }
-        
+
         return true;
     }
 

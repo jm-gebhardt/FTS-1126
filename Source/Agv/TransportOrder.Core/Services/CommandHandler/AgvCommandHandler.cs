@@ -93,7 +93,7 @@ public class AgvCommandHandler :
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IMapper _mapper;
-    private readonly ProductionOptions _productionOptions;
+    private readonly SystemOptions _systemOptions;
     private readonly IAgvDb _agvDb;
     private readonly IParkPointService _parkPointService;
     private readonly IQueueManager _queueManager;
@@ -114,7 +114,7 @@ public class AgvCommandHandler :
         INodeStateRepository nodeStateRepository,
         IMetricCollectionService metricCollectionService,
         IMapper mapper,
-        ProductionOptions productionOptions,
+        SystemOptions systemOptions,
         IStationRepository stationRepository,
         ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider,
         IQueueRepository queueRepository,
@@ -130,7 +130,7 @@ public class AgvCommandHandler :
         _nodeStateRepository = nodeStateRepository;
         _mapper = mapper;
         _metricCollectionService = metricCollectionService;
-        _productionOptions = productionOptions;
+        _systemOptions = systemOptions;
         _chargingPointManager = chargingPointManager;
         _stationRepository = stationRepository;
         _queueSemaphoreProvider = queueSemaphoreProvider;
@@ -496,7 +496,7 @@ public class AgvCommandHandler :
             await context.Publish(new AgvStationsChanged(agv.CorrelationId, agvStatus.StationIds!));
         }
 
-        if (stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged  || operatingDataChanged
+        if (stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged || operatingDataChanged
             || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
         {
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
@@ -513,7 +513,7 @@ public class AgvCommandHandler :
                 }
             }
         }
-        _logger.LogTrace("{Command}: Agv {AgvCorrelationId}, operatingDataChanged: {OperatingDataChanged}, BatteryStatusChanged: {BatteryStatusChanged}, batteryChargeChanged: {BatteryChargeChanged}, lastNodeIdChanged: {LastNodeIdChanged}, wasOnline: {wWsOnline}", 
+        _logger.LogTrace("{Command}: Agv {AgvCorrelationId}, operatingDataChanged: {OperatingDataChanged}, BatteryStatusChanged: {BatteryStatusChanged}, batteryChargeChanged: {BatteryChargeChanged}, lastNodeIdChanged: {LastNodeIdChanged}, wasOnline: {wWsOnline}",
             nameof(UpdateAgvStatus), agv.CorrelationId, operatingDataChanged, batteryStatusChanged, batteryChargeChanged, lastNodeIdChanged, wasOnline);
 
         await PublishAgvStatusUpdateEvents(context, agv, batteryStatusChanged, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, operatingDataChanged);
@@ -1342,7 +1342,7 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_productionOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
+        if (_systemOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
             _logger.LogDebug("AutoAccept {AgvCorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
             await TransitionToIdleAsync(context, agv, cancellationToken);

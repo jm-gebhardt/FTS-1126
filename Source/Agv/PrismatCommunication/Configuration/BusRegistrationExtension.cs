@@ -7,6 +7,7 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
+using Gebhardt.Acc.PrismatCommunication.Simulation;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -21,7 +22,7 @@ public static class BusRegistrationExtension
     /// Add bus consumers.
     /// </summary>
     [PublicAPI]
-    public static IBusRegistrationConfigurator AddBusConsumers(this IBusRegistrationConfigurator cfg)
+    public static IBusRegistrationConfigurator AddBusConsumers(this IBusRegistrationConfigurator cfg, bool isSimulationMode = false)
     {
         cfg.AddConsumer<HostOrderCommandHandler>(c =>
         {
@@ -57,6 +58,11 @@ public static class BusRegistrationExtension
 
         cfg.AddRequestClient<AddOrUpdateStationGroup>();
         cfg.AddRequestClient<GetTriggerMapping>();
+
+        if (isSimulationMode)
+        {
+            cfg.AddConsumer<SimulationCommandHandler>();
+        }
         return cfg;
     }
 }

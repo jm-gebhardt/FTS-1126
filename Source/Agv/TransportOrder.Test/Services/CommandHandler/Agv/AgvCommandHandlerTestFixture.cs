@@ -45,7 +45,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<ILogger<AgvCommandHandler>> _logger = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
-    private readonly ProductionOptions _productionOptions = new() { AutoAccept = true };
+    private readonly SystemOptions _productionOptions = new() { AutoAccept = true };
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<IQueueManager> _queueManager = new();
     public readonly Mock<IAgvDb> AgvDb = new();
@@ -317,7 +317,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     {
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(isOnCharger);
         _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(chargeGraphNode != null ? new NodeLock(chargeGraphNode.Id, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow) : null);
-        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(() => chargeGraphNode?? throw new NoChargeStationAvailableException());
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(() => chargeGraphNode ?? throw new NoChargeStationAvailableException());
         return this;
     }
 

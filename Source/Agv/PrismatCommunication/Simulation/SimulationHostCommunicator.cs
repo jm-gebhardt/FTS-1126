@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.Acc.PrismatCommunication.SimulationMode;
+namespace Gebhardt.Acc.PrismatCommunication.Simulation;
 
 /// <summary>
 /// Mimics host communication in the simulation mode.

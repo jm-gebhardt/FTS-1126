@@ -35,9 +35,9 @@ public class DirectEdgeTest
     private GraphNode Way2 { get; } = NodeGenerator.GenerateNode(nodeId: "Way2", x: 3, y: 3);
 
     private GraphNode Target { get; } = NodeGenerator.GenerateNode(nodeId: "Prk2", x: 5, y: 3);
-    
+
     private GraphEdge Edge { get; } = GraphEdge.CreateDirect("Way2", "Prk2", 2);
-    
+
     private GraphEdge ZeroLengthEdge { get; } = GraphEdge.CreateDirect("Way2", "Way2", 0);
 
     private AgvTravelSimulator WoodShopSimulator { get; set; } = null!;
@@ -50,7 +50,7 @@ public class DirectEdgeTest
         WoodShop = generator.Generate(Guid.NewGuid());
     }
 
-    private void SetupWoodShopSimulator(AgvData agv, AgvPosition? position = null)
+    private void SetupWoodShopSimulator(AgvPosition? position = null)
     {
         if (position == null)
         {
@@ -58,7 +58,7 @@ public class DirectEdgeTest
             var startNode = WoodShop.Nodes.First();
             position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
         }
-        WoodShopSimulator = new AgvTravelSimulator(WoodShop, agv, position, new FakeTimeProvider());
+        WoodShopSimulator = new AgvTravelSimulator(WoodShop, position, new FakeTimeProvider());
     }
 
     [TestMethod]
@@ -74,14 +74,14 @@ public class DirectEdgeTest
     [TestMethod]
     [DataRow("Source", "Target", 0, 0, 1, 0, 90, DisplayName = "SourceNodeAtZero_OrientationSet")]
     [DataRow("Source", "Target", 1, 0, 0, 0, 270, DisplayName = "TargetNodeAtZero_OrientationSet")]
-    public void GetAgvOrientation(string source, string target, 
+    public void GetAgvOrientation(string source, string target,
         float sourceX, float sourceY, float targetX, float targetY, double angle)
     {
         var sourceNode = NodeGenerator.GenerateNode(nodeId: source, x: sourceX, y: sourceY);
         var targetNode = NodeGenerator.GenerateNode(nodeId: target, x: targetX, y: targetY);
         var edge = GraphEdge.CreateDirect(source, target);
         var directEdge = new DirectEdge(edge, sourceNode, targetNode);
-        directEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(angle));
+        directEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(angle));
 
         float orientation = BaseEdge.GetAgvOrientation(sourceNode.AsVector2(), targetNode.AsVector2());
         orientation.ShouldBe(directEdge.AgvOrientation);
@@ -126,14 +126,14 @@ public class DirectEdgeTest
         directEdge.EstimateTravelTime(agvData, 0, entryTime);
         // at entry
         var position = directEdge.GetCurrentPosition(entryTime, agvData, 0);
-        position.Theta.ShouldBe(BaseEdge.GetAgvOrientation(Way2, Target) - (float)entryAngle);
+        position.Theta.ShouldBe(BaseEdge.GetAgvOrientation(Way2, Target) - (float) entryAngle);
         position.X.ShouldBe(Way2.X, tolerance: 0.01);
         position.Y.ShouldBe(Way2.Y, tolerance: 0.01);
         position.Z.ShouldBe(Way2.Z, tolerance: 0.01);
         // in the middle of turning
         double secondsPassed = (directEdge.InitialTurnFinishTime - directEdge.EntryTime).TotalSeconds / 2d;
         position = directEdge.GetCurrentPosition(directEdge.EntryTime.AddSeconds(secondsPassed), agvData, position.Theta);
-        position.Theta.ShouldBe(BaseEdge.GetAgvOrientation(Way2, Target) - (float)entryAngle / 2, tolerance: 0.001);
+        position.Theta.ShouldBe(BaseEdge.GetAgvOrientation(Way2, Target) - (float) entryAngle / 2, tolerance: 0.001);
         position.X.ShouldBe(Way2.X, tolerance: 0.01);
         position.Y.ShouldBe(Way2.Y, tolerance: 0.01);
         position.Z.ShouldBe(Way2.Z, tolerance: 0.01);
@@ -148,8 +148,8 @@ public class DirectEdgeTest
     [TestMethod]
     public void SetAngles_PrkWay1Src3_ExitAndEntryAngleSet()
     {
-        var nextSource = NodeGenerator.GenerateNode(nodeId:"ns", x: 5, y: 3);
-        var nextTarget = NodeGenerator.GenerateNode(nodeId:"nt", x: 5, y: 1);
+        var nextSource = NodeGenerator.GenerateNode(nodeId: "ns", x: 5, y: 3);
+        var nextTarget = NodeGenerator.GenerateNode(nodeId: "nt", x: 5, y: 1);
 
         var directEdge = new DirectEdge(Edge, Way2, Target);
         directEdge.ExitAngle.ShouldBe(0);
@@ -165,7 +165,7 @@ public class DirectEdgeTest
     public void EstimateTravelTime_NoAdjacentEdgesTargetIsStation_SectionsAndVelocitiesSet()
     {
         var agvData = AgvDataGenerator.GenerateAgvData();
-        var target = NodeGenerator.GenerateNode(nodeId: Target.Id, x: Target.X, y : Target.Y, z: Target.Z, nodeType: AgvGraph.NodeType.Charge);
+        var target = NodeGenerator.GenerateNode(nodeId: Target.Id, x: Target.X, y: Target.Y, z: Target.Z, nodeType: AgvGraph.NodeType.Charge);
         var directEdge = new DirectEdge(Edge, Way2, target);
         directEdge.SetAngles(0, null, null);
         var entryTime = DateTime.UtcNow;
@@ -284,12 +284,12 @@ public class DirectEdgeTest
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), WoodShop.Edges.ToList());
         var startNode = WoodShop.Nodes.First(n => n.Id == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
-        SetupWoodShopSimulator(agvData, position);
+        SetupWoodShopSimulator(position);
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
-        WoodShopSimulator.EstimateTravelTimes(nodes, edges, entryTime, initialVelocity);
+        WoodShopSimulator.EstimateTravelTimes(nodes, edges, entryTime, agvData, initialVelocity);
 
-        var directEdge = (DirectEdge)WoodShopSimulator.FollowingEdges.Single(e => e.SourceNode.Id == "WP-0017");
+        var directEdge = (DirectEdge) WoodShopSimulator.FollowingEdges.Single(e => e.SourceNode.Id == "WP-0017");
         double distanceAcc = directEdge.GetEdgeTravelDistance(agvData, directEdge.AccelerationFinishTime);
         distanceAcc.ShouldBe(directEdge.AccelerationSection, tolerance: 0.01);
 
@@ -303,14 +303,13 @@ public class DirectEdgeTest
     [TestMethod]
     public void GetPartialOrientation_WoodShopWay11Way16ToWay16Way15_LeftTurn()
     {
-        var agvData = new KarisType1(Guid.NewGuid(), "ip address");
-        SetupWoodShopSimulator(agvData);
+        SetupWoodShopSimulator();
 
         var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0016" && e.TargetNode.Id == "WP-0015");
         var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0011" && e.TargetNode.Id == "WP-0016");
 
-        edge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(270));
-        previousEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(0));
+        edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(270));
+        previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(0));
 
         var entryTime = DateTime.UtcNow;
         var initialTurnTime = entryTime.AddSeconds(10);
@@ -328,20 +327,19 @@ public class DirectEdgeTest
         // at halftime of turn - agv is oriented by half to the edge (315 degrees)
         now = entryTime.AddSeconds((initialTurnTime - entryTime).TotalSeconds / 2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
-        orientation.ShouldBe((float)Mathematics.ConvertToRadians(315), tolerance: 0.001);
+        orientation.ShouldBe((float) Mathematics.ConvertToRadians(315), tolerance: 0.001);
     }
 
     [TestMethod]
     public void GetPartialOrientation_WoodShopWayDPressWay11ToWay11Way16_RightTurn()
     {
-        var agvData = new KarisType1(Guid.NewGuid(), "ip address");
-        SetupWoodShopSimulator(agvData);
+        SetupWoodShopSimulator();
 
         var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0011" && e.TargetNode.Id == "WP-0016");
         var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "D-Press" && e.TargetNode.Id == "WP-0011");
 
-        edge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(0));
-        previousEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(90));
+        edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(0));
+        previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(90));
 
         var entryTime = DateTime.UtcNow;
         var initialTurnTime = entryTime.AddSeconds(10);
@@ -359,20 +357,19 @@ public class DirectEdgeTest
         // at halftime of turn - agv is oriented by half to the edge (315 degrees)
         now = entryTime.AddSeconds((initialTurnTime - entryTime).TotalSeconds / 2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
-        orientation.ShouldBe((float)Mathematics.ConvertToRadians(45), tolerance: 0.001);
+        orientation.ShouldBe((float) Mathematics.ConvertToRadians(45), tolerance: 0.001);
     }
 
     [TestMethod]
     public void GetPartialOrientation_WoodShopPark4Way28ToWay28Way29_LeftTurn()
     {
-        var agvData = new KarisType1(Guid.NewGuid(), "ip address");
-        SetupWoodShopSimulator(agvData);
+        SetupWoodShopSimulator();
 
         var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0028" && e.TargetNode.Id == "WP-0029");
         var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "Park-4" && e.TargetNode.Id == "WP-0028");
 
-        edge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(180));
-        previousEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(90));
+        edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(180));
+        previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(90));
 
         var entryTime = DateTime.UtcNow;
         var initialTurnTime = entryTime.AddSeconds(10);
@@ -390,20 +387,19 @@ public class DirectEdgeTest
         // at halftime of turn - agv is oriented by half to the edge (225 degrees)
         now = entryTime.AddSeconds((initialTurnTime - entryTime).TotalSeconds / 2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
-        orientation.ShouldBe((float)Mathematics.ConvertToRadians(135), tolerance: 0.001);
+        orientation.ShouldBe((float) Mathematics.ConvertToRadians(135), tolerance: 0.001);
     }
 
     [TestMethod]
     public void GetPartialOrientation_WoodShopPark3Way28ToWay28Way29_LeftTurn()
     {
-        var agvData = new KarisType1(Guid.NewGuid(), "ip address");
-        SetupWoodShopSimulator(agvData);
+        SetupWoodShopSimulator();
 
         var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0028" && e.TargetNode.Id == "WP-0029");
         var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "Park-3" && e.TargetNode.Id == "WP-0028");
 
-        edge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(180));
-        previousEdge.AgvOrientation.ShouldBe((float)Mathematics.ConvertToRadians(270));
+        edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(180));
+        previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(270));
 
         var entryTime = DateTime.UtcNow;
         var initialTurnTime = entryTime.AddSeconds(10);
@@ -421,6 +417,6 @@ public class DirectEdgeTest
         // at halftime of turn - agv is oriented by half to the edge (135 degrees)
         now = entryTime.AddSeconds((initialTurnTime - entryTime).TotalSeconds / 2d);
         orientation = BaseEdge.GetPartialOrientation(now, initialTurnTime, entryTime, edge.AgvOrientation, previousEdge.AgvOrientation);
-        orientation.ShouldBe((float)Mathematics.ConvertToRadians(225), tolerance: 0.001);
+        orientation.ShouldBe((float) Mathematics.ConvertToRadians(225), tolerance: 0.001);
     }
 }

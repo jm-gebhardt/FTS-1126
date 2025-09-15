@@ -14,7 +14,6 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     private DateTime? _pausedFrom;
     private TimeSpan _pauseTime = TimeSpan.Zero;
 
-    private readonly AgvData _agvData;
     private readonly ITimeProvider _timeProvider;
     private readonly DateTime _timeStamp = DateTime.UtcNow;
 
@@ -68,10 +67,9 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     private float OrientationOnPreviousEdge { get; set; }
 
     /// <inheritdoc cref="IAgvTravelSimulator"/>>
-    public AgvTravelSimulator(AgvGraph? graph, AgvData data, AgvPosition position, ITimeProvider timeProvider)
+    public AgvTravelSimulator(AgvGraph? graph, AgvPosition position, ITimeProvider timeProvider)
     {
         Position = position;
-        _agvData = data;
         _timeProvider = timeProvider;
         if (graph == null)
         {
@@ -99,7 +97,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     }
 
     /// <inheritdoc />
-    public void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTime entryTime, double initialVelocity)
+    public void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTime entryTime, AgvData agvData, double initialVelocity)
     {
         Reset();
         if (nodes.Count < 1)
@@ -118,7 +116,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
 
         if (nodes.Count == 1 && CurrentNode != null && AddedVirtualNodes.Contains(CurrentNode.Id))
         {
-            EstimateTimeToGetBackToGraph(nodes.Single(), entryTime, initialVelocity);
+            EstimateTimeToGetBackToGraph(nodes.Single(), entryTime, agvData, initialVelocity);
             return;
         }
 
@@ -133,7 +131,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             var nextEdge = Edges.First(e => e.Id == edges[edge.index + 1]);
             bool turnAgvAtExit = FollowingEdges.Count == 0 && followingEdge.SourceNode.IsStation();
             followingEdge.SetAngles(entryAngle, nextEdge.SourceNode, nextEdge.ReferenceTarget, turnAgvAtExit);
-            followingEdge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
+            followingEdge.EstimateTravelTime(agvData, initialVelocity, entryTime);
             FollowingEdges.Add(followingEdge);
 
             entryTime = followingEdge.EstimatedExitTime;
@@ -142,7 +140,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         }
         followingEdge = Edges.Single(e => e.Id == edges.Last());
         followingEdge.SetAngles(entryAngle, null, null);
-        followingEdge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
+        followingEdge.EstimateTravelTime(agvData, initialVelocity, entryTime);
         FollowingEdges.Add(followingEdge);
 
         CurrentEdge = FollowingEdges.FirstOrDefault();
@@ -163,17 +161,17 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         TravelDuration = TimeSpan.Zero;
     }
 
-    private void EstimateTimeToGetBackToGraph(string targetNode, DateTime entryTime, double initialVelocity)
+    private void EstimateTimeToGetBackToGraph(string targetNode, DateTime entryTime, AgvData agvData, double initialVelocity)
     {
         ResetAddedVirtualNodes(CurrentNode!.Id);
         var target = _nodes.Single(n => n.Id == targetNode);
-        var graphEdge = GraphEdge.CreateDirect(CurrentNode.Id, targetNode, (float)Mathematics.EuclideanDistance(CurrentNode, target), Guid.NewGuid(), _timeStamp);
+        var graphEdge = GraphEdge.CreateDirect(CurrentNode.Id, targetNode, (float) Mathematics.EuclideanDistance(CurrentNode, target), Guid.NewGuid(), _timeStamp);
         var edge = new DirectEdge(graphEdge, CurrentNode, target) { TimeStamp = _timeStamp };
         Edges.Add(edge);
         AddedVirtualEdges.Add(edge.Id);
         var followingEdge = edge;
         followingEdge.SetAngles(0, null, null);
-        followingEdge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
+        followingEdge.EstimateTravelTime(agvData, initialVelocity, entryTime);
         FollowingEdges.Add(followingEdge);
         CurrentEdge = FollowingEdges.FirstOrDefault();
         CurrentNode = CurrentEdge?.SourceNode;
@@ -184,7 +182,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     }
 
     /// <inheritdoc />
-    public void EstimateTravelTimes(AgvPosition targetPosition, DateTime entryTime, double initialVelocity)
+    public void EstimateTravelTimes(AgvPosition targetPosition, DateTime entryTime, AgvData agvData, double initialVelocity)
     {
         var virtualSource = new GraphNode(Guid.NewGuid().ToString()) { X = Position.X, Y = Position.Y, Theta = Position.Theta, TimeStamp = _timeStamp };
         var virtualTarget = new GraphNode(Guid.NewGuid().ToString()) { X = targetPosition.X, Y = targetPosition.Y, Theta = targetPosition.Theta, TimeStamp = _timeStamp };
@@ -193,14 +191,14 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         _nodes.Add(virtualTarget);
         AddedVirtualNodes.Add(virtualTarget.Id);
 
-        var graphEdge = GraphEdge.CreateDirect(virtualSource.Id, virtualTarget.Id, (float)Mathematics.EuclideanDistance(virtualSource, virtualTarget), Guid.NewGuid(), _timeStamp);
+        var graphEdge = GraphEdge.CreateDirect(virtualSource.Id, virtualTarget.Id, (float) Mathematics.EuclideanDistance(virtualSource, virtualTarget), Guid.NewGuid(), _timeStamp);
         var edge = new DirectEdge(graphEdge, virtualSource, virtualTarget) { TimeStamp = _timeStamp };
         Edges.Add(edge);
         AddedVirtualEdges.Add(edge.Id);
 
         var followingEdge = edge;
         followingEdge.SetAngles(0, null, null);
-        followingEdge.EstimateTravelTime(_agvData, initialVelocity, entryTime);
+        followingEdge.EstimateTravelTime(agvData, initialVelocity, entryTime);
         FollowingEdges.Add(followingEdge);
 
         CurrentEdge = FollowingEdges.FirstOrDefault();
@@ -212,8 +210,9 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         }
     }
 
+    /// <param name="agvData"></param>
     /// <inheritdoc />
-    public void UpdatePosition()
+    public void UpdatePosition(AgvData agvData)
     {
         var currentTime = _timeProvider.Now();
         // deduct pause time from currentTime, so simulate the time as if the agv was not paused
@@ -231,12 +230,12 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         var entryTime = FollowingEdges.First().EntryTime;
         double? progress = (currentTime - entryTime) / TravelDuration;
         CurrentNode = CurrentEdge.SourceNode;
-        Position = CurrentEdge.GetCurrentPosition(currentTime, _agvData, OrientationOnPreviousEdge);
+        Position = CurrentEdge.GetCurrentPosition(currentTime, agvData, OrientationOnPreviousEdge);
 
         // Agv is at the end of the route
         if (Math.Abs(progress!.Value - 1d) < double.Epsilon)
         {
-            CurrentEdgeDistance = (float)(CurrentEdge.Length / 1000);
+            CurrentEdgeDistance = (float) (CurrentEdge.Length / 1000);
             CurrentNode = CurrentEdge.TargetNode;
             Position = new AgvPosition(true, CurrentNode.X, CurrentNode.Y, CurrentNode.Z, GetOrientation(Position));
         }

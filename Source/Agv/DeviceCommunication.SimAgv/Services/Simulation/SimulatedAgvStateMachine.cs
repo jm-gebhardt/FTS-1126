@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Commands;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Speed;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 using JetBrains.Annotations;
@@ -21,6 +22,8 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 [PublicAPI]
 public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga>
 {
+    private const int InitialTravelTime = 5000;
+
     #region Records
     /// <summary>
     /// Internal message (request) to create an agv instance
@@ -127,6 +130,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// Simulate an immediate charge up to given level.
     /// </summary>
     public Event<SimulateCharging> SimulateChargingEvent { get; private set; } = null!;
+
+    /// <summary>
+    /// Event to adjust the simulation speed of an AGV.
+    /// </summary>
+    public Event<SetSimulationSpeedForAgv> SetSimulationSpeedEvent { get; private set; } = null!;
     #endregion
 
     #region Schedules
@@ -159,6 +167,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private readonly ILogger<SimulatedAgvStateMachine> _logger;
     private readonly Options _options;
     private readonly ITimeProvider _timeProvider;
+    private IScheduleConfigurator<SimulatedAgvSaga, ScheduleStatusUpdate> _statusUpdateScheduleConfiguration = null!;
+    private IScheduleConfigurator<SimulatedAgvSaga, SchedulePositionUpdate> _signalPositionScheduleConfiguration = null!;
 
     private double BatteryDischargeRate => _options.BatteryDischargeRate; // Rate at which the battery charge decreases during simulation in [%/s]
 
@@ -177,12 +187,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         _logger = logger;
         _options = options;
         _timeProvider = timeProvider;
-        const int initialTravelTime = 5000;
-        StatusUpdateIntervalMs = Math.Clamp(_options.SimulationSpeed * initialTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
-        SignalPositionIntervalMs = Math.Clamp(_options.SimulationSpeed * initialTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
 
-        _logger.LogInformation("Initialized SimulatedAgvStateMachine with Graph (fixed :{FixedGraph}/ grid:{GridGraph} with rows {Rows}) and simulation speed of {SimulationSpeed}",
-            _options.FixedGraph, _options.GridGraph, _options.GridRows, _options.SimulationSpeed);
+        _logger.LogInformation("Initialized SimulatedAgvStateMachine with Graph (fixed :{FixedGraph}/ grid:{GridGraph} with rows {Rows})", _options.FixedGraph, _options.GridGraph, _options.GridRows);
 
         SetSagaFactory();
         SetScheduler();
@@ -195,7 +201,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         During(BusyMoving, Idle, SetFinishActionHandler());
         During(BusyMoving, Idle, ActionAbortedHandler());
         During(BusyMoving, SetUpdateActionHandler());
-       
+
         DuringAny(SetAbortAndStartActionHandler());
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(SetRequestAgvGraphHandler());
@@ -206,10 +212,20 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(ResetAgvErrorsHandler());
         DuringAny(RemoveAgvFromZoneHandler());
         DuringAny(SimulateChargingHandler());
+        DuringAny(SetSimulationSpeedHandler());
 
         WhenEnterAny(UpdateTimeOfStateTransition);
 
         SetCompletedWhenFinalized(); // Delete when finalized
+    }
+
+    private void SetUpdateIntervals(int simulationSpeed)
+    {
+        StatusUpdateIntervalMs = Math.Clamp(simulationSpeed * InitialTravelTime / 2, 100, 10000); // Send twice per node (min 0.1s, max 10s)
+        SignalPositionIntervalMs = Math.Clamp(simulationSpeed * InitialTravelTime / 10, 200, 2000); // Send 10x per node (min 0.2s, max 2s)
+
+        _statusUpdateScheduleConfiguration.Delay = TimeSpan.FromMilliseconds(StatusUpdateIntervalMs);
+        _signalPositionScheduleConfiguration.Delay = TimeSpan.FromMilliseconds(SignalPositionIntervalMs);
     }
 
     #region Init
@@ -219,7 +235,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             s => s.SendStatusUpdateTokenId,
             configuration =>
             {
-                configuration.Delay = TimeSpan.FromMilliseconds(StatusUpdateIntervalMs);
+                _statusUpdateScheduleConfiguration = configuration;
                 configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
             });
 
@@ -227,7 +243,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             s => s.SignalPositionTokenId,
             configuration =>
             {
-                configuration.Delay = TimeSpan.FromMilliseconds(SignalPositionIntervalMs);
+                _signalPositionScheduleConfiguration = configuration;
                 configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
             });
 
@@ -242,7 +258,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private void SetSagaFactory()
     {
         Event(() => CreateAgvEvent, e =>
-            e.SetSagaFactory(context => new SimulatedAgvSaga(context.Message.Agv, context.Message.SimulationSpeed, GetInitialBatteryCharge(), BatteryChargeRate, _timeProvider,  null, SpawnAt))
+            {
+                e.SetSagaFactory(context =>
+                {
+                    var saga = new SimulatedAgvSaga(context.Message.Agv, context.Message.SimulationSpeed, GetInitialBatteryCharge(), BatteryChargeRate, _timeProvider, null, SpawnAt);
+                    SetUpdateIntervals(saga.SimulationSpeed);
+                    return saga;
+                });
+            }
         );
     }
 
@@ -251,7 +274,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         int maxDeviation = _options.InitialBatteryChargeDeviation;
         int calculatedBatteryCharge = _options.InitialBatteryCharge + Random.Shared.Next(-maxDeviation, maxDeviation + 1);
         const int safetyAgainstDeadBirth = 5;
-        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int)SimulatedAgvSaga.MaxCharge);
+        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int) SimulatedAgvSaga.MaxCharge);
         return initialBatteryCharge;
     }
     #endregion
@@ -260,10 +283,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private EventActivityBinder<SimulatedAgvSaga, CreateAgv> SetInitialCreateAgvHandler()
     {
         return When(CreateAgvEvent)
-            .Then(c =>
-            {
-                _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.SerialNumber, c.Saga.CorrelationId);
-            })
+            .Then(c => { _logger.LogDebug("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Agv.SerialNumber, c.Saga.CorrelationId); })
             .TransitionTo(Idle)
             .ThenAsync(PublishStatusAsync)
             .ThenAsync(PublishPositionAsync)
@@ -382,10 +402,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.ActionStartDate = DateTime.UtcNow;
         if (c.Message.Action.IsMoveToCoordinate)
         {
-            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, 0);
+            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
             return;
         }
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, 0);
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
     private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> c)
@@ -395,10 +415,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.ActionStartDate = DateTime.UtcNow;
         if (c.Message.Action.IsMoveToCoordinate)
         {
-            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, 0);
+            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
             return;
         }
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, 0);
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
     private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, AbortAndStartActionCommand> c)
@@ -408,10 +428,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.ActionStartDate = DateTime.UtcNow;
         if (c.Message.Action.IsMoveToCoordinate)
         {
-            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, 0);
+            c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
             return;
         }
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, 0);
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
     private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler()
@@ -535,6 +555,17 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Then(c => c.Saga.SetBatteryLevel(c.Message.Level));
     }
 
+    private EventActivityBinder<SimulatedAgvSaga, SetSimulationSpeedForAgv> SetSimulationSpeedHandler()
+    {
+        return When(SetSimulationSpeedEvent)
+            .Then(c => _logger.LogInformation("SetSimulationSpeed: {SimulationSpeed}x", c.Message.SimulationSpeed))
+            .Then(c =>
+            {
+                c.Saga.SetSimulationSpeed(c.Message.SimulationSpeed);
+                SetUpdateIntervals(c.Saga.SimulationSpeed);
+            });
+    }
+
     private EventActivityBinder<SimulatedAgvSaga, RemoveAgvFromZone> RemoveAgvFromZoneHandler()
     {
         return When(RemoveAgvFromZoneEvent)
@@ -551,14 +582,15 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <param name="requestsOnEdge">Number of requests on the edge.</param>
     /// <param name="lowerBound">The lower bound of the interval [ms].</param>
     /// <param name="upperBound">The upper bound of the interval [ms].</param>
+    /// <param name="simulationSpeed">The simulation speed.</param>
     /// <param name="currentEdge">The current edge.</param>
     /// <returns></returns>
-    private int GetRequestIntervalOnEdge(int requestsOnEdge, int lowerBound, int upperBound, BaseEdge? currentEdge)
+    private static int GetRequestIntervalOnEdge(int requestsOnEdge, int lowerBound, int upperBound, int simulationSpeed, BaseEdge? currentEdge)
     {
-        int interval = _options.SimulationSpeed / requestsOnEdge;
+        int interval = simulationSpeed / requestsOnEdge;
         if (currentEdge != null)
         {
-            interval = (int)(currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
+            interval = (int) (currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
         }
 
         return Math.Clamp(interval, lowerBound, upperBound);
@@ -567,14 +599,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private TimeSpan GetPositionScheduleInterval(SagaConsumeContext<SimulatedAgvSaga> context)
     {
         var currentEdge = context.Saga.TravelSimulator.GetShortestEdge();
-        int interval = GetRequestIntervalOnEdge(12, 100, 10000, currentEdge);
+        int interval = GetRequestIntervalOnEdge(12, 100, 10000, context.Saga.SimulationSpeed, currentEdge);
         return TimeSpan.FromMilliseconds(interval);
     }
 
     private TimeSpan GetStatusUpdateInterval(SagaConsumeContext<SimulatedAgvSaga> context)
     {
         var currentEdge = context.Saga.TravelSimulator.CurrentEdge;
-        int interval = GetRequestIntervalOnEdge(2, 200, 2000, currentEdge);
+        int interval = GetRequestIntervalOnEdge(2, 200, 2000, context.Saga.SimulationSpeed, currentEdge);
         return TimeSpan.FromMilliseconds(interval);
     }
 
@@ -692,40 +724,40 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private async Task FinishActionAsync(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
     {
-       if (context.Saga.ActionStartDate == null)
-       {
-           _logger.LogWarning("Action already finished");
-           return;
-       }
-       var action = context.Saga.Action;
-       if (action == null)
-       {
-           _logger.LogError("Could not finish action, AgvAction object missing");
-       }
-       else
-       {
-           var agvCorrelationId = context.Saga.CorrelationId;
-           _logger.LogInformation("SerialNumber {AgvId} ({CorrelationId}). Finished {ActionType} action with action CorrelationId {ActionCorrelationId} for action group id: {OrderId}",
-               context.Saga.SerialNumber, context.Saga.CorrelationId, context.Saga.Action!.ActionType, context.Saga.Action.CorrelationId, context.Saga.Action.ParentId);
-           var cargos = new List<Cargo>();
-           if (action.ActionType == ActionType.Pick)
-           {
-               // we just picked up a cargo
-               var cargo = new Cargo(Guid.NewGuid(), agvCorrelationId, "Cargo 1", "default", new Point3D(0, 0, 0, 0), new Cuboid(100f, 200f, 50f), "top", 21);
-               cargos.Add(cargo);
-           }
-           if (action.ActionType is ActionType.Pick or ActionType.Drop)
-           {
-               await WaitForCargoHandlingAsync(context);
-               await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
-           }
+        if (context.Saga.ActionStartDate == null)
+        {
+            _logger.LogWarning("Action already finished");
+            return;
+        }
+        var action = context.Saga.Action;
+        if (action == null)
+        {
+            _logger.LogError("Could not finish action, AgvAction object missing");
+        }
+        else
+        {
+            var agvCorrelationId = context.Saga.CorrelationId;
+            _logger.LogInformation("SerialNumber {AgvId} ({CorrelationId}). Finished {ActionType} action with action CorrelationId {ActionCorrelationId} for action group id: {OrderId}",
+                context.Saga.SerialNumber, context.Saga.CorrelationId, context.Saga.Action!.ActionType, context.Saga.Action.CorrelationId, context.Saga.Action.ParentId);
+            var cargos = new List<Cargo>();
+            if (action.ActionType == ActionType.Pick)
+            {
+                // we just picked up a cargo
+                var cargo = new Cargo(Guid.NewGuid(), agvCorrelationId, "Cargo 1", "default", new Point3D(0, 0, 0, 0), new Cuboid(100f, 200f, 50f), "top", 21);
+                cargos.Add(cargo);
+            }
+            if (action.ActionType is ActionType.Pick or ActionType.Drop)
+            {
+                await WaitForCargoHandlingAsync(context);
+                await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
+            }
 
-           await context.Publish(new ActionCompleted(action.CorrelationId, agvCorrelationId));
-       }
+            await context.Publish(new ActionCompleted(action.CorrelationId, agvCorrelationId));
+        }
 
-       // update position last time before the ActionStart time is gone
-       context.Saga.UpdatePosition();
-       context.Saga.ResetAction();
+        // update position last time before the ActionStart time is gone
+        context.Saga.UpdatePosition();
+        context.Saga.ResetAction();
     }
 
     private async Task WaitForCargoHandlingAsync(BehaviorContext<SimulatedAgvSaga, ScheduleFinishAction> context)
@@ -736,7 +768,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             ActionType.Drop => _options.CargoUnloadingTime,
             ActionType.Pick => _options.CargoLoadingTime,
             _ => 0
-        } / (float)_options.SimulationSpeed;
+        } / (float) context.Saga.SimulationSpeed;
 
         await Task.Delay(TimeSpan.FromSeconds(delay));
     }

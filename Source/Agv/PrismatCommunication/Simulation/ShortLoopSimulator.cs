@@ -1,11 +1,13 @@
 ﻿using Gebhardt.Acc.PrismatCommunication.CmdOptions;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.Acc.PrismatCommunication.SimulationMode;
+namespace Gebhardt.Acc.PrismatCommunication.Simulation;
 
 /// <inheritdoc />
+[UsedImplicitly]
 public class ShortLoopSimulator(IBus bus, ILogger<SimulatorBase> logger, SimulateOptions simOptions, KaeserGraphConfiguration kaeserGraphConfiguration) : SimulatorBase(bus, logger, kaeserGraphConfiguration)
 {
     /// <inheritdoc />

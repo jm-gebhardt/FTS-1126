@@ -49,7 +49,8 @@ public static class WebHostBuilderExtensions
     /// Configured the WebHostBuilder to use the TransportOrderWebApi <paramref name="webHostBuilder" />
     /// </summary>
     /// <param name="webHostBuilder"></param>
-    public static IWebHostBuilder AddTransportOrderWebApi(this IWebHostBuilder webHostBuilder)
+    /// <param name="isSimulationMode">If true, simulation endpoints will be available.</param>
+    public static IWebHostBuilder AddTransportOrderWebApi(this IWebHostBuilder webHostBuilder, bool isSimulationMode = false)
     {
         var executingAssembly = Assembly.GetExecutingAssembly();
 
@@ -82,9 +83,13 @@ public static class WebHostBuilderExtensions
             services.AddHub<RestrictedAreaHub>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
-            services.AddMvc();
-            services.AddControllers()
-                .AddApplicationPart(executingAssembly)
+
+            services.AddControllers(opts =>
+                {
+                    opts.Conventions.Add(new ExcludeControllersConvention(cm =>
+                        !isSimulationMode && cm.ControllerType == typeof(SimulationController)));
+                })
+                .AddApplicationPart(typeof(SimulationController).Assembly)
                 .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
             var config = context.Configuration.GetSection("KEYCLOAK");
