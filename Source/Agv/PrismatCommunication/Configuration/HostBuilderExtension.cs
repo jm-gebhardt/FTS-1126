@@ -21,6 +21,7 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.PrismatCommunication.Simulation;
 
@@ -83,7 +84,7 @@ public static class HostBuilderExtension
                 string? connectionString = context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName);
                 builder.UseSqlServer(connectionString, m =>
                 {
-                    m.MigrationsHistoryTable(PrismatCommunicationDbContext.MigrationTableName);
+                    m.MigrationsHistoryTable(IDbContext<PrismatCommunicationDbContext>.MigrationTableName);
                     m.UseCompatibilityLevel(120); // EF9 compatibility level
                 });
             }

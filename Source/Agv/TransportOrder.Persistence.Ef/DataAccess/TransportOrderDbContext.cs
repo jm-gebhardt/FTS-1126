@@ -1,28 +1,20 @@
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Trigger;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Zone;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 
 /// <summary>
 /// TransportOrder DB Context 
 /// </summary>
-public class TransportOrderDbContext : DbContext
+public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, IDbContext<TransportOrderDbContext>
 {
-    /// <summary>
-    /// Configuration section where the ConnectionString for AGV Master Control is located
-    /// </summary>
-    public const string ConfigSectionName = "AMC";
-
-    /// <summary>
-    /// Name of the migration table
-    /// </summary>
-    public const string MigrationTableName = $"__{nameof(TransportOrderDbContext)}Migration";
+    /// <inheritdoc />
+    public static string ConfigSectionName => "AMC";
 
     /// <inheritdoc />
     public TransportOrderDbContext(DbContextOptions<TransportOrderDbContext> options) : base(options)
@@ -58,25 +50,5 @@ public class TransportOrderDbContext : DbContext
         modelBuilder.ApplyConfiguration(new InstantActionDefinitionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ZoneEntityConfiguration());
         modelBuilder.ApplyConfiguration(new MaintenanceLogEntityConfiguration());
-    }
-
-    /// <summary>
-    /// Configure the DbContext
-    /// The default EF Logging is very chatty and prints each CommandExecution using LogLevel.Information.
-    /// This configuration changes this to LogLevel.Debug
-    /// Source: https://github.com/dotnet/efcore/issues/14523#issuecomment-491532384
-    /// </summary>
-    /// <param name="optionsBuilder"></param>
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        // uncomment if logging of generated queries is needed
-        // optionsBuilder.LogTo(Console.WriteLine, LogLevel.Trace);
-        optionsBuilder.ConfigureWarnings(c =>
-        {
-            // Logs from Microsoft.EntityFrameworkCore.Database.Command
-            c.Log((RelationalEventId.CommandExecuted, LogLevel.Debug));
-            // Logs from Microsoft.EntityFrameworkCore.Infrastructure
-            c.Log((CoreEventId.ContextInitialized, LogLevel.Debug));
-        });
     }
 }

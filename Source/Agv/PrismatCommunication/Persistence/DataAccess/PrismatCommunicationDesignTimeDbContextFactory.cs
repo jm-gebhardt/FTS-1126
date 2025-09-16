@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 public class PrismatCommunicationDesignTimeDbContextFactory : DesignTimeDbContextFactory<PrismatCommunicationDbContext>
 {
     /// <inheritdoc />
-    public PrismatCommunicationDesignTimeDbContextFactory() : base(PrismatCommunicationDbContext.ConfigSectionName, PrismatCommunicationDbContext.MigrationTableName)
+    public PrismatCommunicationDesignTimeDbContextFactory() : base(PrismatCommunicationDbContext.ConfigSectionName, IDbContext<PrismatCommunicationDbContext>.MigrationTableName)
     {
     }
 }

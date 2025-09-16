@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Time;
@@ -45,7 +46,7 @@ try
                 string? connectionString = context.Configuration.GetConnectionString(DeviceCommunicationDbContext.ConfigSectionName);
                 builder.UseSqlServer(connectionString, m =>
                 {
-                    m.MigrationsHistoryTable(DeviceCommunicationDbContext.MigrationTableName);
+                    m.MigrationsHistoryTable(IDbContext<DeviceCommunicationDbContext>.MigrationTableName);
                     m.UseCompatibilityLevel(120); // EF9 compatibility level
                 });
             }
@@ -84,8 +85,8 @@ try
             services.AddSingleton<ISignificanceChecker<AgvSetToPushOrJoystickMode>, PushModeSignificanceChecker<AgvSetToPushOrJoystickMode>>();
             services.AddSingleton<UnTimedInMemoryFilter<AgvSetToPushOrJoystickMode>>();
 
-                    services.AddSingleton<IZoneRefreshStateService, ZoneRefreshStateService>();
-                    services.AddHostedService<ZoneRefreshBackgroundService>();
+            services.AddSingleton<IZoneRefreshStateService, ZoneRefreshStateService>();
+            services.AddHostedService<ZoneRefreshBackgroundService>();
 
             services.AddTransient<IActionRepository, EfActionRepository>();
             services.ConfigureServicesMassTransit(context.Configuration,

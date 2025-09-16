@@ -24,7 +24,6 @@
         <ProjectReference Include="..\TriggerDefinition\Common.TriggerDefinition.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Domain\Models\" />
       <Folder Include="Migrations\" />
     </ItemGroup>
     <Target Name="DisableWarnings" BeforeTargets="CoreCompile">

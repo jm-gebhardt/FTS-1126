@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TriggerService.Persistence.Ef.DataAccess;
 public class TriggerServiceDbDesignTimeDbContextFactory : DesignTimeDbContextFactory<TriggerServiceDbContext>
 {
     /// <inheritdoc />
-    public TriggerServiceDbDesignTimeDbContextFactory() : base(TriggerServiceDbContext.ConfigSectionName, TriggerServiceDbContext.MigrationTableName)
+    public TriggerServiceDbDesignTimeDbContextFactory() : base(TriggerServiceDbContext.ConfigSectionName, IDbContext<TriggerServiceDbContext>.MigrationTableName)
     {
     }
 }

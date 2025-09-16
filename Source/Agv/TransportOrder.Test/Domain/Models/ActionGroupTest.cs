@@ -16,7 +16,7 @@ using DateTime = System.DateTime;
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 
 [TestClass]
-public class ActionGroupTests
+public class ActionGroupTest
 {
     [TestMethod]
     [DataRow(ActionState.Created, ActionState.Created, ActionGroupState.Created)]

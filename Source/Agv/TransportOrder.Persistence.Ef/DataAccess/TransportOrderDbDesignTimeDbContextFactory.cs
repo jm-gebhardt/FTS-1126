@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 public class TransportOrderDbDesignTimeDbContextFactory : DesignTimeDbContextFactory<TransportOrderDbContext>
 {
     /// <inheritdoc />
-    public TransportOrderDbDesignTimeDbContextFactory() : base(TransportOrderDbContext.ConfigSectionName, TransportOrderDbContext.MigrationTableName)
+    public TransportOrderDbDesignTimeDbContextFactory() : base(TransportOrderDbContext.ConfigSectionName, IDbContext<TransportOrderDbContext>.MigrationTableName)
     {
     }
 }

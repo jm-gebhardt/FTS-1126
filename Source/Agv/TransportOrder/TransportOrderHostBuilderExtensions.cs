@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.MassTransit;
 using Gebhardt.Acc.Common.Memory;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
@@ -71,7 +72,6 @@ public static class TransportOrderHostBuilderExtensions
     private static void RegisterConfigurationServices(SystemOptions systemOptions, IServiceCollection services, HostBuilderContext context)
     {
         services.AddSingleton(_ => systemOptions);
-
         services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
         services.AddHostedService<AgvSettingsInitializer>();
         services.AddHostedService<InMemoryCacheInitializer>();
@@ -85,7 +85,7 @@ public static class TransportOrderHostBuilderExtensions
 
             builder.UseSqlServer(connectionString, m =>
             {
-                m.MigrationsHistoryTable(TransportOrderDbContext.MigrationTableName);
+                m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
                 m.UseCompatibilityLevel(120); // avoid using OPENJSON in translated sql. In EF9 : use m.TranslateParameterizedCollectionsToConstants() instead
             }).LogTo(Console.WriteLine, LogLevel.Information);
         });

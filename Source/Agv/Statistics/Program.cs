@@ -48,7 +48,7 @@ try
         var dbContext = scope.ServiceProvider.GetRequiredService<StatisticsDbContext>();
         await dbContext.Database.MigrateAsync();
     }
-    
+
     host.Run();
     return 0;
 }

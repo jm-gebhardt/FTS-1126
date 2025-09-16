@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 public class StatisticsDbDesignTimeDbContextFactory : DesignTimeDbContextFactory<StatisticsDbContext>
 {
     /// <inheritdoc />
-    public StatisticsDbDesignTimeDbContextFactory() : base(StatisticsDbContext.ConfigSectionName, StatisticsDbContext.MigrationTableName)
+    public StatisticsDbDesignTimeDbContextFactory() : base(StatisticsDbContext.ConfigSectionName, IDbContext<StatisticsDbContext>.MigrationTableName)
     {
     }
 }

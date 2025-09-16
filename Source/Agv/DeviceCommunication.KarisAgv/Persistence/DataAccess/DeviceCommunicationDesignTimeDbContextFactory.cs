@@ -8,5 +8,7 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
 public class DeviceCommunicationDesignTimeDbContextFactory : DesignTimeDbContextFactory<DeviceCommunicationDbContext>
 {
     /// <inheritdoc />
-    public DeviceCommunicationDesignTimeDbContextFactory(): base(DeviceCommunicationDbContext.ConfigSectionName, DeviceCommunicationDbContext.MigrationTableName){}
+    public DeviceCommunicationDesignTimeDbContextFactory() : base(DeviceCommunicationDbContext.ConfigSectionName, IDbContext<DeviceCommunicationDbContext>.MigrationTableName)
+    {
+    }
 }

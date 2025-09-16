@@ -5,8 +5,10 @@ namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.DataAccess;
 
 /// <inheritdoc />
 [UsedImplicitly]
-public class KaeserSideCarDesignTimeDbContextFactory: DesignTimeDbContextFactory<KaeserSidecarDbContext>
+public class KaeserSideCarDesignTimeDbContextFactory : DesignTimeDbContextFactory<KaeserSidecarDbContext>
 {
     /// <inheritdoc />
-    public KaeserSideCarDesignTimeDbContextFactory() : base(KaeserSidecarDbContext.ConfigSectionName, KaeserSidecarDbContext.MigrationTableName){}
+    public KaeserSideCarDesignTimeDbContextFactory() : base(KaeserSidecarDbContext.ConfigSectionName, IDbContext<KaeserSidecarDbContext>.MigrationTableName)
+    {
+    }
 }

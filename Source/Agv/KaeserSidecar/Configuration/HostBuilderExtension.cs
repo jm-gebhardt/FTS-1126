@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Dictionaries;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
@@ -44,10 +45,7 @@ public static class HostBuilderExtension
             {
                 services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
                 //Configure masstransit
-                services.ConfigureServicesMassTransit(context.Configuration, x =>
-                {
-                    x.AddBusConsumers();
-                });
+                services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(); });
             }
             catch (InvalidOperationException e)
             {
@@ -70,10 +68,10 @@ public static class HostBuilderExtension
             services.AddConfigurationTypeManager();
             services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
             services.AddSingleton<IWaitingHandler, WaitingHandler>();
-            services.AddSingleton<IHostedService>(sp => (IHostedService)sp.GetRequiredService<IWaitingHandler>());
+            services.AddSingleton<IHostedService>(sp => (IHostedService) sp.GetRequiredService<IWaitingHandler>());
 
             services.AddSingleton<ITargetSelector, TargetSelector>();
-            services.AddSingleton<IHostedService>(sp => (IHostedService)sp.GetRequiredService<ITargetSelector>());
+            services.AddSingleton<IHostedService>(sp => (IHostedService) sp.GetRequiredService<ITargetSelector>());
 
             services.AddHostedService<InitializationProvider>();
             // Add prismat communication db connection
@@ -86,7 +84,7 @@ public static class HostBuilderExtension
             services.AddTransient<PrismatCommunication.Domain.Repositories.IStationRepository>(sp => sp.GetRequiredService<IPrismatCommunicationStationRepository>());
             services.AddTransient<IPrismatCommunicationSystemStatusRepository, PrismatCommunicationSystemStatusRepository>();
             services.AddTransient<ISystemStatusRepository>(sp => sp.GetRequiredService<IPrismatCommunicationSystemStatusRepository>());
-            
+
             services.AddTransient<IAklAgvLimitGuard, AklAgvLimitGuard>();
             services.AddTransient<ITransportOrderDb, TransportOrderDb>();
             services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
@@ -104,19 +102,17 @@ public static class HostBuilderExtension
 
                 builder.UseSqlServer(connectionString);
             });
-           
-            void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
+
+            services.AddDbContextFactory<KaeserSidecarDbContext>(builder =>
             {
                 string? connectionString = context.Configuration.GetConnectionString(KaeserSidecarDbContext.ConfigSectionName);
                 builder.UseSqlServer(connectionString, m =>
                 {
-                    m.MigrationsHistoryTable(KaeserSidecarDbContext.MigrationTableName);
+                    m.MigrationsHistoryTable(IDbContext<KaeserSidecarDbContext>.MigrationTableName);
                     m.UseCompatibilityLevel(120); // EF9 compatibility level
                 });
-            }
+            });
 
-            services.AddDbContextFactory<KaeserSidecarDbContext>(ConfigureDbContextOptions);
-            
             services.AddTransient<IAgvSettingsService, AgvSettingsService>();
             services.AddSingleton<IStationRepository, EfStationRepository>();
             services.AddSingleton<IOrderRepository, EfOrderRepository>();

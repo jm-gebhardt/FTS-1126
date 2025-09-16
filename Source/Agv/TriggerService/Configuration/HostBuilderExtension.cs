@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Messages.Filters;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TriggerService.Domain.Repositories;
 using Gebhardt.Acc.TriggerService.Domain.Services;
 using Gebhardt.Acc.TriggerService.Persistence.Ef.DataAccess;
@@ -65,7 +66,7 @@ public static class HostBuilderExtension
             {
                 string? connectionString = context.Configuration.GetConnectionString(TriggerServiceDbContext.ConfigSectionName);
 
-                builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(TriggerServiceDbContext.MigrationTableName); });
+                builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(IDbContext<TriggerServiceDbContext>.MigrationTableName); });
             });
         });
         return hostBuilder;

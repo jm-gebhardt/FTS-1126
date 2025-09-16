@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Contracts;
 using Gebhardt.Acc.Common.Messages.Filters;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
@@ -109,7 +110,7 @@ public static class HostBuilderExtension
             services.AddConfigurationTypeManager();
             services.AddDbContext<StatisticsDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
-                    m => m.MigrationsHistoryTable(StatisticsDbContext.MigrationTableName)));
+                    m => m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName)));
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();
             services.AddTransient<IMapRepository, EfMapRepository>();
             services.AddTransient<IGridRepository, EfGridRepository>();

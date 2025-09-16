@@ -63,8 +63,8 @@ try
 
     using (var scope = host.Services.CreateScope())
     {
-        var transportOrderDb = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
-        await transportOrderDb.Database.MigrateAsync();
+        var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
+        await dbContext.Database.MigrateAsync();
     }
 
     host.Run();
