@@ -14,9 +14,9 @@ public class StationOccupancyEntityConfiguration : IEntityTypeConfiguration<Stat
     public void Configure(EntityTypeBuilder<StationOccupancy> builder)
     {
         builder.ToTable(TableName);
-        builder.HasKey(e => e.Station);
+        builder.HasKey(e => e.StationId);
         builder.Property(e => e.Count);
-        builder.Property(e => e.Station).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.StationId).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.AgvCorrelationId);
     }
 }

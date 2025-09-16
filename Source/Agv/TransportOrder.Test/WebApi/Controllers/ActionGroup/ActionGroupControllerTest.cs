@@ -203,12 +203,14 @@ public class ActionGroupControllerTest
     public async Task SetTarget_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget(actionGroupState: ActionGroupState.Started);
+        var targetNode = "node".ToGraphNode();
         ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
+            .WithNode([targetNode])
             .Build();
 
         var controller = fixture.Controller;
-        var response = await controller.SetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId, "node");
+        var response = await controller.SetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId, targetNode.Name);
         var result = response as OkResult;
         result.ShouldNotBeNull();
     }

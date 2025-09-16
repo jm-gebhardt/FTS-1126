@@ -55,14 +55,14 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 
     /// <summary>
     /// The actual implementation of the algorithm
-    /// <inheritdoc cref="CalculateRoute(string,string)"/>
+    /// <inheritdoc cref="CalculateRoute(Guid,Guid)"/>
     /// </summary>
-    protected abstract Route? CalculateRouteInternal(string source, string destination);
+    protected abstract Route? CalculateRouteInternal(Guid source, Guid destination);
 
-    private Route? CalculateRoute(string source, string destination)
+    private Route? CalculateRoute(Guid source, Guid destination)
     {
-        var start = Nodes.SingleOrDefault(n => n.Id.Equals(source));
-        var end = Nodes.SingleOrDefault(n => n.Id.Equals(destination));
+        var start = Nodes.SingleOrDefault(n => n.Id == source);
+        var end = Nodes.SingleOrDefault(n => n.Id == destination);
 
         if (start == null || end == null)
         {
@@ -76,7 +76,7 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
 
         if (source == destination) // Already at destination -> 0 cost
         {
-            return new Route(0f, new[] {source}, Array.Empty<Guid>());
+            return new Route(0f, [start], []);
         }
 
         return CalculateRouteInternal(source, destination);
@@ -93,27 +93,27 @@ public abstract class BaseRouteAlgorithm : IRouteAlgorithm
         return _routingPlausibilityChecker == null || _routingPlausibilityChecker.IsPlausible(start, end);
     }
 
-    /// <inheritdoc cref="IRouteAlgorithm.CalculateRoute(CancellationToken, string[])"/>
-    public Route? CalculateRoute(params string[] waypoints)
+    /// <inheritdoc cref="IRouteAlgorithm.CalculateRoute(CancellationToken, Guid[])"/>
+    public Route? CalculateRoute(params Guid[] waypoints)
     {
         return CalculateRoute(CancellationToken.None, waypoints);
     }
 
     /// <inheritdoc/>
     /// <exception cref="KeyNotFoundException">A waypoint node was not found.</exception>
-    public Route? CalculateRoute(CancellationToken cancellationToken = default, params string[] waypoints)
+    public Route? CalculateRoute(CancellationToken cancellationToken = default, params Guid[] waypoints)
     {
         if (waypoints.Length < 2)
         {
             return null;
         }
 
-        var totalRoute = new Route(0, Array.Empty<string>(), Array.Empty<Guid>());
+        var totalRoute = new Route(0, [], Array.Empty<Guid>());
 
         for (int i = 0; i < waypoints.Length - 1; i++)
         {
-            string source = waypoints[i];
-            string destination = waypoints[i + 1];
+            var source = waypoints[i];
+            var destination = waypoints[i + 1];
 
             cancellationToken.ThrowIfCancellationRequested();
             var route = CalculateRoute(source, destination);

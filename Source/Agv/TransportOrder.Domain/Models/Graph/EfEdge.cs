@@ -26,12 +26,12 @@ public class EfEdge
     /// <summary>
     /// The Id of the starting node of the edge
     /// </summary>
-    public string FromNodeId { get; init; }
+    public Guid FromNodeId { get; init; }
 
     /// <summary>
     /// The Id of the ending node of the edge
     /// </summary>
-    public string ToNodeId { get; init; }
+    public Guid ToNodeId { get; init; }
 
     /// <summary>
     /// Length of this edge in [m].
@@ -64,8 +64,6 @@ public class EfEdge
     [UsedImplicitly]
     private EfEdge()
     {
-        FromNodeId = null!;
-        ToNodeId = null!;
         Variant = EdgeType.Direct;
         VariantParameters = new List<EdgeCoefficient>();
         Maps = [];

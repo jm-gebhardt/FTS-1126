@@ -10,16 +10,15 @@ public interface IStationRepository
     /// <summary>
     /// Add agv to station.
     /// </summary>
-    /// <param name="station">The station.</param>
+    /// <param name="stationId">The Id of the station.</param>
     /// <param name="agv">The agv.</param>
-    Task OccupyStation(string station, Guid agv);
+    Task OccupyStation(Guid stationId, Guid agv);
 
     /// <summary>
     /// Free the station from an agv.
     /// </summary>
-    /// <param name="station">The station</param>
-    /// <param name="agv">The agv</param>
-    Task FreeStation(string station, Guid agv);
+    /// <param name="stationId">The Id of the station.</param>
+    Task FreeStation(Guid stationId);
 
     /// <summary>
     /// Get the station occupancy.
@@ -29,8 +28,8 @@ public interface IStationRepository
     /// <summary>
     /// Get the occupancy of a station.
     /// </summary>
-    /// <param name="station">The station</param>
-    Task<StationOccupancy> GetOccupancyOfStation(string station);
+    /// <param name="stationId">The Id of the station.</param>
+    Task<StationOccupancy> GetOccupancyOfStation(Guid stationId);
 
     /// <summary>
     /// Get the station an agv occupies.

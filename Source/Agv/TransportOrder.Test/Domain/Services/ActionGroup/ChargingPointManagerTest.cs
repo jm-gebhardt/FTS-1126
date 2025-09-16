@@ -17,7 +17,7 @@ public class ChargingPointManagerTest
     {
         actualNode.ShouldNotBeNull();
         actualNode.ShouldSatisfyAllConditions(
-            n => n.Id.ShouldBe(expectedNode.Id),
+            n => n.Name.ShouldBe(expectedNode.Name),
             n => n.Type.ToString().ShouldBe(expectedNode.Type.ToString()),
             n => n.X.ShouldBe(expectedNode.X),
             n => n.Y.ShouldBe(expectedNode.Y),
@@ -33,7 +33,7 @@ public class ChargingPointManagerTest
         {
             chargingNode
         };
-        
+
         var fixture = new ChargingPointManagerTestFixture()
             .WithAgv()
             .WithAvailableNodes(availableNodes)
@@ -70,7 +70,7 @@ public class ChargingPointManagerTest
         {
             chargingNode
         };
-        
+
         var fixture = new ChargingPointManagerTestFixture()
             .WithAgv()
             .WithAvailableNodes(availableNodes)
@@ -78,7 +78,7 @@ public class ChargingPointManagerTest
             .WithChargingPointManager()
             .WithGraphRepository(true)
             .WithNodeLocker(true, true, true);
-        
+
         var bestCharger = await fixture.ChargingPointManager.GetBestChargerAsync(fixture.Agv);
         bestCharger.ShouldNotBeNull();
         bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
@@ -113,7 +113,7 @@ public class ChargingPointManagerTest
         {
             chargingNode
         };
-        
+
         var fixture = new ChargingPointManagerTestFixture()
             .WithAgv()
             .WithAvailableNodes(availableNodes)
@@ -138,7 +138,7 @@ public class ChargingPointManagerTest
             .WithChargingPointManager()
             .WithGraphRepository(false)
             .WithNodeLocker(true, true, true);
-       
+
         await Should.ThrowAsync<NoChargeStationAvailableException>(async () => await fixture.ChargingPointManager.ReserveChargerAsync(fixture.Agv));
     }
 
@@ -150,7 +150,7 @@ public class ChargingPointManagerTest
         {
             chargingNode
         };
-        
+
         var fixture = new ChargingPointManagerTestFixture()
             .WithAgv()
             .WithAvailableNodes(availableNodes)
@@ -170,7 +170,7 @@ public class ChargingPointManagerTest
         {
             chargingNode
         };
-        
+
         var fixture = new ChargingPointManagerTestFixture()
             .WithAgv()
             .WithGraphRepository(true)
@@ -178,7 +178,7 @@ public class ChargingPointManagerTest
             .WithAvailableNodes(availableNodes)
             .WithLowestCostNode(availableNodes, chargingNode)
             .WithNodeLocker(false, false, false);
-        
+
         await Should.ThrowAsync<NodeNotAvailableException>(async () => await fixture.ChargingPointManager.ReserveChargerAsync(chargingNode, fixture.Agv.CorrelationId));
     }
 
@@ -201,7 +201,7 @@ public class ChargingPointManagerTest
         var bestCharger = await fixture.ChargingPointManager.GetBestChargerAsync(agv);
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
         bestCharger.ShouldNotBeNull();
-        bestCharger.Id.ShouldBe("Charge-2");
+        bestCharger.Name.ShouldBe("Charge-2");
         bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
     }
 
@@ -213,7 +213,7 @@ public class ChargingPointManagerTest
             NodeGenerator.GenerateChargingNode("Charge-1"),
             NodeGenerator.GenerateChargingNode("Charge-2")
         };
-        
+
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new ChargingPointManagerTestFixture()
             .WithAgv(agv)
@@ -221,11 +221,11 @@ public class ChargingPointManagerTest
             .WithLowestCostNode(availableNodes, availableNodes.Last())
             .WithChargingPointManager()
             .WithNodeLocker(true, true, true);
-        
+
         var reservedCharger = await fixture.ChargingPointManager.ReserveChargerAsync(agv);
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
         reservedCharger.ShouldNotBeNull();
-        reservedCharger.Id.ShouldBe("Charge-2");
+        reservedCharger.Name.ShouldBe("Charge-2");
         reservedCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
     }
 }

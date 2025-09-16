@@ -33,19 +33,19 @@ try
             // Servers
             services.AddKeyedSingleton<Server>(ServiceKeyProvider.AplWeStation, (serviceProvider, _) =>
             {
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<Server>>();
                 return new Server(logger, aplWeStationConfig);
             });
 
             services.AddKeyedSingleton<Server>(ServiceKeyProvider.AgvCargoState, (serviceProvider, _) =>
             {
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<Server>>();
                 return new Server(logger, agvCargoStateConfig);
             });
 
             services.AddKeyedSingleton<Server>(ServiceKeyProvider.FromWeStation, (serviceProvider, _) =>
             {
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<Server>>();
                 return new Server(logger, fromWePlcConfig);
             });
 
@@ -71,18 +71,18 @@ try
             // Receiver
             services.AddKeyedSingleton<Receiver<ConveyorTelegram>>(ServiceKeyProvider.AgvCargoState,
                 (serviceProvider, _) =>
-            {
-                var processor = serviceProvider.GetKeyedService<ConveyorTelegramProcessor>(ServiceKeyProvider.AgvCargoState);
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<ConveyorTelegram>>>();
-                var socket = serviceProvider.GetKeyedService<Server>(ServiceKeyProvider.AgvCargoState);
-                return new Receiver<ConveyorTelegram>(socket!, ServiceKeyProvider.AgvCargoState, processor!, logger);
-            });
+                {
+                    var processor = serviceProvider.GetKeyedService<ConveyorTelegramProcessor>(ServiceKeyProvider.AgvCargoState);
+                    var logger = serviceProvider.GetRequiredService<ILogger<Receiver<ConveyorTelegram>>>();
+                    var socket = serviceProvider.GetKeyedService<Server>(ServiceKeyProvider.AgvCargoState);
+                    return new Receiver<ConveyorTelegram>(socket!, ServiceKeyProvider.AgvCargoState, processor!, logger);
+                });
 
             services.AddKeyedSingleton<Receiver<ConveyorTelegram>>(ServiceKeyProvider.AplWeStation,
                 (serviceProvider, _) =>
                 {
                     var processor = serviceProvider.GetKeyedService<ConveyorTelegramProcessor>(ServiceKeyProvider.AplWeStation);
-                    var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<ConveyorTelegram>>>();
+                    var logger = serviceProvider.GetRequiredService<ILogger<Receiver<ConveyorTelegram>>>();
                     var socket = serviceProvider.GetKeyedService<Server>(ServiceKeyProvider.AplWeStation);
                     return new Receiver<ConveyorTelegram>(socket!, ServiceKeyProvider.AplWeStation, processor!, logger);
                 });
@@ -92,7 +92,7 @@ try
                 (serviceProvider, _) =>
                 {
                     var processor = serviceProvider.GetRequiredService<JamStateProcessor>();
-                    var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<ConveyorTelegram>>>();
+                    var logger = serviceProvider.GetRequiredService<ILogger<Sender<ConveyorTelegram>>>();
                     var socket = serviceProvider.GetKeyedService<Server>(ServiceKeyProvider.FromWeStation);
                     return new Sender<ConveyorTelegram>(socket!, ServiceKeyProvider.FromWeStation, processor, logger);
                 });

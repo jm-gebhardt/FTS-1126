@@ -56,20 +56,20 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
     /// <returns></returns>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        (var agvId, string? oldLastNodeId, string? newLastNodeId) = context.Message;
+        (var agvId, Guid? oldLastNodeId, Guid? newLastNodeId) = context.Message;
         await context.Publish(new UpdateNodeOccupancy(agvId, oldLastNodeId, newLastNodeId));
 
         if (newLastNodeId != null)
         {
-            List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(newLastNodeId).ToList();
+            List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(newLastNodeId.Value).ToList();
             if (triggerLocations.Count > 0)
             {
                 await PublishAgvReachedOrLeftTrigger(context, agvId, triggerLocations, false);
             }
         }
-        if (oldLastNodeId != null)
+        if (oldLastNodeId != null && oldLastNodeId != Guid.Empty)
         {
-            List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(oldLastNodeId).ToList();
+            List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(oldLastNodeId.Value).ToList();
             if (triggerLocations.Count > 0)
             {
                 await PublishAgvReachedOrLeftTrigger(context, agvId, triggerLocations, true);
@@ -99,7 +99,7 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
         }
     }
 
-    private async Task PublishAgvReachedOrLeftTrigger(IPublishEndpoint context, Guid agvId, ICollection<Location> triggerLocations, bool leftTrigger) 
+    private async Task PublishAgvReachedOrLeftTrigger(IPublishEndpoint context, Guid agvId, ICollection<Location> triggerLocations, bool leftTrigger)
     {
         Agv? agv;
         try

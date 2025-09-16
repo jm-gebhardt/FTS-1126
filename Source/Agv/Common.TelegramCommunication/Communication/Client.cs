@@ -14,7 +14,7 @@ public class Client : SocketBase
     private TelegramCommunicationConfiguration Configuration { get; }
 
     /// <inheritdoc cref="Client"/>>
-    public Client(ILogger<SocketBase> logger, TelegramCommunicationConfiguration configuration) : base(logger)
+    public Client(ILogger<Client> logger, TelegramCommunicationConfiguration configuration) : base(logger)
     {
         Configuration = configuration;
     }

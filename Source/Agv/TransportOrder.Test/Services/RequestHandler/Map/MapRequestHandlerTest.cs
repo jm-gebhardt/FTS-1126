@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -51,7 +52,7 @@ public class MapRequestHandlerTest
     {
         var fixture = new MapRequestTestFixture<TrySettingNodeApproachingProperties, MapRequestHandler>();
 
-        await fixture.GetResponseAsync<Success>(new TrySettingNodeApproachingProperties(fixture.Maps[0].CorrelationId, "nodeId", 12, 12, DockingDirection.Both));
+        await fixture.GetResponseAsync<Success>(new TrySettingNodeApproachingProperties(fixture.Maps[0].CorrelationId, "nodeId".ToGuid(), 12, 12, DockingDirection.Both));
 
         await fixture.ShouldHavePublishedAsync<SetNodeApproachingProperties>();
     }

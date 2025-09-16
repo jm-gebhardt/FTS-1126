@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -25,7 +26,7 @@ public class ShortLoopWaitingEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopWaitingHandler>();
 
-        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => string.IsNullOrEmpty(a.Target.NodeId)).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
+        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.Node == null).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
     }
 
     [TestMethod]
@@ -43,7 +44,7 @@ public class ShortLoopWaitingEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopWaitingHandler>();
 
-        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => string.IsNullOrEmpty(a.Target.NodeId)).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
+        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.Node == null).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
     }
 
     [TestMethod]
@@ -154,7 +155,7 @@ public class ShortLoopWaitingEventHandlerTest
     {
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         var actionGroup = order.CreateActionGroup(OrderGenerator.KaeserConfiguration, Guid.NewGuid());
-        actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.NodeId = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.Last();
+        actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.Node = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.Last().ToGraphNode();
         actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).StartedDate = DateTime.UtcNow;
 
         var fixture = new ShortLoopWaitingPointEventHandlerTestFixture();
@@ -173,7 +174,7 @@ public class ShortLoopWaitingEventHandlerTest
     {
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         var actionGroup = order.CreateActionGroup(OrderGenerator.KaeserConfiguration, Guid.NewGuid());
-        actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.Last();
+        actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.Node = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.Last().ToGraphNode();
         actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).StartedDate = DateTime.UtcNow;
 
         var fixture = new ShortLoopWaitingPointEventHandlerTestFixture();

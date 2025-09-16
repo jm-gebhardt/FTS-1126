@@ -23,18 +23,11 @@ public interface IStationRepository
     Task<Station> GetStation(Guid id);
 
     /// <summary>
-    /// Get a single station by name.
-    /// </summary>
-    /// <param name="name">The name of the station.</param>
-    /// <returns>The station with the given name.</returns>
-    Task<Station> GetStation(string name);
-
-    /// <summary>
     /// Gets the base information of the station (w/o agvs and node state)
     /// </summary>
-    /// <param name="name">The name of the station.</param>
+    /// <param name="id">The name of the station.</param>
     /// <returns>The station base information with the given name or null.</returns>
-    Task<Station?> GetRequiredStationBaseInformation(string name);
+    Task<Station?> GetRequiredStationBaseInformation(Guid id);
 
     /// <summary>
     /// Get all stations.

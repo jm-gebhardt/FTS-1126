@@ -48,7 +48,7 @@ public interface ITriggerRepository
     /// </summary>
     /// <param name="nodeId"></param>
     /// <returns></returns>
-    ICollection<Location> GetNodeTriggerLocations(string nodeId);
+    ICollection<Location> GetNodeTriggerLocations(Guid nodeId);
 
     /// <summary>
     /// Get polygon trigger locations with triggers to call where the agv is located.

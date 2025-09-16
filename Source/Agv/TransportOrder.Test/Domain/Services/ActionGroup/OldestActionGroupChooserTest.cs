@@ -13,15 +13,15 @@ public class OldestActionGroupChooserTest
     public async Task GetNotStartedActionGroupAsync_AutomaticActions_SelectsDependingOnAge()
     {
         var now = DateTime.UtcNow;
-        var oldSlowActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id, createdDate:now.AddMinutes(-1));
-        var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id, createdDate:now);
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var oldSlowActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Name, createdDate: now.AddMinutes(-1));
+        var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name, createdDate: now);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<OldestActionGroupChooser> fixture = new ChooseAgvActionGroupTestFixture<OldestActionGroupChooser>()
             .WithNotStartedActionGroup(oldSlowActionGroup)
             .WithNotStartedActionGroup(fastActionGroup)
-            .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.NodeId!, oldSlowActionGroup.Actions.Last().Target.NodeId!, oldSlowActionGroup, 10f)
-            .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.NodeId!, fastActionGroup.Actions.Last().Target.NodeId!, fastActionGroup, 1f)
+            .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.Node!.Name, oldSlowActionGroup.Actions.Last().Target.Node!.Name, oldSlowActionGroup, 10f)
+            .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.Node!.Name, fastActionGroup.Actions.Last().Target.Node!.Name, fastActionGroup, 1f)
             .WithAgvAtQueueHead([])
             .Build();
 

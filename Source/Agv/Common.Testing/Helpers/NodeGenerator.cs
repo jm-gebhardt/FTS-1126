@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Testing.Helpers;
@@ -13,36 +14,36 @@ public static class NodeGenerator
 
     public static GraphNode GenerateChargingNode(string nodeId = "CRG1")
     {
-        return new GraphNode(nodeId) { Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f };
+        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = AgvGraph.NodeType.Charge, X = -2f, Y = -2f, Z = 0f };
     }
 
-    public static GraphNode GenerateNode(AgvGraph.NodeType nodeType = AgvGraph.NodeType.WayPoint, float x = 1, float y = 2, float z = 0, float theta = 0f, string nodeId = "Way1", DateTime timeStamp = default)
+    public static GraphNode GenerateNode(AgvGraph.NodeType nodeType = AgvGraph.NodeType.WayPoint, float x = 1, float y = 2, float z = 0, float theta = 0f, string nodeName = "Way1", DateTime timeStamp = default)
     {
         if (timeStamp == default)
         {
             timeStamp = DateTime.UtcNow;
         }
-        return new GraphNode(nodeId) { Type = nodeType, X = x, Y = y, Z = z, Theta = theta, TimeStamp = timeStamp };
+        return new GraphNode(nodeName.ToGuid(), nodeName) { Type = nodeType, X = x, Y = y, Z = z, Theta = theta, TimeStamp = timeStamp, Id = nodeName.ToGuid() };
     }
 
     public static GraphNode GenerateParkingNode(string nodeId = "PRK1")
     {
-        return new GraphNode(nodeId) { Type = AgvGraph.NodeType.Park, X = -21f, Y = -21f, Z = 0f };
+        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = AgvGraph.NodeType.Park, X = -21f, Y = -21f, Z = 0f };
     }
 
     public static GraphNode GenerateNodeWithMultipleTypes(ICollection<AgvGraph.NodeType> nodeTypes, string nodeId = "PRK1")
     {
-        return new GraphNode(nodeId) { Type = nodeTypes, X = -21f, Y = -21f, Z = 0f };
+        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = nodeTypes, X = -21f, Y = -21f, Z = 0f };
     }
 
     [UsedImplicitly]
     public static GraphNode GenerateMaintenanceNode(string nodeId = "MNT1")
     {
-        return new GraphNode(nodeId) { Type = AgvGraph.NodeType.Park, X = 0f, Y = 0f, Z = 0f };
+        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = AgvGraph.NodeType.Park, X = 0f, Y = 0f, Z = 0f };
     }
 
-    public static string[] GenerateRouteNodes(string destinationNode = "D2")
+    public static GraphNode[] GenerateRouteNodes(string destinationNode = "D2")
     {
-        return _routeNodesByDestination[destinationNode];
+        return _routeNodesByDestination[destinationNode].Select(n => new GraphNode(n.ToGuid(), n)).ToArray();
     }
 }

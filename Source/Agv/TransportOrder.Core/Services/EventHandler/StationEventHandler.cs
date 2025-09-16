@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -14,7 +13,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// provides handlers for station-related events.
 /// </summary>
 [UsedImplicitly]
-public class StationEventHandler(IAgvDb agvDb):
+public class StationEventHandler(IAgvDb agvDb) :
     IConsumer<StationUnlocked>,
     IConsumer<JamStateUpdated>
 {
@@ -40,6 +39,6 @@ public class StationEventHandler(IAgvDb agvDb):
     /// </summary>
     public async Task Consume(ConsumeContext<JamStateUpdated> context)
     {
-        await context.Publish(new UpdateStationJamState(context.Message.StationName.ToGuid(), context.Message.HasPalletJam));
+        await context.Publish(new UpdateStationJamState(context.Message.StationId, context.Message.HasPalletJam));
     }
 }

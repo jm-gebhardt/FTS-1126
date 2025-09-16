@@ -1,5 +1,7 @@
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -16,6 +18,7 @@ public class EfNodeStateRepository : INodeStateRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
     private readonly ISemaphoreProvider<INodeStateDbSemaphore> _semaphoreProvider;
+    private readonly IMapper _mapper;
     private readonly ILogger<EfNodeStateRepository> _logger;
 
     /// <summary>
@@ -24,16 +27,18 @@ public class EfNodeStateRepository : INodeStateRepository
     public EfNodeStateRepository(
         IDbContextFactory<TransportOrderDbContext> dbContextFactory,
         ISemaphoreProvider<INodeStateDbSemaphore> semaphoreProvider,
+        IMapper mapper,
         ILogger<EfNodeStateRepository> logger
     )
     {
         _dbContextFactory = dbContextFactory;
         _semaphoreProvider = semaphoreProvider;
+        _mapper = mapper;
         _logger = logger;
     }
 
     /// <inheritdoc />
-    public Task<bool> LockNodeAsync(string nodeId)
+    public Task<bool> LockNodeAsync(Guid nodeId)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -48,7 +53,7 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public Task<bool> UnlockNodeAsync(string nodeId)
+    public Task<bool> UnlockNodeAsync(Guid nodeId)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -63,7 +68,7 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId)
+    public Task<bool> ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -72,22 +77,22 @@ public class EfNodeStateRepository : INodeStateRepository
                 _logger.LogDebug("Reserving node {NodeId}, for Agv {AgvCorrelationId}", nodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId);
             }
-            _logger.LogDebug("Could not reserve node {NodeId} for agv {AgvCorrelationId} because node is locked or not free.", nodeId, agvCorrelationId);
+            _logger.LogDebug("Could not reserve node {NodeId} for agv {AgvCorrelationId} because node is locked or not free", nodeId, agvCorrelationId);
             return false;
         });
     }
 
     /// <inheritdoc />
-    public Task<bool> ForceReserveNodeAsync(string nodeId, Guid agvCorrelationId)
+    public Task<bool> ForceReserveNodeAsync(Guid nodeId, Guid agvCorrelationId)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            if (!IsLocked(nodeId) )
+            if (!IsLocked(nodeId))
             {
                 _logger.LogDebug("Force reserving node {NodeId}, for Agv {AgvCorrelationId}", nodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId, true);
             }
-            _logger.LogDebug("Could not reserve node {NodeId} for agv {AgvCorrelationId} because node is locked .", nodeId, agvCorrelationId);
+            _logger.LogDebug("Could not reserve node {NodeId} for agv {AgvCorrelationId} because node is locked", nodeId, agvCorrelationId);
             return false;
         });
     }
@@ -97,7 +102,7 @@ public class EfNodeStateRepository : INodeStateRepository
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var nodeLock = GetNodeLockInState(agvCorrelationId, NodeLockState.Reserved);
+            var nodeLock = await GetNodeLockInState(agvCorrelationId, NodeLockState.Reserved);
             if (nodeLock != null)
             {
                 _logger.LogDebug("UnReserve node {NodeId}, reserved for Agv {AgvCorrelationId}", nodeLock.NodeId, agvCorrelationId);
@@ -110,23 +115,23 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> OccupyNodeAsync(string nodeId, Guid agvCorrelationId)
+    public async Task<bool> OccupyNodeAsync(Guid nodeId, Guid agvCorrelationId)
     {
-        var currentState = GetNodeLock(nodeId);
+        var currentState = await GetNodeStateAsync(nodeId);
         if (currentState is { IsLocked: true } or { NodeState: NodeLockState.Occupied })
         {
             _logger.LogDebug("Could not not occupy node {NodeId} because it is locked or already occupied", nodeId);
             return false;
         }
-        
+
         _logger.LogDebug("Occupy node {NodeId} with AGV {CorrelationId}", nodeId, agvCorrelationId);
         return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId);
     }
 
     /// <inheritdoc />
-    public async Task<bool> ForceOccupyNodeAsync(string nodeId, Guid agvCorrelationId)
+    public async Task<bool> ForceOccupyNodeAsync(Guid nodeId, Guid agvCorrelationId)
     {
-        var currentState = GetNodeLock(nodeId);
+        var currentState = await GetNodeStateAsync(nodeId);
         if (currentState is { IsLocked: true })
         {
             _logger.LogDebug("Could not not occupy node {NodeId} with agv {AgvCorrelationId} because it is locked", nodeId, agvCorrelationId);
@@ -134,7 +139,7 @@ public class EfNodeStateRepository : INodeStateRepository
         }
 
         _logger.LogDebug("Occupy node {NodeId} with AGV {AgvCorrelationId}", nodeId, agvCorrelationId);
-        return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId, force:true);
+        return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId, force: true);
     }
 
     /// <inheritdoc />
@@ -142,7 +147,7 @@ public class EfNodeStateRepository : INodeStateRepository
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var nodeLock = GetNodeLockInState(agvCorrelationId, NodeLockState.Occupied);
+            var nodeLock = await GetNodeLockInState(agvCorrelationId, NodeLockState.Occupied);
             if (nodeLock != null)
             {
                 return await UpdateNodeAsync(nodeLock.NodeId, NodeLockState.Free, null);
@@ -154,7 +159,7 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public Task<bool> FreeNodeAsync(string nodeId)
+    public Task<bool> FreeNodeAsync(Guid nodeId)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -174,16 +179,31 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public async Task<NodeLock?> GetNodeStateAsync(string nodeId)
+    public async Task<NodeLock?> GetNodeStateAsync(Guid nodeId)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext
-            .Set<NodeLock>()
-            .SingleOrDefaultAsync(nl => nl.NodeId == nodeId);
+
+        var data = await dbContext.Set<NodeLock>()
+            .AsNoTracking()
+            .Join(dbContext.Set<EfNode>().AsNoTracking(),
+                nl => nl.NodeId,
+                n => n.Id,
+                (nl, n) => new { nl, n })
+            .Where(t => t.nl.NodeId == nodeId)
+            .Select(t => new { t.nl, t.n })
+            .ToListAsync();
+
+        var nodeLock = data.Select(x =>
+        {
+            x.nl.Node = _mapper.Map<GraphNode>(x.n);
+            return x.nl;
+        }).SingleOrDefault();
+
+        return nodeLock;
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsAnyNodeReservedForAgv(Guid agvCorrelationId, ICollection<string> nodes)
+    public async Task<bool> IsAnyNodeReservedForAgv(Guid agvCorrelationId, ICollection<Guid> nodes)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Set<NodeLock>()
@@ -191,23 +211,31 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public async Task<NodeLock?> GetReservedNodeLockForAgv(Guid agvCorrelationId, ICollection<string> nodes)
+    public async Task<NodeLock?> GetReservedNodeLockForAgv(Guid agvCorrelationId, ICollection<Guid> nodes)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Set<NodeLock>()
+        var data = await dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(n =>
-                nodes.Contains(n.NodeId)
-                && n.AgvCorrelationId == agvCorrelationId
-                && n.NodeState == NodeLockState.Reserved);
+            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Where(t => nodes.Contains(t.nl.NodeId) && t.nl.AgvCorrelationId == agvCorrelationId && t.nl.NodeState == NodeLockState.Reserved)
+            .Select(t => new { t.nl, t.n })
+            .ToListAsync();
+        var nodeLock = data.Select(x =>
+        {
+            x.nl.Node = _mapper.Map<GraphNode>(x.n);
+            return x.nl;
+        }).SingleOrDefault();
+
+        return nodeLock;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<string>?> GetLockedNodes()
+    public async Task<IReadOnlyCollection<Guid>?> GetLockedNodes()
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Set<NodeLock>()
-            .Where(nl => nl.IsLocked).Select(nl => nl.NodeId)
+            .Where(nl => nl.IsLocked)
+            .Select(nl => nl.NodeId)
             .ToListAsync();
     }
 
@@ -215,10 +243,20 @@ public class EfNodeStateRepository : INodeStateRepository
     public async Task<ICollection<NodeLock>> GetNodeLocksForAgv(Guid agvCorrelationId)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Set<NodeLock>().AsNoTracking().Where(n => n.AgvCorrelationId == agvCorrelationId).ToListAsync();
+
+        var data = await dbContext.Set<NodeLock>()
+            .AsNoTracking()
+            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Where(t => t.nl.AgvCorrelationId == agvCorrelationId).Select(t => new { t.nl, t.n }).ToListAsync();
+        List<NodeLock> nodeLocks = data.Select(x =>
+        {
+            x.nl.Node = _mapper.Map<GraphNode>(x.n);
+            return x.nl;
+        }).ToList();
+        return nodeLocks;
     }
 
-    private bool IsLocked(string nodeId)
+    private bool IsLocked(Guid nodeId)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();
         return dbContext.Set<NodeLock>()
@@ -226,75 +264,91 @@ public class EfNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsNodeReservedAsync(string nodeId)
+    public async Task<bool> IsNodeReservedAsync(Guid nodeId)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         return dbContext.Set<NodeLock>()
             .Any(n => n.NodeId == nodeId && n.NodeState == NodeLockState.Reserved);
     }
 
-    private bool IsFree(string nodeId)
+    private bool IsFree(Guid nodeId)
     {
         using var dbContext = _dbContextFactory.CreateDbContext();
         return !dbContext.Set<NodeLock>()
             .Any(n => n.NodeId == nodeId && n.NodeState != NodeLockState.Free);
     }
 
-    private NodeLock? GetNodeLock(string nodeId)
+    private async Task<NodeLock?> GetNodeLockInState(Guid agvCorrelationId, NodeLockState nodeLockState)
     {
-        using var dbContext = _dbContextFactory.CreateDbContext();
-        return dbContext.Set<NodeLock>()
+        await using var dbContext = _dbContextFactory.CreateDbContext();
+        var data = await dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .SingleOrDefault(n => n.NodeId == nodeId);
+            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Where(t => t.nl.AgvCorrelationId == agvCorrelationId && t.nl.NodeState == nodeLockState)
+            .Select(t => new { t.nl, t.n })
+            .ToListAsync();
+        var nodeLock = data.Select(x =>
+        {
+            x.nl.Node = _mapper.Map<GraphNode>(x.n);
+            return x.nl;
+        }).SingleOrDefault();
+
+        return nodeLock;
     }
 
-    private NodeLock? GetNodeLockInState(Guid agvCorrelationId, NodeLockState nodeLockState)
-    {
-        using var dbContext = _dbContextFactory.CreateDbContext();
-
-        return dbContext.Set<NodeLock>()
-            .AsNoTracking()
-            .SingleOrDefault(n => n.AgvCorrelationId == agvCorrelationId && n.NodeState == nodeLockState);
-    }
-
-    private async Task<bool> UpdateNodeAsync(string nodeId, NodeLockState nodeState, Guid? agvCorrelationId, bool force=false)
+    private async Task<bool> UpdateNodeAsync(Guid nodeId, NodeLockState nodeState, Guid? agvCorrelationId, bool force = false)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-        var currentLock = await dbContext
-            .Set<NodeLock>()
-            .AsNoTracking()
-            .SingleOrDefaultAsync(n => n.NodeId == nodeId);
+        var data = await dbContext.Set<NodeLock>().AsNoTracking()
+            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n }).Where(t => t.nl.NodeId == nodeId)
+            .Select(t => new { t.nl, t.n })
+            .ToListAsync();
+        var currentLock = data.Select(x =>
+        {
+            x.nl.Node = _mapper.Map<GraphNode>(x.n);
+            return x.nl;
+        }).SingleOrDefault();
+
         if (currentLock == null)
         {
-            await dbContext.AddAsync(new NodeLock(nodeId, nodeState, false, agvCorrelationId, DateTime.UtcNow));
+            var node = await dbContext.Set<EfNode>().AsNoTracking().SingleOrDefaultAsync(n => n.Id == nodeId);
+            await dbContext.AddAsync(new NodeLock(_mapper.Map<GraphNode>(node), nodeState, false, agvCorrelationId, DateTime.UtcNow));
             return await dbContext.SaveChangesAsync() > 0;
         }
 
         if (currentLock.NodeState != nodeState || force)
         {
-            dbContext.Update(new NodeLock(nodeId, nodeState, currentLock.IsLocked, agvCorrelationId, DateTime.UtcNow));
+            dbContext.Update(new NodeLock(currentLock.Node, nodeState, currentLock.IsLocked, agvCorrelationId, DateTime.UtcNow));
             return await dbContext.SaveChangesAsync() > 0;
         }
-       
+
         // node already in state and no forced update
         return false;
     }
 
-    private async Task<bool> UpdateNodeLockAsync(string nodeId, bool isLocked)
+    private async Task<bool> UpdateNodeLockAsync(Guid nodeId, bool isLocked)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        var currentLock = await dbContext
-            .Set<NodeLock>()
-            .AsNoTracking()
-            .SingleOrDefaultAsync(n => n.NodeId == nodeId);
+        var data = await dbContext.Set<NodeLock>().AsNoTracking()
+            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Where(t => t.nl.NodeId == nodeId)
+            .Select(t => new { t.nl, t.n })
+            .ToListAsync();
+        var currentLock = data.Select(x =>
+        {
+            x.nl.Node = _mapper.Map<GraphNode>(x.n);
+            return x.nl;
+        }).SingleOrDefault();
+
         if (currentLock == null)
         {
-            await dbContext.AddAsync(new NodeLock(nodeId, NodeLockState.Free, isLocked, null, DateTime.UtcNow));
+            var node = await dbContext.Set<EfNode>().AsNoTracking().SingleOrDefaultAsync(n => n.Id == nodeId);
+            await dbContext.AddAsync(new NodeLock(_mapper.Map<GraphNode>(node), NodeLockState.Free, isLocked, null, DateTime.UtcNow));
         }
         else if (currentLock.IsLocked != isLocked)
         {
-            dbContext.Update(new NodeLock(nodeId, currentLock.NodeState, isLocked, currentLock.AgvCorrelationId, DateTime.UtcNow));
+            dbContext.Update(new NodeLock(currentLock.Node, currentLock.NodeState, isLocked, currentLock.AgvCorrelationId, DateTime.UtcNow));
         }
         else
         {

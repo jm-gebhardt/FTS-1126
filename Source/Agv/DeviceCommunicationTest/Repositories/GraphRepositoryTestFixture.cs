@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Caches;
@@ -44,20 +45,20 @@ public class GraphRepositoryTestFixture : DeviceCommunicationDbTestFixture
 
     private static readonly GraphNode[] _graphNodes =
     [
-        NodeGenerator.GenerateNode(nodeId: _mqttNodes[0].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[0].X, y: _mqttNodes[0].Y, z: (float)_mqttNodes[0].Z!),
-        NodeGenerator.GenerateNode(nodeId: _mqttNodes[1].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[1].X, y: _mqttNodes[1].Y, z: (float)_mqttNodes[1].Z!),
-        NodeGenerator.GenerateNode(nodeId: _mqttNodes[2].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[2].X, y: _mqttNodes[2].Y, z: (float)_mqttNodes[2].Z!),
-        NodeGenerator.GenerateNode(nodeId: _mqttNodes[3].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[3].X, y: _mqttNodes[3].Y, z: (float)_mqttNodes[3].Z!),
-        NodeGenerator.GenerateNode(nodeId: _mqttNodes[4].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[4].X, y: _mqttNodes[4].Y, z: (float)_mqttNodes[4].Z!)
+        NodeGenerator.GenerateNode(nodeName: _mqttNodes[0].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[0].X, y: _mqttNodes[0].Y, z: (float) _mqttNodes[0].Z!),
+        NodeGenerator.GenerateNode(nodeName: _mqttNodes[1].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[1].X, y: _mqttNodes[1].Y, z: (float) _mqttNodes[1].Z!),
+        NodeGenerator.GenerateNode(nodeName: _mqttNodes[2].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[2].X, y: _mqttNodes[2].Y, z: (float) _mqttNodes[2].Z!),
+        NodeGenerator.GenerateNode(nodeName: _mqttNodes[3].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[3].X, y: _mqttNodes[3].Y, z: (float) _mqttNodes[3].Z!),
+        NodeGenerator.GenerateNode(nodeName: _mqttNodes[4].NodeId, nodeType: AgvGraph.NodeType.WayPoint, x: _mqttNodes[4].X, y: _mqttNodes[4].Y, z: (float) _mqttNodes[4].Z!)
     ];
 
     private static readonly GraphEdge[] _graphEdges =
     [
-        GraphEdge.CreateDirect(_mqttNodes[0].NodeId, _mqttNodes[1].NodeId, 2f, Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0")),
-        GraphEdge.CreateDirect(_mqttNodes[1].NodeId, _mqttNodes[2].NodeId, 2f, Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0")),
-        GraphEdge.CreateDirect(_mqttNodes[2].NodeId, _mqttNodes[3].NodeId, 4f, Guid.Parse("ed70292e-e003-e004-8112-ffe69119c4b0")),
-        GraphEdge.CreateDirect(_mqttNodes[3].NodeId, _mqttNodes[4].NodeId, 2f, Guid.Parse("ed70292e-e004-e005-8112-ffe69119c4b0")),
-        GraphEdge.CreateDirect(_mqttNodes[4].NodeId, _mqttNodes[3].NodeId, 2f, Guid.Parse("ed70292e-e005-e004-8112-ffe69119c4b0"))
+        GraphEdge.CreateDirect(_mqttNodes[0].NodeId.ToGuid(), _mqttNodes[1].NodeId.ToGuid(), 2f, Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0")),
+        GraphEdge.CreateDirect(_mqttNodes[1].NodeId.ToGuid(), _mqttNodes[2].NodeId.ToGuid(), 2f, Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0")),
+        GraphEdge.CreateDirect(_mqttNodes[2].NodeId.ToGuid(), _mqttNodes[3].NodeId.ToGuid(), 4f, Guid.Parse("ed70292e-e003-e004-8112-ffe69119c4b0")),
+        GraphEdge.CreateDirect(_mqttNodes[3].NodeId.ToGuid(), _mqttNodes[4].NodeId.ToGuid(), 2f, Guid.Parse("ed70292e-e004-e005-8112-ffe69119c4b0")),
+        GraphEdge.CreateDirect(_mqttNodes[4].NodeId.ToGuid(), _mqttNodes[3].NodeId.ToGuid(), 2f, Guid.Parse("ed70292e-e005-e004-8112-ffe69119c4b0"))
     ];
 
     public Guid GetGraphEdgeId(int index)
@@ -73,7 +74,7 @@ public class GraphRepositoryTestFixture : DeviceCommunicationDbTestFixture
     {
         for (int i = 0; i < _mqttNodes.Length; i++)
         {
-           await GraphRepository.Add(_graphNodes[i].Id, _mqttNodes[i]);
+            await GraphRepository.Add(_graphNodes[i].Name, _mqttNodes[i]);
         }
 
         int j = 0;
@@ -87,7 +88,7 @@ public class GraphRepositoryTestFixture : DeviceCommunicationDbTestFixture
             }
             j++;
         }
-        
-        await  GraphRepository.Add(edges.ToArray());
+
+        await GraphRepository.Add(edges.ToArray());
     }
 }

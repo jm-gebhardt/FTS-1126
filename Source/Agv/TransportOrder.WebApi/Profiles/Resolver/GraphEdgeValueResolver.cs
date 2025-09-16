@@ -15,7 +15,7 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
     {
         var graphEdges = new List<GraphEdgeDto>();
 
-        Dictionary<string, GraphNode> nodeDict = source.Nodes.ToDictionary(node => node.Id);
+        Dictionary<Guid, GraphNode> nodeDict = source.Nodes.ToDictionary(node => node.Id);
 
         foreach (var edge in source.Edges)
         {
@@ -25,7 +25,7 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
                 graphEdges.Add(new GraphEdgeDto
                 {
                     CorrelationId = edge.CorrelationId,
-                    FromNodeId = fromNode.Id, ToNodeId = toNode.Id,
+                    FromNodeId = fromNode.Name, ToNodeId = toNode.Name,
                     Variant = edge.Variant, VariantParameters = edge.VariantParameters, Length = edge.Length
                 });
             }

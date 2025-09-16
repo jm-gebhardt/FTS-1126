@@ -81,15 +81,15 @@ public class InitializationProvider(
                 if (localization.NodeId != null)
                 {
                     logger.LogInformation("Initializing mapping of trigger {Name} to {NodeId}", localization.TriggerName, localization.NodeId);
-                    configuration.UpdateTriggerPointNodeId(localization.TriggerName, localization.NodeId);
+                    configuration.UpdateTriggerPointNodeId(localization.TriggerName, localization.NodeId.Value);
                     continue;
                 }
 
                 if (localization.AreaId != null)
                 {
-                    string nodeId = "AREA-" + localization.AreaId;
-                    logger.LogInformation("Initializing mapping of trigger {Name} to {NodeId}", localization.TriggerName, nodeId);
-                    configuration.UpdateTriggerPointNodeId(localization.TriggerName, nodeId);
+                    string nodeName = "AREA-" + localization.AreaId;
+                    logger.LogInformation("Initializing mapping of trigger {Name} to {NodeId}", localization.TriggerName, nodeName);
+                    configuration.UpdateTriggerPointNodeId(localization.TriggerName, nodeName.ToGuid());
                 }
             }
         }

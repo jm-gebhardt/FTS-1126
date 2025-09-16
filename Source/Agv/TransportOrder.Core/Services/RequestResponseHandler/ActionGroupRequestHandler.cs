@@ -123,7 +123,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         {
             throw new ActionGroupStateInvalidException(actionGroup, failed.Reason);
         }
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId,  "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderAborted } });
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderAborted } });
         await context.RespondAsync(new ActionGroupAbortionTriggered(correlationId));
     }
 
@@ -137,7 +137,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         IRequestClient<ResetActionGroup>? requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
         await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId, keepAgv));
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId,  "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderReset } });
+        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderReset } });
         await context.RespondAsync(new ActionGroupResetTriggered(actionGroup.CorrelationId));
     }
 
@@ -203,7 +203,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<TriggerSetTarget> context)
     {
-        (var correlationId, var actionCorrelationId, string targetNode, string user) = context.Message;
+        (var correlationId, var actionCorrelationId, var targetNodeId, string user) = context.Message;
 
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
         if (actionGroup.Actions.All(a => a.CorrelationId != actionCorrelationId))
@@ -211,7 +211,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionCorrelationId);
         }
 
-        await _graphRepository.ThrowIfNodeNotExistsAsync(targetNode);
+        var targetNode = await _graphRepository.GetNodeAsync(targetNodeId);
 
         var action = actionGroup.Actions.First(a => a.CorrelationId == actionCorrelationId);
         if (action.ShouldSkip)
@@ -224,10 +224,9 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionGroupStateInvalidException($"Action {action.CorrelationId} already completed");
         }
 
-        _logger.LogInformation("Triggering setting target {TargetNode} for action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", targetNode, actionCorrelationId, correlationId);
-        await _bus.Publish(new SetTargetForAction(actionCorrelationId, correlationId, actionGroup.AssignedAgv, targetNode));
+        _logger.LogInformation("Triggering setting target {TargetNode} for action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", targetNode.Name, actionCorrelationId, correlationId);
+        await _bus.Publish(new SetTargetForAction(actionCorrelationId, correlationId, actionGroup.AssignedAgv, targetNode.Id));
         _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderTargetSet } });
-
         await context.RespondAsync(new Success());
     }
 }

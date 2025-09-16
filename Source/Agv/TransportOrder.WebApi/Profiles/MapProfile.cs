@@ -31,6 +31,8 @@ public class MapProfile : WebApiProfile
             .ForMember(m => m.IsCustom, opt => opt.MapFrom(src => src.HasCustomBackground));
 
         CreateMap<NodeLock, NodeStateDto>()
+            .ConstructUsing(_ => new NodeStateDto())
+            .ForMember(m => m.NodeId, opt => opt.MapFrom(src => src.Node.Name))
             .ForMember(m => m.StationId, opt => opt.Ignore())
             .ForMember(m => m.User, opt => opt.Ignore())
             .ForMember(m => m.LockReason, opt => opt.Ignore())

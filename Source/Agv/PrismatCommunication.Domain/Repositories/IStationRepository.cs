@@ -27,7 +27,7 @@ public interface IStationRepository : IRepository<Station>
     /// </summary>
     /// <param name="nodeId">The node id of the station.</param>
     /// <returns>A station, if any.</returns>
-    Task<Station?> GetStationByNode(string nodeId);
+    Task<Station?> GetStationByNode(Guid nodeId);
 
     /// <summary>
     /// Get station group by source and target.

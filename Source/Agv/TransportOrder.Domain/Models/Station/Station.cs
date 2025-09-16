@@ -55,7 +55,7 @@ public class Station
     /// Reference to the corresponding node lock.
     /// </summary>
     public NodeLock? NodeLock { get; set; }
-   
+
     /// <summary>
     /// The user that locked the station.
     /// </summary>

@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupRepository actionGroupRepository) : IMetricCollectionService
 {
     /// <inheritdoc cref="IMetricCollectionService"/>>
-    public async Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, string? lastNodeId = null)
+    public async Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, Guid? lastNodeId = null)
     {
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
         await CollectTravelDistance(actionGroup, agvCorrelationId, lastNodeId);
@@ -141,17 +141,17 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="lastNodeId">The last node id of the agv.</param>
     /// <returns></returns>
-    public async Task CollectTravelDistance(Models.ActionGroup.ActionGroup actionGroup, Guid agvCorrelationId, string? lastNodeId)
+    public async Task CollectTravelDistance(Models.ActionGroup.ActionGroup actionGroup, Guid agvCorrelationId, Guid? lastNodeId)
     {
         var graph = await agvDb.Graphs.GetAgvGraphAsync(agvCorrelationId);
         double travelDistance = actionGroup.Actions.Sum(action =>
         {
-            string[] route = action.Nodes;
-            if (lastNodeId == null || !route.Contains(lastNodeId))
+            GraphNode[] route = action.Nodes;
+            if (lastNodeId == null || route.All(n => n.Id != lastNodeId))
             {
                 return graph.GetRouteLength(route);
             }
-            int nodeIndex = Array.IndexOf(route, lastNodeId);
+            int nodeIndex = Array.FindIndex(route, node => node.Id == lastNodeId);
             route = route.Take(nodeIndex + 1).ToArray();
             return graph.GetRouteLength(route);
         });
@@ -177,7 +177,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         }
 
         var now = DateTime.UtcNow;
-        foreach(var violation in   resolvedErrors.Where(e => e.IsFieldViolation()))
+        foreach (var violation in resolvedErrors.Where(e => e.IsFieldViolation()))
         {
             double timePassed = (now - violation.ErrorReceived).TotalSeconds;
             PrometheusMetricCollector.AgvSafetyFieldDurationGauge.WithLabels(agvCorrelationId.ToString()).Set(timePassed);

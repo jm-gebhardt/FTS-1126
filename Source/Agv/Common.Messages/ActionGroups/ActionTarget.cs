@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 namespace Gebhardt.Acc.Common.Messages.ActionGroups;
 
@@ -11,7 +12,7 @@ public record ActionTarget
     /// <summary>
     /// Target node id of the action
     /// </summary>
-    public string? NodeId { get; set; }
+    public GraphNode? Node { get; set; }
 
     /// <summary>
     /// The target position of the agv.
@@ -26,9 +27,9 @@ public record ActionTarget
     /// <summary>
     /// The target position of the agv.
     /// </summary>
-    public ActionTarget(string targetNodeId)
+    public ActionTarget(GraphNode? targetNode)
     {
-        NodeId = targetNodeId;
+        Node = targetNode;
         Position = null;
     }
 
@@ -38,16 +39,16 @@ public record ActionTarget
     public ActionTarget(float x, float y, float theta)
     {
         Position = new AgvPosition(true, x, y, 0, theta);
-        NodeId = null;
+        Node = null;
     }
 
     /// <summary>
     /// The target position of the agv.
     /// </summary>
     [JsonConstructor]
-    public ActionTarget(string? nodeId, AgvPosition? position)
+    public ActionTarget(GraphNode? node, AgvPosition? position)
     {
-        NodeId = nodeId;
+        Node = node;
         Position = position;
     }
 }

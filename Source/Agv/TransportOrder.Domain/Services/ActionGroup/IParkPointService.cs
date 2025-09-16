@@ -20,7 +20,7 @@ public interface IParkPointService
     /// <param name="parkNodeId"></param>
     /// <param name="agvCorrelationId"></param>
     /// <returns>Throws if reservations fails.</returns>
-    Task ReserveParkAsync(string parkNodeId, Guid agvCorrelationId);
+    Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId);
 
     /// <summary>
     /// Checks if the agv is on a park node

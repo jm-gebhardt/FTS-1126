@@ -43,7 +43,7 @@ public class EfAgvGraphRepositoryTest
     {
         actualNode.ShouldNotBeNull();
         actualNode.ShouldSatisfyAllConditions(
-            n => n.Id.ShouldBe(expectedNode.Id),
+            n => n.Name.ShouldBe(expectedNode.Name),
             n => n.Type.ToString().ShouldBe(expectedNode.Type.ToString()),
             n => n.X.ShouldBe(expectedNode.X),
             n => n.Y.ShouldBe(expectedNode.Y),
@@ -59,14 +59,14 @@ public class EfAgvGraphRepositoryTest
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         await fixture.Repository.UpdateGraphAsync(new Graph { Nodes = expectedAgvGraph.Nodes, Edges = expectedAgvGraph.Edges });
         await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
-        List<GraphNode> expectedNodes = expectedAgvGraph.Nodes.Where(x => x.Id.Contains('1')).ToList();
+        List<GraphNode> expectedNodes = expectedAgvGraph.Nodes.Where(x => x.Name.Contains('1')).ToList();
 
-        List<GraphNode> nodes = (await fixture.Repository.GetNodesAsync(correlationId, node => node.Id.Contains('1'))).ToList();
+        List<GraphNode> nodes = (await fixture.Repository.GetNodesAsync(correlationId, node => node.Name.Contains('1'))).ToList();
 
         nodes.Count.ShouldBe(expectedNodes.Count);
         foreach (var node in nodes)
         {
-            VerifyGraphNode(node, expectedNodes.First(x => x.Id == node.Id));
+            VerifyGraphNode(node, expectedNodes.First(x => x.Name == node.Name));
         }
     }
 
@@ -93,7 +93,7 @@ public class EfAgvGraphRepositoryTest
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
 
-        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.GetNodeAsync("Not existing Node Id"));
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.GetNodeAsync("Not existing Node Id".ToGuid()));
     }
 
     [TestMethod]
@@ -106,7 +106,7 @@ public class EfAgvGraphRepositoryTest
         await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
         var expectedNode = expectedAgvGraph.Nodes.First();
 
-        var actualNode = await fixture.Repository.TryGetNodeAsync(expectedNode.Id);
+        var actualNode = await fixture.Repository.TryGetNodeByIdAsync(expectedNode.Id);
 
         VerifyGraphNode(actualNode!, expectedNode);
     }
@@ -119,7 +119,7 @@ public class EfAgvGraphRepositoryTest
         var expectedAgvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
         await fixture.Repository.AddOrUpdateAgvGraphAsync(expectedAgvGraph);
 
-        var actualNode = await fixture.Repository.TryGetNodeAsync("Not existing Node Id");
+        var actualNode = await fixture.Repository.TryGetNodeByIdAsync("Not existing Node Id".ToGuid());
 
         actualNode.ShouldBeNull();
     }
@@ -175,18 +175,16 @@ public class EfAgvGraphRepositoryTest
     {
         var fixture = new EfAgvGraphRepositoryTestFixture();
 
-        (await fixture.Repository.NodeExistsAsync("unknown")).ShouldBeFalse();
+        (await fixture.Repository.NodeExistsByIdAsync("unknown".ToGuid())).ShouldBeFalse();
     }
 
     [TestMethod]
     public async Task ThrowIfNodeNotExistsAsync_NodesDoesNotExist_ThrowsNodeNotFoundException()
     {
         var fixture = new EfAgvGraphRepositoryTestFixture();
-        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        await fixture.Repository.UpdateGraphAsync(new Graph { Nodes = agvGraph.Nodes, Edges = agvGraph.Edges });
-        await fixture.Repository.AddOrUpdateAgvGraphAsync(agvGraph);
+        await fixture.Repository.UpdateGraphAsync(new Graph { Nodes = [], Edges = [] });
 
-        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.ThrowIfNodeNotExistsAsync(agvGraph.Nodes.First().Id.ToLower()));
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.ThrowIfNodeNotExistsAsync("unknown".ToGuid()));
     }
 
     [TestMethod]
@@ -205,7 +203,7 @@ public class EfAgvGraphRepositoryTest
     {
         var fixture = new EfAgvGraphRepositoryTestFixture();
 
-        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.ThrowIfNodeNotExistsAsync("unknown"));
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.Repository.ThrowIfNodeNotExistsAsync("unknown".ToGuid()));
     }
 
     [TestMethod]

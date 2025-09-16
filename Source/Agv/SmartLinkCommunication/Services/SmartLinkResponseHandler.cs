@@ -35,12 +35,12 @@ public class SmartLinkResponseHandler : ISmartLinkResponseHandler
                 {
                     try
                     {
-                        _logger.LogInformation("IO {ioId} reached target state {currentState} and stayed there for {after}. Executing action now.", actionConfig.Id, actionConfig.State, actionConfig.After);
+                        _logger.LogInformation("IO {IioId} reached target state {CurrentState} and stayed there for {After}, executing action now", actionConfig.Id, actionConfig.State, actionConfig.After);
                         _ioActionExecutionService.ExecuteActionAsync(actionConfig);
                     }
                     catch (Exception e)
                     {
-                        _logger.LogError(e, "Error executing action for IO {ioId}", actionConfig.Id);
+                        _logger.LogError(e, "Error executing action for IO {IoId}", actionConfig.Id);
                     }
                 });
         }
@@ -50,22 +50,22 @@ public class SmartLinkResponseHandler : ISmartLinkResponseHandler
         ioStateTracker.CurrentState = state;
         if (previousState != state)
         {
-            _logger.LogDebug("IO {ioId} changed from {previousState} to {currentState}", actionConfig.Id, previousState, state);
+            _logger.LogDebug("IO {IoId} changed from {PreviousState} to {CurrentState}", actionConfig.Id, previousState, state);
 
             if (state == actionConfig.State)
             {
-                _logger.LogDebug("IO {ioId} reached target state {currentState}. If it stays here for {after}, the action will be executed.", actionConfig.Id, state, actionConfig.After);
+                _logger.LogDebug("IO {IoId} reached target state {CurrentState}. If it stays here for {After}, the action will be executed", actionConfig.Id, state, actionConfig.After);
             }
         }
         else
         {
             if (ioStateTracker.IsTimerRunning)
             {
-                _logger.LogDebug("IO {ioId} stayed {currentState}, but waiting time is not over yet.", actionConfig.Id, state);
+                _logger.LogDebug("IO {IoId} stayed {CurrentState}, but waiting time is not over yet", actionConfig.Id, state);
             }
             else
             {
-                _logger.LogDebug("IO {ioId} has already executed the action.", actionConfig.Id);
+                _logger.LogDebug("IO {IoId} has already executed the action", actionConfig.Id);
             }
         }
     }
@@ -86,12 +86,12 @@ public class SmartLinkResponseHandler : ISmartLinkResponseHandler
                 }
                 else
                 {
-                    _logger.LogError("IO {ioId} not found in SmartLink response", id);
+                    _logger.LogError("IO {IoId} not found in SmartLink response", id);
                 }
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error processing IO {ioId}", ioConfig.Id);
+                _logger.LogError(e, "Error processing IO {IoId}", ioConfig.Id);
             }
         }
 

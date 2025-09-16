@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Provisioning.Models;
 using JetBrains.Annotations;
 using MassTransit;
@@ -8,7 +9,7 @@ namespace Gebhardt.Acc.Provisioning.Services;
 
 /// <inheritdoc cref="JsonSeeder{NodeProperties}" />
 [UsedImplicitly]
-public class NodePropertiesSeeder: JsonSeeder<List<NodeProperties>>
+public class NodePropertiesSeeder : JsonSeeder<List<NodeProperties>>
 {
     /// <inheritdoc cref="JsonSeeder{NodeProperties}" />
     public NodePropertiesSeeder(IBus bus, string basePath, ILogger logger, string fileName) : base(bus, basePath, logger, fileName)
@@ -27,7 +28,7 @@ public class NodePropertiesSeeder: JsonSeeder<List<NodeProperties>>
     /// <inheritdoc />
     protected override Task<object> GetMessageAsync(List<NodeProperties> data)
     {
-        List<InitializeNodeApproachingProperties> seedingTasks = data.Select(d => new InitializeNodeApproachingProperties(d.NodeId, d.PickLiftHeight, d.DropLiftHeight, d.DockingDirection)).ToList();
+        List<InitializeNodeApproachingProperties> seedingTasks = data.Select(d => new InitializeNodeApproachingProperties(d.NodeId.ToGuid(), d.PickLiftHeight, d.DropLiftHeight, d.DockingDirection)).ToList();
         return Task.FromResult<object>(seedingTasks);
     }
 }

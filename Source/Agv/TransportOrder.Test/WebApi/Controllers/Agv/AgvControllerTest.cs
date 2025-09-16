@@ -133,7 +133,7 @@ public class AgvControllerTest
         for (int i = 0; i < graph.Nodes.Count; i++)
         {
             graph.Nodes[i].ShouldSatisfyAllConditions(
-                n => n.Id.ShouldBe(agvGraph.Nodes.ElementAt(i).Id),
+                n => n.Id.ShouldBe(agvGraph.Nodes.ElementAt(i).Name),
                 n => n.X.ShouldBe(agvGraph.Nodes.ElementAt(i).X),
                 n => n.Y.ShouldBe(agvGraph.Nodes.ElementAt(i).Y),
                 n => n.Z.ShouldBe(agvGraph.Nodes.ElementAt(i).Z),
@@ -143,10 +143,11 @@ public class AgvControllerTest
 
         for (int i = 0; i < graph.Edges.Count; i++)
         {
+            var edge = agvGraph.Edges.ElementAt(i);
             graph.Edges[i].ShouldSatisfyAllConditions(
-                e => e.FromNodeId.ShouldBe(agvGraph.Edges.ElementAt(i).FromNodeId),
-                e => e.ToNodeId.ShouldBe(agvGraph.Edges.ElementAt(i).ToNodeId),
-                e => e.Length.ShouldBe(agvGraph.Edges.ElementAt(i).Length));
+                e => e.FromNodeId.ShouldBe(agvGraph.Nodes.Single(n => n.Id == edge.FromNodeId).Name),
+                e => e.ToNodeId.ShouldBe(agvGraph.Nodes.Single(n => n.Id == edge.ToNodeId).Name),
+                e => e.Length.ShouldBe(edge.Length));
         }
     }
 
@@ -405,14 +406,14 @@ public class AgvControllerTest
     [TestMethod]
     public async Task MoveAgv_Ok()
     {
-        var targetNode = NodeGenerator.GenerateNode(nodeId: "target");
+        var targetNode = NodeGenerator.GenerateNode(nodeName: "target");
         AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)
             .Build();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
-        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgv(correlationId, targetNode.Id));
+        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.MoveAgv(correlationId, targetNode.Name));
         result.Value.ShouldBeOfType<Guid>();
     }
 
@@ -431,14 +432,14 @@ public class AgvControllerTest
     [TestMethod]
     public async Task ChargeAgvAtCharger_Ok()
     {
-        var targetNode = NodeGenerator.GenerateNode(nodeId: "target", nodeType: AgvGraph.NodeType.Charge);
+        var targetNode = NodeGenerator.GenerateNode(nodeName: "target", nodeType: AgvGraph.NodeType.Charge);
         AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)
             .Build();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
 
-        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.ChargeAgvAtCharger(correlationId, targetNode.Id));
+        var result = await fixture.GetControllerResultAsync<Guid, OkObjectResult>(c => c.ChargeAgvAtCharger(correlationId, targetNode.Name));
         result.Value.ShouldBeOfType<Guid>();
     }
 

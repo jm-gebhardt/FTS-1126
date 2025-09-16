@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Trigger;
 /// </summary>
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 [Authorize]
-public class TriggersController: Controller
+public class TriggersController : Controller
 {
     private readonly IRequestClient<GetTriggers> _getTriggersRequestClient;
     private readonly IMapper _mapper;
@@ -20,8 +20,8 @@ public class TriggersController: Controller
     /// <inheritdoc cref="TriggersController"/>>
     public TriggersController(IRequestClient<GetTriggers> getTriggersRequestClient, IMapper mapper)
     {
-        _getTriggersRequestClient=getTriggersRequestClient;
-        _mapper=mapper;
+        _getTriggersRequestClient = getTriggersRequestClient;
+        _mapper = mapper;
     }
 
     /// <summary>

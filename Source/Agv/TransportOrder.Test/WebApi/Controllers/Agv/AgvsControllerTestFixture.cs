@@ -43,14 +43,14 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     where TRequest : class
     where TRequestHandler : class, IConsumer
 {
-    public string[] AgvSerialNumbers { get; } = {"AGV001", "AGV002", "AGV003"};
+    public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string[] Orders { get; } = {"ORDER001", "ORDER002", ""};
+    public string[] Orders { get; } = { "ORDER001", "ORDER002", "" };
 
-    public AgvState[] States { get; } = {AgvState.Idle, AgvState.Busy, AgvState.Discovered};
+    public AgvState[] States { get; } = { AgvState.Idle, AgvState.Busy, AgvState.Discovered };
 
-    private string[] Ips { get; } = {"127.0.0.1", "127.0.0.2", "127.0.0.3"};
+    private string[] Ips { get; } = { "127.0.0.1", "127.0.0.2", "127.0.0.3" };
 
     private readonly AgvSettingsReadModel _agvSettingsReadModel = EfAgvSettingsProvider.DefaultSettings;
 
@@ -64,10 +64,10 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") {X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node10") {X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node01") {X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint},
-        new("node11") {X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint}
+        new("node00".ToGuid(), "node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node10".ToGuid(), "node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node01".ToGuid(), "node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node11".ToGuid(), "node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
     };
 
     private IRequestClient<GetAgvs>? _getAgvsRequestClient;
@@ -104,7 +104,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
         ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?) null));
-        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
+        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(_agvSettingsReadModel);
         AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> agvs) => agvs.ToDictionary(a => a, MaintenanceLog? (_) => null));
         AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(It.IsAny<Guid>())).Verifiable();
@@ -122,7 +122,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvSerialNumber);
-            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, lastNodeId: "Node");
+            var currentNodeId = "Node".ToGuid();
+            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, false, true, 10, true, true, currentNodeId);
             var agvData = AgvDataGenerator.GenerateAgvData(ipV4Address: ip);
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv.SetOnline();
@@ -147,7 +148,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), CancellationToken.None, default))
             .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
 
-        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
+        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
         AgvDb.Setup(x => x.AgvSettings.GetSettingsGroupForAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
         AgvDb.Setup(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(It.IsAny<AgvSettingsReadModel>(), It.IsAny<GroupType>(), It.IsAny<string>())).Verifiable();
@@ -232,10 +233,10 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
         return controller;
     }
-    
+
     protected override IEnumerable<Profile> GetProfiles() =>
     [
-        new AgvProfile(), 
+        new AgvProfile(),
         new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvProfile(),
         new AgvStatusProfile(),
         new AgvSettingsProfile(),

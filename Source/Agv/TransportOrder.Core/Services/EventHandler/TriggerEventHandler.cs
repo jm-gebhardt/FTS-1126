@@ -18,7 +18,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// Provides handlers for trigger-related events
 /// </summary>
 [UsedImplicitly]
-public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerRepository, IGraphRepository graphRepository, IMapper mapper, ILogger<TriggerEventHandler> logger) :
+public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerRepository, IMapper mapper, ILogger<TriggerEventHandler> logger) :
     IConsumer<TriggerConfigured>,
     IConsumer<ActionGroupStarted>
 {
@@ -67,17 +67,17 @@ public class TriggerEventHandler(IAgvDb agvDb, ITriggerRepository triggerReposit
 
         ICollection<Location> triggers = triggerRepository.GetPolygonTriggerLocations(position.AgvPosition);
 
-        string? lastNodeId = agv.AgvStatus?.LastNodeId;
+        Guid? lastNodeId = agv.AgvStatus?.LastNodeId;
 
         if (lastNodeId != null)
         {
-            var node = await graphRepository.TryGetNodeAsync(lastNodeId);
+            var node = await agvDb.Graphs.TryGetNodeByIdAsync(lastNodeId.Value);
 
             bool isCloseToNode = node != null && (node.AsVector2() - new Vector2(position.AgvPosition.X, position.AgvPosition.Y)).Length() < MaximumNodeTriggerDistance;
 
             if (isCloseToNode)
             {
-                triggers = triggers.Concat(triggerRepository.GetNodeTriggerLocations(lastNodeId)).ToList();
+                triggers = triggers.Concat(triggerRepository.GetNodeTriggerLocations(lastNodeId.Value)).ToList();
             }
         }
 

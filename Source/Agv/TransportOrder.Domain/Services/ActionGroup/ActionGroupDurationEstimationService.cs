@@ -34,7 +34,7 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="targetNodes">The target nodes.</param>
     /// <returns>The deviation in seconds.</returns>
-    public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, string[] targetNodes)
+    public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, Guid[] targetNodes)
     {
         string key = GetKey(agvCorrelationId, targetNodes);
         bool deviationExists = _deviationCache.ConcurrentDict.TryGetValue(key, out var deviation);
@@ -57,7 +57,7 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
         {
             return EstimateDurationFromDistance((action.Target.Position!.X, action.Target.Position!.Y), (agvPosition.X, agvPosition.Y), agvVelocity);
         }
-        var node = await _graphRepository.GetNodeAsync(action.Target.NodeId!);
+        var node = await _graphRepository.GetNodeAsync(action.Target.Node!.Id);
         return EstimateDurationFromDistance((agvPosition.X, agvPosition.Y), (node.X, node.Y), agvVelocity);
     }
 
@@ -77,7 +77,7 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="targetNodes">The target nodes.</param>
     /// <returns></returns>
-    public static string GetKey(Guid agvCorrelationId, string[] targetNodes)
+    public static string GetKey(Guid agvCorrelationId, Guid[] targetNodes)
     {
         return $"{agvCorrelationId}-{string.Join("-", targetNodes.OrderDescending())}";
     }
@@ -91,7 +91,7 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
             // average of unaccounted for costs (e.g. cargo loading and unloading) for pick/drop actions
             duration += await GetAverageDurationEstimateDeviationAsync(actionGroup.AssignedAgv!.Value, actionGroup.GetTargets());
         }
-    
+
         // costs for charging itself, just assume 1% / s, we don't have the charging rate here
         double chargeCostsPerCharge = 100 - assignedAgv.AgvStatus!.BatteryCharge;
 

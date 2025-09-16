@@ -6,9 +6,9 @@
 public class JamState
 {
     /// <summary>
-    /// The station.
+    /// The station Id.
     /// </summary>
-    public string Station { get; init; }
+    public Guid StationId { get; init; }
 
     /// <summary>
     /// The state.
@@ -27,9 +27,9 @@ public class JamState
     public DateTime LastStateChangeTime { get; private set; }
 
     /// <inheritdoc cref="JamState"/>>
-    public JamState(string station, int state, DateTime lastStateChangeTime)
+    public JamState(Guid stationId, int state, DateTime lastStateChangeTime)
     {
-        Station = station;
+        StationId = stationId;
         State = state;
         LastStateChangeTime = lastStateChangeTime;
     }

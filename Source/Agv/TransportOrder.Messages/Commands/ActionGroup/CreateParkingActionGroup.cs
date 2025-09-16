@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using MassTransit;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 
@@ -7,5 +8,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 /// </summary>
 /// <param name="CorrelationId">The action group correlation id.</param>
 /// <param name="AgvCorrelationId">The agv correlation id.</param>
-/// <param name="ParkingNodeId">The parking node id.</param>
-public record CreateParkingActionGroup(Guid CorrelationId, Guid AgvCorrelationId, string ParkingNodeId):CorrelatedBy<Guid>;
+/// <param name="ParkingNode">The parking node.</param>
+public record CreateParkingActionGroup(Guid CorrelationId, Guid AgvCorrelationId, GraphNode ParkingNode):CorrelatedBy<Guid>;

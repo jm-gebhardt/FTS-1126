@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services.EventHandler;
@@ -20,7 +21,7 @@ public class JamStateEventHandlerTest
         await fixture.ShouldHavePublishedAsync<UpdateJamState>();
 
         var updateJamState = await fixture.GetFirstPublishedMessageAsync<UpdateJamState>();
-        updateJamState.Station.ShouldBe(jamStateReceived.Station);
+        updateJamState.StationId.ShouldBe(jamStateReceived.Station.ToGuid());
         updateJamState.Status.ShouldBe(jamStateReceived.Status);
         updateJamState.TimeStamp.ShouldBe(jamStateReceived.TimeStamp);
     }

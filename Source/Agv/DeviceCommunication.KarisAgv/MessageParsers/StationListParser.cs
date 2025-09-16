@@ -15,7 +15,7 @@ public class StationListParser
 {
     private readonly MqttStationList _stationList;
     private readonly MqttGraph _graph;
-    
+
     private bool _isParsed;
 
     private string? _serialNumber;
@@ -116,12 +116,12 @@ public class StationListParser
                 }
 
                 // Add node and bidirectional edges.
-                var graphNode = _agvGraph.Nodes.SingleOrDefault(n => n.Id == station.Identifier);
+                var graphNode = _agvGraph.Nodes.SingleOrDefault(n => n.Name == station.Identifier);
                 bool added;
                 if (graphNode == null)
                 {
                     var timeStamp = _stationList.ModificationDate.UtcDateTime;
-                    graphNode = new GraphNode(station.Identifier)
+                    graphNode = new GraphNode(station.Identifier.ToGuid(), station.Identifier)
                     {
                         X = station.Position.X,
                         Y = station.Position.Y,
@@ -134,10 +134,12 @@ public class StationListParser
                     if (added)
                     {
                         float metric = graphParser.IsVelocityDataValid ? nearbyDistance / graphParser.AverageVelocity : nearbyDistance;
-                        string graphNodeId = graphNode.Id;
-                        string nodeNearbyId = nodeNearby.Id;
-                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeId, metric, nodeNearbyId), timeStamp));
-                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyId, metric, graphNodeId), timeStamp));
+                        string graphNodeName = graphNode.Name;
+                        string nodeNearbyName = nodeNearby.Name;
+                        var graphNodeId = graphNode.Id;
+                        var nodeNearbyId = nodeNearby.Id;
+                        additionalEdges.Add(GraphEdge.CreateDirect(graphNodeId, nodeNearbyId, metric, GraphHelper.ToGuid(EdgeType.Direct, graphNodeName, metric, nodeNearbyName), timeStamp));
+                        additionalEdges.Add(GraphEdge.CreateDirect(nodeNearbyId, graphNodeId, metric, GraphHelper.ToGuid(EdgeType.Direct, nodeNearbyName, metric, graphNodeName), timeStamp));
                     }
                 }
                 else

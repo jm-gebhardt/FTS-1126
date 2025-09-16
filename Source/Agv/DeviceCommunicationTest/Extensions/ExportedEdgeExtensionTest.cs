@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 using Shouldly;
@@ -13,15 +14,15 @@ public class ExportedEdgeExtensionTest
     [TestMethod]
     public void ToGraphEdges_ValidData_CreatesEdgeOrCorrectType(EdgeType edgeType)
     {
-        var startNode = new GraphNode("start");
-        var endNode = new GraphNode("end");
-        var exportedEdge = new ExportedEdge()
+        var startNode = "start".ToGraphNode();
+        var endNode = "end".ToGraphNode();
+        var exportedEdge = new ExportedEdge
         {
-            StartId = startNode.Id,
-            EndId = endNode.Id,
+            StartId = startNode.Name,
+            EndId = endNode.Name,
             EdgeType = edgeType,
             Bidirectional = false,
-            ControlPoints = [new ExportedControlPoint(1,2), new ExportedControlPoint(2,3), new ExportedControlPoint(3,4), new ExportedControlPoint(5,5)]
+            ControlPoints = [new ExportedControlPoint(1, 2), new ExportedControlPoint(2, 3), new ExportedControlPoint(3, 4), new ExportedControlPoint(5, 5)]
         };
 
         ICollection<GraphEdge> edges = exportedEdge.ToGraphEdges(startNode, endNode);
@@ -34,12 +35,12 @@ public class ExportedEdgeExtensionTest
     [TestMethod]
     public void ToGraphEdges_NotSupportedType_ReturnsEmptyCollection(EdgeType edgeType)
     {
-        var startNode = new GraphNode("start");
-        var endNode = new GraphNode("end");
-        var exportedEdge = new ExportedEdge()
+        var startNode = "start".ToGraphNode();
+        var endNode = "end".ToGraphNode();
+        var exportedEdge = new ExportedEdge
         {
-            StartId = startNode.Id,
-            EndId = endNode.Id,
+            StartId = startNode.Name,
+            EndId = endNode.Name,
             EdgeType = edgeType,
             Bidirectional = false,
             ControlPoints = [new ExportedControlPoint(1, 2), new ExportedControlPoint(2, 3), new ExportedControlPoint(3, 4), new ExportedControlPoint(5, 5)]
@@ -53,12 +54,12 @@ public class ExportedEdgeExtensionTest
     [TestMethod]
     public void ToGraphEdges_Bidirectional_ReturnsCorrectNumberOfEdges(bool isBidirectional, int expectedNumberOfEdges)
     {
-        var startNode = new GraphNode("start");
-        var endNode = new GraphNode("end");
-        var exportedEdge = new ExportedEdge()
+        var startNode = "start".ToGraphNode();
+        var endNode = "end".ToGraphNode();
+        var exportedEdge = new ExportedEdge
         {
-            StartId = startNode.Id,
-            EndId = endNode.Id,
+            StartId = startNode.Name,
+            EndId = endNode.Name,
             EdgeType = EdgeType.Bezier5,
             Bidirectional = isBidirectional,
             ControlPoints = [new ExportedControlPoint(1, 2), new ExportedControlPoint(2, 3), new ExportedControlPoint(3, 4), new ExportedControlPoint(5, 5)]

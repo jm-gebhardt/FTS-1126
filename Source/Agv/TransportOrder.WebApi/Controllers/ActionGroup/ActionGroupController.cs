@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
@@ -115,7 +116,7 @@ public class ActionGroupController : Controller
         {
             ActionGroupCanceled => Ok(),
             ActionGroupCancelFailed { ErrorCode: HostOrderCancelFailedErrorCode.OrderDoesNotExist } => NotFound(),
-            _ => BadRequest(((ActionGroupCancelFailed)response.Message).ErrorCode)
+            _ => BadRequest(((ActionGroupCancelFailed) response.Message).ErrorCode)
         };
     }
 
@@ -165,11 +166,11 @@ public class ActionGroupController : Controller
     [Route("/actionGroup")]
     public async Task<ActionResult<ActionGroupDto>> CreatePickDropActionGroup(
         string? pickStation,
-        string? dropStation, 
+        string? dropStation,
         bool dockFrontPick,
         bool dockFrontDrop,
         string? handlingUnit,
-        string? additionalPickInfo, 
+        string? additionalPickInfo,
         string? additionalDropInfo,
         Guid? agvCorrelationId
     )
@@ -179,7 +180,17 @@ public class ActionGroupController : Controller
         {
             return Unauthorized();
         }
-        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(pickStation, dropStation, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, additionalPickInfo, additionalDropInfo, false, ActionGroupCreator.TransportOrderWebApi, email));
+        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(
+            pickStation?.ToGuid(),
+            dropStation?.ToGuid(),
+            dockFrontPick,
+            dockFrontDrop,
+            handlingUnit,
+            agvCorrelationId,
+            additionalPickInfo,
+            additionalDropInfo,
+            false,
+            ActionGroupCreator.TransportOrderWebApi, email));
         return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
     }
 
@@ -258,7 +269,7 @@ public class ActionGroupController : Controller
         {
             return Unauthorized();
         }
-        await _setTargetClient.GetResponse<Success>(new TriggerSetTarget(correlationId, actionCorrelationId, targetNode, email));
+        await _setTargetClient.GetResponse<Success>(new TriggerSetTarget(correlationId, actionCorrelationId, targetNode.ToGuid(), email));
         return Ok();
     }
 }

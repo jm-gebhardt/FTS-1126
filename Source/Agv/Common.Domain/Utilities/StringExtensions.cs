@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Domain.Utilities;
@@ -24,13 +25,16 @@ public static class StringExtensions
         }
 
         byte[] stringBytes = Encoding.UTF8.GetBytes(str);
-        byte[] hashedBytes;
         // Usually SHA-1 is faster than MD5 and other SHA-algorithms.
-        using (var sha = SHA1.Create())
-        {
-            hashedBytes = sha.ComputeHash(stringBytes);
-        }
+        byte[] hashedBytes = SHA1.HashData(stringBytes);
         Array.Resize(ref hashedBytes, 16);
         return new Guid(hashedBytes);
     }
+
+    /// <summary>
+    /// Converts a string to a <see cref="GraphNode"/> object.
+    /// </summary>
+    /// <param name="nodeName">The name of the node to convert.</param>
+    /// <returns>A <see cref="GraphNode"/> instance initialized with the specified name and Id from <see cref="ToGuid"/>.</returns>
+    public static GraphNode ToGraphNode(this string nodeName) => new(nodeName.ToGuid(), nodeName);
 }

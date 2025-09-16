@@ -64,16 +64,16 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
 
         var currentAction = await _actionGroupDb.GetCurrentAgvActionAsync(agv.CorrelationId);
 
-        var charger = await _chargingPointManager.ReserveChargerAsync(agv, startNodeId: currentAction?.Target.NodeId);
+        var charger = await _chargingPointManager.ReserveChargerAsync(agv, startNodeId: currentAction?.Target.Node?.Id);
         await PublishNodeStateChange(charger.Id);
 
-        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi));
+        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger, ActionGroupCreator.TransportOrderWebApi));
         _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
 
         await context.RespondAsync(new Success());
     }
 
-    private async Task PublishNodeStateChange(string nodeId)
+    private async Task PublishNodeStateChange(Guid nodeId)
     {
         var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
         var station = await _stationRepository.GetStation(nodeId);

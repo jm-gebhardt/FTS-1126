@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
@@ -30,7 +31,11 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
 
     public StationCommandHandlerTestFixture WithOccupancies(params (int Count, Guid? AgvId)[] occupiedCountAndAgv)
     {
-        Occupancies = occupiedCountAndAgv.Select(o => new StationOccupancy($"Station-{Guid.NewGuid()}", o.Count, o.AgvId)).ToList();
+        Occupancies = occupiedCountAndAgv.Select(o =>
+        {
+            string stationName = $"Station-{Guid.NewGuid()}";
+            return new StationOccupancy(stationName.ToGuid(), stationName, o.Count, o.AgvId);
+        }).ToList();
 
         StationRepository.WithOccupancies(Occupancies);
         return this;

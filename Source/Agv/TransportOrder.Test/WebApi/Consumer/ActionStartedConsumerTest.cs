@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
@@ -15,17 +16,17 @@ public class ActionStartedConsumerTest
     public async Task Receiving_ActionStarted_SendsAssignedActionGroupChanged()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, new[] { "1", "2" }, []);
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, ["1".ToGraphNode(), "2".ToGraphNode()], []);
         var fixture = new ConsumerHubTestFixture<ActionStartedConsumer, IAgvPublisher>();
         Mock<IAgvRouteRetrievalService> agvRouteRetrievalService = fixture.AgvRouteServiceMock;
-        agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string?>())).ReturnsAsync(agvRoute);
+        agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<Guid?>())).ReturnsAsync(agvRoute);
         var action = AgvActionGenerator.GenerateMoveAction();
 
         await fixture.TestHarness.Bus.Publish(new ActionStarted(action.CorrelationId, agvCorrelationId));
-        
+
         await fixture.ShouldHavePublishedAsync<ActionStarted>();
         await fixture.ShouldHaveConsumedAsync<ActionStarted>();
-        agvRouteRetrievalService.Verify(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string>()), Times.Once);
+        agvRouteRetrievalService.Verify(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<Guid?>()), Times.Once);
         fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(agvRoute), Times.Once);
     }
 
@@ -33,17 +34,17 @@ public class ActionStartedConsumerTest
     public async Task Receiving_ActionUpdated_SendsAssignedActionGroupChanged()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, new[] { "1", "2" }, []);
+        var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, ["1".ToGraphNode(), "2".ToGraphNode()], []);
         var fixture = new ConsumerHubTestFixture<ActionStartedConsumer, IAgvPublisher>();
         Mock<IAgvRouteRetrievalService> agvRouteRetrievalService = fixture.AgvRouteServiceMock;
-        agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string?>())).ReturnsAsync(agvRoute);
+        agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<Guid?>())).ReturnsAsync(agvRoute);
         var action = AgvActionGenerator.GenerateMoveAction();
 
         await fixture.TestHarness.Bus.Publish(new ActionUpdated(action.CorrelationId, agvCorrelationId));
 
         await fixture.ShouldHavePublishedAsync<ActionUpdated>();
         await fixture.ShouldHaveConsumedAsync<ActionUpdated>();
-        agvRouteRetrievalService.Verify(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<string>()), Times.Once);
+        agvRouteRetrievalService.Verify(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<Guid?>()), Times.Once);
         fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(agvRoute), Times.Once);
     }
 }

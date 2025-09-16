@@ -39,7 +39,13 @@ public class SimulatedAgvSagaTest
     [TestMethod]
     public void Construct_WithChargerOrParker_ZoneAroundChargerOrParker()
     {
-        var saga = SimulatedAgvSagaGenerator.Generate(agvGraph: AgvGraphGenerator.Generate([AgvGraphGenerator.Waypoint4, AgvGraphGenerator.ChargingFar], [AgvGraphGenerator.Edges.Single(e => e.FromNodeId ==AgvGraphGenerator.Waypoint4.Id && e.ToNodeId == AgvGraphGenerator.ChargingFar.Id), AgvGraphGenerator.Edges.Single(e => e.ToNodeId ==AgvGraphGenerator.Waypoint4.Id && e.FromNodeId == AgvGraphGenerator.ChargingFar.Id)]), currentNode: AgvGraphGenerator.ChargingFar);
+        var saga = SimulatedAgvSagaGenerator.Generate(agvGraph: AgvGraphGenerator.Generate(
+                [AgvGraphGenerator.Waypoint4, AgvGraphGenerator.ChargingFar],
+                [
+                    AgvGraphGenerator.Edges.Single(e => e.FromNodeId == AgvGraphGenerator.Waypoint4.Id && e.ToNodeId == AgvGraphGenerator.ChargingFar.Id),
+                    AgvGraphGenerator.Edges.Single(e => e.ToNodeId == AgvGraphGenerator.Waypoint4.Id && e.FromNodeId == AgvGraphGenerator.ChargingFar.Id)
+                ]),
+            currentNode: AgvGraphGenerator.ChargingFar);
         saga.AgvZones.ShouldNotBeNull();
         saga.AgvZones.Single().Polygon.PointIsInPolygon(AgvGraphGenerator.ChargingFar.X, AgvGraphGenerator.ChargingFar.Y).ShouldBeTrue();
     }
@@ -101,7 +107,13 @@ public class SimulatedAgvSagaTest
     [TestMethod]
     public void UpdateStatus_AgvIsInZone_ZoneIdInStatus()
     {
-        var saga = SimulatedAgvSagaGenerator.Generate(agvGraph: AgvGraphGenerator.Generate([AgvGraphGenerator.Waypoint4, AgvGraphGenerator.ChargingFar], [AgvGraphGenerator.Edges.Single(e => e.FromNodeId ==AgvGraphGenerator.Waypoint4.Id && e.ToNodeId == AgvGraphGenerator.ChargingFar.Id), AgvGraphGenerator.Edges.Single(e => e.ToNodeId ==AgvGraphGenerator.Waypoint4.Id && e.FromNodeId == AgvGraphGenerator.ChargingFar.Id)]), currentNode: AgvGraphGenerator.ChargingFar);
+        var saga = SimulatedAgvSagaGenerator.Generate(agvGraph: AgvGraphGenerator.Generate(
+                [AgvGraphGenerator.Waypoint4, AgvGraphGenerator.ChargingFar],
+                [
+                    AgvGraphGenerator.Edges.Single(e => e.FromNodeId == AgvGraphGenerator.Waypoint4.Id && e.ToNodeId == AgvGraphGenerator.ChargingFar.Id),
+                    AgvGraphGenerator.Edges.Single(e => e.ToNodeId == AgvGraphGenerator.Waypoint4.Id && e.FromNodeId == AgvGraphGenerator.ChargingFar.Id)
+                ]),
+            currentNode: AgvGraphGenerator.ChargingFar);
         saga.UpdateStatus(60, 1, 1);
         saga.AgvStatus.ZoneIds.ShouldNotBeNull();
         saga.AgvStatus.ZoneIds.Single().ShouldBe(saga.AgvZones.Single().ZoneId);
@@ -127,14 +139,14 @@ public class SimulatedAgvSagaTest
     {
         var nodes = new List<GraphNode>
         {
-            NodeGenerator.GenerateNode(x: 3, y: 36, nodeId: "W1"),
-            NodeGenerator.GenerateNode(x: 34, y: 91, nodeId: "W2")
+            NodeGenerator.GenerateNode(x: 3, y: 36, nodeName: "W1"),
+            NodeGenerator.GenerateNode(x: 34, y: 91, nodeName: "W2")
         };
         var fixture = new SimulatedAgvSagaTestFixture()
             .WithNumberOfEdges(1)
             .WithTheseNodes(nodes)
-            .WithActionStartNodeId(nodes[0].Id)
-            .WithActionTargetNodeId(nodes[1].Id)
+            .WithActionStartNodeId(nodes[0].Name)
+            .WithActionTargetNodeId(nodes[1].Name)
             .Build();
 
         fixture.SimulateToPercentage(0);
@@ -155,15 +167,15 @@ public class SimulatedAgvSagaTest
     {
         var nodes = new List<GraphNode>
         {
-            NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1"),
-            NodeGenerator.GenerateNode(x: 10, y: 0, nodeId: "W2")
+            NodeGenerator.GenerateNode(x: 0, y: 0, nodeName: "W1"),
+            NodeGenerator.GenerateNode(x: 10, y: 0, nodeName: "W2")
         };
         var fixture = new SimulatedAgvSagaTestFixture()
             .WithPosition(nodes[0])
             .WithNumberOfEdges(1)
             .WithTheseNodes(nodes)
-            .WithActionStartNodeId(nodes[0].Id)
-            .WithActionTargetNodeId(nodes[1].Id)
+            .WithActionStartNodeId(nodes[0].Name)
+            .WithActionTargetNodeId(nodes[1].Name)
             .Build();
 
         fixture.SimulateToPercentage(100);
@@ -176,19 +188,19 @@ public class SimulatedAgvSagaTest
     [TestMethod]
     public void UpdatePosition_CurrentNode_InitializesOnCurrentNode()
     {
-        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1");
-        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
+        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeName: "W1");
+        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeName: "W2");
 
         var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
-        var graph = AgvGraphGenerator.Generate(new List<GraphNode> {node1, node2}, new List<GraphEdge> {edge});
+        var graph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
 
         var fixture = new SimulatedAgvSagaTestFixture()
             .WithGraph(graph)
             .WithPosition(node1)
             .WithNumberOfEdges(0)
-            .WithTheseNodes(new List<GraphNode> {node1, node2})
-            .WithActionStartNodeId(node1.Id)
-            .WithActionTargetNodeId(node1.Id)
+            .WithTheseNodes(new List<GraphNode> { node1, node2 })
+            .WithActionStartNodeId(node1.Name)
+            .WithActionTargetNodeId(node1.Name)
             .Build();
 
         fixture.Saga.Position!.X.ShouldBe(0f, 0.01);
@@ -220,9 +232,9 @@ public class SimulatedAgvSagaTest
         saga.ActionStartDate = finish;
         saga.Action = AgvActionGenerator.GenerateMoveAction();
         saga.TravelSimulator = new AgvTravelSimulatorMock().Object;
-        var remainingDuration = (TimeSpan)saga.RemainingDuration!;
+        var remainingDuration = (TimeSpan) saga.RemainingDuration!;
 
-        var expectedRemaining = (DateTime)saga.ActionFinishDate! - now;
+        var expectedRemaining = (DateTime) saga.ActionFinishDate! - now;
         remainingDuration.TotalSeconds.ShouldBe(expectedRemaining.TotalSeconds);
     }
 
@@ -230,8 +242,8 @@ public class SimulatedAgvSagaTest
     public void Construct_WithValidSpawnNodes_SpawnNodeIdSet()
     {
         const int simulationSpeed = 2;
-        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1");
-        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
+        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeName: "W1");
+        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeName: "W2");
 
         var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
         var agvGraph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
@@ -246,18 +258,18 @@ public class SimulatedAgvSagaTest
             DateTime.MinValue,
             DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
-            var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node2.Id]);
-            saga.SpawnNodeIds.ShouldNotBeNull();
-            saga.SpawnNodeIds.Length.ShouldBe(1);
-            saga.SpawnNodeIds[0].ShouldBe(node2.Id);
+        var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node2.Name]);
+        saga.SpawnNodeIds.ShouldNotBeNull();
+        saga.SpawnNodeIds.Length.ShouldBe(1);
+        saga.SpawnNodeIds[0].ShouldBe(node2.Name);
     }
 
     [TestMethod]
     public void Construct_WithInvalidValidSpawnNodes_ShouldThrowArgumentException()
     {
         const int simulationSpeed = 2;
-        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeId: "W1");
-        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeId: "W2");
+        var node1 = NodeGenerator.GenerateNode(x: 0, y: 0, nodeName: "W1");
+        var node2 = NodeGenerator.GenerateNode(x: -10, y: 0, nodeName: "W2");
         const string unknownNode = "Unknown";
 
         var edge = GraphEdge.CreateDirect(node1.Id, node2.Id);
@@ -273,7 +285,7 @@ public class SimulatedAgvSagaTest
             DateTime.MinValue,
             DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
- 
-        Should.Throw<ArgumentException>(() => new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node1.Id, node2.Id, unknownNode]));
+
+        Should.Throw<ArgumentException>(() => new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node1.Name, node2.Name, unknownNode]));
     }
 }

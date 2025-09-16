@@ -1,8 +1,10 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,11 @@ public class RouteRequestHandlerTestFixture<TRequestClient> : MediatorTestFixtur
         _agvs.Add(agv);
         _agvDb.AddAgvData((AgvData?)null);
         return this;
+    }
+
+    protected override IEnumerable<Profile> GetProfiles()
+    {
+        yield return new GraphProfile();
     }
 
     [PublicAPI]

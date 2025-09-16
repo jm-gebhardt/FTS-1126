@@ -141,7 +141,7 @@ public class StationListParserTest
         };
         var stations = new Station[]
         {
-            new(new List<Function>{ Function.Charge, Function.Park}, "P01", new Position(0f, 0f, 0f), "")
+            new(new List<Function> { Function.Charge, Function.Park }, "P01", new Position(0f, 0f, 0f), "")
         };
         var parser = new StationListParser(
             new MqttStationList(AgvSerialNumber1, DateTimeOffset.UtcNow, stations),
@@ -274,19 +274,19 @@ public class StationListParserTest
         // Average velocity for the single edge is 1 (metric[t] = SQRT(9^2+9^2)/1 = 12.72792.
 
         // Distance S1->1 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
-        float metric = (float)Math.Sqrt(8);
-        agvGraph.Edges.First(x => x.FromNodeId == "S1").Length.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S1").Length.ShouldBe(metric, 0.00001);
+        float metric = (float) Math.Sqrt(8);
+        agvGraph.Edges.First(x => x.FromNodeId == "S1".ToGuid()).Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S1".ToGuid()).Length.ShouldBe(metric, 0.00001);
 
         // Distance S2->2 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
-        metric = (float)Math.Sqrt(8);
-        agvGraph.Edges.First(x => x.FromNodeId == "S2").Length.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S2").Length.ShouldBe(metric, 0.00001);
+        metric = (float) Math.Sqrt(8);
+        agvGraph.Edges.First(x => x.FromNodeId == "S2".ToGuid()).Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S2".ToGuid()).Length.ShouldBe(metric, 0.00001);
 
         // Distance S3->1 is 2 (metric[t] = SQRT(6^2+2^2)/1 = 6,32456
-        metric = (float)Math.Sqrt(40);
-        agvGraph.Edges.First(x => x.FromNodeId == "S3").Length.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S3").Length.ShouldBe(metric, 0.00001);
+        metric = (float) Math.Sqrt(40);
+        agvGraph.Edges.First(x => x.FromNodeId == "S3".ToGuid()).Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S3".ToGuid()).Length.ShouldBe(metric, 0.00001);
     }
 
     /// <summary>
@@ -348,18 +348,18 @@ public class StationListParserTest
         // Average velocity for the single edge is 1 (metric[t] = SQRT(9^2+9^2)/1 = 12.72792.
 
         // Distance S1->1 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
-        float metric = (float)Math.Sqrt(8);
-        agvGraph.Edges.First(x => x.FromNodeId == "S1").Length.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S1").Length.ShouldBe(metric, 0.00001);
+        float metric = (float) Math.Sqrt(8);
+        agvGraph.Edges.First(x => x.FromNodeId == "S1".ToGuid()).Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S1".ToGuid()).Length.ShouldBe(metric, 0.00001);
 
         // Distance S2->2 is 2 (metric[t] = SQRT(2^2+2^2)/1 = 2,82843
-        metric = (float)Math.Sqrt(8);
-        agvGraph.Edges.First(x => x.FromNodeId == "S2").Length.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S2").Length.ShouldBe(metric, 0.00001);
+        metric = (float) Math.Sqrt(8);
+        agvGraph.Edges.First(x => x.FromNodeId == "S2".ToGuid()).Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S2".ToGuid()).Length.ShouldBe(metric, 0.00001);
 
         // Distance S3->1 is 2 (metric[t] = SQRT(6^2+2^2)/1 = 6,32456
-        metric = (float)Math.Sqrt(40);
-        agvGraph.Edges.First(x => x.FromNodeId == "S3").Length.ShouldBe(metric, 0.00001);
-        agvGraph.Edges.First(x => x.ToNodeId == "S3").Length.ShouldBe(metric, 0.00001);
+        metric = (float) Math.Sqrt(40);
+        agvGraph.Edges.First(x => x.FromNodeId == "S3".ToGuid()).Length.ShouldBe(metric, 0.00001);
+        agvGraph.Edges.First(x => x.ToNodeId == "S3".ToGuid()).Length.ShouldBe(metric, 0.00001);
     }
 }

@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -173,7 +175,7 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true);
         agv.GoOffline();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        agv.AgvStatus!.UpdateLastNodeId(null);
+        agv.AgvStatus!.UpdateLastNodeId(Guid.Empty);
         await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
         agv.IsOnline.ShouldBeTrue();
         await fixture.ShouldHavePublishedAsync<AgvWentOnline>();
@@ -276,11 +278,11 @@ public class AgvCommandHandlerTest
     public async Task Consume_UpdateAgvStatus_LastNodeIdChanged_NewLastNodeIdIsOnGraph_PublishesAgvLastNodeIdChanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, "newLastNodeId");
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, "newLastNodeName".ToGuid());
 
         var fixture = new AgvCommandHandlerTestFixture()
             .WithGraphExists(true)
-            .WithNode(new GraphNode(newAgvStatus.LastNodeId!));
+            .WithNode(newAgvStatus.LastNodeId!.Value.ToGraphNode());
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
@@ -293,11 +295,11 @@ public class AgvCommandHandlerTest
     public async Task Consume_UpdateAgvStatus_LastNodeIdChanged_NewLastNodeIdIsNotOnGraph_DoesNotPublishAgvLastNodeIdChanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, "newLastNodeId");
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, Guid.NewGuid());
 
         var fixture = new AgvCommandHandlerTestFixture()
             .WithGraphExists(true)
-            .WithNode(null);
+            .WithNode([null]);
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
@@ -326,7 +328,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_CurrentActionGroups_NoReservationNeeded_PublishesAgvOnlineChanged()
     {
-        string? lastNodeId = null;
+        var lastNode = "somewhere".ToGraphNode();
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
@@ -336,9 +338,10 @@ public class AgvCommandHandlerTest
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([], nodes)
             .WithGraphExists(true)
-            .AddAgvs([agv]);
+            .AddAgvs([agv])
+            .WithNode(lastNode);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNode.Id);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
@@ -349,18 +352,18 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_LastNodeIdIsReservableNode_NodeStateWasDeleted_OccupiesLastNode()
     {
-        const string lastNodeId = AgvGraphGenerator.Prk1;
+        var lastNode = AgvGraphGenerator.Prk1Node;
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph([lastNodeId]);
+        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph([lastNode.Id]);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([])
-            .WithNodesStates([], nodes, lastNodeId: lastNodeId)
+            .WithNodesStates([], nodes, lastNodeId: lastNode.Name)
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNode.Id);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
 
         await fixture.PublishMessageAsync(updateAgvStatus);
@@ -372,11 +375,10 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_CurrentActionGroups_ReservationNeeded_ReservesNode()
     {
-        string? lastNodeId = null;
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Crg1);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1);
         ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
@@ -384,7 +386,7 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
@@ -395,11 +397,10 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_CurrentActionGroups_ReservationNeeded_NodeAlreadyReservedOrOccupied_PublishesCancelOrAbortActionGroup()
     {
-        string? lastNodeId = null;
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Crg1);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1);
         ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
@@ -407,7 +408,7 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
@@ -420,20 +421,19 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_CurrentActionGroups_ReservationNeeded_OldReservationNotDeleted_DoesNotRepeatReservation()
     {
-        string? lastNodeId = null;
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Crg1);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1);
         ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
-        var nodeLock = NodeLockGenerator.GenerateNodeLock(nodeId: AgvGraphGenerator.Crg1, agvCorrelationId: agv.CorrelationId, nodeLockState: NodeLockState.Reserved);
+        var nodeLock = NodeLockGenerator.GenerateNodeLock(nodeName: AgvGraphGenerator.Crg1, agvCorrelationId: agv.CorrelationId, nodeLockState: NodeLockState.Reserved);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([nodeLock], nodes)
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
@@ -446,11 +446,10 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_CurrentActionGroups_ReservationNeeded_ActionGroupOutdated_DoesNotReserveNodePublishesCancelOrAbortActionGroup()
     {
-        string? lastNodeId = null;
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Crg1, createdDate: DateTime.UtcNow.AddMinutes(-15));
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1, createdDate: DateTime.UtcNow.AddMinutes(-15));
         ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
@@ -458,7 +457,7 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
@@ -471,7 +470,6 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_CurrentActionGroups_QueuingActionGroup_ActionGroupOutdated_DoesNotReserveNodePublishesCancelOrAbortActionGroup()
     {
-        string? lastNodeId = null;
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
@@ -483,7 +481,7 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
@@ -496,7 +494,6 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_CurrentActionGroups_QueuingActionGroup_ReservesNode()
     {
-        string? lastNodeId = null;
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
@@ -508,7 +505,7 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true)
             .AddAgvs([agv]);
 
-        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed, lastNodeId: lastNodeId);
+        var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<AgvOnlineChanged>();
@@ -617,9 +614,9 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithGraphExists(true)
             .WithCurrentStartedOrCreatedActionGroups([])
-            .WithNodesStates([new NodeLock("node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
+            .WithNodesStates([new NodeLock("node".ToGraphNode(), NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
-            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node".ToGuid())]);
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
@@ -642,9 +639,9 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true)
             .WithZones([zone])
             .WithCurrentStartedOrCreatedActionGroups([])
-            .WithNodesStates([new NodeLock("node", NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
+            .WithNodesStates([new NodeLock("node".ToGraphNode(), NodeLockState.Reserved, false, agv.CorrelationId, DateTime.UtcNow)], [])
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
-            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node")]);
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, "zone"), new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node".ToGuid())]);
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
@@ -924,7 +921,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_NotQueueing_AgvPreparedForStartingAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: NodeGenerator.GenerateParkingNode().Id);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: NodeGenerator.GenerateParkingNode().Name);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithAgvsToMove(null)
@@ -942,17 +939,19 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_WasQueuingAtQueueHead_AutomaticPickDropAction_CreateQueueingActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         var agvInQueue = AgvGenerator.GenerateRawAgv(Guid.NewGuid(), "serial number");
         agvInQueue.IsQueueing = true;
 
-        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "a queue head" } };
+        var queueHead = "a queue head".ToGraphNode();
+        var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, queueHead.Id } };
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
             .WithActionGroup(actionGroup)
-            .WithEvacuationMoves([Guid.NewGuid()]);
+            .WithEvacuationMoves([Guid.NewGuid()])
+            .WithNode(queueHead);
 
         await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
 
@@ -965,8 +964,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_WasQueuingAtQueueHeadNoOtherAgvsInQueue_AutomaticPickDropAction_QueueBecameEmpty()
     {
-        var agvsToMove = new Dictionary<Guid, string>();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agvsToMove = new Dictionary<Guid, Guid>();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithAgvsToMove(agvsToMove)
@@ -987,7 +986,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_NotQueueing_ChargeAction_DoesNotPublishCreateQueueingActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "a node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "a node");
         agv.IsQueueing = false;
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
@@ -1008,11 +1007,11 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ManualPickDropAction_CreateQueueingActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agv.IsQueueing = true;
-        var agvInQueue = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agvInQueue = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agvInQueue.IsQueueing = true;
-        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "queue node" } };
+        var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, "queue node".ToGuid() } };
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.IsManual = true;
@@ -1038,11 +1037,11 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_CreateQueueingActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agv.IsQueueing = true;
         var agvInQueue = AgvGenerator.GenerateIdleAgv();
         agvInQueue.IsQueueing = true;
-        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "queue node" } };
+        var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, "queue node".ToGuid() } };
 
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
@@ -1067,8 +1066,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_NoOtherAgvsInQueue_QueueBecameEmpty()
     {
-        var agvsToMove = new Dictionary<Guid, string>();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agvsToMove = new Dictionary<Guid, Guid>();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agv.IsQueueing = true;
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
@@ -1095,7 +1094,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_PrepareAgvForStartingAction_AgvIsLocked_AgvPreparedForStartingActionNotPublished()
     {
         var fixture = new AgvCommandHandlerTestFixture();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: NodeGenerator.GenerateParkingNode().Id, mode: new AgvMode(ModeType.Locked));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: NodeGenerator.GenerateParkingNode().Name, mode: new AgvMode(ModeType.Locked));
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
@@ -1113,7 +1112,7 @@ public class AgvCommandHandlerTest
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
         var currentAgStatus = agv.AgvStatus!;
-        var agvStatus = new AgvStatus(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, 48, currentAgStatus.Charging ? 20 : -10, 20, currentAgStatus.Disturbed, currentAgStatus.LastNodeId);
+        var agvStatus = new AgvStatus(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, 50, 0, 20, currentAgStatus.Disturbed, currentAgStatus.LastNodeId, currentAgStatus.EstimatedFullyChargedTime, currentAgStatus.LastBatteryReplacement);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, agvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
 
@@ -1354,7 +1353,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_PrepareChargingOfAgv_AgvIsOnCharger_PublishesChargingNodeSelectedForAgv()
     {
         const string chargeNodeName = "Charger-1";
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: chargeNodeName);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: chargeNodeName);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .HasAlreadyReservedNode(false)
@@ -1641,7 +1640,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithEnqueueingTarget(null);
 
-        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "a queue node"));
+        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "a queue node".ToGuid()));
 
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<QueueEntered>();
@@ -1654,7 +1653,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithEnqueueingTarget(entryNode);
 
-        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), entryNode));
+        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), entryNode.ToGuid()));
 
         await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<QueueEntered>();
@@ -1666,7 +1665,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .WithEnqueueingTarget("target queue node");
 
-        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "queue entry node"));
+        await fixture.PublishMessageAsync(new TryEnqueueAgv(Guid.NewGuid(), "queue entry node".ToGuid()));
 
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<QueueEntered>();
@@ -1739,15 +1738,16 @@ public class AgvCommandHandlerTest
         agvToMove.IsQueueing = true;
         var chargingAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: 80);
         const string queueEntryNode = "node";
-        const string queueNode = "queue node";
-        var agvsToMove = new Dictionary<Guid, string> { { agvToMove.CorrelationId, queueNode } };
+        var queueNode = "queue node".ToGraphNode();
+        var agvsToMove = new Dictionary<Guid, Guid> { { agvToMove.CorrelationId, queueNode.Id } };
 
         const string charger = "charger";
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agvToMove, queueingCriticalBatteryAgv, chargingAgv])
-            .WithNodesStates([new NodeLock(charger, NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
-            .WithAgvsToMove(agvsToMove, nodeId: queueEntryNode, swapped: true)
-            .WithQueueInternalMoves([]);
+            .WithNodesStates([new NodeLock(charger.ToGraphNode(), NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
+            .WithAgvsToMove(agvsToMove, nodeName: queueEntryNode, swapped: true)
+            .WithQueueInternalMoves([])
+            .WithNode(queueNode);
 
         await fixture.PublishMessageAsync(new SwitchChargingAgvs(queueingCriticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
 
@@ -1760,11 +1760,11 @@ public class AgvCommandHandlerTest
 
         List<CreateQueueingActionGroup> createQueueActionGroupMessages = fixture.TestHarness.Published.Select<CreateQueueingActionGroup>().Select(m => m.Context.Message).ToList();
         createQueueActionGroupMessages.Count.ShouldBe(2);
-        createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == chargingAgv.CorrelationId).QueueNodeId.ShouldBe(queueEntryNode);
-        createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == agvToMove.CorrelationId).QueueNodeId.ShouldBe(queueNode);
+        createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == chargingAgv.CorrelationId).QueueNode.Id.ShouldBe(queueEntryNode.ToGuid());
+        createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == agvToMove.CorrelationId).QueueNode.Id.ShouldBe(queueNode.Id);
 
         var chargingNodeSelectedForAgv = fixture.TestHarness.Published.Select<ChargingNodeSelectedForAgv>().Select(m => m.Context.Message).Single();
-        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(charger);
+        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(charger.ToGuid());
         chargingNodeSelectedForAgv.CorrelationId.ShouldBe(queueingCriticalBatteryAgv.CorrelationId);
     }
 
@@ -1778,8 +1778,8 @@ public class AgvCommandHandlerTest
         const string charger = "charger";
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([criticalBatteryAgv, chargingAgv])
-            .WithNodesStates([new NodeLock(charger, NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
-            .WithAgvsToMove(null, nodeId: queueEntryNode, swapped: true)
+            .WithNodesStates([new NodeLock(charger.ToGraphNode(), NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
+            .WithAgvsToMove(null, nodeName: queueEntryNode, swapped: true)
             .WithQueueInternalMoves([]);
 
         await fixture.PublishMessageAsync(new SwitchChargingAgvs(criticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
@@ -1793,10 +1793,10 @@ public class AgvCommandHandlerTest
 
         List<CreateQueueingActionGroup> createQueueActionGroupMessages = fixture.TestHarness.Published.Select<CreateQueueingActionGroup>().Select(m => m.Context.Message).ToList();
         createQueueActionGroupMessages.Count.ShouldBe(1);
-        createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == chargingAgv.CorrelationId).QueueNodeId.ShouldBe(queueEntryNode);
+        createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == chargingAgv.CorrelationId).QueueNode.Id.ShouldBe(queueEntryNode.ToGuid());
 
         var chargingNodeSelectedForAgv = fixture.TestHarness.Published.Select<ChargingNodeSelectedForAgv>().Select(m => m.Context.Message).Single();
-        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(charger);
+        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(charger.ToGuid());
         chargingNodeSelectedForAgv.CorrelationId.ShouldBe(criticalBatteryAgv.CorrelationId);
     }
 
@@ -1811,9 +1811,9 @@ public class AgvCommandHandlerTest
         const string parker = "parker";
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([criticalBatteryAgv, chargingAgv])
-            .WithNodesStates([new NodeLock(charger, NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
-            .WithAgvsToMove(null, nodeId: queueEntryNode, swapped: false)
-            .AddParkingPointManager(new GraphNode(parker));
+            .WithNodesStates([new NodeLock(charger.ToGraphNode(), NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
+            .WithAgvsToMove(null, nodeName: queueEntryNode, swapped: false)
+            .AddParkingPointManager(parker.ToGraphNode());
 
         await fixture.PublishMessageAsync(new SwitchChargingAgvs(criticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
 
@@ -1825,11 +1825,11 @@ public class AgvCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
 
         var parkingNodeSelectedForAgv = fixture.TestHarness.Published.Select<ParkingNodeSelectedForAgv>().Select(m => m.Context.Message).Single();
-        parkingNodeSelectedForAgv.ParkingNode.ShouldBe(parker);
+        parkingNodeSelectedForAgv.ParkingNode.Name.ShouldBe(parker);
         parkingNodeSelectedForAgv.CorrelationId.ShouldBe(chargingAgv.CorrelationId);
 
         var chargingNodeSelectedForAgv = fixture.TestHarness.Published.Select<ChargingNodeSelectedForAgv>().Select(m => m.Context.Message).Single();
-        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(charger);
+        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(charger.ToGuid());
         chargingNodeSelectedForAgv.CorrelationId.ShouldBe(criticalBatteryAgv.CorrelationId);
     }
 
@@ -1837,14 +1837,14 @@ public class AgvCommandHandlerTest
     public async Task Consume_SwitchChargingAgvs_AgvIsInNotQueue_NoQueueNoParkerAvailable_PublishesChargingNodeSelectedForAgv_QueueActionGroup()
     {
         const string lastNodeId = "a node";
-        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: lastNodeId);
+        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: lastNodeId);
         var chargingAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: 80);
 
-        const string charger = "charger";
+        var chargerNode = "charger".ToGraphNode();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([criticalBatteryAgv, chargingAgv])
-            .WithNodesStates([new NodeLock(charger, NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
-            .WithAgvsToMove(null, nodeId: null, swapped: false)
+            .WithNodesStates([new NodeLock(chargerNode, NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
+            .WithAgvsToMove(null, nodeName: null, swapped: false)
             .AddParkingPointManager(null);
 
         await fixture.PublishMessageAsync(new SwitchChargingAgvs(criticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
@@ -1858,10 +1858,10 @@ public class AgvCommandHandlerTest
 
         var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).Single();
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(chargingAgv.CorrelationId);
-        queueActionGroup.ActionGroup.Actions.Single().Target.NodeId.ShouldBe(lastNodeId);
+        queueActionGroup.ActionGroup.Actions.Single().Target.Node!.Id.ShouldBe(lastNodeId.ToGuid());
 
         var chargingNodeSelectedForAgv = fixture.TestHarness.Published.Select<ChargingNodeSelectedForAgv>().Select(m => m.Context.Message).Single();
-        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(charger);
+        chargingNodeSelectedForAgv.ChargeStationId.ShouldBe(chargerNode.Id);
         chargingNodeSelectedForAgv.CorrelationId.ShouldBe(criticalBatteryAgv.CorrelationId);
     }
 
@@ -1869,14 +1869,14 @@ public class AgvCommandHandlerTest
     public async Task Consume_SwitchChargingAgvs_AgvIsInNotQueue_NoQueueNoParkerAvailableNoLastNodeId_PublishesSwitchChargingAgvsFailed()
     {
         const string? lastNodeId = null;
-        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: lastNodeId);
+        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: lastNodeId);
         var chargingAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: 80);
 
         const string charger = "charger";
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([criticalBatteryAgv, chargingAgv])
-            .WithNodesStates([new NodeLock(charger, NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
-            .WithAgvsToMove(null, nodeId: null, swapped: false)
+            .WithNodesStates([new NodeLock(charger.ToGraphNode(), NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [])
+            .WithAgvsToMove(null, nodeName: null, swapped: false)
             .AddParkingPointManager(null);
 
         await fixture.PublishMessageAsync(new SwitchChargingAgvs(criticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
@@ -1893,13 +1893,13 @@ public class AgvCommandHandlerTest
     public async Task Consume_SwitchChargingAgvs_AgvNotOnCharger_PublishesSwitchChargingAgvsFailed()
     {
         const string? lastNodeId = null;
-        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: lastNodeId);
+        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: lastNodeId);
         var chargingAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: 80);
 
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([criticalBatteryAgv, chargingAgv])
             .WithNodesStates([], [])
-            .WithAgvsToMove(null, nodeId: null, swapped: false)
+            .WithAgvsToMove(null, nodeName: null, swapped: false)
             .AddParkingPointManager(null);
 
         await fixture.PublishMessageAsync(new SwitchChargingAgvs(criticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
@@ -2033,19 +2033,21 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveAgvFromQueue_EscapeQueue_PublishesUpdateErrorStatus()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agv.IsQueueing = true;
         var agvInQueue = AgvGenerator.GenerateRawAgv(Guid.NewGuid(), "serial number");
         agvInQueue.IsQueueing = true;
 
-        var agvsToMove = new Dictionary<Guid, string> { { agvInQueue.CorrelationId, "a queue head" } };
+        var queueHead = "a queue head".ToGraphNode();
+        var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, queueHead.Id } };
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
             .WithAgvRemovedFromQueueEntry(false)
             .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
             .WithQueueInternalMoves([])
-            .WithEvacuationMoves([]);
+            .WithEvacuationMoves([])
+            .WithNode(queueHead);
 
         var update = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateSystemAgvErrors>(new RemoveAgvFromQueue(agv.CorrelationId));
 
@@ -2056,11 +2058,11 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveAgvFromQueue_RemovedFromQueueEntryNode_PublishesUpdateSystemAgvErrors()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agv.IsQueueing = true;
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
-            .WithAgvsToMove(new Dictionary<Guid, string>())
+            .WithAgvsToMove(new Dictionary<Guid, Guid>())
             .WithAgvRemovedFromQueueEntry(true)
             .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
             .WithQueueInternalMoves([])
@@ -2075,10 +2077,10 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveAgvFromQueue_NotInQueueAnymore_DoesNotPublishUpdateSystemAgvErrors()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "queue node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
-            .WithAgvsToMove(new Dictionary<Guid, string>())
+            .WithAgvsToMove(new Dictionary<Guid, Guid>())
             .WithAgvRemovedFromQueueEntry(false)
             .WithActiveErrors([])
             .WithQueueInternalMoves([])

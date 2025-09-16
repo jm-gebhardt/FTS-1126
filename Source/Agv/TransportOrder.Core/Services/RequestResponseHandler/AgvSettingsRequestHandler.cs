@@ -85,7 +85,7 @@ public class AgvSettingsRequestHandler :
         var defaultSettingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
         await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, defaultSettingsGroup.GroupType, defaultSettingsGroup.Identifier);
         _logger.LogSystemInformation(LogCodes.AgvOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.SystemAgvDefaultSettingUpdated } });
-        _logger.LogInformation("Default agv settings changed." );
+        _logger.LogInformation("Default agv settings changed" );
         await context.RespondAsync(new Success());
     }
 

@@ -1,4 +1,5 @@
 ﻿using FluentValidation.TestHelper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
@@ -217,7 +218,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenCorrelationIdIsEmpty_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: null, targetNodeId: "Park1") };
+        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: null, targetNodeName: "Park1") };
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId: Guid.Empty);
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -235,7 +236,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenStateOfActionGroupIsNotCreated_Fails()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, ["source", "way", "target"], []); // manually setting to not Created state
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => new GraphNode(n.ToGuid(), n)).ToArray(), []); // manually setting to not Created state
         var agv = AgvGenerator.GenerateIdleAgv();
 
         var fixture = new ActionGroupValidatorTestFixture()
@@ -288,7 +289,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenAnyParentIdNotMatchCorrelationId_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: "DifferentActionGroup".ToGuid(), targetNodeId: "Park1") };
+        var actions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(parentId: "DifferentActionGroup".ToGuid(), targetNodeName: "Park1") };
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions, correlationId: "ActionGroup".ToGuid());
 
         var fixture = new ActionGroupValidatorTestFixture()
@@ -403,8 +404,8 @@ public class ActionGroupValidatorTest
         var orderId = Guid.NewGuid();
         var testActions = new List<AgvAction>
         {
-            new(Guid.NewGuid(), ActionType.Pick, "S1", orderId),
-            new(Guid.NewGuid(), ActionType.Drop, "S2", orderId)
+            new(Guid.NewGuid(), ActionType.Pick, "S1".ToGraphNode(), orderId),
+            new(Guid.NewGuid(), ActionType.Drop, "S2".ToGraphNode(), orderId)
         };
 
         var actionGroup = new ActionGroup(
@@ -433,11 +434,11 @@ public class ActionGroupValidatorTest
         var orderId = Guid.NewGuid();
         var testActions = new List<AgvAction>
         {
-            new(Guid.NewGuid(), ActionType.Pick, "S1", orderId)
+            new(Guid.NewGuid(), ActionType.Pick, "S1".ToGraphNode(), orderId)
             {
                 Sequence = 2
             },
-            new(Guid.NewGuid(), ActionType.Drop, "S2", orderId)
+            new(Guid.NewGuid(), ActionType.Drop, "S2".ToGraphNode(), orderId)
             {
                 Sequence = 2
             }
@@ -469,11 +470,11 @@ public class ActionGroupValidatorTest
         var orderId = Guid.NewGuid();
         var testActions = new List<AgvAction>
         {
-            new(Guid.NewGuid(), ActionType.Pick, "S1", orderId)
+            new(Guid.NewGuid(), ActionType.Pick, "S1".ToGraphNode(), orderId)
             {
                 Sequence = 0
             },
-            new(Guid.NewGuid(), ActionType.Drop, "S2", orderId)
+            new(Guid.NewGuid(), ActionType.Drop, "S2".ToGraphNode(), orderId)
             {
                 Sequence = 2
             }
@@ -507,7 +508,7 @@ public class ActionGroupValidatorTest
         var orderId = Guid.NewGuid();
         var testActions = new List<AgvAction>
         {
-            new(Guid.NewGuid(), actionType, "node", orderId)
+            new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
                 Sequence = 0
             }
@@ -541,7 +542,7 @@ public class ActionGroupValidatorTest
         var orderId = Guid.NewGuid();
         var testActions = new List<AgvAction>
         {
-            new(Guid.NewGuid(), actionType, "node", orderId)
+            new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
                 Sequence = 0
             }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
@@ -345,7 +346,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/route")]
     public async Task<ActionResult<RouteDto>> GetAgvRoute(Guid correlationId, [Required] string destinationNodeId, string? startNodeId = null)
     {
-        Response<GotRoute> response = await _getRouteClient.GetResponse<GotRoute>(new GetRoute(correlationId, destinationNodeId, startNodeId));
+        Response<GotRoute> response = await _getRouteClient.GetResponse<GotRoute>(new GetRoute(correlationId, destinationNodeId.ToGuid(), startNodeId?.ToGuid()));
         var dto = _mapper.Map<RouteDto>(response.Message.Route);
         return Ok(dto);
     }
@@ -635,7 +636,7 @@ public class AgvController : Controller
         {
             return Unauthorized();
         }
-        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId, ActionGroupCreator.TransportOrderWebApi, email, theta));
+        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId.ToGuid(), ActionGroupCreator.TransportOrderWebApi, email, theta));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -689,7 +690,7 @@ public class AgvController : Controller
         {
             return Unauthorized();
         }
-        Response<AgvMoveSuccessful> response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId, email));
+        Response<AgvMoveSuccessful> response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId.ToGuid(), email));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -922,7 +923,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/maintenanceLog")]
     public async Task<ActionResult<ICollection<AgvMaintenanceLogDto>>> GetMaintenanceLog([FromRoute] Guid correlationId, [FromQuery] MaintenanceType? maintenanceType)
     {
-        Response<GotMaintenanceLogs> response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv( correlationId, maintenanceType));
+        Response<GotMaintenanceLogs> response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv(correlationId, maintenanceType));
         return Ok(_mapper.Map<List<AgvMaintenanceLogDto>>(response.Message.MaintenanceLogs));
     }
 }

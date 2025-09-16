@@ -13,8 +13,11 @@ public class AgvGraphProfile : WebApiProfile
     /// <inheritdoc />
     public AgvGraphProfile()
     {
-        CreateMap<GraphEdge, GraphEdgeDto>(MemberList.None);
-        CreateMap<GraphNode, GraphNodeDto>();
+        CreateMap<GraphEdge, GraphEdgeDto>(MemberList.None)
+            .ForMember(dest => dest.FromNodeId, opt => opt.MapFrom(src => src.From.Name))
+            .ForMember(dest => dest.ToNodeId, opt => opt.MapFrom(src => src.To.Name));
+        CreateMap<GraphNode, GraphNodeDto>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Name));
         CreateMap<Graph, GraphDto>()
             // Graph is a record type, therefore we must initialize all properties in the ctor
             .ForCtorParam(nameof(GraphDto.Edges), opt =>

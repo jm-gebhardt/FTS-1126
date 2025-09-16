@@ -1,4 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Shouldly;
 
@@ -13,7 +15,12 @@ public class GraphExtensionsTest
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         List<GraphEdge> neighboringEdges = graph.Edges.Take(1).ToList();
         neighboringEdges = neighboringEdges.Append(graph.Edges.First(e => e.FromNodeId == neighboringEdges.Single().ToNodeId)).ToList();
-        string[] route = [neighboringEdges.First().FromNodeId, neighboringEdges.First().ToNodeId, neighboringEdges.Last().ToNodeId];
+        GraphNode[] route =
+        [
+            neighboringEdges.First().FromNodeId.ToGraphNode(),
+            neighboringEdges.First().ToNodeId.ToGraphNode(),
+            neighboringEdges.Last().ToNodeId.ToGraphNode()
+        ];
 
         graph.GetRouteLength(route).ShouldBe(neighboringEdges.Sum(e => e.Length));
     }
@@ -23,13 +30,13 @@ public class GraphExtensionsTest
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
 
-        Should.Throw<InvalidOperationException>(() =>graph.GetRouteLength([graph.Edges.First().FromNodeId, "another node"]));
+        Should.Throw<InvalidOperationException>(() => graph.GetRouteLength([graph.Edges.First().FromNodeId.ToGraphNode(), "another node".ToGraphNode()]));
     }
 
     [TestMethod]
     public void GetRouteLength_OnlyOneNodeGivenInRoute_ReturnsZero()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        graph.GetRouteLength([graph.Edges.First().FromNodeId]).ShouldBe(0);
+        graph.GetRouteLength([graph.Edges.First().FromNodeId.ToGraphNode()]).ShouldBe(0);
     }
 }

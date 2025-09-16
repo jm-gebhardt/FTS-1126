@@ -151,7 +151,7 @@ public class EfQueueRepositoryTest
     public async Task GetBlockedQueueNodes_AgvHasNotEntered_ReturnEntryNode()
     {
         var queue = QueueGenerator.GenerateEmptyQueue();
-        string entryNode = queue.TryEnterQueue()!;
+        var entryNode = queue.TryEnterQueue()!.Value;
 
         var fixture = new EfQueueRepositoryTestFixture();
         await fixture.AddAsync(queue);

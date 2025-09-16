@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.Common.Testing.Helpers;
 
@@ -22,8 +23,8 @@ public static class EdgeGenerator
         }
         return new GraphEdge
         {
-            FromNodeId = fromNodeId,
-            ToNodeId = toNodeId,
+            FromNodeId = fromNodeId.ToGuid(),
+            ToNodeId = toNodeId.ToGuid(),
             Id = id ?? Guid.NewGuid(),
             Length = length,
             Variant = variant,

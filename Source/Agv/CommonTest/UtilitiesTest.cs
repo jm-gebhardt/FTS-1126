@@ -31,10 +31,10 @@ public class UtilitiesTest
     public void NodeIdComparer()
     {
         var comparer = new GraphNodeComparer();
-        var node1 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeId:"1");
-        var node2 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeId:"2");
-        var node3 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeId:"1");
-        var node4 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Park, 0f, 0f, nodeId:"1");
+        var node1 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeName: "1");
+        var node2 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeName: "2");
+        var node3 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Charge, 1f, 2f, 3f, nodeName: "1");
+        var node4 = NodeGenerator.GenerateNode(AgvGraph.NodeType.Park, 0f, 0f, nodeName: "1");
 
         comparer.Equals(node1, node2).ShouldBeFalse();
         comparer.GetHashCode(node2).ShouldNotBe(comparer.GetHashCode(node1));
@@ -53,9 +53,9 @@ public class UtilitiesTest
     public void EdgeIdComparer()
     {
         var comparer = new GraphEdgeComparer();
-        var edge1 = GraphEdge.CreateSlanted("1", "2", 1f, 90, 15d);
-        var edge2 = GraphEdge.CreateDirect("2", "1");
-        var edge3 = GraphEdge.CreateSlanted("1", "2", 2f, 90d, 15d);
+        var edge1 = GraphEdge.CreateSlanted("1".ToGuid(), "2".ToGuid(), 1f, 90, 15d);
+        var edge2 = GraphEdge.CreateDirect("2".ToGuid(), "1".ToGuid());
+        var edge3 = GraphEdge.CreateSlanted("1".ToGuid(), "2".ToGuid(), 2f, 90d, 15d);
 
         comparer.Equals(edge1, edge2).ShouldBeFalse();
         comparer.GetHashCode(edge1).ShouldNotBe(comparer.GetHashCode(edge2));

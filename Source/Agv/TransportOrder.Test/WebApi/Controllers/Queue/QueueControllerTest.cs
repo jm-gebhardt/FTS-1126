@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Queue;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Queue;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Queue;
@@ -10,7 +11,7 @@ public class QueuesController
     public async Task AddQueue_ValidData_ReturnsQueueDto()
     {
         var queue = new TransportOrder.Domain.Models.Queue.Queue();
-        queue.AddNode("a node", 0);
+        queue.AddNode("a node".ToGuid(), 0);
 
         var fixture = new QueueControllerTestFixture()
             .WithQueue(queue)

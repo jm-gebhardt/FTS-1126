@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.KaeserSidecar.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Shouldly;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Repositories;
@@ -12,14 +13,14 @@ public class EfStationRepositoryTest
         var agv = Guid.NewGuid();
         var fixture = new StationRepositoryTestFixture();
 
-        const string station = "station";
+        var station = "station".ToGuid();
 
         await fixture.Repository.OccupyStation(station, agv);
 
         ICollection<StationOccupancy> stationOccupancies = await fixture.Repository.GetStationOccupancy();
 
-        var stationOccupancy = stationOccupancies.Single(s => s.Station == station);
-        stationOccupancy.Station.ShouldBe(station);
+        var stationOccupancy = stationOccupancies.Single(s => s.StationId == station);
+        stationOccupancy.StationId.ShouldBe(station);
         stationOccupancy.Count.ShouldBe(1);
         stationOccupancy.AgvCorrelationId.ShouldBe(agv);
     }
@@ -29,12 +30,12 @@ public class EfStationRepositoryTest
     {
         var agv = Guid.NewGuid();
         var fixture = new StationRepositoryTestFixture();
-        var stationOccupancy = new StationOccupancy("station", 1, agv);
+        var stationOccupancy = new StationOccupancy("station".ToGuid(), "station", 1, agv);
         await fixture.Repository.AddAsync(stationOccupancy);
 
-        await fixture.Repository.FreeStation(stationOccupancy.Station, agv);
+        await fixture.Repository.FreeStation(stationOccupancy.StationId);
 
-        (await fixture.Repository.GetStationOccupancy()).Single(o => o.Station == stationOccupancy.Station).Count.ShouldBe(stationOccupancy.Count - 1);
+        (await fixture.Repository.GetStationOccupancy()).Single(o => o.StationId == stationOccupancy.StationId).Count.ShouldBe(stationOccupancy.Count - 1);
     }
 
     [TestMethod]
@@ -45,6 +46,6 @@ public class EfStationRepositoryTest
         ICollection<StationOccupancy> occupancies = await fixture.Repository.GetStationOccupancy();
 
         occupancies.Count.ShouldBe(3);
-        occupancies.Sum(o => o.Count).ShouldBe(0);   
+        occupancies.Sum(o => o.Count).ShouldBe(0);
     }
 }

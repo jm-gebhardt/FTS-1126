@@ -7,9 +7,9 @@ public record ResourceBlockingError : AgvError
 {
     /// <inheritdoc cref="ResourceBlockingError"/>>
     public ResourceBlockingError(Guid correlationId,
-        DateTime received, string station) : base(correlationId,
+        DateTime received, Guid stationId) : base(correlationId,
         "Agv offline blocking resource",
-        $"Agv went offline with reservation for or blocking {station}",
+        $"Agv went offline with reservation for or blocking station {stationId}",
         "FTS-4143",
         ErrorLevel.Warning,
         "Resource error",

@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
@@ -14,7 +15,7 @@ public class GraphProfileTest
     [TestMethod]
     public void Map_GraphNodeWithAdditionalType_MapsNodeTypeCorrectly()
     {
-        var graphNode = new GraphNode("nodeId", 1, 1, 0, [AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park], null, null, null);
+        var graphNode = new GraphNode("nodeId".ToGuid(), "nodeId", 1, 1, 0, [AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park], null, null, null);
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
 

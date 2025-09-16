@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
 using QueueNode = Gebhardt.Acc.Common.Messages.Queue.QueueNode;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 
@@ -23,7 +24,9 @@ public class QueueCommandHandler(
     IQueueRepository queueRepository,
     ILogger<QueueCommandHandler> logger,
     IActionGroupRepository actionGroupRepository,
-    ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider) :
+    ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider,
+    IAgvDb agvDb
+) :
     IConsumer<AddQueue>,
     IConsumer<GetQueueFillQuantities>,
     IConsumer<EvacuateQueue>,
@@ -66,10 +69,12 @@ public class QueueCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<EvacuateQueue> context)
     {
-        (string queueName, string evacuationTarget, int waitingTime) = context.Message;
+        (string queueName, var evacuationTargetName, int waitingTime) = context.Message;
+        var evacuationTarget = await agvDb.Graphs.TryGetNodeByIdAsync(evacuationTargetName);
+        
         await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            logger.LogInformation("Evacuating queue {Queue} to node {Node}", queueName, evacuationTarget);
+            logger.LogInformation("Evacuating queue {Queue} to node {Node}", queueName, evacuationTargetName);
             var queue = await queueRepository.GetQueueByName(queueName);
 
             if (queue.AgvFillQuantity == 0)
@@ -81,14 +86,14 @@ public class QueueCommandHandler(
             List<Guid> agvs = queue.Agvs;
             if (!queue.AllAgvsEntered)
             {
-                ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(queue.EntryNode!);
+                ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(queue.EntryNode!.Value);
                 List<Guid> queueingAgvs = queueActionGroups.Where(a => a.AssignedAgv.HasValue).Select(a => a.AssignedAgv!.Value).ToList();
                 agvs.AddRange(queueingAgvs);
             }
 
             foreach (var agv in agvs.Distinct().ToList())
             {
-                logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTarget, agv);
+                logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTargetName, agv);
                 var actionGroupId = Guid.NewGuid();
                 await QueueNewActionGroup(context,
                     [
@@ -128,7 +133,8 @@ public class QueueCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<EvacuateQueueHead> context)
     {
-        (string queueName, string evacuationTarget) = context.Message;
+        (string queueName, var evacuationTargetId) = context.Message;
+        var evacuationTarget = await agvDb.Graphs.GetNodeAsync(evacuationTargetId);
         await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             logger.LogInformation("Evacuating head of queue {Queue}", queueName);
@@ -146,17 +152,17 @@ public class QueueCommandHandler(
                 logger.LogInformation("No agv at head of queue {Queue}", queue.Name);
                 return;
             }
-            ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTarget);
+            ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTargetId);
             if (queueActionGroups.Any(q => q.AssignedAgv == agv))
             {
-                logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists", agv );
+                logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists", agv);
                 return;
             }
-            List<string> queueTargets = queue.NonEntryNodes.Except([queueHeadNode?.NodeId ?? string.Empty]).ToList();
+            List<Guid> queueTargets = queue.NonEntryNodes.Except([queueHeadNode?.NodeId ?? Guid.Empty]).ToList();
             ICollection<Domain.Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.Value, queueTargets);
             await Task.WhenAll(queueInternalMoves.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag.CorrelationId))));
 
-            logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTarget, agv);
+            logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTargetId, agv);
             var actionGroupId = Guid.NewGuid();
             await QueueNewActionGroup(context,
                 [

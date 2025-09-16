@@ -27,7 +27,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override string Description => "Charging";
 
     /// <inheritdoc />
-    public async Task<GraphNode> ReserveChargerAsync(Agv agv, string? startNodeId = null)
+    public async Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null)
     {
         try
         {
@@ -43,7 +43,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.IsCharger();
 
     /// <inheritdoc />
-    public async Task<GraphNode?> GetBestChargerAsync(Agv agv, string? startNodeId = null)
+    public async Task<GraphNode?> GetBestChargerAsync(Agv agv, Guid? startNodeId = null)
     {
         try
         {
@@ -65,7 +65,7 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
         }
         catch (ReserveNodeFailedException)
         {
-            throw new ChargeStationNotAvailableException(node.Id);
+            throw new ChargeStationNotAvailableException(node.Name);
         }
     }
 
@@ -78,14 +78,14 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     /// <inheritdoc />
     public async Task<bool> AgvHasReservedChargerAsync(Guid agvCorrelationId)
     {
-        List<string> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
+        List<Guid> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
         return await NodeStateRepository.IsAnyNodeReservedForAgv(agvCorrelationId, nodes);
     }
 
     /// <inheritdoc />
     public async Task<NodeLock?> GetReservedChargerForAgvAsync(Guid agvCorrelationId)
     {
-        List<string> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
+        List<Guid> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
         return await NodeStateRepository.GetReservedNodeLockForAgv(agvCorrelationId, nodes);
     }
 }

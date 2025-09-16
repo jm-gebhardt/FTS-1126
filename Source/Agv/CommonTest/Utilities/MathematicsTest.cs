@@ -31,12 +31,12 @@ public class MathematicsTest
     [TestMethod]
     public void EuclideanDistance_ValidInput_CorrectResult()
     { 
-        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:1, y:0, z:0)).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0)).ShouldBe(0, 0.0001);
-        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:0, y:1, z:0)).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:1)).ShouldBe(1, 0.0001);
-        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:1), NodeGenerator.GenerateNode(nodeId:"", x:0, y:0, z:-1)).ShouldBe(2, 0.0001);
-        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeId:"", x:0, y:1, z:0), NodeGenerator.GenerateNode(nodeId:"", x:1, y:0, z:0)).ShouldBe(1.4142, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeName:"", x:1, y:0, z:0)).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:0)).ShouldBe(0, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeName:"", x:0, y:1, z:0)).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:0), NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:1)).ShouldBe(1, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:1), NodeGenerator.GenerateNode(nodeName:"", x:0, y:0, z:-1)).ShouldBe(2, 0.0001);
+        Mathematics.EuclideanDistance(NodeGenerator.GenerateNode(nodeName:"", x:0, y:1, z:0), NodeGenerator.GenerateNode(nodeName:"", x:1, y:0, z:0)).ShouldBe(1.4142, 0.0001);
     }
     
     [TestMethod]

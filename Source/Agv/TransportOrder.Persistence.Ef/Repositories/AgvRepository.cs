@@ -144,11 +144,11 @@ public class AgvRepository : IAgvRepository
             return [];
         }
         List<Agv> agvs = await Agvs
-            .Where(a =>  agvCorrelationIds.Contains(a.CorrelationId))
+            .Where(a => agvCorrelationIds.Contains(a.CorrelationId))
             .Where(a => !a.IsLocked &&
-                   !a.IsQueueing &&
-                   a.IsOnline &&
-                   a.Mode.Type == ModeType.Normal).ToListAsync();
+                        !a.IsQueueing &&
+                        a.IsOnline &&
+                        a.Mode.Type == ModeType.Normal).ToListAsync();
         return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].BatteryLevelCritical).ToList();
     }
 
@@ -210,9 +210,9 @@ public class AgvRepository : IAgvRepository
 
         IQueryable<Agv> agvContext = context.Set<Agv>().AsNoTracking();
         List<Agv> agvs = await agvContext.Where(agv => agv.GraphExists &&
-                                                                         actionGroups.Any(g => g.AssignedAgv == agv.CorrelationId && g.State == ActionGroupState.Started &&
-                                                                                               g.Actions.Any(a => a.ActionType == ActionType.Charge && a.State == ActionState.Started)) &&
-                                                                         agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging && !agv.IsLocked).ToListAsync();
+                                                       actionGroups.Any(g => g.AssignedAgv == agv.CorrelationId && g.State == ActionGroupState.Started &&
+                                                                             g.Actions.Any(a => a.ActionType == ActionType.Charge && a.State == ActionState.Started)) &&
+                                                       agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging && !agv.IsLocked).ToListAsync();
         return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].MinChargeUp).ToList();
     }
 
@@ -226,7 +226,7 @@ public class AgvRepository : IAgvRepository
             .Where(nl => nl.NodeState == NodeLockState.Occupied)
             .Select(nl => new { nl.NodeId, nl.AgvCorrelationId })
             .ToListAsync();
-        List<string> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
+        List<Guid> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
 
         // Nodes corresponding to locks to get which are chargers
         List<EfNode> efNodes = await context.Set<EfNode>()
@@ -234,11 +234,11 @@ public class AgvRepository : IAgvRepository
             .ToListAsync();
         var lockedNodes = _mapper.Map<List<GraphNode>>(efNodes);
 
-        HashSet<string> chargerNodeIds = lockedNodes
+        HashSet<Guid> chargerNodeIds = lockedNodes
             .Where(n => n.IsCharger())
             .Select(n => n.Id)
             .ToHashSet();
-        
+
         // Charging agvs
         List<Guid?> chargingAgvIds = nodeLocks
             .Where(nl => chargerNodeIds.Contains(nl.NodeId))
@@ -267,7 +267,7 @@ public class AgvRepository : IAgvRepository
             .Where(nl => nl.NodeState == NodeLockState.Occupied || nl.NodeState == NodeLockState.Reserved)
             .Select(nl => new { nl.NodeId, nl.AgvCorrelationId })
             .ToListAsync();
-        List<string> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
+        List<Guid> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
 
         // Nodes corresponding to locks to get which are chargers
         List<EfNode> efNodes = await context.Set<EfNode>()
@@ -275,7 +275,7 @@ public class AgvRepository : IAgvRepository
             .ToListAsync();
         var lockedNodes = _mapper.Map<List<GraphNode>>(efNodes);
 
-        HashSet<string> chargerNodeIds = lockedNodes
+        HashSet<Guid> chargerNodeIds = lockedNodes
             .Where(n => n.IsCharger())
             .Select(n => n.Id)
             .ToHashSet();
@@ -299,10 +299,10 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId)
+    public async Task<Guid?> GetLastNodeIdAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        string? lastNodeId = await Agvs
+        Guid? lastNodeId = await Agvs
             .Where(s => s.CorrelationId == agvCorrelationId && s.AgvStatus != null)
             .Select(s => s.AgvStatus!.LastNodeId)
             .SingleOrDefaultAsync();
@@ -311,7 +311,7 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, string?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds)
+    public async Task<IReadOnlyDictionary<Guid, Guid?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -321,9 +321,9 @@ public class AgvRepository : IAgvRepository
             queryable = queryable.Where(s => agvCorrelationIds.Contains(s.CorrelationId));
         }
 
-        Dictionary<Guid, string?> lastNodeIdsById = await queryable
+        Dictionary<Guid, Guid?> lastNodeIdsById = await queryable
             .Where(s => s.AgvStatus != null)
-            .Select(s => new {s.CorrelationId, s.AgvStatus!.LastNodeId})
+            .Select(s => new { s.CorrelationId, s.AgvStatus!.LastNodeId })
             .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId);
 
         // for potential Agvs with no status, we want to have a null value

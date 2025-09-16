@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Queue;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
@@ -9,13 +10,15 @@ namespace Gebhardt.Acc.TransportOrder.Test.Messages;
 [TestClass]
 public class QueueMessageSerializationTest
 {
+    private static readonly Guid _nodeId = "node id".ToGuid();
+
     [TestMethod]
     public void GotQueues_ValidData_SerializesAllProperties()
     {
         var queue = new Queue("a queue");
-        queue.AddNode("node id", 0);
+        queue.AddNode(_nodeId, 0);
         var message = new GotQueues([queue]);
-        var fixture =  new MessageSerialisationTestFixture();
+        var fixture = new MessageSerialisationTestFixture();
 
         fixture.ValidateSerialization(message);
     }
@@ -24,7 +27,7 @@ public class QueueMessageSerializationTest
     public void GotQueue_ValidData_SerializesAllProperties()
     {
         var queue = new Queue("a queue");
-        queue.AddNode("node id", 0);
+        queue.AddNode(_nodeId, 0);
         var message = new GotQueue(queue);
         var fixture = new MessageSerialisationTestFixture();
 
@@ -35,7 +38,7 @@ public class QueueMessageSerializationTest
     public void AddQueue_ValidData_SerializesAllProperties()
     {
         var queue = new Queue("a queue");
-        queue.AddNode("node id", 0);
+        queue.AddNode(_nodeId, 0);
         var message = new AddQueue(queue.Name, queue.Nodes.Select(n => new QueueNode(n.NodeId, n.Position)).ToList());
         var fixture = new MessageSerialisationTestFixture();
 
@@ -46,7 +49,7 @@ public class QueueMessageSerializationTest
     public void TryAddQueue_ValidData_SerializesAllProperties()
     {
         var queue = new Queue("a queue");
-        queue.AddNode("node id", 0);
+        queue.AddNode(_nodeId, 0);
         var message = new TryAddQueue(queue.Name, queue.Nodes.Select(n => new QueueNode(n.NodeId, n.Position)).ToList());
         var fixture = new MessageSerialisationTestFixture();
 

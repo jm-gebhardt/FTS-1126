@@ -30,7 +30,7 @@ public class RouteService : IRouteService
         _queueRepository = queueRepository;
     }
 
-    private static string GetLastNodeId(Agv agv)
+    private static Guid GetLastNodeId(Agv agv)
     {
         return agv.AgvStatus?.LastNodeId ?? throw new AgvLocationUnknownException(agv.CorrelationId);
     }
@@ -40,7 +40,7 @@ public class RouteService : IRouteService
         return await _graphRepository.GetAgvGraphAsync(agv.CorrelationId);
     }
 
-    private async Task<Route?> GetRouteIfExistingAsync(Agv agv, string destinationNodeId, string? startNodeId = null, bool throwIfNodeUnknown = false, AgvData? agvData = null, CancellationToken cancellationToken = default)
+    private async Task<Route?> GetRouteIfExistingAsync(Agv agv, Guid destinationNodeId, Guid? startNodeId = null, bool throwIfNodeUnknown = false, AgvData? agvData = null, CancellationToken cancellationToken = default)
     {
         if (startNodeId == null)
         {
@@ -71,23 +71,24 @@ public class RouteService : IRouteService
             }
             if (agvGraph.Nodes.All(n => n.Id != startNodeId))
             {
-                throw new NodeNotFoundException(agv, startNodeId);
+                throw new NodeNotFoundException(agv, startNodeId.Value);
             }
         }
 
-        var route = await _routeFinder.TryGetRouteAsync(agvGraph, agvData, cancellationToken, startNodeId, destinationNodeId);
+        var route = await _routeFinder.TryGetRouteAsync(agvGraph, agvData, cancellationToken, startNodeId.Value, destinationNodeId);
 
         return route?.Nodes.Length == 0 ? null : route;
     }
 
-    private async Task<Route?> GetRouteIfExistingAsync(Agv agv, IEnumerable<string> destinationNodeIds, string? startNodeId, AgvData? agvData, CancellationToken cancellationToken = default)
+    private async Task<Route?> GetRouteIfExistingAsync(Agv agv, IEnumerable<Guid> destinationNodeIds, Guid? startNodeId, AgvData? agvData, CancellationToken cancellationToken = default)
     {
         startNodeId ??= GetLastNodeId(agv);
 
-        var nodes = new List<string>
+        var nodes = new List<Guid>();
+        if (startNodeId != Guid.Empty)
         {
-            startNodeId
-        };
+            nodes.Add(startNodeId.Value);
+        }
         nodes.AddRange(destinationNodeIds);
         var agvGraph = await GetAgvGraph(agv);
         cancellationToken.ThrowIfCancellationRequested();
@@ -99,7 +100,7 @@ public class RouteService : IRouteService
     ///<inheritdoc />
     /// <exception cref="AgvLocationUnknownException"></exception>
     /// <exception cref="AgvGraphNotDefinedException"></exception>
-    public async Task<double?> GetCostsAsync(Agv agv, string destinationNodeId, AgvData? agvData, CancellationToken cancellationToken = default)
+    public async Task<double?> GetCostsAsync(Agv agv, Guid destinationNodeId, AgvData? agvData, CancellationToken cancellationToken = default)
     {
         var route = await GetRouteIfExistingAsync(agv, destinationNodeId, null, true, agvData, cancellationToken);
         return route?.Costs;
@@ -118,7 +119,7 @@ public class RouteService : IRouteService
 
         foreach (var action in actionGroup.Actions.Where(a => a is { IsIncomplete: false, IsMoveToCoordinate: false }))
         {
-            double? costs = await GetCostsAsync(agv, action.Target.NodeId!, agvData, cancellationToken);
+            double? costs = await GetCostsAsync(agv, action.Target.Node!.Id, agvData, cancellationToken);
             if (costs == null)
             {
                 return null; // Break if a target node is not reachable
@@ -137,7 +138,7 @@ public class RouteService : IRouteService
     }
 
     /// <inheritdoc />
-    public async Task<double?> GetCostsForFirstActionNotPassingNodesAsync(Agv agv, Models.ActionGroup.ActionGroup actionGroup, AgvData? agvData, ICollection<string> nodesToAvoid, CancellationToken cancellationToken = default)
+    public async Task<double?> GetCostsForFirstActionNotPassingNodesAsync(Agv agv, Models.ActionGroup.ActionGroup actionGroup, AgvData? agvData, ICollection<Guid> nodesToAvoid, CancellationToken cancellationToken = default)
     {
         AgvAction? firstAction = null;
         double? firstActionCost = null;
@@ -149,13 +150,13 @@ public class RouteService : IRouteService
 
         foreach (var action in actionGroup.Actions.Where(a => a is { IsIncomplete: false, IsMoveToCoordinate: false }))
         {
-            var route = await GetRouteIfExistingAsync(agv, action.Target.NodeId!, null, true, agvData, cancellationToken);
+            var route = await GetRouteIfExistingAsync(agv, action.Target.Node!.Id, null, true, agvData, cancellationToken);
             if (route == null)
             {
                 return null; // Break if a target node is not reachable
             }
 
-            IEnumerable<string> prohibitedNodes = route.Nodes.Where(n => n != agv.AgvStatus?.LastNodeId).Intersect(nodesToAvoid);
+            IEnumerable<Guid> prohibitedNodes = route.Nodes.Where(n => n.Id != agv.AgvStatus?.LastNodeId).Select(n => n.Id).Intersect(nodesToAvoid);
             if (prohibitedNodes.Any() && action.ActionType == ActionType.Pick) // drop actions are not time-critical and can wait for prohibited nodes to be freed again
             {
                 return null; // Break if a route to a pick passes nodes to avoid.
@@ -197,12 +198,12 @@ public class RouteService : IRouteService
 
             if (finishedTask.Result != null)
             {
-                _logger.LogDebug("A route calculation task completed successfully. Cancelling the remaining tasks.");
+                _logger.LogDebug("A route calculation task completed successfully. Cancelling the remaining tasks");
                 await cts.CancelAsync();
                 return true;
             }
 
-            _logger.LogDebug("A route calculation task completed but returned hasRoute false. Waiting for the next completion.");
+            _logger.LogDebug("A route calculation task completed but returned hasRoute false. Waiting for the next completion");
 
             hasRouteTasks.Remove(finishedTask);
         }
@@ -214,7 +215,7 @@ public class RouteService : IRouteService
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     /// <exception cref="RouteNotFoundException"></exception>
     /// <exception cref="NodeNotFoundException"></exception>
-    public async Task<Route> GetRouteAsync(Agv agv, string destinationNodeId, string? startNodeId = null, AgvData? agvData = null, CancellationToken cancellationToken = default)
+    public async Task<Route> GetRouteAsync(Agv agv, Guid destinationNodeId, Guid? startNodeId = null, AgvData? agvData = null, CancellationToken cancellationToken = default)
     {
         var route = await GetRouteIfExistingAsync(agv, destinationNodeId, startNodeId, true, agvData, cancellationToken);
 
@@ -230,20 +231,20 @@ public class RouteService : IRouteService
     /// <exception cref="AgvLocationUnknownException"></exception>
     /// <exception cref="AgvGraphNotDefinedException"></exception>
     /// <exception cref="RouteNotFoundException"></exception>
-    public async Task<Route> GetRouteAsync(Agv agv, IList<string> destinationNodeIds, string? startNodeId, AgvData? agvData)
+    public async Task<Route> GetRouteAsync(Agv agv, IList<Guid> destinationNodeIds, Guid? startNodeId, AgvData? agvData)
     {
         var route = await GetRouteIfExistingAsync(agv, destinationNodeIds, startNodeId, agvData);
 
         if (route == null)
         {
-            throw new RouteNotFoundException(agv.AgvStatus?.LastNodeId, destinationNodeIds);
+            throw new RouteNotFoundException(agv.AgvStatus?.LastNodeId, destinationNodeIds.ToList());
         }
 
         return route;
     }
 
     ///<inheritdoc />
-    public async Task<GraphNode> GetNodeWithLowestCostsAsync(Agv agv, IList<GraphNode> availableNodes, AgvData? agvData, string? startNodeId = null)
+    public async Task<GraphNode> GetNodeWithLowestCostsAsync(Agv agv, IList<GraphNode> availableNodes, AgvData? agvData, Guid? startNodeId = null)
     {
         IEnumerable<GraphNode> graphNodes = availableNodes.ToList();
         List<Route> routes = await Task.WhenAll(graphNodes
@@ -255,14 +256,14 @@ public class RouteService : IRouteService
         {
             throw new RouteNotFoundException(agv.CorrelationId, availableNodes);
         }
-        string lowestCostDestinationNodeId = routes.MinBy(r => r.Costs)!.Nodes.Last();
+        var lowestCostDestinationNodeId = routes.MinBy(r => r.Costs)!.Nodes.Last().Id;
 
-        _logger.LogDebug("Destination node with lowest cost route for Agv with serial number {SerialNumber} is: {Node}. This was chosen out of: {AvailableNodes}", agv.SerialNumber, lowestCostDestinationNodeId, graphNodes.Select(n => n.Id).ToList());
+        _logger.LogDebug("Destination node with lowest cost route for Agv with serial number {SerialNumber} is: {Node}. This was chosen out of: {AvailableNodes}", agv.SerialNumber, lowestCostDestinationNodeId, graphNodes.Select(n => n.Name).ToList());
         return graphNodes.First(n => n.Id == lowestCostDestinationNodeId);
     }
 
     ///<inheritdoc />
-    public async Task<(Guid? agv, Route? route)> GetAgvRouteClosestToTarget(ICollection<(Agv agv, AgvData? agvData)> agvs, string targetNodeId, bool skipAgvsStartingAtTarget = false)
+    public async Task<(Guid? agv, Route? route)> GetAgvRouteClosestToTarget(ICollection<(Agv agv, AgvData? agvData)> agvs, Guid targetNodeId, bool skipAgvsStartingAtTarget = false)
     {
         if (skipAgvsStartingAtTarget)
         {
@@ -285,16 +286,16 @@ public class RouteService : IRouteService
             return (null, null);
         }
 
-        ICollection<string> queueNodes = await _queueRepository.GetBlockedQueueNodes();
+        ICollection<Guid> queueNodes = await _queueRepository.GetBlockedQueueNodes();
 
         List<(Guid CorrelationId, Route? Route)> routes = routesWithIds.Where(r =>
             r.Route != null &&
-            (queueNodes.Contains(r.Route.Nodes.First()) || !r.Route.Nodes.Intersect(queueNodes).Any())).ToList();
+            (queueNodes.Contains(r.Route.Nodes.First().Id) || !r.Route.Nodes.Select(n => n.Id).Intersect(queueNodes).Any())).ToList();
 
         if (routes.Count == 0)
         {
             return (null, null);
         }
-        return routes.MinBy(r => r.Route?.Costs); 
+        return routes.MinBy(r => r.Route?.Costs);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
@@ -18,21 +19,21 @@ public class ConveyorReportingEventHandlerTest
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
         actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
-        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId = OrderGenerator.KaeserConfiguration.GetShortLoopTarget();
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.Node = OrderGenerator.KaeserConfiguration.GetShortLoopTarget().ToGraphNode();
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
 
         var fixture = new ConveyorReportingEventHandlerTestFixture()
             .WithHostOrders(dropHostOrder, nextPickOrder)
             .WithAgvHasLowBatteryLevel(hasLowBatteryLevel);
 
-        var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!,
+        var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.Node!,
             Guid.NewGuid(), dropHostOrder.CorrelationId, nextPickOrder.CorrelationId, !hasLowBatteryLevel, null);
 
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
 
         fixture.VerifyReportingToConveyors("PS03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, pickStation, dropHostOrder.Hu, Times.Once());
-        (await fixture.OrderRepository.HasOrderBeenReported(pickStation??"", nextPickOrder.CorrelationId)).ShouldBe(pickStation != null);
+        (await fixture.OrderRepository.HasOrderBeenReported(pickStation ?? "", nextPickOrder.CorrelationId)).ShouldBe(pickStation != null);
         (await fixture.OrderRepository.HasOrderBeenReported(dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, dropHostOrder.CorrelationId)).ShouldBeTrue();
     }
 
@@ -42,18 +43,18 @@ public class ConveyorReportingEventHandlerTest
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         var actionGroup = dropHostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration);
         actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
-        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId = OrderGenerator.KaeserConfiguration.GetShortLoopTarget();
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.Node = OrderGenerator.KaeserConfiguration.GetShortLoopTarget().ToGraphNode();
 
         var fixture = new ConveyorReportingEventHandlerTestFixture()
             .WithHostOrders(dropHostOrder)
             .WithAgvHasLowBatteryLevel(false);
 
-        var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!,
+        var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.Node!,
             Guid.NewGuid(), dropHostOrder.CorrelationId, null, false, null);
 
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
-        
+
         fixture.VerifyReportingToConveyors("PS03", dropHostOrder.Actions.First(a => a.ActionType == ActionType.Drop).Node, null, dropHostOrder.Hu, Times.Once());
         (await fixture.OrderRepository.HasOrderBeenReported(dropHostOrder.Source, dropHostOrder.CorrelationId)).ShouldBeFalse();
         (await fixture.OrderRepository.HasOrderBeenReported(dropHostOrder.Target, dropHostOrder.CorrelationId)).ShouldBeTrue();
@@ -73,7 +74,7 @@ public class ConveyorReportingEventHandlerTest
         await fixture.OrderRepository.StoreOrderReport(dropOrderDetails.Destination, dropHostOrder.CorrelationId);
         (await fixture.OrderRepository.HasOrderBeenReported(dropOrderDetails.Destination, dropHostOrder.CorrelationId)).ShouldBeTrue();
 
-        var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId!,
+        var droppingAgvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.Node!,
             Guid.NewGuid(), dropHostOrder.CorrelationId, null, false, null);
 
         await fixture.TestHarness.Bus.Publish(droppingAgvPassedDoppelspielTriggerPoint);

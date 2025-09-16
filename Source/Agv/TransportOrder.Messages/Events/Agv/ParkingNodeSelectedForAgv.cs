@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using MassTransit;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 
@@ -7,4 +8,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 /// </summary>
 /// <param name="CorrelationId">The agv correlation id.</param>
 /// <param name="ParkingNode">The parking node.</param>
-public record ParkingNodeSelectedForAgv(Guid CorrelationId, string ParkingNode): CorrelatedBy<Guid>;
+public record ParkingNodeSelectedForAgv(Guid CorrelationId, GraphNode ParkingNode) : CorrelatedBy<Guid>;

@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
@@ -6,7 +7,7 @@ namespace Gebhardt.Acc.Common.Testing.Helpers;
 
 public static class AgvActionGenerator
 {
-    private static string[] GetNodes(string startNodeId, string targetNodeId, int numberOfNodes, IEnumerable<GraphNode>? availableNodes = null)
+    private static GraphNode[] GetNodes(string startNodeId, string targetNodeId, int numberOfNodes, IEnumerable<GraphNode>? availableNodes = null)
     {
         var nodes = new List<string>
         {
@@ -15,7 +16,7 @@ public static class AgvActionGenerator
 
         if (startNodeId == targetNodeId)
         {
-            return nodes.ToArray();
+            return nodes.Select(n => new GraphNode(n.ToGuid(), n)).ToArray();
         }
 
         int nodesToBeAdded = numberOfNodes - 2;
@@ -29,12 +30,12 @@ public static class AgvActionGenerator
             for (int i = 0; i < nodesToBeAdded; i++)
             {
                 // take element based on index, if it exceeds start from beginning
-                nodes.Add(graphNodes.ElementAt(i % graphNodes.Count).Id);
+                nodes.Add(graphNodes.ElementAt(i % graphNodes.Count).Name);
             }
         }
         nodes.Add(targetNodeId);
 
-        return nodes.ToArray();
+        return nodes.Select(n => new GraphNode(n.ToGuid(), n)).ToArray();
     }
 
     [UsedImplicitly]
@@ -46,12 +47,12 @@ public static class AgvActionGenerator
 
         var moveActionGuid = Guid.NewGuid();
         var chargeActionGuid = Guid.NewGuid();
-        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, targetNodeId ?? "Charge-1", groupId)
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, (targetNodeId ?? "Charge-1").ToGraphNode(), groupId)
         {
             Sequence = 0,
             State = actionState
         };
-        var chargeAction = new AgvAction(chargeActionGuid, ActionType.Charge, targetNodeId ?? "Charge-1", groupId)
+        var chargeAction = new AgvAction(chargeActionGuid, ActionType.Charge, (targetNodeId ?? "Charge-1").ToGraphNode(), groupId)
         {
             Sequence = 1,
             State = actionState
@@ -69,12 +70,12 @@ public static class AgvActionGenerator
     [UsedImplicitly]
     public static AgvAction GenerateChargeAction(string startNodeId = "CRG1", string targetNodeId = "CRG1", Guid? parentId = null)
     {
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId, parentId ?? Guid.NewGuid())
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId.ToGraphNode(), parentId ?? Guid.NewGuid())
         {
-            Nodes = new[]
-            {
-                targetNodeId
-            }
+            Nodes =
+            [
+                new GraphNode(targetNodeId.ToGuid(), targetNodeId)
+            ]
         };
 
         return action;
@@ -106,7 +107,7 @@ public static class AgvActionGenerator
     /// <returns></returns>
     public static AgvAction GenerateAction(string startNodeId = "N1", ActionType actionType = ActionType.Move, IEnumerable<GraphNode>? availableNodes = null, int numberOfNodes = 2, string targetNodeId = "Move-1", Guid? parentId = null)
     {
-        var action = new AgvAction(Guid.NewGuid(), actionType, targetNodeId, parentId ?? Guid.NewGuid())
+        var action = new AgvAction(Guid.NewGuid(), actionType, targetNodeId.ToGraphNode(), parentId ?? Guid.NewGuid())
         {
             Nodes = GetNodes(startNodeId, targetNodeId, numberOfNodes, availableNodes)
         };
@@ -129,13 +130,13 @@ public static class AgvActionGenerator
         groupId ??= Guid.NewGuid();
         var pickActionGuid = Guid.NewGuid();
         var dropActionGuid = Guid.NewGuid();
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, (source ?? AgvGraphGenerator.SourceClose.Name).ToGraphNode(), groupId.Value)
         {
             Sequence = 0,
             State = actionState,
             AdditionalInfo = additionalPickInfo
         };
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, (destination ?? AgvGraphGenerator.DestinationClose.Name).ToGraphNode(), groupId.Value)
         {
             Sequence = 1,
             State = actionState
@@ -168,18 +169,18 @@ public static class AgvActionGenerator
         var moveActionGuid = Guid.NewGuid();
         var pickActionGuid = Guid.NewGuid();
         var dropActionGuid = Guid.NewGuid();
-        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, AgvGraphGenerator.Waypoint3.Id, groupId.Value)
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, AgvGraphGenerator.Waypoint3, groupId.Value)
         {
             Sequence = 0,
             State = actionState
         };
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source != null ? source.ToGraphNode() : AgvGraphGenerator.SourceClose, groupId.Value)
         {
             Sequence = 1,
             State = actionState,
             AdditionalInfo = additionalPickInfo
         };
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination != null ? destination.ToGraphNode() : AgvGraphGenerator.DestinationClose, groupId.Value)
         {
             Sequence = 2,
             State = actionState
@@ -212,18 +213,18 @@ public static class AgvActionGenerator
         var pickActionGuid = Guid.NewGuid();
         var moveActionGuid = Guid.NewGuid();
         var dropActionGuid = Guid.NewGuid();
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source != null ? source.ToGraphNode() : AgvGraphGenerator.SourceClose, groupId.Value)
         {
             Sequence = 0,
             State = actionState,
             AdditionalInfo = additionalPickInfo
         };
-        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, AgvGraphGenerator.Waypoint3.Id, groupId.Value)
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, AgvGraphGenerator.Waypoint3, groupId.Value)
         {
             Sequence = 1,
             State = actionState
         };
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination != null ? destination.ToGraphNode() : AgvGraphGenerator.DestinationClose, groupId.Value)
         {
             Sequence = 2,
             State = actionState
@@ -256,18 +257,18 @@ public static class AgvActionGenerator
         var dropActionGuid = Guid.NewGuid();
         var moveActionGuid = Guid.NewGuid();
 
-        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId.Value)
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination != null ? moveDestination.ToGraphNode() : AgvGraphGenerator.Waypoint3, groupId.Value)
         {
             Sequence = 0,
             State = actionState
         };
 
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, string.Empty, groupId.Value)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, targetNode: null, groupId.Value)
         {
             Sequence = 1,
             State = actionState
         };
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination ?? AgvGraphGenerator.DestinationClose.Id, groupId.Value)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination != null ? destination.ToGraphNode() : AgvGraphGenerator.DestinationClose, groupId.Value)
         {
             Sequence = 2,
             State = actionState
@@ -298,19 +299,19 @@ public static class AgvActionGenerator
         var dropActionGuid = Guid.NewGuid();
         var moveActionGuid = Guid.NewGuid();
 
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source ?? AgvGraphGenerator.SourceClose.Id, groupId.Value)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, source != null ? source.ToGraphNode() : AgvGraphGenerator.SourceClose, groupId.Value)
         {
             Sequence = 0,
             State = actionState
         };
 
-        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination ?? AgvGraphGenerator.Waypoint3.Id, groupId.Value)
+        var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination != null ? moveDestination.ToGraphNode() : AgvGraphGenerator.Waypoint3, groupId.Value)
         {
             Sequence = 1,
             State = actionState
         };
 
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, string.Empty, groupId.Value)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, targetNode: null, groupId.Value)
         {
             Sequence = 2,
             State = actionState
@@ -330,10 +331,10 @@ public static class AgvActionGenerator
     {
         const string orderId = "orderId-move";
         var groupId = Guid.NewGuid();
-        var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId ?? "Move-1", groupId);
+        var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, (targetNodeId ?? "Move-1").ToGraphNode(), groupId);
         if (targetNodeId != null)
         {
-            moveAction.Nodes = new[] { targetNodeId };
+            moveAction.Nodes = [new GraphNode(targetNodeId.ToGuid(), targetNodeId)];
         }
 
         var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi)

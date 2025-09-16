@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using JetBrains.Annotations;
@@ -26,7 +27,7 @@ public abstract class BaseNodePicker
     protected readonly INodeStateRepository NodeStateRepository;
 
     private readonly IRouteService _routeService;
-    
+
     /// <summary>
     /// The logger.
     /// </summary>
@@ -57,7 +58,7 @@ public abstract class BaseNodePicker
     /// <param name="agvData"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <param name="ignoredNodeIds">Node ids to ignore.</param>
-    protected async Task<GraphNode> PickNode(Models.Agv.Agv agv, AgvData? agvData, string? startNodeId = null, params string[] ignoredNodeIds)
+    protected async Task<GraphNode> PickNode(Agv agv, AgvData? agvData, Guid? startNodeId = null, params Guid[] ignoredNodeIds)
     {
         IEnumerable<GraphNode> availableNodes = (await GetAvailableNodes(agv)).Where(n => !ignoredNodeIds.Contains(n.Id));
 
@@ -65,7 +66,7 @@ public abstract class BaseNodePicker
 
         return node;
     }
-    
+
     /// <summary>
     /// Checks if the agv has a node of the given type reserved.
     /// </summary>
@@ -77,7 +78,7 @@ public abstract class BaseNodePicker
         return AgvDb.Graphs.HasAnyNodeOfTypeAsync(agvCorrelationId, nodeType);
     }
 
-    private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Models.Agv.Agv agv)
+    private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Agv agv)
     {
         IEnumerable<GraphNode> nodes = await AgvDb.Graphs.GetNodesAsync(agv.CorrelationId, NodeFilter);
         IEnumerable<GraphNode> availableNodes = NodeStateRepository.FilterFreeUnlockedNodes(nodes);
@@ -105,7 +106,7 @@ public abstract class BaseNodePicker
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns>The best node</returns>
     [PublicAPI]
-    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv, AgvData? agvData, string? startNodeId = null)
+    protected virtual Task<GraphNode> SelectBestNode(IEnumerable<GraphNode> availableNodes, Agv agv, AgvData? agvData, Guid? startNodeId = null)
     {
         Logger.LogDebug("Choosing node with lowest costs");
         return _routeService.GetNodeWithLowestCostsAsync(agv, availableNodes.ToList(), agvData, startNodeId);
@@ -118,7 +119,7 @@ public abstract class BaseNodePicker
     /// <param name="agv"></param>
     /// <returns></returns>
     [PublicAPI]
-    protected virtual Task<GraphNode> SelectRandomAvailableNode(IEnumerable<GraphNode> availableNodes, Models.Agv.Agv agv)
+    protected virtual Task<GraphNode> SelectRandomAvailableNode(IEnumerable<GraphNode> availableNodes, Agv agv)
     {
         var rand = Random.Shared;
         // must use ToList, otherwise it can not be interpreted
@@ -132,14 +133,14 @@ public abstract class BaseNodePicker
     /// </summary>
     /// <param name="agv"></param>
     /// <returns>True if the lastNodeId of the Agv is such a node, False if the lastNodeId of the agv is null</returns>
-    protected async Task<bool> IsAgvOnSuchANode(Models.Agv.Agv agv)
+    protected async Task<bool> IsAgvOnSuchANode(Agv agv)
     {
-        string? lastNodeId = agv.AgvStatus?.LastNodeId;
-        if (string.IsNullOrEmpty(lastNodeId))
+        Guid? lastNodeId = agv.AgvStatus?.LastNodeId;
+        if (lastNodeId == null)
         {
             return false;
         }
-        var currentNode = await AgvDb.Graphs.GetNodeAsync(lastNodeId);
+        var currentNode = await AgvDb.Graphs.GetNodeAsync(lastNodeId.Value);
         bool isSuchANode = NodeFilter.Compile()(currentNode);
 
         return isSuchANode;

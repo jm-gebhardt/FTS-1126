@@ -41,19 +41,19 @@ public interface IGraphRepository
     /// Get distinct nodes by given ids.
     /// </summary>
     /// <param name="nodeIds">The node ids.</param>
-    Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<string> nodeIds);
+    Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<Guid> nodeIds);
 
     /// <summary>
     /// Get node of this agv by NodeId.
     /// </summary>
     /// <param name="id">The Id of the node to get</param>
-    Task<GraphNode> GetNodeAsync(string id);
+    Task<GraphNode> GetNodeAsync(Guid id);
 
     /// <summary>
-    /// Try to get node of this agv by NodeId.
+    /// Try to get node.
     /// </summary>
-    /// <param name="id">The Id of the node to get</param>
-    Task<GraphNode?> TryGetNodeAsync(string id);
+    /// <param name="nodeId">The Id of the node to get</param>
+    Task<GraphNode?> TryGetNodeByIdAsync(Guid nodeId);
 
     /// <summary>
     /// Gets the graph for the given map.
@@ -94,14 +94,14 @@ public interface IGraphRepository
     /// </summary>
     /// <param name="nodeId">The Id of the node</param>
     /// <returns></returns>
-    Task<bool> NodeExistsAsync(string nodeId);
+    Task<bool> NodeExistsByIdAsync(Guid nodeId);
 
     /// <summary>
     /// Check if a node exists in the repository and raise <see cref="NodeNotFoundException"/> if not.
     /// </summary>
-    /// <param name="nodeId">The Id of the node</param>
+    /// <param name="nodeId"></param>
     /// <exception cref="NodeNotFoundException">Raised, if the node was not found.</exception>
-    Task ThrowIfNodeNotExistsAsync(string nodeId);
+    Task ThrowIfNodeNotExistsAsync(Guid? nodeId);
 
     /// <summary>
     /// Check if an edge exists in the repository.
@@ -139,7 +139,7 @@ public interface IGraphRepository
     /// </summary>
     /// <param name="lastNodeIdsByAgvCorrelationId">A dictionary with agv correlation id and last node id.</param>
     /// <returns></returns>
-    public Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, string?> lastNodeIdsByAgvCorrelationId);
+    public Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, Guid?> lastNodeIdsByAgvCorrelationId);
 
     /// <summary>
     /// Check if the agv has a node of the given type.

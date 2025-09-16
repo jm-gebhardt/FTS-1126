@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 
@@ -24,19 +25,19 @@ public class TriggerControllerTest
     [TestMethod]
     public async Task AssignTriggerToNodeLocation_ValidData_ReturnsLocationDto()
     {
-        const string nodeToUse = "WP-0001";
+        var nodeToUse = "WP-0001".ToGraphNode();
         var location = new TriggerLocationDto
         {
-            NodeId = nodeToUse
+            NodeId = nodeToUse.Name
         };
 
         var fixture = new TriggerControllerTestFixture()
-            .WithTriggerLocation(location)
+            .WithTriggerLocation(location, nodeToUse)
             .Build();
 
         var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(Guid.NewGuid(), location));
         locationDto.Id.ShouldBe(location.Id);
-        locationDto.NodeId.ShouldBe(nodeToUse);
+        locationDto.NodeId.ShouldBe(nodeToUse.Name);
     }
 
     [TestMethod]
@@ -53,7 +54,7 @@ public class TriggerControllerTest
         };
 
         var fixture = new TriggerControllerTestFixture()
-            .WithTriggerLocation(location)
+            .WithTriggerLocation(location, "node".ToGraphNode())
             .Build();
 
         var locationDto = await fixture.GetControllerResultAsync(c => c.AssignTriggerToLocation(Guid.NewGuid(), location));

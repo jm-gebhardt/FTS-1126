@@ -6,13 +6,13 @@ namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 /// <summary>
 /// Provides a mapping of trigger point names to node ids.
 /// </summary>
-public class InMemoryTriggerPointMapping : IConcurrentDictionaryProvider<string, string>
+public class InMemoryTriggerPointMapping : IConcurrentDictionaryProvider<string, Guid>
 {
     /// <inheritdoc />>
-    public ConcurrentDictionary<string, string> ConcurrentDict { get; } = new ();
+    public ConcurrentDictionary<string, Guid> ConcurrentDict { get; } = new();
 
     /// <inheritdoc />>
-    public void Add(string key, string value)
+    public void Add(string key, Guid value)
     {
         ConcurrentDict.AddOrUpdate(key, value, (_, _) => value);
     }

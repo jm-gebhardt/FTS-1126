@@ -12,7 +12,7 @@ public class AgvActionValidatorTest
     [TestMethod]
     public async Task ValidateAsync_WhenEverythingIsValid_Passes()
     {
-        var action = AgvActionGenerator.GenerateParkAction(targetNodeId: null);
+        var action = AgvActionGenerator.GenerateParkAction(targetNodeName: null);
 
         var agvActionValidator = new AgvActionValidator();
 

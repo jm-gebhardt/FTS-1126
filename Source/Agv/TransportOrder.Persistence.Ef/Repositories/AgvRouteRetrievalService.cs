@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -38,7 +39,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<CurrentAgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, string? lastNodeId = null)
+    public async Task<CurrentAgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, Guid? lastNodeId = null)
     {
         await using var context = await CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
@@ -50,7 +51,7 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             .FirstOrDefaultAsync();
 
         // if lastNodeId parameter is not we want to get the current value from the repository
-        Task<string?> lastNodeIdTask = string.IsNullOrEmpty(lastNodeId) ? _agvRepository.GetLastNodeIdAsync(agvCorrelationId) : Task.FromResult<string?>(lastNodeId);
+        Task<Guid?> lastNodeIdTask = lastNodeId == null ? _agvRepository.GetLastNodeIdAsync(agvCorrelationId) : Task.FromResult(lastNodeId);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);
         var actionGroup = actionGroupTask.Result;
@@ -63,11 +64,11 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             return null;
         }
 
-        string[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
+        GraphNode[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
         Guid[] remainingNodes = currentAction.Edges.Skip(currentAction.Nodes.Length - remainingRoute.Length).ToArray();
 
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute, remainingNodes);
-        _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes));
+        _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes.Select(n => n.Name)));
 
         return agvRoute;
     }
@@ -81,24 +82,24 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
 
         if (agvCorrelationIds.Count != 0)
         {
-            queryable = queryable.Where(a => a.AssignedAgv != null && agvCorrelationIds.Contains((Guid)a.AssignedAgv));
+            queryable = queryable.Where(a => a.AssignedAgv != null && agvCorrelationIds.Contains((Guid) a.AssignedAgv));
         }
 
         Task<Dictionary<Guid, ActionGroup?>> actionGroupTask = queryable
             .OrderByDescending(a => a.StartedDate)
-            .GroupBy(a => (Guid)a.AssignedAgv!, a => a)
+            .GroupBy(a => (Guid) a.AssignedAgv!, a => a)
             .Select(g => g.FirstOrDefault())
-            .ToDictionaryAsync(a => (Guid)a!.AssignedAgv!, a => a);
+            .ToDictionaryAsync(a => (Guid) a!.AssignedAgv!, a => a);
 
-        Task<IReadOnlyDictionary<Guid, string?>> lastNodeIdTask = _agvRepository.GetLastNodeIdAsync(agvCorrelationIds);
+        Task<IReadOnlyDictionary<Guid, Guid?>> lastNodeIdTask = _agvRepository.GetLastNodeIdAsync(agvCorrelationIds);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);
         Dictionary<Guid, ActionGroup?> actionGroupById = actionGroupTask.Result;
-        IReadOnlyDictionary<Guid, string?> lastNodeIdById = lastNodeIdTask.Result;
+        IReadOnlyDictionary<Guid, Guid?> lastNodeIdById = lastNodeIdTask.Result;
 
         var agvRoutesById = new Dictionary<Guid, CurrentAgvRouteReadModel>();
 
-        foreach (KeyValuePair<Guid, string?> lastNodeIdByAgv in lastNodeIdById)
+        foreach (KeyValuePair<Guid, Guid?> lastNodeIdByAgv in lastNodeIdById)
         {
             var agvCorrelationId = lastNodeIdByAgv.Key;
             if (!actionGroupById.TryGetValue(agvCorrelationId, out var actionGroup))
@@ -117,12 +118,12 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
                 continue;
             }
 
-            string? lastNodeId = lastNodeIdByAgv.Value;
+            Guid? lastNodeId = lastNodeIdByAgv.Value;
 
-            string[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
+            GraphNode[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId, currentAction.Nodes);
             Guid[] remainingNodes = currentAction.Edges.Skip(currentAction.Nodes.Length - remainingRoute.Length).ToArray();
             var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute, remainingNodes);
-            _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes));
+            _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes.Select(n => n.Name)));
 
             agvRoutesById[agvCorrelationId] = agvRoute;
         }

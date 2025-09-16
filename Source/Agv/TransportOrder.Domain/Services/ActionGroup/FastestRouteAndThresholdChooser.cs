@@ -27,7 +27,7 @@ public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
-    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
+    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<Guid> nodesToAvoid)
     {
         var now = DateTime.UtcNow;
         IOrderedEnumerable<Models.ActionGroup.ActionGroup> priorityGroups = notStartedActionGroups.Where(a => ( now - a.CreatedDate).TotalMinutes > _orderWaitingTimeThreshold).OrderBy(a => a.CreatedDate);

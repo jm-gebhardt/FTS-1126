@@ -171,7 +171,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             }
             var zonePoints = new List<PolygonPoint> { new(singleAgvNode.X - 1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y - 1), new(singleAgvNode.X + 1, singleAgvNode.Y), new(singleAgvNode.X, singleAgvNode.Y + 1) };
 
-            var agvZone = new AgvZone(singleAgvNode.Id, 1, zonePoints, []);
+            var agvZone = new AgvZone(singleAgvNode.Name, 1, zonePoints, []);
             _agvZones = [agvZone];
         }
     }
@@ -193,7 +193,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             _ => false
         }).ToList();
 
-        List<GraphNode> spawnGraphNodes = graphNodes.Where(n => SpawnNodeIds != null && SpawnNodeIds.Contains(n.Id)).ToList();
+        List<GraphNode> spawnGraphNodes = graphNodes.Where(n => SpawnNodeIds != null && SpawnNodeIds.Contains(n.Name)).ToList();
         if (SpawnNodeIds is { Length: > 0 } && spawnGraphNodes.Count != SpawnNodeIds.Length)
         {
             string nodeIdsString = string.Join(",", SpawnNodeIds);
@@ -263,7 +263,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <summary>
     /// Returns the node last visited by the AGV
     /// </summary>
-    public string? LastNodeId => CurrentNode?.Id;
+    public Guid? LastNodeId => CurrentNode?.Id;
 
     /// <summary>
     /// True when the last action has been aborted

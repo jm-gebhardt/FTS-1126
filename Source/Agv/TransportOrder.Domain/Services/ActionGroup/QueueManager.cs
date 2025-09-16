@@ -17,15 +17,15 @@ public class QueueManager(
     ILogger<QueueManager> logger,
     IGraphRepository graphRepository,
     IActionGroupRepository actionGroupRepository,
-    ISemaphoreProvider<IQueueingSemaphore> semaphoreProvider) :  IQueueManager
+    ISemaphoreProvider<IQueueingSemaphore> semaphoreProvider) : IQueueManager
 {
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<string?> TryEnterQueue(Agv agv)
+    public async Task<Guid?> TryEnterQueue(Agv agv)
     {
         return await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var queue = await GetQueue(agv);
-            string? entryNode = queue?.TryEnterQueue();
+            Guid? entryNode = queue?.TryEnterQueue();
             if (entryNode == null || queue == null)
             {
                 logger.LogWarning("No queue available for entering agv {AgvCorrelationId} to queue", agv.CorrelationId);
@@ -38,12 +38,12 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<(Dictionary<Guid, string>? agvsToMove, string? queueEntry, bool swapped)> TrySwapAgv(Agv agvInside, Agv agvOutside)
+    public async Task<(Dictionary<Guid, Guid>? agvsToMove, Guid? queueEntry, bool swapped)> TrySwapAgv(Agv agvInside, Agv agvOutside)
     {
         var queueOfAgvInside = await queueRepository.GetQueueForAgv(agvInside.CorrelationId);
         if (queueOfAgvInside != null)
         {
-            queueOfAgvInside.TrySwapAgv(agvInside.CorrelationId, out Dictionary<Guid, string> agvsToMove);
+            queueOfAgvInside.TrySwapAgv(agvInside.CorrelationId, out Dictionary<Guid, Guid> agvsToMove);
             logger.LogInformation("Queue {QueueName} selected for swapping in agv {AgvCorrelationId} with {AgvToSwapOut}", queueOfAgvInside.Name, agvOutside.CorrelationId, agvInside.CorrelationId);
             await queueRepository.UpdateQueueAsync(queueOfAgvInside);
             return (agvsToMove, queueOfAgvInside.EntryNode!, true);
@@ -56,7 +56,7 @@ public class QueueManager(
             logger.LogWarning("No queue available for swapping in agv {AgvCorrelationId} with {AgvToSwapOut}", agvOutside.CorrelationId, agvInside.CorrelationId);
             return (null, null, false);
         }
-        string? entryNode = queue.TryEnterQueue();
+        Guid? entryNode = queue.TryEnterQueue();
         if (entryNode != null)
         {
             logger.LogInformation("Queue {QueueName} selected for queueing agv {AgvCorrelationId} ", queue.Name, agvOutside.CorrelationId);
@@ -68,7 +68,7 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<string?> TryEnqueueAgv(Guid agvCorrelationId, string entryNode)
+    public async Task<Guid?> TryEnqueueAgv(Guid agvCorrelationId, Guid entryNode)
     {
         var queue = await queueRepository.GetQueueByEntryNode(entryNode);
         if (queue == null)
@@ -80,11 +80,11 @@ public class QueueManager(
             logger.LogWarning("Agv {AgvCorrelation} has already been enqueued to queue {QueueName}", agvCorrelationId, queue.Name);
             return null;
         }
-        if (queue.TryEnqueue(agvCorrelationId, out string? target))
+        if (queue.TryEnqueue(agvCorrelationId, out Guid? target))
         {
             logger.LogInformation("Enqueuing agv {AgvCorrelationId} to node {TargetNode} of queue {QueueName}", agvCorrelationId, target, queue.Name);
             await queueRepository.UpdateQueueAsync(queue);
-            return target;
+            return target.Value;
         }
         logger.LogWarning("Could not enqueue agv {AgvCorrelation} to queue {QueueName}", agvCorrelationId, queue.Name);
         return null;
@@ -98,7 +98,7 @@ public class QueueManager(
             logger.LogWarning("No queues with capacity available for enqueuing agv {AgvCorrelation}", agv.CorrelationId);
             return null;
         }
-        string[] queueEntryNodeIds = queues.Select(q => q.EntryNode!).ToArray();
+        Guid[] queueEntryNodeIds = queues.Select(q => q.EntryNode!.Value).ToArray();
         try
         {
             var targetNode = await PickQueue(agv, queueEntryNodeIds);
@@ -111,7 +111,7 @@ public class QueueManager(
         }
     }
 
-    private async Task<GraphNode> PickQueue(Agv agv, string[] queueNodeIds)
+    private async Task<GraphNode> PickQueue(Agv agv, Guid[] queueNodeIds)
     {
         var agvData = await agvDb.Data.GetAgvDataAsync(agv.CorrelationId);
         ICollection<GraphNode> queueNodes = await graphRepository.GetNodesByIdsAsync(queueNodeIds);
@@ -120,7 +120,7 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<Dictionary<Guid, string>?> TryDequeueAgv(Guid agvCorrelationId, string? agvLastNodeId)
+    public async Task<Dictionary<Guid, Guid>?> TryDequeueAgv(Guid agvCorrelationId, Guid? agvLastNodeId)
     {
         var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
         if (queue == null)
@@ -134,14 +134,14 @@ public class QueueManager(
             return null;
         }
 
-        queue.TryDequeue(out Dictionary<Guid, string> agvsToMove);
+        queue.TryDequeue(out Dictionary<Guid, Guid> agvsToMove);
         await queueRepository.UpdateQueueAsync(queue);
         logger.LogInformation("Dequeued agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
         return agvsToMove;
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<(Dictionary<Guid, string>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, string? agvLastNodeId)
+    public async Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, Guid? agvLastNodeId)
     {
         var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
         if (queue == null)
@@ -149,7 +149,7 @@ public class QueueManager(
             logger.LogDebug("Agv {AgvCorrelationId} not enqueued, checking for escaping from queue entry node", agvCorrelationId);
             return await TryEscapeFromQueueEntryNode(agvCorrelationId, agvLastNodeId);
         }
-        string? node = queue.TryEscapeQueue(agvCorrelationId, out Dictionary<Guid, string> agvsToMove);
+        Guid? node = queue.TryEscapeQueue(agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove);
         if (node == null)
         {
             logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
@@ -164,14 +164,14 @@ public class QueueManager(
         return (null, null);
     }
 
-    private async Task<(Dictionary<Guid, string>? agvsToMove, int? queueSize)> TryEscapeFromQueueEntryNode(Guid agvCorrelationId, string? agvLastNodeId)
+    private async Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeFromQueueEntryNode(Guid agvCorrelationId, Guid? agvLastNodeId)
     {
         if (agvLastNodeId == null)
         {
             logger.LogDebug("Agv {AgvCorrelationId} could not escape queue, no last node id {AgvLastNodeId} of agv ", agvCorrelationId, agvLastNodeId);
             return (null, null);
         }
-        var queue = await queueRepository.GetQueueByEntryNode(agvLastNodeId);
+        var queue = await queueRepository.GetQueueByEntryNode(agvLastNodeId.Value);
         if (queue == null)
         {
             logger.LogDebug("Agv {AgvCorrelationId} could not escape queue, no queue for last node id {AgvLastNodeId} of agv found", agvCorrelationId, agvLastNodeId);
@@ -180,11 +180,11 @@ public class QueueManager(
         queue.RemoveAgv(agvCorrelationId);
         await queueRepository.UpdateQueueAsync(queue);
         logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName}", agvCorrelationId, queue.Name);
-        return (new Dictionary<Guid, string>(), queue.AgvFillQuantity);
+        return (new Dictionary<Guid, Guid>(), queue.AgvFillQuantity);
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<bool> TryReachQueueNode(Agv agv, string nodeId)
+    public async Task<bool> TryReachQueueNode(Agv agv, Guid nodeId)
     {
         Queue? queue = null;
         await semaphoreProvider.ExecuteLockedAsync(async () =>
@@ -229,33 +229,33 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string? targetNode)
+    public async Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, Guid? targetNodeId)
     {
         bool removed = false;
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             Queue? queue;
-            if (targetNode != null)
+            if (targetNodeId != null && targetNodeId != Guid.Empty)
             {
-                queue = await queueRepository.GetQueueByEntryNode(targetNode);
+                queue = await queueRepository.GetQueueByEntryNode(targetNodeId.Value);
             }
             else
             {
                 ICollection<Queue> queues = await queueRepository.GetQueues();
                 var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-                var queueNode = await PickQueue(agv, queues.Select(q => q.EntryNode).Where(e => e != null).ToArray()!);
+                var queueNode = await PickQueue(agv, queues.Select(q => q.EntryNode).Where(e => e != Guid.Empty).Select(e => e!.Value).ToArray());
                 queue = queues.FirstOrDefault(q => q.EntryNode == queueNode.Id);
             }
             if (queue == null)
             {
-                logger.LogDebug("Agv {AgvCorrelationId} could not be removed from queue, no queue for target node {TargetNode} of agv found", agvCorrelationId, targetNode);
+                logger.LogDebug("Agv {AgvCorrelationId} could not be removed from queue, no queue for target node {TargetNode} of agv found", agvCorrelationId, targetNodeId);
                 return;
             }
 
             queue.RemoveAgv(agvCorrelationId);
-                await queueRepository.UpdateQueueAsync(queue);
-                removed = true;
-                logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
+            await queueRepository.UpdateQueueAsync(queue);
+            removed = true;
+            logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName}", agvCorrelationId, queue.Name);
         });
         return removed;
     }

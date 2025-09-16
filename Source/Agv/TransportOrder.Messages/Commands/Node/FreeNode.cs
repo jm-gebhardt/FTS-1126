@@ -5,4 +5,4 @@
 /// </summary>
 /// <param name="NodeId">The node id.</param>
 /// <param name="ReservedOnly">If true, free the node only if it was reserved.</param>
-public record FreeNode(string NodeId, bool ReservedOnly = false);
+public record FreeNode(Guid NodeId, bool ReservedOnly = false);

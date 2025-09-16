@@ -14,14 +14,14 @@ public interface INodeStateRepository
     /// </summary>
     /// <param name="nodeId"></param>
     /// <returns>True if the node could be freed</returns>
-    public Task<bool> LockNodeAsync(string nodeId);
+    public Task<bool> LockNodeAsync(Guid nodeId);
 
     /// <summary>
     /// Sets the state of a node to 'unlocked'
     /// </summary>
     /// <param name="nodeId"></param>
     /// <returns>True if the node could be freed</returns>
-    public Task<bool> UnlockNodeAsync(string nodeId);
+    public Task<bool> UnlockNodeAsync(Guid nodeId);
 
     /// <summary>
     /// Reserve a node for an agv
@@ -30,7 +30,7 @@ public interface INodeStateRepository
     /// <param name="nodeId"></param>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    public Task<bool> ReserveNodeAsync(string nodeId, Guid agvCorrelationId);
+    public Task<bool> ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId);
 
     /// <summary>
     /// Force reserving a node for an agv independent of previous occupancy/reservation
@@ -39,7 +39,7 @@ public interface INodeStateRepository
     /// <param name="nodeId"></param>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    public Task<bool> ForceReserveNodeAsync(string nodeId, Guid agvCorrelationId);
+    public Task<bool> ForceReserveNodeAsync(Guid nodeId, Guid agvCorrelationId);
 
     /// <summary>
     /// Force to occupy a node for an agv independent of previous occupancy/reservation
@@ -48,7 +48,7 @@ public interface INodeStateRepository
     /// <param name="nodeId"></param>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    Task<bool> ForceOccupyNodeAsync(string nodeId, Guid agvCorrelationId);
+    Task<bool> ForceOccupyNodeAsync(Guid nodeId, Guid agvCorrelationId);
 
     /// <summary>
     /// Un-reserve a node.
@@ -64,7 +64,7 @@ public interface INodeStateRepository
     /// <param name="nodeId"></param>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    public Task<bool> OccupyNodeAsync(string nodeId, Guid agvCorrelationId);
+    public Task<bool> OccupyNodeAsync(Guid nodeId, Guid agvCorrelationId);
 
     /// <summary>
     /// Free an occupied node.
@@ -80,13 +80,13 @@ public interface INodeStateRepository
     /// <param name="nodeId"></param>
     /// <returns></returns>
     [UsedImplicitly]
-    public Task<bool> FreeNodeAsync(string nodeId);
+    public Task<bool> FreeNodeAsync(Guid nodeId);
 
     /// <summary>
     /// Is node reserved
     /// </summary>
     /// <returns></returns>
-    public Task<bool> IsNodeReservedAsync(string nodeId);
+    public Task<bool> IsNodeReservedAsync(Guid nodeId);
 
     /// <summary>
     /// Get free and unlocked nodes
@@ -99,7 +99,7 @@ public interface INodeStateRepository
     /// </summary>
     /// <param name="nodeId">The node id.</param>
     /// <returns></returns>
-    Task<NodeLock?> GetNodeStateAsync(string nodeId);
+    Task<NodeLock?> GetNodeStateAsync(Guid nodeId);
 
     /// <summary>
     /// Checks if any of the given nodes is reserved for the given agv.
@@ -107,7 +107,7 @@ public interface INodeStateRepository
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="nodes">The nodes in question.</param>
     /// <returns></returns>
-    Task<bool> IsAnyNodeReservedForAgv(Guid agvCorrelationId, ICollection<string> nodes);
+    Task<bool> IsAnyNodeReservedForAgv(Guid agvCorrelationId, ICollection<Guid> nodes);
 
     /// <summary>
     /// Gets a reserved NodeLock for an AGV and the specified collection of nodes.
@@ -115,13 +115,13 @@ public interface INodeStateRepository
     /// <param name="agvCorrelationId">AGV correlation ID.</param>
     /// <param name="nodes">Collection of nodes to check</param>
     /// <returns></returns>
-    public Task<NodeLock?> GetReservedNodeLockForAgv(Guid agvCorrelationId, ICollection<string> nodes);
+    public Task<NodeLock?> GetReservedNodeLockForAgv(Guid agvCorrelationId, ICollection<Guid> nodes);
 
     /// <summary>
     /// Get ids of nodes which are in state Locked.
     /// </summary>
     /// <returns></returns>
-    public Task<IReadOnlyCollection<string>?> GetLockedNodes();
+    public Task<IReadOnlyCollection<Guid>?> GetLockedNodes();
 
     /// <summary>
     /// Get all node locks that are concerning the given agv.

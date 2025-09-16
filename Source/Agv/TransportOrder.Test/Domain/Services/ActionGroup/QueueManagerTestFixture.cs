@@ -14,10 +14,11 @@ using Moq;
 using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Extensions;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
-public class QueueManagerTestFixture: FixtureBase
+public class QueueManagerTestFixture : FixtureBase
 {
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
@@ -47,10 +48,10 @@ public class QueueManagerTestFixture: FixtureBase
         QueueManager = Provider.GetRequiredService<QueueManager>();
         _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>())).ReturnsAsync([]);
         _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>())).Verifiable();
-         _nodeStateRepository.Setup(x => x.FilterFreeUnlockedNodes(It.IsAny<IEnumerable<GraphNode>>())).Returns([]);
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
-        _nodeStateRepository.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
-        _nodeStateRepository.Setup(x => x.ForceReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        _nodeStateRepository.Setup(x => x.FilterFreeUnlockedNodes(It.IsAny<IEnumerable<GraphNode>>())).Returns([]);
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        _nodeStateRepository.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        _nodeStateRepository.Setup(x => x.ForceReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(true);
         _queueRepository.Setup(x => x.UpdateQueueSize(It.IsAny<Guid>(), It.IsAny<int>())).Verifiable();
         _queueRepository.Setup(x => x.UpdateQueueAsync(It.IsAny<Queue>())).ReturnsAsync(true);
     }
@@ -62,11 +63,11 @@ public class QueueManagerTestFixture: FixtureBase
         var queue = queues.FirstOrDefault();
         if (queue != null)
         {
-            _graphRepository.Setup(x => x.GetNodesByIdsAsync(It.IsAny<ICollection<string>>())).ReturnsAsync(queue.Nodes.Select(n => new GraphNode(n.NodeId)).ToList());
+            _graphRepository.Setup(x => x.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(queue.Nodes.Select(n => n.NodeId.ToGraphNode()).ToList());
             _routeService.Setup(x => x.GetNodeWithLowestCostsAsync(It.IsAny<Agv>(),
                     It.IsAny<IList<GraphNode>>(),
-                    It.IsAny<AgvData?>(), It.IsAny<string?>()))
-                .ReturnsAsync(new GraphNode(queue.EntryNode!));
+                    It.IsAny<AgvData?>(), It.IsAny<Guid?>()))
+                .ReturnsAsync(queue.EntryNode!.Value.ToGraphNode());
         }
         return this;
     }
@@ -85,7 +86,7 @@ public class QueueManagerTestFixture: FixtureBase
 
     public QueueManagerTestFixture WithQueueByEntryNode(Queue? queue)
     {
-        _queueRepository.Setup(x => x.GetQueueByEntryNode(It.IsAny<string>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueueByEntryNode(It.IsAny<Guid>())).ReturnsAsync(queue);
         return this;
     }
 
@@ -98,7 +99,7 @@ public class QueueManagerTestFixture: FixtureBase
         return this;
     }
 
-    public void VerifyQueueWasUpdated(bool updated=true)
+    public void VerifyQueueWasUpdated(bool updated = true)
     {
         _queueRepository.Verify(x => x.UpdateQueueAsync(It.IsAny<Queue>()), updated ? Times.Once() : Times.Never());
     }

@@ -46,12 +46,12 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// True, if the action is heading towards a position given
     /// by coordinates instead of node id.
     /// </summary>
-    public bool IsMoveToCoordinate => Target.NodeId == null && Target.Position != null;
+    public bool IsMoveToCoordinate => Target.Node?.Id == null && Target.Position != null;
 
     /// <summary>
     /// The nodes of the trip.
     /// </summary>
-    public string[] Nodes { get; set; } = [];
+    public GraphNode[] Nodes { get; set; } = [];
 
     /// <summary>
     /// The edges (Guids) of the trip.
@@ -111,7 +111,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// True if the action is complete, i.e. its target is not defined.
     /// </summary>
-    public bool IsIncomplete => Target.NodeId == string.Empty;
+    public bool IsIncomplete => Target.Node?.Id == null;
 
     /// <summary>
     /// True, if Dockfront has been set externally.
@@ -144,14 +144,14 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// </summary>
     /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
     /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
-    /// <param name="targetNodeId">Target node id of the action</param>
+    /// <param name="targetNode">Target node of the action</param>
     /// <param name="parentId">The CorrelationId of the ActionGroup where this action belongs to</param>
     /// <param name="infoToAgv">Information that will be passed to the agv.</param>
-    public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
+    public AgvAction(Guid correlationId, ActionType actionType, GraphNode? targetNode, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
         CorrelationId = correlationId;
         ActionType = actionType;
-        Target = new ActionTarget(targetNodeId);
+        Target = new ActionTarget(targetNode);
         ParentId = parentId;
         InfoToAgv = infoToAgv;
     }
@@ -192,7 +192,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         ActionState state,
         ActionType actionType,
         ActionTarget target,
-        string[] nodes,
+        GraphNode[] nodes,
         Guid[] edges,
         DateTime createdDate,
         DateTime? startedDate,
@@ -233,9 +233,9 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 
         if (State == ActionState.Paused && PausedDate != null)
         {
-            var pauseTimeSpan = (TimeSpan)(DateTime.UtcNow - PausedDate);
-            var previousRunTime = (TimeSpan)(PausedDate - StartedDate.GetValueOrDefault());
-            PriorRunAndPauseDuration += (long)pauseTimeSpan.TotalSeconds + (long)previousRunTime.TotalSeconds;
+            var pauseTimeSpan = (TimeSpan) (DateTime.UtcNow - PausedDate);
+            var previousRunTime = (TimeSpan) (PausedDate - StartedDate.GetValueOrDefault());
+            PriorRunAndPauseDuration += (long) pauseTimeSpan.TotalSeconds + (long) previousRunTime.TotalSeconds;
 
             PausedDate = null;
         }
@@ -257,10 +257,11 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// Sets a target for the action.
     /// </summary>
-    /// <param name="targetNodeId">The target node id.</param>
-    public void SetTarget(string targetNodeId)
+    /// <param name="targetNode">The target node</param>
+    public void SetTarget(GraphNode targetNode)
     {
-        Target.NodeId = targetNodeId;
+        // this is needed for EF
+        Target.Node = new GraphNode(targetNode.Id, targetNode.Name);
     }
 
     private void SetDates()
@@ -381,7 +382,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// </summary>
     public override string ToString()
     {
-        return $"Nodes: {string.Join(",", Nodes)} TargetNode: {Target.NodeId} CorrelationId: {CorrelationId}, ParentId: {ParentId} Type: {ActionType}, State {State}, ShouldSkip {ShouldSkip}";
+        return $"Nodes: {string.Join(",", Nodes.Select(n => n.Name))} TargetNode: {Target.Node?.Name} CorrelationId: {CorrelationId}, ParentId: {ParentId} Type: {ActionType}, State {State}, ShouldSkip {ShouldSkip}";
     }
 
     /// <inheritdoc cref="IEquatable{T}"/>>
@@ -475,7 +476,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         {
             return false;
         }
-        return Equals((AgvAction)obj);
+        return Equals((AgvAction) obj);
     }
 
     /// <inheritdoc cref="IEquatable{T}"/>>

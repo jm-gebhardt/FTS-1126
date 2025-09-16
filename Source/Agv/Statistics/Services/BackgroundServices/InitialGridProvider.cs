@@ -52,7 +52,7 @@ public class InitialGridProvider : BackgroundService
             }
             catch (RequestTimeoutException)
             {
-                _logger.LogWarning("Creating grid failed, trying again in next cycle.");
+                _logger.LogWarning("Creating grid failed, trying again in next cycle");
                 await Task.Delay(ExecutionDelayMs, stoppingToken).WaitAsync(stoppingToken);
             }
         }

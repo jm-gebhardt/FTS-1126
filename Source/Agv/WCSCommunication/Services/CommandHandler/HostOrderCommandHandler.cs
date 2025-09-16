@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
@@ -51,7 +52,7 @@ public class HostOrderCommandHandler :
         var actionGroup = new ActionGroup(
             hostOrder.CorrelationId,
             hostOrder.OrderId,
-            hostOrder.Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, a.Node, hostOrder.CorrelationId)
+            hostOrder.Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, a.Node.ToGraphNode(), hostOrder.CorrelationId)
                 { Sequence = a.SequenceNumber }).ToList(),
             orderDetails.Creator.ConvertToActionGroupCreator(),
             orderDetails.CreationDate);

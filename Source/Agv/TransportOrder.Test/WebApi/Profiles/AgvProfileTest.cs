@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -27,11 +28,11 @@ public class AgvProfileTest
         var correlationId = Guid.NewGuid();
         const string agvSerialNumber = "TestAgv-01";
         const string orderId = "TestOrder-01";
-        const string lastNodeId = "WAY3";
+        const string lastNodeName = "WAY3";
         var stateTransitionTimestamp = DateTime.UtcNow;
 
-        var actionGroup = new ActionGroupReadModel(correlationId, orderId, correlationId, stateTransitionTimestamp, null, null, TimeSpan.FromHours(99), ActionGroupState.Created, ActionGroupCreator.TransportOrderWebApi, "hu",new List<AgvActionReadModel>(), false, false, true, new List<Reason>(), false);
-        var agvMessageContent = new TransportOrder.Messages.MessageContent.Agv(correlationId, agvSerialNumber, agvSerialNumber, AgvState.Idle, stateTransitionTimestamp, DateTime.MinValue, true, false, false, true, 50d, false, actionGroup, new List<AgvError>(), lastNodeId, new TransportOrder.Messages.MessageContent.GraphNode {Id = lastNodeId, Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f}, new AgvMode(ModeType.Normal, correlationId), ["test"], ["station"], 66.9f, 22.5f);
+        var actionGroup = new ActionGroupReadModel(correlationId, orderId, correlationId, stateTransitionTimestamp, null, null, TimeSpan.FromHours(99), ActionGroupState.Created, ActionGroupCreator.TransportOrderWebApi, "hu", new List<AgvActionReadModel>(), false, false, true, new List<Reason>(), false);
+        var agvMessageContent = new TransportOrder.Messages.MessageContent.Agv(correlationId, agvSerialNumber, agvSerialNumber, AgvState.Idle, stateTransitionTimestamp, DateTime.MinValue, true, false, false, true, 50d, false, actionGroup, new List<AgvError>(), new TransportOrder.Messages.MessageContent.GraphNode { Name = lastNodeName, Id = lastNodeName.ToGuid(), Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f }, new AgvMode(ModeType.Normal, correlationId), ["test"], ["station"], 66.9f, 22.5f);
 
         var mapper = GetMapper();
 
@@ -60,7 +61,7 @@ public class AgvProfileTest
         agvDto.CurrentActionGroup.IsManual.ShouldBeFalse();
         agvDto.CurrentActionGroup.Actions.ShouldBeEmpty();
         agvDto.LastNode.ShouldNotBeNull();
-        agvDto.LastNode.Id.ShouldBe(lastNodeId);
+        agvDto.LastNode.Id.ShouldBe(lastNodeName);
         agvDto.LastNode.Type.ShouldBe(AgvGraph.NodeType.WayPoint);
         agvDto.LastNode.X.ShouldBe(1.0f);
         agvDto.LastNode.Y.ShouldBe(2.0f);
@@ -129,7 +130,7 @@ public class AgvProfileTest
 
         var mapper = MappingHelper.GetMapper(new AgvSettingsProfile());
         var settings = mapper.Map<AgvSettingsDto, AgvSettingsReadModel>(settingsDto);
-        settings.BatteryLevelCritical.ShouldBe((int)settingsDto.BatteryLevelCritical!);
+        settings.BatteryLevelCritical.ShouldBe((int) settingsDto.BatteryLevelCritical!);
         settings.BatteryLevelLow.ShouldBeLessThan(0);
         settings.MinChargeUp.ShouldBeLessThan(0);
         settings.MaxChargeUp.ShouldBeLessThan(0);

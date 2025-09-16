@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -12,12 +13,12 @@ using Moq;
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Trigger;
 
 public class TriggerRequestHandlerTestFixture<TMessage> : MediatorTestFixture<TMessage, TriggerRequestHandler, MockConsumer>
-where TMessage: class
+    where TMessage : class
 {
     private readonly Mock<ITriggerRepository> _triggerRepository = new();
     private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
-   
+
     private class MockConsumer(Location? loc, string? message) : IConsumer<AddTriggerLocation>
     {
         public async Task Consume(ConsumeContext<AddTriggerLocation> context)
@@ -40,11 +41,12 @@ where TMessage: class
         return this;
     }
 
-    public TriggerRequestHandlerTestFixture<TMessage> WithLocationResponse(Location? triggerLocation=null, string? exception=null)
+    public TriggerRequestHandlerTestFixture<TMessage> WithLocationResponse(Location? triggerLocation = null, string? exception = null)
     {
         ConsumerMock = new MockConsumer(triggerLocation, exception);
         AddServices(s => s.AddTransient(_ => ConsumerMock));
         AddConsumers<MockConsumer>();
+
         return this;
     }
 
@@ -68,7 +70,18 @@ where TMessage: class
     public TriggerRequestHandlerTestFixture<TMessage> WithGraphElementExists(bool exists)
     {
         _graphRepository.Setup(x => x.EdgeExistsAsync(It.IsAny<Guid>())).ReturnsAsync(exists);
-        _graphRepository.Setup(x => x.NodeExistsAsync(It.IsAny<string>())).ReturnsAsync(exists);
+        _graphRepository.Setup(x => x.NodeExistsByIdAsync(It.IsAny<Guid>())).ReturnsAsync(exists);
+        if (!exists)
+        {
+            _graphRepository.Setup(x => x.ThrowIfNodeNotExistsAsync(It.IsAny<Guid>())).ThrowsAsync(new NodeNotFoundException(Guid.Empty));
+        }
+        return this;
+    }
+
+    public TriggerRequestHandlerTestFixture<TMessage> WithNode(GraphNode node)
+    {
+        _graphRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+        _graphRepository.Setup(x => x.NodeExistsByIdAsync(node.Id)).ReturnsAsync(true);
         return this;
     }
 }

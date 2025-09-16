@@ -13,6 +13,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="State"> The current state of the action.</param>
 /// <param name="ActionType">The type of the action.</param>
 /// <param name="TargetNodeId">The target node id of the action.</param>
+/// <param name="TargetNodeName">The target node name of the action.</param>
 /// <param name="TargetNodeType">The type of the target node.</param>
 /// <param name="Nodes">The nodes of the trip.</param>
 /// <param name="Edges">The edges of the trip.</param>
@@ -30,7 +31,8 @@ public record AgvActionReadModel(
     int Sequence,
     ActionState State,
     ActionType ActionType,
-    string TargetNodeId,
+    Guid? TargetNodeId,
+    string? TargetNodeName,
     AgvGraph.NodeType TargetNodeType,
     string[] Nodes,
     Guid[] Edges,

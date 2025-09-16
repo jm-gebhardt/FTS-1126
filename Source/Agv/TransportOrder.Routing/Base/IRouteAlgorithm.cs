@@ -16,5 +16,5 @@ public interface IRouteAlgorithm
     /// <param name="waypoints">List of Node IDs that define the waypoints that need to be traversed on the given order</param>
     /// <returns>Returns the full aggregated route or null when no path found</returns>
     [PublicAPI]
-    Route? CalculateRoute(CancellationToken cancellationToken = default, params string[] waypoints);
+    Route? CalculateRoute(CancellationToken cancellationToken = default, params Guid[] waypoints);
 }

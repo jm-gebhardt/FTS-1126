@@ -7,6 +7,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.TriggerQueueHeadEvacuation;
 
@@ -70,7 +71,7 @@ public class QueueHeadEvacuationTrigger(IBus bus, ILogger<QueueHeadEvacuationTri
             return;
         }
         string queueName = GetQueueName(parameters);
-        string evacuationNode = GetEvacuationNode(parameters);
+        var evacuationNode = GetEvacuationNode(parameters);
         logger.LogInformation("Trigger evacuation of head of queue {QueueName} to node {EvacuationNode} for agv {AgvCorrelationId}", queueName, evacuationNode, agvStatus.CorrelationId);
         await bus.Publish(new EvacuateQueueHead(queueName, evacuationNode));
     }
@@ -84,22 +85,22 @@ public class QueueHeadEvacuationTrigger(IBus bus, ILogger<QueueHeadEvacuationTri
     private bool ShouldEvacuate(Dictionary<string, ConfigurationParameter> parameters)
     {
         var enable = parameters.GetValueOrDefault(_enableParameter.Name) ??
-                                    GetDefaultConfigurationParameters().GetValueOrDefault(_enableParameter.Name);
+                     GetDefaultConfigurationParameters().GetValueOrDefault(_enableParameter.Name);
         return bool.Parse(enable!.Value);
     }
 
     private string GetQueueName(Dictionary<string, ConfigurationParameter> parameters)
     {
         var queueName = parameters.GetValueOrDefault(_queueNameParameter.Name) ??
-                     GetDefaultConfigurationParameters().GetValueOrDefault(_queueNameParameter.Name);
+                        GetDefaultConfigurationParameters().GetValueOrDefault(_queueNameParameter.Name);
         return queueName?.Value ?? string.Empty;
     }
 
-    private string GetEvacuationNode(Dictionary<string, ConfigurationParameter> parameters)
+    private Guid GetEvacuationNode(Dictionary<string, ConfigurationParameter> parameters)
     {
         var node = parameters.GetValueOrDefault(_evacuationNodeParameter.Name) ??
                    GetDefaultConfigurationParameters().GetValueOrDefault(_evacuationNodeParameter.Name);
-        return node?.Value ?? string.Empty;
+        return !string.IsNullOrEmpty(node?.Value) ? node.Value.ToGuid() : Guid.Empty;
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>

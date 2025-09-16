@@ -10,12 +10,19 @@ namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 public record GraphNode
 {
     /// <summary>
-    /// The id of the node, based on the AGV vendor
-    /// </summary><remarks>
-    /// Usually this is the (numeric) ID passed by the AGV vendor.
-    /// For internal reasons it can be necessary to build/combine an internal identification.
-    /// </remarks>
-    public string Id { get; init; } = null!;
+    /// The unique Id of the node.
+    /// </summary>
+    public Guid Id { get; init; } = Guid.NewGuid();
+
+    /// <summary>
+    /// The Name of the node.
+    /// </summary>
+    public string Name
+    {
+        get;
+        [UsedImplicitly]
+        init;
+    } = null!;
 
     /// <summary>
     /// The type of the node

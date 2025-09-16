@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Shouldly;
@@ -15,8 +16,8 @@ public class ActionGroupProfileTest
         var correlationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(correlationId, "orderId", new List<AgvAction>
         {
-            new(Guid.NewGuid(), ActionType.Drop, "D1", correlationId) { Sequence = 1, IsSkipped = true}, 
-            new(Guid.NewGuid(), ActionType.Pick, "S1", correlationId) { Sequence = 0 }
+            new(Guid.NewGuid(), ActionType.Drop, "D1".ToGraphNode(), correlationId) { Sequence = 1, IsSkipped = true },
+            new(Guid.NewGuid(), ActionType.Pick, "S1".ToGraphNode(), correlationId) { Sequence = 0 }
         }, ActionGroupCreator.Wms, isQueued: true);
         var mappedActionGroup = mapper.Map<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(actionGroup);
         mappedActionGroup.FirstNotStartedAction!.ActionType.ShouldBe(ActionType.Pick);

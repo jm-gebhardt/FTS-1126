@@ -89,9 +89,9 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         return this;
     }
 
-    public string? GetExistingNode()
+    public Guid GetExistingNode()
     {
-        return _efGraph?.Nodes.Select(e => e.Id).FirstOrDefault();
+        return (Guid) _efGraph?.Nodes.First().Id!;
     }
 
     public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggeredActionCompletion()

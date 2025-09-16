@@ -32,7 +32,7 @@ public class JamStateCommandHandlerTestFixture : MassTransitConsumerTestFixture<
 
     public JamStateCommandHandlerTestFixture WithJamState(JamState? jamState)
     {
-        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<string>())).ReturnsAsync(jamState);
+        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<Guid>())).ReturnsAsync(jamState);
         return this;
     }
 

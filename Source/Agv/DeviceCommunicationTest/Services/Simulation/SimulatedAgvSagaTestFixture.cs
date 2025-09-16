@@ -17,8 +17,8 @@ public class SimulatedAgvSagaTestFixture
 
     private readonly DateTime _startTime = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     private ICollection<GraphNode>? _nodes;
-    private string _startNodeId = AgvGraphGenerator.SourceClose.Id;
-    private string _targetNodeId = AgvGraphGenerator.DestinationClose.Id;
+    private string _startNodeId = AgvGraphGenerator.SourceClose.Name;
+    private string _targetNodeId = AgvGraphGenerator.DestinationClose.Name;
     private GraphNode? _currentNode;
     private AgvGraph? _graph;
     private GraphEdge? _edge;
@@ -62,7 +62,7 @@ public class SimulatedAgvSagaTestFixture
     public SimulatedAgvSagaTestFixture WithActionTargetNodeId(string id)
     {
         _targetNodeId = id;
-        _edge = GraphEdge.CreateDirect(_startNodeId, _targetNodeId, (float)Mathematics.EuclideanDistance(_nodes!.First(n => n.Id == _startNodeId), _nodes!.First(n => n.Id == _targetNodeId)));
+        _edge = GraphEdge.CreateDirect(_startNodeId.ToGuid(), _targetNodeId.ToGuid(), (float) Mathematics.EuclideanDistance(_nodes!.First(n => n.Name == _startNodeId), _nodes!.First(n => n.Name == _targetNodeId)));
         return this;
     }
 
@@ -81,7 +81,7 @@ public class SimulatedAgvSagaTestFixture
             startNodeId: _startNodeId,
             targetNodeId: _targetNodeId,
             numberOfNodes: NumberOfNodes,
-            availableNodes: (_nodes ?? _graph.Nodes.Where(n => (AgvGraph.NodeType)n.Type == AgvGraph.NodeType.WayPoint)).ToList());
+            availableNodes: (_nodes ?? _graph.Nodes.Where(n => (AgvGraph.NodeType) n.Type == AgvGraph.NodeType.WayPoint)).ToList());
 
         Saga = SimulatedAgvSagaGenerator.Generate(
             agvGraph: _graph,
@@ -94,7 +94,7 @@ public class SimulatedAgvSagaTestFixture
         var nodes = new List<string>();
         if (_nodes != null)
         {
-            nodes.AddRange(_nodes.Select(n => n.Id));
+            nodes.AddRange(_nodes.Select(n => n.Name));
         }
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes, _graph.Edges.ToList());
         Saga.TravelSimulator.EstimateTravelTimes(nodes, edges, _startTime, Saga.AgvData!, 0);

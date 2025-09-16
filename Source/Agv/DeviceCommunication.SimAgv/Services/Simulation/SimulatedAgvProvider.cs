@@ -128,7 +128,7 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
             }
             catch (RequestTimeoutException)
             {
-                _logger.LogWarning("Creating agvs failed, trying again in next cycle.");
+                _logger.LogWarning("Creating agvs failed, trying again in next cycle");
                 await Task.Delay(ExecutionDelayMs, stoppingToken).WaitAsync(stoppingToken);
             }
         }

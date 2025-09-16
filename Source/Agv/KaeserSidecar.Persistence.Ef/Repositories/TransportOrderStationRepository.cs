@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Services;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -12,7 +13,8 @@ namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 public class TransportOrderStationRepository : TransportOrder.Persistence.Ef.Repositories.EfStationRepository, ITransportOrderStationRepository
 {
     /// <inheritdoc cref="ITransportOrderStationRepository"/>>
-    public TransportOrderStationRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, ILogger<SemaphoreProvider<IGraphRepositorySemaphore>> semaphoreLogger) : base(dbContextFactory, new SemaphoreProvider<IGraphRepositorySemaphore>(semaphoreLogger))
+    public TransportOrderStationRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper, ILogger<SemaphoreProvider<IGraphRepositorySemaphore>> semaphoreLogger)
+        : base(dbContextFactory, new SemaphoreProvider<IGraphRepositorySemaphore>(semaphoreLogger), mapper)
     {
         ContextFactory = dbContextFactory;
     }

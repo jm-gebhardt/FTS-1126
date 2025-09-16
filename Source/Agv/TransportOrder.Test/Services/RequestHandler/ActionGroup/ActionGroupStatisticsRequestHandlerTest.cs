@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using MassTransit;
@@ -16,7 +17,7 @@ public class ActionGroupStatisticsRequestHandlerTest
             .WithActionDurations([])
             .Build();
 
-        Response<GotActionGroupStatistics> response = await fixture.GetResponseAsync<GotActionGroupStatistics>(new GetActionGroupStatistics("a source", "a target"));
+        Response<GotActionGroupStatistics> response = await fixture.GetResponseAsync<GotActionGroupStatistics>(new GetActionGroupStatistics("a source".ToGuid(), "a target".ToGuid()));
 
         response.ShouldNotBeNull();
         response.Message.DurationStatistics.ShouldBeEmpty();
@@ -25,7 +26,7 @@ public class ActionGroupStatisticsRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetActionGroupStatistics_PickDropActionGroups_RespondsGotActionGroupStatisticsWithDurationStatistics()
     {
-        List<double> durations = Enumerable.Range(1, 10).ToList().Select(d => (double)d).ToList();
+        List<double> durations = Enumerable.Range(1, 10).ToList().Select(d => (double) d).ToList();
         var actionDurations = new Dictionary<ActionType, ICollection<double>>()
         {
             { ActionType.Pick, durations },
@@ -35,7 +36,7 @@ public class ActionGroupStatisticsRequestHandlerTest
             .WithActionDurations(actionDurations)
             .Build();
 
-        Response<GotActionGroupStatistics> response = await fixture.GetResponseAsync<GotActionGroupStatistics>(new GetActionGroupStatistics("source", "target"));
+        Response<GotActionGroupStatistics> response = await fixture.GetResponseAsync<GotActionGroupStatistics>(new GetActionGroupStatistics("source".ToGuid(), "target".ToGuid()));
 
         response.ShouldNotBeNull();
         response.Message.DurationStatistics.Count.ShouldBe(actionDurations.Count);

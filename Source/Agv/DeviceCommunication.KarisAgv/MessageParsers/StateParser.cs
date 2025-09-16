@@ -130,7 +130,7 @@ public class StateParser(ILogger logger, IMapper mapper)
             state.BatteryState?.BatteryCurrent ?? -1f,
             state.BatteryState?.BatteryTemperature ?? -1f,
             GetDisturbed(state),
-            !string.IsNullOrEmpty(state.LastNodeId) ? state.LastNodeId : null,
+            !string.IsNullOrEmpty(state.LastNodeId) ? state.LastNodeId.ToGuid() : null,
             null,
             null,
             state.ZoneIds,

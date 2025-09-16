@@ -12,15 +12,15 @@ public class GraphTest
     {
         const string id = "1";
         var timeStamp = DateTime.UtcNow;
-        var graphNode = NodeGenerator.GenerateNode(nodeId: id, timeStamp: timeStamp);
-        var agvGraphNode = NodeGenerator.GenerateNode(nodeId: id, x: 123, timeStamp: timeStamp.AddHours(1));
+        var graphNode = NodeGenerator.GenerateNode(nodeName: id, timeStamp: timeStamp);
+        var agvGraphNode = NodeGenerator.GenerateNode(nodeName: id, x: 123, timeStamp: timeStamp.AddHours(1));
         var fixture = new GraphTestFixture()
             .WithGraphNodes(graphNode)
             .WithAgvGraphNodes(agvGraphNode)
             .Build();
 
         fixture.Graph.Merge(fixture.AgvGraph).ShouldBeTrue();
-        fixture.Graph.Nodes.SingleOrDefault(n => n.Id == id).ShouldBe(agvGraphNode);
+        fixture.Graph.Nodes.SingleOrDefault(n => n.Name == id).ShouldBe(agvGraphNode);
     }
 
     [TestMethod]
@@ -109,7 +109,7 @@ public class GraphTest
             .WithGraphEdges(EdgeGenerator.Generate())
             .WithGraphNodes(NodeGenerator.GenerateNode())
             .WithAgvGraphEdges(EdgeGenerator.Generate(id: Guid.NewGuid()))
-            .WithAgvGraphNodes(NodeGenerator.GenerateNode(nodeId: "new Id"))
+            .WithAgvGraphNodes(NodeGenerator.GenerateNode(nodeName: "new Id"))
             .Build();
 
         fixture.Graph.Merge(fixture.AgvGraph).ShouldBeTrue();

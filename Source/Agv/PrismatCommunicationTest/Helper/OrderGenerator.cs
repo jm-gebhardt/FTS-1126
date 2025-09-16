@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -25,10 +26,10 @@ public static class OrderGenerator
     {
         get
         {
-            Configuration.UpdateTriggerPointNodeId(Configuration.DecisionPoint1TriggerName, DecisionNode);
+            Configuration.UpdateTriggerPointNodeId(Configuration.DecisionPoint1TriggerName, DecisionNode.ToGuid());
             Configuration.UpdateLongLoopMoveTargetNode(DecisionNode);
-            Configuration.UpdateTriggerPointNodeId(Configuration.CheckCargoTriggerName, CheckCargoTriggerNode);
-            Configuration.UpdateTriggerPointNodeId(Configuration.DoppelspielTriggerName, ShortLoopTriggerNode);
+            Configuration.UpdateTriggerPointNodeId(Configuration.CheckCargoTriggerName, CheckCargoTriggerNode.ToGuid());
+            Configuration.UpdateTriggerPointNodeId(Configuration.DoppelspielTriggerName, ShortLoopTriggerNode.ToGuid());
             return Configuration;
         }
     }
@@ -73,19 +74,19 @@ public static class OrderGenerator
             HostOrderCreator.Wms);
     }
 
-    public static OrderDetails GenerateUnknownDropTargetOrder(string? hu=null, int dropTarget = 0)
+    public static OrderDetails GenerateUnknownDropTargetOrder(string? hu = null, int dropTarget = 0)
     {
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
             KaeserConfiguration.PrismatAplSource,
             KaeserConfiguration.PrismatOutputLanes[dropTarget],
-            hu??Guid.NewGuid().ToString(),
+            hu ?? Guid.NewGuid().ToString(),
             HostOrderCreator.Wms);
     }
 
-    public static HostOrder GenerateHostOrderFromOrderDetails(OrderDetails orderDetails, DateTime? createdDate=null, DateTime? finishDate = null)
+    public static HostOrder GenerateHostOrderFromOrderDetails(OrderDetails orderDetails, DateTime? createdDate = null, DateTime? finishDate = null)
     {
-        var hostOrder = new HostOrder(orderDetails.OrderId, orderDetails.LeNo, createdDate??DateTime.UtcNow);
+        var hostOrder = new HostOrder(orderDetails.OrderId, orderDetails.LeNo, createdDate ?? DateTime.UtcNow);
         hostOrder.AddAction(orderDetails.Source, ActionType.Pick);
         hostOrder.AddAction(orderDetails.Destination, ActionType.Drop);
         if (finishDate != null)

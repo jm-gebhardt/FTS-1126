@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Routing.Implementations;
@@ -40,7 +41,7 @@ public class RouteServiceTestFixture
 
     public RouteServiceTestFixture WithBlockedQueueNodes(string[] nodes)
     {
-        _queueRepository.Setup(x => x.GetBlockedQueueNodes()).ReturnsAsync(nodes);
+        _queueRepository.Setup(x => x.GetBlockedQueueNodes()).ReturnsAsync(nodes.Select(n => n.ToGuid()).ToList);
         return this;
     }
 }

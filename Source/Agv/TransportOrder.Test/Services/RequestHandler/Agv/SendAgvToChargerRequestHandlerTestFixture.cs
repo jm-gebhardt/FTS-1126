@@ -19,14 +19,14 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
-    
+
     public SendAgvToChargerRequestHandlerTestFixture()
     {
         Build();
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
     }
-    
+
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
 
     protected override MassTransitConsumerTestFixture<SendAgvToChargerRequestHandler> AddServices(IServiceCollection collection)
@@ -54,13 +54,13 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
 
     public SendAgvToChargerRequestHandlerTestFixture ReserveChargerReturns(GraphNode chargingNode)
     {
-        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string?>())).ReturnsAsync(chargingNode);
+        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid?>())).ReturnsAsync(chargingNode);
         return this;
     }
 
     public SendAgvToChargerRequestHandlerTestFixture WithNodeLock(NodeLock nodeLock)
     {
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(nodeLock);
+        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeLock);
         return this;
     }
 }

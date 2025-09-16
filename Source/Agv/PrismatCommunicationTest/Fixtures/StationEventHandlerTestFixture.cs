@@ -8,7 +8,7 @@ using Moq;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 
-public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<StationEventHandler>, IDisposable
+public class StationEventHandlerTestFixture : MassTransitConsumerTestFixture<StationEventHandler>, IDisposable
 {
     private readonly Mock<IShortLoopWeTargetStationRepository> _targetStationRepository = new();
     public readonly KaeserGraphConfiguration Configuration = OrderGenerator.KaeserConfiguration;
@@ -44,7 +44,7 @@ public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<Stat
 
     public StationEventHandlerTestFixture WithStation(Station? station)
     {
-        _stationRepository.Setup(x => x.GetStationByNode(It.IsAny<string>())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStationByNode(It.IsAny<Guid>())).ReturnsAsync(station);
         return this;
     }
 

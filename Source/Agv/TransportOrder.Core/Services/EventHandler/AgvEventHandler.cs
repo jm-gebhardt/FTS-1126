@@ -94,7 +94,7 @@ public class AgvEventHandler :
             _logger.LogDebug("AGV with CorrelationId {AgvCorrelationId} is not available ", agv.CorrelationId);
             return;
         }
-        _logger.LogInformation("Trying to prepare AGV:{CorrelationId} for charging.", agv.CorrelationId);
+        _logger.LogInformation("Trying to prepare AGV:{CorrelationId} for charging", agv.CorrelationId);
         await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             if (!agv.CanStartAutomaticAction || agv.ShouldStartManualAction)
@@ -311,7 +311,8 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ChargingNodeSelectedForAgv> context)
     {
-        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, context.Message.ChargeStationId, context.Message.Initiator));
+        var chargeStation = await _agvDb.Graphs.GetNodeAsync(context.Message.ChargeStationId);
+        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), context.Message.CorrelationId, chargeStation, context.Message.Initiator));
     }
 
     /// <summary>
@@ -342,7 +343,7 @@ public class AgvEventHandler :
         {
             if (agvMode is { PendingType: ModeType.Maintenance or ModeType.Locked } && actionGroup.DoNotPause)
             {
-                _logger.LogDebug("Cancelling/Aborting action group {CorrelationId} with do not pause flag during mode change to mode {mode}", actionGroup.CorrelationId, agvMode.PendingType);
+                _logger.LogDebug("Cancelling/Aborting action group {CorrelationId} with do not pause flag during mode change to mode {Mode}", actionGroup.CorrelationId, agvMode.PendingType);
                 await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
                 continue;
             }

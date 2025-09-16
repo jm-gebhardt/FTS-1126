@@ -19,7 +19,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Handles trigger-related requests.
 /// </summary>
 [UsedImplicitly]
-public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphRepository graphRepository, IMapRepository mapRepository, IBus bus, ILogger<TriggerRequestHandler> logger):
+public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphRepository graphRepository, IMapRepository mapRepository, IBus bus, ILogger<TriggerRequestHandler> logger) :
     IConsumer<GetTriggers>,
     IConsumer<AssignTriggerToLocation>,
     IConsumer<TryRemoveTriggerLocation>,
@@ -42,24 +42,25 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     /// </summary>
     public async Task Consume(ConsumeContext<AssignTriggerToLocation> context)
     {
-        (var triggerId, string? nodeId, Guid? edgeId, ICollection <PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters) = context.Message;
+        (var triggerId, var node, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters) = context.Message;
 
-        await ValidateMessageContent(triggerId, nodeId, edgeId,  polygon, mapId, configurationParameters);
+        await ValidateMessageContent(triggerId, node?.Id, edgeId, polygon, mapId, configurationParameters);
 
         IRequestClient<AddTriggerLocation>? requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
-        
-        Response<TriggerLocationAdded> response =  await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, nodeId, edgeId, polygon, mapId, configurationParameters));
 
-        if (response.Message.Exception != null)
+        Response<TriggerLocationAdded> response = await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, node, edgeId, polygon, mapId, configurationParameters));
+        string? exceptionMessage = response.Message.Exception;
+
+        if (exceptionMessage != null)
         {
-            logger.LogError(response.Message.Exception);
-            throw new TriggerAssignmentFailedException(response.Message.Exception);
+            logger.LogError(exceptionMessage);
+            throw new TriggerAssignmentFailedException(exceptionMessage);
         }
 
-        await context.RespondAsync(new TriggerLocationAssigned(response.Message.Location!));
+        await context.RespondAsync(new TriggerLocationAssigned(response.Message.Location!, node));
     }
 
-    private async Task ValidateMessageContent(Guid triggerId, string? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters)
+    private async Task ValidateMessageContent(Guid triggerId, Guid? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters)
     {
         var trigger = await triggerRepository.GetById(triggerId);
 
@@ -74,7 +75,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             }
         }
 
-        if (nodeId is null && edgeId is null && polygon.Count == 0)
+        if (nodeId == null && edgeId is null && polygon.Count == 0)
         {
             throw new TriggerAssignmentFailedException("No location set: edge id, node id, and polygon are null");
         }
@@ -83,10 +84,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             throw new TriggerAssignmentFailedException("More then one location set: only one of edge id, node id, or polygon must be provided");
         }
 
-        if (nodeId != null && !await graphRepository.NodeExistsAsync(nodeId))
-        {
-            throw new NodeNotFoundException(nodeId);
-        }
+        await graphRepository.ThrowIfNodeNotExistsAsync(nodeId);
 
         if (edgeId != null && !await graphRepository.EdgeExistsAsync(edgeId.Value))
         {
@@ -98,8 +96,8 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             throw new TriggerAssignmentFailedException($"Map {mapId} does not exist");
         }
     }
-    
-    private static bool OnlyOneLocationSet(string? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon)
+
+    private static bool OnlyOneLocationSet(Guid? nodeId, Guid? edgeId, ICollection<PolygonPoint> polygon)
     {
         int count = 0;
 
@@ -108,7 +106,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             count++;
         }
 
-        if (!string.IsNullOrEmpty(nodeId))
+        if (nodeId != null)
         {
             count++;
         }
@@ -156,7 +154,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     public async Task Consume(ConsumeContext<TryUpdateDefaultConfigurationParameter> context)
     {
         (var triggerId, string parameterName, string newValue) = context.Message;
-       
+
         var trigger = await triggerRepository.GetById(triggerId);
         if (!trigger.ValidateConfigurationParameterValue(parameterName, newValue))
         {

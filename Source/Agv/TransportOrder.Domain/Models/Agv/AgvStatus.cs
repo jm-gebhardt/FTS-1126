@@ -84,13 +84,11 @@ public record AgvStatus
     public bool Disturbed { get; }
 
     /// <summary>
-    /// nodeID of last reached node or, if AGV is currently on a node, current node.
-    /// Empty string if no lastNodeId is available.
+    /// Node id of last reached node or, if AGV is currently on a node, current node.
+    /// Empty GUid if no lastNodeId is available.
     /// </summary>
-    /// <remarks>
-    /// VDA5050.state.schema.lastNodeId
-    /// </remarks>
-    public string? LastNodeId { get; private set; }
+    [UsedImplicitly]
+    public Guid? LastNodeId { get; private set; }
 
     /// <summary>
     /// The zones that the agv is in if any.
@@ -136,7 +134,7 @@ public record AgvStatus
         double batteryCharge,
         bool charging,
         bool disturbed,
-        string? lastNodeId = null,
+        Guid? lastNodeId = null,
         double batteryVoltage = double.MaxValue,
         double batteryCurrent = double.MinValue,
         double batteryTemperature = double.MaxValue,
@@ -183,7 +181,6 @@ public record AgvStatus
         BatteryCharge = 0;
         Charging = false;
         Disturbed = false;
-        LastNodeId = null;
         LastBatteryReplacement = DateTime.UtcNow.AddDays(-2);
         TotalDistance = 0;
         TotalLifetime = 0;
@@ -193,7 +190,7 @@ public record AgvStatus
     /// Update the last node id.
     /// </summary>
     /// <param name="nodeId">The new node id.</param>
-    public void UpdateLastNodeId(string? nodeId)
+    public void UpdateLastNodeId(Guid? nodeId)
     {
         LastNodeId = nodeId;
     }

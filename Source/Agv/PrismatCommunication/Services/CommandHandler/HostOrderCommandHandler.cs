@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -122,7 +123,7 @@ public class HostOrderCommandHandler(
         ICollection<HostOrder> hostOrders = await hostOrderRepository.GetLatestUnfinishedOrdersByHu(hu, creationDate);
         if (hostOrders.Count == 0)
         {
-            logger.LogDebug("No unfinished host orders for HU {hu}", hu);
+            logger.LogDebug("No unfinished host orders for HU {Hu}", hu);
             return;
         }
         foreach (var hostOrder in hostOrders)
@@ -167,11 +168,11 @@ public class HostOrderCommandHandler(
         await hostOrderRepository.SaveAsync();
     }
 
-    private async Task<bool> QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, Guid? assignedAgv = null, string? pickNode = null)
+    private async Task<bool> QueueHostOrder(IPublishEndpoint context, HostOrder hostOrder, Guid? assignedAgv = null, GraphNode? pickNode = null)
     {
         if (!configuration.IsPickAtAkl(hostOrder.Source) && await ViolatesAklAgvLimitation(hostOrder))
         {
-            logger.LogInformation("Host order {OrderId} / {CorrelationId} is kept back because of AKL station limitation.", hostOrder.Hu, hostOrder.CorrelationId);
+            logger.LogInformation("Host order {OrderId} / {CorrelationId} is kept back because of AKL station limitation", hostOrder.Hu, hostOrder.CorrelationId);
             return false;
         }
 
@@ -220,7 +221,7 @@ public class HostOrderCommandHandler(
 
         if (hostOrder == null)
         {
-            logger.LogError("Could not cancel HostOrder with HandlingUnit {Hu}; None exist.", hu);
+            logger.LogError("Could not cancel HostOrder with HandlingUnit {Hu}; None exist", hu);
             return;
         }
         hostOrder.Cancel(DateTime.UtcNow);
@@ -289,7 +290,7 @@ public class HostOrderCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<FinishHostOrder> context)
     {
-        (var correlationId, var timestamp, string? _) = context.Message;
+        var (correlationId, timestamp) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
         hostOrder.Finish(timestamp);
         await hostOrderRepository.UpdateAsync(hostOrder);
@@ -326,7 +327,7 @@ public class HostOrderCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<PassTriggerPoint> context)
     {
-        (var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, string? pickNode) = context.Message;
+        (var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, var pickNode) = context.Message;
         var droppingHostOrder = await hostOrderRepository.GetByIdAsync(droppingHostOrderCorrelationId);
         droppingHostOrder.PassTriggerPoint();
 
@@ -403,7 +404,7 @@ public class HostOrderCommandHandler(
             return;
         }
 
-        logger.LogInformation("Station group AKL changed. Queuing order {OrderId} / {CorrelationId} that was kept back because of AKL station limitation.", hostOrder.Hu, hostOrder.CorrelationId);
+        logger.LogInformation("Station group AKL changed. Queuing order {OrderId} / {CorrelationId} that was kept back because of AKL station limitation", hostOrder.Hu, hostOrder.CorrelationId);
         await QueueHostOrder(context, hostOrder);
     }
 

@@ -17,7 +17,7 @@ public record GetRoute : CorrelatedBy<Guid>
     /// <summary>
     /// The start node Id from which the route should be calculated. If null the last node Id of the Agv will be used.
     /// </summary>
-    public string? StartNodeId
+    public Guid? StartNodeId
     {
         get;
         [UsedImplicitly]
@@ -27,7 +27,7 @@ public record GetRoute : CorrelatedBy<Guid>
     /// <summary>
     /// The destination node Id to which the route should be calculated, starting from the Agvs current node.
     /// </summary>
-    public string DestinationNodeId
+    public Guid DestinationNodeId
     {
         get;
         [UsedImplicitly]
@@ -38,7 +38,7 @@ public record GetRoute : CorrelatedBy<Guid>
     /// <param name="agvCorrelationId">Agv correlationId.</param>
     /// <param name="destinationNodeId">The destination node Id to which the route should be calculated, starting from the Agvs current node.</param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the Agv will be used.</param>
-    public GetRoute(Guid agvCorrelationId, string destinationNodeId, string? startNodeId = null)
+    public GetRoute(Guid agvCorrelationId, Guid destinationNodeId, Guid? startNodeId = null)
     {
         CorrelationId = agvCorrelationId;
         StartNodeId = startNodeId;
@@ -51,6 +51,5 @@ public record GetRoute : CorrelatedBy<Guid>
     [UsedImplicitly]
     public GetRoute()
     {
-        DestinationNodeId = null!;
     }
 }

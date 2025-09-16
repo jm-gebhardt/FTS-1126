@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -25,13 +26,20 @@ public class GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsum
         });
     }
 
-    public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoute(Guid agvCorrelationId, CurrentAgvRouteReadModel currentAgvRouteReadModel, string? lastNodeId = null)
+    public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoute(Guid agvCorrelationId, CurrentAgvRouteReadModel currentAgvRouteReadModel, string? lastNodeName = null)
     {
-        _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeId)).ReturnsAsync(currentAgvRouteReadModel);
+        if (lastNodeName != null)
+        {
+            _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeName.ToGuid())).ReturnsAsync(currentAgvRouteReadModel);
+        }
+        else
+        {
+            _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, null)).ReturnsAsync(currentAgvRouteReadModel);
+        }
         _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { new(agvCorrelationId, Guid.Empty, "") });
-        return this;    
+        return this;
     }
-    
+
     public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoutes(Guid[] agvCorrelationIds, ICollection<CurrentAgvRouteReadModel> agvRoutesByAgv)
     {
         _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationIds)).ReturnsAsync(agvRoutesByAgv);

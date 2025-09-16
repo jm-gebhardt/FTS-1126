@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Triggers;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
@@ -9,7 +10,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 /// Handles trigger related events
 /// </summary>
 [UsedImplicitly]
-public class TriggerEventHandler(KaeserGraphConfiguration configuration): 
+public class TriggerEventHandler(KaeserGraphConfiguration configuration) :
     IConsumer<TriggerAssignedToNode>,
     IConsumer<TriggerAssignedToArea>
 {
@@ -18,8 +19,8 @@ public class TriggerEventHandler(KaeserGraphConfiguration configuration):
     /// </summary>
     public Task Consume(ConsumeContext<TriggerAssignedToNode> context)
     {
-         configuration.UpdateTriggerPointNodeId(context.Message.TriggerName, context.Message.NodeId);
-         return Task.CompletedTask;
+        configuration.UpdateTriggerPointNodeId(context.Message.TriggerName, context.Message.NodeId);
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -28,8 +29,8 @@ public class TriggerEventHandler(KaeserGraphConfiguration configuration):
     public Task Consume(ConsumeContext<TriggerAssignedToArea> context)
     {
         // Create a dummy node id from the area id.
-        string nodeId = "AREA-" + context.Message.AreaId;
-        configuration.UpdateTriggerPointNodeId(context.Message.TriggerName, nodeId);
+        var nodeName = ("AREA-" + context.Message.AreaId).ToGuid();
+        configuration.UpdateTriggerPointNodeId(context.Message.TriggerName, nodeName);
         return Task.CompletedTask;
     }
 }

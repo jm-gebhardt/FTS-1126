@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
@@ -83,9 +84,10 @@ public class AgvActionTest
         var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), string.Empty);
         const string target = "target";
 
-        action.SetTarget(target);
+        action.SetTarget(target.ToGraphNode());
 
-        action.Target.NodeId.ShouldBe(target);
+        action.Target.Node.ShouldNotBeNull();
+        action.Target.Node.Name.ShouldBe(target);
         action.IsIncomplete.ShouldBeFalse();
     }
 
@@ -94,7 +96,7 @@ public class AgvActionTest
     {
         var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), "target");
 
-        Should.NotThrow(() => action.SetTarget("new target"));
+        Should.NotThrow(() => action.SetTarget("new target".ToGraphNode()));
     }
 
     [TestMethod]
@@ -110,15 +112,15 @@ public class AgvActionTest
     [TestMethod]
     public void Equals_IdenticalAction_ReturnsTrue()
     {
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid());
-        var other = new TransportOrder.Domain.Models.ActionGroup.AgvAction(action.CorrelationId, ActionType.Drop, new ActionTarget(string.Empty), action.ParentId){CreatedDate = action.CreatedDate};
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid());
+        var other = new TransportOrder.Domain.Models.ActionGroup.AgvAction(action.CorrelationId, ActionType.Drop, new ActionTarget(null), action.ParentId) { CreatedDate = action.CreatedDate };
         action.Equals(other).ShouldBeTrue();
     }
 
     [TestMethod]
     public void HasDockFront_DockFrontSet_ReturnsTrue()
     {
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid());
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid());
         action.SetDockFrontValue(true);
 
         action.HasDockFront().ShouldBeTrue();
@@ -127,7 +129,7 @@ public class AgvActionTest
     [TestMethod]
     public void HasDockFront_DockFrontNotSet_ReturnsFalse()
     {
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid());
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid());
 
         action.HasDockFront().ShouldBeFalse();
     }
@@ -136,7 +138,7 @@ public class AgvActionTest
     public void SetLiftHeight_LiftHeightInAdditionalInfo_LiftHeightSet()
     {
         const string liftHeight = "0.9";
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid())
         {
             AdditionalInfo = $"LiftHeight:{liftHeight}"
         };
@@ -148,7 +150,7 @@ public class AgvActionTest
     [TestMethod]
     public void SetLiftHeight_InfoToAgvExists_LiftHeightNotInAdditionalInfo_LiftHeightNotSet()
     {
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid())
         {
             AdditionalInfo = "Some other info"
         };
@@ -162,7 +164,7 @@ public class AgvActionTest
     [TestMethod]
     public void SetLiftHeight_InfoToAgvDoesNotExist_LiftHeightNotInAdditionalInfo_LiftHeightNotSet()
     {
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid())
         {
             AdditionalInfo = "Some other info"
         };
@@ -174,7 +176,7 @@ public class AgvActionTest
     public void GetSap_ValidData_ReturnsSapValue()
     {
         const string sap = "1020";
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid())
         {
             AdditionalInfo = $"SAP:{sap}"
         };
@@ -185,10 +187,10 @@ public class AgvActionTest
     [TestMethod]
     public void GetSapSapNotSet_ReturnsNull()
     {
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(string.Empty), Guid.NewGuid())
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid())
         {
             AdditionalInfo = "Some other info"
         };
         action.GetSap().ShouldBeNull();
     }
-} 
+}

@@ -1,9 +1,11 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -15,7 +17,11 @@ using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.Action
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IStationRepository"/>>
-public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, ISemaphoreProvider<IGraphRepositorySemaphore> semaphoreProvider) : IStationRepository
+public class EfStationRepository(
+    IDbContextFactory<TransportOrderDbContext> dbContextFactory,
+    ISemaphoreProvider<IGraphRepositorySemaphore> semaphoreProvider,
+    IMapper mapper
+) : IStationRepository
 {
     // additional padding for the stations
     private const double Padding = 0.2;
@@ -33,12 +39,12 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
                 .ToList();
 
             List<Station> existingStations = await context.Set<Station>()
-                .Where(s => nodeStations.Select(n => n.Id).Contains(s.Name))
+                .Where(s => nodeStations.Select(n => n.Id).Contains(s.Id))
                 .ToListAsync();
-            List<GraphNode> newNodes = nodeStations.Where(efNode => !existingStations.Select(s => s.Name).Contains(efNode.Id)).ToList();
-           
+            List<GraphNode> newNodes = nodeStations.Where(efNode => !existingStations.Select(s => s.Id).Contains(efNode.Id)).ToList();
+
             var map = (await context.Set<Domain.Models.Map.Map>()
-                .Include(g => g.Nodes).ToListAsync())
+                    .Include(g => g.Nodes).ToListAsync())
                 .Where(m => newNodes.Select(ns => ns.Id).All(s => m.Nodes.Select(n => n.Id).Contains(s)))
                 .OrderBy(m => m.ModificationDate)
                 .FirstOrDefault();
@@ -50,12 +56,12 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
                 {
                     station.SetMap(map?.MapId);
                 }
-                context.Update(station).CurrentValues.SetValues(station); 
+                context.Update(station).CurrentValues.SetValues(station);
             }
 
             IEnumerable<Station> newStations = newNodes.ToList().Select(n =>
             {
-                var station = new Station(n.Id, n.GetPrimaryType(), n.GetAdditionalTypes());
+                var station = new Station(n.Name, n.GetPrimaryType(), n.GetAdditionalTypes());
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
                 station.SetMap(map?.MapId);
                 return station;
@@ -91,93 +97,118 @@ public class EfStationRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     public async Task<Station> GetStation(Guid id)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-
-        var station = await context.Set<Station>()
+        var stationWithNode = await context.Set<Station>()
             .Where(s => s.Id == id)
-            .SingleOrDefaultAsync()
-            ?? throw new NodeNotFoundException(id, "Station not found");
-
-        var nodeLock = await context.Set<NodeLock>()
-            .Where(n => n.NodeId == station.Name)
+            .GroupJoin(
+                context.Set<NodeLock>().AsNoTracking(),
+                s => s.Id,
+                nl => nl.NodeId,
+                (s, nodeLocks) => new { s, nodeLocks }
+            )
+            .SelectMany(
+                x => x.nodeLocks.DefaultIfEmpty(),
+                (x, nl) => new { x.s, nl }
+            )
+            .GroupJoin(
+                context.Set<EfNode>().AsNoTracking(),
+                x => x.nl != null ? x.nl.NodeId : (Guid?) null,
+                g => g.Id,
+                (x, graphNodes) => new { x.s, x.nl, graphNodes }
+            )
+            .SelectMany(
+                x => x.graphNodes.DefaultIfEmpty(),
+                (x, g) => new { Station = x.s, NodeLock = x.nl, GraphNode = g }
+            )
             .SingleOrDefaultAsync();
 
-        List<Guid> agvs = await context.Set<ActionGroup>()
-            .Where(a => a.Actions.Any(ac => ac.Target.NodeId == station.Name && ac.State == ActionState.Started))
-            .Select(x => x.AssignedAgv.GetValueOrDefault())
+        if (stationWithNode == null)
+        {
+            throw new NodeNotFoundException(id, "Station not found");
+        }
+
+        var station = stationWithNode.Station;
+        station.NodeLock = stationWithNode.NodeLock == null ?
+            null :
+            new NodeLock(mapper.Map<GraphNode>(stationWithNode.GraphNode), stationWithNode.NodeLock.NodeState, stationWithNode.NodeLock.IsLocked,
+                stationWithNode.NodeLock.AgvCorrelationId, stationWithNode.NodeLock.ModifiedDate);
+
+        station.Agvs = await context.Set<ActionGroup>()
+            .Where(a => a.Actions.Any(ac => ac.Target.Node!.Id == station.Id && ac.State == ActionState.Started))
+            .Select(a => a.AssignedAgv.GetValueOrDefault())
             .ToListAsync();
-        
-        station.NodeLock = nodeLock;
-        station.Agvs = agvs;
 
         return station;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<Station> GetStation(string name)
-    {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
-
-        var station = await context.Set<Station>()
-            .Where(s => s.Name == name)
-            .SingleOrDefaultAsync()
-            ?? throw new NodeNotFoundException(name);
-
-        var nodeLock = await context.Set<NodeLock>()
-            .Where(n => n.NodeId == station.Name)
-            .SingleOrDefaultAsync();
-
-        List<Guid> agvs = await context.Set<ActionGroup>()
-            .Where(a => a.Actions.Any(ac => ac.Target.NodeId == station.Name && ac.State == ActionState.Started))
-            .Select(x => x.AssignedAgv.GetValueOrDefault())
-            .ToListAsync();
-
-        station.NodeLock = nodeLock;
-        station.Agvs = agvs;
-
-        return station;
-    }
-
-    /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<Station?> GetRequiredStationBaseInformation(string name)
+    public async Task<Station?> GetRequiredStationBaseInformation(Guid id)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 
         return await context.Set<Station>()
-            .SingleOrDefaultAsync(s => s.Name == name);
+            .SingleOrDefaultAsync(s => s.Id == id);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
     public async Task<ICollection<Station>> GetStations(string? mapName = null)
     {
-        var context = await dbContextFactory.CreateDbContextAsync();
-
-        var result = context.Set<Station>()
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        var query = context.Set<Station>()
             .AsNoTracking()
-            .Select(s => new
-            {
-                Station = s,
-                NodeLock = context.Set<NodeLock>().SingleOrDefault(n => n.NodeId == s.Name),
-                Agvs = context.Set<ActionGroup>()
-                    .Where(a => a.Actions.Any(ac => ac.Target.NodeId == s.Name && ac.State == ActionState.Started))
-                    .Select(a => a.AssignedAgv.GetValueOrDefault())
-                    .ToList()
-            });
+            .GroupJoin(
+                context.Set<NodeLock>().AsNoTracking(),
+                s => s.Id,
+                nl => nl.NodeId,
+                (s, nodeLocks) => new { s, nodeLocks }
+            )
+            .SelectMany(
+                x => x.nodeLocks.DefaultIfEmpty(),
+                (x, nl) => new { x.s, nl }
+            )
+            .GroupJoin(
+                context.Set<EfNode>().AsNoTracking(),
+                x => x.nl != null ? x.nl.NodeId : (Guid?) null,
+                g => g.Id,
+                (x, graphNodes) => new { x.s, x.nl, graphNodes }
+            )
+            .SelectMany(
+                x => x.graphNodes.DefaultIfEmpty(),
+                (x, g) => new
+                {
+                    Station = x.s,
+                    NodeLock = x.nl,
+                    GraphNode = g,
+                    // ReSharper disable once AccessToDisposedClosure
+                    Agvs = context.Set<ActionGroup>()
+                        .Where(a => a.Actions.Any(ac => ac.Target.Node!.Id == x.s.Id && ac.State == ActionState.Started))
+                        .Select(a => a.AssignedAgv.GetValueOrDefault())
+                        .Distinct()
+                        .ToList()
+                }
+            );
 
         if (mapName != null)
         {
-            result = result.Where(x => x.Station.MapName == mapName);
+            query = query.Where(x => x.Station.MapName == mapName);
         }
 
-        var stations = await result.ToListAsync();
-        await context.DisposeAsync();
-        return stations.Select(s =>
+        var rows = await query.ToListAsync();
+
+        List<Station> stations = rows.Select(r =>
         {
-            s.Station.NodeLock = s.NodeLock;
-            s.Station.Agvs = s.Agvs;
-            return s.Station;
+            var station = r.Station;
+
+            station.NodeLock = r.NodeLock == null ?
+                null :
+                new NodeLock(mapper.Map<GraphNode>(r.GraphNode), r.NodeLock.NodeState, r.NodeLock.IsLocked, r.NodeLock.AgvCorrelationId, r.NodeLock.ModifiedDate);
+
+            station.Agvs = r.Agvs;
+            return station;
         }).ToList();
+
+        return stations;
     }
-    
+
     /// <inheritdoc cref="IStationRepository"/>
     public async Task Update(Station station)
     {

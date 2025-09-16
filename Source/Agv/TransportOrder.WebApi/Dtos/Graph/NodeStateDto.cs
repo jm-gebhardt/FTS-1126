@@ -12,7 +12,7 @@ public record NodeStateDto : DatedMessage
 {
     /// <summary >The node id.</summary>
     public string NodeId { get; set; }
-    
+
     /// <summary >The node lock state.</summary>
     public NodeLockState NodeState { get; set; }
 
@@ -36,6 +36,14 @@ public record NodeStateDto : DatedMessage
 
     /// <summary >Reason description for locking station.</summary>
     public string? LockDescription { get; set; }
+
+    /// <summary>
+    /// AutoMapper
+    /// </summary>
+    public NodeStateDto()
+    {
+        NodeId = string.Empty;
+    }
 
     /// <inheritdoc cref="NodeStateDto"/>>
     public NodeStateDto(string nodeId, NodeLockState nodeState, bool isLocked, Guid? agvCorrelationId, DateTime modifiedDate, Guid? stationId = null, string? user = null, string? lockReason = null, string? lockDescription = null)

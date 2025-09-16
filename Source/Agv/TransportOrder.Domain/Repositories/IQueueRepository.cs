@@ -38,7 +38,7 @@ public interface IQueueRepository
     /// Get the id of queue nodes that are blocked by agvs.
     /// </summary>
     /// <returns>Collection of node ids.</returns>
-    Task<ICollection<string>> GetBlockedQueueNodes();
+    Task<ICollection<Guid>> GetBlockedQueueNodes();
 
     /// <summary>
     /// Get a single queue by its id.
@@ -74,7 +74,7 @@ public interface IQueueRepository
     /// </summary>
     /// <param name="entryNode">The id of the entry node.</param>
     /// <returns>The (first) queue that has the given entry node.</returns>
-    Task<Queue?> GetQueueByEntryNode(string entryNode);
+    Task<Queue?> GetQueueByEntryNode(Guid entryNode);
 
     /// <summary>
     /// Get all queues that are occupied by agvs.

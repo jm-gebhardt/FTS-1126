@@ -24,7 +24,7 @@ public class OldestActionGroupChooser: BaseChooseAgvActionGroupService
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
-    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
+    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<Guid> nodesToAvoid)
     {
         Models.ActionGroup.ActionGroup? nextActionGroup = null;
         foreach (var actionGroup in notStartedActionGroups.OrderBy(g => g.CreatedDate))

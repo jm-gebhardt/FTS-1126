@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 
@@ -8,4 +9,4 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="CorrelationId">The CorrelationId of the Agv.</param>
 /// <param name="RemainingNodes">The remaining nodes.</param>
 /// <param name="RemainingEdges">The remaining edges.</param>
-public record CurrentAgvRouteReadModel([UsedImplicitly] Guid CorrelationId, string[] RemainingNodes, Guid[] RemainingEdges);
+public record CurrentAgvRouteReadModel([UsedImplicitly] Guid CorrelationId, GraphNode[] RemainingNodes, Guid[] RemainingEdges);

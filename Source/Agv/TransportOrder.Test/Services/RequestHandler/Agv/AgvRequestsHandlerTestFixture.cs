@@ -72,10 +72,10 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         _agvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(
             maintenanceLogs
                 .GroupBy(log => log.AgvCorrelationId)
-            .ToDictionary(
-                group => group.Key,
-                group => group.FirstOrDefault()
-            ));
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.FirstOrDefault()
+                ));
         return this;
     }
 
@@ -140,9 +140,9 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.CorrelationId)).ToList());
 
         Dictionary<Guid, GraphNode?> nodes = agvs.ToDictionary(a => a.CorrelationId,
-            a => a.AgvStatus!.LastNodeId != null ? NodeGenerator.GenerateNode(nodeId: a.AgvStatus!.LastNodeId!, x: 1.0f, y: 2.0f, z: 0.0f, theta: 0.0f, nodeType: AgvGraph.NodeType.WayPoint) : null);
+            a => a.AgvStatus!.LastNodeId != null ? NodeGenerator.GenerateNode(nodeName: a.AgvStatus!.LastNodeId!.ToString()!, x: 1.0f, y: 2.0f, z: 0.0f, theta: 0.0f, nodeType: AgvGraph.NodeType.WayPoint) : null);
 
-        _agvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, string?>>())).ReturnsAsync(() => nodes);
+        _agvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => nodes);
 
         return this;
     }

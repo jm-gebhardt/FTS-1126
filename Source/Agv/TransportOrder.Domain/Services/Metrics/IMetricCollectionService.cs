@@ -13,7 +13,7 @@ public interface IMetricCollectionService
     /// </summary>
     /// <param name="actionGroup">The action group.</param>
     /// <param name="lastNodeId">The last node id of the agv.</param>
-    Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, string? lastNodeId=null);
+    Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, Guid? lastNodeId = null);
 
     /// <summary>
     /// Collect agv battery charge metrics.

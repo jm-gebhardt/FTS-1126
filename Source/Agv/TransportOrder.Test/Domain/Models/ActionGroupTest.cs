@@ -52,7 +52,7 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         actionGroup.StartedDate.ShouldBeNull();
-        string[] nodes = ["source", "target"];
+        GraphNode[] nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
         Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
 
         actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges);
@@ -150,7 +150,7 @@ public class ActionGroupTests
 
         actionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        ((DateTime)actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
+        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -240,7 +240,7 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         actionGroup.StartedDate.ShouldBeNull();
-        string[] nodes = ["source", "target"];
+        GraphNode[] nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
         Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
         actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges);
 
@@ -254,7 +254,7 @@ public class ActionGroupTests
     public void GetTargets_PickDropActionGroup_TargetNodeIdsOfPickAndDropAction()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId!, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.NodeId!];
+        Guid[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.Node!.Id, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.Node!.Id];
 
         actionGroup.GetTargets().ShouldBe(expectedTargets);
     }
@@ -263,7 +263,7 @@ public class ActionGroupTests
     public void GetTargets_IncompletePickDropActionGroupWithoutDropTarget_TargetNodeIdsOfPickAndMoveAction()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
-        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId!, actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId!];
+        Guid[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.Node!.Id, actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id];
 
         actionGroup.GetTargets().ShouldBe(expectedTargets);
     }
@@ -272,7 +272,7 @@ public class ActionGroupTests
     public void GetTargets_IncompletePickDropActionGroupWithoutPickTarget_TargetNodeIdOfMoveAction()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
-        string[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId!];
+        Guid[] expectedTargets = [actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id];
 
         actionGroup.GetTargets().ShouldBe(expectedTargets);
     }
@@ -282,12 +282,13 @@ public class ActionGroupTests
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
         var action = actionGroup.Actions.First(a => a.IsIncomplete);
-        const string target = "target";
+        var targetNode = "target".ToGraphNode();
 
-        actionGroup.SetTargetForAction(action.CorrelationId, target);
+        actionGroup.SetTargetForAction(action.CorrelationId, targetNode);
 
         actionGroup.IsIncomplete.ShouldBeFalse();
-        action.Target.NodeId.ShouldBe(target);
+        action.Target.Node.ShouldNotBeNull();
+        action.Target.Node.Id.ShouldBe(targetNode.Id);
         action.IsIncomplete.ShouldBeFalse();
     }
 
@@ -296,7 +297,7 @@ public class ActionGroupTests
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
-        Should.Throw<ActionNotFoundException>(() => actionGroup.SetTargetForAction("unknown".ToGuid(), "target"));
+        Should.Throw<ActionNotFoundException>(() => actionGroup.SetTargetForAction("unknown".ToGuid(), "target".ToGraphNode()));
     }
 
     [TestMethod]
@@ -587,7 +588,7 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.InfoToAgv.ShouldBeNull();
-        pickAction.Nodes = ["target of last action"];
+        pickAction.Nodes = ["target of last action".ToGraphNode()];
         pickAction.Nodes.Length.ShouldBe(1);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.InfoToAgv.ShouldBeNull();
@@ -852,7 +853,7 @@ public class ActionGroupTests
         moveAction.InfoToAgv.GetDockFront().ShouldBe(move);
 
         // Update target
-        var currentAction = actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target", new Route(32, [], []));
+        var currentAction = actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target".ToGraphNode(), new Route(32, [], []));
         actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, previous, DockingDirection.Both, true);
         currentAction.ShouldNotBeNull();
         currentAction.InfoToAgv.ShouldNotBeNull();
@@ -884,7 +885,7 @@ public class ActionGroupTests
         moveAction.InfoToAgv.GetDockFront().ShouldBe(move);
 
         // Update target
-        var currentAction = actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target", new Route(32, [], []));
+        var currentAction = actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target".ToGraphNode(), new Route(32, [], []));
         actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, previous, DockingDirection.Both, true);
         currentAction.ShouldNotBeNull();
         currentAction.InfoToAgv.ShouldNotBeNull();
@@ -921,7 +922,7 @@ public class ActionGroupTests
         moveAction.InfoToAgv.GetDockFront().ShouldBe(move);
 
         // Update target
-        var currentAction = actionGroup.SetTargetForActionWithUpdate(dropAction.CorrelationId, "target", new Route(32, [], []));
+        var currentAction = actionGroup.SetTargetForActionWithUpdate(dropAction.CorrelationId, "target".ToGraphNode(), new Route(32, [], []));
         actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, previous, DockingDirection.Both);
         currentAction.ShouldNotBeNull();
         currentAction.InfoToAgv.ShouldNotBeNull();
@@ -953,7 +954,7 @@ public class ActionGroupTests
         moveAction.InfoToAgv.GetDockFront().ShouldBe(move);
 
         // Update target
-        var currentAction = actionGroup.SetTargetForActionWithUpdate(dropAction.CorrelationId, "target", new Route(32, [], []));
+        var currentAction = actionGroup.SetTargetForActionWithUpdate(dropAction.CorrelationId, "target".ToGraphNode(), new Route(32, [], []));
         actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, previous, DockingDirection.Both);
         currentAction.ShouldNotBeNull();
         currentAction.InfoToAgv.ShouldNotBeNull();
@@ -1028,9 +1029,12 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Completed, dropActionState: ActionState.Created, moveActionState: ActionState.Started);
         var dropAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
 
-        var moveAction = actionGroup.SetTargetForActionWithUpdate(dropAction.CorrelationId, "target");
+        var targetNode = "target".ToGraphNode();
+        var moveAction = actionGroup.SetTargetForActionWithUpdate(dropAction.CorrelationId, targetNode);
         moveAction.ActionType.ShouldBe(ActionType.Drop);
-        moveAction.Target.NodeId.ShouldBe("target");
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Id.ShouldBe(targetNode.Id);
+        moveAction.Target.Node.Name.ShouldBe(targetNode.Name);
 
         dropAction.ShouldSkip.ShouldBeTrue();
     }
@@ -1041,9 +1045,12 @@ public class ActionGroupTests
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(pickActionState: ActionState.Created, dropActionState: ActionState.Created, moveActionState: ActionState.Started);
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
 
-        var moveAction = actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target");
+        var targetNode = "target".ToGraphNode();
+        var moveAction = actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, targetNode);
         moveAction.ActionType.ShouldBe(ActionType.Pick);
-        moveAction.Target.NodeId.ShouldBe("target");
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Id.ShouldBe(targetNode.Id);
+        moveAction.Target.Node.Name.ShouldBe(targetNode.Name);
 
         pickAction.ShouldSkip.ShouldBeTrue();
     }
@@ -1053,7 +1060,7 @@ public class ActionGroupTests
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(ActionState.Completed, ActionState.Started);
 
-        Should.Throw<ActionNotFoundException>(() => actionGroup.SetTargetForActionWithUpdate(Guid.Empty, "target"));
+        Should.Throw<ActionNotFoundException>(() => actionGroup.SetTargetForActionWithUpdate(Guid.Empty, "target".ToGraphNode()));
     }
 
     [TestMethod]
@@ -1291,7 +1298,7 @@ public class ActionGroupTests
         var orderId = Guid.NewGuid();
         var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
         {
-            new(Guid.NewGuid(), actionType, "node", orderId)
+            new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
                 Sequence = 0
             }
@@ -1320,7 +1327,7 @@ public class ActionGroupTests
         var orderId = Guid.NewGuid();
         var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
         {
-            new(Guid.NewGuid(), actionType, "node", orderId)
+            new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
                 Sequence = 0
             }
@@ -1351,7 +1358,7 @@ public class ActionGroupTests
         var orderId = Guid.NewGuid();
         var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
         {
-            new(Guid.NewGuid(), actionType, "node", orderId)
+            new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
                 Sequence = 0
             }

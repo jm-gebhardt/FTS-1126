@@ -13,7 +13,7 @@ public class RouteNotFoundException : NotFoundException
     /// </summary>
     /// <param name="sourceNodeId"></param>
     /// <param name="destinationNodeId"></param>
-    public RouteNotFoundException(string? sourceNodeId, string destinationNodeId) : base($"No route found {sourceNodeId}->{destinationNodeId}")
+    public RouteNotFoundException(Guid? sourceNodeId, Guid destinationNodeId) : base($"No route found {sourceNodeId}->{destinationNodeId}")
     {
     }
 
@@ -22,14 +22,14 @@ public class RouteNotFoundException : NotFoundException
     /// </summary>
     /// <param name="sourceNodeId"></param>
     /// <param name="destinationNodeIds"></param>
-    public RouteNotFoundException(string? sourceNodeId, IEnumerable<string> destinationNodeIds) : base($"No route found {sourceNodeId}{string.Join("-> ", destinationNodeIds)}")
+    public RouteNotFoundException(Guid? sourceNodeId, IEnumerable<Guid> destinationNodeIds) : base($"No route found {sourceNodeId}{string.Join("-> ", destinationNodeIds)}")
     {
     }
 
     /// <summary>
     /// If no route was found for the given agv to any of these nodes.
     /// </summary>
-    public RouteNotFoundException(Guid agvCorrelationId, IEnumerable<GraphNode> destinationNodeIds) : base($"No route found to any of these nodes: {agvCorrelationId} {string.Join(", ", destinationNodeIds.Select(n => n.Id))}")
+    public RouteNotFoundException(Guid agvCorrelationId, IEnumerable<GraphNode> destinationNodeIds) : base($"No route found to any of these nodes: {agvCorrelationId} {string.Join(", ", destinationNodeIds.Select(n => n.Name))}")
     {
     }
 }

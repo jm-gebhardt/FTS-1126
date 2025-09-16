@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 
 /// <inheritdoc cref="IStationRepository"/>>
-public class EfStationRepository(PrismatCommunicationDbContext context): EfRepository<Station, PrismatCommunicationDbContext>(context), IStationRepository
+public class EfStationRepository(PrismatCommunicationDbContext context) : EfRepository<Station, PrismatCommunicationDbContext>(context), IStationRepository
 {
     private readonly PrismatCommunicationDbContext _context = context;
 
@@ -51,9 +51,9 @@ public class EfStationRepository(PrismatCommunicationDbContext context): EfRepos
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<Station?> GetStationByNode(string nodeId)
+    public async Task<Station?> GetStationByNode(Guid nodeId)
     {
-        return await _context.Set<Station>().SingleOrDefaultAsync(s => s.Node == nodeId);
+        return await _context.Set<Station>().SingleOrDefaultAsync(s => s.Id == nodeId);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>

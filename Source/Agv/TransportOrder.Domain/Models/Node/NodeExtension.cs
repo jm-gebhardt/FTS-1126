@@ -15,7 +15,7 @@ public static class NodeExtension
     /// <param name="nodeId">The node id.</param>
     /// <returns>The selected node.</returns>
     /// <exception cref="NodeNotFoundException">When the node is not found.</exception>
-    public static GraphNode SelectById(this IEnumerable<GraphNode> nodes, string nodeId)
+    public static GraphNode SelectById(this IEnumerable<GraphNode> nodes, Guid nodeId)
     {
         return nodes.FirstOrDefault(n => n.Id == nodeId) ?? throw new NodeNotFoundException(nodeId);
     }

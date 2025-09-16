@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -32,14 +33,14 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _graphRepository.Object);
         collection.AddTransient(_ => _mapRepository.Object);
-        NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
+        NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<Guid>())).Verifiable();
         _graphRepository.Setup(x => x.UpdateNode(It.IsAny<GraphNode>())).Verifiable();
         return this;
     }
 
     public NodeCommandHandlerTestFixture WithNodeState(NodeLock? nodeState)
     {
-        NodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(nodeState);
+        NodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeState);
         return this;
     }
 
@@ -49,26 +50,26 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         return this;
     }
 
-    public NodeCommandHandlerTestFixture WithStation(string nodeId)
+    public NodeCommandHandlerTestFixture WithStation(string nodeName)
     {
-        var station = new TransportOrder.Domain.Models.Station.Station(nodeId, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>());
+        var station = new TransportOrder.Domain.Models.Station.Station(nodeName, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>());
         var id = station.Id;
         _stationRepository.Setup(x => x.GetStation(id)).ReturnsAsync(station);
-        _stationRepository.Setup(x => x.GetStation(nodeId)).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStation(nodeName.ToGuid())).ReturnsAsync(station);
         return this;
     }
 
     public NodeCommandHandlerTestFixture WithAnyStation()
     {
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         return this;
     }
 
-    public NodeCommandHandlerTestFixture WithNodeReserved(string nodeId, bool reserve = true)
+    public NodeCommandHandlerTestFixture WithNodeReserved(string nodeName, bool reserve = true)
     {
-        NodeStateRepository.Setup(x => x.OccupyNodeAsync(nodeId, It.IsAny<Guid>())).Verifiable();
-        NodeStateRepository.Setup(x => x.IsNodeReservedAsync(nodeId)).ReturnsAsync(reserve);
+        NodeStateRepository.Setup(x => x.OccupyNodeAsync(nodeName.ToGuid(), It.IsAny<Guid>())).Verifiable();
+        NodeStateRepository.Setup(x => x.IsNodeReservedAsync(nodeName.ToGuid())).ReturnsAsync(reserve);
         return this;
     }
 
@@ -81,6 +82,10 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     public NodeCommandHandlerTestFixture WithNodeStates(ICollection<NodeLock> nodeLocks)
     {
         NodeStateRepository.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
+        foreach (var nodeLock in nodeLocks)
+        {
+            WithNode(nodeLock.Node);
+        }
         return this;
     }
 
@@ -100,9 +105,10 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
 
     public NodeCommandHandlerTestFixture WithNode(GraphNode node)
     {
-        _graphRepository.Setup(x => x.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
-        _graphRepository.Setup(x => x.TryGetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
-        _mapRepository.Setup(x => x.GetMapIdForNode(node.Id)).ReturnsAsync(Guid.NewGuid);
+        _graphRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+        _graphRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+        _graphRepository.Setup(x => x.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+        _mapRepository.Setup(x => x.GetMapIdForNodeAsync(node.Id)).ReturnsAsync(Guid.NewGuid);
         return this;
     }
 

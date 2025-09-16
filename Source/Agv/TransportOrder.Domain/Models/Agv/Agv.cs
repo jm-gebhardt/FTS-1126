@@ -227,17 +227,17 @@ public class Agv : IAgv
     /// The threshold for considering a battery charge change (increasing) significant [%].
     /// </summary>
     public const double BatteryChargeChargingThreshold = 0.5d;
-    
+
     /// <summary>
     /// The threshold for considering a battery voltage change significant [V].
     /// </summary>
     public const double BatteryVoltageThreshold = 0.5d;
-    
+
     /// <summary>
     /// The threshold for considering a battery current change when idle significant [A].
     /// </summary>
     public const double BatteryCurrentIdleThreshold = 0.5d;
-    
+
     /// <summary>
     /// The threshold for considering a battery current change when busy significant [A].
     /// </summary>
@@ -251,7 +251,7 @@ public class Agv : IAgv
     /// <summary>
     /// The threshold for considering a battery datetime change (LastBatteryReplacement, EstimatedFullyChargedTime) significant.
     /// </summary>
-    public const long BatteryStatusTicksThreshold = 60 * TimeSpan.TicksPerSecond;
+    public const long BatteryStatusSecondsThreshold = 60;
 
     /// <summary>
     /// The threshold for considering an operating data total distance change significant [km].
@@ -379,8 +379,8 @@ public class Agv : IAgv
                || Math.Abs(newStatus.BatteryCurrent - AgvStatus.BatteryCurrent) > batteryCurrentThreshold
                || Math.Abs(newStatus.BatteryTemperature - AgvStatus.BatteryTemperature) > BatteryTemperatureThreshold
                || Math.Abs(newStatus.BatteryVoltage - AgvStatus.BatteryVoltage) > BatteryVoltageThreshold
-               || Math.Abs(newEstimatedFullyChargedTime.Ticks - estimatedFullyChargeTime.Ticks) > BatteryStatusTicksThreshold
-               || Math.Abs(newLastBatteryReplacement.Ticks - lastBatteryReplacement.Ticks) > BatteryStatusTicksThreshold;
+               || Math.Abs((newEstimatedFullyChargedTime - estimatedFullyChargeTime).TotalSeconds) > BatteryStatusSecondsThreshold
+               || Math.Abs((newLastBatteryReplacement - lastBatteryReplacement).TotalSeconds) > BatteryStatusSecondsThreshold;
     }
 
     /// <summary>
@@ -398,16 +398,16 @@ public class Agv : IAgv
         return Math.Abs(AgvStatus.BatteryCharge - newBatteryCharge) > threshold;
     }
 
-    private bool CheckLastNodeIdChanged(string? newLastNodeId)
+    private bool CheckLastNodeIdChanged(Guid? newLastNodeId)
     {
         if (AgvStatus == null)
         {
-            return !string.IsNullOrEmpty(newLastNodeId);
+            return newLastNodeId != null && newLastNodeId != Guid.Empty;
         }
         return AgvStatus.LastNodeId != newLastNodeId;
     }
 
-    private bool CheckOperatingDataTotalDistanceChanged(float  newTotalDistance)
+    private bool CheckOperatingDataTotalDistanceChanged(float newTotalDistance)
     {
         if (AgvStatus == null)
         {
@@ -468,7 +468,7 @@ public class Agv : IAgv
         }
 
         bool batteryStatusChanged = batteryChargeChanged || CheckBatteryStatusChange(newStatus);
-        bool operatingDataChanged = operatingDataTotalDistanceChanged || operatingDataTotalLifetimeChanged; 
+        bool operatingDataChanged = operatingDataTotalDistanceChanged || operatingDataTotalLifetimeChanged;
         bool lastNodeIdChanged = CheckLastNodeIdChanged(newStatus.LastNodeId);
         AgvStatus = newStatus;
         return (batteryStatusChanged, batteryChargeChanged, lastNodeIdChanged, operatingDataChanged);
@@ -692,7 +692,7 @@ public class Agv : IAgv
         {
             return agv =>
                 agv.AgvStatus != null &&
-                agv.AgvStatus.LastNodeId != null &&
+                agv.AgvStatus.LastNodeId != Guid.Empty &&
                 !agv.HasError &&
                 agv.IsOnline;
         }
@@ -701,5 +701,5 @@ public class Agv : IAgv
     /// <summary>
     /// If the agv is ready ignoring if it has an error.
     /// </summary>
-    public bool IsReadyIgnoringError => AgvStatus is { LastNodeId: not null } && IsOnline;
+    public bool IsReadyIgnoringError => AgvStatus?.LastNodeId is { } g && g != Guid.Empty && IsOnline;
 }

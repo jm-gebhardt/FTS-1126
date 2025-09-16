@@ -36,7 +36,7 @@ public class AgvsSeeder : ISeeder
         }
         else
         {
-            logger.LogInformation("Directory {AgvBasePath} not found.", agvBasePath);
+            logger.LogInformation("Directory {AgvBasePath} not found", agvBasePath);
         }
 
         Name = $"Agv seeder of {_folderPaths.Length} Agvs";

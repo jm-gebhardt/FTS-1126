@@ -25,7 +25,7 @@ public class MqttSimulateAgvErrorConsumer : IConsumer<MqttSimulateAgvError>
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<MqttSimulateAgvError> context)
     {
-        _logger.LogDebug("{Message} received.", nameof(MqttSimulateAgvError));
+        _logger.LogDebug("{Message} received", nameof(MqttSimulateAgvError));
         await context.Publish(new SimulateAgvError(context.Message.CorrelationId, context.Message.AgvErrors));
     }
 }

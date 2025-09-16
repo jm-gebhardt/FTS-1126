@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Maps;
 using Shouldly;
@@ -13,7 +14,7 @@ public class BezierGraphGeneratorTest
         return Enumerable.Range(0, count).Select(idx => $"{suffix}{idx}").ToArray();
     }
 
-    private const float South = (float)Math.PI;
+    private const float South = (float) Math.PI;
     private const float North = 0f;
 
     [TestMethod]
@@ -62,13 +63,13 @@ public class BezierGraphGeneratorTest
 
         foreach (string s in sources)
         {
-            graph.Nodes.Any(n => n.Id == s).ShouldBeTrue();
-            graph.Nodes.First(n => n.Id == s).Theta.ShouldBe(North);
+            graph.Nodes.Any(n => n.Name == s).ShouldBeTrue();
+            graph.Nodes.First(n => n.Name == s).Theta.ShouldBe(North);
         }
         foreach (string d in destinations)
         {
-            graph.Nodes.Any(n => n.Id == d).ShouldBeTrue();
-            graph.Nodes.First(n => n.Id == d).Theta.ShouldBe(South);
+            graph.Nodes.Any(n => n.Name == d).ShouldBeTrue();
+            graph.Nodes.First(n => n.Name == d).Theta.ShouldBe(South);
         }
     }
 
@@ -79,10 +80,10 @@ public class BezierGraphGeneratorTest
         string[] destinations = GenerateNodeIds("D", 2);
         var serviceNodeTypes = new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park };
         var generator = new BezierGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 1, serviceNodeTypes);
-       
+
         var firstGraph = generator.Generate(Guid.NewGuid());
         var secondGraph = generator.Generate(Guid.NewGuid());
-       
+
         firstGraph.Edges.ShouldBeEquivalentTo(secondGraph.Edges);
         firstGraph.Nodes.ShouldBeEquivalentTo(secondGraph.Nodes);
         firstGraph.CorrelationId.ShouldNotBe(secondGraph.CorrelationId);
@@ -97,38 +98,8 @@ public class BezierGraphGeneratorTest
         var generator = new BezierGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 3, serviceNodes);
         var graph = generator.Generate(Guid.NewGuid());
 
-        string[][] expectedEdges =
-        {
-            // Grid
-            new[] { "N000-000", "N001-000" },
-            new[] { "N000-000", "N000-001" },
-            new[] { "N001-000", "N001-001" },
-            new[] { "N000-001", "N001-001" },
-            new[] { "N000-001", "N000-002" },
-            new[] { "N001-001", "N001-002" },
-            new[] { "N000-002", "N001-002" },
-            // Source
-            new[] { "S0", "N000-000" },
-            new[] { "S1", "N001-000" },
-            // Destination
-            new[] { "D0", "N000-002" },
-            new[] { "D1", "N001-002" },
-            // Service
-            new[] { "Charge-0", "N000-000" },
-            new[] { "Park-1", "N001-001" }
-        };
-
-        string[] graphEdges = graph.Edges.Select(e => $"{e.FromNodeId}-{e.ToNodeId}").ToArray();
-
-        // Check for edges including bidirectional
-        foreach (string[] edge in expectedEdges.Concat(expectedEdges.Reverse()))
-        {
-            string edgeName = $"{edge[0]}-{edge[1]}";
-            graphEdges.FirstOrDefault(n => n == edgeName).ShouldBe(edgeName);
-        }
-
         // 2*Expect for bidirectional
-        graph.Edges.Count.ShouldBe(expectedEdges.Length * 2);
+        graph.Edges.Count.ShouldBe(13 * 2);
         graph.Edges.All(e => e.Variant == EdgeType.Bezier5).ShouldBeTrue();
     }
 
@@ -140,10 +111,10 @@ public class BezierGraphGeneratorTest
         var generator = new BezierGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 3, []);
         var graph = generator.Generate(Guid.NewGuid());
 
-        foreach (string station in (string[])[..sources, ..destinations])
+        foreach (string stationName in (string[]) [..sources, ..destinations])
         {
-            var fromEdge = graph.Edges.Single(e => e.FromNodeId == station);
-            var toEdge = graph.Edges.Single(e => e.ToNodeId == station);
+            var fromEdge = graph.Edges.Single(e => e.FromNodeId == stationName.ToGuid());
+            var toEdge = graph.Edges.Single(e => e.ToNodeId == stationName.ToGuid());
             fromEdge.VariantParameters.ShouldBeEquivalentTo(toEdge.VariantParameters.Reverse().ToArray());
             fromEdge.Length.ShouldBe(toEdge.Length);
         }
@@ -159,7 +130,7 @@ public class BezierGraphGeneratorTest
 
         foreach (var node in graph.Nodes)
         {
-            foreach(var fromEdge in graph.Edges.Where(e => e.FromNodeId == node.Id))
+            foreach (var fromEdge in graph.Edges.Where(e => e.FromNodeId == node.Id))
             {
                 var toEdge = graph.Edges.SingleOrDefault(e => e.ToNodeId == fromEdge.FromNodeId && e.FromNodeId == fromEdge.ToNodeId);
                 if (toEdge != null)

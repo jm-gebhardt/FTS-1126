@@ -14,7 +14,7 @@ public interface IAgvRouteRetrievalService
     /// <param name="agvCorrelationId"></param>
     /// <param name="lastNodeId">You can specify the last node of the Agv, if you leave it blank, it will be retrieved from the system</param>
     /// <returns></returns>
-    Task<CurrentAgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, string? lastNodeId = null);
+    Task<CurrentAgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, Guid? lastNodeId = null);
 
     /// <summary>
     /// Gets the AgvRoute for the given AgvCorrelationIds

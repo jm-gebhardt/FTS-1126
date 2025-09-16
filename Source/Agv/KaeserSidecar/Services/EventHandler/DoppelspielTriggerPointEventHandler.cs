@@ -23,7 +23,8 @@ public class DoppelspielTriggerPointEventHandler(
     IPrismatCommunicationHostOrderRepository hostOrderRepository,
     IAklAgvLimitGuard aklAgvLimitGuard,
     KaeserGraphConfiguration configuration,
-    IAgvSettingsService agvSettingsService) :
+    IAgvSettingsService agvSettingsService
+) :
     IConsumer<AgvPassedDoppelspielTriggerPoint>
 {
     /// <summary>
@@ -37,13 +38,13 @@ public class DoppelspielTriggerPointEventHandler(
             logger.LogWarning("Agv without pick drop action group passed Doppelspiel trigger point ({ActionGroup})", actionGroup?.CorrelationId);
             return;
         }
-        var action = actionGroup.Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Completed && a.Target.NodeId == targetStationName);
+        var action = actionGroup.Actions.FirstOrDefault(a => a.State is ActionState.Started or ActionState.Completed && a.Target.Node?.Name == targetStationName);
         if (action == null)
         {
             logger.LogWarning("Agv without started action to station {TargetStation} with Doppelspiel passed Doppelspiel trigger point. Current action group is: ({ActionGroup})", targetStationName, actionGroup.CorrelationId);
             foreach (var a in actionGroup.Actions)
             {
-                logger.LogWarning("Action {ActionType} is in State {State} and heads to {Target}", a.ActionType, a.State, a.Target.NodeId);
+                logger.LogWarning("Action {ActionType} is in State {State} and heads to {Target}", a.ActionType, a.State, a.Target.Node?.Name);
             }
             return;
         }
@@ -63,13 +64,13 @@ public class DoppelspielTriggerPointEventHandler(
             bool agvHasCriticalBatteryLevel = await agvSettingsService.CheckAgvHasCriticalBatteryLevel(agvStatus.CorrelationId);
             Guid? nextPickOrderId = nextPickOrder == null || nextPickOrder.IsQueued ? null : nextPickOrder.CorrelationId;
             bool shouldPickNext = !agvHasCriticalBatteryLevel && nextPickOrderId != null && await CanBeUsedForDoppelspiel(nextPickOrder);
-            string? pickNode = shouldPickNext ? action.Target.NodeId : null;
-            logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next {ShouldPick} order {PickOrderCorrelationId} and has critical battery level {HasLowBatteryLevel}", actionGroup.AssignedAgv!.Value, action.Target.NodeId!, shouldPickNext, nextPickOrderId, agvHasCriticalBatteryLevel);
-            await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId, nextPickOrderId, shouldPickNext, pickNode));
+            var pickNode = shouldPickNext ? action.Target.Node : null;
+            logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next {ShouldPick} order {PickOrderCorrelationId} and has critical battery level {HasLowBatteryLevel}", actionGroup.AssignedAgv!.Value, action.Target.Node?.Name, shouldPickNext, nextPickOrderId, agvHasCriticalBatteryLevel);
+            await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId, nextPickOrderId, shouldPickNext, pickNode));
             return;
         }
-        logger.LogInformation("Picking agv {AgvCorrelationId} passed Doppelspiel trigger point and will pick at {Target} ", actionGroup.AssignedAgv!.Value, action.Target.NodeId!);
-        await context.Publish(new PickingAgvPassedDoppelspielTriggerPoint(action.Target.NodeId!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId));
+        logger.LogInformation("Picking agv {AgvCorrelationId} passed Doppelspiel trigger point and will pick at {Target} ", actionGroup.AssignedAgv!.Value, action.Target.Node!.Name);
+        await context.Publish(new PickingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId));
     }
 
     private async Task HandleManualPickDropActionGroup(IPublishEndpoint context, ActionGroup actionGroup, AgvAction action, bool isPicking)
@@ -77,10 +78,10 @@ public class DoppelspielTriggerPointEventHandler(
         string? sap = action.GetSap();
         if (sap == null)
         {
-            logger.LogError("SAP not given for manual pick drop action group.");
+            logger.LogError("SAP not given for manual pick drop action group");
             return;
         }
-        await context.Publish(new ManualActionPassedDoppelspielTrigger(sap, action.Target.NodeId!, isPicking, actionGroup.HandlingUnit!, action.CorrelationId, actionGroup.AssignedAgv!.Value));
+        await context.Publish(new ManualActionPassedDoppelspielTrigger(sap, action.Target.Node!.Name, isPicking, actionGroup.HandlingUnit!, action.CorrelationId, actionGroup.AssignedAgv!.Value));
     }
 
     private Task<bool> CanBeUsedForDoppelspiel(HostOrder? hostOrder)
@@ -88,6 +89,10 @@ public class DoppelspielTriggerPointEventHandler(
         if (hostOrder?.IsQueued == true)
         {
             return Task.FromResult(false);
+        }
+        if (configuration.UseAklAgvLimit.HasValue && !configuration.UseAklAgvLimit.Value)
+        {
+            return Task.FromResult(true);
         }
 
         return aklAgvLimitGuard.IsWithinAklAgvLimitAsync(hostOrder);

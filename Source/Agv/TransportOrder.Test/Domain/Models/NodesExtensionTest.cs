@@ -12,7 +12,7 @@ public class NodesExtensionTest
     [TestMethod]
     public void SelectById_ValidData_ReturnsNode()
     {
-        var node = NodeGenerator.GenerateNode(nodeId:"id");
+        var node = NodeGenerator.GenerateNode(nodeName: "id");
         var nodes = new List<GraphNode> { node };
         nodes.SelectById(node.Id).ShouldBe(node);
     }
@@ -20,6 +20,6 @@ public class NodesExtensionTest
     [TestMethod]
     public void SelectById_NodeNotInCollection_ThrowsNodeNotFoundException()
     {
-        Should.Throw<NodeNotFoundException>(() => new List<GraphNode>().SelectById("a node that is not in the collection"));
+        Should.Throw<NodeNotFoundException>(() => new List<GraphNode>().SelectById(Guid.Empty));
     }
 }

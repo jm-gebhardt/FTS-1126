@@ -19,17 +19,17 @@ public class ActionGroupDurationEstimationServiceTestFixture
 
     public ActionGroupDurationEstimationServiceTestFixture()
     {
-        Service = new ActionGroupDurationEstimationService(_deviationCache ,_actionGroupRepository.Object, _positionRepository.Object, _graphRepository.Object);
+        Service = new ActionGroupDurationEstimationService(_deviationCache, _actionGroupRepository.Object, _positionRepository.Object, _graphRepository.Object);
     }
 
-    public ActionGroupDurationEstimationServiceTestFixture WithDeviation((double value, DateTime lastUpdated) deviation, Guid agvId, string[] targets, bool existsInMemory)
+    public ActionGroupDurationEstimationServiceTestFixture WithDeviation((double value, DateTime lastUpdated) deviation, Guid agvId, Guid[] targets, bool existsInMemory)
     {
         if (existsInMemory)
         {
             string key = ActionGroupDurationEstimationService.GetKey(agvId, targets);
-            _deviationCache.ConcurrentDict.AddOrUpdate(key, deviation, (_,_)=> deviation);
+            _deviationCache.ConcurrentDict.AddOrUpdate(key, deviation, (_, _) => deviation);
         }
-        _actionGroupRepository.Setup(x => x.GetAverageDurationEstimateDeviationAsync(It.IsAny<Guid>(), It.IsAny<string[]>())).ReturnsAsync(deviation.value);
+        _actionGroupRepository.Setup(x => x.GetAverageDurationEstimateDeviationAsync(It.IsAny<Guid>(), It.IsAny<Guid[]>())).ReturnsAsync(deviation.value);
         return this;
     }
 
@@ -41,11 +41,13 @@ public class ActionGroupDurationEstimationServiceTestFixture
 
     public ActionGroupDurationEstimationServiceTestFixture WithNode(GraphNode node)
     {
-        _graphRepository.Setup(x => x.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
+        _graphRepository.Setup(x => x.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+        _graphRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+        _graphRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
         return this;
     }
 
-    public bool ValueExistsInMemory(Guid agvId, string[] targets, out (double value, DateTime lastUpdated) actual)
+    public bool ValueExistsInMemory(Guid agvId, Guid[] targets, out (double value, DateTime lastUpdated) actual)
     {
         string key = ActionGroupDurationEstimationService.GetKey(agvId, targets);
         return _deviationCache.ConcurrentDict.TryGetValue(key, out actual);

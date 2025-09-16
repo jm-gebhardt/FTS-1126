@@ -39,7 +39,7 @@ public class CreateActionGroupRequestHandler :
         IAgvDb agvDb,
         IMapper mapper,
         ILogger<CreateActionGroupRequestHandler> logger
-        )
+    )
     {
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
@@ -55,15 +55,15 @@ public class CreateActionGroupRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (string? sourceNode, string? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, var creator, string user) = await ValidateMessageContent(context);
+        (var sourceNode, var targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, var creator, string user) = await ValidateMessageContent(context.Message);
 
         var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, infoPick, infoDrop, hasPriority, creator);
         actionGroup.Queue();
         await _actionGroupRepository.AddAsync(actionGroup);
-        
+
         _logger.LogOrderInformation(LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully",
-            new Dictionary<string, object?>{{LogLabels.OrderId, actionGroup.OrderId } });
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
         _logger.LogOrderInformation(LogCodes.OrderQueued, agvCorrelationId.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Queued", $"Order {actionGroup.OrderId} was queued successfully",
@@ -74,54 +74,59 @@ public class CreateActionGroupRequestHandler :
         await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));
     }
 
-    private async Task<CreatePickDropActionGroup> ValidateMessageContent(ConsumeContext<CreatePickDropActionGroup> context)
+    private async Task<(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId,
+            string? infoPick, string? infoDrop, bool hasPriority, ActionGroupCreator creator, string user)>
+        ValidateMessageContent(CreatePickDropActionGroup createPickDropActionGroup)
     {
-        (string? source, string? target, _, _, _, Guid? agvCorrelationId, _, _, _, _, _) = context.Message;
+        (Guid? sourceNodeId, Guid? targetNodeId, _, _, _, Guid? agvCorrelationId, _, _, _, _, _) = createPickDropActionGroup;
 
         // validate agv existence 
         if (agvCorrelationId != null)
         {
             var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
-            if (!agv.CanStartManualPickDropAction && source != null && target != null)
+            if (!agv.CanStartManualPickDropAction && sourceNodeId != null && targetNodeId != null)
             {
                 throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
             }
         }
 
         // validate source and target node
-        if (source == null && target == null)
+        if (sourceNodeId == null && targetNodeId == null)
         {
             throw new ActionGroupInvalidException([Reasons.ActionGroupMustHaveTargetOrSource]);
         }
 
-        if (agvCorrelationId == null && (source == null || target == null))
+        if (agvCorrelationId == null && (sourceNodeId == null || targetNodeId == null))
         {
             throw new AgvNotAssignedToActionGroupException("Pick or drop only order requires assigned agv");
         }
 
-        var (sourceNode, targetNode) = await TryGetSourceAndTargetNode(source, target, agvCorrelationId);
-        if ( sourceNode != null && !sourceNode.IsPickStation())
+        var (sourceNode, targetNode) = await TryGetSourceAndTargetNode(sourceNodeId, targetNodeId, agvCorrelationId);
+        if (sourceNode != null && !sourceNode.IsPickStation())
         {
-            throw new InvalidNodeTypeException(source!, sourceNode.Type.ToString()?? "", $"{nameof(AgvGraph.NodeType.Pick)} or {nameof(AgvGraph.NodeType.PickDrop)}");
+            throw new InvalidNodeTypeException(sourceNode.Name, sourceNode.Type.ToString() ?? "", $"{nameof(AgvGraph.NodeType.Pick)} or {nameof(AgvGraph.NodeType.PickDrop)}");
         }
 
         if (targetNode != null && !targetNode.IsDropStation())
         {
-            throw new InvalidNodeTypeException(target!, targetNode.Type.ToString()??"", $"{nameof(AgvGraph.NodeType.Drop)} or {nameof(AgvGraph.NodeType.PickDrop)}");
+            throw new InvalidNodeTypeException(targetNode.Name, targetNode.Type.ToString() ?? "", $"{nameof(AgvGraph.NodeType.Drop)} or {nameof(AgvGraph.NodeType.PickDrop)}");
         }
-        return context.Message;
+
+        return (sourceNode, targetNode, createPickDropActionGroup.DockFrontPick, createPickDropActionGroup.DockFrontDrop,
+            createPickDropActionGroup.HandlingUnit, agvCorrelationId, createPickDropActionGroup.AdditionalPickInfo,
+            createPickDropActionGroup.AdditionalDropInfo, createPickDropActionGroup.HasPriority, createPickDropActionGroup.Creator, createPickDropActionGroup.User);
     }
 
-    private async Task<(GraphNode? sourceNode, GraphNode? targetNode)> TryGetSourceAndTargetNode(string? source, string? target, Guid? agvCorrelationId)
+    private async Task<(GraphNode? sourceNode, GraphNode? targetNode)> TryGetSourceAndTargetNode(Guid? sourceNodeId, Guid? targetNodeId, Guid? agvCorrelationId)
     {
-        var nodeIds = new List<string>();
-        if (source != null)
+        var nodeIds = new List<Guid>();
+        if (sourceNodeId != null)
         {
-            nodeIds.Add(source);
+            nodeIds.Add(sourceNodeId.Value);
         }
-        if (target != null)
+        if (targetNodeId != null)
         {
-            nodeIds.Add(target);
+            nodeIds.Add(targetNodeId.Value);
         }
         ICollection<GraphNode> nodes;
         if (agvCorrelationId == null)
@@ -132,13 +137,13 @@ public class CreateActionGroupRequestHandler :
         else
         {
             // get source and target from the graph of the given agv
-            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => new[] {source, target}.Contains(node.Id))).ToList();
+            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => new[] { sourceNodeId, targetNodeId }.Contains(node.Id))).ToList();
         }
 
-        return (source != null ? nodes.SelectById(source) : null, target != null ? nodes.SelectById(target) : null);
+        return (sourceNodeId != null ? nodes.SelectById(sourceNodeId.Value) : null, targetNodeId != null ? nodes.SelectById(targetNodeId.Value) : null);
     }
 
-    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(string? sourceNode, string? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, ActionGroupCreator creator)
+    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, ActionGroupCreator creator)
     {
         var correlationId = Guid.NewGuid();
 
@@ -147,7 +152,7 @@ public class CreateActionGroupRequestHandler :
         if (sourceNode != null)
         {
             var pickId = Guid.NewGuid();
-            var pickAction = new AgvAction(pickId, ActionType.Pick, sourceNode, correlationId) { Sequence = 0, AdditionalInfo = infoPick };
+            var pickAction = new AgvAction(pickId, ActionType.Pick, targetNode: sourceNode, correlationId) { Sequence = 0, AdditionalInfo = infoPick };
             pickAction.SetDockFrontValue(dockFrontPick);
             pickAction.SetExternalLiftHeight();
             actions.Add(pickAction);
@@ -156,7 +161,7 @@ public class CreateActionGroupRequestHandler :
         if (targetNode != null)
         {
             var dropId = Guid.NewGuid();
-            var dropAction = new AgvAction(dropId, ActionType.Drop, targetNode, correlationId) { Sequence = sourceNode == null? 0: 1, AdditionalInfo = infoDrop };
+            var dropAction = new AgvAction(dropId, ActionType.Drop, targetNode: targetNode, correlationId) { Sequence = sourceNode == null ? 0 : 1, AdditionalInfo = infoDrop };
             dropAction.SetDockFrontValue(dockFrontDrop);
             dropAction.SetExternalLiftHeight();
             actions.Add(dropAction);
@@ -179,7 +184,7 @@ public class CreateActionGroupRequestHandler :
             assignedAgv: agvCorrelationId,
             isManual: creator == ActionGroupCreator.TransportOrderWebApi,
             hasPriority: hasPriority
-        ) {HandlingUnit = handlingUnit};
+        ) { HandlingUnit = handlingUnit };
 
         var validationResult = await _actionGroupValidationService.ValidateAsync(actionGroup);
         if (!validationResult.IsValid)

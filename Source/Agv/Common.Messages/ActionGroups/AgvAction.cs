@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.Contracts;
 using JetBrains.Annotations;
 using MassTransit;
@@ -41,12 +42,12 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     /// True, if the action is heading towards a position given
     /// by coordinates instead of node id.
     /// </summary>
-    public bool IsMoveToCoordinate => Target.NodeId == null && Target.Position != null;
+    public bool IsMoveToCoordinate => Target.Node?.Id == null && Target.Position != null;
 
     /// <summary>
     /// The nodes of the trip
     /// </summary>
-    public ICollection<string> Nodes { get; set; } = [];
+    public ICollection<GraphNode> Nodes { get; set; } = [];
 
     /// <summary>
     /// The nodes of the trip
@@ -98,14 +99,14 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     /// </summary>
     /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>
     /// <param name="actionType">The type of the action, e.g. Pick or Drop</param>
-    /// <param name="targetNodeId">Target node id of the action</param>
+    /// <param name="targetNode">Target node of the action</param>
     /// <param name="parentId">The CorrelationId of the ActionGroup where this action belongs to</param>
     /// <param name="infoToAgv">Information that will be sent to the agv.</param>
-    public AgvAction(Guid correlationId, ActionType actionType, string targetNodeId, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
+    public AgvAction(Guid correlationId, ActionType actionType, GraphNode? targetNode, Guid parentId, Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
         CorrelationId = correlationId;
         ActionType = actionType;
-        Target = new ActionTarget(targetNodeId);
+        Target = new ActionTarget(targetNode);
         ParentId = parentId;
         InfoToAgv = infoToAgv;
     }
@@ -129,7 +130,7 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     {
         CorrelationId = Guid.Empty;
         ActionType = ActionType.Pick;
-        Target = new ActionTarget(string.Empty);
+        Target = new ActionTarget(null);
         ParentId = Guid.Empty;
     }
 }

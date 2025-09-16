@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
@@ -21,7 +22,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Trigger;
 /// </summary>
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 [Authorize]
-public class TriggerController: Controller
+public class TriggerController : Controller
 {
     private readonly IRequestClient<GetTrigger> _getTriggerRequestClient;
     private readonly IRequestClient<AssignTriggerToLocation> _assignTriggerLocationRequestClient;
@@ -33,9 +34,9 @@ public class TriggerController: Controller
     private readonly ILogger<TriggerController> _logger;
 
     /// <inheritdoc cref="TriggerController"/>>
-    public TriggerController(IMapper mapper, 
+    public TriggerController(IMapper mapper,
         ILogger<TriggerController> logger,
-        IRequestClient<GetTrigger> getTriggerRequestClient, 
+        IRequestClient<GetTrigger> getTriggerRequestClient,
         IRequestClient<AssignTriggerToLocation> assignTriggerLocationRequestClient,
         IRequestClient<TryRemoveTriggerLocation> removeTriggerLocationRequestClient,
         IRequestClient<TryUpdateDefaultConfigurationParameter> updateDefaultParameterRequestClient,
@@ -83,9 +84,10 @@ public class TriggerController: Controller
     {
         ICollection<PolygonPoint> polygonPoints = location.Polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(location.Polygon) : [];
         ICollection<ConfigurationParameter>? parameters = location.ConfigurationParameters != null ? _mapper.Map<ICollection<ConfigurationParameter>>(location.ConfigurationParameters) : null;
-        Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, location.NodeId, location.EdgeId, polygonPoints, location.MapId, parameters));
-         _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerAssignedToLocation } });
-         return Ok(_mapper.Map<TriggerLocationDto>(response.Message.Location));
+        Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, location.NodeId?.ToGraphNode(), location.EdgeId, polygonPoints, location.MapId, parameters));
+        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerAssignedToLocation } });
+        var triggerLocationDto = _mapper.Map<TriggerLocationDto>(response.Message);
+        return Ok(triggerLocationDto);
     }
 
     /// <summary>

@@ -33,8 +33,9 @@ public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<Cr
 
     public CreateActionGroupRequestHandlerTestFixture WithNodes(ICollection<GraphNode> nodes)
     {
-        _agvDb.Setup(x => x.Graphs.GetNodesByIdsAsync(It.IsAny<ICollection<string>>())).ReturnsAsync(nodes);
+        _agvDb.Setup(x => x.Graphs.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(nodes);
         _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>())).ReturnsAsync(nodes);
+        _agvDb.Setup(x => x.Graphs.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => nodes.Where(n => ids.Contains(n.Id)).ToList());
         return this;
     }
 

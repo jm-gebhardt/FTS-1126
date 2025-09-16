@@ -391,7 +391,7 @@ public class ActionGroup
     /// <param name="actionId">The id of the action.</param>
     /// <param name="nodes">The nodes of the action.</param>
     /// <param name="edges">The edges of the action.</param>
-    public void StartAction(Guid actionId, string[] nodes, Guid[] edges)
+    public void StartAction(Guid actionId, GraphNode[] nodes, Guid[] edges)
     {
         Actions.Single(a => a.CorrelationId == actionId).Nodes = nodes;
         Actions.Single(a => a.CorrelationId == actionId).Edges = edges;
@@ -481,7 +481,7 @@ public class ActionGroup
     /// <param name="targetNode">The target node.</param>
     /// <exception cref="ActionNotFoundException">Thrown if no action with was found using the action id</exception>
     /// <param name="route">The route, if any.</param>
-    public void SetTargetForAction(Guid actionId, string targetNode, Route? route = null)
+    public void SetTargetForAction(Guid actionId, GraphNode targetNode, Route? route = null)
     {
         if (Actions.All(a => a.CorrelationId != actionId))
         {
@@ -556,14 +556,14 @@ public class ActionGroup
     /// Get the targets of the action group.
     /// </summary>
     /// <returns>Node ids if the targets.</returns>
-    public string[] GetTargets()
+    public Guid[] GetTargets()
     {
         return !Actions.Any() ?
             [] :
             Actions
                 .Where((action, index) => !action.IsIncomplete &&
                                           (index == 0 || (!Actions[index - 1].IsIncomplete && action.Sequence == Actions[index - 1].Sequence + 1)))
-                .Select(action => action.Target.NodeId!)
+                .Select(action => action.Target.Node!.Id)
                 .ToArray();
     }
 
@@ -589,9 +589,9 @@ public class ActionGroup
     /// Skips the provided action and updates the previous one with its type and the new target.
     /// </summary>
     /// <param name="actionId">The action id to skip.</param>
-    /// <param name="targetNodeId">The id of the new target node.</param>
+    /// <param name="targetNode">The id of the new target node.</param>
     /// <param name="route">The route, if any.</param>
-    public AgvAction SetTargetForActionWithUpdate(Guid actionId, string targetNodeId, Route? route = null)
+    public AgvAction SetTargetForActionWithUpdate(Guid actionId, GraphNode targetNode, Route? route = null)
     {
         if (Actions.All(a => a.CorrelationId != actionId))
         {
@@ -601,7 +601,7 @@ public class ActionGroup
         var toSkip = Actions.First(a => a.CorrelationId == actionId);
         var toUpdate = Actions.OrderBy(a => a.Sequence).Last(a => a.Sequence < toSkip.Sequence);
         toUpdate.ChangeActiontype(toSkip.ActionType);
-        toUpdate.SetTarget(targetNodeId);
+        toUpdate.SetTarget(targetNode);
         if (toSkip.ActionType == ActionType.Pick)
         {
             toUpdate.SetInfoToAgv(toSkip.InfoToAgv);

@@ -14,7 +14,7 @@ public class ShortestRouteChooserTest
     public async Task GetNotStartedActionGroupAsync_WhenLastNodeIdIsNull_ReturnsNull()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var agv = AgvGenerator.GenerateIdleAgv(index: 0, lastNodeId: null); // No last node id
+        var agv = AgvGenerator.GenerateIdleAgv(index: 0, lastNodeName: null); // No last node id
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>(true)
             .WithNotStartedActionGroup(actionGroup)
@@ -28,8 +28,8 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_WhenThereIsNoRoute_ReturnNull()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(destination: AgvGraphGenerator.DestinationUnreachable.Id); // Action with unreachable destination
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(destination: AgvGraphGenerator.DestinationUnreachable.Name); // Action with unreachable destination
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup)
@@ -43,18 +43,18 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_WhenThereIsANotStartedActionGroupsThatHasRoute_ReturnClosestActionGroup()
     {
-        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id);
-        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id); // Closest pick action
-        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Id);
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Name);
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name); // Closest pick action
+        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Name);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup1)
             .WithNotStartedActionGroup(actionGroup2)
             .WithNotStartedActionGroup(actionGroup3)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.NodeId!, actionGroup2.Actions.Last().Target.NodeId!, actionGroup2, 1f)
-            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.NodeId!, actionGroup3.Actions.Last().Target.NodeId!, actionGroup3, 20f)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.Node!.Name, actionGroup2.Actions.Last().Target.Node!.Name, actionGroup2, 1f)
+            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.Node!.Name, actionGroup3.Actions.Last().Target.Node!.Name, actionGroup3, 20f)
             .WithAgvAtQueueHead([])
             .Build();
 
@@ -66,16 +66,16 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_WhenThereIsAPriorityActionGroup_ReturnPriorityActionGroup()
     {
-        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id);
-        var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id); // Priority action
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name);
+        var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name); // Priority action
         priorityActionGroup.HasPriority = true;
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup1)
             .WithNotStartedActionGroup(priorityActionGroup)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
-            .WithAgvHasRouteToDestination(agv, priorityActionGroup.Actions.First().Target.NodeId!, priorityActionGroup.Actions.Last().Target.NodeId!, priorityActionGroup, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 10f)
+            .WithAgvHasRouteToDestination(agv, priorityActionGroup.Actions.First().Target.Node!.Name, priorityActionGroup.Actions.Last().Target.Node!.Name, priorityActionGroup, 10f)
             .Build();
 
         var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
@@ -86,15 +86,15 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_EqualPriorityActionGroups_ReturnActionGroupCreatedEarlier()
     {
-        var earlierCreatedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id);
-        var laterCreatedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id, createdDate: earlierCreatedActionGroup.CreatedDate.AddMinutes(1));
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var earlierCreatedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name);
+        var laterCreatedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name, createdDate: earlierCreatedActionGroup.CreatedDate.AddMinutes(1));
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(earlierCreatedActionGroup)
             .WithNotStartedActionGroup(laterCreatedActionGroup)
-            .WithAgvHasRouteToDestination(agv, earlierCreatedActionGroup.Actions.First().Target.NodeId!, earlierCreatedActionGroup.Actions.Last().Target.NodeId!, earlierCreatedActionGroup, 1f)
-            .WithAgvHasRouteToDestination(agv, laterCreatedActionGroup.Actions.First().Target.NodeId!, laterCreatedActionGroup.Actions.Last().Target.NodeId!, laterCreatedActionGroup, 1f)
+            .WithAgvHasRouteToDestination(agv, earlierCreatedActionGroup.Actions.First().Target.Node!.Name, earlierCreatedActionGroup.Actions.Last().Target.Node!.Name, earlierCreatedActionGroup, 1f)
+            .WithAgvHasRouteToDestination(agv, laterCreatedActionGroup.Actions.First().Target.Node!.Name, laterCreatedActionGroup.Actions.Last().Target.Node!.Name, laterCreatedActionGroup, 1f)
             .WithAgvAtQueueHead([])
             .Build();
 
@@ -106,15 +106,15 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_WhenThereIsAnActionGroupAssignedToTheAgv_ReturnAssignedActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
-        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id);
-        var assignedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id, assignedAgv: agv.CorrelationId); // Assigned action
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name);
+        var assignedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name, assignedAgv: agv.CorrelationId); // Assigned action
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup1)
             .WithNotStartedActionGroup(assignedActionGroup)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 1f)
-            .WithAgvHasRouteToDestination(agv, assignedActionGroup.Actions.First().Target.NodeId!, assignedActionGroup.Actions.Last().Target.NodeId!, assignedActionGroup, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 1f)
+            .WithAgvHasRouteToDestination(agv, assignedActionGroup.Actions.First().Target.Node!.Name, assignedActionGroup.Actions.Last().Target.Node!.Name, assignedActionGroup, 10f)
             .WithAgvAtQueueHead([])
             .Build();
 
@@ -126,11 +126,11 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_WhenThereAreNotStartedActionGroupsWithManualActionGroup_ReturnManualActionGroup()
     {
-        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id);
-        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id); // Closest pick action
-        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Id);
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Name);
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name); // Closest pick action
+        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Name);
         var moveActionGroup = AgvActionGenerator.GenerateMoveActionGroup("Move Destination Id", true);
-        string agvLastNodeId = AgvGraphGenerator.ParkClose.Id;
+        string agvLastNodeId = AgvGraphGenerator.ParkClose.Name;
         var agv = AgvGenerator.GenerateIdleAgv(0, agvLastNodeId);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
@@ -138,10 +138,10 @@ public class ShortestRouteChooserTest
             .WithNotStartedActionGroup(actionGroup2)
             .WithNotStartedActionGroup(moveActionGroup)
             .WithNotStartedActionGroup(actionGroup3)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.NodeId!, actionGroup2.Actions.Last().Target.NodeId!, actionGroup2, 2f)
-            .WithAgvHasRouteToDestination(agv, agvLastNodeId, moveActionGroup.Actions.First().Target.NodeId!, moveActionGroup, 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.NodeId!, actionGroup3.Actions.Last().Target.NodeId!, actionGroup3, routeCosts: null)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.Node!.Name, actionGroup2.Actions.Last().Target.Node!.Name, actionGroup2, 2f)
+            .WithAgvHasRouteToDestination(agv, agvLastNodeId, moveActionGroup.Actions.First().Target.Node!.Name, moveActionGroup, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.Node!.Name, actionGroup3.Actions.Last().Target.Node!.Name, actionGroup3, routeCosts: null)
             .Build();
 
         var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
@@ -152,12 +152,12 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_QueueEvacuationMoveAndQueueHeadMove_ReturnQueueHeadMove()
     {
-        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id);
-        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id); // Closest pick action
-        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Id);
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Name);
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name); // Closest pick action
+        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Name);
         var evacuationMove = AgvActionGenerator.GenerateMoveActionGroup("evacuation node", true, hasPriority: false, orderId: Queue.EvacuationOrderId);
         var queueHeadMove = AgvActionGenerator.GenerateMoveActionGroup("queue head node", true, hasPriority: true, orderId: "Queue ,pve");
-        string agvLastNodeId = AgvGraphGenerator.ParkClose.Id;
+        string agvLastNodeId = AgvGraphGenerator.ParkClose.Name;
         var agv = AgvGenerator.GenerateIdleAgv(0, agvLastNodeId);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
@@ -166,11 +166,11 @@ public class ShortestRouteChooserTest
             .WithNotStartedActionGroup(evacuationMove)
             .WithNotStartedActionGroup(queueHeadMove)
             .WithNotStartedActionGroup(actionGroup3)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.NodeId!, actionGroup2.Actions.Last().Target.NodeId!, actionGroup2, 2f)
-            .WithAgvHasRouteToDestination(agv, agvLastNodeId, evacuationMove.Actions.First().Target.NodeId!, evacuationMove, 10f)
-            .WithAgvHasRouteToDestination(agv, agvLastNodeId, queueHeadMove.Actions.First().Target.NodeId!, queueHeadMove, 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.NodeId!, actionGroup3.Actions.Last().Target.NodeId!, actionGroup3, routeCosts: null)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.Node!.Name, actionGroup2.Actions.Last().Target.Node!.Name, actionGroup2, 2f)
+            .WithAgvHasRouteToDestination(agv, agvLastNodeId, evacuationMove.Actions.First().Target.Node!.Name, evacuationMove, 10f)
+            .WithAgvHasRouteToDestination(agv, agvLastNodeId, queueHeadMove.Actions.First().Target.Node!.Name, queueHeadMove, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.Node!.Name, actionGroup3.Actions.Last().Target.Node!.Name, actionGroup3, routeCosts: null)
             .Build();
 
         var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
@@ -182,10 +182,10 @@ public class ShortestRouteChooserTest
     public async Task GetNotStartedActionGroupAsync_WhenDropActionIsCloser_ReturnPickAction()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
-            source: AgvGraphGenerator.SourceFar.Id,
-            destination: AgvGraphGenerator.DestinationClose.Id
+            source: AgvGraphGenerator.SourceFar.Name,
+            destination: AgvGraphGenerator.DestinationClose.Name
         );
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup)
@@ -203,9 +203,9 @@ public class ShortestRouteChooserTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
             source: string.Empty,
-            destination: AgvGraphGenerator.DestinationClose.Id
+            destination: AgvGraphGenerator.DestinationClose.Name
         );
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup)
@@ -221,11 +221,11 @@ public class ShortestRouteChooserTest
     public async Task GetNotStartedActionGroupAsync_SecondActionOfTheOneActionGroupHasLockedTarget_ReturnNull()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
-            source: AgvGraphGenerator.SourceClose.Id,
-            destination: AgvGraphGenerator.DestinationClose.Id
+            source: AgvGraphGenerator.SourceClose.Name,
+            destination: AgvGraphGenerator.DestinationClose.Name
         );
-        List<string> lockedNodes = [AgvGraphGenerator.DestinationClose.Id];
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        List<string> lockedNodes = [AgvGraphGenerator.DestinationClose.Name];
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup)
@@ -242,15 +242,15 @@ public class ShortestRouteChooserTest
     public async Task GetNotStartedActionGroupAsync_LowestCostActionGroupHasLockedDestination_ReturnHigherCostActionGroup()
     {
         var actionGroupClose = AgvActionGenerator.GeneratePickDropActionGroup(
-            source: AgvGraphGenerator.SourceClose.Id,
-            destination: AgvGraphGenerator.DestinationClose.Id
+            source: AgvGraphGenerator.SourceClose.Name,
+            destination: AgvGraphGenerator.DestinationClose.Name
         );
         var actionGroupFar = AgvActionGenerator.GeneratePickDropActionGroup(
-            source: AgvGraphGenerator.SourceFar.Id,
-            destination: AgvGraphGenerator.DestinationFar.Id
+            source: AgvGraphGenerator.SourceFar.Name,
+            destination: AgvGraphGenerator.DestinationFar.Name
         );
-        List<string> lockedNodes = [AgvGraphGenerator.DestinationClose.Id];
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        List<string> lockedNodes = [AgvGraphGenerator.DestinationClose.Name];
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroupClose)
@@ -262,17 +262,17 @@ public class ShortestRouteChooserTest
             .Build();
 
         var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
-        chosenActionGroup!.Actions.FirstOrDefault()?.Target.NodeId.ShouldBe(AgvGraphGenerator.SourceFar.Id);
+        chosenActionGroup!.Actions.FirstOrDefault()?.Target.Node!.Name.ShouldBe(AgvGraphGenerator.SourceFar.Name);
     }
 
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_ChargingActionGroupWithNotLockedCharger_ReturnChargingActionGroup()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(
-            targetNodeId: AgvGraphGenerator.ChargingClose.Id
+            targetNodeName: AgvGraphGenerator.ChargingClose.Name
         );
-        List<string> lockedNodes = [AgvGraphGenerator.ChargingFar.Id];
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        List<string> lockedNodes = [AgvGraphGenerator.ChargingFar.Name];
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup)
@@ -290,10 +290,10 @@ public class ShortestRouteChooserTest
     public async Task GetNotStartedActionGroupAsync_ChargingActionGroupWithLockedCharger_ReturnNull()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(
-            targetNodeId: AgvGraphGenerator.ChargingClose.Id
+            targetNodeName: AgvGraphGenerator.ChargingClose.Name
         );
-        List<string> lockedNodes = [AgvGraphGenerator.ChargingClose.Id];
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        List<string> lockedNodes = [AgvGraphGenerator.ChargingClose.Name];
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroup)
@@ -310,10 +310,10 @@ public class ShortestRouteChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_AgvIsQueueingNoManualOrAssignedActionGroups_ReturnNull()
     {
-        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id);
-        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id); // Closest pick action
-        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Id);
-        string agvLastNodeId = AgvGraphGenerator.ParkClose.Id;
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Name);
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name); // Closest pick action
+        var actionGroup3 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceUnreachable.Name);
+        string agvLastNodeId = AgvGraphGenerator.ParkClose.Name;
         var agv = AgvGenerator.GenerateIdleAgv(0, agvLastNodeId);
         agv.IsQueueing = true;
 
@@ -321,9 +321,9 @@ public class ShortestRouteChooserTest
             .WithNotStartedActionGroup(actionGroup1)
             .WithNotStartedActionGroup(actionGroup2)
             .WithNotStartedActionGroup(actionGroup3)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.NodeId!, actionGroup2.Actions.Last().Target.NodeId!, actionGroup2, 2f)
-            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.NodeId!, actionGroup3.Actions.Last().Target.NodeId!, actionGroup3, routeCosts: null)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.Node!.Name, actionGroup2.Actions.Last().Target.Node!.Name, actionGroup2, 2f)
+            .WithAgvHasRouteToDestination(agv, actionGroup3.Actions.First().Target.Node!.Name, actionGroup3.Actions.Last().Target.Node!.Name, actionGroup3, routeCosts: null)
             .WithAgvAtQueueHead([])
             .Build();
 
@@ -335,10 +335,10 @@ public class ShortestRouteChooserTest
     public async Task GetNotStartedActionGroupAsync_AgvIsQueueingChargingActionGroupWith_ReturnChargingActionGroup()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(
-            targetNodeId: AgvGraphGenerator.ChargingClose.Id
+            targetNodeName: AgvGraphGenerator.ChargingClose.Name
         );
-        List<string> lockedNodes = [AgvGraphGenerator.ChargingFar.Id];
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        List<string> lockedNodes = [AgvGraphGenerator.ChargingFar.Name];
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
         agv.IsQueueing = true;
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
@@ -360,13 +360,13 @@ public class ShortestRouteChooserTest
         var queue = QueueGenerator.GenerateEmptyQueue();
 
         var actionGroupClose = AgvActionGenerator.GeneratePickDropActionGroup(
-            source: AgvGraphGenerator.SourceClose.Id,
-            destination: AgvGraphGenerator.DestinationClose.Id
+            source: AgvGraphGenerator.SourceClose.Name,
+            destination: AgvGraphGenerator.DestinationClose.Name
         );
 
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
-        queue.TryEnqueue(agv.CorrelationId, out string? _);
+        queue.TryEnqueue(agv.CorrelationId, out Guid? _);
 
         ChooseAgvActionGroupTestFixture<ShortestRouteChooser> fixture = new ChooseAgvActionGroupTestFixture<ShortestRouteChooser>()
             .WithNotStartedActionGroup(actionGroupClose)
@@ -377,6 +377,6 @@ public class ShortestRouteChooserTest
             .Build();
 
         var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
-        chosenActionGroup!.Actions.FirstOrDefault()?.Target.NodeId.ShouldBe(AgvGraphGenerator.SourceClose.Id);
+        chosenActionGroup!.Actions.FirstOrDefault()?.Target.Node!.Name.ShouldBe(AgvGraphGenerator.SourceClose.Name);
     }
 }

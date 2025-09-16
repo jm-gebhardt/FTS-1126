@@ -40,7 +40,7 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
     // ReSharper disable once UnusedMethodReturnValue.Global
     public ActionGroupEstimationTestFixture AddRouteOnCosts(double onCosts)
     {
-        RouteService.Setup(r => r.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string[]>(), null, It.IsAny<AgvData>()))
+        RouteService.Setup(r => r.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid[]>(), null, It.IsAny<AgvData>()))
             .ReturnsAsync(new Route(onCosts, [], []));
 
         return this;

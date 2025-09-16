@@ -45,7 +45,7 @@ public class TriggerLocationsSeeder : ISeeder
          }
          else
          {
-             logger.LogInformation("Directory {TriggerBasePath} not found.", triggerBasePath);
+             logger.LogInformation("Directory {TriggerBasePath} not found", triggerBasePath);
          }
 
          Name = $"Trigger location seeder of {_folderPaths.Length} trigger locations";

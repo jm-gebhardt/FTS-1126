@@ -196,7 +196,7 @@ public record AgvError : CorrelatedBy<Guid>
     /// </summary>
     public bool IsResourceError()
     {
-        var resourceError = new ResourceBlockingError(CorrelationId, ErrorReceived, "any");
+        var resourceError = new ResourceBlockingError(CorrelationId, ErrorReceived, Guid.Empty);
         return ErrorType == resourceError.ErrorType &&
                ErrorCategory == resourceError.ErrorCategory &&
                ErrorFlag == resourceError.ErrorFlag &&

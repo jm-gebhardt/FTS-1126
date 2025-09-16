@@ -13,26 +13,26 @@ public interface IQueueManager
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     /// <param name="entryNode">The entry node of the queue.</param>
     /// <returns>The node where to enqueue the agv, if any.</returns>
-    Task<string?> TryEnqueueAgv(Guid agvCorrelationId, string entryNode);
+    Task<Guid?> TryEnqueueAgv(Guid agvCorrelationId, Guid entryNode);
 
     /// <summary>
     /// Try to enter a queue.
     /// </summary>
     /// <param name="agv">The agv that enters a queue.</param>
     /// <returns>The entry node of the queue.</returns>
-    Task<string?> TryEnterQueue(Agv agv);
+    Task<Guid?> TryEnterQueue(Agv agv);
 
     /// <summary>
     /// Try to dequeue an agv.
     /// </summary>
     /// <returns>Object containing the agvs that need to move to the next queue node.</returns>
-    Task<Dictionary<Guid, string>?> TryDequeueAgv(Guid agvCorrelationId, string? agvLastNodeId);
+    Task<Dictionary<Guid, Guid>?> TryDequeueAgv(Guid agvCorrelationId, Guid? agvLastNodeId);
 
     /// <summary>
     /// Try to escape the queue.
     /// </summary>
     /// <returns>Object containing the agvs that need to move to the next queue node.</returns>
-    Task<(Dictionary<Guid, string>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, string? agvLastNodeId);
+    Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, Guid? agvLastNodeId);
 
     /// <summary>
     /// True, if the agv is on a queue node.
@@ -46,7 +46,7 @@ public interface IQueueManager
     /// <param name="agv">The agv.</param>
     /// <param name="nodeId">The node id.</param>
     /// <returns>True, if the agv is now at queue head.</returns>
-    Task<bool> TryReachQueueNode(Agv agv, string nodeId);
+    Task<bool> TryReachQueueNode(Agv agv, Guid nodeId);
 
     /// <summary>
     /// Get all agvs at queue heads.
@@ -58,16 +58,16 @@ public interface IQueueManager
     /// Remove an agv from its queue.
     /// </summary>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
-    /// <param name="targetNode">The target node of the queue.</param>
+    /// <param name="targetNodeId"></param>
     /// <returns>True, if the agv was removed from the queue.</returns>
-    Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, string? targetNode=null);
+    Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, Guid? targetNodeId);
 
     /// <summary>
     /// Tries to find the best queue for an agv by also respecting the possibility of swapping out another agv and updates the queue if necessary.
     /// </summary>
     /// <param name="agvInside">The agv already in the queue.</param>
     /// <param name="agvOutside">The agv currently outside the queue.</param>
-    Task<(Dictionary<Guid, string>? agvsToMove, string? queueEntry, bool swapped)> TrySwapAgv(Agv agvInside, Agv agvOutside);
+    Task<(Dictionary<Guid, Guid>? agvsToMove, Guid? queueEntry, bool swapped)> TrySwapAgv(Agv agvInside, Agv agvOutside);
 
     /// <summary>
     /// Gets all the action groups that are internal to the queue that the agv might be in.

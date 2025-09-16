@@ -12,15 +12,15 @@ public class AlternatingModeChooserTest
     [TestMethod]
     public async Task GetNotStartedActionGroupAsync_AutomaticActions_AlternatesMode()
     {
-        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id);
-        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id); 
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Name);
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<AlternatingModeChooser> fixture = new ChooseAgvActionGroupTestFixture<AlternatingModeChooser>()
             .WithNotStartedActionGroup(actionGroup1)
             .WithNotStartedActionGroup(actionGroup2)
-            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.NodeId!, actionGroup1.Actions.Last().Target.NodeId!, actionGroup1, 10f)
-            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.NodeId!, actionGroup2.Actions.Last().Target.NodeId!, actionGroup2, 1f)
+            .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 10f)
+            .WithAgvHasRouteToDestination(agv, actionGroup2.Actions.First().Target.Node!.Name, actionGroup2.Actions.Last().Target.Node!.Name, actionGroup2, 1f)
             .WithAgvAtQueueHead([])
             .Build();
 
@@ -36,15 +36,15 @@ public class AlternatingModeChooserTest
     public async Task GetNotStartedActionGroupAsync_AutomaticActions_SelectsDependingOnMode()
     {
         var now = DateTime.UtcNow;
-        var oldSlowActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Id, createdDate: now.AddMinutes(-1));
-        var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Id, createdDate: now);
-        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Id);
+        var oldSlowActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceFar.Name, createdDate: now.AddMinutes(-1));
+        var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name, createdDate: now);
+        var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
         ChooseAgvActionGroupTestFixture<AlternatingModeChooser> fixture = new ChooseAgvActionGroupTestFixture<AlternatingModeChooser>()
             .WithNotStartedActionGroup(oldSlowActionGroup)
             .WithNotStartedActionGroup(fastActionGroup)
-            .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.NodeId!, oldSlowActionGroup.Actions.Last().Target.NodeId!, oldSlowActionGroup, 10f)
-            .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.NodeId!, fastActionGroup.Actions.Last().Target.NodeId!, fastActionGroup, 1f)
+            .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.Node!.Name, oldSlowActionGroup.Actions.Last().Target.Node!.Name, oldSlowActionGroup, 10f)
+            .WithAgvHasRouteToDestination(agv, fastActionGroup.Actions.First().Target.Node!.Name, fastActionGroup.Actions.Last().Target.Node!.Name, fastActionGroup, 1f)
             .WithAgvAtQueueHead([])
             .Build();
 

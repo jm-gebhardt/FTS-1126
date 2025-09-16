@@ -19,15 +19,15 @@ public class BezierTest
     // 3                  Way2             C1    //
     // |                                         //
     ///////////////////////////////////////////////
-    private GraphNode Way2 { get; } = new("Way2") { X = 3, Y = 3 };
+    private GraphNode Way2 { get; } = new("Way2".ToGuid(), "Way2") { X = 3, Y = 3 };
 
-    private GraphNode Src3 { get; } = new("Src3") { X = 5, Y = 1 };
+    private GraphNode Src3 { get; } = new("Src3".ToGuid(), "Src3") { X = 5, Y = 1 };
 
-    private GraphNode C2 { get; } = new("C2") { X = 3, Y = 1 };
+    private GraphNode C2 { get; } = new("C2".ToGuid(), "C2") { X = 3, Y = 1 };
 
-    private GraphEdge Edge { get; } = GraphEdge.CreateBezier3("Way2", "Src3", 4, 5, 3, 3, 1);
+    private GraphEdge Edge { get; } = GraphEdge.CreateBezier3("Way2".ToGuid(), "Src3".ToGuid(), 4, 5, 3, 3, 1);
 
-    private GraphEdge StraightEdge { get; } = GraphEdge.CreateBezier3("C2", "Src3", 2, 3.5, 1, 4.5, 1);
+    private GraphEdge StraightEdge { get; } = GraphEdge.CreateBezier3("C2".ToGuid(), "Src3".ToGuid(), 2, 3.5, 1, 4.5, 1);
 
     [TestMethod]
     public void Construct_ValidData_PropertiesSet()

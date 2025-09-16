@@ -35,9 +35,9 @@ public static class AgvInformationGenerator
         string state = _agvStates[i];
         var correlationId = agvCorrelationId != Guid.Empty ? agvCorrelationId : agvSerialNumber.ToGuid();
         var actionGroupId = Guid.Empty;
-        var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], 48, _chargingState[i] ? 20 : -10, 20, false, _sources[i], null, null, null, null, 42f, 30f);
+        var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], 48, _chargingState[i] ? 20 : -10, 20, false, _sources[i].ToGuid(), null, null, null, null, 42f, 30f);
         var agvGraph = new AgvGraph(correlationId, GetNodes(), GetEdges());
-        var agvAction = new AgvAction($"Action#{agvSerialNumber}".ToGuid(), ActionType.Pick, "Drop5", actionGroupId);
+        var agvAction = new AgvAction($"Action#{agvSerialNumber}".ToGuid(), ActionType.Pick, "Drop5".ToGraphNode(), actionGroupId);
         var agvInformation = GetAgvInformation(agvStatus, agvGraph, agvAction);
         return agvInformation;
     }
@@ -52,19 +52,19 @@ public static class AgvInformationGenerator
     {
         return new[]
         {
-            GraphEdge.CreateDirect(_charge, _node01, 2f),
-            GraphEdge.CreateDirect(_node01, _charge, 2f),
-            GraphEdge.CreateDirect(_node01, _node02, 4f),
-            GraphEdge.CreateDirect(_node01, _node03, 3f),
-            GraphEdge.CreateDirect(_node01, _node04, 5f),
-            GraphEdge.CreateDirect(_node02, _node01, 4f),
-            GraphEdge.CreateDirect(_node02, _node04, 6f),
-            GraphEdge.CreateDirect(_node03, _node01, 3f),
-            GraphEdge.CreateDirect(_node03, _node04, 4f),
-            GraphEdge.CreateDirect(_node04, _node01, 5f),
-            GraphEdge.CreateDirect(_node04, _node02, 6f),
-            GraphEdge.CreateDirect(_node04, _node03, 4f),
-            GraphEdge.CreateDirect(_charge2, _node04, 4f)
+            GraphEdge.CreateDirect(_charge.ToGuid(), _node01.ToGuid(), 2f),
+            GraphEdge.CreateDirect(_node01.ToGuid(), _charge.ToGuid(), 2f),
+            GraphEdge.CreateDirect(_node01.ToGuid(), _node02.ToGuid(), 4f),
+            GraphEdge.CreateDirect(_node01.ToGuid(), _node03.ToGuid(), 3f),
+            GraphEdge.CreateDirect(_node01.ToGuid(), _node04.ToGuid(), 5f),
+            GraphEdge.CreateDirect(_node02.ToGuid(), _node01.ToGuid(), 4f),
+            GraphEdge.CreateDirect(_node02.ToGuid(), _node04.ToGuid(), 6f),
+            GraphEdge.CreateDirect(_node03.ToGuid(), _node01.ToGuid(), 3f),
+            GraphEdge.CreateDirect(_node03.ToGuid(), _node04.ToGuid(), 4f),
+            GraphEdge.CreateDirect(_node04.ToGuid(), _node01.ToGuid(), 5f),
+            GraphEdge.CreateDirect(_node04.ToGuid(), _node02.ToGuid(), 6f),
+            GraphEdge.CreateDirect(_node04.ToGuid(), _node03.ToGuid(), 4f),
+            GraphEdge.CreateDirect(_charge2.ToGuid(), _node04.ToGuid(), 4f)
         };
     }
 
@@ -72,13 +72,13 @@ public static class AgvInformationGenerator
     {
         return new[]
         {
-            NodeGenerator.GenerateNode(nodeId:_sources[3], nodeType:AgvGraph.NodeType.Charge, x:-2f, y:-2f, z:0f),
-            NodeGenerator.GenerateNode(nodeId:_sources[0], nodeType:AgvGraph.NodeType.PickDrop, x:0f, y:0f, z:0f),
-            NodeGenerator.GenerateNode(nodeId:_sources[1], nodeType:AgvGraph.NodeType.PickDrop, x:4f, y:0f, z:0f),
-            NodeGenerator.GenerateNode(nodeId:_destinations[0], nodeType:AgvGraph.NodeType.PickDrop, x:0f, y:3f, z:0f),
-            NodeGenerator.GenerateNode(nodeId:_destinations[1], nodeType:AgvGraph.NodeType.PickDrop, x:4f, y:3f, z:0f),
-            NodeGenerator.GenerateNode(nodeId:_sources[2], nodeType:AgvGraph.NodeType.Charge, x:6f, y:9f, z:0f),
-            NodeGenerator.GenerateNode(nodeId:_destinations[2], nodeType:AgvGraph.NodeType.PickDrop, x:13f, y:5f, z:0f)
+            NodeGenerator.GenerateNode(nodeName: _sources[3], nodeType: AgvGraph.NodeType.Charge, x: -2f, y: -2f, z: 0f),
+            NodeGenerator.GenerateNode(nodeName: _sources[0], nodeType: AgvGraph.NodeType.PickDrop, x: 0f, y: 0f, z: 0f),
+            NodeGenerator.GenerateNode(nodeName: _sources[1], nodeType: AgvGraph.NodeType.PickDrop, x: 4f, y: 0f, z: 0f),
+            NodeGenerator.GenerateNode(nodeName: _destinations[0], nodeType: AgvGraph.NodeType.PickDrop, x: 0f, y: 3f, z: 0f),
+            NodeGenerator.GenerateNode(nodeName: _destinations[1], nodeType: AgvGraph.NodeType.PickDrop, x: 4f, y: 3f, z: 0f),
+            NodeGenerator.GenerateNode(nodeName: _sources[2], nodeType: AgvGraph.NodeType.Charge, x: 6f, y: 9f, z: 0f),
+            NodeGenerator.GenerateNode(nodeName: _destinations[2], nodeType: AgvGraph.NodeType.PickDrop, x: 13f, y: 5f, z: 0f)
         };
     }
 }

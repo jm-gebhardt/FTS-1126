@@ -10,7 +10,7 @@ public class Sender<TTelegramType> : SocketCommunicator<TTelegramType>
     where TTelegramType : TelegramBase
 {
     /// <inheritdoc cref="Sender{TTelegramType}"/>>
-    public Sender(SocketBase socket, string name, TelegramProcessorBase<TTelegramType> telegramProcessor, ILogger<SocketCommunicator<TTelegramType>> logger) : base(socket, name, telegramProcessor, logger)
+    public Sender(SocketBase socket, string name, TelegramProcessorBase<TTelegramType> telegramProcessor, ILogger<Sender<TTelegramType>> logger) : base(socket, name, telegramProcessor, logger)
     {
     }
 

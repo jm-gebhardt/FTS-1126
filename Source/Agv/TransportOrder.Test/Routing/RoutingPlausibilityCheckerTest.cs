@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Shouldly;
@@ -139,7 +140,8 @@ public class RoutingPlausibilityCheckerTest
 
     private static GraphNode CreateNode(AgvGraph.NodeType nodeType)
     {
-        return new GraphNode(Guid.NewGuid().ToString())
+        string name = Guid.NewGuid().ToString();
+        return new GraphNode(name.ToGuid(), name)
         {
             Type = nodeType
         };

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
@@ -32,7 +33,7 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
             .WithPalletJam(null)
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
 
@@ -42,7 +43,7 @@ public class WaitingHandlerTest
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(WaitingHandlerTestFixture.Target);
+        setTargetForAction.TargetNodeId.ShouldBe(WaitingHandlerTestFixture.Target.ToGuid());
 
         await fixture.VerifyStationOccupancyAsync(1, actionGroup.AssignedAgv!.Value);
 
@@ -50,7 +51,7 @@ public class WaitingHandlerTest
         var waitingPointAction = fixture.WaitingPointRepository.Invocations.First().Arguments[0] as WaitingPointAction;
         waitingPointAction.ShouldNotBeNull();
         waitingPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
-        waitingPointAction.Target.ShouldBe(WaitingHandlerTestFixture.Target);
+        waitingPointAction.Target.ShouldBe(WaitingHandlerTestFixture.Target.ToGuid());
         await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
@@ -63,8 +64,8 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
-            .WithPalletJam(WaitingHandlerTestFixture.Target)
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
+            .WithPalletJam(WaitingHandlerTestFixture.Target.ToGuid())
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
 
         await fixture.Handler.StartHandling(moveAction.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate);
@@ -84,7 +85,7 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup))
             .WithWaitingPointAction(new WaitingPointAction(moveAction.CorrelationId, agv, DateTime.Now));
 
@@ -101,9 +102,9 @@ public class WaitingHandlerTest
     public async Task ExecuteAsync_CompletedActionInRepository_NotUsedForTargetSelection()
     {
         var waitingPointAction = new WaitingPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now);
-        waitingPointAction.SetTarget(WaitingHandlerTestFixture.Target);
+        waitingPointAction.SetTarget(WaitingHandlerTestFixture.Target.ToGuid());
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
             .WithWaitingPointAction(waitingPointAction);
 
         await fixture.HandleAsync();
@@ -121,7 +122,7 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.Target, 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
 
         await fixture.Handler.StartHandling(moveAction.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate);

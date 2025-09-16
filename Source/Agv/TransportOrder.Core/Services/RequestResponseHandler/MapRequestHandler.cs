@@ -75,7 +75,7 @@ public class MapRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<TrySettingNodeApproachingProperties> context)
     {
-        (var correlationId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        (var correlationId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
         await _mapRepository.GetMapAsync(correlationId);
         await _graphRepository.GetNodeAsync(nodeId);
 

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.DataAccess;
@@ -12,10 +13,10 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
     EfRepository<StationOccupancy, KaeserSidecarDbContext, IDbContextFactory<KaeserSidecarDbContext>>(contextFactory), IStationRepository
 {
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task OccupyStation(string station, Guid agv)
+    public async Task OccupyStation(Guid stationId, Guid agv)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.Station == station).SingleOrDefaultAsync();
+        var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.StationId == stationId).SingleOrDefaultAsync();
         if (stationOccupancy != null)
         {
             stationOccupancy.Add(agv);
@@ -23,15 +24,15 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
             return;
         }
 
-        stationOccupancy = new StationOccupancy(station, 1, agv);
+        stationOccupancy = new StationOccupancy(stationId, "", 1, agv);
         await AddAsync(stationOccupancy);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task FreeStation(string station, Guid agv)
+    public async Task FreeStation(Guid stationId)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.Station == station).SingleOrDefaultAsync();
+        var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.StationId == stationId).SingleOrDefaultAsync();
         if (stationOccupancy != null)
         {
             stationOccupancy.Remove();
@@ -43,21 +44,21 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
     public async Task<ICollection<StationOccupancy>> GetStationOccupancy()
     {
         ICollection<StationOccupancy> occupancies = await GetAll();
-        List<string> stations = occupancies.Select(o => o.Station).ToList();
+        List<string> stations = occupancies.Select(o => o.StationName).ToList();
         IEnumerable<string> missingStations = configuration.ConveyorStationMapping.Keys.Except(stations);
         foreach (string station in missingStations)
         {
-            occupancies.Add(new StationOccupancy(station, 0, null));
+            occupancies.Add(new StationOccupancy(station.ToGuid(), station, 0, null));
         }
         return occupancies;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<StationOccupancy> GetOccupancyOfStation(string station)
+    public async Task<StationOccupancy> GetOccupancyOfStation(Guid stationId)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.Station == station).SingleOrDefaultAsync();
-        return stationOccupancy ?? new StationOccupancy(station, 0, null);
+        var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.StationId == stationId).SingleOrDefaultAsync();
+        return stationOccupancy ?? new StationOccupancy(stationId, "", 0, null);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>

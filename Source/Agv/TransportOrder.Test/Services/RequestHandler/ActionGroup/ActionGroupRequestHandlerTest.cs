@@ -399,7 +399,7 @@ public class ActionGroupRequestHandlerTest
             .AddDefaultGraph()
             .BuildAsync();
 
-        string node = fixture.GetExistingNode()!;
+        var node = fixture.GetExistingNode();
         await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node, "user"));
 
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
@@ -416,7 +416,7 @@ public class ActionGroupRequestHandlerTest
                 .AddDefaultGraph()
                 .BuildAsync();
 
-        string node = fixture.GetExistingNode()!;
+        var node = fixture.GetExistingNode();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupNotFoundException>(async () =>
             await fixture.GetResponseAsync<Success>(new TriggerSetTarget("unknown".ToGuid(), actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node, "user")));
     }
@@ -432,7 +432,7 @@ public class ActionGroupRequestHandlerTest
                 .AddDefaultGraph()
                 .BuildAsync();
 
-        string node = fixture.GetExistingNode()!;
+        var node = fixture.GetExistingNode();
         await MediatorShould.ThrowRequestExceptionAsync<ActionNotFoundException>(async () =>
             await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, "unknown".ToGuid(), node, "user")));
     }
@@ -449,7 +449,7 @@ public class ActionGroupRequestHandlerTest
                 .BuildAsync();
 
         await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
-            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "unknown", "user")));
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "unknown".ToGuid(), "user")));
     }
 
     [TestMethod]
@@ -463,7 +463,7 @@ public class ActionGroupRequestHandlerTest
                 .AddDefaultGraph()
                 .BuildAsync();
 
-        string node = fixture.GetExistingNode()!;
+        var node = fixture.GetExistingNode();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
             await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node, "user")));
     }
@@ -472,14 +472,14 @@ public class ActionGroupRequestHandlerTest
     public async Task Consume_TriggerSetTarget_ActionShouldSkip_ThrowsActionGroupStateInvalidException()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Completed);
-        actionGroup.SetTargetForActionWithUpdate(actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "target");
+        actionGroup.SetTargetForActionWithUpdate(actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "target".ToGraphNode());
         ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup)
                 .AddDefaultGraph()
                 .BuildAsync();
 
-        string node = fixture.GetExistingNode()!;
+        var node = fixture.GetExistingNode();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
             await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ShouldSkip).CorrelationId, node, "user")));
     }

@@ -13,6 +13,7 @@ public class RoutingProfile : WebApiProfile
     /// <inheritdoc cref="RoutingProfile" />
     public RoutingProfile()
     {
-        CreateMap<Route, RouteDto>();
+        CreateMap<Route, RouteDto>()
+            .ForCtorParam(nameof(RouteDto.Nodes), opt => opt.MapFrom(src => src.Nodes.Select(n => n.Name)));
     }
 }

@@ -74,18 +74,18 @@ public class ActionCommandHelper
         await PublishStateChange(assignedAgv);
         bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
         Route? route = null;
-        if (!action.IsMoveToCoordinate)
+        if (action is { IsMoveToCoordinate: false, Target.Node: not null })
         {
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
-            route = await _routeService.GetRouteAsync(assignedAgv, action.Target.NodeId!, null, agvData, cancellationToken);
-            action.Nodes = action.ActionType == ActionType.Charge ? [action.Target.NodeId!] : route.Nodes;
+            route = await _routeService.GetRouteAsync(assignedAgv, action.Target.Node.Id, null, agvData, cancellationToken);
+            action.Nodes = action.ActionType == ActionType.Charge ? [action.Target.Node] : route.Nodes;
             action.Edges = route.Edges;
         }
 
         if (lastActionWasMoveToCoordinate)
         {
-            action.Nodes = route == null? [action.Target.NodeId!]: route.Nodes;
-            action.Edges = route == null? [] : route.Edges;
+            action.Nodes = route == null ? [action.Target.Node!] : route.Nodes;
+            action.Edges = route == null ? [] : route.Edges;
         }
 
         if (action.IsMoveToCoordinate)
@@ -96,14 +96,14 @@ public class ActionCommandHelper
 
         try
         {
-            if ((action.Nodes == null || action.Nodes.Length == 0) && assignedAgv.AgvStatus!.LastNodeId != action.Target.NodeId! && !action.IsMoveToCoordinate)
+            if ((action.Nodes == null || action.Nodes.Length == 0) && assignedAgv.AgvStatus!.LastNodeId != action.Target.Node?.Id && !action.IsMoveToCoordinate)
             {
                 throw new ArgumentNullException(nameof(action.Nodes));
             }
         }
         catch
         {
-            _logger.LogWarning("Node selection failed for action: {Action} of group {ActionGroupCorrelationId}.", action, action.ParentId);
+            _logger.LogWarning("Node selection failed for action: {Action} of group {ActionGroupCorrelationId}", action, action.ParentId);
             return false;
         }
 
@@ -124,14 +124,14 @@ public class ActionCommandHelper
     /// <returns></returns>
     public async Task LogStationUpdate(Domain.Models.Agv.Agv agv, AgvAction action, ActionGroup actionGroup)
     {
-        if (action.Target.NodeId == null)
+        if (action.Target.Node == null)
         {
             return;
         }
 
         try
         {
-            var station = await _stationRepository.GetStation(action.Target.NodeId);
+            var station = await _stationRepository.GetStation(action.Target.Node.Id);
             switch (action.ActionType)
             {
                 case ActionType.Drop:
@@ -211,21 +211,21 @@ public class ActionCommandHelper
     {
         if (actionGroup.State == ActionGroupState.Paused)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action group is paused.", action.CorrelationId, actionGroup.CorrelationId);
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action group is paused", action.CorrelationId, actionGroup.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
 
         if (assignedAgv.IsLocked)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start any actions in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start any actions in mode {Mode}", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
 
         if (actionGroup is { IsMovingCargo: true, IsManual: true } && !assignedAgv.CanStartManualPickDropAction)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start pick/drop actions in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start pick/drop actions in mode {Mode}", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
             var pauseReason = assignedAgv.Mode.GetPauseReason();
 
             await context.Publish(new PauseActionGroup(actionGroup.CorrelationId, pauseReason));
@@ -235,7 +235,7 @@ public class ActionCommandHelper
 
         if (!actionGroup.IsManual && !assignedAgv.CanStartAutomaticAction)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start automatic action in mode {Mode}.", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start automatic action in mode {Mode}", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
 
             var pauseReason = assignedAgv.Mode.GetPauseReason();
 
@@ -251,20 +251,20 @@ public class ActionCommandHelper
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
         if (!isNextActionInGroup)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first.", action.CorrelationId, actionGroup.CorrelationId);
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first", action.CorrelationId, actionGroup.CorrelationId);
             return false;
         }
 
         if (actionGroup.AssignedAgv.GetValueOrDefault() != assignedAgv.CorrelationId)
         {
-            _logger.LogError("Could not start action {Action} of group {ActionGroupCorrelationId} for agv {AgvCorrelationId}, the action group is already handled by {OtherAgvCorrelationId}.", action.CorrelationId, action.ParentId, assignedAgv.CorrelationId, actionGroup.AssignedAgv);
+            _logger.LogError("Could not start action {Action} of group {ActionGroupCorrelationId} for agv {AgvCorrelationId}, the action group is already handled by {OtherAgvCorrelationId}", action.CorrelationId, action.ParentId, assignedAgv.CorrelationId, actionGroup.AssignedAgv);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
 
         if (action.IsIncomplete)
         {
-            _logger.LogError("Could not action {Action} of group {ActionGroupCorrelationId} for agv {AgvCorrelationId}, the action group is incomplete.", action.CorrelationId, action.ParentId, assignedAgv.CorrelationId);
+            _logger.LogError("Could not action {Action} of group {ActionGroupCorrelationId} for agv {AgvCorrelationId}, the action group is incomplete", action.CorrelationId, action.ParentId, assignedAgv.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
@@ -277,7 +277,7 @@ public class ActionCommandHelper
             return true;
         }
 
-        _logger.LogError("Could not start action {Action} of group {ActionGroupCorrelationId}, there are other started action groups for this agv.", action.CorrelationId, action.ParentId);
+        _logger.LogError("Could not start action {Action} of group {ActionGroupCorrelationId}, there are other started action groups for this agv", action.CorrelationId, action.ParentId);
         await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
         return false;
     }
@@ -310,7 +310,7 @@ public class ActionCommandHelper
         var actionGroup = await _actionGroupRepository.GetNextManualActionGroupForAgvAsync(agv.CorrelationId, allowedActionTypes);
         if (actionGroup == null)
         {
-            _logger.LogInformation("There is no manual action group available for agv with CorrelationId {AgvCorrelationId}.", agv.CorrelationId);
+            _logger.LogInformation("There is no manual action group available for agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
             return null;
         }
         return actionGroup.FirstNotStartedAction;
@@ -319,12 +319,12 @@ public class ActionCommandHelper
     /// <summary>
     /// Checks if a station is locked if it exists.
     /// </summary>
-    /// <param name="name">The name of the station.</param>
-    public async Task<bool> StationIsLockedIfExists(string name)
+    /// <param name="id">The Id of the station.</param>
+    public async Task<bool> StationIsLockedIfExists(Guid id)
     {
         try
         {
-            return (await _stationRepository.GetStation(name)).IsLocked;
+            return (await _stationRepository.GetStation(id)).IsLocked;
         }
         catch
         {
@@ -377,7 +377,7 @@ public class ActionCommandHelper
         try
         {
             IRequestClient<TriggerDoppelspielpartnerQueueing>? requestClient = context.CreateRequestClient<TriggerDoppelspielpartnerQueueing>(_bus);
-            Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielpartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.NodeId!), cancellationToken);
+            Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielpartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.Node!), cancellationToken);
             if (response.Message.CorrelationId == null)
             {
                 return;

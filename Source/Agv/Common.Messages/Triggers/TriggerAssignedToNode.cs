@@ -9,4 +9,4 @@ namespace Gebhardt.Acc.Common.Messages.Triggers;
 /// <param name="TriggerName">The trigger name.</param>
 /// <param name="NodeId">The node id.</param>
 [PublicAPI]
-public record TriggerAssignedToNode(Guid TriggerId, string TriggerName, string NodeId);
+public record TriggerAssignedToNode(Guid TriggerId, string TriggerName, Guid NodeId);

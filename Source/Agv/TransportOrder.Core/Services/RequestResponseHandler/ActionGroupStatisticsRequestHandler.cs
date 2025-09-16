@@ -18,7 +18,7 @@ public class ActionGroupStatisticsRequestHandler(IActionGroupRepository actionGr
     /// </summary>
     public async Task Consume(ConsumeContext<GetActionGroupStatistics> context)
     {
-        (string? source, string? target) = context.Message;
+        (Guid? source, Guid? target) = context.Message;
 
         Dictionary<ActionType, ICollection<double>> actionDurations = await actionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, source, target);
         List<DurationStatistics> statistics = [];

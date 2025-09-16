@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -8,7 +9,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 /// Provides a handler for jam state related events.
 /// </summary>
 [UsedImplicitly]
-public class JamStateEventHandler:
+public class JamStateEventHandler :
     IConsumer<JamStateReceived>
 {
     /// <summary>
@@ -17,6 +18,6 @@ public class JamStateEventHandler:
     public async Task Consume(ConsumeContext<JamStateReceived> context)
     {
         (string station, int state, var timeStamp) = context.Message;
-        await context.Publish(new UpdateJamState(station, state, timeStamp));
+        await context.Publish(new UpdateJamState(station.ToGuid(), state, timeStamp));
     }
 }

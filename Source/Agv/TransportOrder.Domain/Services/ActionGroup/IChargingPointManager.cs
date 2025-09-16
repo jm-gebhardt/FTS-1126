@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using JetBrains.Annotations;
 
@@ -15,7 +16,7 @@ public interface IChargingPointManager
     /// <param name="agv"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns>The best free charger, throws if it could not reserve it</returns>
-    Task<GraphNode> ReserveChargerAsync(Models.Agv.Agv agv, string? startNodeId = null);
+    Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null);
 
     /// <summary>
     /// Chooses the best free charger based on the agvs graph
@@ -23,7 +24,7 @@ public interface IChargingPointManager
     /// <param name="agv"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <returns>The best free charger, or null if all occupied</returns>
-    Task<GraphNode?> GetBestChargerAsync(Models.Agv.Agv agv, string? startNodeId = null);
+    Task<GraphNode?> GetBestChargerAsync(Agv agv, Guid? startNodeId = null);
 
     /// <summary>
     /// Reserves the given charger
@@ -39,7 +40,7 @@ public interface IChargingPointManager
     /// <param name="agv"></param>
     /// <returns>True if the lastNodeId of the Agv is a charging point, False if the lastNodeId of the agv is null</returns>
     [UsedImplicitly]
-    Task<bool> IsOnAChargingNodeAsync(Models.Agv.Agv agv);
+    Task<bool> IsOnAChargingNodeAsync(Agv agv);
 
     /// <summary>
     /// Checks if the agv has already reserved a charger.

@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -17,7 +18,7 @@ public class ActionGroupDurationEstimationServiceTest
     {
         (double value, DateTime lastUpdated) deviation = (12, DateTime.UtcNow);
         var agvId = Guid.NewGuid();
-        string[] targets = ["a target", "another target"];
+        Guid[] targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
 
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithDeviation(deviation, agvId, targets, existsInMemory: false);
@@ -34,7 +35,7 @@ public class ActionGroupDurationEstimationServiceTest
     {
         (double value, DateTime lastUpdated) deviation = (12, DateTime.UtcNow);
         var agvId = Guid.NewGuid();
-        string[] targets = ["a target", "another target"];
+        Guid[] targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
 
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithDeviation(deviation, agvId, targets, existsInMemory: true);
@@ -50,7 +51,7 @@ public class ActionGroupDurationEstimationServiceTest
     {
         (double value, DateTime lastUpdated) deviation = (12, DateTime.UtcNow.AddHours(-1));
         var agvId = Guid.NewGuid();
-        string[] targets = ["a target", "another target"];
+        Guid[] targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
 
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithDeviation(deviation, agvId, targets, existsInMemory: true);
@@ -81,13 +82,14 @@ public class ActionGroupDurationEstimationServiceTest
     [TestMethod]
     public async Task GetDurationEstimate_MoveFromCoordinateToGraph_ReturnsDuration(double velocity, double expectedDuration)
     {
-        var node = new GraphNode("a node", 1, 1, 0, AgvGraph.NodeType.WayPoint, null, null, null);
+        const string aNodeName = "a node";
+        var node = new GraphNode(aNodeName.ToGuid(), aNodeName, 1, 1, 0, AgvGraph.NodeType.WayPoint, null, null, null);
         var agvPositionStatus = new AgvPositionStatus(Guid.NewGuid(), "agv", new AgvPosition(true, 0, 1, 0, 0));
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithPositionStatus(agvPositionStatus)
             .WithNode(node);
 
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, node.Id, Guid.NewGuid());
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, node, Guid.NewGuid());
 
         (await fixture.Service.GetDurationEstimate(velocity, action, agvPositionStatus.CorrelationId)).ShouldBe(expectedDuration);
     }

@@ -64,13 +64,13 @@ public static class ServiceCollectionExtension
         serviceCollection.AddKeyedSingleton(ServiceKeyProvider.ToPrismat, (_, _) => fromPrismatConfig);
         serviceCollection.AddKeyedSingleton<Server>(ServiceKeyProvider.FromPrismat, (serviceProvider, _) =>
         {
-            var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+            var logger = serviceProvider.GetRequiredService<ILogger<Server>>();
             return new Server(logger, fromPrismatConfig);
         });
 
         serviceCollection.AddKeyedSingleton<Server>(ServiceKeyProvider.ToPrismat, (serviceProvider, _) =>
         {
-            var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+            var logger = serviceProvider.GetRequiredService<ILogger<Server>>();
             return new Server(logger, toPrismatConfig);
         });
 
@@ -78,7 +78,7 @@ public static class ServiceCollectionExtension
         {
             var toPrismatProcessor = serviceProvider.GetRequiredService<ToPrismatTelegramProcessor>();
             var socket = serviceProvider.GetKeyedService<Server>(ServiceKeyProvider.ToPrismat);
-            var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<PrismatTelegram>>>();
+            var logger = serviceProvider.GetRequiredService<ILogger<Sender<PrismatTelegram>>>();
             return new Sender<PrismatTelegram>(socket!, ServiceKeyProvider.ToPrismat, toPrismatProcessor, logger);
         });
 
@@ -86,7 +86,7 @@ public static class ServiceCollectionExtension
         {
             var fromPrismatProcessor = serviceProvider.GetRequiredService<FromPrismatTelegramProcessor>();
             var server = serviceProvider.GetKeyedService<Server>(ServiceKeyProvider.FromPrismat);
-            var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<PrismatTelegram>>>();
+            var logger = serviceProvider.GetRequiredService<ILogger<Receiver<PrismatTelegram>>>();
             return new Receiver<PrismatTelegram>(server!, ServiceKeyProvider.FromPrismat, fromPrismatProcessor, logger);
         });
 
@@ -135,9 +135,9 @@ public static class ServiceCollectionExtension
     {
         if (isSimulationMode)
         {
-            _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPoint1TriggerName, "");
-            _config.Value.UpdateTriggerPointNodeId(_config.Value.CheckCargoTriggerName, "");
-            _config.Value.UpdateTriggerPointNodeId(_config.Value.DoppelspielTriggerName, "");
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPoint1TriggerName, Guid.Empty);
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.CheckCargoTriggerName, Guid.Empty);
+            _config.Value.UpdateTriggerPointNodeId(_config.Value.DoppelspielTriggerName, Guid.Empty);
         }
         serviceCollection.TryAddSingleton(_config.Value);
         return serviceCollection;

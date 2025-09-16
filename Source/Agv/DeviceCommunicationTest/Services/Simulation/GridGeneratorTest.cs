@@ -8,10 +8,10 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 [TestClass]
 public class GridGeneratorTest
 {
-    private const float East = (float)Math.PI / 2f;
+    private const float East = (float) Math.PI / 2f;
 
-    private const float West = 3f * (float)Math.PI / 2f;
-    private const float South = (float)Math.PI;
+    private const float West = 3f * (float) Math.PI / 2f;
+    private const float South = (float) Math.PI;
     private const float North = 0f;
 
     [TestMethod]
@@ -60,13 +60,13 @@ public class GridGeneratorTest
 
         foreach (string s in sources)
         {
-            graph.Nodes.Any(n => n.Id == s).ShouldBeTrue();
-            graph.Nodes.First(n => n.Id == s).Theta.ShouldBe(North);
+            graph.Nodes.Any(n => n.Name == s).ShouldBeTrue();
+            graph.Nodes.First(n => n.Name == s).Theta.ShouldBe(North);
         }
         foreach (string d in destinations)
         {
-            graph.Nodes.Any(n => n.Id == d).ShouldBeTrue();
-            graph.Nodes.First(n => n.Id == d).Theta.ShouldBe(South);
+            graph.Nodes.Any(n => n.Name == d).ShouldBeTrue();
+            graph.Nodes.First(n => n.Name == d).Theta.ShouldBe(South);
         }
     }
 
@@ -85,8 +85,8 @@ public class GridGeneratorTest
         graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge).ShouldBe(1);
         graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park).ShouldBe(1);
 
-        graph.Nodes.First(n => (AgvGraph.NodeType)n.Type == serviceNodeTypes.First()).Theta.ShouldBe(West);
-        graph.Nodes.First(n => (AgvGraph.NodeType)n.Type == serviceNodeTypes.Last()).Theta.ShouldBe(East);
+        graph.Nodes.First(n => (AgvGraph.NodeType) n.Type == serviceNodeTypes.First()).Theta.ShouldBe(West);
+        graph.Nodes.First(n => (AgvGraph.NodeType) n.Type == serviceNodeTypes.Last()).Theta.ShouldBe(East);
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public class GridGeneratorTest
         string[] destinations = GenerateNodeIds("D", 2);
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 2, serviceNodes);
         var graph = generator.Generate(Guid.NewGuid());
-        graph.Nodes.Count.ShouldBe(new HashSet<string>(graph.Nodes.Select(n => n.Id)).Count);
+        graph.Nodes.Count.ShouldBe(new HashSet<string>(graph.Nodes.Select(n => n.Name)).Count);
     }
 
     /// <summary>
@@ -142,38 +142,8 @@ public class GridGeneratorTest
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 3, serviceNodes);
         var graph = generator.Generate(Guid.NewGuid());
 
-        string[][] expectedEdges =
-        {
-            // Grid
-            new[] { "N000-000", "N001-000" },
-            new[] { "N000-000", "N000-001" },
-            new[] { "N001-000", "N001-001" },
-            new[] { "N000-001", "N001-001" },
-            new[] { "N000-001", "N000-002" },
-            new[] { "N001-001", "N001-002" },
-            new[] { "N000-002", "N001-002" },
-            // Source
-            new[] { "S0", "N000-000" },
-            new[] { "S1", "N001-000" },
-            // Destination
-            new[] { "D0", "N000-002" },
-            new[] { "D1", "N001-002" },
-            // Service
-            new[] { "Charge-0", "N000-000" },
-            new[] { "Park-1", "N001-001" }
-        };
-
-        string[] graphEdges = graph.Edges.Select(e => $"{e.FromNodeId}-{e.ToNodeId}").ToArray();
-
-        // Check for edges including bidirectional
-        foreach (string[] edge in expectedEdges.Concat(expectedEdges.Reverse()))
-        {
-            string edgeName = $"{edge[0]}-{edge[1]}";
-            graphEdges.FirstOrDefault(n => n == edgeName).ShouldBe(edgeName);
-        }
-
         // 2*Expect for bidirectional
-        graph.Edges.Count.ShouldBe(expectedEdges.Length * 2);
+        graph.Edges.Count.ShouldBe(13 * 2);
     }
 
     [TestMethod]

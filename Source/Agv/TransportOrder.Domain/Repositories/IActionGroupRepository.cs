@@ -58,7 +58,7 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="assignedAgv">The assigned agv.</param>
     /// <param name="allowedActionTypes">Optional list of action types to be contained in the group.</param>
-    Task<ActionGroup?> GetNextManualActionGroupForAgvAsync(Guid assignedAgv, List<ActionType>? allowedActionTypes=null);
+    Task<ActionGroup?> GetNextManualActionGroupForAgvAsync(Guid assignedAgv, List<ActionType>? allowedActionTypes = null);
 
     /// <summary>
     /// Get the durations of actions in action groups that are in given actionGroupState and
@@ -69,7 +69,7 @@ public interface IActionGroupRepository
     /// <param name="targetNodeId">The target node id.</param>
     /// <param name="maxItems">The maximum number of groups returned.</param>
     /// <returns></returns>
-    Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, string? sourceNodeId=null, string? targetNodeId=null, int maxItems = 1000);
+    Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000);
 
     /// <summary>
     /// Get ActionGroup count which have the given actionGroupState (and date range filter).
@@ -256,7 +256,7 @@ public interface IActionGroupRepository
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="targetNodes">The target nodes.</param>
     /// <returns>The deviation in seconds.</returns>
-    Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, string[] targetNodes );
+    Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, Guid[] targetNodes);
 
     /// <summary>
     /// True, if the last completed action of this agv was a move to a coordinate.
@@ -336,9 +336,9 @@ public interface IActionGroupRepository
     /// <summary>
     /// Gets list of running or pending action groups that are heading towards the given target.
     /// </summary>
-    /// <param name="target">The target node.</param>
+    /// <param name="targetId">The target node.</param>
     /// <returns>Action groups.</returns>
-    Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(string target);
+    Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(Guid targetId);
 
     /// <summary>
     /// Get all the not started action groups for a specific agv that are targeting one of the nodes of a collection.
@@ -346,5 +346,5 @@ public interface IActionGroupRepository
     /// <param name="agvId">The agv to check.</param>
     /// <param name="targets">The targets to check.</param>
     /// <returns></returns>
-    Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<string> targets);
+    Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<Guid> targets);
 }

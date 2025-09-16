@@ -32,13 +32,13 @@ public class DirectEdgeTest
     // 6                   Dst2          Dst3    //
     // |                                         //
     ///////////////////////////////////////////////
-    private GraphNode Way2 { get; } = NodeGenerator.GenerateNode(nodeId: "Way2", x: 3, y: 3);
+    private GraphNode Way2 { get; } = NodeGenerator.GenerateNode(nodeName: "Way2", x: 3, y: 3);
 
-    private GraphNode Target { get; } = NodeGenerator.GenerateNode(nodeId: "Prk2", x: 5, y: 3);
+    private GraphNode Target { get; } = NodeGenerator.GenerateNode(nodeName: "Prk2", x: 5, y: 3);
 
-    private GraphEdge Edge { get; } = GraphEdge.CreateDirect("Way2", "Prk2", 2);
+    private GraphEdge Edge { get; } = GraphEdge.CreateDirect("Way2".ToGuid(), "Prk2".ToGuid(), 2);
 
-    private GraphEdge ZeroLengthEdge { get; } = GraphEdge.CreateDirect("Way2", "Way2", 0);
+    private GraphEdge ZeroLengthEdge { get; } = GraphEdge.CreateDirect("Way2".ToGuid(), "Way2".ToGuid(), 0);
 
     private AgvTravelSimulator WoodShopSimulator { get; set; } = null!;
 
@@ -77,9 +77,9 @@ public class DirectEdgeTest
     public void GetAgvOrientation(string source, string target,
         float sourceX, float sourceY, float targetX, float targetY, double angle)
     {
-        var sourceNode = NodeGenerator.GenerateNode(nodeId: source, x: sourceX, y: sourceY);
-        var targetNode = NodeGenerator.GenerateNode(nodeId: target, x: targetX, y: targetY);
-        var edge = GraphEdge.CreateDirect(source, target);
+        var sourceNode = NodeGenerator.GenerateNode(nodeName: source, x: sourceX, y: sourceY);
+        var targetNode = NodeGenerator.GenerateNode(nodeName: target, x: targetX, y: targetY);
+        var edge = GraphEdge.CreateDirect(source.ToGuid(), target.ToGuid());
         var directEdge = new DirectEdge(edge, sourceNode, targetNode);
         directEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(angle));
 
@@ -92,7 +92,7 @@ public class DirectEdgeTest
     {
         var agvData = AgvDataGenerator.GenerateAgvData();
         var directEdge = new DirectEdge(Edge, Way2, Target);
-        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeId: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
+        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeName: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
         var entryTime = DateTime.UtcNow;
         directEdge.EstimateTravelTime(agvData, 0, entryTime);
         var position = directEdge.GetCurrentPosition(directEdge.EstimatedExitTime, agvData, 0);
@@ -148,8 +148,8 @@ public class DirectEdgeTest
     [TestMethod]
     public void SetAngles_PrkWay1Src3_ExitAndEntryAngleSet()
     {
-        var nextSource = NodeGenerator.GenerateNode(nodeId: "ns", x: 5, y: 3);
-        var nextTarget = NodeGenerator.GenerateNode(nodeId: "nt", x: 5, y: 1);
+        var nextSource = NodeGenerator.GenerateNode(nodeName: "ns", x: 5, y: 3);
+        var nextTarget = NodeGenerator.GenerateNode(nodeName: "nt", x: 5, y: 1);
 
         var directEdge = new DirectEdge(Edge, Way2, Target);
         directEdge.ExitAngle.ShouldBe(0);
@@ -165,7 +165,7 @@ public class DirectEdgeTest
     public void EstimateTravelTime_NoAdjacentEdgesTargetIsStation_SectionsAndVelocitiesSet()
     {
         var agvData = AgvDataGenerator.GenerateAgvData();
-        var target = NodeGenerator.GenerateNode(nodeId: Target.Id, x: Target.X, y: Target.Y, z: Target.Z, nodeType: AgvGraph.NodeType.Charge);
+        var target = NodeGenerator.GenerateNode(nodeName: Target.Name, x: Target.X, y: Target.Y, z: Target.Z, nodeType: AgvGraph.NodeType.Charge);
         var directEdge = new DirectEdge(Edge, Way2, target);
         directEdge.SetAngles(0, null, null);
         var entryTime = DateTime.UtcNow;
@@ -193,7 +193,7 @@ public class DirectEdgeTest
         var agvData = AgvDataGenerator.GenerateAgvData();
         var directEdge = new DirectEdge(Edge, Way2, Target);
         var entryTime = DateTime.UtcNow;
-        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeId: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
+        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeName: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
         directEdge.EstimateTravelTime(agvData, 0, entryTime);
         directEdge.Length.ShouldBe(directEdge.MaxVelocitySection + directEdge.AccelerationSection + directEdge.DecelerationSection, tolerance: 0.01);
         directEdge.ExitVelocity.ShouldBe(agvData.MaxVelocityStraight);
@@ -206,7 +206,7 @@ public class DirectEdgeTest
     {
         const double initialVelocity = 0;
         var directEdge = new DirectEdge(Edge, Way2, Target);
-        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeId: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
+        directEdge.SetAngles(0, Target, NodeGenerator.GenerateNode(nodeName: "new", x: Target.X + 1, y: Target.Y, z: Target.Z));
         var karis = new KarisType1(Guid.NewGuid(), "ip address");
         var agvData = karis.SetSimulationSpeed(5);
         double distance = PhysicsHelper.DistanceToVelocityFromVelocity(agvData.Acceleration, agvData.MaxVelocityStraight, initialVelocity);
@@ -282,14 +282,14 @@ public class DirectEdgeTest
         SetupWoodShop();
         string[] nodes = { "D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA" };
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), WoodShop.Edges.ToList());
-        var startNode = WoodShop.Nodes.First(n => n.Id == nodes.First());
+        var startNode = WoodShop.Nodes.First(n => n.Name == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
         SetupWoodShopSimulator(position);
         var entryTime = DateTime.UtcNow;
         const double initialVelocity = 0;
         WoodShopSimulator.EstimateTravelTimes(nodes, edges, entryTime, agvData, initialVelocity);
 
-        var directEdge = (DirectEdge) WoodShopSimulator.FollowingEdges.Single(e => e.SourceNode.Id == "WP-0017");
+        var directEdge = (DirectEdge) WoodShopSimulator.FollowingEdges.Single(e => e.SourceNode.Name == "WP-0017");
         double distanceAcc = directEdge.GetEdgeTravelDistance(agvData, directEdge.AccelerationFinishTime);
         distanceAcc.ShouldBe(directEdge.AccelerationSection, tolerance: 0.01);
 
@@ -305,8 +305,8 @@ public class DirectEdgeTest
     {
         SetupWoodShopSimulator();
 
-        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0016" && e.TargetNode.Id == "WP-0015");
-        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0011" && e.TargetNode.Id == "WP-0016");
+        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "WP-0016" && e.TargetNode.Name == "WP-0015");
+        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "WP-0011" && e.TargetNode.Name == "WP-0016");
 
         edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(270));
         previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(0));
@@ -335,8 +335,8 @@ public class DirectEdgeTest
     {
         SetupWoodShopSimulator();
 
-        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0011" && e.TargetNode.Id == "WP-0016");
-        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "D-Press" && e.TargetNode.Id == "WP-0011");
+        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "WP-0011" && e.TargetNode.Name == "WP-0016");
+        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "D-Press" && e.TargetNode.Name == "WP-0011");
 
         edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(0));
         previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(90));
@@ -365,8 +365,8 @@ public class DirectEdgeTest
     {
         SetupWoodShopSimulator();
 
-        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0028" && e.TargetNode.Id == "WP-0029");
-        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "Park-4" && e.TargetNode.Id == "WP-0028");
+        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "WP-0028" && e.TargetNode.Name == "WP-0029");
+        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "Park-4" && e.TargetNode.Name == "WP-0028");
 
         edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(180));
         previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(90));
@@ -395,8 +395,8 @@ public class DirectEdgeTest
     {
         SetupWoodShopSimulator();
 
-        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "WP-0028" && e.TargetNode.Id == "WP-0029");
-        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Id == "Park-3" && e.TargetNode.Id == "WP-0028");
+        var edge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "WP-0028" && e.TargetNode.Name == "WP-0029");
+        var previousEdge = WoodShopSimulator.Edges.Single(e => e.SourceNode.Name == "Park-3" && e.TargetNode.Name == "WP-0028");
 
         edge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(180));
         previousEdge.AgvOrientation.ShouldBe((float) Mathematics.ConvertToRadians(270));

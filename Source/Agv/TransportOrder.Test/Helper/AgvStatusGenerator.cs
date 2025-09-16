@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
@@ -9,7 +10,7 @@ public static class AgvStatusGenerator
         bool busy = false,
         double batteryCharge = 40,
         bool charging = false,
-        string? lastNodeId = null,
+        string? lastNodeName = null,
         ICollection<string>? zoneIds = null,
         ICollection<string>? stationIds = null)
     {
@@ -20,7 +21,7 @@ public static class AgvStatusGenerator
             batteryCharge,
             charging,
             false,
-            lastNodeId,
+            lastNodeName?.ToGuid(),
             48,
             charging ? 20 : -10,
             20,

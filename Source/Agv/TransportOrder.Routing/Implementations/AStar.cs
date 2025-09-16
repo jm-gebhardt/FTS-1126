@@ -38,7 +38,7 @@ public class AStar : BaseRouteAlgorithm
         /// </summary>
         public void Reset()
         {
-            Predecessor = "";
+            Predecessor = Guid.Empty;
             G = 0;
             H = 0;
             EntryVector = null;
@@ -64,7 +64,7 @@ public class AStar : BaseRouteAlgorithm
         /// <summary>
         /// Predecessor node ID of the calculated path.
         /// </summary>
-        public string Predecessor { get; set; } = "";
+        public Guid Predecessor { get; set; } = Guid.Empty;
 
         /// <summary>
         /// Time from start to this node.
@@ -104,7 +104,7 @@ public class AStar : BaseRouteAlgorithm
         /// <returns></returns>
         public override string ToString()
         {
-            return $"{Node.Id} [{Predecessor}, {EntryVector}, F({F}) = G({G}) + H({H})]";
+            return $"{Node.Name} [{Predecessor}, {EntryVector}, F({F}) = G({G}) + H({H})]";
         }
 
         public Vector2 AsVector2()
@@ -123,14 +123,14 @@ public class AStar : BaseRouteAlgorithm
     }
 
     /// <summary>List of nodes currently processing.</summary>
-    private readonly Dictionary<string, ANode> _openList = new(); // Should be a PriorityQueue<node, float> but we need to update the sorting attribute.
+    private readonly Dictionary<Guid, ANode> _openList = new(); // Should be a PriorityQueue<node, float> but we need to update the sorting attribute.
 
     /// <summary>List of nodes already checked.</summary>
-    private readonly SortedSet<string> _closedList = new();
+    private readonly SortedSet<Guid> _closedList = new();
 
-    private readonly Dictionary<string, ANode> _nodes;
+    private readonly Dictionary<Guid, ANode> _nodes;
 
-    private Dictionary<string, ANode> _virtualNodes = new();
+    private Dictionary<Guid, ANode> _virtualNodes = new();
 
     private readonly AgvData? _agvData;
 
@@ -165,7 +165,7 @@ public class AStar : BaseRouteAlgorithm
     private ANode? GetAndRemoveMin()
     {
         ANode? min = null;
-        foreach (KeyValuePair<string, ANode> kvp in _openList)
+        foreach (KeyValuePair<Guid, ANode> kvp in _openList)
         {
             if (min == null || kvp.Value.F < min.F)
             {
@@ -180,7 +180,7 @@ public class AStar : BaseRouteAlgorithm
         return min;
     }
 
-    private ANode GetNodeById(string nodeId)
+    private ANode GetNodeById(Guid nodeId)
     {
         return _nodes.Keys.Contains(nodeId) ? _nodes[nodeId] : _virtualNodes[nodeId];
     }
@@ -214,8 +214,8 @@ public class AStar : BaseRouteAlgorithm
         double time = CalculateCosts(current, edge, out double finalVelocity, out double decelerationCost);
         double g = current.G + time;
         var successor = _nodes[edge.ToNodeId];
-       
-       if (_openList.ContainsKey(successor.Node.Id) &&_openList[successor.Node.Id].G <= g && g >= successor.G)
+
+        if (_openList.ContainsKey(successor.Node.Id) && _openList[successor.Node.Id].G <= g && g >= successor.G)
         {
             return;
         }
@@ -249,7 +249,7 @@ public class AStar : BaseRouteAlgorithm
         {
             double sectionTime = CalculateCosts(currentNode, section, out double finalVelocity, out double decelerationCost);
             time += sectionTime;
-            string previousNodeId = currentNode.Node.Id;
+            var previousNodeId = currentNode.Node.Id;
             currentNode = GetNodeById(section.ToNodeId);
 
             currentNode.Predecessor = previousNodeId;
@@ -266,7 +266,7 @@ public class AStar : BaseRouteAlgorithm
         currentNode.G = current.G;
         currentNode.Predecessor = current.Node.Id;
         double g = currentNode.G + time;
-        if (_openList.ContainsKey(currentNode.Node.Id) &&_openList[currentNode.Node.Id].G <= g && g >= currentNode.G)
+        if (_openList.ContainsKey(currentNode.Node.Id) && _openList[currentNode.Node.Id].G <= g && g >= currentNode.G)
         {
             return;
         }
@@ -329,10 +329,10 @@ public class AStar : BaseRouteAlgorithm
 
         if (current.EntryVector != null)
         {
-            angle = Mathematics.AngleBetween((Vector2)current.EntryVector, CalculateEntryVector(edge));
+            angle = Mathematics.AngleBetween((Vector2) current.EntryVector, CalculateEntryVector(edge));
         }
 
-        bool isFirstNode = string.IsNullOrEmpty(current.Predecessor);
+        bool isFirstNode = current.Predecessor == Guid.Empty;
 
         bool needsSpotTurn = angle > TurnOnSpotThreshold || isFirstNode;
 
@@ -413,7 +413,7 @@ public class AStar : BaseRouteAlgorithm
     }
 
     /// <inheritdoc/>>
-    protected override Route? CalculateRouteInternal(string source, string destination)
+    protected override Route? CalculateRouteInternal(Guid source, Guid destination)
     {
         _openList.Clear();
         _closedList.Clear();
@@ -442,13 +442,13 @@ public class AStar : BaseRouteAlgorithm
             ExpandNode(current, end);
         } while (_openList.Count != 0);
 
-        if (string.IsNullOrEmpty(end.Predecessor))
+        if (end.Predecessor == Guid.Empty)
         {
             // No path found.
             return null;
         }
 
-        var route = new List<string> { end.Node.Id };
+        var route = new List<Guid> { end.Node.Id };
         var routeEdges = new List<Guid>();
         current = end;
 
@@ -462,6 +462,6 @@ public class AStar : BaseRouteAlgorithm
         routeEdges.Reverse();
         route.Reverse();
 
-        return new Route(end.F, route.ToArray(), routeEdges.ToArray());
+        return new Route(end.F, route.Select(r => GetNodeById(r).Node).ToArray(), routeEdges.ToArray());
     }
 }

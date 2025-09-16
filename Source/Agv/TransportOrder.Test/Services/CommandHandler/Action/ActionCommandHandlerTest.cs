@@ -1,6 +1,7 @@
 using FluentValidation.Results;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -33,10 +34,14 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 [TestClass]
 public class ActionCommandHandlerTest
 {
+    private static readonly GraphNode _chargeNode = "Charge-1".ToGraphNode();
+    private const string ParkNodeName = "Park-1";
+    private static readonly GraphNode _parkNode = ParkNodeName.ToGraphNode();
+
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_ValidData_Publishes_StartActionCommandAndActionGroupChanged()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var startedAction = actionGroup.Actions.First();
         const bool dockFront = true;
@@ -44,7 +49,7 @@ public class ActionCommandHandlerTest
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
-            .WithNode(new GraphNode(startedAction.Target.NodeId!))
+            .WithNode(startedAction.Target.Node!)
             .WithLastActionDockFront(dockFront);
 
         var startAction = new StartActionOfActionGroup(startedAction, agv.CorrelationId);
@@ -58,14 +63,14 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_FirstPickAction_Publishes_StartActionCommandAndActionGroupChangedActionGroupStarted()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         var pickAction = actionGroup.Actions.First();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
             .AddActionGroup(actionGroup)
-            .WithNode(new GraphNode(pickAction.Target.NodeId!))
+            .WithNode(pickAction.Target.Node!)
             .WithLastActionDockFront(false);
 
         var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
@@ -79,8 +84,8 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_AgvInMessageIsNotAssignedAgv_PublishesStartingActionForAgvFailed()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
-        var anotherAgv = AgvGenerator.GenerateIdleAgv(index: 2, lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
+        var anotherAgv = AgvGenerator.GenerateIdleAgv(index: 2, lastNodeName: "NodeId");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(anotherAgv)
@@ -100,7 +105,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_IncompleteAction_PublishesStartingActionForAgvFailed()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(
             assignedAgv: agv.CorrelationId,
             pickActionState: ActionState.Completed,
@@ -123,7 +128,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_AgvIsLocked_PublishesStartingActionForAgvFailed()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.Locked));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.Locked));
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -143,7 +148,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_AutomaticAction_AgvIsInUserMode_PublishedStartingActionForAgvFailed()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.UserMode));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.UserMode));
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -166,7 +171,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_AutomaticAction_AgvIsInMaintenanceMode_NothingPublished()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.Maintenance));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.Maintenance));
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, pickActionState: ActionState.Started);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -186,7 +191,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_ManualPickDropAction_AgvIsInUserMode_PublishedStartingActionForAgvFailed()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.UserMode));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.UserMode));
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
         actionGroup.IsManual = true;
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -208,7 +213,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNextActionInActionGroup_ValidData_PublishesNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -224,7 +229,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNextActionInActionGroup_ErrorAgvAutomaticAction_DoesNotPublishNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
         agv.HasError = true;
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -241,7 +246,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNextActionInActionGroup_ErrorAgvManualAction_PublishesNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
         agv.HasError = true;
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual: true);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -455,7 +460,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_CompleteActionOfActionGroup_ActionGroupNotCompleteChargingAction_PublishesActionGroupChangedSetIdleNotCalled()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -1018,7 +1023,6 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateChargingActionGroup_BatteryCritical_PublishedActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
-        const string chargeNodeName = "Charge-1";
 
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
 
@@ -1028,7 +1032,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false, existsPriorToTest: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1040,14 +1044,13 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5, mode: new AgvMode(ModeType.Locked));
 
-        const string chargeNodeName = "Charge-1";
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1059,14 +1062,13 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5, mode: new AgvMode(ModeType.Maintenance));
 
-        const string chargeNodeName = "Charge-1";
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName, Creator: ActionGroupCreator.TransportOrder);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode, Creator: ActionGroupCreator.TransportOrder);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1077,7 +1079,6 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateChargingActionGroup_ActionTriggeredByWebApiAndAgvIsInMaintenanceMode_PublishedActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5, mode: new AgvMode(ModeType.Maintenance));
-        const string chargeNodeName = "Charge-1";
 
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
 
@@ -1087,7 +1088,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false, existsPriorToTest: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName, Creator: ActionGroupCreator.TransportOrderWebApi);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode, Creator: ActionGroupCreator.TransportOrderWebApi);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1099,14 +1100,13 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5, mode: new AgvMode(ModeType.UserMode));
 
-        const string chargeNodeName = "Charge-1";
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName, Creator: ActionGroupCreator.TransportOrder);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode, Creator: ActionGroupCreator.TransportOrder);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1117,7 +1117,6 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateChargingActionGroup_ActionTriggeredByWebApiAndAgvIsInUserMode_PublishedActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5, mode: new AgvMode(ModeType.UserMode));
-        const string chargeNodeName = "Charge-1";
 
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
 
@@ -1127,7 +1126,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false, existsPriorToTest: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName, Creator: ActionGroupCreator.TransportOrderWebApi);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode, Creator: ActionGroupCreator.TransportOrderWebApi);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1152,7 +1151,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false, existsPriorToTest: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, "a charger", Creator: ActionGroupCreator.TransportOrder);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, "a charger".ToGraphNode(), Creator: ActionGroupCreator.TransportOrder);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1177,7 +1176,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false, existsPriorToTest: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, "a charger", Creator: ActionGroupCreator.TransportOrderWebApi);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, "a charger".ToGraphNode(), Creator: ActionGroupCreator.TransportOrderWebApi);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1189,14 +1188,13 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateChargingAgv(batteryCharge: 10);
 
-        const string chargeNodeName = "Charge-1";
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(chargeActionGroup, hasUnfinishedAction: false)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1207,7 +1205,6 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateChargingActionGroup_BatteryNotCriticalAndExistingActionGroups_DoesNotPublishActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 30);
-        const string chargeNodeName = "Charge-1";
 
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         var pickAndDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
@@ -1217,7 +1214,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(pickAndDropActionGroup)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1228,7 +1225,6 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateChargingActionGroup_BatteryCriticalAndExistingActionGroups_PublishedActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
-        const string chargeNodeName = "Charge-1";
 
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         var pickAndDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
@@ -1239,7 +1235,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(pickAndDropActionGroup)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1250,7 +1246,6 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateChargingActionGroup_AddingActionGroupNotSuccessful_DoesNotPublishActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);
-        const string chargeNodeName = "Charge-1";
 
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         var pickAndDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
@@ -1261,7 +1256,7 @@ public class ActionCommandHandlerTest
             .AddActionGroup(pickAndDropActionGroup)
             .AddActionGroupRetrieval(headingTo: false);
 
-        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, chargeNodeName);
+        var command = new CreateChargingActionGroup(chargeActionGroup.CorrelationId, agv.CorrelationId, _chargeNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateChargingActionGroup>();
@@ -1272,16 +1267,15 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateParkingActionGroup_ValidAgv_PublishedActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        const string parkNodeName = "Park-1";
 
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeName: ParkNodeName) };
         var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .WithAddActionGroupIsSuccessful()
             .AddAgv(agv)
             .AddActionGroup(parkActionGroup, hasUnfinishedAction: false);
 
-        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, parkNodeName);
+        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, _parkNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
@@ -1292,16 +1286,15 @@ public class ActionCommandHandlerTest
     public async Task Consume_CreateParkingActionGroup_AddingActionGroupNotSuccessful_DoesNotPublishActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        const string parkNodeName = "Park-1";
 
-        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: parkNodeName) };
+        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeName: ParkNodeName) };
         var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .WithAddActionGroupIsSuccessful(false)
             .AddAgv(agv)
             .AddActionGroup(parkActionGroup, hasUnfinishedAction: false);
 
-        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, parkNodeName);
+        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, _parkNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
@@ -1317,12 +1310,11 @@ public class ActionCommandHandlerTest
         var mode = new AgvMode(ModeType.Normal);
         mode.PrepareSwitch(pendingMode);
         var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
-        const string parkNodeName = "Park-1";
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv);
 
-        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, parkNodeName);
+        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, _parkNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
@@ -1335,14 +1327,14 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         const string queueNodeName = "Park-1";
 
-        var queueActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeId: queueNodeName) };
+        var queueActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeName: queueNodeName) };
         var queueActionGroup = AgvActionGenerator.GenerateActionGroup(queueActions);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .WithAddActionGroupIsSuccessful()
             .AddAgv(agv)
             .AddActionGroup(queueActionGroup, hasUnfinishedAction: false);
 
-        var command = new CreateQueueingActionGroup(Guid.NewGuid(), agv.CorrelationId, queueNodeName);
+        var command = new CreateQueueingActionGroup(Guid.NewGuid(), agv.CorrelationId, _parkNode);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateQueueingActionGroup>();
@@ -1363,7 +1355,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv);
 
-        var command = new CreateQueueingActionGroup(Guid.NewGuid(), agv.CorrelationId, queueNodeName);
+        var command = new CreateQueueingActionGroup(Guid.NewGuid(), agv.CorrelationId, queueNodeName.ToGraphNode());
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateQueueingActionGroup>();
@@ -1420,7 +1412,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_ValidData_PublishesNodesSelectedForAction(bool lastActionWasMoveToCoordinate)
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "A node");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
         string[] nodes = ["Node1", "Node2"];
 
@@ -1434,7 +1426,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<NodesSelectedForAction>();
         var nodesSelectedForAction = await fixture.GetFirstPublishedMessageAsync<NodesSelectedForAction>();
-        nodesSelectedForAction.Action.Nodes.ShouldBeEquivalentTo(nodes);
+        nodesSelectedForAction.Action.Nodes.Select(n => n.Name).ToArray().ShouldBeEquivalentTo(nodes);
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
     }
 
@@ -1443,7 +1435,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_MoveToCoordinates_PublishesNodesSelectedForAction(bool lastActionWasMoveToCoordinate)
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "A node");
         var actionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup(targetPosition: new AgvPosition(true, 1, 1, 1, 1), assignedAgv: agv.CorrelationId);
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -1462,7 +1454,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_AgvHasErrorManualActionGroup_PublishesNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "A node");
         agv.HasError = true;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
         actionGroup.IsManual = true;
@@ -1470,7 +1462,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup, hasUnfinishedAction: false, isManual: true)
-            .AddRoute(["A node", actionGroup.Actions.First().Target.NodeId!], edges: [Guid.NewGuid()]);
+            .AddRoute(["A node", actionGroup.Actions.First().Target.Node!.Name], edges: [Guid.NewGuid()]);
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
 
@@ -1482,14 +1474,14 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_AgvHasErrorAutomaticActionGroup_DoesNotPublishNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "A node");
         agv.HasError = true;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup, hasUnfinishedAction: false)
-            .AddRoute(["A node", actionGroup.Actions.First().Target.NodeId!], edges: [Guid.NewGuid()]);
+            .AddRoute(["A node", actionGroup.Actions.First().Target.Node!.Name], edges: [Guid.NewGuid()]);
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
 
@@ -1501,7 +1493,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_NoActionGroup_PublishesAgvCanStartIdleAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "A node");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "A node");
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -1523,7 +1515,7 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup, hasUnfinishedAction: false)
-            .AddRoute(["A node", actionGroup.Actions.First().Target.NodeId!], edges: [Guid.NewGuid()]);
+            .AddRoute(["A node", actionGroup.Actions.First().Target.Node!.Name], edges: [Guid.NewGuid()]);
 
         await fixture.TestHarness.Bus.Publish(new TryStartNewActionGroup(agv.CorrelationId));
 
@@ -1535,7 +1527,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_MaintenanceMode_ValidData_PublishesNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.Maintenance));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.Maintenance));
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -1552,7 +1544,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_UserMode_PublishesNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.UserMode));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.UserMode));
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
@@ -1569,7 +1561,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_ShouldStartManualAction_NoManualActionGroup_DoesNotPublishNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.UserMode));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.UserMode));
         agv.SwitchMode();
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -1586,7 +1578,7 @@ public class ActionCommandHandlerTest
     [TestMethod]
     public async Task Consume_TryStartNewActionGroup_ShouldStartManualAction_NoUnStartedAction_DoesNotPublishNodesSelectedForAction()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "NodeId", mode: new AgvMode(ModeType.UserMode));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.UserMode));
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
         actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], []);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -1688,12 +1680,14 @@ public class ActionCommandHandlerTest
             pickActionState: ActionState.Completed,
             moveActionState: ActionState.Completed);
 
+        var targetNode = "target".ToGraphNode();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithNode(targetNode);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, targetNode.Id));
 
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
@@ -1709,13 +1703,14 @@ public class ActionCommandHandlerTest
             assignedAgv: agv.CorrelationId,
             pickActionState: ActionState.Completed,
             moveActionState: ActionState.Completed);
-
+        var targetNode = "target".ToGraphNode();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithNode(targetNode);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, targetNode.Id));
 
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
@@ -1732,12 +1727,15 @@ public class ActionCommandHandlerTest
             pickActionState: ActionState.Completed,
             moveActionState: ActionState.Completed);
 
+        var targetNode = "target".ToGraphNode();
+
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithNode(targetNode);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, targetNode.Id));
 
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
@@ -1752,19 +1750,19 @@ public class ActionCommandHandlerTest
             assignedAgv: null,
             pickActionState: ActionState.Created,
             moveActionState: ActionState.Created);
-        const string newTargetNode = "target";
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithNode(_parkNode);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, newTargetNode));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, _parkNode.Id));
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[2].Target.NodeId == newTargetNode)), Times.Once);
+            ag.Actions[2].Target.Node!.Name == _parkNode.Name)), Times.Once);
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }
@@ -1782,25 +1780,27 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)
             .AddAgv(agv)
-            .WithNode(new GraphNode("target"))
+            .WithNode(nodes.Select(n => n.ToGraphNode()).Concat([_parkNode]).ToArray())
             .AddRoute(nodes: nodes.ToArray(), edges: [Guid.NewGuid()]);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
         var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, _parkNode.Id));
 
         await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         incompleteAction.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
-        actionGroup.Actions[1].Target.NodeId.ShouldBe("target");
+        actionGroup.Actions[1].Target.Node.ShouldNotBeNull();
+        actionGroup.Actions[1].Target.Node.ShouldNotBeNull();
+        actionGroup.Actions[1].Target.Node!.Name.ShouldBe(_parkNode.Name);
         actionGroup.Actions[1].ActionType.ShouldBe(ActionType.Drop);
 
         var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
         updateActionCommand.Action.CorrelationId.ShouldBe(moveAction.CorrelationId);
-        updateActionCommand.Action.Nodes.ShouldBeEquivalentTo(nodes);
-        moveAction.Nodes.ToList().ShouldBeEquivalentTo(nodes);
+        updateActionCommand.Action.Nodes.Select(n => n.Name).ToList().ShouldBeEquivalentTo(nodes);
+        moveAction.Nodes.Select(n => n.Name).ToList().ShouldBeEquivalentTo(nodes);
         moveAction.ActionType.ShouldBe(incompleteAction.ActionType);
     }
 
@@ -1814,22 +1814,24 @@ public class ActionCommandHandlerTest
             assignedAgv: agv.CorrelationId,
             pickActionState: state);
         actionGroup.Actions[0].InfoToAgv = new Dictionary<InfoToAgvKey, string>();
+        string[] nodes = ["Node1", "Node2"];
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)
             .AddAgv(agv)
-            .WithNode(new GraphNode("target"))
-            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()]);
+            .WithNode(nodes.Select(n => n.ToGraphNode()).Concat([_parkNode]).ToArray())
+            .AddRoute(nodes: nodes, edges: [Guid.NewGuid()]);
 
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(pickAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(pickAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, _parkNode.Id));
 
         await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
 
         pickAction.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
-        pickAction.Target.NodeId.ShouldBe("target");
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(_parkNode.Name);
 
         var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
         updateActionCommand.Action.CorrelationId.ShouldBe(pickAction.CorrelationId);
@@ -1846,12 +1848,12 @@ public class ActionCommandHandlerTest
         var orderId = Guid.NewGuid();
         var testActions = new List<AgvAction>
         {
-            new(Guid.NewGuid(), actionType, "node", orderId)
+            new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
                 Sequence = 0,
                 ActionType = actionType,
                 InfoToAgv = new Dictionary<InfoToAgvKey, string>(),
-                Target = new ActionTarget("old target")
+                Target = new ActionTarget("old target".ToGraphNode())
             }
         };
 
@@ -1867,22 +1869,24 @@ public class ActionCommandHandlerTest
         {
             actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], []);
         }
+        string[] nodes = ["Node1", "Node2"];
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup)
             .AddAgv(agv)
-            .WithNode(new GraphNode("target"))
-            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()]);
+            .WithNode(nodes.Select(n => n.ToGraphNode()).Concat([_parkNode]).ToArray())
+            .AddRoute(nodes: nodes, edges: [Guid.NewGuid()]);
 
         var action = actionGroup.Actions.First();
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(action.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(action.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, _parkNode.Id));
 
         await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
 
         action.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
-        action.Target.NodeId.ShouldBe("target");
+        action.Target.Node.ShouldNotBeNull();
+        action.Target.Node.Name.ShouldBe(_parkNode.Name);
 
         var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
         updateActionCommand.Action.CorrelationId.ShouldBe(action.CorrelationId);
@@ -1898,11 +1902,14 @@ public class ActionCommandHandlerTest
             moveActionState: ActionState.Started);
 
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .AddActionGroup(actionGroup).WithLockedStations().AddAgv(agv);
+            .AddActionGroup(actionGroup)
+            .WithLockedStations()
+            .AddAgv(agv)
+            .WithNode(_parkNode);
 
         var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
 
-        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, "target"));
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, _parkNode.Id));
 
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
 
@@ -2045,7 +2052,7 @@ public class ActionCommandHandlerTest
     public async Task TryUpdateIdleAction_InfinitelyChargingAgvAboveMaxChargeUpIsClosest_PublishesUpdateActionCommand()
     {
         var closestAgv = AgvGenerator.GenerateBusyAgv();
-        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node".ToGraphNode()], [Guid.NewGuid()]);
         var chargingActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: closestAgv.CorrelationId, actionStateCharge: ActionState.Started);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -2055,7 +2062,7 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([])
             .WithClosestAgv(closestAgv.CorrelationId, route)
-            .WithNode(new GraphNode())
+            .WithNode(new GraphNode(Guid.NewGuid(), "name"))
             .AddAgvs([closestAgv])
             .WithLastActionDockFront(false);
 
@@ -2084,7 +2091,7 @@ public class ActionCommandHandlerTest
     public async Task TryUpdateIdleAction_AgvRunningParkingActionGroupIsClosest_PublishesUpdateActionCommand()
     {
         var closestAgv = AgvGenerator.GenerateBusyAgv();
-        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node".ToGraphNode()], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -2094,7 +2101,7 @@ public class ActionCommandHandlerTest
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([])
             .WithClosestAgv(closestAgv.CorrelationId, route)
-            .WithNode(new GraphNode())
+            .WithNode(new GraphNode(Guid.NewGuid(), "name"))
             .AddAgvs([closestAgv])
             .WithLastActionDockFront(false);
 
@@ -2123,7 +2130,7 @@ public class ActionCommandHandlerTest
     public async Task TryUpdateIdleAction_AgvRunningParkingActionGroupIsClosest_HasAlreadyPriorityActionGroup_DoesNotPublishUpdateActionCommand()
     {
         var closestAgv = AgvGenerator.GenerateBusyAgv();
-        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node".ToGraphNode()], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -2150,7 +2157,7 @@ public class ActionCommandHandlerTest
     {
         var closestAgv = AgvGenerator.GenerateBusyAgv();
         var error = AgvErrorGenerator.GenerateAgvError(closestAgv.CorrelationId);
-        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node".ToGraphNode()], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -2177,20 +2184,24 @@ public class ActionCommandHandlerTest
         const bool previousDockFront = true;
         var closestAgv = AgvGenerator.GenerateBusyAgv();
         var warning = AgvErrorGenerator.GenerateAgvError(closestAgv.CorrelationId, errorLevel: ErrorLevel.Warning);
-        var route = new Route(42, ["a node", "waypoint"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node".ToGraphNode(), "waypoint".ToGraphNode()], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
-        parkingActionGroup.Actions.Single().Nodes = ["start", "waypoint"];
+        var startNode = new GraphNode(Guid.NewGuid(), "start") { Type = AgvGraph.NodeType.PickDrop };
+        parkingActionGroup.Actions.Single().Nodes = [startNode, "waypoint".ToGraphNode()];
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .WithRunningIdleActionGroups([parkingActionGroup])
             .WithRunningChargeActionGroups([])
             .AddActionGroup(pickDropActionGroup)
+            .WithActionGroupToSaveAbortion(parkingActionGroup)
             .WithAgvsWithPriorityActionGroups([])
             .WithErrors([warning])
             .WithClosestAgv(closestAgv.CorrelationId, route)
-            .WithNode(new GraphNode() { Type = AgvGraph.NodeType.PickDrop, Id = "start" })
+            .WithNode(pickDropActionGroup.Actions.Concat(parkingActionGroup.Actions).Select(a => a.Target.Node)
+                .Concat([startNode]).ToArray())
             .AddAgvs([closestAgv])
-            .WithLastActionDockFront(previousDockFront);
+            .WithLastActionDockFront(previousDockFront)
+            .WithNode();
 
         var command = new TryUpdateIdleAction(pickDropActionGroup.CorrelationId);
 
@@ -2199,7 +2210,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AbortAndStartActionCommand>();
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         var abortAndStartActionCommand = fixture.TestHarness.Published.Select<AbortAndStartActionCommand>().First().Context.Message;
-        abortAndStartActionCommand.AbortedActionCorrelationId.ShouldBe(parkingActionGroup.Actions.First(a => a.State == ActionState.Started).CorrelationId);
+        abortAndStartActionCommand.AbortedActionCorrelationId.ShouldBe(parkingActionGroup.Actions.First().CorrelationId);
         abortAndStartActionCommand.Action.Nodes.ShouldBeEquivalentTo(route.Nodes.ToList());
         abortAndStartActionCommand.Action.Edges.ShouldBeEquivalentTo(route.Edges.ToList());
         abortAndStartActionCommand.Action.CorrelationId.ShouldBe(pickDropActionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId);
@@ -2211,6 +2222,7 @@ public class ActionCommandHandlerTest
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromParking);
         saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First(a => a.ActionType == ActionType.Move).CorrelationId);
         pickDropActionGroup.HasPriority.ShouldBeTrue();
+        //TODO: see if it works after GetStartNodeIsStation fix
         pickDropActionGroup.Actions.Single(a => a.Sequence == 0).InfoToAgv?.GetDockFront().ShouldBe(!previousDockFront); // start of move is station 
     }
 
@@ -2219,7 +2231,7 @@ public class ActionCommandHandlerTest
     {
         var parkingAgv = AgvGenerator.GenerateBusyAgv(index: 2);
         var agvAtQueueHead = AgvGenerator.GenerateBusyAgv();
-        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node".ToGraphNode()], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: parkingAgv.CorrelationId);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -2247,7 +2259,7 @@ public class ActionCommandHandlerTest
     {
         var parkingAgv = AgvGenerator.GenerateBusyAgv(index: 2);
         var readyAgv = AgvGenerator.GenerateBusyAgv();
-        var route = new Route(42, ["a node"], [Guid.NewGuid()]);
+        var route = new Route(42, ["a node".ToGraphNode()], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: parkingAgv.CorrelationId);
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()

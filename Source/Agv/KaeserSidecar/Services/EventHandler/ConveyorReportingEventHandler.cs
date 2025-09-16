@@ -32,8 +32,8 @@ public class ConveyorReportingEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<DroppingAgvPassedDoppelspielTriggerPoint> context)
     {
-        (string actionDropTarget, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, _) = context.Message;
-        if (!configuration.ConveyorStationMapping.TryGetValue(actionDropTarget, out string? targetStation))
+        (var actionDropTarget, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, _) = context.Message;
+        if (!configuration.ConveyorStationMapping.TryGetValue(actionDropTarget.Name, out string? targetStation))
         {
             return;
         }
@@ -67,8 +67,8 @@ public class ConveyorReportingEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<PickingAgvPassedDoppelspielTriggerPoint> context)
     {
-        (string actionPickTarget, var agvCorrelationId, var hostOrderCorrelationId) = context.Message;
-        if (!configuration.ConveyorStationMapping.TryGetValue(actionPickTarget, out string? targetStation))
+        var (actionPickTarget, agvCorrelationId, hostOrderCorrelationId) = context.Message;
+        if (!configuration.ConveyorStationMapping.TryGetValue(actionPickTarget.Name, out string? targetStation))
         {
             return;
         }
@@ -135,8 +135,8 @@ public class ConveyorReportingEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<ManualActionPassedDoppelspielTrigger> context)
     {
-        var (sap, actionTarget, isPicking, hu, orderId, agvCorrelationId) = context.Message;
-        if (!configuration.ConveyorStationMapping.TryGetValue(actionTarget, out string? targetStation))
+        (string sap, string targetNodeName, bool isPicking, string hu, var orderId, var agvCorrelationId) = context.Message;
+        if (!configuration.ConveyorStationMapping.TryGetValue(targetNodeName, out string? targetStation))
         {
             return;
         }

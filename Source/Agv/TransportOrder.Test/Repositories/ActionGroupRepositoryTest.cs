@@ -43,7 +43,7 @@ public class ActionGroupRepositoryTest
             o => o.CompletedDate.ShouldBe(expectedAction.CompletedDate),
             o => o.Sequence.ShouldBe(expectedAction.Sequence),
             o => o.State.ShouldBe(expectedAction.State),
-            o => o.Target.NodeId.ShouldBe(expectedAction.Target.NodeId),
+            o => (o.Target.Node?.Id).ShouldBe(expectedAction.Target.Node?.Id),
             o => o.ParentId.ShouldBe(expectedAction.ParentId),
             o => o.StartedDate.ShouldBe(expectedAction.StartedDate)
         );
@@ -253,8 +253,8 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: false);
-        actionGroupsResult.First().ShouldBeEquivalentTo(earlierCreatedGroup);
-        actionGroupsResult.Last().ShouldBeEquivalentTo(laterCreatedGroup);
+        actionGroupsResult.First().CorrelationId.ShouldBe(earlierCreatedGroup.CorrelationId);
+        actionGroupsResult.Last().CorrelationId.ShouldBe(laterCreatedGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -268,8 +268,8 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: true);
-        actionGroupsResult.First().ShouldBeEquivalentTo(laterCreatedGroup);
-        actionGroupsResult.Last().ShouldBeEquivalentTo(earlierCreatedGroup);
+        actionGroupsResult.First().CorrelationId.ShouldBe(laterCreatedGroup.CorrelationId);
+        actionGroupsResult.Last().CorrelationId.ShouldBe(earlierCreatedGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -283,8 +283,8 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: false);
-        actionGroupsResult.First().ShouldBeEquivalentTo(earlierCompletedGroup);
-        actionGroupsResult.Last().ShouldBeEquivalentTo(laterCompletedGroup);
+        actionGroupsResult.First().CorrelationId.ShouldBe(earlierCompletedGroup.CorrelationId);
+        actionGroupsResult.Last().CorrelationId.ShouldBe(laterCompletedGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -298,8 +298,8 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: true);
-        actionGroupsResult.First().ShouldBeEquivalentTo(laterCompletedGroup);
-        actionGroupsResult.Last().ShouldBeEquivalentTo(earlierCompletedGroup);
+        actionGroupsResult.First().CorrelationId.ShouldBe(laterCompletedGroup.CorrelationId);
+        actionGroupsResult.Last().CorrelationId.ShouldBe(earlierCompletedGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -313,8 +313,8 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: false);
-        actionGroupsResult.First().ShouldBeEquivalentTo(earlierStartedGroup);
-        actionGroupsResult.Last().ShouldBeEquivalentTo(laterStartedGroup);
+        actionGroupsResult.First().CorrelationId.ShouldBe(earlierStartedGroup.CorrelationId);
+        actionGroupsResult.Last().CorrelationId.ShouldBe(laterStartedGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -330,7 +330,7 @@ public class ActionGroupRepositoryTest
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 2);
 
-        actionGroupsResult.Single().ShouldBeEquivalentTo(actionGroupInPausedState);
+        actionGroupsResult.Single().CorrelationId.ShouldBe(actionGroupInPausedState.CorrelationId);
     }
 
     [TestMethod]
@@ -344,8 +344,8 @@ public class ActionGroupRepositoryTest
             .BuildAsync();
 
         IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: true);
-        actionGroupsResult.First().ShouldBeEquivalentTo(laterStartedGroup);
-        actionGroupsResult.Last().ShouldBeEquivalentTo(earlierStartedGroup);
+        actionGroupsResult.First().CorrelationId.ShouldBe(laterStartedGroup.CorrelationId);
+        actionGroupsResult.Last().CorrelationId.ShouldBe(earlierStartedGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -373,7 +373,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).ShouldBeEquivalentTo(actionGroup);
+        (await fixture.ActionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId)).CorrelationId.ShouldBe(actionGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -508,7 +508,7 @@ public class ActionGroupRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, ["source", "way", "target"], []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => n.ToGraphNode()).ToArray(), []);
         actionGroup.CompleteAction(actionGroup.Actions[0].CorrelationId);
 
         var subsequentAction = actionGroup.Actions.ElementAt(1);
@@ -528,7 +528,7 @@ public class ActionGroupRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, ["source", "way", "target"], []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => n.ToGraphNode()).ToArray(), []);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
@@ -629,8 +629,8 @@ public class ActionGroupRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: startedDate1, assignedAgv: agv.CorrelationId,
             pickActionState: ActionState.Started);
-        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: startedDate2, assignedAgv: agv.CorrelationId, 
-            pickActionState: ActionState.Completed, 
+        var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(startedDate: startedDate2, assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Completed,
             dropActionState: ActionState.Completed);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -685,7 +685,7 @@ public class ActionGroupRepositoryTest
 
         var actualActionGroup = await fixture.ActionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionGroup.Actions.First().CorrelationId);
 
-        actualActionGroup.ShouldBeEquivalentTo(actionGroup);
+        actualActionGroup.CorrelationId.ShouldBe(actionGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -797,7 +797,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([pickDropActionGroup, otherActionGroup])
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync(agv, ["a different pick node", "a different drop node"])).ShouldBe(0);
+        (await fixture.ActionGroupRepository.GetAverageDurationEstimateDeviationAsync(agv, ["a different pick node".ToGuid(), "a different drop node".ToGuid()])).ShouldBe(0);
     }
 
     [TestMethod]
@@ -833,13 +833,13 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([actionGroup, actionGroupSameSourceAndTarget, actionGroupAnotherSource])
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target")).ShouldBeEmpty();
+        (await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target".ToGuid())).ShouldBeEmpty();
     }
 
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_SourceNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndTarget()
     {
-        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double)d).ToList();
+        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
         List<ActionGroup> actionGroups = durations[..^1]
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
@@ -857,7 +857,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target");
+        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target".ToGuid());
         durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
         durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
     }
@@ -865,7 +865,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_TargetNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndSource()
     {
-        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double)d).ToList();
+        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
         List<ActionGroup> actionGroups = durations[..^1]
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
@@ -883,7 +883,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source", targetNodeId: null);
+        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source".ToGuid(), targetNodeId: null);
         durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
         durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
     }
@@ -891,7 +891,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_SourceAndTargetGiven_ReturnsActionDurationsOfGroupsMatchingStateSourceAndTarget()
     {
-        List<double> durations = Enumerable.Range(1, 2).ToList().Select(d => (double)d).ToList();
+        List<double> durations = Enumerable.Range(1, 2).ToList().Select(d => (double) d).ToList();
         List<ActionGroup> actionGroups = durations
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
@@ -909,7 +909,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source", targetNodeId: "target");
+        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source".ToGuid(), targetNodeId: "target".ToGuid());
         durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
         durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
     }
@@ -924,7 +924,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(actionGroup.AssignedAgv!.Value)).ShouldBeEquivalentTo(actionGroup);
+        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(actionGroup.AssignedAgv!.Value))?.CorrelationId.ShouldBe(actionGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -940,7 +940,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([actionGroup, firstCreatedActionGroup])
             .BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(agvCorrelationId)).ShouldBeEquivalentTo(firstCreatedActionGroup);
+        (await fixture.ActionGroupRepository.GetNextManualActionGroupForAgvAsync(agvCorrelationId))?.CorrelationId.ShouldBe(firstCreatedActionGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -1033,7 +1033,7 @@ public class ActionGroupRepositoryTest
     {
         const string station = "a station";
         const string otherStation = "other station";
-        
+
         var startedGroupPickTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Started);
         var startedGroupDropTarget = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, dropActionState: ActionState.Started);
         var pausedGroupPausedPickTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Paused, destination: otherStation, dropActionState: ActionState.Created);
@@ -1042,15 +1042,17 @@ public class ActionGroupRepositoryTest
         var pausedGroupPausedOtherDropTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: station, pickActionState: ActionState.Completed, destination: otherStation, dropActionState: ActionState.Paused);
         var createdGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: station);
         var startedGroupOtherTarget = AgvActionGenerator.GeneratePickDropActionGroup(source: otherStation, pickActionState: ActionState.Started);
-        var chargeGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeId: station);
+        var chargeGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeName: station);
         var parkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
         var startedParkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
         startedParkGroup.StartAction(startedParkGroup.Actions.First().CorrelationId, [], []);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
-            .WithActionGroups([startedGroupPickTarget, startedGroupDropTarget, createdGroup, startedGroupOtherTarget, 
-                               pausedGroupPausedPickTarget, pausedGroupPausedDropTarget, pausedGroupPausedOtherPickTarget, pausedGroupPausedOtherDropTarget,
-                               chargeGroup, parkGroup, startedParkGroup])
+            .WithActionGroups([
+                startedGroupPickTarget, startedGroupDropTarget, createdGroup, startedGroupOtherTarget,
+                pausedGroupPausedPickTarget, pausedGroupPausedDropTarget, pausedGroupPausedOtherPickTarget, pausedGroupPausedOtherDropTarget,
+                chargeGroup, parkGroup, startedParkGroup
+            ])
             .BuildAsync();
 
         IReadOnlyCollection<ActionGroup> groupsForStation = await fixture.ActionGroupRepository.GetCurrentActionGroupsForStation(station);
@@ -1163,8 +1165,8 @@ public class ActionGroupRepositoryTest
         var createdParkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Created);
 
         var runningChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started);
-        var completedChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge:ActionState.Completed);
-        var createdChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Created, actionStateCharge:ActionState.Created);
+        var completedChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Completed, actionStateCharge: ActionState.Completed);
+        var createdChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Created, actionStateCharge: ActionState.Created);
 
         var runningManualChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started);
         runningManualChargeActionGroup.IsManual = true;
@@ -1180,7 +1182,10 @@ public class ActionGroupRepositoryTest
                 runningManualChargeActionGroup, runningPriorityChargeActionGroup, pickDropActionGroup
             ]).BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ShouldBeEquivalentTo(new List<ActionGroup>{runningParkingActionGroup, runningChargeActionGroup});
+        List<ActionGroup> runningActions = (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ToList();
+        runningActions.Count.ShouldBe(2);
+        runningActions[0].CorrelationId.ShouldBe(runningParkingActionGroup.CorrelationId);
+        runningActions[1].CorrelationId.ShouldBe(runningChargeActionGroup.CorrelationId);
     }
 
     [DataRow(true)]
@@ -1189,7 +1194,7 @@ public class ActionGroupRepositoryTest
     public async Task AgvHasPendingActions_CreatedActionGroupWithoutAssignedAgv_ReturnsExpectedValue(bool isQueued)
     {
         var agv = Guid.NewGuid();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null, isQueued:isQueued);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null, isQueued: isQueued);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([actionGroup]).BuildAsync();
@@ -1224,7 +1229,7 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.AgvHasPendingActions(agv)).ShouldBe(expected);
     }
-        
+
     [DataRow(ActionState.Started)]
     [DataRow(ActionState.Created)]
     [TestMethod]
@@ -1243,7 +1248,7 @@ public class ActionGroupRepositoryTest
                 priorityActionGroup, nonPriorityActionGroup
             ]).BuildAsync();
 
-        (await fixture.ActionGroupRepository.FilterAgvsWithPriorityActionGroups([agvWithPriorityGroup, agvWithoutActionGroup, agvWithNonPriorityGroup])).ShouldBeEquivalentTo(new List<Guid>{agvWithPriorityGroup});
+        (await fixture.ActionGroupRepository.FilterAgvsWithPriorityActionGroups([agvWithPriorityGroup, agvWithoutActionGroup, agvWithNonPriorityGroup])).ShouldBeEquivalentTo(new List<Guid> { agvWithPriorityGroup });
     }
 
     [DataRow(ActionState.Aborted)]
@@ -1256,7 +1261,7 @@ public class ActionGroupRepositoryTest
         var agvWithNonPriorityGroup = Guid.NewGuid();
         var agvWithoutActionGroup = Guid.NewGuid();
 
-        var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: actionState, dropActionState:actionState, assignedAgv: agvWithPriorityGroup);
+        var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: actionState, dropActionState: actionState, assignedAgv: agvWithPriorityGroup);
         priorityActionGroup.HasPriority = true;
         var nonPriorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created, assignedAgv: agvWithNonPriorityGroup);
 
@@ -1285,7 +1290,7 @@ public class ActionGroupRepositoryTest
                 startedActionGroupToTarget, notStartedActionGroupToTarget, actionGroupToDifferentTarget
             ]).BuildAsync();
 
-        (await fixture.ActionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv, [target])).ShouldBeEquivalentTo(new List<ActionGroup>{ notStartedActionGroupToTarget });
+        (await fixture.ActionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv, [target.ToGuid()])).ShouldBeEquivalentTo(new List<ActionGroup> { notStartedActionGroupToTarget });
     }
 
     [TestMethod]

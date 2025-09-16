@@ -34,7 +34,7 @@ public class ActionGroupRetrievalServiceTest
                 foreach (var node in efGraph.Nodes)
                 {
                     DbSet<EfNode> dbSet = context.Set<EfNode>();
-                    if (!dbSet.Any(n => n.Id == node.Id))
+                    if (!dbSet.Any(n => n.Name == node.Name))
                     {
                         dbSet.Add(node);
                     }
@@ -99,7 +99,7 @@ public class ActionGroupRetrievalServiceTest
 
         ICollection<AgvActionReadModel> movesToCoordinates = actionGroups.Single(a => a.CorrelationId == moveToCoordinateActionGroup.CorrelationId).Actions;
         movesToCoordinates.Count.ShouldBe(moveToCoordinateActionGroup.Actions.Count);
-        movesToCoordinates.First().TargetNodeId.ShouldBeEmpty();
+        movesToCoordinates.First().TargetNodeName.ShouldBeEmpty();
         movesToCoordinates.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
     }
 
@@ -439,7 +439,7 @@ public class ActionGroupRetrievalServiceTest
 
         actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
-        actualActionGroup.Actions.Last().TargetNodeId.ShouldBeEmpty();
+        actualActionGroup.Actions.Last().TargetNodeName.ShouldBeEmpty();
     }
 
     [TestMethod]

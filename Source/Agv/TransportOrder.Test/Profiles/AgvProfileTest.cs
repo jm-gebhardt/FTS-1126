@@ -1,9 +1,10 @@
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
-using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Profiles;
 
@@ -36,11 +37,11 @@ public class AgvProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvDtoIsMappedToAgvWithAgvStatus()
     {
-        var mapper = MappingHelper.GetMapper(new AgvProfile());
-        var agvStatus = new AgvStatus(Guid.NewGuid(), "OrderId#123", false, true, 98, false, false, "lastNodeId#123", 12.0, 13.5, 20.1, null, null, null, null, 35, totalLifetime: 2);
-        var agv = AgvGenerator.GenerateIdleAgv(agvStatus);
+        var mapper = MappingHelper.GetMapper(new AgvProfile(), new GraphProfile());
+        var lastNode = "current".ToGraphNode();
+        var agv = AgvGenerator.GenerateIdleAgv();
 
-        var agvMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<Agv>(agv, opts => { opts.Items[nameof(Agv.LastNode)] = lastNode; });
         agvMessageContent.ShouldSatisfyAllConditions(
             o => o.SerialNumber.ShouldBe(agv.SerialNumber),
             o => o.CorrelationId.ShouldBe(agv.CorrelationId),
@@ -54,7 +55,8 @@ public class AgvProfileTest
             o => o.IsAutomatic.ShouldBe(agv.AgvStatus!.Automatic),
             o => o.BatteryCharge.ShouldBe(agv.AgvStatus!.BatteryCharge),
             o => o.IsCharging.ShouldBe(agv.AgvStatus!.Charging),
-            o => o.LastNodeId.ShouldBe(agvStatus.LastNodeId),
+            o => o.LastNode.ShouldNotBeNull(),
+            o => o.LastNode!.Id.ShouldBe(lastNode.Id),
             o => o.TotalDistance.ShouldBe(agv.AgvStatus!.TotalDistance),
             o => o.TotalLifetime.ShouldBe(agv.AgvStatus!.TotalLifetime)
         );
@@ -65,13 +67,13 @@ public class AgvProfileTest
     {
         var mapper = MappingHelper.GetMapper(new AgvProfile(), new AgvErrorProfile());
         var agv = AgvGenerator.GenerateIdleAgv();
-        var agvMessageContent = mapper.Map<TransportOrder.Domain.Models.Agv.Agv, TransportOrder.Messages.MessageContent.Agv>(agv);
+        var agvMessageContent = mapper.Map<TransportOrder.Domain.Models.Agv.Agv, Agv>(agv);
         var expectedAgvErrors = new List<AgvError>
         {
             AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)
         };
 
-        mapper.Map(expectedAgvErrors, agvMessageContent);
+        mapper.Map(agv, agvMessageContent, opts => { opts.Items[nameof(Agv.Errors)] = expectedAgvErrors; });
 
         foreach (var agvMessageContentError in agvMessageContent.Errors)
         {

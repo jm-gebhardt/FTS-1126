@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -17,23 +18,23 @@ public class RouteServiceTest
     public async Task GetRoute_WhenAgvCurrentPositionIsDestinationNode_ReturnsRoute()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.DestinationClose.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.DestinationClose.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        var actualRoute = await fixture.RouteService.GetRouteAsync(agv, node);
+        var actualRoute = await fixture.RouteService.GetRouteAsync(agv, node.ToGuid());
 
         actualRoute.Costs.ShouldBe(0);
-        actualRoute.Nodes.ShouldBe(new[] { node });
+        actualRoute.Nodes.Select(n => n.Name).ShouldBe([node]);
     }
 
     [TestMethod]
     public async Task GetRoute_AsCalledInEstimateActionGroupDuration_IncompleteActionGroupWithoutDropTarget_ReturnsRouteUntilMoveActionTarget()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.DestinationClose.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.DestinationClose.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var agvData = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
         var fixture = new RouteServiceTestFixture()
@@ -42,16 +43,16 @@ public class RouteServiceTest
         var actualRoute = await fixture.RouteService.GetRouteAsync(agv, actionGroup.GetTargets(), null, agvData);
 
         actualRoute.Costs.ShouldNotBe(0);
-        actualRoute.Nodes.Last().ShouldBe(actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId);
-        actualRoute.Nodes.First().ShouldBe(node);
+        actualRoute.Nodes.Last().Id.ShouldBe(actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id);
+        actualRoute.Nodes.First().Name.ShouldBe(node);
     }
 
     [TestMethod]
     public async Task GetRoute_AsCalledInEstimateActionGroupDuration_IncompleteActionGroupWithoutPickTarget_ReturnsRouteUntilMoveActionTarget()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.DestinationClose.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.DestinationClose.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var agvData = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
         var fixture = new RouteServiceTestFixture()
@@ -60,65 +61,65 @@ public class RouteServiceTest
         var actualRoute = await fixture.RouteService.GetRouteAsync(agv, actionGroup.GetTargets(), null, agvData);
 
         actualRoute.Costs.ShouldNotBe(0);
-        actualRoute.Nodes.Last().ShouldBe(actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId);
-        actualRoute.Nodes.First().ShouldBe(node);
+        actualRoute.Nodes.Last().Name.ShouldBe(actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Name);
+        actualRoute.Nodes.First().Name.ShouldBe(node);
     }
 
     [TestMethod]
     public async Task GetRoute_WhenLastNodeIsUnknown_ThrowsException()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string destinationNode = agvGraph.Nodes.Skip(5).First().Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "unknown");
+        string destinationNode = agvGraph.Nodes.Skip(5).First().Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "unknown");
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.RouteService.GetRouteAsync(agv, destinationNode));
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.RouteService.GetRouteAsync(agv, destinationNode.ToGuid()));
     }
 
     [TestMethod]
     public async Task GetRoute_WhenStartNodeIsUnknown_ThrowsException()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string destinationNode = agvGraph.Nodes.Skip(5).First().Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: agvGraph.Nodes.First().Id);
+        string destinationNode = agvGraph.Nodes.Skip(5).First().Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: agvGraph.Nodes.First().Name);
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.RouteService.GetRouteAsync(agv, destinationNode, "unknown"));
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.RouteService.GetRouteAsync(agv, destinationNode.ToGuid(), "unknown".ToGuid()));
     }
 
     [TestMethod]
     public async Task GetRoute_WhenDestinationNodeIsUnknown_ThrowsException()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: agvGraph.Nodes.First().Id);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: agvGraph.Nodes.First().Name);
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.RouteService.GetRouteAsync(agv, "unknown"));
+        await Should.ThrowAsync<NodeNotFoundException>(async () => await fixture.RouteService.GetRouteAsync(agv, "unknown".ToGuid()));
     }
 
     [TestMethod]
     public async Task GetNodeWithLowestCostsAsync_MultipleNodes_ReturnsNodeWithLowestCosts()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.Waypoint1.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.Waypoint1.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
         var actualRoute = await fixture.RouteService.GetNodeWithLowestCostsAsync(agv, AgvGraphGenerator.Nodes, It.IsAny<AgvData>());
 
-        actualRoute.Id.ShouldBe(AgvGraphGenerator.Waypoint1.Id);
+        actualRoute.Name.ShouldBe(AgvGraphGenerator.Waypoint1.Name);
     }
 
     [TestMethod]
     public async Task GetNodeWithLowestCostsAsync_NoNodeReachable_Throws()
     {
-        string node = AgvGraphGenerator.DestinationUnreachable.Id;
-        var agvGraph = AgvGraphGenerator.CreateDefaultGraph(AgvGraphGenerator.Nodes.Where(n => n.Id != node).ToArray());
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.DestinationUnreachable.Name;
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph(AgvGraphGenerator.Nodes.Where(n => n.Name != node).ToArray());
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
@@ -129,28 +130,28 @@ public class RouteServiceTest
     public async Task GetAgvRouteClosestToTarget_ValidData_ReturnsAgvCorrelationId()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: AgvGraphGenerator.Waypoint1.Id);
+        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: AgvGraphGenerator.Waypoint1.Name);
         var closeAgvData = AgvDataGenerator.GenerateAgvData(closeAgv.CorrelationId);
-        var farAgv = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
+        var farAgv = AgvGenerator.GenerateIdleAgv(2, lastNodeName: AgvGraphGenerator.Waypoint2.Name);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
             .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph])
             .WithBlockedQueueNodes([]);
 
-        (await fixture.RouteService.GetAgvRouteClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.Src1)).agv.ShouldBe(closeAgv.CorrelationId);
+        (await fixture.RouteService.GetAgvRouteClosestToTarget([(closeAgv, closeAgvData), (farAgv, farAgvData)], AgvGraphGenerator.Src1Node.Id)).agv.ShouldBe(closeAgv.CorrelationId);
     }
 
     [TestMethod]
     public async Task GetAgvRouteClosestToTarget_SkipAgvsStartingAtTarget_ReturnsAgvCorrelationId()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: AgvGraphGenerator.Waypoint1.Id);
+        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: AgvGraphGenerator.Waypoint1.Name);
         var closeAgvData = AgvDataGenerator.GenerateAgvData(closeAgv.CorrelationId);
 
-        var agvAtTarget = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.Src1);
+        var agvAtTarget = AgvGenerator.GenerateIdleAgv(2, lastNodeName: AgvGraphGenerator.Src1);
         var agvAtTargetData = AgvDataGenerator.GenerateAgvData(agvAtTarget.CorrelationId);
 
-        var farAgv = AgvGenerator.GenerateIdleAgv(3, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
+        var farAgv = AgvGenerator.GenerateIdleAgv(3, lastNodeName: AgvGraphGenerator.Waypoint2.Name);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
             .WithAgvs([closeAgv, farAgv, agvAtTarget], [agvGraph, agvGraph, agvGraph])
@@ -158,7 +159,7 @@ public class RouteServiceTest
 
         (await fixture.RouteService.GetAgvRouteClosestToTarget(
             [(closeAgv, closeAgvData), (farAgv, farAgvData), (agvAtTarget, agvAtTargetData)],
-            AgvGraphGenerator.Src1,
+            AgvGraphGenerator.Src1Node.Id,
             true)).agv.ShouldBe(closeAgv.CorrelationId);
     }
 
@@ -181,24 +182,24 @@ public class RouteServiceTest
     public async Task GetAgvRouteClosestToTarget_SkipAgvsPassingQueue_ReturnsAgvCorrelationId()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: AgvGraphGenerator.Waypoint1.Id);
+        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: AgvGraphGenerator.Waypoint1.Name);
         var closeAgvData = AgvDataGenerator.GenerateAgvData(closeAgv.CorrelationId);
 
-        var agvPassingQueue = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.ChargingFar.Id);
+        var agvPassingQueue = AgvGenerator.GenerateIdleAgv(2, lastNodeName: AgvGraphGenerator.ChargingFar.Name);
         var agvPassingQueueData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
 
-        var agvAtQueueHead = AgvGenerator.GenerateIdleAgv(3, lastNodeId: AgvGraphGenerator.Waypoint3.Id);
+        var agvAtQueueHead = AgvGenerator.GenerateIdleAgv(3, lastNodeName: AgvGraphGenerator.Waypoint3.Name);
         var agvAtQueueHeadData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
 
-        var farAgv = AgvGenerator.GenerateIdleAgv(4, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
+        var farAgv = AgvGenerator.GenerateIdleAgv(4, lastNodeName: AgvGraphGenerator.Waypoint2.Name);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
             .WithAgvs([closeAgv, farAgv, agvPassingQueue, agvAtQueueHead], [agvGraph, agvGraph, agvGraph, agvGraph])
-            .WithBlockedQueueNodes([AgvGraphGenerator.Waypoint3.Id, AgvGraphGenerator.Waypoint4.Id]);
+            .WithBlockedQueueNodes([AgvGraphGenerator.Waypoint3.Name, AgvGraphGenerator.Waypoint4.Name]);
 
         (await fixture.RouteService.GetAgvRouteClosestToTarget(
             [(closeAgv, closeAgvData), (farAgv, farAgvData), (agvPassingQueue, agvPassingQueueData), (agvAtQueueHead, agvAtQueueHeadData)],
-            AgvGraphGenerator.Src1,
+            AgvGraphGenerator.Src1Node.Id,
             true)).agv.ShouldBe(closeAgv.CorrelationId);
     }
 
@@ -207,21 +208,21 @@ public class RouteServiceTest
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
 
-        var agvPassingQueue = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.ChargingFar.Id);
+        var agvPassingQueue = AgvGenerator.GenerateIdleAgv(2, lastNodeName: AgvGraphGenerator.ChargingFar.Name);
         var agvPassingQueueData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
 
-        var agvAtQueueHead = AgvGenerator.GenerateIdleAgv(3, lastNodeId: AgvGraphGenerator.Waypoint3.Id);
+        var agvAtQueueHead = AgvGenerator.GenerateIdleAgv(3, lastNodeName: AgvGraphGenerator.Waypoint3.Name);
         var agvAtQueueHeadData = AgvDataGenerator.GenerateAgvData(agvPassingQueue.CorrelationId);
 
-        var farAgv = AgvGenerator.GenerateIdleAgv(4, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
+        var farAgv = AgvGenerator.GenerateIdleAgv(4, lastNodeName: AgvGraphGenerator.Waypoint2.Name);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
             .WithAgvs([farAgv, agvPassingQueue, agvAtQueueHead], [agvGraph, agvGraph, agvGraph])
-            .WithBlockedQueueNodes([AgvGraphGenerator.Waypoint3.Id, AgvGraphGenerator.Waypoint4.Id]);
+            .WithBlockedQueueNodes([AgvGraphGenerator.Waypoint3.Name, AgvGraphGenerator.Waypoint4.Name]);
 
         (await fixture.RouteService.GetAgvRouteClosestToTarget(
             [(farAgv, farAgvData), (agvPassingQueue, agvPassingQueueData), (agvAtQueueHead, agvAtQueueHeadData)],
-            AgvGraphGenerator.Src1,
+            AgvGraphGenerator.Src1Node.Id,
             true)).agv.ShouldBe(agvAtQueueHead.CorrelationId);
     }
 
@@ -229,9 +230,9 @@ public class RouteServiceTest
     public async Task GetAgvRouteClosestToTarget_TargetNotReachable_ReturnsNull()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeId: AgvGraphGenerator.Waypoint1.Id);
+        var closeAgv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: AgvGraphGenerator.Waypoint1.Name);
         var closeAgvData = AgvDataGenerator.GenerateAgvData(closeAgv.CorrelationId);
-        var farAgv = AgvGenerator.GenerateIdleAgv(2, lastNodeId: AgvGraphGenerator.Waypoint2.Id);
+        var farAgv = AgvGenerator.GenerateIdleAgv(2, lastNodeName: AgvGraphGenerator.Waypoint2.Name);
         var farAgvData = AgvDataGenerator.GenerateAgvData(farAgv.CorrelationId);
         var fixture = new RouteServiceTestFixture()
             .WithAgvs([closeAgv, farAgv], [agvGraph, agvGraph])
@@ -244,8 +245,8 @@ public class RouteServiceTest
     public async Task GetCostForFirstActionAsync_PickDropActionGroup_ReturnsActionCosts()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.Waypoint1.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.Waypoint1.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var data = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
@@ -260,8 +261,8 @@ public class RouteServiceTest
     public async Task GetCostForFirstActionAsync_IncompletePickDropActionGroupWithoutDropTarget_ReturnsActionCosts()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.Waypoint1.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.Waypoint1.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var data = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
 
@@ -276,8 +277,8 @@ public class RouteServiceTest
     public async Task GetCostForFirstActionAsync_IncompletePickDropActionGroupWithoutPickTarget_ReturnsActionCosts()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.Waypoint1.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.Waypoint1.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var data = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
 
@@ -292,8 +293,8 @@ public class RouteServiceTest
     public async Task GetCostsForFirstActionNotPassingNodesAsync_PickDropActionGroupNoAvoidedNodes_ReturnsActionCosts()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.Waypoint1.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.Waypoint1.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var data = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
@@ -308,15 +309,15 @@ public class RouteServiceTest
     public async Task GetCostsForFirstActionNotPassingNodesAsync_NodesToAvoidOnRoute_ReturnsNull()
     {
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        string node = AgvGraphGenerator.Waypoint1.Id;
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        string node = AgvGraphGenerator.Waypoint1.Name;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node);
         var data = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        double? costs = await fixture.RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, data, [actionGroup.Actions.First().Target.NodeId!], CancellationToken.None);
+        double? costs = await fixture.RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, data, [actionGroup.Actions.First().Target.Node!.Id], CancellationToken.None);
         costs.ShouldBeNull();
     }
 }

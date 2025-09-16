@@ -80,7 +80,7 @@ public class SystemStatusCommandHandler(ISystemStatusRepository repository, ILog
         }
 
         systemStatus = new SystemStatus(isReady, isReady ? 0 : SystemErrorCode, isReady ? "" : SystemError);
-        logger.LogInformation("No system status found, generating new status.");
+        logger.LogInformation("No system status found, generating new status");
         repository.Add(systemStatus);
         await repository.SaveAsync();
         return (systemStatus, true);

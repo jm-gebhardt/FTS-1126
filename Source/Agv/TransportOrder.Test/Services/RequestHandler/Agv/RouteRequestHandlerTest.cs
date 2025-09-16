@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -26,7 +27,7 @@ public class RouteRequestHandlerTest
 
         await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId, "user"));
 
-        fixture.ChargingPointManager.Verify(x => x.ReserveChargerAsync(agv, node), Times.Once);
+        fixture.ChargingPointManager.Verify(x => x.ReserveChargerAsync(agv, node.ToGuid()), Times.Once);
     }
 
     [TestMethod]
@@ -38,11 +39,10 @@ public class RouteRequestHandlerTest
             .WithAgv(agv)
             .WithCurrentAction(null)
             .ReserveChargerReturns(chargingNode)
-            .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
+            .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeName: chargingNode.Name, nodeLockState: NodeLockState.Reserved));
 
         var nodeStateChanged = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, NodeStateChanged>(
             new SendAgvToCharger(agv.CorrelationId, "user"));
-        
         nodeStateChanged.NodeLock.NodeId.ShouldBe(chargingNode.Id);
         nodeStateChanged.NodeLock.NodeState.ShouldBe(NodeLockState.Reserved);
     }
@@ -57,7 +57,7 @@ public class RouteRequestHandlerTest
             .WithAgv(agv)
             .WithCurrentAction(null)
             .ReserveChargerReturns(chargingNode)
-            .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
+            .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeName: chargingNode.Name, nodeLockState: NodeLockState.Reserved));
 
         await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId, "user"));
         await fixture.ShouldHaveConsumedAsync<SendAgvToCharger>();
@@ -73,13 +73,14 @@ public class RouteRequestHandlerTest
             .WithAgv(agv)
             .WithCurrentAction(null)
             .ReserveChargerReturns(chargingNode)
-            .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeId: chargingNode.Id, nodeLockState: NodeLockState.Reserved));
+            .WithNodeLock(NodeLockGenerator.GenerateNodeLock(nodeName: chargingNode.Name, nodeLockState: NodeLockState.Reserved));
 
         var createChargingActionGroup = await fixture.PublishAndGetFirstMessageAsync<SendAgvToCharger, CreateChargingActionGroup>(
             new SendAgvToCharger(agv.CorrelationId, "user"));
 
         createChargingActionGroup.AgvCorrelationId.ShouldBe(agv.CorrelationId);
-        createChargingActionGroup.ChargeStationId.ShouldBe(chargingNode.Id);
+        createChargingActionGroup.ChargeStation.Id.ShouldBe(chargingNode.Id);
+        createChargingActionGroup.ChargeStation.Name.ShouldBe(chargingNode.Name);
         createChargingActionGroup.Creator.ShouldBe(ActionGroupCreator.TransportOrderWebApi);
     }
 }

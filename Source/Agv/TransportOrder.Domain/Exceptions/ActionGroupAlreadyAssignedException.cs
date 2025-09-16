@@ -11,7 +11,7 @@ public class ActionGroupAlreadyAssignedException : Exception
     /// <param name="actionGroup"></param>
     /// <param name="tryingToAssignAgvCorrelationId"></param>
     public ActionGroupAlreadyAssignedException(ActionGroup actionGroup, Guid tryingToAssignAgvCorrelationId)
-        : base($"ActionGroup with CorrelationId {actionGroup.CorrelationId} {actionGroup.Actions.First().ActionType} to {actionGroup.Actions.First().Target.NodeId} is already assigned to Agv {actionGroup.AssignedAgv}, we wanted to assign Agv {tryingToAssignAgvCorrelationId}")
+        : base($"ActionGroup with CorrelationId {actionGroup.CorrelationId} {actionGroup.Actions.First().ActionType} to {actionGroup.Actions.First().Target.Node?.Name} is already assigned to Agv {actionGroup.AssignedAgv}, we wanted to assign Agv {tryingToAssignAgvCorrelationId}")
     {
     }
 }

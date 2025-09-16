@@ -19,5 +19,5 @@ public interface IRouteFinder
     /// <param name="cancellationToken"></param>
     /// <param name="waypoints">List of Node IDs that define the waypoints that need to be traversed on the given order</param>
     /// <returns>Returns the full aggregated route or null when no path found</returns>
-    Task<Route?> TryGetRouteAsync(IGraph agvGraph, AgvData? agvData = null, CancellationToken cancellationToken = default, params string[] waypoints);
+    Task<Route?> TryGetRouteAsync(IGraph agvGraph, AgvData? agvData = null, CancellationToken cancellationToken = default, params Guid[] waypoints);
 }

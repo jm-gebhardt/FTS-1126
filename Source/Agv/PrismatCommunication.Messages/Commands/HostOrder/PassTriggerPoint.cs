@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+
+namespace Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 
 /// <summary>
 /// Provides a command to handle passing the Doppelspiel trigger point
@@ -8,4 +10,4 @@
 /// <param name="NextPickHostOrderCorrelationId">The correlation id of the host order of the next pick.</param>
 /// <param name="ShouldPickNext">If true the agv is going to pick next.</param>
 /// <param name="PickNode">The pick node.</param>
-public record PassTriggerPoint(Guid AgvCorrelationId, Guid DroppingHostOrderCorrelationId, Guid? NextPickHostOrderCorrelationId, bool ShouldPickNext, string? PickNode);
+public record PassTriggerPoint(Guid AgvCorrelationId, Guid DroppingHostOrderCorrelationId, Guid? NextPickHostOrderCorrelationId, bool ShouldPickNext, GraphNode? PickNode);

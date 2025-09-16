@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Routing.Models;
 
@@ -8,7 +9,7 @@ namespace Gebhardt.Acc.TransportOrder.Routing.Models;
 public class Route : IComparable<Route>
 {
     /// <inheritdoc cref="Route"/>>
-    public Route(double costs, string[] nodes, Guid[] edges)
+    public Route(double costs, GraphNode[] nodes, Guid[] edges)
     {
         Costs = costs;
         Nodes = nodes;
@@ -25,7 +26,7 @@ public class Route : IComparable<Route>
     /// List of node ids that define the route
     /// </summary>
     [PublicAPI]
-    public string[] Nodes { get; set; }
+    public GraphNode[] Nodes { get; set; }
 
     /// <summary>
     /// List of edge ids that define the route
@@ -63,7 +64,7 @@ public class Route : IComparable<Route>
     /// <returns></returns>
     public static Route operator +(Route a, Route b)
     {
-        string[] nodes = a.Nodes.LastOrDefault() == b.Nodes.FirstOrDefault() ?
+        GraphNode[] nodes = a.Nodes.LastOrDefault()?.Id == b.Nodes.FirstOrDefault()?.Id ?
             a.Nodes.Concat(b.Nodes.Skip(1)).ToArray() // Skip first item of b if first and last are equal
             :
             a.Nodes.Concat(b.Nodes).ToArray();

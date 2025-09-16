@@ -76,5 +76,5 @@ public interface IMapRepository
     /// </summary>
     /// <param name="nodeId">The node id.</param>
     /// <returns>Correlation id of a map.</returns>
-    Task<Guid> GetMapIdForNode(string nodeId);
+    Task<Guid> GetMapIdForNodeAsync(Guid nodeId);
 }

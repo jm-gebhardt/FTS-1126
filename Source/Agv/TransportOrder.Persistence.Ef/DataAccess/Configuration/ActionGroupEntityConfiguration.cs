@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Property(g => g.Reasons).HasJsonConversion();
         builder.OwnsMany(g => g.Actions, a =>
         {
+            a.WithOwner().HasForeignKey("ParentId");
             a.HasKey(o => o.CorrelationId);
             a.Ignore(o => o.Duration);
             a.Ignore(o => o.IsIncomplete);
@@ -41,8 +43,26 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             a.Property(e => e.AdditionalInfo).HasMaxLength(DbStringLimits.Description);
             a.OwnsOne(e => e.Target, c =>
             {
-                c.Property(t => t.NodeId).HasMaxLength(DbStringLimits.NodeId);
-                c.OwnsOne(t => t.Position);
+                c.OwnsOne<GraphNode>(t => t.Node, n =>
+                {
+                    n.Property(nn => nn.Id);
+                    n.Property(nn => nn.Name).HasMaxLength(DbStringLimits.NodeId);
+                    n.Ignore(nn => nn.TimeStamp);
+                    n.Ignore(nn => nn.Type);
+                    n.Ignore(nn => nn.X);
+                    n.Ignore(nn => nn.Y);
+                    n.Ignore(nn => nn.Z);
+                    n.Ignore(nn => nn.DropLiftHeight);
+                    n.Ignore(nn => nn.PickLiftHeight);
+                    n.Ignore(nn => nn.DockingDirection);
+                    n.Ignore(nn => nn.Theta);
+                });
+
+                c.OwnsOne(t => t.Position, p =>
+                {
+                    p.Ignore(pp => pp.PositionInitialized);
+                    p.Ignore(pp => pp.DeviationRange);
+                });
             });
             a.Property(o => o.InfoToAgv).HasJsonConversion();
         });

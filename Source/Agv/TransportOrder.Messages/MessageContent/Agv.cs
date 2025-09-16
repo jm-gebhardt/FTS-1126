@@ -58,10 +58,7 @@ public record Agv : IAgv
     /// </summary>
     public List<AgvError> Errors { get; init; } = new();
 
-    /// <summary>The last node id of the agv.</summary>
-    public string? LastNodeId { get; init; }
-
-    /// <summary>The last node for the agv.</summary>
+    /// <summary>The last node of the agv.</summary>
     public GraphNode? LastNode { get; init; }
 
     /// <summary>
@@ -104,13 +101,13 @@ public record Agv : IAgv
     /// <param name="isCharging">Is Battery currently charging</param>
     /// <param name="currentActionGroup">The recent ActionGroup of the Agv</param>
     /// <param name="agvError">List of Agv errors</param>
-    /// <param name="lastNodeId">Last node id for agv.</param>
-    /// <param name="lastNode">Last node for agv.</param>
+    /// <param name="lastNode">The last node of the agv.</param>
     /// <param name="mode">The agv mode.</param>
     /// <param name="zones">the zones that this agv is in.</param>
     /// <param name="stations">the zones that this agv is in.</param>
     /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
     /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
+    /// <param name="lastMaintenance">The last maintenance of the agv.</param>
     [PublicAPI]
     public Agv(
         Guid correlationId,
@@ -127,13 +124,14 @@ public record Agv : IAgv
         bool isCharging,
         ActionGroupReadModel? currentActionGroup,
         List<AgvError> agvError,
-        string? lastNodeId,
         GraphNode? lastNode,
         AgvMode mode,
-        List <string> zones, 
+        List<string> zones,
         List<string> stations,
         float totalDistance,
-        float totalLifetime) 
+        float totalLifetime,
+        Maintenance? lastMaintenance = null
+    )
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -149,13 +147,13 @@ public record Agv : IAgv
         IsCharging = isCharging;
         CurrentActionGroup = currentActionGroup;
         Errors = agvError;
-        LastNodeId = lastNodeId;
         LastNode = lastNode;
         AgvMode = mode;
         Zones = zones;
         Stations = stations;
         TotalDistance = totalDistance;
         TotalLifetime = totalLifetime;
+        LastMaintenance = lastMaintenance;
     }
 
     /// <summary>

@@ -54,7 +54,7 @@ public class MqttStateConsumerTest
     [DataRow("Node01", "Node01")]
     [DataRow(null, null)]
     [DataRow("", null)]
-    public async Task ReceiveStateWithLastNode_ExpectLastNodeTransferred(string sentLastNodeId, string receivedLastNodeId)
+    public async Task ReceiveStateWithLastNode_ExpectLastNodeTransferred(string? sentLastNodeId, string? receivedLastNodeId)
     {
         var fixture = new AgvStateConsumerTestFixture();
         const string orderId = "Order123";
@@ -71,7 +71,7 @@ public class MqttStateConsumerTest
         consumedState.LastNodeId.ShouldBe(sentLastNodeId);
 
         var publishedStatus = await fixture.GetFirstPublishedMessageAsync<AgvStatusReceived>();
-        publishedStatus.AgvStatus.LastNodeId.ShouldBe(receivedLastNodeId);
+        publishedStatus.AgvStatus.LastNodeId.ShouldBe(receivedLastNodeId?.ToGuid());
 
         await fixture.ShouldNotHavePublishedAsync<AgvPositionReceived>();
     }

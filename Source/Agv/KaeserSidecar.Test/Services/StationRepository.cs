@@ -1,85 +1,84 @@
-﻿using System.Collections.Concurrent;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Services;
 
 /// <inheritdoc cref="IStationRepository"/>>
 public class StationRepository : IStationRepository
 {
-    private readonly ConcurrentDictionary<string, List<Guid>> _stationOccupancies = new();
-    private readonly ILogger<StationRepository> _logger;
+    private readonly Dictionary<Guid, StationOccupancy> _stationOccupancies = new();
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public StationRepository(ILogger<StationRepository> logger, KaeserGraphConfiguration configuration)
+    public StationRepository(KaeserGraphConfiguration configuration)
     {
-        _logger = logger;
         foreach (KeyValuePair<string, string> station in configuration.ConveyorStationMapping)
         {
-            _stationOccupancies.TryAdd(station.Key, []);
+            var stationId = station.Key.ToGuid();
+            _stationOccupancies.Add(stationId, new StationOccupancy(stationId, station.Key, 0, null));
         }
     }
 
-    /// <inheritdoc cref="IStationRepository"/>>
-    public Task OccupyStation(string station, Guid agv)
+    private void OccupyStation(Guid stationId, string stationName, Guid agv)
     {
-        _stationOccupancies.AddOrUpdate(station,
-            addValueFactory: (_) => [agv],
-            updateValueFactory: (_, oldValue) =>
-            {
-                if (oldValue.Count > 0)
-                {
-                    oldValue[0] = agv;
-                }
-                else
-                {
-                    oldValue.Add(agv);
-                }
-                return oldValue;
-            });
-        _logger.LogInformation("Added agv {Agv} to station {Station}, new occupancy is {Occupancy}", agv, station, _stationOccupancies[station].Count);
-        return Task.CompletedTask;
-    }
+        var stationOccupancy = new StationOccupancy(stationId, stationName, 1, agv);
 
-    /// <inheritdoc cref="IStationRepository"/>>
-    public Task FreeStation(string station, Guid agv)
-    {
-        if (_stationOccupancies.TryGetValue(station, out List<Guid>? agvs))
+        if (_stationOccupancies.TryGetValue(stationId, out var occupancy))
         {
-            agvs.Remove(agv);
+            occupancy.Add(agv);
         }
-        _logger.LogInformation("Removed agv {Agv} from station {Station}, new occupancy is {Occupancy}", agv, station, _stationOccupancies[station].Count);
+        else
+        {
+            _stationOccupancies.Add(stationId, stationOccupancy);
+        }
+    }
+
+    /// <inheritdoc cref="IStationRepository"/>>
+    public Task OccupyStation(Guid stationId, Guid agv)
+    {
+        if (_stationOccupancies.TryGetValue(stationId, out var occupancy))
+        {
+            occupancy.Add(agv);
+            return Task.CompletedTask;
+        }
+        throw new KeyNotFoundException($"Station with id {stationId} not found in occupancy list.");
+    }
+
+    /// <inheritdoc cref="IStationRepository"/>>
+    public Task FreeStation(Guid stationId)
+    {
+        if (_stationOccupancies.TryGetValue(stationId, out var occupancy))
+        {
+            occupancy.Remove();
+        }
         return Task.CompletedTask;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
     public Task<ICollection<StationOccupancy>> GetStationOccupancy()
     {
-        return Task.FromResult<ICollection<StationOccupancy>>(
-            _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key, kvp.Value.Count, kvp.Value.Cast<Guid?>().SingleOrDefault())).OrderBy(s => s.Station).ToList());
+        return Task.FromResult<ICollection<StationOccupancy>>(_stationOccupancies.Values);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public Task<StationOccupancy> GetOccupancyOfStation(string station)
+    public Task<StationOccupancy> GetOccupancyOfStation(Guid stationId)
     {
-        var occupancy = _stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key,
-                kvp.Value.Count,
-                kvp.Value.SingleOrDefault()))
-            .SingleOrDefault(s => s.Station == station);
-        return Task.FromResult(occupancy ?? new StationOccupancy(station, 0, null));
+        if (!_stationOccupancies.TryGetValue(stationId, out var occupancy))
+        {
+            occupancy = new StationOccupancy(stationId, stationId.ToString(), 0, null);
+            _stationOccupancies.Add(stationId, occupancy);
+        }
+        return Task.FromResult(occupancy);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
     public Task<StationOccupancy?> GetOccupancyByAgvCorrelationId(Guid agvCorrelationId)
     {
-        return Task.FromResult(_stationOccupancies.Select(kvp => new StationOccupancy(kvp.Key,
-                kvp.Value.Count,
-                kvp.Value.SingleOrDefault()))
-            .SingleOrDefault(s => s.AgvCorrelationId == agvCorrelationId));
+        var occupancy = _stationOccupancies.Values.FirstOrDefault(s => s.AgvCorrelationId == agvCorrelationId);
+        return Task.FromResult(occupancy);
     }
-    
+
     /// <summary>
     /// Sets the occupancy of the stations.
     /// </summary>
@@ -90,7 +89,7 @@ public class StationRepository : IStationRepository
         {
             for (int i = 0; i < occupancy.Count; i++)
             {
-                OccupyStation(occupancy.Station, (Guid) occupancy.AgvCorrelationId!);
+                OccupyStation(occupancy.StationId, occupancy.StationName, (Guid) occupancy.AgvCorrelationId!);
             }
         }
     }

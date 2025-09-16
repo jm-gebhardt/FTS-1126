@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
@@ -68,13 +69,13 @@ public class MapProfileTest
     public void Map_NodeLockToNodeStateDto_MapsAllPropertiesCorrectly()
     {
         var mapper = MappingHelper.GetMapper(new MapProfile());
-        var nodeLock = new NodeLock("NodeId", NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow);
+        var nodeLock = new NodeLock("NodeId".ToGraphNode(), NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow);
 
         var nodeStateDto = mapper.Map<NodeStateDto>(nodeLock);
         nodeStateDto.ShouldNotBeNull();
         nodeStateDto.AgvCorrelationId.ShouldBe(nodeLock.AgvCorrelationId);
         nodeStateDto.IsLocked.ShouldBe(nodeLock.IsLocked);
-        nodeStateDto.NodeId.ShouldBe(nodeLock.NodeId);
+        nodeStateDto.NodeId.ShouldBe(nodeLock.Node.Name);
         nodeStateDto.NodeState.ShouldBe(nodeLock.NodeState);
     }
 }

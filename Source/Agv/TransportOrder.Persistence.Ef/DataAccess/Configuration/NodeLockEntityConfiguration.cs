@@ -12,7 +12,7 @@ public class NodeLockEntityConfiguration : IEntityTypeConfiguration<NodeLock>
     public void Configure(EntityTypeBuilder<NodeLock> builder)
     {
         builder.HasKey(x => x.NodeId);
-        builder.Property(x => x.NodeId).HasMaxLength(DbStringLimits.NodeId);
-        builder.ConfigureAllProperties();
+        builder.Ignore(x => x.Node);
+        builder.ConfigureAllProperties(except: [nameof(NodeLock.Node)]);
     }
 }

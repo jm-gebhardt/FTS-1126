@@ -24,7 +24,8 @@ public class AgvStateChangedConsumerTest
     [DataRow(AgvState.Idle, AgvState.Busy)]
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsNotInitial_SendAgvStateChangedToAllClients(AgvState currentState, AgvState? previousState)
     {
-        var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false, NodeGenerator.GenerateParkingNode().Id);
+        var currentNode = NodeGenerator.GenerateParkingNode();
+        var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false, currentNode.Id);
         var agv = new Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber, agvStatus);
         agv.SetOnline();
         agv = AgvGenerator.SetAgvState(currentState, agv, false);
@@ -37,7 +38,7 @@ public class AgvStateChangedConsumerTest
 
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
         await fixture.TestHarness.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
-        
+
         await fixture.ShouldHavePublishedAsync<AgvStateChanged>();
         await fixture.ShouldHaveConsumedAsync<AgvStateChanged>();
 
@@ -59,7 +60,7 @@ public class AgvStateChangedConsumerTest
 
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
         await fixture.TestHarness.Bus.Publish(new AgvStateChanged(agvMessageContent.CorrelationId, agvMessageContent.CurrentState, previousState, agvMessageContent));
-        
+
         await fixture.ShouldHavePublishedAsync<AgvStateChanged>();
         await fixture.ShouldHaveConsumedAsync<AgvStateChanged>();
 

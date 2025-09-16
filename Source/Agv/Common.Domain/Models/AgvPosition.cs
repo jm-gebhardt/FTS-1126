@@ -40,6 +40,10 @@ public record AgvPosition
     /// </summary>
     public float? DeviationRange { get; init; }
 
+    private AgvPosition()
+    {
+    }
+
     /// <summary>
     /// Initializes a new instance of <see cref="AgvPosition"/>
     /// </summary>

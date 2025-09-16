@@ -10,15 +10,15 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 /// <summary>
 /// Generate a graph based on the one exported from Karis
 /// </summary>
-public class ExportedGraphGenerator: GraphGeneratorBase
+public class ExportedGraphGenerator : GraphGeneratorBase
 {
     private readonly IGraphReader _reader;
 
-    private  List<GraphNode> _nodes = [];
-    private  List<GraphEdge> _edges = [];
+    private List<GraphNode> _nodes = [];
+    private List<GraphEdge> _edges = [];
 
     private GraphNode[] WayPoints => _nodes.Where(n => !n.IsStation()).ToArray();
-    
+
     private ExportedGraph _exportedGraph = null!;
 
     /// <inheritdoc cref="ExportedGraphGenerator"/>>
@@ -29,7 +29,7 @@ public class ExportedGraphGenerator: GraphGeneratorBase
 
     /// <inheritdoc />
     protected override Guid GraphId { get; } = "ExportedGraph".ToGuid();
-    
+
     /// <inheritdoc />
     public override AgvGraph Generate(Guid correlationId)
     {
@@ -37,7 +37,7 @@ public class ExportedGraphGenerator: GraphGeneratorBase
         _edges = [];
 
         _exportedGraph = _reader.Read();
-        
+
         GetNodes();
         GetEdges();
         ConnectStations();
@@ -67,7 +67,7 @@ public class ExportedGraphGenerator: GraphGeneratorBase
 
     private GraphNode GetNode(string nodeId)
     {
-        return _nodes.Single(n => n.Id == nodeId);
+        return _nodes.Single(n => n.Name == nodeId);
     }
 
     private void ConnectStations()
@@ -78,12 +78,12 @@ public class ExportedGraphGenerator: GraphGeneratorBase
 
             if (!_edges.Any(e => e.ToNodeId == nodeNearby.Id && e.FromNodeId == station.Id))
             {
-                var edge = GraphEdge.CreateDirect(station.Id, nodeNearby.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, station.Id, distance, nodeNearby.Id), _exportedGraph.TimeStamp);
+                var edge = GraphEdge.CreateDirect(station.Id, nodeNearby.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, station.Name, distance, nodeNearby.Name), _exportedGraph.TimeStamp);
                 _edges.Add(edge);
             }
             if (!_edges.Any(e => e.FromNodeId == nodeNearby.Id && e.ToNodeId == station.Id))
             {
-                var reverse = GraphEdge.CreateDirect(nodeNearby.Id, station.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, nodeNearby.Id, distance, station.Id), _exportedGraph.TimeStamp);
+                var reverse = GraphEdge.CreateDirect(nodeNearby.Id, station.Id, distance, GraphHelper.ToGuid(EdgeType.Direct, nodeNearby.Name, distance, station.Name), _exportedGraph.TimeStamp);
                 _edges.Add(reverse);
             }
         }
@@ -108,6 +108,6 @@ public class ExportedGraphGenerator: GraphGeneratorBase
         {
             throw new ArgumentException("No node nearby found");
         }
-        return (nodeNearby, (float)nearbyDistance);
+        return (nodeNearby, (float) nearbyDistance);
     }
 }

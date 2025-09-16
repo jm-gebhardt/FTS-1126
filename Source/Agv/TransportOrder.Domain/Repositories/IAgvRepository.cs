@@ -121,14 +121,14 @@ public interface IAgvRepository
     /// </summary>
     /// <param name="agvCorrelationId">The AgvCorrelationId</param>
     /// <returns></returns>
-    Task<string?> GetLastNodeIdAsync(Guid agvCorrelationId);
+    Task<Guid?> GetLastNodeIdAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Get the last node id of the agvs with the given correlation ids.
     /// </summary>
     /// <param name="agvCorrelationIds">A list of AgvCorrelationIds</param>
     /// <returns></returns>
-    Task<IReadOnlyDictionary<Guid, string?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds);
+    Task<IReadOnlyDictionary<Guid, Guid?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// True, if there are online agvs.

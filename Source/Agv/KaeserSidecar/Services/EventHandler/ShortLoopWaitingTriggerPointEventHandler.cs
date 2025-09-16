@@ -14,9 +14,9 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.EventHandler;
 /// </summary>
 [UsedImplicitly]
 public class ShortLoopWaitingTriggerPointEventHandler(
-    ILogger<ShortLoopWaitingTriggerPointEventHandler> logger, 
-    KaeserGraphConfiguration configuration, 
-    IWaitingHandler waitingHandler):
+    ILogger<ShortLoopWaitingTriggerPointEventHandler> logger,
+    KaeserGraphConfiguration configuration,
+    IWaitingHandler waitingHandler) :
     IConsumer<AgvPassedShortLoopWaitingHandler>,
     IConsumer<AgvLeftShortLoopWaitingHandler>
 {
@@ -26,13 +26,13 @@ public class ShortLoopWaitingTriggerPointEventHandler(
     public async Task Consume(ConsumeContext<AgvPassedShortLoopWaitingHandler> context)
     {
         (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
-        if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) || actionGroup.Actions.All(a => a.Target.NodeId != string.Empty))
+        if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) || actionGroup.Actions.All(a => a.Target.Node != null))
         {
             logger.LogWarning("Skip waiting order selection: Agv {AgvCorrelationId} passed short loop waiting handler without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
             return;
         }
         var moveAction = actionGroup.Actions.FirstOrDefault(a => a.ActionType == ActionType.Move);
-        if (moveAction == null || (moveAction.Target.NodeId != configuration.LeftShortLoopWaitingNode && moveAction.Target.NodeId != configuration.RightShortLoopWaitingNode))
+        if (moveAction == null || (moveAction.Target.Node?.Name != configuration.LeftShortLoopWaitingNode && moveAction.Target.Node?.Name != configuration.RightShortLoopWaitingNode))
         {
             logger.LogWarning("Skip waiting order selection: Agv {AgvCorrelationId} passed short loop waiting handler without without pick drop action group for short loop ({ActionGroup})", agvStatus.CorrelationId, actionGroup.CorrelationId);
 
@@ -47,7 +47,7 @@ public class ShortLoopWaitingTriggerPointEventHandler(
             return;
         }
 
-        var incompleteAction = actionGroup.Actions.FirstOrDefault(a => a.Target.NodeId == string.Empty);
+        var incompleteAction = actionGroup.Actions.FirstOrDefault(a => a.Target.Node == null);
         if (incompleteAction == null)
         {
             logger.LogWarning("Skip waiting order selection: Agv {AgvCorrelationId} passed short loop waiting handler without without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup.CorrelationId);
@@ -74,13 +74,13 @@ public class ShortLoopWaitingTriggerPointEventHandler(
         string aplSourceNode = configuration.StationMapping[configuration.PrismatAplSource];
         string aplTargetNode = configuration.StationMapping[configuration.PrismatAplTarget];
 
-        if (actionGroup.Actions.Any(a => a.Target.NodeId == aplSourceNode || a.Target.NodeId == aplTargetNode))
+        if (actionGroup.Actions.Any(a => a.Target.Node?.Name == aplSourceNode || a.Target.Node?.Name == aplTargetNode))
         {
             logger.LogWarning("Skip removal of waiting order : Agv {AgvCorrelationId} passed short loop waiting handler with long loop action group ({ActionGroup})", agvStatus.CorrelationId, actionGroup.CorrelationId);
             return;
         }
 
-        var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started || configuration.ConveyorStationMapping.ContainsKey(a.Target.NodeId!));
+        var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started || configuration.ConveyorStationMapping.ContainsKey(a.Target.Node!.Name));
         if (action == null)
         {
             logger.LogWarning("Skip removal of waiting order : Agv {AgvCorrelationId} passed short loop waiting handler w/o action heading towards short loop we target station or started action ({ActionGroup})", agvStatus.CorrelationId, actionGroup.CorrelationId);

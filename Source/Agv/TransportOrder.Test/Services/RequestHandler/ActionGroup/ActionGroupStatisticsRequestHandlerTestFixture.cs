@@ -25,8 +25,8 @@ public class ActionGroupStatisticsRequestHandlerTestFixture : MediatorTestFixtur
     public ActionGroupStatisticsRequestHandlerTestFixture WithActionDurations(Dictionary<ActionType, ICollection<double>> actionDurations)
     {
         _actionGroupRepository.Setup(x => x.GetActionDurationsByTypeAsync(It.IsAny<ActionGroupState>(),
-                It.IsAny<string?>(),
-                It.IsAny<string>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
                 It.IsAny<int>()))
             .ReturnsAsync(actionDurations);
         return this;

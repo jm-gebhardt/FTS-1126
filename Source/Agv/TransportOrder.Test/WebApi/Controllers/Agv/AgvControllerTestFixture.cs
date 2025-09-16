@@ -100,21 +100,22 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        new("node00".ToGuid(), "node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node10".ToGuid(), "node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node01".ToGuid(), "node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
+        new("node11".ToGuid(), "node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
     };
 
     private readonly IAgvPositionRepository _agvPositionRepository;
 
     public AgvSettingsReadModel AgvSettingsReadModel { get; } = EfAgvSettingsProvider.DefaultSettings;
 
-    private readonly TransportOrder.Domain.Models.ActionGroup.AgvAction _chargeAction = new(Guid.NewGuid(), ActionType.Charge, "Charger-1", Guid.NewGuid());
+    private readonly TransportOrder.Domain.Models.ActionGroup.AgvAction _chargeAction = new(Guid.NewGuid(), ActionType.Charge, "Charger-1".ToGraphNode(), Guid.NewGuid());
 
     public AgvControllerTestFixture()
     {
         AgvDb = new Mock<IAgvDb>();
+        AgvDb.SetupNodeFallbacks();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
         ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
@@ -129,8 +130,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(It.IsAny<Guid>())).Verifiable();
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
         ChargingPointManager = new Mock<IChargingPointManager>();
-        ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId: "Charger-1"));
-        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeId: "Charger-1"));
+        ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
+        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
         _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>())).ReturnsAsync(false);
     }
 
@@ -147,7 +148,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvSerialNumber);
-            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3", 2.5, 11.3, 20.5, null, null, null, null, 42, 24);
+            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3".ToGuid(), 2.5, 11.3, 20.5, null, null, null, null, 42, 24);
             var agvData = AgvDataGenerator.GenerateAgvData(correlationId: correlationId, ipV4Address: ip);
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);
@@ -186,7 +187,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvControllerTestFixture<TRequest, TRequestHandler> SetupAgvDbWitNode(GraphNode node)
     {
-        AgvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
+        AgvDb.AddNode(node);
         return this;
     }
 
@@ -341,15 +342,14 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
     {
         AgvDb.Setup(x => x.Graphs.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
-        AgvDb.Setup(x => x.Graphs.TryGetNodeAsync(It.IsAny<string>()))
-            .ReturnsAsync(() => agvGraph.Nodes.First());
+        AgvDb.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>())).ReturnsAsync(() => agvGraph.Nodes.First());
         return this;
     }
 
     public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
     {
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(new NodeLock("target", NodeLockState.Reserved, true, Guid.NewGuid(), DateTime.UtcNow));
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
+        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(new NodeLock("target".ToGraphNode(), NodeLockState.Reserved, true, Guid.NewGuid(), DateTime.UtcNow));
 
         AddConsumers<FakeQueueActionGroupConsumer>();
 
@@ -377,7 +377,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         });
         base.Build();
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         return this;
     }
 }

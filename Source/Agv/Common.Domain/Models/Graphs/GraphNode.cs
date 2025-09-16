@@ -11,13 +11,14 @@ namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 public class GraphNode : IEquatable<GraphNode>
 {
     /// <summary>
-    /// The Id of the node, based on the AGV vendor
-    /// </summary><remarks>
-    /// Usually this is the (numeric) ID passed by the AGV vendor.
-    /// For internal reasons it can be necessary to build/combine an internal identification.
-    /// </remarks>
+    /// The unique Id of the node.
+    /// </summary>
+    public Guid Id { get; init; }
 
-    public string Id
+    /// <summary>
+    /// The Name of the node.
+    /// </summary>
+    public string Name
     {
         get;
         [UsedImplicitly]
@@ -93,28 +94,25 @@ public class GraphNode : IEquatable<GraphNode>
     /// <returns></returns>
     public override string ToString()
     {
-        return $"{Id} [X={X}/Y={Y}/Z={Z}]";
-    }
-
-    /// <summary>
-    /// Node Constructor
-    /// </summary>
-    /// <param name="id"></param>
-    public GraphNode(string id)
-    {
-        Id = id;
+        return $"{Name} [X={X}/Y={Y}/Z={Z}]";
     }
 
     /// <inheritdoc cref="GraphNode"/>>
     [JsonConstructor]
-    public GraphNode()
+    private GraphNode()
     {
     }
 
-    /// <inheritdoc cref="GraphNode"/>>
-    public GraphNode(string id, float x, float y, float z, NodeType nodeType, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection)
+    /// <inheritdoc cref="GraphNode"/>
+    public GraphNode(Guid id, string name)
     {
         Id = id;
+        Name = name;
+    }
+
+    /// <inheritdoc cref="GraphNode"/>>
+    public GraphNode(Guid id, string name, float x, float y, float z, NodeType nodeType, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) : this(id, name)
+    {
         Y = y;
         X = x;
         Z = z;
@@ -125,9 +123,8 @@ public class GraphNode : IEquatable<GraphNode>
     }
 
     /// <inheritdoc cref="GraphNode"/>>
-    public GraphNode(string id, float x, float y, float z, ICollection<NodeType> nodeType, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection)
+    public GraphNode(Guid id, string name, float x, float y, float z, ICollection<NodeType> nodeType, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) : this(id, name)
     {
-        Id = id;
         Y = y;
         X = x;
         Z = z;
@@ -161,6 +158,10 @@ public class GraphNode : IEquatable<GraphNode>
             return true;
         }
         if (Id != other.Id)
+        {
+            return false;
+        }
+        if (Name != other.Name)
         {
             return false;
         }
@@ -224,8 +225,7 @@ public class GraphNode : IEquatable<GraphNode>
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        // ReSharper disable once NonReadonlyMemberInGetHashCode
-        return HashCode.Combine(Id, Type, X, Y, Z, Theta);
+        return HashCode.Combine(Id, Name, Type, X, Y, Z, Theta);
     }
 }
 

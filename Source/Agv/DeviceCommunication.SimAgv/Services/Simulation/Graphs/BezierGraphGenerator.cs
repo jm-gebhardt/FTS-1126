@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 /// <summary>
 /// Generate a grid graph <see cref="GridGraphGenerator"/> that uses Bezier curves to connect nodes.
 /// </summary>
-public class BezierGraphGenerator: GridGraphGenerator
+public class BezierGraphGenerator : GridGraphGenerator
 {
     /// <inheritdoc />
     protected override Guid GraphId => $"SIM_Bezier_{GridWidth}x{GridRows}".ToGuid();
@@ -19,7 +19,9 @@ public class BezierGraphGenerator: GridGraphGenerator
     private static readonly Random _random = new();
 
     /// <inheritdoc />
-    public BezierGraphGenerator(Options options, IMapGenerator mapGenerator) : base(options, mapGenerator){}
+    public BezierGraphGenerator(Options options, IMapGenerator mapGenerator) : base(options, mapGenerator)
+    {
+    }
 
     /// <inheritdoc />
     public BezierGraphGenerator(
@@ -27,7 +29,9 @@ public class BezierGraphGenerator: GridGraphGenerator
         string[] destinations,
         IMapGenerator mapGenerator,
         int gridRows = 3,
-        AgvGraph.NodeType[]? serviceNodes = null) : base(sources, destinations, mapGenerator, gridRows, serviceNodes){}
+        AgvGraph.NodeType[]? serviceNodes = null) : base(sources, destinations, mapGenerator, gridRows, serviceNodes)
+    {
+    }
 
     /// <summary>
     /// Generate AgvGraph
@@ -59,21 +63,21 @@ public class BezierGraphGenerator: GridGraphGenerator
         float length = GetLength(controlPoints.ToList());
         EdgeCoefficient[] edgeCoefficients = controlPoints.Skip(1).Take(4).Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray();
         var timeStamp = new List<DateTime> { fromNode.TimeStamp, toNode.TimeStamp }.Max();
-        
+
         Edges.Add(
             GraphEdge.CreateBezier5(fromNode.Id, toNode.Id, length, edgeCoefficients,
-                GraphHelper.ToGuid(EdgeType.Bezier5, fromNode.Id, length, toNode.Id),
+                GraphHelper.ToGuid(EdgeType.Bezier5, fromNode.Name, length, toNode.Name),
                 timeStamp)
-            );
-        
+        );
+
         if (bidirectional)
         {
             Edges.Add(
-                GraphEdge.CreateBezier5(toNode.Id, fromNode.Id, length, 
-                    edgeCoefficients.Reverse().ToArray(), 
-                    GraphHelper.ToGuid(EdgeType.Bezier5, toNode.Id, length, fromNode.Id),
+                GraphEdge.CreateBezier5(toNode.Id, fromNode.Id, length,
+                    edgeCoefficients.Reverse().ToArray(),
+                    GraphHelper.ToGuid(EdgeType.Bezier5, toNode.Name, length, fromNode.Name),
                     timeStamp)
-                );
+            );
         }
     }
 
@@ -127,13 +131,13 @@ public class BezierGraphGenerator: GridGraphGenerator
 
     private static Vector2 RandomPerpendicular(Vector2 perpendicular)
     {
-        float scale = (float)(_random.NextDouble() * 2 - 1);
+        float scale = (float) (_random.NextDouble() * 2 - 1);
         return scale * perpendicular;
     }
 
     private static float GetLength(List<Vector2> controlPoints)
     {
         var bezier = new Bezier(controlPoints);
-        return (float)bezier.GetLength(100);
+        return (float) bezier.GetLength(100);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
@@ -19,14 +20,14 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 
 public class TriggerEventHandlerTestFixture : MassTransitConsumerTestFixture<TriggerEventHandler>
 {
-    private Mock<IAgvDb> _agvDb = null!;
-    private Mock<ITriggerRepository> _triggerRepository = null!;
-    private Mock<IGraphRepository> _graphRepository = null!;
+    private readonly Mock<IAgvDb> _agvDb = new();
+    private readonly Mock<ITriggerRepository> _triggerRepository = new();
 
     protected override IEnumerable<Profile> GetProfiles() => [new AgvProfile(), new CargoProfile(), new AgvStatusProfile()];
 
     public TriggerEventHandlerTestFixture()
     {
+        _agvDb.SetupNodeFallbacks();
         Build();
     }
 
@@ -34,13 +35,8 @@ public class TriggerEventHandlerTestFixture : MassTransitConsumerTestFixture<Tri
     {
         base.AddServices(collection);
 
-        _agvDb = new Mock<IAgvDb>();
-        _triggerRepository = new Mock<ITriggerRepository>();
-        _graphRepository = new Mock<IGraphRepository>();
-
         collection.AddSingleton(_agvDb.Object);
         collection.AddSingleton(_triggerRepository.Object);
-        collection.AddSingleton(_graphRepository.Object);
 
         return this;
     }
@@ -84,13 +80,13 @@ public class TriggerEventHandlerTestFixture : MassTransitConsumerTestFixture<Tri
 
     public TriggerEventHandlerTestFixture WithNodeTriggerLocations(IList<Location> locations, string nodeId)
     {
-        _triggerRepository.Setup(t => t.GetNodeTriggerLocations(nodeId)).Returns(locations);
+        _triggerRepository.Setup(t => t.GetNodeTriggerLocations(nodeId.ToGuid())).Returns(locations);
         return this;
     }
 
     public TriggerEventHandlerTestFixture WithNode(GraphNode node)
     {
-        _graphRepository.Setup(g => g.TryGetNodeAsync(node.Id)).ReturnsAsync(node);
+        _agvDb.AddNode(node);
         return this;
     }
 }

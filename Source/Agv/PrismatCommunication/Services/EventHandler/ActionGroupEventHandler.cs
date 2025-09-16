@@ -33,7 +33,7 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
         var (actionGroup, correlationId, timestamp) = context.Message;
         if (actionGroup.Creator is ActionGroupCreator.Wms or ActionGroupCreator.Simulation)
         {
-            await context.Publish(new FinishHostOrder(correlationId, timestamp, actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId));
+            await context.Publish(new FinishHostOrder(correlationId, timestamp));
         }
     }
 
@@ -81,7 +81,7 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
     /// </summary>
     public async Task Consume(ConsumeContext<DroppingAgvPassedDoppelspielTriggerPoint> context)
     {
-        (_, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, string? pickNode) = context.Message;
+        (_, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, var pickNode) = context.Message;
         await context.Publish(new PassTriggerPoint(agvCorrelationId, droppingHostOrderCorrelationId, nextPickHostOrderCorrelationId, shouldPickNext, pickNode));
     }
 
@@ -123,7 +123,7 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
         {
             return;
         }
-        
+
         await context.Publish(new ResetDoppelspielPartner(actionGroupId));
     }
 

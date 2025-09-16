@@ -58,7 +58,7 @@ public class AgvEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvBecameIdle_AgvCarryingLoad_PublishesTryStartNextActionInActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "nodeId");
         var fixture = new AgvEventHandlerTestFixture()
             .WithAgv(agv);
         fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
@@ -73,7 +73,7 @@ public class AgvEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvBecameIdle_LockedAgvCarryingLoad_PublishesTryStartNextActionInActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId", mode: new AgvMode(ModeType.Locked));
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "nodeId", mode: new AgvMode(ModeType.Locked));
         var fixture = new AgvEventHandlerTestFixture()
             .WithAgv(agv);
         fixture.AgvHasUnfinishedDropAction(agv.CorrelationId);
@@ -88,7 +88,7 @@ public class AgvEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvBecameIdle_AgvIsNotCarryingLoadDoesNotNeedsChargingOrNeedMaintenance_PublishesTryStartNewActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId");
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "nodeId");
         var fixture = new AgvEventHandlerTestFixture()
             .WithAgv(agv);
         fixture.AddChargeAction(existsPriorToTest: false);
@@ -102,7 +102,7 @@ public class AgvEventHandlerTest
     [TestMethod]
     public async Task Consume_AgvBecameIdle_AgvIsNotCarryingLoadNeedsCharging_DoesPublishTryStartNewActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId", batteryCharge: 10);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "nodeId", batteryCharge: 10);
         var fixture = new AgvEventHandlerTestFixture()
             .WithAgv(agv);
         fixture.AddChargeAction(existsPriorToTest: false);
@@ -119,7 +119,7 @@ public class AgvEventHandlerTest
     {
         var mode = new AgvMode(ModeType.Normal);
         mode.PrepareSwitch(ModeType.Maintenance);
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "nodeId", batteryCharge: 10, mode: mode);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "nodeId", batteryCharge: 10, mode: mode);
         var fixture = new AgvEventHandlerTestFixture()
             .WithAgv(agv);
         fixture.AddChargeAction(existsPriorToTest: false);
@@ -321,15 +321,16 @@ public class AgvEventHandlerTest
     public async Task Consume_ParkingNodeSelectedForAgv_PublishesCreateActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
-        await fixture.PublishMessageAsync(new ParkingNodeSelectedForAgv(Guid.NewGuid(), "a parking node"));
+        await fixture.PublishMessageAsync(new ParkingNodeSelectedForAgv(Guid.NewGuid(), "a parking node".ToGraphNode()));
         await fixture.ShouldHavePublishedAsync<CreateParkingActionGroup>();
     }
 
     [TestMethod]
     public async Task Consume_ChargingNodeSelectedForAgv_PublishesCreateChargingActionGroup()
     {
-        var fixture = new AgvEventHandlerTestFixture();
-        await fixture.PublishMessageAsync(new ChargingNodeSelectedForAgv(Guid.NewGuid(), "a charging node"));
+        var chargeNode = "a charging node".ToGraphNode();
+        var fixture = new AgvEventHandlerTestFixture().WithNode(chargeNode);
+        await fixture.PublishMessageAsync(new ChargingNodeSelectedForAgv(Guid.NewGuid(), chargeNode.Id));
         await fixture.ShouldHavePublishedAsync<CreateChargingActionGroup>();
     }
 
@@ -337,7 +338,7 @@ public class AgvEventHandlerTest
     public async Task Consume_QueueNodeSelectedForAgv_PublishesCreateQueueingActionGroup()
     {
         var fixture = new AgvEventHandlerTestFixture();
-        await fixture.PublishMessageAsync(new QueueNodeSelectedForAgv(Guid.NewGuid(), "a queue node"));
+        await fixture.PublishMessageAsync(new QueueNodeSelectedForAgv(Guid.NewGuid(), "a queue node".ToGraphNode()));
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
     }
 

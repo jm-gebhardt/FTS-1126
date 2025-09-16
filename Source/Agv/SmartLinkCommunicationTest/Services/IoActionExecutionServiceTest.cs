@@ -19,7 +19,7 @@ public class IoActionExecutionServiceTest
         await fixture.IoActionExecutionService.ExecuteActionAsync(ioActionConfig);
 
         fixture.Bus.Verify(x => x.Publish(It.Is<QueueActionGroup>(g
-                => g.ActionGroup.Actions.All(a => actionDefinitions.Contains(new ActionDefinition(a.ActionType, a.Target.NodeId!))))
+                => g.ActionGroup.Actions.All(a => actionDefinitions.Contains(new ActionDefinition(a.ActionType, a.Target.Node!.Name))))
             , It.IsAny<CancellationToken>()), Times.Once);
     }
 }

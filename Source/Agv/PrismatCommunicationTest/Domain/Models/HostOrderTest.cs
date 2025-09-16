@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Shouldly;
@@ -36,11 +37,11 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        moveAction.Target.NodeId.ShouldNotBeNull();
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.RightShortLoopWaitingNode);
-        pickAction.Target.NodeId.ShouldBeNullOrEmpty();
-        dropAction.Target.NodeId.ShouldNotBeNull();
-        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.RightShortLoopWaitingNode);
+        pickAction.Target.Node.ShouldBeNull();
+        dropAction.Target.Node.ShouldNotBeNull();
+        dropAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
     }
 
     [DataRow("1020", "2110")]
@@ -58,7 +59,7 @@ public class HostOrderTest
         var agv = Guid.NewGuid();
         const string pickNode = "PS03";
         
-        var actionGroup = hostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration, agv, pickNode);
+        var actionGroup = hostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration, agv, pickNode.ToGraphNode());
         
         VerifyActionGroup(actionGroup, hostOrder, agv);
         actionGroup.Actions.Count.ShouldBe(2);
@@ -71,9 +72,10 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        pickAction.Target.NodeId.ShouldBe(pickNode);
-        dropAction.Target.NodeId.ShouldNotBeNull();
-        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(pickNode);
+        dropAction.Target.Node.ShouldNotBeNull();
+        dropAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
     }
 
     [DataRow("2130", "1020")]
@@ -104,11 +106,11 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        pickAction.Target.NodeId.ShouldNotBeNull();
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
-        moveAction.Target.NodeId.ShouldNotBeNull();
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.WaitingPositionByAklSource[source]);
-        dropAction.Target.NodeId.ShouldBeNullOrEmpty();
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.WaitingPositionByAklSource[source]);
+        dropAction.Target.Node.ShouldBeNull();
     }
 
     [DataRow("2130", "1020")]
@@ -140,11 +142,11 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        pickAction.Target.NodeId.ShouldNotBeNull();
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
-        moveAction.Target.NodeId.ShouldNotBeNull();
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.WaitingPositionByAklSource[source]);
-        dropAction.Target.NodeId.ShouldBeNullOrEmpty();
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.WaitingPositionByAklSource[source]);
+        dropAction.Target.Node.ShouldBeNull();
     }
 
     [DataRow("9060", "1050")]
@@ -169,11 +171,11 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        pickAction.Target.NodeId.ShouldNotBeNull();
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
-        moveAction.Target.NodeId.ShouldNotBeNull();
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.LongLoopMoveTargetNode);
-        dropAction.Target.NodeId.ShouldBeNullOrEmpty();
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.LongLoopMoveTargetNode);
+        dropAction.Target.Node.ShouldBeNull();
     }
 
     [DataRow("9060", "1050")]
@@ -184,7 +186,7 @@ public class HostOrderTest
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateOrderDetails(source, target));
         var agv = Guid.NewGuid();
         string pickNode = OrderGenerator.KaeserConfiguration.StationMapping[source];
-        var actionGroup = hostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration, agv, pickNode);
+        var actionGroup = hostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration, agv, pickNode.ToGraphNode());
 
         VerifyActionGroup(actionGroup, hostOrder, agv);
         actionGroup.Actions.Count.ShouldBe(3);
@@ -199,11 +201,11 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        pickAction.Target.NodeId.ShouldNotBeNull();
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
-        moveAction.Target.NodeId.ShouldNotBeNull();
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.LongLoopMoveTargetNode);
-        dropAction.Target.NodeId.ShouldBeNullOrEmpty();
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[source]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.LongLoopMoveTargetNode);
+        dropAction.Target.Node.ShouldBeNull();
     }
 
     [DataRow("1020", "9070")]
@@ -228,11 +230,11 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        moveAction.Target.NodeId.ShouldNotBeNull();
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.LongLoopMoveTargetNode);
-        pickAction.Target.NodeId.ShouldBeNullOrEmpty();
-        dropAction.Target.NodeId.ShouldNotBeNull();
-        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.LongLoopMoveTargetNode);
+        pickAction.Target.Node.ShouldBeNull();
+        dropAction.Target.Node.ShouldNotBeNull();
+        dropAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
     }
 
     [DataRow("1020", "9070")]
@@ -244,7 +246,7 @@ public class HostOrderTest
         var agv = Guid.NewGuid();
         const string pickNode = "PS03";
 
-        var actionGroup = hostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration, agv, pickNode);
+        var actionGroup = hostOrder.CreateActionGroup(OrderGenerator.KaeserConfiguration, agv, pickNode.ToGraphNode());
 
         VerifyActionGroup(actionGroup, hostOrder, agv);
         actionGroup.Actions.Count.ShouldBe(2);
@@ -257,10 +259,10 @@ public class HostOrderTest
         pickAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId);
         dropAction.CorrelationId.ShouldBe(hostOrder.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
 
-        pickAction.Target.NodeId.ShouldNotBeNull();
-        pickAction.Target.NodeId.ShouldBe(pickNode);
-        dropAction.Target.NodeId.ShouldNotBeNull();
-        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(pickNode);
+        dropAction.Target.Node.ShouldNotBeNull();
+        dropAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[target]);
     }
 
     private static void VerifyActionGroup(ActionGroup actionGroup, HostOrder hostOrder, Guid? assignedAgv=null)

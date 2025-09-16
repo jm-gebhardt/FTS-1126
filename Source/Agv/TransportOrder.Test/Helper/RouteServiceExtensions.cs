@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
@@ -12,8 +13,9 @@ public static class RouteServiceExtensions
     public static void WithRoute(this Mock<IRouteService> routeServiceMock, double costs, string[] nodes, Guid[]? edges = null)
     {
         Guid[] routeEdges = edges ?? [];
-        routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(costs, nodes, routeEdges));
-        routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<IList<string>>(), It.IsAny<string?>(), It.IsAny<AgvData>())).ReturnsAsync(new Route(costs, nodes, routeEdges));
+        GraphNode[] graphNodes = nodes.Select(n => n.ToGraphNode()).ToArray();
+        routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(costs, graphNodes, routeEdges));
+        routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<IList<Guid>>(), It.IsAny<Guid?>(), It.IsAny<AgvData>())).ReturnsAsync(new Route(costs, graphNodes, routeEdges));
     }
 
     public static void WithRouteCostsFirstAction(this Mock<IRouteService> routeServiceMock, TransportOrder.Domain.Models.Agv.Agv agv, ActionGroup actionGroup, float? routeCosts = null)

@@ -42,7 +42,7 @@ public class MoveAgvRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<MoveAgv> context)
     {
-        (var agvCorrelationId, string targetNodeId, var creator, string user, double theta) = context.Message;
+        (var agvCorrelationId, var targetNodeId, var creator, string user, double theta) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -65,7 +65,7 @@ public class MoveAgvRequestHandler(
             [
                 new AgvAction(Guid.NewGuid(),
                     ActionType.Move,
-                    targetNode.Id,
+                    targetNode,
                     actionGroupId,
                     rotationInfo)
             ],
@@ -83,7 +83,7 @@ public class MoveAgvRequestHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<ChargeAgv> context)
     {
-        (var agvCorrelationId, string chargerId, string user) = context.Message;
+        (var agvCorrelationId, var chargerId, string user) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -96,7 +96,7 @@ public class MoveAgvRequestHandler(
 
         if (!node.IsCharger())
         {
-            throw new InvalidNodeTypeException(node.Id, node.Type.ToString() ?? "", nameof(AgvGraph.NodeType.Charge));
+            throw new InvalidNodeTypeException(node.Name, node.Type.ToString() ?? "", nameof(AgvGraph.NodeType.Charge));
         }
 
         if (agv.AgvStatus?.LastNodeId != chargerId)
@@ -107,12 +107,12 @@ public class MoveAgvRequestHandler(
         var actionGroupId = Guid.NewGuid();
         await QueueNewActionGroup(context,
             [
-                new AgvAction(Guid.NewGuid(), ActionType.Move, node.Id, actionGroupId)
+                new AgvAction(Guid.NewGuid(), ActionType.Move, node, actionGroupId)
                 {
                     Sequence = 0
                 },
 
-                new AgvAction(Guid.NewGuid(), ActionType.Charge, node.Id, actionGroupId)
+                new AgvAction(Guid.NewGuid(), ActionType.Charge, node, actionGroupId)
                 {
                     Sequence = 1
                 }
@@ -194,7 +194,7 @@ public class MoveAgvRequestHandler(
         await requestClient.GetResponse<Success>(new QueueActionGroup(actionGroup, true));
     }
 
-    private async Task PublishNodeStateChange(string nodeId)
+    private async Task PublishNodeStateChange(Guid nodeId)
     {
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
         var station = await stationRepository.GetStation(nodeId);

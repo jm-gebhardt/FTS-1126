@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
+using MassTransit.Serialization;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 using GraphNode = Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode;
 
@@ -15,48 +18,55 @@ public class AgvProfile : Profile
     /// <inheritdoc />
     public AgvProfile()
     {
-        CreateMap<AgvStatus, MessageContent.Agv>(MemberList.None)
-            .ForMember(nameof(MessageContent.Agv.IsDisturbed), opt => opt.MapFrom(src => src.Disturbed))
-            .ForMember(nameof(MessageContent.Agv.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
-            .ForMember(nameof(MessageContent.Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
-            .ForMember(nameof(MessageContent.Agv.LastNodeId), opt => opt.MapFrom(src => src.LastNodeId))
-            .ForMember(nameof(MessageContent.Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds))
-            .ForMember(nameof(MessageContent.Agv.Stations), opt => opt.MapFrom(src => src.StationIds));
+        CreateMap<AgvStatus, Agv>(MemberList.None)
+            .ForMember(nameof(Agv.IsDisturbed), opt => opt.MapFrom(src => src.Disturbed))
+            .ForMember(nameof(Agv.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
+            .ForMember(nameof(Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
+            .ForMember(nameof(Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds));
 
-        CreateMap<Domain.Models.Agv.AgvStatus, MessageContent.Agv>(MemberList.None)
-            .ForMember(nameof(MessageContent.Agv.IsDisturbed), opt => opt.MapFrom(src => src.Disturbed))
-            .ForMember(nameof(MessageContent.Agv.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
-            .ForMember(nameof(MessageContent.Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
-            .ForMember(nameof(MessageContent.Agv.LastNodeId), opt => opt.MapFrom(src => src.LastNodeId))
-            .ForMember(nameof(MessageContent.Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds))
-            .ForMember(nameof(MessageContent.Agv.Stations), opt => opt.MapFrom(src => src.StationIds));
+        CreateMap<AgvSettingsReadModel, AgvSettings>()
+            .ForMember(d => d.CorrelationId, opt => opt.Ignore());
 
         CreateMap<Guid, AgvSettings>(MemberList.None)
             .ForMember(d => d.CorrelationId, opt => opt.MapFrom(s => s));
-        CreateMap<Domain.Models.Settings.AgvSettingsReadModel, AgvSettings>()
-            .ForMember(d => d.CorrelationId, opt => opt.Ignore());
 
-        CreateMap<Domain.Models.Agv.Agv, MessageContent.Agv>(MemberList.None)
-            .ForMember(a => a.AgvMode, opt => opt.MapFrom(src => src.Mode))
-            .ForSourceMember(a => a.IsQueueing, opt => opt.DoNotValidate())
-            .IncludeMembers(s => s.AgvStatus)
-            .ForMember(nameof(MessageContent.Agv.CurrentState), opt => opt.MapFrom(src => src.CurrentAgvState));
+        CreateMap<Domain.Models.Agv.Agv, Agv>(MemberList.None)
+            .ConstructUsing((src, ctx) =>
+            {
+                ctx.TryGetItems(out Dictionary<string, object>? items);
+                items.TryGetValue(nameof(Agv.CurrentActionGroup), out ActionGroupReadModel? currentActionGroup);
+                items.TryGetValue(nameof(Agv.Errors), out List<AgvError> agvErrors);
+                agvErrors ??= [];
+                items.TryGetValue(nameof(Agv.LastNode), out GraphNode? lastNode);
+                items.TryGetValue(nameof(Agv.LastMaintenance), out MaintenanceLog? lastMaintenance);
 
-        CreateMap<ActionGroupReadModel, MessageContent.Agv>(MemberList.None)
-            .ForMember(d => d.CurrentActionGroup, opt => opt.MapFrom(s => s))
-            // ignore CorrelationId, as it's set from the other mapping already, otherwise this would overwrite the CorrelationId of the AgvDto (Agv) with the CorrelationId of the ActionGroup
-            .ForMember(x => x.CorrelationId, opt => opt.Ignore());
+                var agv = new Agv(
+                    src.CorrelationId,
+                    src.SerialNumber,
+                    src.Name,
+                    src.CurrentAgvState,
+                    src.TimeOfStateTransition,
+                    src.TimeOfLockStateChanged,
+                    src.IsOnline,
+                    src.IsLocked,
+                    (src.AgvStatus?.Disturbed).GetValueOrDefault(false),
+                    (src.AgvStatus?.Automatic).GetValueOrDefault(false),
+                    (src.AgvStatus?.BatteryCharge).GetValueOrDefault(0),
+                    (src.AgvStatus?.Charging).GetValueOrDefault(false),
+                    currentActionGroup,
+                    agvErrors,
+                    ctx.Mapper.Map<MessageContent.GraphNode>(lastNode),
+                    src.Mode,
+                    src.AgvStatus?.ZoneIds?.ToList() ?? [],
+                    src.AgvStatus?.StationIds?.ToList() ?? [],
+                    src.AgvStatus?.TotalDistance ?? 0,
+                    src.AgvStatus?.TotalLifetime ?? 0,
+                    ctx.Mapper.Map<Maintenance>(lastMaintenance)
+                );
+                return agv;
+            });
 
-        CreateMap<GraphNode, MessageContent.Agv>(MemberList.None)
-            .ForMember(d => d.LastNode, opt => opt.MapFrom(s => s));
-
-        CreateMap<IList<AgvError>, MessageContent.Agv>(MemberList.None)
-            .ForMember(d => d.Errors, opt => opt.MapFrom(s => s));
-
-        CreateMap<MaintenanceLog, MessageContent.Agv>(MemberList.None)
-            .ForMember(a => a.LastMaintenance, opt => opt.MapFrom(src => src));
-
-        CreateMap<MaintenanceLog, MessageContent.Maintenance>()
+        CreateMap<MaintenanceLog, Maintenance>()
             .ForSourceMember(s => s.User, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.AgvCorrelationId, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.CreationDate, opt => opt.DoNotValidate())

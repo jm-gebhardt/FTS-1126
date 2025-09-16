@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -52,7 +53,7 @@ public class QueueRequestHandlerTest
     public async Task TryAddQueue_ValidData_RespondsGotQueue()
     {
         var queue = new TransportOrder.Domain.Models.Queue.Queue("a queue");
-        queue.AddNode("node id", 0);
+        queue.AddNode("node name".ToGuid(), 0);
         QueueRequestHandlerTestFixture<TryAddQueue> fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
             .WithQueue(queue)
             .Build();
@@ -68,7 +69,7 @@ public class QueueRequestHandlerTest
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<QueueNodeExistsException>(async () =>
-            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node 1", 0), new QueueNode("node 2", 0)])));
+            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node 1".ToGuid(), 0), new QueueNode("node 2".ToGuid(), 0)])));
     }
 
     [TestMethod]
@@ -78,6 +79,6 @@ public class QueueRequestHandlerTest
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<QueueNodeExistsException>(async () =>
-            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node id", 0), new QueueNode("node id", 1)])));
+            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node id".ToGuid(), 0), new QueueNode("node id".ToGuid(), 1)])));
     }
 }

@@ -195,7 +195,7 @@ public class EfMapRepository : IMapRepository
     }
 
     /// <inheritdoc />
-    public async Task<Guid> GetMapIdForNode(string nodeId)
+    public async Task<Guid> GetMapIdForNodeAsync(Guid nodeId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -217,7 +217,7 @@ public class EfMapRepository : IMapRepository
 
             if (!await CheckGraphSaved(map, context))
             {
-                _logger.LogWarning("Not all nodes or edges exist yet, so we cannot store the Map yet.");
+                _logger.LogWarning("Not all nodes or edges exist yet, so we cannot store the Map yet");
                 return false;
             }
 
@@ -352,7 +352,7 @@ public class EfMapRepository : IMapRepository
         IEnumerable<TId> rightOnly = rightIds.Except(leftIds);
 
         return (
-            leftOnly.Select(id => leftCollection.First(entry => Equals(id,  idProvider(entry)))),
+            leftOnly.Select(id => leftCollection.First(entry => Equals(id, idProvider(entry)))),
             rightOnly.Select(id => rightCollection.First(entry => Equals(id, idProvider(entry))))
         );
     }

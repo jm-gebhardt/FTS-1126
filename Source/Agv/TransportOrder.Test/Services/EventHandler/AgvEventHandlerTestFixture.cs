@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
@@ -60,6 +61,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture()
     {
+        _agvDb.SetupNodeFallbacks();
         Build();
     }
 
@@ -72,9 +74,9 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     public AgvEventHandlerTestFixture WithMinBatteryAgvs(ICollection<Agv> agvs)
     {
         _agvDb.Setup(x => x.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
-          return this;
+        return this;
     }
-    
+
     public AgvEventHandlerTestFixture WithAgv(Agv agv, bool isOnQueueHead = false)
     {
         _agvDb.AddAgvs(new List<Agv> { agv });
@@ -128,15 +130,14 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithReservedCharger(string? charger)
     {
-        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(),
-                It.IsAny<string?>()))
-            .ReturnsAsync((Agv _, string? _) =>
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(), It.IsAny<Guid?>()))
+            .ReturnsAsync((Agv _, Guid? _) =>
             {
                 if (charger == null)
                 {
                     throw new NoChargeStationAvailableException();
                 }
-                return new GraphNode(charger);
+                return charger.ToGraphNode();
             });
         return this;
     }
@@ -150,6 +151,12 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     public AgvEventHandlerTestFixture WithActiveErrors(IList<AgvError> errors)
     {
         _agvDb.AddActiveErrors(errors);
+        return this;
+    }
+
+    public AgvEventHandlerTestFixture WithNode(GraphNode node)
+    {
+        _agvDb.AddNode(node);
         return this;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Services;
@@ -74,7 +75,7 @@ public class WaitingHandler(
 
             var agvCorrelationId = actionGroup.AssignedAgv!.Value;
             logger.LogInformation("Handle waiting for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
-            string target = (await shortLoopTargetStationRepository.GetTargetStation()).Current;
+            var target = (await shortLoopTargetStationRepository.GetTargetStation()).Current.ToGuid();
             var occupancy = await stationRepository.GetOccupancyOfStation(target);
             if (!occupancy.IsEmpty)
             {
@@ -84,7 +85,7 @@ public class WaitingHandler(
             bool hasPalletJam = await GetJamState(target);
             if (hasPalletJam)
             {
-                logger.LogInformation("Station {Target} not available due to pallet jam ", occupancy.Station);
+                logger.LogInformation("Station {Target} not available due to pallet jam ", occupancy.StationId);
                 return;
             }
 
@@ -100,9 +101,9 @@ public class WaitingHandler(
         }, stoppingToken);
     }
 
-    private async Task<bool> GetJamState(string station)
+    private async Task<bool> GetJamState(Guid stationId)
     {
-        var jamState = await jamStateRepository.GetByStationAsync(station) ?? new JamState(station, 0, DateTime.UtcNow);
+        var jamState = await jamStateRepository.GetByStationAsync(stationId) ?? new JamState(stationId, 0, DateTime.UtcNow);
         return jamState.HasPalletJam;
     }
 

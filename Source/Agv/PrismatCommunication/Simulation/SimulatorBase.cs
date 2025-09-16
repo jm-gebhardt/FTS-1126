@@ -74,15 +74,15 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
     private bool AllTriggerAreLocalized()
     {
         bool allTriggerLocalized = true;
-        ConcurrentDictionary<string, string> triggerPointMapping = kaeserGraphConfiguration.TriggerPointMapping.ConcurrentDict;
-        foreach (KeyValuePair<string, string> triggerPoint in triggerPointMapping)
+        ConcurrentDictionary<string, Guid> triggerPointMapping = kaeserGraphConfiguration.TriggerPointMapping.ConcurrentDict;
+        foreach (KeyValuePair<string, Guid> triggerPoint in triggerPointMapping)
         {
-            if (!string.IsNullOrEmpty(triggerPoint.Value))
+            if (triggerPoint.Value != Guid.Empty)
             {
                 continue;
             }
             allTriggerLocalized = false;
-            logger.LogDebug("{MethodName}: Trigger {TriggerKey} is not assigned to any location", nameof(AllTriggerAreLocalized), triggerPoint.Key);
+            logger.LogInformation("{MethodName}: Trigger {TriggerKey} is not assigned to any location", nameof(AllTriggerAreLocalized), triggerPoint.Key);
         }
 
         return allTriggerLocalized;

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
@@ -46,12 +47,12 @@ public class AgvActionCommandHandler(
 
         logger.LogInformation("Handling start of {ActionType} action {CorrelationId} for agv {AgvCorrelationId}", action.ActionType, action.CorrelationId, agvCorrelationId);
         var lastFinishedAction = await transportOrderDb.ActionGroups.GetLastCompletedActionAsync(agvCorrelationId);
-        ICollection<string> nodes = action.Nodes;
+        ICollection<GraphNode> nodes = action.Nodes;
 
         logger.LogInformation("Nodes of {ActionType} action: {Nodes}", action.ActionType, string.Join(",", nodes));
         //start node of current order is assumed to be the target node of last completed action of this AGV
-        string? startNode = lastFinishedAction?.Target.NodeId;
-        if (startNode != null && !startNode.Equals(nodes.FirstOrDefault()))
+        var startNode = lastFinishedAction?.Target.Node;
+        if (startNode != null && startNode.Id != nodes.FirstOrDefault()?.Id)
         {
             logger.LogWarning("Target node of last completed action and first node of started action for AGV {AgvCorrelationId} differ. Last {LastTargetNode} Started {StartNode}", agvCorrelationId, startNode, nodes.FirstOrDefault());
         }
@@ -66,25 +67,25 @@ public class AgvActionCommandHandler(
                 return;
             }
         }
-        bool gotPickAssignedOnStation = nodes.First() == nodes.Last();
+        bool gotPickAssignedOnStation = nodes.First().Id == nodes.Last().Id;
 
         if (action.ActionType == ActionType.Pick && gotPickAssignedOnStation && !actionGroup.IsManual)
         {
             var order = await hostOrderRepository.GetByIdAsync(actionGroup.CorrelationId);
             string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? targetStation))
+            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.Node!.Name, out string? targetStation))
             {
                 logger.LogInformation("Agv {AgvCorrelationId} started {ActionType} {ActionCorrelationId} at station {Station}", agvCorrelationId, action.ActionType, action.CorrelationId, targetStation);
                 await context.Publish(new AgvStartedPick(targetStation, order.CorrelationId, pickTarget));
                 return;
             }
         }
-        if (configuration.IsOccupancyLimitedNode(startNode))
+        if (configuration.IsOccupancyLimitedNode(startNode.Name))
         {
             // free station only in case the start node is limited by agv occupancy.
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, free station",
                 nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, startNode);
-            await context.Publish(new FreeStationOccupancy(startNode, agvCorrelationId));
+            await context.Publish(new FreeStationOccupancy(startNode.Id, agvCorrelationId));
         }
     }
 
@@ -132,14 +133,14 @@ public class AgvActionCommandHandler(
 
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
 
-        string targetNodeId = action.Target.NodeId!;
-        if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _) || actionGroup.IsManual)
+        var targetNode = action.Target.Node;
+        if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.Node!.Name, out string? _) || actionGroup.IsManual)
         {
             // Only publish for non-WE stations for automatic action groups, as WE stations are occupied already during target selection
             // For manual actions publish also for WE stations
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} action {ActionId} for action group {ActionGroupCorrelationId}, occupying station {Station}",
-                nameof(HandleActionCompletion), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, targetNodeId);
-            await context.Publish(new OccupyStation(targetNodeId, agvCorrelationId));
+                nameof(HandleActionCompletion), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, targetNode?.Name);
+            await context.Publish(new OccupyStation(targetNode!, agvCorrelationId));
         }
 
         if (actionGroup.IsManual)
@@ -154,7 +155,7 @@ public class AgvActionCommandHandler(
             case ActionType.Pick:
             {
                 string pickTarget = order.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-                if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+                if (configuration.ConveyorStationMapping.TryGetValue(action.Target.Node!.Name, out string? _))
                 {
                     await context.Publish(new AgvFinishedPick(order.CorrelationId, pickTarget));
                     await targetSelector.Dequeue(action.CorrelationId);
@@ -165,10 +166,10 @@ public class AgvActionCommandHandler(
             case ActionType.Drop:
             {
                 string dropTarget = order.Actions.Single(a => a.ActionType == ActionType.Drop).Node;
-                if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+                if (configuration.ConveyorStationMapping.TryGetValue(action.Target.Node!.Name, out string? _))
                 {
                     await context.Publish(new AgvFinishedDrop(order.CorrelationId, dropTarget));
-                    conveyorCommunicator.ReportPalletDrop(action.Target.NodeId!, dropTarget, order.Hu);
+                    conveyorCommunicator.ReportPalletDrop(action.Target.Node!.Name, dropTarget, order.Hu);
                     await targetSelector.Dequeue(action.CorrelationId);
                 }
                 break;
@@ -197,7 +198,7 @@ public class AgvActionCommandHandler(
         var action = actionGroup.Actions.OrderBy(a => a.CompletedDate).Last();
         if (action is { ActionType: ActionType.Drop, ShouldSkip: false })
         {
-            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.NodeId!, out string? _))
+            if (configuration.ConveyorStationMapping.TryGetValue(action.Target.Node!.Name, out string? _))
             {
                 string? sap = action.GetSap();
                 if (sap == null)
@@ -210,17 +211,17 @@ public class AgvActionCommandHandler(
                     logger.LogError("Hu not given for manual drop {ActionCorrelationId}, can not send tord", action.CorrelationId);
                     return;
                 }
-                conveyorCommunicator.ReportPalletDrop(action.Target.NodeId!, sap, actionGroup.HandlingUnit);
+                conveyorCommunicator.ReportPalletDrop(action.Target.Node!.Name, sap, actionGroup.HandlingUnit);
             }
         }
 
-        string? station = action.Target.NodeId;
-        if (string.IsNullOrEmpty(station) || (configuration.ConveyorStationMapping.TryGetValue(station, out string? _) && !actionGroup.IsManual))
+        var station = action.Target.Node;
+        if (station == null || (configuration.ConveyorStationMapping.TryGetValue(station.Name, out string? _) && !actionGroup.IsManual))
         {
             // If the station is a conveyor station, we have  already occupied it during the target selection
             return;
         }
-        if (configuration.IsOccupancyLimitedNode(station))
+        if (configuration.IsOccupancyLimitedNode(station.Name))
         {
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}, occupying station {Station}",
                 nameof(ActionGroupCompleted), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, station);
@@ -234,8 +235,8 @@ public class AgvActionCommandHandler(
     public async Task Consume(ConsumeContext<ActionAborted> context)
     {
         var action = context.Message.Action;
-        string targetNodeId = action.Target.NodeId!;
-        if (configuration.ConveyorStationMapping.TryGetValue(targetNodeId, out string? _))
+        var targetNode = action.Target.Node;
+        if (configuration.ConveyorStationMapping.TryGetValue(targetNode!.Name, out string? _))
         {
             await targetSelector.Dequeue(action.CorrelationId);
         }
@@ -247,11 +248,11 @@ public class AgvActionCommandHandler(
             logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} or no AGV assigned to handle action aborted", action.CorrelationId, action.ParentId);
             return;
         }
-        if (configuration.IsOccupancyLimitedNode(targetNodeId))
+        if (configuration.IsOccupancyLimitedNode(targetNode.Name))
         {
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it",
-                nameof(ActionAborted), action.CorrelationId, action.CorrelationId, targetNodeId);
-            await context.Publish(new FreeStationOccupancy(targetNodeId, (Guid)agv));
+                nameof(ActionAborted), action.CorrelationId, action.CorrelationId, targetNode.Name);
+            await context.Publish(new FreeStationOccupancy(targetNode.Id, (Guid) agv));
         }
     }
 }

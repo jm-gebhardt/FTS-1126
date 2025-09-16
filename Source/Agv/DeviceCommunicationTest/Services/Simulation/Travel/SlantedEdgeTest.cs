@@ -19,11 +19,11 @@ public class SlantedEdgeTest
     // 3                  Way2                   //
     // |                                         //
     ///////////////////////////////////////////////
-    private GraphNode Source { get; } = new("Way2") { X = 3, Y = 3 };
+    private GraphNode Source { get; } = new("Way2".ToGuid(), "Way2") { X = 3, Y = 3 };
 
-    private GraphNode Target { get; } = new("Src3") { X = 5, Y = 1 };
+    private GraphNode Target { get; } = new("Src3".ToGuid(), "Src3") { X = 5, Y = 1 };
 
-    private GraphEdge Edge { get; } = GraphEdge.CreateSlanted("Way2", "Src3", 4, 0, 1);
+    private GraphEdge Edge { get; } = GraphEdge.CreateSlanted("Way2".ToGuid(), "Src3".ToGuid(), 4, 0, 1);
 
     [TestMethod]
     public void Construct_ValidData_PropertiesSet()
@@ -50,7 +50,7 @@ public class SlantedEdgeTest
     {
         var slanted = new SlantedEdge(Edge, Source, Target);
         double entryAngle = Mathematics.ConvertToRadians(90);
-        slanted.SetAngles(entryAngle, Target, NodeGenerator.GenerateNode(nodeId:"", x: 4, y:0));
+        slanted.SetAngles(entryAngle, Target, NodeGenerator.GenerateNode(nodeName: "", x: 4, y: 0));
         slanted.EntryAngle.ShouldBe(entryAngle);
         slanted.ExitAngle.ShouldBe(Mathematics.ConvertToRadians(45), tolerance: 0.001);
     }

@@ -11,9 +11,9 @@ public class JamStateEntityConfiguration: IEntityTypeConfiguration<JamState>
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<JamState> builder)
     {
-        builder.HasKey(e => e.Station);
+        builder.HasKey(e => e.StationId);
         builder.Property(e => e.LastStateChangeTime);
-        builder.Property(e => e.Station).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.StationId).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.State);
     }
 }

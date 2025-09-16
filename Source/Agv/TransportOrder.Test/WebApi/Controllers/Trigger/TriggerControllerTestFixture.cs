@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -10,13 +11,13 @@ using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Trigger;
 
-public class TriggerControllerTestFixture: MockRequestClientControllerTestFixture<TriggerController>
+public class TriggerControllerTestFixture : MockRequestClientControllerTestFixture<TriggerController>
 {
     protected override IEnumerable<Profile> GetProfiles() => [new TriggerProfile(), new PolygonPointProfile()];
 
     private GotTrigger _gotTrigger = null!;
     private TriggerLocationAssigned _triggerLocationAssigned = null!;
-    
+
     protected override void SetupController()
     {
         AddRequestClient<GetTrigger, GotTrigger>(() => _gotTrigger);
@@ -39,10 +40,11 @@ public class TriggerControllerTestFixture: MockRequestClientControllerTestFixtur
         return this;
     }
 
-    public TriggerControllerTestFixture WithTriggerLocation(LocationDto location)
+    public TriggerControllerTestFixture WithTriggerLocation(LocationDto locationDto, GraphNode? nodeId)
     {
         var mapper = MappingHelper.GetMapper(GetProfiles().ToArray());
-        _triggerLocationAssigned = new TriggerLocationAssigned(mapper.Map<Location>(location));
+        var location = mapper.Map<Location>(locationDto);
+        _triggerLocationAssigned = new TriggerLocationAssigned(location, nodeId);
         return this;
     }
 }

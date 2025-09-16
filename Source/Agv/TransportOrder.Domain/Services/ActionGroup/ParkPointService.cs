@@ -47,7 +47,7 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     }
 
     /// <inheritdoc />
-    public async Task ReserveParkAsync(string parkNodeId, Guid agvCorrelationId)
+    public async Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId)
     {
         try
         {
@@ -68,7 +68,7 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     /// <inheritdoc />
     public async Task<bool> AgvHasReservedParkingNodeAsync(Guid agvCorrelationId)
     {
-        List<string> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
+        List<Guid> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
         return await NodeStateRepository.IsAnyNodeReservedForAgv(agvCorrelationId, nodes);
     }
 }

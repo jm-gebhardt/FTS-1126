@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
@@ -16,6 +17,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 using MassTransit;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +37,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 {
     private readonly Mock<IActionGroupRetrievalService> _retrievalServiceMock = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepositoryMock = new();
-    private readonly Mock<IStationRepository> _stationRepository= new();
+    private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
     private readonly SemaphoreProvider<IAgvsSemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IAgvsSemaphore>>>().Object);
@@ -50,9 +52,10 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 
     public ActionGroupControllerTestFixture()
     {
+        _agvDb.SetupNodeFallbacks();
         AddConsumers<SuccessRequestHandlerMock<AbortActionGroup>>();
         AddConsumers<SuccessRequestHandlerMock<ResetActionGroup>>();
-        
+
         AddServices(sc =>
         {
             sc.AddTransient(_ => _retrievalServiceMock.Object);
@@ -71,8 +74,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _queueManager.Object);
         });
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<string>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
         _actionGroupRepositoryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
         {
@@ -80,10 +83,9 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             return ag ?? throw new ActionGroupNotFoundException(c);
         });
         _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>()))!.ReturnsAsync(
-            (AgvAction action, TransportOrder.Domain.Models.Agv.Agv _, ActionState _, Reason? _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
+        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>()))!.ReturnsAsync((AgvAction action, TransportOrder.Domain.Models.Agv.Agv _, ActionState _, Reason? _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
         _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((TransportOrder.Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
-        _graphRepositoryMock.Setup(x => x.NodeExistsAsync(It.IsAny<string>())).ReturnsAsync(true);
+        _graphRepositoryMock.Setup(x => x.NodeExistsByIdAsync(It.IsAny<Guid>())).ReturnsAsync(true);
     }
 
     protected override ActionGroupController GetController()
@@ -119,7 +121,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     }
 
     protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile(), new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile()];
-    
+
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> AddActionGroup(ActionGroupReadModel actionGroup)
     {
         _actionGroupReadModels.Add(actionGroup);
@@ -128,7 +130,27 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> AddActionGroup(Common.Messages.ActionGroups.ActionGroup actionGroup)
     {
-        _actionGroups.Add(Mapper.Map<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(actionGroup));
+        var domainActionGroup = Mapper.Map<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(actionGroup);
+        _actionGroups.Add(domainActionGroup);
+        GraphNode?[] graphNodes = domainActionGroup.Actions.Select(a => a.Target.Node).ToArray();
+        return WithNode(graphNodes);
+    }
+
+    public ActionGroupControllerTestFixture<TRequest, TRequestHandler> WithNode(GraphNode?[] graphNodes)
+    {
+        _agvDb.AddNode(graphNodes);
+
+        foreach (var node in graphNodes)
+        {
+            if (node != null)
+            {
+                _graphRepositoryMock.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+                _graphRepositoryMock.Setup(x => x.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+                _graphRepositoryMock.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+                _graphRepositoryMock.Setup(x => x.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+            }
+        }
+
         return this;
     }
 

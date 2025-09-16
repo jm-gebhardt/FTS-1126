@@ -45,8 +45,8 @@ public class NodeChangedConsumer(
     /// </summary>
     public Task Consume(ConsumeContext<NodeApproachingPropertiesUpdated> context)
     {
-        (var mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
-        return mapPublisher.SendNodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection);
+        (var mapId, var node, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        return mapPublisher.SendNodeApproachingPropertiesUpdated(mapId, node.Name, pickLiftHeight, dropLiftHeight, dockingDirection);
     }
 
     /// <summary>

@@ -3,10 +3,10 @@
 /// <summary>
 /// Exception thrown when the given node is already in the queue.
 /// </summary>
-public class QueueNodeExistsException: Exception
+public class QueueNodeExistsException : Exception
 {
     /// <inheritdoc cref="QueueNodeExistsException"/>>
-    public QueueNodeExistsException(string nodeId) : base($"{nodeId} is already part of the queue")
+    public QueueNodeExistsException(Guid nodeId) : base($"{nodeId} is already part of the queue")
     {
     }
 

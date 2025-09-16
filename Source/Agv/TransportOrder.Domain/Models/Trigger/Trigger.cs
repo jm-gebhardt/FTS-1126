@@ -2,6 +2,7 @@
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using JetBrains.Annotations;
 using System.Text.RegularExpressions;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
@@ -9,7 +10,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 /// <summary>
 /// A trigger
 /// </summary>
-public class Trigger: IEquatable<Trigger>
+public class Trigger : IEquatable<Trigger>
 {
     /// <inheritdoc cref="Trigger"/>>
     public Trigger(Guid id, string urn, string displayName, string version, string description, int? instanceMaximum, ICollection<ConfigurationParameter> configurationParameters)
@@ -61,7 +62,7 @@ public class Trigger: IEquatable<Trigger>
     /// <summary>
     /// Description of the triggers functionality
     /// </summary>
-    public string Description { get; init; } 
+    public string Description { get; init; }
 
     /// <summary>
     /// If set, the maximum allowed trigger instances in the graph 
@@ -81,37 +82,19 @@ public class Trigger: IEquatable<Trigger>
     /// <summary>
     /// Add an edge location.
     /// </summary>
+    /// <param name="node"></param>
     /// <param name="edgeId">The edge id.</param>
     /// <param name="mapId">Id of the map the edge is on.</param>
     /// <param name="configurationParameters">The configuration parameters at the location.</param>
     /// <returns>The new location</returns>
     /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(Guid edgeId, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null)
+    public Location AddLocation(GraphNode? node, Guid? edgeId, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null)
     {
         if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
         {
             throw new TriggerInstanceCountException(InstanceMaximum!.Value);
         }
-        var location = new Location(edgeId, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters));
-        Locations.Add(location);
-        return location ;
-    }
-
-    /// <summary>
-    /// Add a node location.
-    /// </summary>
-    /// <param name="nodeId">The node id.</param>
-    /// <param name="mapId">Id of the map the node is on.</param>
-    /// <param name="configurationParameters">The configuration parameters at the location.</param>
-    /// <returns>The new location</returns>
-    /// <exception cref="TriggerInstanceCountException">Thrown when the instance maximum was exceeded.</exception>
-    public Location AddLocation(string nodeId, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters = null)
-    {
-        if (InstanceMaximum != null && Locations.Count == InstanceMaximum)
-        {
-            throw new TriggerInstanceCountException(InstanceMaximum!.Value);
-        }
-        var location = new Location(nodeId, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters));
+        var location = new Location(node, edgeId, mapId, Id, GetUpdatedConfigurationParameters(configurationParameters));
         Locations.Add(location);
         return location;
     }
@@ -331,7 +314,7 @@ public class Trigger: IEquatable<Trigger>
         {
             return false;
         }
-        return Equals((Trigger)obj);
+        return Equals((Trigger) obj);
     }
 
     /// <inheritdoc cref="IEquatable{T}"/>>

@@ -138,7 +138,7 @@ public record AgvActionDto
     /// <summary>
     /// ctor called by AutoMapper.
     /// </summary>
-    private AgvActionDto()
+    public AgvActionDto()
     {
         TargetNodeId = null!;
         Nodes = null!;

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Queue;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -12,26 +13,21 @@ public class QueueProfile : WebApiProfile
     public QueueProfile()
     {
         CreateMap<QueueNode, QueueNodeDto>()
+            .ConstructUsing(_ => new QueueNodeDto())
+            .ForMember(d => d.NodeId, opt => opt.MapFrom(s => s.Node != null ? s.Node.Name : string.Empty))
             .ForSourceMember(s => s.Node, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.LastReservedDate, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.LastOccupiedDate, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.ReservedAgv, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.OccupiedAgv, opt => opt.DoNotValidate());
-        CreateMap<QueueNodeDto, QueueNode>()
-            .ForMember(m => m.Node, opt => opt.Ignore())
-            .ForMember(m => m.LastReservedDate, opt => opt.Ignore())
-            .ForMember(m => m.LastOccupiedDate, opt => opt.Ignore())
-            .ForMember(m => m.ReservedAgv, opt => opt.Ignore())
-            .ForMember(m => m.OccupiedAgv, opt => opt.Ignore());
-        CreateMap<QueueNodeDto, Common.Messages.Queue.QueueNode>();
-        CreateMap<List<QueueNodeDto>, List<Common.Messages.Queue.QueueNode>>().ConvertUsing((src, _, context) =>
-            {
-                return src.Select((dto, _) => context.Mapper.Map<Common.Messages.Queue.QueueNode>(dto)).ToList();
-            });
+       
+        CreateMap<QueueNodeDto, Common.Messages.Queue.QueueNode>()
+            .ForCtorParam(nameof(Common.Messages.Queue.QueueNode.NodeId), opt => opt.MapFrom(s => s.NodeId.ToGuid()));
+        CreateMap<List<QueueNodeDto>, List<Common.Messages.Queue.QueueNode>>().ConvertUsing((src, _, context) => { return src.Select((dto, _) => context.Mapper.Map<Common.Messages.Queue.QueueNode>(dto)).ToList(); });
         CreateMap<Queue, QueueDto>()
-            .ForSourceMember(s => s.Head , opt => opt.DoNotValidate())
-            .ForSourceMember(s => s.AgvFillQuantity , opt => opt.DoNotValidate())
-            .ForSourceMember(s => s.Tail , opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.Head, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.AgvFillQuantity, opt => opt.DoNotValidate())
+            .ForSourceMember(s => s.Tail, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.IsFull, opt => opt.DoNotValidate());
     }
 }

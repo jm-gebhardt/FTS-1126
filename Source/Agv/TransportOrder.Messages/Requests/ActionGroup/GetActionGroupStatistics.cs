@@ -5,4 +5,4 @@
 /// </summary>
 /// <param name="SourceNodeId">The source node id of the action group (optional).</param>
 /// <param name="TargetNodeId">The target node id of the action group (optional).</param>
-public record GetActionGroupStatistics(string? SourceNodeId, string? TargetNodeId);
+public record GetActionGroupStatistics(Guid? SourceNodeId, Guid? TargetNodeId);

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
@@ -19,12 +20,14 @@ public class RouteRequestHandler : IConsumer<GetRoute>
 {
     private readonly IAgvDb _agvDb;
     private readonly IRouteService _routeService;
+    private readonly IMapper _mapper;
 
     /// <inheritdoc cref="RouteRequestHandler"/>
-    public RouteRequestHandler(IAgvDb agvDb, IRouteService routeService)
+    public RouteRequestHandler(IAgvDb agvDb, IRouteService routeService, IMapper mapper)
     {
         _agvDb = agvDb;
         _routeService = routeService;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -39,8 +42,9 @@ public class RouteRequestHandler : IConsumer<GetRoute>
         try
         {
             var modelRoute = await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId, agvData);
-            
-            route = new Route(agv.CorrelationId, modelRoute.Nodes, modelRoute.Edges);
+
+            GraphNode[]? nodes = _mapper.Map<GraphNode[]>(modelRoute.Nodes);
+            route = new Route(agv.CorrelationId, nodes, modelRoute.Edges);
         }
         catch (RouteNotFoundException)
         {

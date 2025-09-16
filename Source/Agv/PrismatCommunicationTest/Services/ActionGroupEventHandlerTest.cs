@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
@@ -20,7 +21,7 @@ public class ActionGroupEventHandlerTest
     public async Task Consume_ActionGroupCompleted_ValidData_FinishHostOrder()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-        var hostOrder = new HostOrder( "OrderId", "hu", DateTime.UtcNow);
+        var hostOrder = new HostOrder("OrderId", "hu", DateTime.UtcNow);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
 
         fixture.HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
@@ -32,14 +33,14 @@ public class ActionGroupEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
 
         (await fixture.TestHarness.Published.Any<FinishHostOrder>(f =>
-            f.Context.Message == new FinishHostOrder(actionGroup.CorrelationId, actionGroupCompleted.MessageCreatedDate, actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).Target.NodeId))).ShouldBeTrue();
+            f.Context.Message == new FinishHostOrder(actionGroup.CorrelationId, actionGroupCompleted.MessageCreatedDate))).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task Consume_ActionAborted_ValidDataNotTemporary_AbortHostOrder()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-        var actionAborted = new ActionAborted(Guid.NewGuid(), new AgvAction(){ParentId = Guid.NewGuid()});
+        var actionAborted = new ActionAborted(Guid.NewGuid(), new AgvAction() { ParentId = Guid.NewGuid() });
 
         await fixture.TestHarness.Bus.Publish(actionAborted);
         await fixture.ShouldHaveConsumedAsync<ActionAborted>();
@@ -103,7 +104,7 @@ public class ActionGroupEventHandlerTest
         (await fixture.TestHarness.Published.Any<HandleHostOrderStart>(f =>
             f.Context.Message == new HandleHostOrderStart(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroupStarted.MessageCreatedDate))).ShouldBeTrue();
     }
-    
+
     [TestMethod]
     public async Task PickActionCompleted_ValidData_PublishesFinishPick()
     {
@@ -124,7 +125,7 @@ public class ActionGroupEventHandlerTest
     [TestMethod]
     public async Task DroppingAgvPassedDoppelspielTriggerPoint_ValidData_PublishesPassTriggerPoint()
     {
-        var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action", Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true, "pickNode");
+        var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action".ToGraphNode(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true, "pickNode".ToGraphNode());
 
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
 

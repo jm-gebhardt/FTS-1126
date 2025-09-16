@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Exceptions;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
@@ -12,6 +13,6 @@ public class ParkPointServiceTest
         var fixture = new ParkPointServiceTestFixture()
             .ReserveNodeAsyncReturns(false);
 
-        Should.ThrowAsync<NodeNotAvailableException>(async () => await fixture.ParkPointService.ReserveParkAsync("nodeId", Guid.NewGuid()));
+        Should.ThrowAsync<NodeNotAvailableException>(async () => await fixture.ParkPointService.ReserveParkAsync("nodeId".ToGuid(), Guid.NewGuid()));
     }
 }

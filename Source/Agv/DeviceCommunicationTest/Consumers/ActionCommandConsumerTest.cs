@@ -1,8 +1,10 @@
 ﻿using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
@@ -18,6 +20,7 @@ public class ActionCommandConsumerTest
     private const string AgvSerialNumber = "agv0";
     private readonly Guid _agvCorrelationId = AgvSerialNumber.ToGuid();
     private const string ToStation = "Target";
+    private static readonly GraphNode _toStationNode = ToStation.ToGraphNode();
     private const string OrderId = "1234";
     private readonly Guid _orderCorrelationId = OrderId.ToGuid();
 
@@ -53,7 +56,7 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_StartActionCommand_EmptyAssignedAgv_ThrowsException()
     {
-        var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
+        var action = new AgvAction(Guid.Empty, ActionType.Pick, targetNode: null, Guid.Empty);
         var fixture = new ActionCommandConsumerTestFixture();
 
         await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
@@ -102,7 +105,7 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_StartActionCommand_ChargeAction_To_AGV_Via_MQTT()
     {
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, ToStation, _orderCorrelationId,
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, _toStationNode, _orderCorrelationId,
             infoToAgv: new Dictionary<InfoToAgvKey, string>
             {
                 { InfoToAgvKey.DockFront, "true" }
@@ -135,9 +138,9 @@ public class ActionCommandConsumerTest
     {
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
         Guid[] edges = [Guid.Parse("ed70292e-e001-e002-8112-ffe69119c4b0"), Guid.Parse("ed70292e-e002-e003-8112-ffe69119c4b0"), Guid.NewGuid()];
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, _toStationNode, _orderCorrelationId)
         {
-            Nodes = nodes,
+            Nodes = nodes.ToGraphNodeArray(),
             Edges = edges,
             InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
         };
@@ -166,10 +169,10 @@ public class ActionCommandConsumerTest
     {
         const double liftHeight = 1.23d;
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, ToStation, _orderCorrelationId,
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, _toStationNode, _orderCorrelationId,
             infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
         {
-            Nodes = nodes
+            Nodes = nodes.ToGraphNodeArray()
         };
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
@@ -244,10 +247,10 @@ public class ActionCommandConsumerTest
 
         const double liftHeight = 1.23d;
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, ToStation, _orderCorrelationId,
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, _toStationNode, _orderCorrelationId,
             infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
         {
-            Nodes = nodes
+            Nodes = nodes.ToGraphNodeArray()
         };
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(vehicleId, action.CorrelationId);
@@ -269,10 +272,10 @@ public class ActionCommandConsumerTest
     {
         const double liftHeight = 1.23d;
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, ToStation, _orderCorrelationId,
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, _toStationNode, _orderCorrelationId,
             infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } })
         {
-            Nodes = nodes
+            Nodes = nodes.ToGraphNodeArray()
         };
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
@@ -295,9 +298,9 @@ public class ActionCommandConsumerTest
     public async Task Consume_UpdateActionCommand_Pick_MqttMessageSent()
     {
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, _toStationNode, _orderCorrelationId)
         {
-            Nodes = nodes,
+            Nodes = nodes.ToGraphNodeArray(),
             InfoToAgv = new Dictionary<InfoToAgvKey, string>
             {
                 {
@@ -325,7 +328,7 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_UpdateActionCommand_Charge_MqttMessageSent()
     {
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, ToStation, _orderCorrelationId,
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, _toStationNode, _orderCorrelationId,
             infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } });
         var fixture = new ActionCommandConsumerTestFixture();
 
@@ -368,7 +371,7 @@ public class ActionCommandConsumerTest
     [TestMethod]
     public async Task Consume_UpdateActionCommand_EmptyAssignedAgv_ThrowsException()
     {
-        var action = new AgvAction(Guid.Empty, ActionType.Pick, string.Empty, Guid.Empty);
+        var action = new AgvAction(Guid.Empty, ActionType.Pick, targetNode: "".ToGraphNode(), Guid.Empty);
         var fixture = new ActionCommandConsumerTestFixture();
 
         await fixture.TestHarness.Bus.Publish(new UpdateActionCommand(Guid.Empty, "", action));
@@ -387,9 +390,9 @@ public class ActionCommandConsumerTest
         await fixture.FillGraphRepository();
 
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, _toStationNode, _orderCorrelationId)
         {
-            Nodes = nodes,
+            Nodes = nodes.ToGraphNodeArray(),
             InfoToAgv = new Dictionary<InfoToAgvKey, string>
             {
                 {
@@ -419,9 +422,9 @@ public class ActionCommandConsumerTest
 
         var abortedId = Guid.NewGuid();
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, ToStation, _orderCorrelationId)
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, _toStationNode, _orderCorrelationId)
         {
-            Nodes = nodes,
+            Nodes = nodes.ToGraphNodeArray(),
             InfoToAgv = new Dictionary<InfoToAgvKey, string>
             {
                 {

@@ -7,11 +7,9 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 /// </summary>
 public class ReserveNodeFailedException : NodeStateException
 {
-    /// <summary>
-    /// Ctor
-    /// </summary>
+    /// <inheritdoc cref="ReserveNodeFailedException"/>>
     /// <param name="nodeId">The nodeId of the node which could not be locked</param>
-    public ReserveNodeFailedException(string nodeId) : base(nodeId, "lock")
+    public ReserveNodeFailedException(Guid nodeId) : base(nodeId.ToString(), "lock")
     {
     }
 }

@@ -256,9 +256,11 @@ public class HostOrderCommandHandlerTest
         pickAction.Sequence.ShouldBe(1);
         dropAction.Sequence.ShouldBe(2);
 
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.DecisionNode);
-        pickAction.Target.NodeId.ShouldBeEmpty();
-        dropAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.DecisionNode);
+        pickAction.Target.Node.ShouldBeNull();
+        dropAction.Target.Node.ShouldNotBeNull();
+        dropAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Destination]);
     }
 
     [DataRow(0)] //1020
@@ -309,9 +311,11 @@ public class HostOrderCommandHandlerTest
         moveAction.Sequence.ShouldBe(1);
         dropAction.Sequence.ShouldBe(2);
 
-        pickAction.Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
-        moveAction.Target.NodeId.ShouldBe(OrderGenerator.DecisionNode);
-        dropAction.Target.NodeId.ShouldBeEmpty();
+        pickAction.Target.Node.ShouldNotBeNull();
+        pickAction.Target.Node.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[order.Source]);
+        moveAction.Target.Node.ShouldNotBeNull();
+        moveAction.Target.Node.Name.ShouldBe(OrderGenerator.DecisionNode);
+        dropAction.Target.Node.ShouldBeNull();
     }
 
     [DataRow(0)] //1050
@@ -346,7 +350,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
-        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow, null));
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, DateTime.UtcNow));
         await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
         fixture.VerifyReportOrderCompletion(hostOrder.Actions.OrderBy(a => a.SequenceNumber).Last().Node);
     }
@@ -362,7 +366,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
-        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, now, null));
+        await fixture.TestHarness.Bus.Publish(new FinishHostOrder(hostOrder.CorrelationId, now));
         await fixture.ShouldHaveConsumedAsync<FinishHostOrder>();
         fixture.VerifyReportOrderCompletion(times: Times.Never());
     }
@@ -481,14 +485,14 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([dropOrder, nextPickOrder]);
 
-        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, "pickNode");
+        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, "pickNode".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<PassTriggerPoint>();
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
         queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
-        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId.ShouldBe(command.PickNode);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.Node!.Name.ShouldBe(command.PickNode!.Name);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AgvCorrelationId);
     }
 
@@ -505,14 +509,14 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([dropOrder, nextPickOrder]);
 
-        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, "pickNode");
+        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, "pickNode".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<PassTriggerPoint>();
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
         queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
-        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.NodeId.ShouldBe(command.PickNode);
+        queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).Target.Node!.Name.ShouldBe(command.PickNode!.Name);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AgvCorrelationId);
     }
 
@@ -529,7 +533,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([dropOrder, nextPickOrder]);
 
-        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, pickNode);
+        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, true, pickNode.ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<PassTriggerPoint>();
@@ -537,7 +541,7 @@ public class HostOrderCommandHandlerTest
         var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
         queueActionGroup.ActionGroup.Actions.Count.ShouldBe(3);
         queueActionGroup.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Pick)
-            .Target.NodeId.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[pickNode]);
+            .Target.Node!.Name.ShouldBe(OrderGenerator.KaeserConfiguration.StationMapping[pickNode]);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AgvCorrelationId);
     }
 
@@ -555,7 +559,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrders([dropOrder])
             .WithUnMatchedPickOrder(nextPickOrder);
 
-        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, false, pickNode);
+        var command = new PassTriggerPoint(Guid.NewGuid(), dropOrder.CorrelationId, nextPickOrder.CorrelationId, false, pickNode.ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<PassTriggerPoint>();
@@ -769,7 +773,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder]);
 
-        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
 
@@ -789,7 +793,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder]);
 
-        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
 
@@ -812,7 +816,7 @@ public class HostOrderCommandHandlerTest
             .WithNextPickOrder(nextPickOrder)
             .WithinAklAgvLimit(true);
 
-        await fixture.PublishMessageAsync(new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node"));
+        await fixture.PublishMessageAsync(new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode()));
         await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
 
         fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBe(nextPickOrder.CorrelationId);
@@ -832,7 +836,7 @@ public class HostOrderCommandHandlerTest
             .WithNextPickOrder(nextPickOrder)
             .WithinAklAgvLimit(true);
 
-        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
 
@@ -856,7 +860,7 @@ public class HostOrderCommandHandlerTest
             .WithNextPickOrder(nextPickOrder)
             .WithinAklAgvLimit(false);
 
-        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
 
@@ -877,7 +881,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrders([hostOrder])
             .WithUnMatchedPickOrder(null);
 
-        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
 
@@ -899,7 +903,7 @@ public class HostOrderCommandHandlerTest
             .WithHostOrders([hostOrder])
             .WithNextPickOrder(nextPickOrder);
 
-        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node");
+        var command = new TriggerDoppelspielpartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
 
         await fixture.TestHarness.Bus.Publish(command);
 

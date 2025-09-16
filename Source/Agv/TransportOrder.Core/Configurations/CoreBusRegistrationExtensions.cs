@@ -205,13 +205,13 @@ public static class CoreBusRegistrationExtensions
             });
             var nodePartitioner = c.CreatePartitioner(PartitionCount);
             c.Message<FreeStationOccupancy>(x =>
-                x.UsePartitioner(nodePartitioner, p => p.Message.Station));
+                x.UsePartitioner(nodePartitioner, p => p.Message.StationId));
             c.Message<OccupyStation>(x =>
-                x.UsePartitioner(nodePartitioner, p => p.Message.Station));
+                x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
             c.Message<StationReserved>(x =>
-                x.UsePartitioner(nodePartitioner, p => p.Message.StationName));
+                x.UsePartitioner(nodePartitioner, p => p.Message.StationId));
             c.Message<Common.Messages.Stations.UnblockStation>(x =>
-                x.UsePartitioner(nodePartitioner, p => p.Message.Station));
+                x.UsePartitioner(nodePartitioner, p => p.Message.Id));
         });
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 

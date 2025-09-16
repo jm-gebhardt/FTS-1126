@@ -190,8 +190,8 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_AutomaticActionWithdrawn_AgvOnTargetNode_DoesNotPublishFreeNode()
     {
-        const string node = "Charge-0";
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: node);
+        var node = "Charge-0".ToGraphNode();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node.Name);
         var fixture = new ActionEventHandlerTestFixture()
             .WithAgv(agv);
         await fixture.TestHarness.Bus.Publish(new AutomaticActionWithdrawn(agv.CorrelationId, node));
@@ -202,8 +202,8 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_AutomaticActionWithdrawn_AgvNotOnTargetNode_PublishesFreeNode()
     {
-        const string node = "Charge-0";
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: "a waypoint");
+        var node = "Charge-0".ToGraphNode();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "a waypoint");
         var fixture = new ActionEventHandlerTestFixture()
             .WithAgv(agv);
         await fixture.TestHarness.Bus.Publish(new AutomaticActionWithdrawn(agv.CorrelationId, node));
@@ -214,7 +214,7 @@ public class ActionEventHandlerTest
     [TestMethod]
     public async Task Consume_AutomaticActionWithdrawn_NoAgvGiven_PublishesFreeNode()
     {
-        const string node = "Charge-0";
+        var node = "Charge-0".ToGraphNode();
         var fixture = new ActionEventHandlerTestFixture();
         await fixture.TestHarness.Bus.Publish(new AutomaticActionWithdrawn(null, node));
         await fixture.ShouldHaveConsumedAsync<AutomaticActionWithdrawn>();

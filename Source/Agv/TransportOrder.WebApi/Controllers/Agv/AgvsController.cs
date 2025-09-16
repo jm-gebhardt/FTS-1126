@@ -97,6 +97,8 @@ public class AgvsController : Controller
         Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new List<Guid>()));
         var agvs = _mapper.Map<List<AgvDto>>(response.Message.Agvs);
         return Ok(agvs);
+        
+        // check if map/NODE-1 is right
     }
 
     /// <summary>

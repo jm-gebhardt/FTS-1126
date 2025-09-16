@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using MassTransit;
 using ActionGroupCreator = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroupCreator;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -8,6 +9,6 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 /// </summary>
 /// <param name="CorrelationId">The correlationId of the charging action group.</param>
 /// <param name="AgvCorrelationId">The correlationId of the agv.</param>
-/// <param name="ChargeStationId">Charger id.</param>
+/// <param name="ChargeStation">Charger node.</param>
 /// <param name="Creator">The creator of the charge action group.</param>
-public record CreateChargingActionGroup(Guid CorrelationId, Guid AgvCorrelationId, string ChargeStationId, ActionGroupCreator Creator = ActionGroupCreator.TransportOrder): CorrelatedBy<Guid>;
+public record CreateChargingActionGroup(Guid CorrelationId, Guid AgvCorrelationId, GraphNode ChargeStation, ActionGroupCreator Creator = ActionGroupCreator.TransportOrder): CorrelatedBy<Guid>;

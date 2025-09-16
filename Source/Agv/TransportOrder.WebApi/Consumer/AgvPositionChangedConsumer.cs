@@ -56,13 +56,13 @@ public class AgvPositionChangedConsumer :
     /// <param name="context"></param>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        (var agvCorrelationId, string? _, string? newLastNodeId) = context.Message;
+        (var agvCorrelationId, Guid? _, Guid? newLastNodeId) = context.Message;
         _logger.LogTrace("{MessageType} {AgvId}/{CorrelationId} received", nameof(AgvLastNodeIdChanged), agvCorrelationId, agvCorrelationId);
 
         var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(agvCorrelationId, newLastNodeId);
         if (agvRoute != null)
         {
-            _logger.LogTrace("Publishing AgvRoute {AgvRoute}", string.Join(",", agvRoute.RemainingNodes));
+            _logger.LogTrace("Publishing AgvRoute {AgvRoute}", string.Join(",", agvRoute.RemainingNodes.Select(n => n.Name)));
 
             await _agvPublisher.SendAgvRouteChangedAsync(agvRoute);
         }

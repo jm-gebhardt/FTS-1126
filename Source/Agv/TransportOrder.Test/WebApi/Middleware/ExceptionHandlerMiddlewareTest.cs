@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -47,7 +48,7 @@ public class ExceptionHandlerMiddlewareTest
 
         // Conflict
         yield return [() => new ChargeStationNotAvailableException(null!), HttpStatusCode.Conflict];
-        yield return [() => new ParkNodeNotAvailableException(""), HttpStatusCode.Conflict];
+        yield return [() => new ParkNodeNotAvailableException("".ToGuid()), HttpStatusCode.Conflict];
         yield return [() => new NoChargeStationAvailableException(), HttpStatusCode.Conflict];
         yield return [() => new NodeNotAvailableException(null!), HttpStatusCode.Conflict];
         yield return [() => new NoNodesAvailableException(null!), HttpStatusCode.Conflict];
@@ -68,6 +69,6 @@ public class ExceptionHandlerMiddlewareTest
         yield return [() => new MapNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
         yield return [() => new OrderNotFoundException(Guid.Empty), HttpStatusCode.NotFound];
         yield return [() => new PropertyNotFoundException(null!), HttpStatusCode.NotFound];
-        yield return [() => new RouteNotFoundException("", ""), HttpStatusCode.NotFound];
+        yield return [() => new RouteNotFoundException(Guid.Empty, Guid.Empty), HttpStatusCode.NotFound];
     }
 }

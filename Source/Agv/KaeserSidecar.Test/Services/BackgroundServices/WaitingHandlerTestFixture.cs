@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Services;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
@@ -12,12 +13,12 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 
-namespace Gebhardt.Acc.KaeserSidecar.Test.Services.BackgroundServices; 
+namespace Gebhardt.Acc.KaeserSidecar.Test.Services.BackgroundServices;
 
 public class WaitingHandlerTestFixture : MassTransitTestFixture
 {
     public WaitingHandler Handler { get; }
-    
+
     private readonly StationRepository _stationRepository;
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
     private readonly Mock<IJamStateRepository> _jamStateRepository = new();
@@ -29,7 +30,9 @@ public class WaitingHandlerTestFixture : MassTransitTestFixture
 
     private List<ActionGroup> ActionGroups { get; } = new();
 
-    public  const string Target = "PS03";
+    public const string Target = "PS03";
+
+    public static Guid TargetId = Target.ToGuid();
 
     public WaitingHandlerTestFixture()
     {
@@ -64,9 +67,9 @@ public class WaitingHandlerTestFixture : MassTransitTestFixture
         return this;
     }
 
-    public WaitingHandlerTestFixture WithPalletJam(string? station)
+    public WaitingHandlerTestFixture WithPalletJam(Guid? stationId)
     {
-        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<string>())).ReturnsAsync((string s) => new JamState(s, string.Equals(s, station) ? 1 : 0, DateTime.UtcNow));
+        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<Guid>())).ReturnsAsync((Guid s) => new JamState(s, s == stationId ? 1 : 0, DateTime.UtcNow));
         return this;
     }
 
@@ -97,7 +100,7 @@ public class WaitingHandlerTestFixture : MassTransitTestFixture
     public async Task VerifyStationOccupancyAsync(int count, Guid? agvCorrelationId = null)
     {
         ICollection<StationOccupancy> stationOccupancies = await _stationRepository.GetStationOccupancy();
-        var stationOccupancy = stationOccupancies.SingleOrDefault(s => s.Station == Target);
+        var stationOccupancy = stationOccupancies.SingleOrDefault(s => s.StationId == TargetId);
         stationOccupancy.ShouldNotBeNull();
         stationOccupancy.Count.ShouldBe(count);
         if (stationOccupancy.Count == 0)

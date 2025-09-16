@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
@@ -81,17 +82,18 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
 
     public TargetSelectorTestFixture WithOccupancies(params (int Count, Guid? AgvId)[] occupiedCountAndAgv)
     {
-        string[] stationIds = new[] { "1", "2", "3" };
+        string[] stationNames = ["1", "2", "3"];
+        Dictionary<string, Guid> stations = stationNames.ToDictionary(n => n, n => n.ToGuid());
 
-        List<StationOccupancy> occupancyList = stationIds
-            .Select((id, index) =>
+        List<StationOccupancy> occupancyList = stations
+            .Select((station, index) =>
             {
                 (int Count, Guid? AgvId) value = occupiedCountAndAgv.ElementAtOrDefault(index);
-                return new StationOccupancy(id, value.Count, value.AgvId);
+                return new StationOccupancy(station.Value, station.Key, value.Count, value.AgvId);
             })
             .ToList();
 
-        List<Station> stationList = stationIds
+        List<Station> stationList = stationNames
             .Select(id => new Station(id, AgvGraph.NodeType.PickDrop, []))
             .ToList();
 
@@ -129,9 +131,9 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
         return this;
     }
 
-    public Task FreeStation(string stationName, Guid agvCorrelationId)
+    public Task FreeStation(Guid stationId)
     {
-        return _stationRepository.FreeStation(stationName, agvCorrelationId);
+        return _stationRepository.FreeStation(stationId);
     }
 
     public async Task SelectTargetAsync()
@@ -146,10 +148,10 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
         await Selector.StopAsync(CancellationToken.None);
     }
 
-    public async Task VerifyStationOccupancyAsync(string station, int count, Guid? agvCorrelationId = null)
+    public async Task VerifyStationOccupancyAsync(Guid stationId, int count, Guid? agvCorrelationId = null)
     {
         ICollection<StationOccupancy> stationOccupancies = await _stationRepository.GetStationOccupancy();
-        var stationOccupancy = stationOccupancies.SingleOrDefault(s => s.Station == station);
+        var stationOccupancy = stationOccupancies.SingleOrDefault(s => s.StationId == stationId);
         stationOccupancy.ShouldNotBeNull();
         stationOccupancy.Count.ShouldBe(count);
         if (stationOccupancy.Count == 0)
@@ -165,10 +167,10 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
         }
     }
 
-    public TargetSelectorTestFixture WithStationHasPalletJam(string? station)
+    public TargetSelectorTestFixture WithStationHasPalletJam(Guid? stationId)
     {
-        Selector.SetUseJamState(station != null);
-        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<string>())).ReturnsAsync((string s) => new JamState(s, string.Equals(s, station) ? 1 : 0, DateTime.UtcNow));
+        Selector.SetUseJamState(stationId != null);
+        _jamStateRepository.Setup(x => x.GetByStationAsync(It.IsAny<Guid>())).ReturnsAsync((Guid s) => new JamState(s, s == stationId ? 1 : 0, DateTime.UtcNow));
         return this;
     }
 }

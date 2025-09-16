@@ -1,7 +1,9 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+﻿using AutoMapper;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
@@ -12,7 +14,12 @@ public class EfNodeRepositoryTestFixture : TransportOrderDbFixture, IDisposable
 
     public EfNodeRepositoryTestFixture()
     {
-        Repository = new EfNodeRepository(ContextFactory);
+        Repository = new EfNodeRepository(ContextFactory, Mapper);
+    }
+
+    protected override IEnumerable<Profile> GetProfiles()
+    {
+        yield return new GraphProfile();
     }
 
     public void AddGraph(EfAgvGraph agvGraph)

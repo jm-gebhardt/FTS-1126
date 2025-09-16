@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -47,7 +48,7 @@ public class ActionGroupsController : Controller
             states,
             fromDate ?? DateTime.MinValue,
             toDate ?? DateTime.MaxValue,
-            assignedAgv != null ? new List<Guid> { (Guid)assignedAgv } : null,
+            assignedAgv != null ? new List<Guid> { (Guid) assignedAgv } : null,
             limit,
             sortBy,
             sortDirection == SortDirection.Desc));
@@ -79,7 +80,7 @@ public class ActionGroupsController : Controller
     [Route("/actionGroups/durationStatistics")]
     public async Task<ActionResult<IEnumerable<ActionDurationStatisticsDto>>> GetDurationStatistics([FromQuery] string? source, [FromQuery] string? target)
     {
-        Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source, target));
+        Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()));
         return Ok(_mapper.Map<List<ActionDurationStatisticsDto>>(response.Message.DurationStatistics));
     }
 }

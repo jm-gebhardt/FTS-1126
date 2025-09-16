@@ -55,7 +55,7 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
         var stationCountParameter = parameters.GetValueOrDefault(PropertyName) ??
                                     GetDefaultConfigurationParameters().GetValueOrDefault(PropertyName);
         int stationCount = int.Parse(stationCountParameter!.Value);
-        logger.LogInformation("Current StationCount set to {stationCount}", stationCount);
+        logger.LogInformation("Current StationCount set to {StationCount}", stationCount);
 
         await bus.Publish(new AgvPassedDecisionPoint1(agvData, agvStatus, actionGroup, cargo, errors, stationCount, ShouldUseJamState(parameters)));
     }
@@ -63,7 +63,7 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
     /// <inheritdoc cref="IFfcTrigger"/>>
     public async Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
-        logger.LogInformation("Action group changed invoked for {name}; redirecting to default trigger invocation", nameof(DecisionPoint1Trigger));
+        logger.LogInformation("Action group changed invoked for {Name}; redirecting to default trigger invocation", nameof(DecisionPoint1Trigger));
 
         await Invoke(parameters, agvData, agvStatus, actionGroup, cargo, errors);
     }

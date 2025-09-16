@@ -18,7 +18,7 @@ public class WaitingPointAction
     /// <summary>
     /// The target station.
     /// </summary>
-    public string? Target { get; private set; }
+    public Guid? Target { get; private set; }
 
     /// <summary>
     /// The time the order was created.
@@ -26,7 +26,7 @@ public class WaitingPointAction
     public DateTime CreatedTime { get; init; }
 
     /// <inheritdoc cref="WaitingPointAction"/>>
-    public WaitingPointAction(Guid correlationId, Guid agvCorrelationId, string? target, DateTime createdTime)
+    public WaitingPointAction(Guid correlationId, Guid agvCorrelationId, Guid? target, DateTime createdTime)
     {
         CorrelationId = correlationId;
         AgvCorrelationId = agvCorrelationId;
@@ -46,7 +46,7 @@ public class WaitingPointAction
     /// The target of the action.
     /// </summary>
     /// <param name="target"></param>
-    public void SetTarget(string target)
+    public void SetTarget(Guid target)
     {
         Target = target;
     }

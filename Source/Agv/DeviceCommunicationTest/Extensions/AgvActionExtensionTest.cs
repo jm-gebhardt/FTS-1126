@@ -25,7 +25,7 @@ public class AgvActionExtensionTest
     {
         const string toStationId = "Drop5";
         const double liftHeight = 1.23d;
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, toStationId, Guid.NewGuid(), infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Drop, toStationId.ToGraphNode(), Guid.NewGuid(), infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
 
         var station = action.GetDestinationStation();
 
@@ -40,7 +40,7 @@ public class AgvActionExtensionTest
     {
         const string toStationId = "Pick1";
         const double liftHeight = 1.23d;
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, toStationId, Guid.NewGuid(), infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Pick, toStationId.ToGraphNode(), Guid.NewGuid(), infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
 
         action.GetDestinationStation().ShouldBeNull();
     }
@@ -49,14 +49,14 @@ public class AgvActionExtensionTest
     public void GetDestinationStation_Charge_ReturnsStationInfo()
     {
         const string toStationId = "Charge-1";
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, toStationId, Guid.NewGuid())
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, toStationId.ToGraphNode(), Guid.NewGuid())
         {
             InfoToAgv = new Dictionary<InfoToAgvKey, string>
             {
                 { InfoToAgvKey.DockFront, "true" },
-                { InfoToAgvKey.LiftHeight, "42"}
+                { InfoToAgvKey.LiftHeight, "42" }
             }
-        }; 
+        };
 
         var station = action.GetDestinationStation();
 
@@ -70,7 +70,7 @@ public class AgvActionExtensionTest
     public void GetDestinationStation_MoveToNode_ReturnsStationInfo()
     {
         const string toStationId = "Node-1";
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, toStationId, Guid.NewGuid())
+        var action = new AgvAction(Guid.NewGuid(), ActionType.Move, toStationId.ToGraphNode(), Guid.NewGuid())
         {
             InfoToAgv = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } }
         };
@@ -98,7 +98,7 @@ public class AgvActionExtensionTest
     [TestMethod]
     public void GetSourceStation_IsNotPick_ReturnsNull(ActionType actionType)
     {
-        var action = new AgvAction(Guid.NewGuid(), actionType, "a node", Guid.NewGuid());
+        var action = new AgvAction(Guid.NewGuid(), actionType, "a node".ToGraphNode(), Guid.NewGuid());
         action.GetSourceStation().ShouldBeNull();
     }
 
@@ -120,7 +120,7 @@ public class AgvActionExtensionTest
         {
             ToX = target.Position!.X,
             ToY = target.Position.Y * -1,
-            ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
+            ToTheta = (float) Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
         });
         mqttOrder.Stations.ShouldBeNull();
         mqttOrder.OrderType.ShouldBe(OrderType.Move);
@@ -135,7 +135,7 @@ public class AgvActionExtensionTest
     [TestMethod]
     public void ConvertToMoveToCoordinateOrder_NotMoveToCoordinate_ThrowsInvalidOperationException(ActionType actionType)
     {
-        var action = new AgvAction(Guid.NewGuid(), actionType, "a node", Guid.NewGuid());
+        var action = new AgvAction(Guid.NewGuid(), actionType, "a node".ToGraphNode(), Guid.NewGuid());
         action.IsMoveToCoordinate.ShouldBeFalse();
 
         Should.Throw<InvalidOperationException>(() => action.ConvertToMoveToCoordinateOrder("orderId", OrderRecordType.Order, "agv serial number"));
@@ -152,7 +152,7 @@ public class AgvActionExtensionTest
         var orderCorrelationId = orderId.ToGuid();
         const string toStationId = "Drop5";
         const double liftHeight = 1.23d;
-        var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
+        var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId.ToGraphNode(), orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
 
         var mqttOrder = action.ConvertToMoveToStationsOrder(orderId, recordType, agvSerialNumber, [], []);
 
@@ -193,7 +193,7 @@ public class AgvActionExtensionTest
         {
             ToX = target.Position!.X,
             ToY = target.Position.Y * -1,
-            ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
+            ToTheta = (float) Mathematics.ConvertToRadians(90.0f) - target.Position.Theta
         });
         mqttOrder.Stations.ShouldBeNull();
         mqttOrder.OrderType.ShouldBe(OrderType.Move);
@@ -213,7 +213,7 @@ public class AgvActionExtensionTest
         var orderCorrelationId = orderId.ToGuid();
         const string toStationId = "Drop5";
         const double liftHeight = 1.23d;
-        var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId, orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
+        var action = new AgvAction(actionCorrelationId, ActionType.Drop, toStationId.ToGraphNode(), orderCorrelationId, infoToAgv: new Dictionary<InfoToAgvKey, string>() { { InfoToAgvKey.LiftHeight, liftHeight.ToString(CultureInfo.InvariantCulture) } });
 
         var mqttOrder = action.ConvertToOrder(orderId, recordType, agvSerialNumber, [], []);
 

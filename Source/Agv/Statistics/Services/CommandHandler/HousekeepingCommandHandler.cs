@@ -30,7 +30,7 @@ public class HousekeepingCommandHandler : IConsumer<HouseKeepAgvPositions>
     {
         var timestamp = DateTime.UtcNow - TimeSpan.FromDays(30);
 
-        _logger.LogInformation("Housekeeping {name}: Dropping older than {timestamp}", nameof(GridAgvPosition), timestamp);
+        _logger.LogInformation("Housekeeping {Name}: Dropping older than {Timestamp}", nameof(GridAgvPosition), timestamp);
 
         await _db.GridAgvPositions.DeleteAgvPositionsOlderThan(timestamp);
         await _db.SaveAsync();

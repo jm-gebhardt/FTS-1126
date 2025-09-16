@@ -37,10 +37,10 @@ public class NodesPropertiesSeeder: ISeeder
 
         if (!Directory.Exists(basePath))
         {
-            _logger.LogInformation("Directory {BasePath} not found.", basePath);
+            _logger.LogInformation("Directory {BasePath} not found", basePath);
             return "";
         }
-        _fileName = Directory.GetFiles(basePath, "*", SearchOption.AllDirectories).Select(Path.GetFileName).Single() ?? throw new InvalidOperationException("No file found");
+        _fileName = Directory.GetFiles(basePath, "*", SearchOption.AllDirectories).Select(Path.GetFileName).SingleOrDefault() ?? throw new InvalidOperationException("No file found");
 
         _logger.LogInformation("Node properties file: {FileName}", _fileName);
 

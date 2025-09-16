@@ -39,7 +39,7 @@ public class GraphProfileTest
     {
         efNode.ShouldNotBeNull();
         efNode.ShouldSatisfyAllConditions(
-            n => n.Id.ShouldBe(graphNode.Id),
+            n => n.Name.ShouldBe(graphNode.Name),
             n => n.Type.ToString().ShouldBe(graphNode.Type.ToString()),
             n => n.X.ShouldBe(graphNode.X),
             n => n.Y.ShouldBe(graphNode.Y),

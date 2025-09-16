@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Triggers;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -20,13 +21,13 @@ public class EfTriggerRepositoryTest
 
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
-        
+
         await fixture.Repository.AddOrUpdate(trigger, true);
         var addedTrigger = await fixture.Repository.GetById(trigger.Id);
         addedTrigger.ShouldBeEquivalentTo(trigger);
         addedTrigger.Locations.ShouldBeEmpty();
 
-        trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
+        trigger.AddLocation(null, Guid.NewGuid(), Guid.NewGuid());
         await fixture.Repository.Update(trigger, true);
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
@@ -46,7 +47,7 @@ public class EfTriggerRepositoryTest
         addedTrigger.ShouldBeEquivalentTo(trigger);
         addedTrigger.Locations.ShouldBeEmpty();
 
-        trigger.AddLocation([new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())] , null, []);
+        trigger.AddLocation([new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())], null, []);
         await fixture.Repository.Update(trigger, true);
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
@@ -63,14 +64,14 @@ public class EfTriggerRepositoryTest
 
         //Add trigger with location
         await fixture.AddAsync(trigger);
-        var location = trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
+        var location = trigger.AddLocation(Guid.NewGuid().ToGraphNode(), null, Guid.NewGuid());
         await fixture.Repository.Update(trigger, true);
-        
+
         // Remove location during update
         trigger.RemoveLocation(location.Id);
         trigger.Locations.ShouldBeEmpty();
         await fixture.Repository.Update(trigger, true);
-       
+
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
         updatedTrigger.Locations.ShouldBeEmpty();
@@ -81,14 +82,14 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        const string nodeIdToUse = "WP-0080";
+        var nodeToUse = "WP-0080".ToGraphNode();
 
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
         //Add trigger with location
         await fixture.AddAsync(trigger);
-        var location = trigger.AddLocation(nodeIdToUse, null);
+        var location = trigger.AddLocation(nodeToUse, null, null);
         await fixture.Repository.Update(trigger, true);
 
         // Remove location during update
@@ -153,7 +154,7 @@ public class EfTriggerRepositoryTest
 
         var triggerToUpdate = await fixture.Repository.GetById(trigger.Id);
         // Update location 
-        triggerToUpdate.Locations.First().Agvs = new List<Guid>(){Guid.NewGuid()};
+        triggerToUpdate.Locations.First().Agvs = new List<Guid>() { Guid.NewGuid() };
         triggerToUpdate.Locations.ShouldNotBeEmpty();
         await fixture.Repository.Update(triggerToUpdate, true);
 
@@ -209,7 +210,7 @@ public class EfTriggerRepositoryTest
         updatedTrigger.ShouldBeEquivalentTo(trigger);
         updatedTrigger.ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue);
     }
-    
+
     [TestMethod]
     public async Task UpdateLocation_WithUpdatedConfigurationParameter_ParameterUpdated()
     {
@@ -224,7 +225,7 @@ public class EfTriggerRepositoryTest
             new(2, 1, 2),
             new(2, 2, 3)
         ];
-        
+
         //Add trigger with location
         await fixture.AddAsync(trigger);
         var addedLocation = trigger.AddLocation(polygon, null, [], [Guid.NewGuid()]);
@@ -243,7 +244,7 @@ public class EfTriggerRepositoryTest
         updatedTrigger.ShouldBeEquivalentTo(trigger);
         updatedTrigger.Locations.First(l => l.Id == addedLocation.Id).ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue);
     }
-    
+
     [TestMethod]
     public async Task UpdateMultipleLocations_WithUpdatedConfigurationParameter_ParameterUpdated()
     {
@@ -258,7 +259,7 @@ public class EfTriggerRepositoryTest
             new(2, 1, 2),
             new(2, 2, 3)
         ];
-        
+
         ICollection<PolygonPoint> polygon2 =
         [
             new(2, 9, 0),
@@ -266,7 +267,7 @@ public class EfTriggerRepositoryTest
             new(2, 6, 2),
             new(3, 5, 3)
         ];
-        
+
         //Add trigger with two locations
         await fixture.AddAsync(trigger);
         var addedLocation1 = trigger.AddLocation(polygon, null, [], [Guid.NewGuid()]);
@@ -293,8 +294,8 @@ public class EfTriggerRepositoryTest
     [TestMethod]
     public async Task GetTriggersAssignedToNode_WithNodeLocation_TriggersReturned()
     {
-        const string nodeIdToUse = "WP-0010";
-        const string otherNodeId = "WP-0015";
+        var nodeToUse = "WP-0010".ToGraphNode();
+        var otherNode = "WP-0015".ToGraphNode();
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
@@ -306,9 +307,9 @@ public class EfTriggerRepositoryTest
             new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
             new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
         };
-        triggers[0].AddLocation(nodeIdToUse, null);
-        triggers[1].AddLocation(otherNodeId, null);
-        triggers[2].AddLocation(nodeIdToUse, null);
+        triggers[0].AddLocation(nodeToUse, null, null);
+        triggers[1].AddLocation(otherNode, null, null);
+        triggers[2].AddLocation(nodeToUse, null, null);
 
         ITriggerRepository repo = fixture.Repository;
         await repo.AddOrUpdate(triggers[0]);
@@ -316,15 +317,15 @@ public class EfTriggerRepositoryTest
         await repo.AddOrUpdate(triggers[2]);
         await repo.AddOrUpdate(triggers[3]);
 
-        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
+        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
         triggerLocations.Count.ShouldBe(2);
     }
 
     [TestMethod]
     public async Task GetTriggersAssignedToNode_WithNodeLocationNoTriggerAvailable_TriggersReturned()
     {
-        const string nodeIdNotAvailable = "WP-0010";
-        const string otherNodeId = "WP-0015";
+        var nodeIdNotAvailable = "WP-0010".ToGuid();
+        var otherNode = "WP-0015".ToGraphNode();
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
@@ -336,8 +337,8 @@ public class EfTriggerRepositoryTest
             new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
             new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
         };
-        triggers[0].AddLocation(otherNodeId, null);
-        triggers[1].AddLocation(otherNodeId, null);
+        triggers[0].AddLocation(otherNode, null, null);
+        triggers[1].AddLocation(otherNode, null, null);
 
         ITriggerRepository repo = fixture.Repository;
         await repo.AddOrUpdate(triggers[0]);
@@ -352,8 +353,8 @@ public class EfTriggerRepositoryTest
     [TestMethod]
     public async Task GetTriggersAssignedToNode_EmptyNodeId_EmptyTriggerListReturned()
     {
-        const string nodeIdToUse = "";
-        const string otherNodeId = "WP-0009";
+        var nodeIdToUse = "".ToGuid();
+        var otherNode = "WP-0009".ToGraphNode();
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
@@ -364,9 +365,9 @@ public class EfTriggerRepositoryTest
             new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
             new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
         };
-        triggers[1].AddLocation(otherNodeId, null);
-        triggers[2].AddLocation(otherNodeId, null);
-        triggers[3].AddLocation(otherNodeId, null);
+        triggers[1].AddLocation(otherNode, null, null);
+        triggers[2].AddLocation(otherNode, null, null);
+        triggers[3].AddLocation(otherNode, null, null);
 
         ITriggerRepository repo = fixture.Repository;
         await repo.AddOrUpdate(triggers[0]);
@@ -381,8 +382,8 @@ public class EfTriggerRepositoryTest
     [TestMethod]
     public async Task LoadTriggerToLocationDictionary_WithNodeLocation_TriggersReturned()
     {
-        const string nodeIdToUse = "WP-0010";
-        const string otherNodeId = "WP-0015";
+        var nodeToUse = "WP-0010".ToGraphNode();
+        var otherNode = "WP-0015".ToGraphNode();
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
@@ -394,9 +395,9 @@ public class EfTriggerRepositoryTest
             new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
             new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
         };
-        triggers[0].AddLocation(nodeIdToUse, null);
-        triggers[1].AddLocation(otherNodeId, null);
-        triggers[2].AddLocation(nodeIdToUse, null);
+        triggers[0].AddLocation(nodeToUse, null, null);
+        triggers[1].AddLocation(otherNode, null, null);
+        triggers[2].AddLocation(nodeToUse, null, null);
 
         ITriggerRepository repo = fixture.Repository;
         await repo.AddOrUpdate(triggers[0]);
@@ -405,14 +406,14 @@ public class EfTriggerRepositoryTest
         await repo.AddOrUpdate(triggers[3]);
         await repo.LoadTriggerToLocationDictionary();
 
-        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
+        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
         triggerLocations.Count.ShouldBe(2);
     }
 
     [TestMethod]
     public async Task UpdateTriggerRepository_WithUpdatedConfigurationParameter_UpdatedTriggersReturned()
     {
-        const string nodeIdToUse = "WP-0010";
+        var nodeToUse = "WP-0010".ToGraphNode();
         const string updatedValue = "new value";
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
@@ -422,8 +423,8 @@ public class EfTriggerRepositoryTest
             new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
             new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter])
         };
-        triggers[0].AddLocation(nodeIdToUse, null);
-        triggers[1].AddLocation(nodeIdToUse, null);
+        triggers[0].AddLocation(nodeToUse, null, null);
+        triggers[1].AddLocation(nodeToUse, null, null);
 
         ITriggerRepository repo = fixture.Repository;
         await repo.AddOrUpdate(triggers[0]);
@@ -458,7 +459,7 @@ public class EfTriggerRepositoryTest
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
-         await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.Update(trigger, true));
+        await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.Update(trigger, true));
     }
 
     [TestMethod]

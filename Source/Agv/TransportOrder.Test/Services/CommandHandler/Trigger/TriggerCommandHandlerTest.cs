@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Trigger;
 using Shouldly;
@@ -76,7 +77,7 @@ public class TriggerCommandHandlerTest
         var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
 
-        var location = trigger.AddLocation(Guid.NewGuid(), Guid.NewGuid());
+        var location = trigger.AddLocation(Guid.NewGuid().ToGraphNode(), null, Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(1);
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
@@ -99,7 +100,7 @@ public class TriggerCommandHandlerTest
         await fixture.PublishMessageAsync(new UpdateDefaultConfigurationParameter(trigger.Id, parameter.Name, "new value"));
 
         await fixture.ShouldHavePublishedAsync<DefaultTriggerConfigurationUpdated>();
-        fixture.UpdatedTrigger.ConfigurationParameters.Single( p => p.Name == parameter.Name).Value.ShouldBe("new value");
+        fixture.UpdatedTrigger.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe("new value");
         await fixture.ShouldHavePublishedAsync<TriggerChanged>();
     }
 
@@ -125,7 +126,7 @@ public class TriggerCommandHandlerTest
         trigger.Locations.ShouldBeEmpty();
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        var command = new AddTriggerLocation(trigger.Id, null, Guid.NewGuid(),  [], Guid.NewGuid(), null);
+        var command = new AddTriggerLocation(trigger.Id, null, Guid.NewGuid(), [], Guid.NewGuid(), null);
 
         await fixture.PublishMessageAsync(command);
 
@@ -146,14 +147,14 @@ public class TriggerCommandHandlerTest
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        var command = new AddTriggerLocation(trigger.Id, null, null, [new PolygonPoint(12,12)], Guid.NewGuid(), null);
+        var command = new AddTriggerLocation(trigger.Id, null, null, [new PolygonPoint(12, 12)], Guid.NewGuid(), null);
 
         await fixture.PublishMessageAsync(command);
 
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
         fixture.UpdatedTrigger.Locations.First().Polygon.Count.ShouldBe(command.Polygon.Count);
- 
+
         await fixture.ShouldHavePublishedAsync<TriggerChanged>();
         await fixture.ShouldHavePublishedAsync<TriggerAssignedToArea>();
         await fixture.ShouldHavePublishedAsync<TriggerLocationAdded>();
@@ -166,14 +167,14 @@ public class TriggerCommandHandlerTest
         trigger.Locations.ShouldBeEmpty();
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
-        var command = new AddTriggerLocation(trigger.Id, "a node", null, [], Guid.NewGuid(), null);
+        var command = new AddTriggerLocation(trigger.Id, "a node".ToGraphNode(), null, [], Guid.NewGuid(), null);
 
         await fixture.PublishMessageAsync(command);
 
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
-        fixture.UpdatedTrigger.Locations.First().NodeId.ShouldBe(command.NodeId);
-        
+        fixture.UpdatedTrigger.Locations.First().Node.ShouldBe(command.Node);
+
         await fixture.ShouldHavePublishedAsync<TriggerChanged>();
         await fixture.ShouldHavePublishedAsync<TriggerAssignedToNode>();
         await fixture.ShouldHavePublishedAsync<TriggerLocationAdded>();
@@ -184,7 +185,7 @@ public class TriggerCommandHandlerTest
     {
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
-        trigger.AddLocation("a node", null);
+        trigger.AddLocation("a node".ToGraphNode(), null, null);
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
         await fixture.PublishMessageAsync(new UpdateLocationConfigurationParameter(trigger.Id, "unknown".ToGuid(), parameter.Name, "new value"));
@@ -198,7 +199,7 @@ public class TriggerCommandHandlerTest
     {
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
-        trigger.AddLocation("a node", null);
+        trigger.AddLocation("a node".ToGraphNode(), null, null);
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
         const string newValue = "new value";

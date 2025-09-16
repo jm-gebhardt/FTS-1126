@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -29,7 +30,7 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _graphRepository.Object);
         collection.AddTransient(_ => _metricCollectorServiceMock.Object);
-        NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<string>())).Verifiable();
+        NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<Guid>())).Verifiable();
         _stationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Verifiable();
         _metricCollectorServiceMock.Setup(x => x.CollectJamStateMetrics(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<bool>(), It.IsAny<DateTime>(), It.IsAny<bool>())).Verifiable();
         return this;
@@ -37,23 +38,23 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
 
     public StationCommandHandlerTestFixture WithNodeState(NodeLock? nodeState)
     {
-        NodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<string>())).ReturnsAsync(nodeState);
+        NodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeState);
         return this;
     }
 
-    public StationCommandHandlerTestFixture WithStation(string nodeId)
+    public StationCommandHandlerTestFixture WithStation(string nodeName)
     {
-        var station = new TransportOrder.Domain.Models.Station.Station(nodeId, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>());
+        var station = new TransportOrder.Domain.Models.Station.Station(nodeName, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>());
         var id = station.Id;
         _stationRepository.Setup(x => x.GetStation(id)).ReturnsAsync(station);
-        _stationRepository.Setup(x => x.GetStation(nodeId)).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStation(nodeName.ToGuid())).ReturnsAsync(station);
         return this;
     }
 
-    public StationCommandHandlerTestFixture WithLockableAndUnlockableNode(string nodeId)
+    public StationCommandHandlerTestFixture WithLockableAndUnlockableNode(string nodeName)
     {
-        NodeStateRepository.Setup(x => x.LockNodeAsync(nodeId)).ReturnsAsync(true);
-        NodeStateRepository.Setup(x => x.UnlockNodeAsync(nodeId)).ReturnsAsync(true);
+        NodeStateRepository.Setup(x => x.LockNodeAsync(nodeName.ToGuid())).ReturnsAsync(true);
+        NodeStateRepository.Setup(x => x.UnlockNodeAsync(nodeName.ToGuid())).ReturnsAsync(true);
         return this;
     }
 

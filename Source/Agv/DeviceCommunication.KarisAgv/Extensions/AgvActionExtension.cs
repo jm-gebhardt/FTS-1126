@@ -52,9 +52,9 @@ public static class AgvActionExtension
             RecordType = recordType,
             Coordinates = new Coordinates
             {
-                ToTheta = (float)Mathematics.ConvertToRadians(90.0f) - action.Target.Position!.Theta,  // Convert to KARIS coordination system
+                ToTheta = (float) Mathematics.ConvertToRadians(90.0f) - action.Target.Position!.Theta, // Convert to KARIS coordination system
                 ToX = action.Target.Position!.X,
-                ToY = action.Target.Position!.Y * -1  // Convert to KARIS coordination system
+                ToY = action.Target.Position!.Y * -1 // Convert to KARIS coordination system
             }
         };
     }
@@ -86,7 +86,7 @@ public static class AgvActionExtension
             Stations = new Stations
             {
                 FromStation = action.GetSourceStation(),
-                ToStation =  action.GetDestinationStation()
+                ToStation = action.GetDestinationStation()
             },
             Route = new Route()
             {
@@ -113,7 +113,7 @@ public static class AgvActionExtension
         {
             return new StationInfo
             {
-                Id = action.Target.NodeId!,
+                Id = action.Target.Node!.Name,
                 DockFront = dockFront,
                 LiftHeight = liftHeight
             };
@@ -132,9 +132,9 @@ public static class AgvActionExtension
         {
             throw new InvalidOperationException($"Can't handle action target {action.Target} for deriving destination");
         }
-        bool dockFront = action.InfoToAgv?.GetDockFront()?? false;
+        bool dockFront = action.InfoToAgv?.GetDockFront() ?? false;
         double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
-        string targetNodeId = action.Target.NodeId!;
+        string targetNodeId = action.Target.Node!.Name;
         if (action.ActionType == ActionType.Pick)
         {
             return null;

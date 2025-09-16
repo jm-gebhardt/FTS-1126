@@ -38,16 +38,18 @@ try
                 .AddKaeserSidecar(null)
                 .ConfigureWebHost(h =>
                     h.UseKestrel()
-                        .Configure(app =>
-                        {
-                            app.UseMetricServer();
-                        }));
+                        .Configure(app => { app.UseMetricServer(); }));
         });
     if (hostBuilder == null)
     {
         initialLogger.LogWarning("Invalid command line argument(s)");
         return 1;
     }
+
+    hostBuilder.ConfigureServices(s =>
+        s.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies())
+    );
+
     var host = hostBuilder.Build();
     using (var scope = host.Services.CreateScope())
     {

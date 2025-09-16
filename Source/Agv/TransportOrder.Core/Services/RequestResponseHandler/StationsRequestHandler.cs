@@ -26,8 +26,8 @@ public class StationsRequestHandler(
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository,
     IBus bus) :
-    IConsumer<GetMapStations>, 
-    IConsumer<GetStations>, 
+    IConsumer<GetMapStations>,
+    IConsumer<GetStations>,
     IConsumer<GetStation>,
     IConsumer<TryLockStation>,
     IConsumer<TryUnlockStation>,
@@ -68,7 +68,7 @@ public class StationsRequestHandler(
             return;
         }
         await HandleOrders(station.Name, lockOrderHandling);
-        await bus.Publish(new LockStation(id, user ,reason, lockDescription, lockOrderHandling));
+        await bus.Publish(new LockStation(id, user, reason, lockDescription, lockOrderHandling));
         logger.LogStationInformation(LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationLocked } });
         await context.RespondAsync(new LockedUnlockedStation(true));
     }
@@ -94,7 +94,7 @@ public class StationsRequestHandler(
 
     private async Task HandleStartedOrders(IReadOnlyCollection<ActionGroup> actionGroups, LockedOrderHandlingType policy)
     {
-        IEnumerable<ActionGroup>  startedOrders = actionGroups.Where(a => a.State is ActionGroupState.Started or ActionGroupState.Paused);
+        IEnumerable<ActionGroup> startedOrders = actionGroups.Where(a => a.State is ActionGroupState.Started or ActionGroupState.Paused);
 
         Func<Guid, Task>? handleOrder = GetHandlingForPolicy(policy);
         if (handleOrder == null)
@@ -103,7 +103,7 @@ public class StationsRequestHandler(
         }
         foreach (var actionGroup in startedOrders)
         {
-            await handleOrder(actionGroup.CorrelationId) ;
+            await handleOrder(actionGroup.CorrelationId);
         }
     }
 
@@ -161,7 +161,7 @@ public class StationsRequestHandler(
         logger.LogStationInformation(LogCodes.StationUnblocked, station.Id, "Station Unblocked", "Station was unblocked", new Dictionary<string, object?>{{LogLabels.User, user}});
         logger.LogStationInformation(LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationUnblocked}});
 
-        await bus.Publish(new Common.Messages.Stations.UnblockStation(station.Name));
+        await bus.Publish(new Common.Messages.Stations.UnblockStation(station.Id, station.Name));
 
         await context.RespondAsync(new Success());
     }

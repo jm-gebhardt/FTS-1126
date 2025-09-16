@@ -48,7 +48,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             return;
         }
         logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
-            action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
+            action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.Node?.Name);
     }
 
     /// <inheritdoc />
@@ -84,7 +84,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             return;
         }
         logger.LogInformation("Sent update transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
-            action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
+            action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.Node?.Name);
     }
 
     /// <inheritdoc />
@@ -118,7 +118,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             return;
         }
         logger.LogInformation("Aborted Action: {ActionCorrelationId} and sent update transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
-            abortedActionCorrelationId, action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.NodeId);
+            abortedActionCorrelationId, action.CorrelationId, assignedAgv, agvSerialNumber, action.Target.Node?.Name);
     }
 
     /// <inheritdoc />
@@ -137,7 +137,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         await context.PublishMqtt(order, context.CancellationToken);
 
         logger.LogInformation("Resent order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}",
-            action.CorrelationId, serialNumber, action.Target.NodeId);
+            action.CorrelationId, serialNumber, action.Target.Node?.Name);
     }
 
     private async Task<MqttOrder> GetOrder(AgvAction action, string agvSerialNumber, OrderRecordType recordType, string orderId)
@@ -150,7 +150,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
 
     private async Task<List<object>> GetRouteNodes(AgvAction action)
     {
-        return (await graphRepository.GetMqttNodes([.. action.Nodes])).ToList<object>();
+        return (await graphRepository.GetMqttNodes([.. action.Nodes.Select(n => n.Name)])).ToList<object>();
     }
 
     private async Task<List<object>> GetRouteEdges(AgvAction action)

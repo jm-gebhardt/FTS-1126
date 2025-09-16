@@ -96,7 +96,7 @@ public class StationsRequestHandlerTest
     public async Task Consume_TryLockStation_NotStartedChargeParkActionGroups_PublishLockStationCancelActionGroup_RespondsLockedUnlockedStation()
     {
         var station = new Station("name", AgvGraph.NodeType.Park, []);
-        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeId: station.Name);
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeName: station.Name);
         var parkActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station.Name);
         StationsRequestHandlerTestFixture<TryLockStation, StationsRequestHandler> fixture = new StationsRequestHandlerTestFixture<TryLockStation, StationsRequestHandler>()
             .WithActionGroups([parkActionGroup, chargeActionGroup])

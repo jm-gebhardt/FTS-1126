@@ -10,19 +10,24 @@ public class NodeNotFoundException : NotFoundException
 {
     /// <inheritdoc cref="NodeNotFoundException"/>>
     [PublicAPI]
-    public NodeNotFoundException(Models.Agv.Agv agv, string description)
-        : base(description, "Agv CorrelationId", agv.CorrelationId)
+    public NodeNotFoundException(Models.Agv.Agv agv, Guid nodeId)
+        : base(nodeId.ToString(), "Agv CorrelationId", agv.CorrelationId)
     {
     }
 
     /// <inheritdoc cref="NodeNotFoundException"/>>
-    public NodeNotFoundException(Guid agvCorrelationId, string description)
-        : base(description, nameof(agvCorrelationId), agvCorrelationId)
+    public NodeNotFoundException(Guid agvCorrelationId, Guid nodeId)
+        : base(nodeId.ToString(), nameof(agvCorrelationId), agvCorrelationId)
     {
     }
 
     /// <inheritdoc cref="NodeNotFoundException"/>>
-    public NodeNotFoundException(string nodeId) : base($"Node with Id {nodeId}")
+    public NodeNotFoundException(string description) : base($"{description}")
+    {
+    }
+
+    /// <inheritdoc cref="NodeNotFoundException"/>>
+    public NodeNotFoundException(Guid? nodeId, string? nodeDescription = null) : base($"{nodeDescription} Node with Id {nodeId}")
     {
     }
 }

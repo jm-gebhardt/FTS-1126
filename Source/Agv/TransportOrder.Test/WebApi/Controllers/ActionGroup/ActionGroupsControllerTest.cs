@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -13,6 +14,7 @@ public class ActionGroupsControllerTest
     [TestMethod]
     public async Task GetActionGroups_ValidData_ReturnsActionGroupDtos()
     {
+        const string targetNodeName = "target";
         var actionGroups = new List<ActionGroupReadModel>
         {
             new(Guid.NewGuid(),
@@ -31,7 +33,8 @@ public class ActionGroupsControllerTest
                         1,
                         ActionState.Created,
                         ActionType.Move,
-                        "target",
+                        targetNodeName.ToGuid(),
+                        targetNodeName,
                         AgvGraph.NodeType.PickDrop,
                         [],
                         [],

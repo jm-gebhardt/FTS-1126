@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -25,6 +25,11 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
 
+    public MoveAgvRequestHandlerTestFixture()
+    {
+        _agvDb.SetupNodeFallbacks();
+    }
+
     public new MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> BuildAsync()
     {
         AddServices(s =>
@@ -38,10 +43,10 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         });
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).Verifiable();
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.Is<string>(y => y == "target"))).ReturnsAsync(new TransportOrder.Domain.Models.Node.NodeLock("target", TransportOrder.Domain.Models.Node.NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow));
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
+        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.Is<Guid>(y => y == "target".ToGuid()))).ReturnsAsync(new TransportOrder.Domain.Models.Node.NodeLock("target".ToGraphNode(), TransportOrder.Domain.Models.Node.NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow));
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<string>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         base.Build();
         return this;
     }
@@ -52,9 +57,9 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         return this;
     }
 
-    public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> WithNode(GraphNode? node)
+    public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> WithNode(params GraphNode?[] nodes)
     {
-        _agvDb.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<string>())).ReturnsAsync((string id) => node ?? throw new NodeNotFoundException(id));
+        _agvDb.AddNode(nodes);
         return this;
     }
 
@@ -73,7 +78,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
                 break;
 
             case AgvGraph.NodeType.Park:
-                ParkPointService.Verify(x => x.ReserveParkAsync(It.Is<string>(n => n == targetNode.Id), It.Is<Guid>(a => a == agvId)), Times.Once());
+                ParkPointService.Verify(x => x.ReserveParkAsync(It.Is<Guid>(n => n == targetNode.Id), It.Is<Guid>(a => a == agvId)), Times.Once());
                 break;
 
             default:

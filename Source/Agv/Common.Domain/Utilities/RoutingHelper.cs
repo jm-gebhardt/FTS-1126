@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+
+namespace Gebhardt.Acc.Common.Domain.Utilities;
 
 /// <summary>
 /// Collection of utility functions to work with routes/nodes.
@@ -54,20 +56,20 @@ public static class RoutingHelper
     /// <param name="route">The full route</param>
     /// <param name="nodeId">The node id</param>
     /// <returns></returns>
-    public static uint GetFirstIndexOfNodeId(string[] route, string? nodeId)
+    public static uint GetFirstIndexOfNodeId(GraphNode[] route, Guid? nodeId)
     {
         int currentIndex = 0;
 
-        if (!string.IsNullOrEmpty(nodeId))
+        if (nodeId != null)
         {
-            currentIndex = Array.IndexOf(route, route.FirstOrDefault(n => n.Equals(nodeId)));
+            currentIndex = Array.FindIndex(route, n => n.Id == nodeId);
         }
 
         if (currentIndex <= 0)
         {
             currentIndex = 0;
         }
-        return (uint)currentIndex;
+        return (uint) currentIndex;
     }
 
     /// <summary>
@@ -76,10 +78,10 @@ public static class RoutingHelper
     /// <param name="lastNodeId"></param>
     /// <param name="route"></param>
     /// <returns></returns>
-    public static string[] GetRemainingRoute(string? lastNodeId, string[] route)
+    public static GraphNode[] GetRemainingRoute(Guid? lastNodeId, GraphNode[] route)
     {
         uint currentIndex = GetFirstIndexOfNodeId(route, lastNodeId);
-        string[] remainingRoute = route.Skip((int)currentIndex).ToArray();
+        GraphNode[] remainingRoute = route.Skip((int) currentIndex).ToArray();
         return remainingRoute;
     }
 }

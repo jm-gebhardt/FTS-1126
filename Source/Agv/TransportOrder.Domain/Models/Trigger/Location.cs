@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using JetBrains.Annotations;
@@ -31,7 +32,7 @@ public class Location : IEquatable<Location>
     /// <summary>
     /// The node id, if set.
     /// </summary>
-    public string? NodeId { get; set; }
+    public GraphNode? Node { get; set; }
 
     /// <summary>
     /// The polygon, if set.
@@ -64,47 +65,25 @@ public class Location : IEquatable<Location>
     }
 
     /// <inheritdoc cref="Location"/>>
-    public Location(string nodeId, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters)
+    public Location(GraphNode? node, Guid? edgeId, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters)
     {
         Id = Guid.NewGuid();
         Polygon = [];
         Agvs = [];
-        NodeId = nodeId;
-        TriggerId = triggerId;
-        MapId =  mapId ?? null;
-        ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
-    }
-
-    /// <inheritdoc cref="Location"/>>
-    public Location(Guid edgeId, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters)
-    {
-        Id = Guid.NewGuid();
-        Polygon = [];
-        Agvs = [];
+        Node = node;
         EdgeId = edgeId;
-        MapId =  mapId ?? null;
+        MapId = mapId ?? null;
         TriggerId = triggerId;
         ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
     }
 
     /// <inheritdoc cref="Location"/>>
-    public Location(ICollection<Polygon.PolygonPoint> polygon, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters)
+    public Location(ICollection<Polygon.PolygonPoint> polygon, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters, ICollection<Guid>? agvs = null)
     {
         Id = Guid.NewGuid();
         Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, p.Index, Id)).ToList();
-        Agvs = [];
-        MapId =  mapId ?? null;
-        TriggerId = triggerId;
-        ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
-    }
-
-    /// <inheritdoc cref="Location"/>>
-    public Location(ICollection<Polygon.PolygonPoint> polygon, Guid? mapId, Guid triggerId, ICollection<ConfigurationParameter> configurationParameters, ICollection<Guid> agvs)
-    {
-        Id = Guid.NewGuid();
-        Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, p.Index, Id)).ToList();
-        Agvs = agvs;
-        MapId =  mapId ?? null;
+        Agvs = agvs ?? [];
+        MapId = mapId ?? null;
         TriggerId = triggerId;
         ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
     }
@@ -174,7 +153,7 @@ public class Location : IEquatable<Location>
         {
             return false;
         }
-        if (NodeId != other.NodeId)
+        if (Node?.Id != other.Node?.Id)
         {
             return false;
         }
@@ -210,12 +189,12 @@ public class Location : IEquatable<Location>
             return true;
         }
 
-        return obj.GetType() == GetType() && Equals((Location)obj);
+        return obj.GetType() == GetType() && Equals((Location) obj);
     }
 
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, TriggerId, EdgeId, NodeId, MapId, Agvs, ConfigurationParameters, Polygon);
+        return HashCode.Combine(Id, TriggerId, EdgeId, Node, MapId, Agvs, ConfigurationParameters, Polygon);
     }
 }

@@ -41,7 +41,7 @@ public static class CmdParser
                         string[] split = c.PickDropNode.Split(PickDropNodeIdSeparator);
                         if (split.Length != 2)
                         {
-                            logger.LogError("Invalid pick drop argument.");
+                            logger.LogError("Invalid pick drop argument");
                             return;
                         }
                         pickNodeId = split[0];
@@ -90,7 +90,7 @@ public static class CmdParser
                     // make sure no other config is set
                     if (c.ModuleUrl != null || c.Pin != null || c.PickDropNode != null)
                     {
-                        logger.LogError("Config file set together with other values. That's not supported.");
+                        logger.LogError("Config file set together with other values. That's not supported");
                     }
 
                     string yamlContent = await File.ReadAllTextAsync(c.ConfigFilePath);
@@ -102,7 +102,7 @@ public static class CmdParser
                 }
             });
 
-        logger.LogInformation("Config: {config}", config);
+        logger.LogInformation("Config: {Config}", config);
 
         return config;
     }

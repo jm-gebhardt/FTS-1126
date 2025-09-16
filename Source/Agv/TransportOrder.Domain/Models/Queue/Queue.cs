@@ -55,12 +55,12 @@ public class Queue
     /// <summary>
     /// The id of the node where agvs enter the queue.
     /// </summary>
-    public string? EntryNode => Nodes.OrderBy(n => n.Position).LastOrDefault()?.NodeId;
+    public Guid? EntryNode => Nodes.OrderBy(n => n.Position).LastOrDefault()?.NodeId;
 
     /// <summary>
     /// All the nodes of the queue that are not the entry node.
     /// </summary>
-    public ICollection<string> NonEntryNodes => Nodes.Select(q => q.NodeId).Where(n => n != EntryNode).ToList();
+    public ICollection<Guid> NonEntryNodes => Nodes.Select(q => q.NodeId).Where(n => n != EntryNode).ToList();
 
     /// <summary>
     /// The agv fill quantity.
@@ -118,7 +118,7 @@ public class Queue
     /// Try to enter a queue.
     /// </summary>
     /// <returns>Id of entry node.</returns>
-    public string? TryEnterQueue()
+    public Guid? TryEnterQueue()
     {
         if (IsFull)
         {
@@ -133,7 +133,7 @@ public class Queue
     /// </summary>
     /// <param name="nodeId">The node id.</param>
     /// <param name="position">The position of the node in the queue.</param>
-    public void AddNode(string nodeId, int position)
+    public void AddNode(Guid nodeId, int position)
     {
         if (Nodes.Any(n => n.NodeId == nodeId))
         {
@@ -151,7 +151,7 @@ public class Queue
     /// </summary>
     /// <param name="nodeId">The id of the node.</param>
     /// <exception cref="NodeNotFoundException">Thrown, if no node with the given id was found in the queue.</exception>
-    public void RemoveNode(string nodeId)
+    public void RemoveNode(Guid nodeId)
     {
         var node = Nodes.SingleOrDefault(n => n.NodeId == nodeId);
         if (node == null)
@@ -170,7 +170,7 @@ public class Queue
     /// </summary>
     /// <param name="agvCorrelationId">The agv to enqueue.</param>
     /// <param name="targetNode">The id of the target node to enqueue to.</param>
-    public bool TryEnqueue(Guid agvCorrelationId, [MaybeNullWhen(false)] out string targetNode)
+    public bool TryEnqueue(Guid agvCorrelationId, [NotNullWhen(true)] out Guid? targetNode)
     {
         if (AgvFillQuantity == 0)
         {
@@ -179,7 +179,7 @@ public class Queue
         }
         if (AllAgvsEntered && !IsEnqueued(agvCorrelationId))
         {
-            targetNode = EntryNode!;
+            targetNode = EntryNode!.Value;
             return true;
         }
         int tail = Tail!.Position;
@@ -199,9 +199,9 @@ public class Queue
     /// Dequeue an agv.
     /// </summary>
     /// <param name="agvsToMove">Output: Agvs that are to move down the queue and their target node ids.</param>
-    public Guid? TryDequeue(out Dictionary<Guid, string> agvsToMove)
+    public Guid? TryDequeue(out Dictionary<Guid, Guid> agvsToMove)
     {
-        agvsToMove = new Dictionary<Guid, string>();
+        agvsToMove = new Dictionary<Guid, Guid>();
         if (AgvFillQuantity == 0 || Head == null)
         {
             return null;
@@ -224,7 +224,7 @@ public class Queue
     /// </summary>
     /// <param name="agvsToMove">Output: agvs to move one position down.</param>
     /// <param name="startPosition">The position from which to start moving down.</param>
-    private void ShiftDown(ref Dictionary<Guid, string> agvsToMove, int startPosition)
+    private void ShiftDown(ref Dictionary<Guid, Guid> agvsToMove, int startPosition)
     {
         foreach (var node in Nodes.Where(n => n.Position > startPosition && n.GetCurrentAgv() != null).OrderBy(n => n.Position))
         {
@@ -264,9 +264,9 @@ public class Queue
     /// <param name="agvCorrelationId">The correlation id of the agv that escapes.</param>
     /// <param name="agvsToMove">The Output: agvs to move one position down</param>
     /// <returns>Node at which the queue was escaped.</returns>
-    public string? TryEscapeQueue(Guid agvCorrelationId, out Dictionary<Guid, string> agvsToMove)
+    public Guid? TryEscapeQueue(Guid agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove)
     {
-        agvsToMove = new Dictionary<Guid, string>();
+        agvsToMove = new Dictionary<Guid, Guid>();
         var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == agvCorrelationId);
         if (node == null)
         {
@@ -292,9 +292,9 @@ public class Queue
     /// </summary>
     /// <param name="queueingAgv">The correlation id of the agv that already queues.</param>
     /// <param name="agvsToMove">The Output: agvs to move one position down</param>
-    public void TrySwapAgv(Guid queueingAgv, out Dictionary<Guid, string> agvsToMove)
+    public void TrySwapAgv(Guid queueingAgv, out Dictionary<Guid, Guid> agvsToMove)
     {
-        agvsToMove = new Dictionary<Guid, string>();
+        agvsToMove = new Dictionary<Guid, Guid>();
         var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == queueingAgv);
         if (node == null)
         {
@@ -315,7 +315,7 @@ public class Queue
     /// </summary>
     /// <param name="nodeId">The id of the node.</param>
     /// <param name="agvCorrelationId">The agv that reaches the node.</param>
-    public void ReachNode(string nodeId, Guid agvCorrelationId)
+    public void ReachNode(Guid nodeId, Guid agvCorrelationId)
     {
         var node = Nodes.SingleOrDefault(n => n.NodeId == nodeId);
         if (node == null)

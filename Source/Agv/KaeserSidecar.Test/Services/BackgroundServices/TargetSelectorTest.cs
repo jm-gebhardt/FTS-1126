@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -37,7 +38,7 @@ public class TargetSelectorTest
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Id);
         await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
@@ -47,7 +48,7 @@ public class TargetSelectorTest
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
             .AddDropActionGroup()
-            .WithStationHasPalletJam("PS01");
+            .WithStationHasPalletJam("PS01".ToGuid());
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
 
         await fixture.Selector.Enqueue(moveAction.CorrelationId, fixture.ActionGroups[0].AssignedAgv!.Value);
@@ -56,7 +57,7 @@ public class TargetSelectorTest
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[1].Name);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[1].Id);
         await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
@@ -76,7 +77,7 @@ public class TargetSelectorTest
         var decisionPointAction = fixture.DecisionPointRepository.Invocations.First().Arguments[0] as DecisionPointAction;
         decisionPointAction.ShouldNotBeNull();
         decisionPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
-        decisionPointAction.Target.ShouldBe(fixture.Stations[0].Name);
+        decisionPointAction.Target.ShouldBe(fixture.Stations[0].Id);
     }
 
     [TestMethod]
@@ -96,7 +97,7 @@ public class TargetSelectorTest
         var decisionPointAction = fixture.DecisionPointRepository.Invocations.First().Arguments[0] as DecisionPointAction;
         decisionPointAction.ShouldNotBeNull();
         decisionPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
-        decisionPointAction.Target.ShouldBe(fixture.Stations[1].Name);
+        decisionPointAction.Target.ShouldBe(fixture.Stations[1].Id);
     }
 
     [TestMethod]
@@ -119,7 +120,7 @@ public class TargetSelectorTest
 
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First().Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Id);
         await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
@@ -149,7 +150,7 @@ public class TargetSelectorTest
         setTargetForAction.ShouldNotBeNull();
         Console.WriteLine($"CorrelationId: {setTargetForAction.CorrelationId}, MoveAction: {moveAction.CorrelationId}, MoveActionOfPick: {moveActionOfPick.CorrelationId}");
         setTargetForAction.ActionId.ShouldBe(moveAction.CorrelationId);
-        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Id);
         await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
@@ -182,7 +183,7 @@ public class TargetSelectorTest
 
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First(a => a.Context.Message.ActionId == moveAction.CorrelationId).Context.Message;
         setTargetForAction.ShouldNotBeNull();
-        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Name);
+        setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Id);
         await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
@@ -218,11 +219,11 @@ public class TargetSelectorTest
         var assignedAgv = fixture.ActionGroups[0].AssignedAgv!.Value;
 
         await fixture.Selector.Enqueue(moveAction.CorrelationId, assignedAgv);
-        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 0);
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Id, 0);
 
         await fixture.SelectTargetAsync();
 
-        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, assignedAgv);
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Id, 1, assignedAgv);
     }
 
     [TestMethod]
@@ -244,15 +245,15 @@ public class TargetSelectorTest
         await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, pickAgv);
 
         await fixture.SelectTargetAsync();
-        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, originalAgvOnStation);
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Id, 1, originalAgvOnStation);
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
         await fixture.ShouldNotHavePublishedAsync<StationReserved>();
 
-        await fixture.FreeStation(fixture.Stations[0].Name, originalAgvOnStation);
+        await fixture.FreeStation(fixture.Stations[0].Id);
         await fixture.SelectTargetAsync();
 
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(1);
-        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Name, 1, dropAgv);
+        await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Id, 1, dropAgv);
         await fixture.ShouldHavePublishedAsync<StationReserved>();
     }
 
@@ -284,7 +285,7 @@ public class TargetSelectorTest
     public async Task ExecuteAsync_CompletedActionInRepository_NotUsedForTargetSelection()
     {
         var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now, 2);
-        decisionPointAction.SetTarget("finished");
+        decisionPointAction.SetTarget("finished".ToGuid());
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
             .WithDecisionPointAction(decisionPointAction);

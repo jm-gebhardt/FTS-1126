@@ -9,4 +9,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 /// <param name="Nodes">List of node ids that define the route.</param>
 /// <param name="Edges">List of edge id that define the route.</param>
 [UsedImplicitly]
-public record Route(Guid CorrelationId, string[] Nodes, Guid[] Edges);
+public record Route(Guid CorrelationId, GraphNode[] Nodes, Guid[] Edges);

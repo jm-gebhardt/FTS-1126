@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Services;
@@ -25,7 +26,7 @@ public class TargetSelector(
     ISemaphoreProvider<ITargetSelectionSemaphore> semaphoreProvider,
     IJamStateRepository jamStateRepository,
     IBus bus) : BackgroundService, ITargetSelector
-    
+
 {
     private readonly List<Guid> _lastEvaluatedActions = [];
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
@@ -94,17 +95,17 @@ public class TargetSelector(
                 var agvCorrelationId = actionGroup.AssignedAgv!.Value;
                 logger.LogInformation("Trigger target selection for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
 
-                string? target = await SelectTarget(_consideredStations);
-                if (target != null)
+                (Guid? stationId, string? stationName) = await SelectTarget(_consideredStations);
+                if (stationId != null)
                 {
-                    logger.LogInformation("Selected target {Target} for agv {Agv} running action group {ActionGroup} and adding to station", target, agvCorrelationId, actionGroup.CorrelationId);
+                    logger.LogInformation("Selected target {Target} for agv {Agv} running action group {ActionGroup} and adding to station", stationName, agvCorrelationId, actionGroup.CorrelationId);
                     // occupy station when target is selected already, so that we can use the occupancy status to select future targets
-                    await stationRepository.OccupyStation(target, agvCorrelationId);
+                    await stationRepository.OccupyStation(stationId.Value, agvCorrelationId);
                     _lastEvaluatedActions.Add(action.Value);
-                    await bus.Publish(new SetTargetForAction(action.Value, actionGroup.CorrelationId, agvCorrelationId, target), stoppingToken);
-                    await bus.Publish(new StationReserved(target, agvCorrelationId), stoppingToken);
+                    await bus.Publish(new SetTargetForAction(action.Value, actionGroup.CorrelationId, agvCorrelationId, stationId.Value), stoppingToken);
+                    await bus.Publish(new StationReserved(stationId.Value, agvCorrelationId), stoppingToken);
                     var decisionPointAction = await decisionPointActionRepository.GetByIdAsync(action.Value);
-                    decisionPointAction.SetTarget(target);
+                    decisionPointAction.SetTarget(stationId.Value);
                     await decisionPointActionRepository.UpdateAsync(decisionPointAction);
                 }
             }
@@ -117,9 +118,9 @@ public class TargetSelector(
         _consideredStations = stationCount;
     }
 
-    private async Task<string?> SelectTarget(int consideredStations)
+    private async Task<(Guid? StationId, string? StationName)> SelectTarget(int consideredStations)
     {
-        string? selectedTarget = null;
+        StationOccupancy? selectedTarget = null;
         ICollection<StationOccupancy> occupancies = await stationRepository.GetStationOccupancy();
         ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
 
@@ -130,29 +131,29 @@ public class TargetSelector(
         {
             if (!occupancy.IsEmpty)
             {
-                logger.LogInformation("Station: {Station} is not free, as it's occupied by {occupancy.Count} agv, StationCount set to {StationCount}", occupancy.Station, occupancy.Count, consideredStations);
+                logger.LogInformation("Station: {Station} is not free, as it's occupied by {OccupancyCount} agv, StationCount set to {StationCount}", occupancy.StationId, occupancy.Count, consideredStations);
                 continue;
             }
             if (_useJamState)
             {
-                string jamStateStation = configuration.ConveyorStationMapping[occupancy.Station];
-                logger.LogInformation("Considering jam state for station {Target}", occupancy.Station);
-                bool hasPalletJam = await GetJamState(jamStateStation);
+                string jamStateStation = configuration.ConveyorStationMapping[occupancy.StationName];
+                logger.LogInformation("Considering jam state for station {Target}", occupancy.StationId);
+                bool hasPalletJam = await GetJamState(jamStateStation.ToGuid());
                 if (hasPalletJam)
                 {
-                    logger.LogInformation("Station {Target} not available due to pallet jam ", occupancy.Station);
+                    logger.LogInformation("Station {Target} not available due to pallet jam ", occupancy.StationId);
                     continue;
                 }
             }
-            selectedTarget = occupancy.Station;
+            selectedTarget = occupancy;
             break;
         }
-        return selectedTarget;
+        return (selectedTarget?.StationId, selectedTarget?.StationName);
     }
 
-    private async Task<bool> GetJamState(string station)
+    private async Task<bool> GetJamState(Guid stationId)
     {
-        var jamState = await jamStateRepository.GetByStationAsync(station) ?? new JamState(station, 0, DateTime.UtcNow);
+        var jamState = await jamStateRepository.GetByStationAsync(stationId) ?? new JamState(stationId, 0, DateTime.UtcNow);
         return jamState.HasPalletJam;
     }
 
@@ -164,10 +165,10 @@ public class TargetSelector(
         ICollection<StationOccupancy> orderedOccupancies = [];
         foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Take(consideredStations))
         {
-            var occupancy = unorderedOccupancies.SingleOrDefault(o => o.Station == conveyorStationMapping.Key) ??
-                            new StationOccupancy(conveyorStationMapping.Key, 0, null);
+            var occupancy = unorderedOccupancies.SingleOrDefault(o => o.StationName == conveyorStationMapping.Key) ??
+                            new StationOccupancy(conveyorStationMapping.Key.ToGuid(), conveyorStationMapping.Key, 0, null);
 
-            if (!stations.First(s => s.Name == occupancy.Station).IsLocked)
+            if (!stations.First(s => s.Id == occupancy.StationId).IsLocked)
             {
                 orderedOccupancies.Add(occupancy);
             }

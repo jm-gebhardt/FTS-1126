@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
@@ -35,8 +36,8 @@ public class TriggerEventHandlerTest
 
         var cargo = new Cargo(Guid.NewGuid(), agv.CorrelationId, "load", null, new Point3D(1f, 1f, 1f, 1f), new Cuboid(1f, 1f, null), null, null);
         var agvData = new AgvData(agv.CorrelationId, "", "", "", "", 1d, 1d, 1d, 1d, 1d, 1d, 1d, 1d, 1, []);
-        var position = new AgvPositionStatus(agv.CorrelationId, agv.SerialNumber,new AgvPosition(true, 1, 1, 0, 0f));
-        var location = new Location([new PolygonPoint(0,0,0)], Guid.NewGuid(), Guid.NewGuid(), [], []);
+        var position = new AgvPositionStatus(agv.CorrelationId, agv.SerialNumber, new AgvPosition(true, 1, 1, 0, 0f));
+        var location = new Location([new PolygonPoint(0, 0, 0)], Guid.NewGuid(), Guid.NewGuid(), [], []);
 
         var fixture = new TriggerEventHandlerTestFixture()
             .WithAgv(agv)
@@ -55,9 +56,9 @@ public class TriggerEventHandlerTest
     [TestMethod]
     public async Task Consume_ActionGroupStarted_ValidDataNodeTrigger_PublishesAgvStartedActionGroupOnTrigger()
     {
-        const string nodeId = "lastNode";
-        var node = new GraphNode(nodeId, 1, 1, 0, AgvGraph.NodeType.Charge, null, null, null);
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId:nodeId);
+        const string nodeName = "lastNode";
+        var node = new GraphNode(nodeName.ToGuid(), nodeName, 1, 1, 0, AgvGraph.NodeType.Charge, null, null, null);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: nodeName);
 
         var actionGroup = new ActionGroup(Guid.NewGuid(), "order") { AssignedAgv = agv.CorrelationId };
 
@@ -73,7 +74,7 @@ public class TriggerEventHandlerTest
             .WithCargo(agv.CorrelationId, cargo)
             .WithPosition(agv.CorrelationId, position)
             .WithNode(node)
-            .WithNodeTriggerLocations([location], nodeId)
+            .WithNodeTriggerLocations([location], nodeName)
             .WithPolygonTriggerLocations([]);
 
         await fixture.TestHarness.Bus.Publish(new ActionGroupStarted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow));
@@ -87,10 +88,10 @@ public class TriggerEventHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
 
-        var actionGroup = new ActionGroup(Guid.NewGuid(), "order") {AssignedAgv = agv.CorrelationId};
+        var actionGroup = new ActionGroup(Guid.NewGuid(), "order") { AssignedAgv = agv.CorrelationId };
 
         var cargo = new Cargo(Guid.NewGuid(), agv.CorrelationId, "load", null, new Point3D(1f, 1f, 1f, 1f), new Cuboid(1f, 1f, null), null, null);
-        
+
         var position = new AgvPositionStatus(agv.CorrelationId, agv.SerialNumber, new AgvPosition(true, 1, 1, 0, 0f));
         var location = new Location([new PolygonPoint(0, 0, 0)], Guid.NewGuid(), Guid.NewGuid(), [], []);
 

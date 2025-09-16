@@ -27,7 +27,7 @@ public class MaintenanceServiceTest
         var maintenanceNode = await fixture.MaintenanceService.GetMaintenanceNode(agv);
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
         maintenanceNode.ShouldNotBeNull();
-        maintenanceNode.Id.ShouldBe("Park-1");
+        maintenanceNode.Name.ShouldBe("Park-1");
         maintenanceNode.Type.ShouldBe(AgvGraph.NodeType.Park);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
@@ -19,13 +20,13 @@ public static class ExportedStationExtension
         bool isNodeType = type is AgvGraph.NodeType;
         if (isNodeType)
         {
-            return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (AgvGraph.NodeType)type, null, null, null )
+            return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, -station.Position.Y, 0f, (AgvGraph.NodeType) type, null, null, null)
             {
                 Theta = station.Position.Theta,
                 TimeStamp = station.TimeStamp
             };
         }
-        return new GraphNode(station.Identifier, station.Position.X, -station.Position.Y, 0f, (List<AgvGraph.NodeType>)type, null, null, null)
+        return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, -station.Position.Y, 0f, (List<AgvGraph.NodeType>) type, null, null, null)
         {
             Theta = station.Position.Theta,
             TimeStamp = station.TimeStamp
@@ -42,9 +43,9 @@ public static class ExportedStationExtension
         bool isFunction = function is Function;
         if (isFunction)
         {
-            return ParseNodeType((Function)function);
+            return ParseNodeType((Function) function);
         }
-        return ((List<Function>)function).Select(ParseNodeType).ToList();
+        return ((List<Function>) function).Select(ParseNodeType).ToList();
     }
 
     /// <summary>

@@ -27,7 +27,8 @@ public class ActionEventHandlerTest
         var orderCorrelationId = orderId.ToGuid();
         const string toStationId = "Drop5";
 
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId);
+        // TODO: user generator
+        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId.ToGraphNode(), orderCorrelationId);
         var message = new ActionAborted(agvCorrelationId, action);
 
         await fixture.TestHarness.Bus.Publish(message);
@@ -56,7 +57,8 @@ public class ActionEventHandlerTest
         var orderCorrelationId = orderId.ToGuid();
         const string toStationId = "Drop5";
 
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId);
+        // TODO: user generator
+        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId.ToGraphNode(), orderCorrelationId);
         var message = new ActionAborted(agvCorrelationId, action);
 
         await fixture.TestHarness.Bus.Publish(message);
@@ -81,7 +83,8 @@ public class ActionEventHandlerTest
         var orderCorrelationId = orderId.ToGuid();
         const string toStationId = "Drop5";
 
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId, orderCorrelationId);
+        // TODO: user generator
+        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId.ToGraphNode(), orderCorrelationId);
         var correlationId = Guid.NewGuid();
         var message = new ActionAborted(correlationId, action);
 

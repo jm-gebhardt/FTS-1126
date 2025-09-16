@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -20,7 +21,7 @@ public class StationEventHandlerTest
     {
         string station = OrderGenerator.KaeserConfiguration.GetShortLoopTarget();
         var shortLoopTarget = new ShortLoopWeTargetStation(station, station);
-        
+
         using var fixture = new StationEventHandlerTestFixture()
             .WithShortLoopTarget(shortLoopTarget);
 
@@ -59,12 +60,12 @@ public class StationEventHandlerTest
         string defaultStation = OrderGenerator.KaeserConfiguration.GetShortLoopTarget();
         const string nextStation = "next station";
         OrderGenerator.KaeserConfiguration.SetShortLoopTarget(nextStation);
-        var shortLoopTarget = new ShortLoopWeTargetStation(defaultStation, nextStation );
+        var shortLoopTarget = new ShortLoopWeTargetStation(defaultStation, nextStation);
 
         using var fixture = new StationEventHandlerTestFixture()
             .WithShortLoopTarget(shortLoopTarget);
 
-        await fixture.TestHarness.Bus.Publish(new StationUnlocked(defaultStation));
+        await fixture.TestHarness.Bus.Publish(new StationUnlocked(defaultStation.ToGraphNode()));
 
         await fixture.ShouldHaveConsumedAsync<StationUnlocked>();
 
@@ -85,7 +86,7 @@ public class StationEventHandlerTest
         using var fixture = new StationEventHandlerTestFixture()
             .WithShortLoopTarget(shortLoopTarget);
 
-        await fixture.TestHarness.Bus.Publish(new StationUnlocked("another station"));
+        await fixture.TestHarness.Bus.Publish(new StationUnlocked("another station".ToGraphNode()));
 
         await fixture.ShouldHaveConsumedAsync<StationUnlocked>();
 
@@ -115,7 +116,7 @@ public class StationEventHandlerTest
             .WithStation(station)
             .WithOccupiedStation(null);
 
-        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!.ToGraphNode(), agv));
 
         await fixture.ShouldHaveConsumedAsync<OccupyStation>();
         await fixture.ShouldHavePublishedAsync<AddAgvToStation>();
@@ -132,7 +133,7 @@ public class StationEventHandlerTest
             .WithStation(station)
             .WithOccupiedStation(occupiedStation);
 
-        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!.ToGraphNode(), agv));
 
         await fixture.ShouldHaveConsumedAsync<OccupyStation>();
         await fixture.ShouldHavePublishedAsync<AddAgvToStation>();
@@ -142,13 +143,13 @@ public class StationEventHandlerTest
     [TestMethod]
     public async Task Consumer_OccupyStation_AgvAlreadyOccupiesStation_DoesNotPublishAddAgvToStation()
     {
-        var station = new Station("source", "target") { Node = "node" };
+        var station = new Station("source", "target") { Node = "source" };
         var agv = Guid.NewGuid();
         using var fixture = new StationEventHandlerTestFixture()
             .WithStation(station)
             .WithOccupiedStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!, agv));
+        await fixture.TestHarness.Bus.Publish(new OccupyStation(station.Node!.ToGraphNode(), agv));
 
         await fixture.ShouldHaveConsumedAsync<OccupyStation>();
         await fixture.ShouldNotHavePublishedAsync<AddAgvToStation>();
@@ -158,12 +159,12 @@ public class StationEventHandlerTest
     [TestMethod]
     public async Task Consumer_FreeStationOccupancy_ValidData_PublishesRemoveAgvFromStation()
     {
-        var station = new Station("source", "target") { Node = "node" };
+        var station = new Station("source", "target") { Node = "source" };
         var agv = Guid.NewGuid();
         using var fixture = new StationEventHandlerTestFixture()
             .WithOccupiedStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy(station.Node!, agv));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy(station.Node!.ToGuid(), agv));
 
         await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
@@ -177,7 +178,7 @@ public class StationEventHandlerTest
         using var fixture = new StationEventHandlerTestFixture()
             .WithOccupiedStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy("different node", agv));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy("different node".ToGuid(), agv));
 
         await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
@@ -192,7 +193,7 @@ public class StationEventHandlerTest
         using var fixture = new StationEventHandlerTestFixture()
             .WithStation(station);
 
-        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(station.Node!));
+        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid(), station.Node));
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
     }
 
@@ -203,7 +204,7 @@ public class StationEventHandlerTest
 
         using var fixture = new StationEventHandlerTestFixture();
 
-        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(station.Node!));
+        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid(), station.Node));
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 
@@ -215,7 +216,7 @@ public class StationEventHandlerTest
         using var fixture = new StationEventHandlerTestFixture()
             .WithStation(station);
 
-        await fixture.PublishMessageAsync<UnblockStation, string>(new UnblockStation(station.Node!));
+        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid(), station.Node));
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 }

@@ -29,7 +29,7 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
     }
 
     /// <inheritdoc cref="BaseChooseAgvActionGroupService"/>>
-    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
+    protected override async Task<Models.ActionGroup.ActionGroup?> SelectNextActionGroup(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<Guid> nodesToAvoid)
     {
         FastestRouteMode = !FastestRouteMode;
         if (FastestRouteMode)
@@ -39,7 +39,7 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
         return await SelectBasedOnOldestRoute(agv, agvData, cancellationToken, notStartedActionGroups, nodesToAvoid);
     }
 
-    private async Task<Models.ActionGroup.ActionGroup?> SelectBasedOnShortestRoute(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
+    private async Task<Models.ActionGroup.ActionGroup?> SelectBasedOnShortestRoute(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<Guid> nodesToAvoid)
     {
         double minCosts = double.MaxValue;
 
@@ -65,7 +65,7 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
         return nextActionGroup;
     }
 
-    private async Task<Models.ActionGroup.ActionGroup?> SelectBasedOnOldestRoute(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<string> nodesToAvoid)
+    private async Task<Models.ActionGroup.ActionGroup?> SelectBasedOnOldestRoute(Agv agv, AgvData? agvData, CancellationToken cancellationToken, ICollection<Models.ActionGroup.ActionGroup> notStartedActionGroups, ICollection<Guid> nodesToAvoid)
     {
         Models.ActionGroup.ActionGroup? nextActionGroup = null;
         foreach (var actionGroup in notStartedActionGroups.OrderBy(g => g.CreatedDate))

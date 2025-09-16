@@ -32,16 +32,18 @@ public class PrometheusMetricCollectionServiceTest
         var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(
             actionGroupCorrelationId,
             string.Empty,
-            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1, actionGroupCorrelationId) },
+            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1Node, actionGroupCorrelationId) },
             assignedAgv: agvId,
             creator: ActionGroupCreator.TransportOrder
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1, AgvGraphGenerator.Way1, AgvGraphGenerator.Prk1];
+        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
+
         var fixture = new PrometheusMetricCollectionServiceTestFixture()
             .AddGraph(graph);
 
         await fixture.Service.CollectTravelDistance(actionGroup, agvId, null);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBe(graph.GetRouteLength([AgvGraphGenerator.Src1, AgvGraphGenerator.Way1, AgvGraphGenerator.Prk1]));
+        double expectedRouteLength = graph.GetRouteLength([AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node]);
+        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBe(expectedRouteLength);
     }
 
     [TestMethod]
@@ -53,16 +55,16 @@ public class PrometheusMetricCollectionServiceTest
         var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(
             actionGroupCorrelationId,
             string.Empty,
-            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1, actionGroupCorrelationId) },
+            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1Node, actionGroupCorrelationId) },
             assignedAgv: agvId,
             creator: ActionGroupCreator.TransportOrder
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1, AgvGraphGenerator.Way1, AgvGraphGenerator.Prk1];
+        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
         var fixture = new PrometheusMetricCollectionServiceTestFixture()
             .AddGraph(graph);
 
-        await fixture.Service.CollectTravelDistance(actionGroup, agvId, AgvGraphGenerator.Way1);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBe(graph.GetRouteLength([AgvGraphGenerator.Src1, AgvGraphGenerator.Way1]));
+        await fixture.Service.CollectTravelDistance(actionGroup, agvId, AgvGraphGenerator.Way1Node.Id);
+        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBe(graph.GetRouteLength([AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node]));
     }
 
     [TestMethod]
@@ -88,8 +90,8 @@ public class PrometheusMetricCollectionServiceTest
             assignedAgv: agvId,
             source: AgvGraphGenerator.Src1,
             destination: AgvGraphGenerator.Dst1);
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1, AgvGraphGenerator.Way1, AgvGraphGenerator.Src1];
-        actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Src1, AgvGraphGenerator.Way1, AgvGraphGenerator.Way3, AgvGraphGenerator.Dst1];
+        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Src1Node];
+        actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Way3Node, AgvGraphGenerator.Dst1Node];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 
@@ -130,8 +132,8 @@ public class PrometheusMetricCollectionServiceTest
             actionStateCharge: chargeActionState,
             actionStateMove: ActionState.Completed,
             assignedAgv: agvId);
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1, AgvGraphGenerator.Way1, AgvGraphGenerator.Way3, AgvGraphGenerator.Crg1];
-        actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Crg1];
+        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Way3Node, AgvGraphGenerator.Crg1Node];
+        actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Crg1Node];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 
@@ -170,11 +172,11 @@ public class PrometheusMetricCollectionServiceTest
         var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(
             actionGroupCorrelationId,
             string.Empty,
-            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1, actionGroupCorrelationId) },
+            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1Node, actionGroupCorrelationId) },
             assignedAgv: agvId,
             creator: ActionGroupCreator.TransportOrder
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1, AgvGraphGenerator.Way1, AgvGraphGenerator.Prk1];
+        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 
@@ -213,12 +215,12 @@ public class PrometheusMetricCollectionServiceTest
         var actionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup(
             actionGroupCorrelationId,
             string.Empty,
-            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Src1, actionGroupCorrelationId) },
+            actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Src1Node, actionGroupCorrelationId) },
             assignedAgv: agvId,
             creator: ActionGroupCreator.TransportOrder,
             isManual: true
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1, AgvGraphGenerator.Way1, AgvGraphGenerator.Src1];
+        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Src1Node];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 

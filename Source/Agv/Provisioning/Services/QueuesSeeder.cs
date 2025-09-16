@@ -39,7 +39,7 @@ public class QueuesSeeder : ISeeder
 
         if (!Directory.Exists(basePath))
         {
-            _logger.LogInformation("Directory {BasePath} not found.", basePath);
+            _logger.LogInformation("Directory {BasePath} not found", basePath);
             return [];
         }
         string[] files = Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)

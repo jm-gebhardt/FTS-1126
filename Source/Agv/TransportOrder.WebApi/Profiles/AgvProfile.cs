@@ -22,7 +22,8 @@ public class AgvProfile : WebApiProfile
         CreateMap<Messages.MessageContent.Agv, AgvStateDto>();
         CreateMap<Messages.MessageContent.Maintenance, MaintenanceDto>();
         CreateMap<MaintenanceLog, AgvMaintenanceLogDto>();
-        CreateMap<CurrentAgvRouteReadModel, CurrentRouteDto>();
+        CreateMap<CurrentAgvRouteReadModel, CurrentRouteDto>()
+            .ForCtorParam(nameof(CurrentRouteDto.RemainingNodes), c => c.MapFrom(o => o.RemainingNodes.Select(n => n.Name).ToArray()));
         CreateMap<CurrentAgvRouteReadModel, CurrentAgvRouteDto>()
             .ForMember(c => c.CurrentRoute, c => c.MapFrom(o => o));
         CreateMap<AgvState, AgvStateType>();

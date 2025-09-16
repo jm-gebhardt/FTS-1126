@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.Common.Testing.Helpers;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -13,16 +15,21 @@ public class QueueProfileTest
     public void Map_ValidData_MapsAllProperties()
     {
         var mapper = MappingHelper.GetMapper(new QueueProfile());
-
         var queue = new Queue("a queue");
-        queue.AddNode("node id", 0);
+        const string nodeName = "node name";
+        var efNode = new EfNode
+        {
+            Id = nodeName.ToGuid(),
+            Name = nodeName
+        };
+        queue.Nodes.Add(new QueueNode(efNode.Id, 0, efNode));
 
         var queueDto = mapper.Map<QueueDto>(queue);
 
         queueDto.Id.ShouldBe(queue.Id);
         queueDto.Name.ShouldBe(queue.Name);
         queueDto.Nodes.Count.ShouldBe(queue.Nodes.Count);
-        queueDto.Nodes.First().NodeId.ShouldBe(queue.Nodes.First().NodeId);
+        queueDto.Nodes.First().NodeId.ShouldBe(queue.Nodes.First().Node!.Name);
         queueDto.Nodes.First().Position.ShouldBe(queue.Nodes.First().Position);
     }
 

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -28,10 +29,10 @@ public class ActionGroupMessageSerializationTest
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
         var dropAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
-        actionGroup.StartAction(moveAction.CorrelationId, ["a node"], [Guid.NewGuid()]);
-        actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target");
+        actionGroup.StartAction(moveAction.CorrelationId, ["a node".ToGraphNode()], [Guid.NewGuid()]);
+        actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target".ToGraphNode());
         actionGroup.CompleteAction(moveAction.CorrelationId);
-        dropAction.Nodes = ["node 1", "node2"];
+        dropAction.Nodes = ["node 1".ToGraphNode(), "node2".ToGraphNode()];
         dropAction.Edges = [Guid.NewGuid()];
         dropAction.AdditionalInfo = "SAP:9070";
         var message = new StartActionOfActionGroup(dropAction, actionGroup.AssignedAgv!.Value);

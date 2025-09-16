@@ -30,7 +30,7 @@ public class AgvRouteServiceTestFixture : TransportOrderDbFixture
         _agvRepositoryMock.Setup(x => x.GetLastNodeIdAsync(It.IsAny<ICollection<Guid>>()))
             .ReturnsAsync((ICollection<Guid> agvCorrelationIds) =>
             {
-                var result = new Dictionary<Guid, string?>();
+                var result = new Dictionary<Guid, Guid?>();
 
                 if (agvCorrelationIds.Count == 0)
                 {

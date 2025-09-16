@@ -48,7 +48,7 @@ public class ActionProfileTest
         actionDto.Sequence.ShouldBe(action.Sequence);
         actionDto.State.ShouldBe(action.State);
         actionDto.ActionType.ShouldBe(action.ActionType);
-        actionDto.TargetNodeId.ShouldBe(action.TargetNodeId);
+        actionDto.TargetNodeId.ShouldBe(action.TargetNodeName);
         actionDto.Nodes.ShouldBe(action.Nodes);
         actionDto.CreatedDate.ShouldBe(action.CreatedDate);
         actionDto.StartedDate.ShouldBe(action.StartedDate!);

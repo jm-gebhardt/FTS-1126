@@ -18,7 +18,7 @@ public static class GraphExtensions
             throw new ArgumentException("Duplicate Edges. Edge Ids must be unique.");
         }
 
-        List<IGrouping<string, GraphNode>> duplicateNodes = graph.Nodes.GroupBy(n => n.Id).Where(g => g.Count() > 1).ToList();
+        List<IGrouping<Guid, GraphNode>> duplicateNodes = graph.Nodes.GroupBy(n => n.Id).Where(g => g.Count() > 1).ToList();
         if (duplicateNodes.Count != 0)
         {
             throw new ArgumentException("Duplicate Nodes. Node Ids must be unique.");
@@ -29,16 +29,16 @@ public static class GraphExtensions
     /// Get the length [m] of a route given by node ids.
     /// </summary>
     /// <param name="graph">This graph.</param>
-    /// <param name="route">The route (collection of node ids).</param>
+    /// <param name="routeNodes">The route (collection of node ids).</param>
     /// <returns>Length of the route [m].</returns>
     /// <exception cref="ArgumentNullException">Ambiguous route.</exception>
     /// <exception cref="InvalidOperationException">If any of the subsequent nodes do not match an edge.</exception>
-    public static double GetRouteLength(this IGraph graph, string[] route)
+    public static double GetRouteLength(this IGraph graph, GraphNode[] routeNodes)
     {
         double totalLength = 0.0;
-        for (int i = 0; i < route.Length - 1; i++)
+        for (int i = 0; i < routeNodes.Length - 1; i++)
         {
-            totalLength +=  graph.Edges.Single(edge => edge.FromNodeId == route[i] && edge.ToNodeId == route[i + 1]).Length;
+            totalLength += graph.Edges.Single(edge => edge.FromNodeId == routeNodes[i].Id && edge.ToNodeId == routeNodes[i + 1].Id).Length;
         }
         return totalLength;
     }

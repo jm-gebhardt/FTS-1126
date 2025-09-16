@@ -13,7 +13,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsPickStation_PickTypes_True(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsPickStation().ShouldBeTrue();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).IsPickStation().ShouldBeTrue();
     }
 
     [TestMethod]
@@ -30,7 +30,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.WayPoint)]
     public void IsPickStation_NonPickTypes_False(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsPickStation().ShouldBeFalse();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).IsPickStation().ShouldBeFalse();
     }
 
     [TestMethod]
@@ -38,7 +38,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.PickDrop)]
     public void IsDropStation_DropTypes_True(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsDropStation().ShouldBeTrue();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).IsDropStation().ShouldBeTrue();
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.WayPoint)]
     public void IsDropStation_NonDropTypes_False(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsDropStation().ShouldBeFalse();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).IsDropStation().ShouldBeFalse();
     }
 
     [TestMethod]
@@ -78,14 +78,14 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.Maintenance)]
     public void IsStation_ValidData_True(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsStation().ShouldBeTrue();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).IsStation().ShouldBeTrue();
     }
 
     [TestMethod]
     [DataRow(AgvGraph.NodeType.WayPoint)]
     public void IsStation_Waypoint_False(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).IsStation().ShouldBeFalse();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).IsStation().ShouldBeFalse();
     }
 
     [TestMethod]
@@ -133,7 +133,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.PickDrop)]
     public void GetPrimaryType_AdditionalType_ExpectedValue(AgvGraph.NodeType nodeType, AgvGraph.NodeType expected)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).GetPrimaryType().ShouldBe(expected);
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).GetPrimaryType().ShouldBe(expected);
     }
 
     [TestMethod]
@@ -148,7 +148,7 @@ public class NodeExtensionTest
     [TestMethod]
     public void GetAdditionalTypes_NoAdditionalType_Empty()
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: AgvGraph.NodeType.Charge).GetAdditionalTypes().ShouldBeEmpty();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: AgvGraph.NodeType.Charge).GetAdditionalTypes().ShouldBeEmpty();
     }
 
     [TestMethod]
@@ -176,7 +176,7 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.Maintenance)]
     public void GetReservableNodeTypes_AdditionalType_NoReservableTypes_Empty(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).GetReservableNodeTypes().ShouldBeEmpty();
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).GetReservableNodeTypes().ShouldBeEmpty();
     }
 
     [TestMethod]
@@ -184,6 +184,6 @@ public class NodeExtensionTest
     [DataRow(AgvGraph.NodeType.Park)]
     public void GetReservableNodeTypes_AdditionalType_ReservableTypes_ReturnsNodeTypes(AgvGraph.NodeType nodeType)
     {
-        NodeGenerator.GenerateNode(nodeId: "id", nodeType: nodeType).GetReservableNodeTypes().ShouldBe([nodeType]);
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).GetReservableNodeTypes().ShouldBe([nodeType]);
     }
 }

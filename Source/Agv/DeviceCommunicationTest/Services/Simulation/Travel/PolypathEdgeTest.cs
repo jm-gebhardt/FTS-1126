@@ -19,11 +19,11 @@ public class PolypathEdgeTest
     // 3                  Way2                   //
     // |                                         //
     ///////////////////////////////////////////////
-    private GraphNode Source { get; } = new("Way2") { X = 3, Y = 3 };
+    private GraphNode Source { get; } = new("Way2".ToGuid(), "Way2") { X = 3, Y = 3 };
 
-    private GraphNode Target { get; } = new("Src3") { X = 5, Y = 1 };
+    private GraphNode Target { get; } = new("Src3".ToGuid(), "Src3") { X = 5, Y = 1 };
 
-    private GraphEdge Edge { get; } = GraphEdge.CreatePolypath("Way2", "Src3", 4, new List<EdgeCoefficient> { new(3, 2), new(5, 2) });
+    private GraphEdge Edge { get; } = GraphEdge.CreatePolypath("Way2".ToGuid(), "Src3".ToGuid(), 4, new List<EdgeCoefficient> { new(3, 2), new(5, 2) });
 
     [TestMethod]
     public void Construct_ValidData_PropertiesSet()
@@ -31,8 +31,8 @@ public class PolypathEdgeTest
         var polypath = new Polypath(Edge, Source, Target);
         polypath.SourceNode.ShouldBe(Source);
         polypath.TargetNode.ShouldBe(Target);
-        polypath.ReferenceTarget.X.ShouldBe((float)Edge.VariantParameters.First().X!);
-        polypath.ReferenceTarget.Y.ShouldBe((float)Edge.VariantParameters.First().Y!);
+        polypath.ReferenceTarget.X.ShouldBe((float) Edge.VariantParameters.First().X!);
+        polypath.ReferenceTarget.Y.ShouldBe((float) Edge.VariantParameters.First().Y!);
     }
 
     [TestMethod]
@@ -50,7 +50,7 @@ public class PolypathEdgeTest
     {
         var polypath = new Polypath(Edge, Source, Target);
         double entryAngle = Mathematics.ConvertToRadians(90);
-        polypath.SetAngles(entryAngle, Target, NodeGenerator.GenerateNode(nodeId:"", x:4, y:0));
+        polypath.SetAngles(entryAngle, Target, NodeGenerator.GenerateNode(nodeName: "", x: 4, y: 0));
         polypath.EntryAngle.ShouldBe(entryAngle);
         polypath.ExitAngle.ShouldBe(Mathematics.ConvertToRadians(45), tolerance: 0.001);
     }

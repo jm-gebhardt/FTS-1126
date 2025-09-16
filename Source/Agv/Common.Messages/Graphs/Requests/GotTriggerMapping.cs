@@ -15,4 +15,4 @@ public record GotTriggerMapping(ICollection<TriggerLocalization> TriggerLocaliza
 /// <param name="NodeId">The node id where there trigger is localized.</param>
 /// <param name="AreaId">The area id where the trigger is localized</param>
 [PublicAPI]
-public record TriggerLocalization(string TriggerName, string? NodeId=null, Guid? AreaId = null );
+public record TriggerLocalization(string TriggerName, Guid? NodeId, Guid? AreaId = null);

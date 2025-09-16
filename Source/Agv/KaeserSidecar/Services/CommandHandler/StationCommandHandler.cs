@@ -27,14 +27,14 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     /// </summary>
     public async Task Consume(ConsumeContext<OccupyStation> context)
     {
-        (string station, var agvCorrelationId) = context.Message;
-        if (!configuration.ConveyorStationMapping.Keys.Contains(station))
+        var (station, agvCorrelationId) = context.Message;
+        if (!configuration.ConveyorStationMapping.ContainsKey(station.Name))
         {
-            logger.LogInformation("Ignoring station occupancy for agv {Agv} at non WE station {Station} ", agvCorrelationId, station);
+            logger.LogInformation("Ignoring station occupancy for agv {Agv} at non WE station {Station} ", agvCorrelationId, station.Name);
             return;
         }
-        logger.LogInformation("{Message}: Adding agv {Agv} to station {Station}", nameof(OccupyStation), agvCorrelationId, station);
-        await stationRepository.OccupyStation(station, agvCorrelationId);
+        logger.LogInformation("{Message}: Adding agv {Agv} to station {Station}", nameof(OccupyStation), agvCorrelationId, station.Name);
+        await stationRepository.OccupyStation(station.Id, agvCorrelationId);
     }
 
     /// <summary>
@@ -43,16 +43,16 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
-        string station = context.Message.Station;
+        var station = context.Message.StationId;
         var occupancy = await stationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
-        if (occupancy?.Station != station)
+        if (occupancy?.StationId != station)
         {
             logger.LogWarning("AGV {AgvCorrelationId} does not occupy station {Station} at all, ignoring FreeStationOccupancy command", agvCorrelationId, station);
             return;
         }
         logger.LogInformation("{Message}: Removing agv {Agv} from station: {Station}", nameof(FreeStationOccupancy), agvCorrelationId, station);
 
-        await stationRepository.FreeStation(occupancy.Station, agvCorrelationId);
+        await stationRepository.FreeStation(occupancy.StationId);
     }
 
     /// <summary>
@@ -68,8 +68,8 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         {
             return;
         }
-        logger.LogInformation("{Message}: Removing agv {Agv} from station: {Station}", nameof(SolveResourceErrorsReceived), agvCorrelationId, occupancy.Station);
-        await context.Publish(new FreeStationOccupancy(occupancy.Station, agvCorrelationId));
+        logger.LogInformation("{Message}: Removing agv {Agv} from station: {Station}", nameof(SolveResourceErrorsReceived), agvCorrelationId, occupancy.StationId);
+        await context.Publish(new FreeStationOccupancy(occupancy.StationId, agvCorrelationId));
     }
 
     /// <summary>
@@ -77,8 +77,8 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     /// </summary>
     public async Task Consume(ConsumeContext<StationUnlocked> context)
     {
-        string unlockedStation = context.Message.StationNodeId;
-        if (!configuration.ConveyorStationMapping.TryGetValue(unlockedStation, out string? jamStateStation))
+        var unlockedStation = context.Message.StationNode;
+        if (!configuration.ConveyorStationMapping.TryGetValue(unlockedStation.Name, out string? jamStateStation))
         {
             return;
         }
@@ -91,7 +91,7 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     /// </summary>
     public async Task Consume(ConsumeContext<UnblockStation> context)
     {
-        string station = context.Message.Station;
+        var station = context.Message.Id;
 
         var occupancy = await stationRepository.GetOccupancyOfStation(station);
 
@@ -102,6 +102,6 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
 
         logger.LogInformation("Removing agv {Agv} from station: {Station}", occupancy.AgvCorrelationId, station);
 
-        await stationRepository.FreeStation(station, occupancy.AgvCorrelationId.Value);
+        await stationRepository.FreeStation(station);
     }
 }

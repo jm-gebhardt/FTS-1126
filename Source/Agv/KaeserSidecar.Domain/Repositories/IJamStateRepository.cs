@@ -24,5 +24,5 @@ public interface IJamStateRepository
     /// </summary>
     /// <param name="station">The station.</param>
     /// <returns>The jam state, if existing.</returns>
-    Task<JamState?> GetByStationAsync(string station);
+    Task<JamState?> GetByStationAsync(Guid station);
 }

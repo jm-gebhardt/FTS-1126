@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -19,7 +20,7 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
 
     private List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> NotStartedActionGroups { get; } = new();
 
-    private List<string> LockedNodes { get; } = new();
+    private List<Guid> LockedNodes { get; } = new();
 
     private Mock<IRouteService> RouteService { get; } = new();
 
@@ -63,38 +64,38 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
     public new ChooseAgvActionGroupTestFixture<TChooser> Build()
     {
         base.Build();
-        Service = (TChooser)Provider.GetRequiredService<IChooseAgvActionGroupService>();
+        Service = (TChooser) Provider.GetRequiredService<IChooseAgvActionGroupService>();
         return this;
     }
 
     public ChooseAgvActionGroupTestFixture<TChooser> WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
-        RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<string>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsAsync(agv, It.IsAny<Guid>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
-        RouteService.Setup(x => x.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<ICollection<string>>(), It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>(), Array.Empty<Guid>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<Guid>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, [], []));
         return this;
     }
 
     public ChooseAgvActionGroupTestFixture<TChooser> WithAgvHasRouteToDestination(TransportOrder.Domain.Models.Agv.Agv agv, string sourceNodeId, string destinationNodeId, TransportOrder.Domain.Models.ActionGroup.ActionGroup actionGroup, float? routeCosts = null)
     {
-        RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsAsync(agv, destinationNodeId.ToGuid(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetCostsAsync(agv, sourceNodeId, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsAsync(agv, sourceNodeId.ToGuid(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
         RouteService.Setup(x => x.GetCostsForFirstActionAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
-        RouteService.Setup(x => x.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<ICollection<string>>(), It.IsAny<CancellationToken>()))
+        RouteService.Setup(x => x.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, It.IsAny<AgvData>(), It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(routeCosts);
 
-        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<string>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, Array.Empty<string>(), Array.Empty<Guid>()));
+        RouteService.Setup(x => x.GetRouteAsync(agv, It.IsAny<Guid>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, [], []));
         return this;
     }
 
@@ -106,7 +107,7 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
 
     public ChooseAgvActionGroupTestFixture<TChooser> WithLockedNodes(List<string> lockedNodeIds)
     {
-        LockedNodes.AddRange(lockedNodeIds);
+        LockedNodes.AddRange(lockedNodeIds.Select(n => n.ToGuid()));
         return this;
     }
 

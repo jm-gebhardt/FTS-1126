@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using JetBrains.Annotations;
@@ -39,14 +40,14 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <param name="reserveNode"></param>
     /// <param name="ignoredNodes">Nodes to ignore.</param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickAndReserveNodeAsync(Models.Agv.Agv agv, string? startNodeId = null, bool reserveNode = true, params string[] ignoredNodes)
+    protected async Task<GraphNode> PickAndReserveNodeAsync(Agv agv, Guid? startNodeId = null, bool reserveNode = true, params Guid[] ignoredNodes)
     {
         return await SemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var agvData = await AgvDb.Data.GetAgvDataAsync(agv.CorrelationId);
             var node = await PickNode(agv, agvData, startNodeId, ignoredNodes);
 
-            if(reserveNode)
+            if (reserveNode)
             {
                 await ReserveNodeAsync(node.Id, agv.CorrelationId);
             }
@@ -56,13 +57,13 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
 
     ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
     [UsedImplicitly]
-    protected Task<bool> TryLockNode(string nodeId)
+    protected Task<bool> TryLockNode(Guid nodeId)
     {
         return NodeStateRepository.LockNodeAsync(nodeId);
     }
 
     ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
-    protected async Task ReserveNodeAsync(string nodeId, Guid agvCorrelationId)
+    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId)
     {
         if (!await NodeStateRepository.ReserveNodeAsync(nodeId, agvCorrelationId))
         {

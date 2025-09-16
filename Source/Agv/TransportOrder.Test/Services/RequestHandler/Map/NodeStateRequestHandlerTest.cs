@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Testing.Helpers;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -14,9 +15,9 @@ public class NodeStateRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetMapNodeStates_ValidData_RespondsGotMapNodeStates()
     {
-        var nodeStates = new List<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> 
-        { 
-            (new NodeLock("nodeId", NodeLockState.Free, false, null, DateTime.UtcNow), Guid.NewGuid(), null, null, null)
+        var nodeStates = new List<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)>
+        {
+            (new NodeLock("nodeId".ToGraphNode(), NodeLockState.Free, false, null, DateTime.UtcNow), Guid.NewGuid(), null, null, null)
         };
 
         NodeStateRequestHandlerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new NodeStateRequestHandlerTestFixture<GetMapNodeStates, NodeStateRequestHandler>()

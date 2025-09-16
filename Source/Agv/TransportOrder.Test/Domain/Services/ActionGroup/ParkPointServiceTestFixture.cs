@@ -27,7 +27,7 @@ public class ParkPointServiceTestFixture
 
     public ParkPointServiceTestFixture ReserveNodeAsyncReturns(bool returnValue)
     {
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync(returnValue);
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(returnValue);
         return this;
     }
 }

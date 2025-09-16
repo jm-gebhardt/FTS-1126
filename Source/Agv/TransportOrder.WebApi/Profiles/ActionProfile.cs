@@ -20,14 +20,24 @@ public class ActionProfile : WebApiProfile
             .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration))
             .ForSourceMember(g => g.HasPriority, opt => opt.DoNotValidate());
 
-        CreateMap<AgvActionReadModel, AgvActionDto>();
+        CreateMap<AgvActionReadModel, AgvActionDto>()
+            .ConstructUsing(_ => new AgvActionDto())
+            .ForMember(a => a.TargetNodeId, opt => opt.MapFrom(a => a.TargetNodeName))
+            ;
+
         CreateMap<AgvGroupCountByState, AgvGroupCountByStateDto>();
         CreateMap<ActionGroup, ActionGroupDto>()
             .ForMember(g => g.IsQueued, opt => opt.MapFrom(s => true))
             .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration));
+
         CreateMap<AgvAction, AgvActionDto>()
+            .ConstructUsing(_ => new AgvActionDto())
             .ForMember(m => m.TargetNodeType, opt => opt.Ignore())
-            .ForMember(m => m.TargetNodeId, opt => opt.MapFrom(s => s.Target.NodeId!));
+            .ForMember(m => m.TargetNodeId, opt =>
+            {
+                opt.MapFrom(s => s.Target.Node!.Name);
+                opt.Condition(s => s.Target.Node != null);
+            });
         CreateMap<DateTime, DateTime>().ConvertUsing(new CustomDateTimeConverter());
         CreateMap<DateTime?, DateTime?>().ConvertUsing(new CustomDateTimeConverter());
         CreateMap<DurationStatistics, ActionDurationStatisticsDto>();
@@ -62,7 +72,7 @@ public class ActionProfile : WebApiProfile
             {
                 return null;
             }
-            var sourceTime = (DateTime)source;
+            var sourceTime = (DateTime) source;
             switch (sourceTime.Kind)
             {
                 case DateTimeKind.Unspecified:

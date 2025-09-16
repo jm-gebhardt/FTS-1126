@@ -18,7 +18,7 @@ public class MaintenanceServiceTestFixture
 
     public MaintenanceServiceTestFixture()
     {
-        _agvDb.AddAgvData((AgvData?)null);
+        _agvDb.AddAgvData((AgvData?) null);
         MaintenanceService = new MaintenanceService(_agvDb.Object, _nodeStateRepository.Object, RouteService.Object, new Mock<ILogger<MaintenanceService>>().Object);
     }
 

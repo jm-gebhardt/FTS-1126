@@ -23,7 +23,7 @@ public class GraphParser
     private DateTime TimeStamp => _graph.ModificationDate.UtcDateTime;
 
     private bool _isParsed;
-    
+
     private string? _serialNumber;
     private bool _checkedVelocity;
     private bool _isVelocityDataValid;
@@ -140,8 +140,8 @@ public class GraphParser
     private bool BuildEdge(MqttEdge mqttEdge, float metric, double length, bool swap = false)
     {
         var (fromNode, toNode) = GetFromToNodes(mqttEdge);
-        string fromNodeId = swap ? toNode.Id : fromNode.Id;
-        string toNodeId = swap ? fromNode.Id : toNode.Id;
+        string fromNodeId = swap ? toNode.Name : fromNode.Name;
+        string toNodeId = swap ? fromNode.Name : toNode.Name;
 
         var edge = GetGraphEdgeForCurveType(mqttEdge, metric, (float) length, swap, fromNodeId, toNodeId);
         bool allAdded = _edges.Add(edge);
@@ -161,7 +161,7 @@ public class GraphParser
         return allAdded;
     }
 
-    private  GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeId, string toNodeId)
+    private GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeName, string toNodeName)
     {
         ICollection<MqttControlPoint>? controlPoints = swap ? mqttEdge.ControlPoints?.Reverse().ToList() : mqttEdge.ControlPoints;
         bool parsed = Enum.TryParse<EdgeType>(mqttEdge.EdgeType, true, out var edgeType);
@@ -169,7 +169,9 @@ public class GraphParser
         {
             edgeType = EdgeType.Direct;
         }
-        var id = GraphHelper.ToGuid(edgeType, fromNodeId, metric, toNodeId);
+        var fromNodeId = fromNodeName.ToGuid();
+        var toNodeId = toNodeName.ToGuid();
+        var id = GraphHelper.ToGuid(edgeType, fromNodeName, metric, toNodeName);
         switch (edgeType)
         {
             case EdgeType.Direct:
@@ -216,8 +218,8 @@ public class GraphParser
     {
         string fromNodeId = mqttEdge.StartId;
         string toNodeId = mqttEdge.EndId;
-        var fromNode = _nodes.Single(n => n.Id == fromNodeId);
-        var toNode = _nodes.Single(n => n.Id == toNodeId);
+        var fromNode = _nodes.Single(n => n.Name == fromNodeId);
+        var toNode = _nodes.Single(n => n.Name == toNodeId);
         return (fromNode, toNode);
     }
 
@@ -267,7 +269,7 @@ public class GraphParser
 
         foreach (var mqttNode in _graph.Nodes!)
         {
-            var newNode = new GraphNode(mqttNode.NodeId)
+            var newNode = new GraphNode(mqttNode.NodeId.ToGuid(), mqttNode.NodeId)
             {
                 Type = AgvGraph.NodeType.WayPoint,
                 TimeStamp = TimeStamp,
@@ -278,7 +280,7 @@ public class GraphParser
             allAdded &= _nodes.Add(newNode);
             if (allAdded)
             {
-                NodesById.Add(newNode.Id, mqttNode);
+                NodesById.Add(newNode.Name, mqttNode);
                 // this would throw as the edge is not unique. Usability will be set to invalid outside.
             }
         }

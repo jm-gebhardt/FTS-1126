@@ -131,14 +131,14 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         if (agvCorrelationId != null)
         {
             var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
-            if (agv.AgvStatus?.LastNodeId == targetNode)
+            if (agv.AgvStatus?.LastNodeId == targetNode.Id)
             {
-                logger.LogInformation("Automatic action withdrawn: not calling free node for agv {AgvCorrelation} already occupying node {Node}", agvCorrelationId, targetNode);
+                logger.LogInformation("Automatic action withdrawn: not calling free node for agv {AgvCorrelation} already occupying node {Node}", agvCorrelationId, targetNode.Name);
                 return;
             }
         }
         logger.LogInformation("Automatic action withdrawn: calling free node for agv {AgvCorrelation} and node {Node}", agvCorrelationId, targetNode);
-        await context.Publish(new FreeNode(targetNode, reservedOnly));
+        await context.Publish(new FreeNode(targetNode.Id, reservedOnly));
     }
 
     /// <inheritdoc />

@@ -13,7 +13,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 /// Provides a handler for jam state related events.
 /// </summary>
 [UsedImplicitly]
-public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJamStateRepository jamStateRepository, IConveyorCommunicator communicator): 
+public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJamStateRepository jamStateRepository, IConveyorCommunicator communicator) :
     IConsumer<UpdateJamState>,
     IConsumer<RequestJamState>
 {
@@ -22,24 +22,24 @@ public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJam
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateJamState> context)
     {
-        (string station, int state, var timeStamp) = context.Message;
+        (var stationId, int state, var timeStamp) = context.Message;
 
-        var jamState = await jamStateRepository.GetByStationAsync(station);
+        var jamState = await jamStateRepository.GetByStationAsync(stationId);
         if (jamState == null)
         {
-            jamState = new JamState(station, state, timeStamp);
-            logger.LogInformation("Adding jam state {State} for station {Station}", jamState.State, jamState.Station);
+            jamState = new JamState(stationId, state, timeStamp);
+            logger.LogInformation("Adding jam state {State} for station {Station}", jamState.State, jamState.StationId);
             await jamStateRepository.AddAsync(jamState);
             return;
         }
         if (state != jamState.State)
         {
-            await context.Publish(new JamStateUpdated(jamState.Station, state == 1));
+            await context.Publish(new JamStateUpdated(jamState.StationId, state == 1));
         }
 
         jamState.SetState(state, timeStamp);
         await jamStateRepository.UpdateAsync(jamState);
-        logger.LogInformation("Updating jam state {State} for station {Station}", jamState.State, jamState.Station);
+        logger.LogInformation("Updating jam state {State} for station {Station}", jamState.State, jamState.StationId);
     }
 
     /// <summary>

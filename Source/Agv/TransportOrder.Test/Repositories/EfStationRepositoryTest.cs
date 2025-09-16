@@ -92,7 +92,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).OrderBy(n => n.Id).Skip(1).ToList();
+        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).OrderBy(n => n.Name).Skip(1).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
@@ -135,7 +135,7 @@ public class EfStationRepositoryTest
         ICollection<Station> stations = await fixture.Repository.GetStations();
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
-            var station = stations.Single(s => s.Name == stationNode.Id);
+            var station = stations.Single(s => s.Name == stationNode.Name);
             station.MapName.ShouldBe(expectedMapName);
             station.Length.ShouldBe(expectedMaxLength);
             station.Width.ShouldBe(expectedMaxWidth);
@@ -151,16 +151,15 @@ public class EfStationRepositoryTest
     [TestMethod]
     public async Task GetStation_ValidData_GetsStationWithNodeLockAndAgvs()
     {
-        var fixture = new EfStationRepositoryTestFixture();
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
+        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()), NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var fixture = await new EfStationRepositoryTestFixture()
+            .WithNodeLockAsync(nodeLock);
 
-        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()).Id, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
-        await fixture.AddAsync(nodeLock);
-
-        string destination = graph.Nodes.First(n => n.IsStation()).Id;
+        string destination = graph.Nodes.First(n => n.IsStation()).Name;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
-        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.NodeId == destination).CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], []);
         await fixture.AddAsync(actionGroup);
 
         await fixture.Repository.AddStations(graph);
@@ -175,7 +174,7 @@ public class EfStationRepositoryTest
             station.PrimaryType.ShouldBe(stationNode.Type);
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();
-            if (station.Name == nodeLock.NodeId)
+            if (station.Id == nodeLock.NodeId)
             {
                 station.NodeLock.ShouldBe(nodeLock);
             }
@@ -195,24 +194,23 @@ public class EfStationRepositoryTest
     [TestMethod]
     public async Task GetStations_ValidData_GetsStationsWithNodeLockAndAgvs()
     {
-        var fixture = new EfStationRepositoryTestFixture();
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
+        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()), NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var fixture = await new EfStationRepositoryTestFixture()
+            .WithNodeLockAsync(nodeLock);
 
-        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()).Id, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
-        await fixture.AddAsync(nodeLock);
-
-        string destination = graph.Nodes.First(n => n.IsStation()).Id;
+        string destination = graph.Nodes.First(n => n.IsStation()).Name;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
-        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.NodeId == destination).CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], []);
         await fixture.AddAsync(actionGroup);
 
         await fixture.Repository.AddStations(graph);
-        
+
         ICollection<Station> stations = await fixture.Repository.GetStations();
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
-            var station = stations.Single(s => s.Name == stationNode.Id);
+            var station = stations.Single(s => s.Name == stationNode.Name);
             station.MapName.ShouldBe(null);
             station.Length.ShouldBe(Padding);
             station.Width.ShouldBe(Padding);
@@ -220,7 +218,7 @@ public class EfStationRepositoryTest
             station.PrimaryType.ShouldBe(stationNode.Type);
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();
-            if (station.Name == nodeLock.NodeId)
+            if (station.Id == nodeLock.NodeId)
             {
                 station.NodeLock.ShouldBe(nodeLock);
             }

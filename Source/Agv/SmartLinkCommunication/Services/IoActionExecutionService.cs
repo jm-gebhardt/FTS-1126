@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.SmartLinkCommunication.Models;
 using MassTransit;
@@ -23,7 +24,7 @@ public class IoActionExecutionService : IIoActionExecutionService
     {
         var orderId = Guid.NewGuid();
         int sequence = 0;
-        List<AgvAction> testActions = actionDefinitions.Select(a => new AgvAction(Guid.NewGuid(), a.Type, a.NodeId, orderId) { Sequence = sequence++ }).ToList();
+        List<AgvAction> testActions = actionDefinitions.Select(a => new AgvAction(Guid.NewGuid(), a.Type, a.NodeId.ToGraphNode(), orderId) { Sequence = sequence++ }).ToList();
 
         var actionGroup = new ActionGroup(
             orderId,

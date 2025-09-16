@@ -10,12 +10,14 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 public class EfNode
 {
     /// <summary>
-    /// The ID of the node, based on the AGV vendor
-    /// </summary><remarks>
-    /// Usually this is the (numeric) ID passed by the AGV vendor.
-    /// For internal reasons it can be necessary to build/combine an internal identification.
-    /// </remarks>
-    public string Id { get; init; }
+    /// The unique Id of the node.
+    /// </summary>
+    public Guid Id { get; init; }
+
+    /// <summary>
+    /// The Name of the node.
+    /// </summary>
+    public string Name { get; init; }
 
     /// <summary>
     /// The time (UTC) when this node was created.
@@ -78,10 +80,13 @@ public class EfNode
     /// </summary>
     public DockingDirection? DockingDirection { get; init; }
 
+    /// <summary>
+    /// EF
+    /// </summary>
     [JsonConstructor]
-    private EfNode()
+    public EfNode()
     {
-        Id = null!;
+        Name = null!;
         Maps = [];
         AgvGraphs = null!;
     }

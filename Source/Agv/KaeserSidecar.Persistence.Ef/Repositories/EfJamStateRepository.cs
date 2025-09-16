@@ -25,9 +25,9 @@ public class EfJamStateRepository(IDbContextFactory<KaeserSidecarDbContext> cont
     }
 
     /// <inheritdoc cref="IJamStateRepository"/>>
-    public async Task<JamState?> GetByStationAsync(string station)
+    public async Task<JamState?> GetByStationAsync(Guid stationId)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
-        return await context.Set<JamState>().SingleOrDefaultAsync(j => j.Station == station);
+        return await context.Set<JamState>().SingleOrDefaultAsync(j => j.StationId == stationId);
     }
 }

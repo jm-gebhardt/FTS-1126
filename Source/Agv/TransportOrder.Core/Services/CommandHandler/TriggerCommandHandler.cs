@@ -47,7 +47,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
 
         await triggerRepository.AddOrUpdate(trigger, false);
 
-        logger.LogInformation("Trigger {Name} created or updated.", trigger.DisplayName);
+        logger.LogInformation("Trigger {Name} created or updated", trigger.DisplayName);
 
         if (!trigger.Equals(existingTrigger))
         {
@@ -63,7 +63,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
     public async Task Consume(ConsumeContext<AddTriggerLocation> context)
     {
         Guid? edgeId = context.Message.EdgeId;
-        string? nodeId = context.Message.NodeId;
+        var node = context.Message.Node;
         var triggerId = context.Message.TriggerId;
         Guid? mapId = context.Message.MapId;
         ICollection<ConfigurationParameter>? configurationParameters = context.Message.ConfigurationParameters;
@@ -79,11 +79,11 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
             trigger = await triggerRepository.GetById(triggerId);
             if (edgeId != null)
             {
-                location = trigger.AddLocation(edgeId.Value, mapId, configurationParameters);
+                location = trigger.AddLocation(null, edgeId, mapId, configurationParameters);
             }
-            if (nodeId != null)
+            if (node != null)
             {
-                location = trigger.AddLocation(nodeId, mapId, configurationParameters);
+                location = trigger.AddLocation(node, null, mapId, configurationParameters);
             }
             if (polygon.Count > 0)
             {
@@ -101,9 +101,9 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         {
             logger.LogInformation("Trigger {Name} assigned to location {Location}", trigger.DisplayName, location!.Id);
 
-            if (nodeId != null)
+            if (node != null)
             {
-                await context.Publish(new TriggerAssignedToNode(triggerId, trigger.DisplayName, nodeId));
+                await context.Publish(new TriggerAssignedToNode(triggerId, trigger.DisplayName, node.Id));
             }
             if (polygon.Count > 0)
             {
@@ -198,11 +198,9 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
 
         List<TriggerLocalization> localizations = triggers
             .SelectMany(trigger => trigger.Locations, (trigger, location) => new { trigger, location })
-            .Where(tl => tl.location.NodeId != null || tl.location.Polygon.Count > 0)
+            .Where(tl => tl.location.Node != null || tl.location.Polygon.Count > 0)
             .Select(tl =>
-                tl.location.NodeId != null
-                    ? new TriggerLocalization(tl.trigger.DisplayName, tl.location.NodeId)
-                    : new TriggerLocalization(tl.trigger.DisplayName, tl.location.NodeId, tl.location.Id))
+                tl.location.Node != null ? new TriggerLocalization(tl.trigger.DisplayName, tl.location.Node.Id) : new TriggerLocalization(tl.trigger.DisplayName, tl.location.Node?.Id, tl.location.Id))
             .ToList();
 
         await context.RespondAsync(new GotTriggerMapping(localizations));

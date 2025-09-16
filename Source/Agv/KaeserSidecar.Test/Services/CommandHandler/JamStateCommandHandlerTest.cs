@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.KaeserSidecar.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Messages.JamState;
 using Moq;
 
@@ -10,14 +11,14 @@ public class JamStateCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateJamState_NewJamState_AddsJamState()
     {
-        var jamState = new JamState("PS01", 1, DateTime.UtcNow);
+        var jamState = new JamState("PS01".ToGuid(), 1, DateTime.UtcNow);
 
         var fixture = new JamStateCommandHandlerTestFixture()
             .WithJamState(null);
 
-        var updateJamState = new UpdateJamState(jamState.Station, jamState.State, jamState.LastStateChangeTime);
+        var updateJamState = new UpdateJamState(jamState.StationId, jamState.State, jamState.LastStateChangeTime);
 
-        await fixture.PublishMessageAsync<UpdateJamState, string>(updateJamState);
+        await fixture.PublishMessageAsync(updateJamState);
 
         fixture.VerifyJamStateAdded(Times.Once());
         fixture.VerifyJamStateUpdated(Times.Never());
@@ -26,14 +27,14 @@ public class JamStateCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateJamState_ExistingJamState_UpdatesJamState()
     {
-        var jamState = new JamState("PS01", 1, DateTime.UtcNow);
+        var jamState = new JamState("PS01".ToGuid(), 1, DateTime.UtcNow);
 
         var fixture = new JamStateCommandHandlerTestFixture()
             .WithJamState(jamState);
 
-        var updateJamState = new UpdateJamState(jamState.Station,0, DateTime.UtcNow);
+        var updateJamState = new UpdateJamState(jamState.StationId, 0, DateTime.UtcNow);
 
-        await fixture.PublishMessageAsync<UpdateJamState, string>(updateJamState);
+        await fixture.PublishMessageAsync(updateJamState);
 
         fixture.VerifyJamStateAdded(Times.Never());
         fixture.VerifyJamStateUpdated(Times.Once());

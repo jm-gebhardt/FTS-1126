@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Messages.Triggers;
@@ -14,12 +15,12 @@ namespace Gebhardt.Acc.TriggerQueueEvacuation;
 /// Represents a trigger that if enabled triggers evacuation of a queue when an agv running a pick drop action group passes the trigger.
 /// </summary>
 [PublicAPI]
-public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> logger): IFfcTrigger
+public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> logger) : IFfcTrigger
 {
     private readonly ConfigurationParameter _enableParameter = new("Enable", "Flag for switching on queue evacuation", false.ToString().ToLower(), "^(true|false)$");
     private readonly ConfigurationParameter _queueNameParameter = new("QueueName", "The name of the queue to evacuate", string.Empty, string.Empty);
     private readonly ConfigurationParameter _evacuationNodeParameter = new("EvacuationNode", "The node to evacuate the queue to", string.Empty, string.Empty);
-  
+
     /// <inheritdoc cref="IFfcTrigger"/>>
     public ConcurrentDictionary<string, ConfigurationParameter> GetDefaultConfigurationParameters()
     {
@@ -70,7 +71,7 @@ public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> lo
             return;
         }
         string queueName = GetQueueName(parameters);
-        string evacuationNode = GetEvacuationNode(parameters);
+        var evacuationNode = GetEvacuationNode(parameters).ToGuid();
         logger.LogInformation("Trigger evacuation of queue {QueueName} to node {EvacuationNode} for agv {AgvCorrelationId}", queueName, evacuationNode, agvStatus.CorrelationId);
         await bus.Publish(new EvacuateQueue(queueName, evacuationNode));
     }
@@ -78,21 +79,21 @@ public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> lo
     private bool ShouldEvacuate(Dictionary<string, ConfigurationParameter> parameters)
     {
         var enable = parameters.GetValueOrDefault(_enableParameter.Name) ??
-                                    GetDefaultConfigurationParameters().GetValueOrDefault(_enableParameter.Name);
+                     GetDefaultConfigurationParameters().GetValueOrDefault(_enableParameter.Name);
         return bool.Parse(enable!.Value);
     }
 
     private string GetQueueName(Dictionary<string, ConfigurationParameter> parameters)
     {
         var queueName = parameters.GetValueOrDefault(_queueNameParameter.Name) ??
-                     GetDefaultConfigurationParameters().GetValueOrDefault(_queueNameParameter.Name);
+                        GetDefaultConfigurationParameters().GetValueOrDefault(_queueNameParameter.Name);
         return queueName?.Value ?? string.Empty;
     }
 
     private string GetEvacuationNode(Dictionary<string, ConfigurationParameter> parameters)
     {
         var node = parameters.GetValueOrDefault(_evacuationNodeParameter.Name) ??
-                        GetDefaultConfigurationParameters().GetValueOrDefault(_evacuationNodeParameter.Name);
+                   GetDefaultConfigurationParameters().GetValueOrDefault(_evacuationNodeParameter.Name);
         return node?.Value ?? string.Empty;
     }
 

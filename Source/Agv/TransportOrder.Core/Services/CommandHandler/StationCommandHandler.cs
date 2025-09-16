@@ -36,7 +36,7 @@ public class StationCommandHandler(
 
         var station = await stationRepository.GetStation(id);
 
-        bool lockResult = await nodeStateRepository.LockNodeAsync(station.Name);
+        bool lockResult = await nodeStateRepository.LockNodeAsync(station.Id);
 
         if (!lockResult)
         {
@@ -44,7 +44,7 @@ public class StationCommandHandler(
             return;
         }
 
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Id);
 
         station.Lock(user, reason, lockDescription, lockOrderHandling);
 
@@ -70,7 +70,7 @@ public class StationCommandHandler(
 
         var station = await stationRepository.GetStation(id);
 
-        bool unlockResult = await nodeStateRepository.UnlockNodeAsync(station.Name);
+        bool unlockResult = await nodeStateRepository.UnlockNodeAsync(station.Id);
 
         if (!unlockResult)
         {
@@ -78,7 +78,7 @@ public class StationCommandHandler(
             return;
         }
 
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Name);
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Id);
 
         station.Unlock();
         await stationRepository.Update(station);
@@ -91,7 +91,9 @@ public class StationCommandHandler(
         logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked",
             $"User {user} unlocked station",
             new Dictionary<string, object?> { { LogLabels.User, user } });
-        await context.Publish(new StationUnlocked(station.Name));
+
+        var node = await graphRepository.GetNodeAsync(station.Id);
+        await context.Publish(new StationUnlocked(node));
     }
 
     /// <summary>

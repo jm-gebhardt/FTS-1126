@@ -98,13 +98,10 @@ public record AgvStatus : CorrelatedBy<Guid>
 
     /// <summary>
     /// Node id of last reached node or, if AGV is currently on a node, current node.
-    /// Empty string if no lastNodeId is available.
+    /// Empty GUid if no lastNodeId is available.
     /// </summary>
-    /// <remarks>
-    /// VDA5050.state.schema.lastNodeId
-    /// </remarks>
     [UsedImplicitly]
-    public string? LastNodeId { get; init; }
+    public Guid? LastNodeId { get; init; }
 
     /// <summary>
     /// The zones that the agv is in, if any.
@@ -153,7 +150,7 @@ public record AgvStatus : CorrelatedBy<Guid>
         double batteryCurrent,
         double batteryTemperature,
         bool disturbed,
-        string? lastNodeId = null,
+        Guid? lastNodeId = null,
         DateTime? estimatedFullyChargedTime = null,
         DateTime? lastBatteryReplacement = null,
         ICollection<string>? zoneIds = null,
@@ -193,7 +190,6 @@ public record AgvStatus : CorrelatedBy<Guid>
         BatteryCharge = 0;
         Charging = false;
         Disturbed = false;
-        LastNodeId = null;
         TotalDistance = 0;
         TotalLifetime = 0;
     }

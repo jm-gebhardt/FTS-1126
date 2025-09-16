@@ -24,20 +24,20 @@ try
             fromFtsConfig.LoadFromConfig(context.Configuration.GetRequiredSection(ServiceKeyProvider.FromFts));
             services.AddKeyedSingleton<Client>(ServiceKeyProvider.ToFts, (serviceProvider, _) =>
             {
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<Client>>();
                 return new Client(logger, toFtsConfig);
             });
             services.AddKeyedSingleton<Client>(ServiceKeyProvider.FromFts, (serviceProvider, _) =>
             {
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketBase>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<Client>>();
                 return new Client(logger, fromFtsConfig);
             });
             services.AddKeyedSingleton<PrismatTelegramProcessor>(ServiceKeyProvider.ToFts,
                 (serviceProvider, _) =>
-            {
-                var logger = serviceProvider.GetRequiredService<ILogger<PrismatTelegramProcessor>>();
-                return new PrismatTelegramProcessor(logger, false, toFtsConfig);
-            });
+                {
+                    var logger = serviceProvider.GetRequiredService<ILogger<PrismatTelegramProcessor>>();
+                    return new PrismatTelegramProcessor(logger, false, toFtsConfig);
+                });
             services.AddKeyedSingleton<PrismatTelegramProcessor>(ServiceKeyProvider.FromFts,
                 (serviceProvider, _) =>
                 {
@@ -49,7 +49,7 @@ try
             {
                 var toFtsProcessor = serviceProvider.GetKeyedService<PrismatTelegramProcessor>(ServiceKeyProvider.ToFts);
                 var socket = serviceProvider.GetKeyedService<Client>(ServiceKeyProvider.ToFts);
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<PrismatTelegram>>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<Sender<PrismatTelegram>>>();
                 return new Sender<PrismatTelegram>(socket!, ServiceKeyProvider.FromFts, toFtsProcessor!, logger);
             });
 
@@ -64,7 +64,7 @@ try
             {
                 var fromFtsProcessor = serviceProvider.GetKeyedService<PrismatTelegramProcessor>(ServiceKeyProvider.FromFts);
                 var server = serviceProvider.GetKeyedService<Client>(ServiceKeyProvider.FromFts);
-                var logger = serviceProvider.GetRequiredService<ILogger<SocketCommunicator<PrismatTelegram>>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<Receiver<PrismatTelegram>>>();
                 return new Receiver<PrismatTelegram>(server!, ServiceKeyProvider.FromFts, fromFtsProcessor!, logger);
             });
         });

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -18,14 +19,25 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
             .HasForeignKey(p => p.LocationId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(e => e.Polygon).AutoInclude();
-        builder.OwnsMany(e => e.ConfigurationParameters, o =>
-        {
-            o.ToTable("TriggerLocationConfigurationParameters");
-        });
+        builder.OwnsMany(e => e.ConfigurationParameters, o => { o.ToTable("TriggerLocationConfigurationParameters"); });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
         builder.Property(e => e.MapId);
         builder.Property(e => e.EdgeId);
-        builder.Property(e => e.NodeId).HasMaxLength(DbStringLimits.NodeId);
+        builder.OwnsOne<GraphNode>(t => t.Node, n =>
+        {
+            n.Property(nn => nn.Id);
+            n.Property(nn => nn.Name).HasMaxLength(DbStringLimits.NodeId);
+            n.Ignore(nn => nn.TimeStamp);
+            n.Ignore(nn => nn.Type);
+            n.Ignore(nn => nn.X);
+            n.Ignore(nn => nn.Y);
+            n.Ignore(nn => nn.Z);
+            n.Ignore(nn => nn.DropLiftHeight);
+            n.Ignore(nn => nn.PickLiftHeight);
+            n.Ignore(nn => nn.DockingDirection);
+            n.Ignore(nn => nn.Theta);
+        });
+
         builder.Property(e => e.Agvs).HasJsonConversion();
     }
 }

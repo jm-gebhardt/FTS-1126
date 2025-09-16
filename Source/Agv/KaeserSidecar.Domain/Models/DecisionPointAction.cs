@@ -18,7 +18,7 @@ public class DecisionPointAction
     /// <summary>
     /// The target station.
     /// </summary>
-    public string? Target { get; private set; }
+    public Guid? Target { get; private set; }
 
     /// <summary>
     /// The time the agv entered the decision point.
@@ -31,11 +31,11 @@ public class DecisionPointAction
     public int StationCount { get; init; }
 
     /// <inheritdoc cref="DecisionPointAction"/>>
-    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, string? target, DateTime entryTime, int stationCount)
+    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, Guid? targetStationId, DateTime entryTime, int stationCount)
     {
         CorrelationId = correlationId;
         AgvCorrelationId = agvCorrelationId;
-        Target = target;
+        Target = targetStationId;
         EntryTime = entryTime;
         StationCount = stationCount;
     }
@@ -52,9 +52,9 @@ public class DecisionPointAction
     /// <summary>
     /// The target of the action.
     /// </summary>
-    /// <param name="target"></param>
-    public void SetTarget(string target)
+    /// <param name="targetStationId"></param>
+    public void SetTarget(Guid targetStationId)
     {
-        Target = target;
+        Target = targetStationId;
     }
 }

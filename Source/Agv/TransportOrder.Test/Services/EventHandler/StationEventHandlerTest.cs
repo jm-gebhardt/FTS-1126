@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -14,7 +15,7 @@ public class StationEventHandlerTest
     {
         var fixture = new StationEventHandlerTestFixture();
 
-        await fixture.PublishMessageAsync<StationUnlocked, string>(new StationUnlocked("station"));
+        await fixture.PublishMessageAsync(new StationUnlocked("station".ToGraphNode()));
 
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldNotHavePublishedAsync<TryReactivateChargingAgv>();
@@ -26,7 +27,7 @@ public class StationEventHandlerTest
         var fixture = new StationEventHandlerTestFixture()
             .WithChargingAgvs([AgvGenerator.GenerateChargingAgv()]);
 
-        await fixture.PublishMessageAsync<StationUnlocked, string>(new StationUnlocked("station"));
+        await fixture.PublishMessageAsync(new StationUnlocked("station".ToGraphNode()));
 
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<TryReactivateChargingAgv>();
@@ -37,7 +38,7 @@ public class StationEventHandlerTest
     {
         var fixture = new StationEventHandlerTestFixture();
 
-        await fixture.PublishMessageAsync<JamStateUpdated, string>(new JamStateUpdated("station", true));
+        await fixture.PublishMessageAsync(new JamStateUpdated("station".ToGuid(), true));
 
         await fixture.ShouldHavePublishedAsync<UpdateStationJamState>();
     }

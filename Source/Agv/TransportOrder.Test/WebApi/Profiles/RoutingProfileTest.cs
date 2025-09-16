@@ -27,12 +27,12 @@ public class RoutingProfileTest
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereMapMessageContentIsMappedToDtoMap()
     {
-        var route = new Route(Guid.NewGuid(), ["A", "B"], [Guid.NewGuid()]);
+        var route = new Route(Guid.NewGuid(), [new GraphNode { Name = "A" }, new GraphNode { Name = "B" }], [Guid.NewGuid()]);
         var dto = _mapper.Map<RouteDto>(route);
 
         dto.ShouldNotBeNull();
         dto.CorrelationId.ShouldBe(route.CorrelationId);
-        dto.Nodes.ShouldBe(route.Nodes);
+        dto.Nodes.ShouldBe(route.Nodes.Select(n => n.Name));
         dto.Edges.ShouldBe(route.Edges);
     }
 }

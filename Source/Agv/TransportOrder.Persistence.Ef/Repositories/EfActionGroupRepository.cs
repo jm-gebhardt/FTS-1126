@@ -106,7 +106,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, string? sourceNodeId = null, string? targetNodeId = null, int maxItems = 1000)
+    public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
@@ -115,19 +115,19 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         if (sourceNodeId != null && targetNodeId == null)
         {
-            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.Target.NodeId == sourceNodeId));
+            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.Target.Node!.Id == sourceNodeId));
         }
 
         if (sourceNodeId == null && targetNodeId != null)
         {
-            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.Target.NodeId == targetNodeId));
+            actionGroups = actionGroups.Where(a => a.Actions.Any(action => action.Target.Node!.Id == targetNodeId));
         }
 
         if (sourceNodeId != null && targetNodeId != null)
         {
             actionGroups = actionGroups.Where(a =>
-                a.Actions.Any(action => action.Target.NodeId == sourceNodeId) &&
-                a.Actions.Any(action => action.Target.NodeId == targetNodeId));
+                a.Actions.Any(action => action.Target.Node!.Id == sourceNodeId) &&
+                a.Actions.Any(action => action.Target.Node!.Id == targetNodeId));
         }
 
         List<AgvAction> actions = await actionGroups
@@ -143,8 +143,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                 actions
                     .GroupBy(a => a.ActionType)
                     .ToDictionary(
-                        g => g.Key,
-                        g => (ICollection<double>) g.Select(a => a.Duration == null ? 0 : a.Duration!.Value.TotalSeconds).ToList()
+                        g => g.Key, ICollection<double> (g) => g.Select(a => a.Duration == null ? 0 : a.Duration!.Value.TotalSeconds).ToList()
                     );
         }
 
@@ -547,7 +546,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, string[] targetNodes)
+    public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, Guid[] targetNodes)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         try
@@ -560,7 +559,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             return actionGroups.Where(ag =>
                     ag.StartedDate.HasValue && ag.CompletedDate.HasValue && ag.EstimatedDuration.HasValue &&
                     ag.AssignedAgv == agvCorrelationId &&
-                    ag.Actions.All(a => targetNodes.Contains(a.Target.NodeId)))
+                    ag.Actions.All(a => targetNodes.Contains(a.Target.Node!.Id)))
                 .Average(ag => (ag.CompletedDate!.Value - ag.StartedDate!.Value - ag.EstimatedDuration!.Value).TotalSeconds);
         }
         catch (InvalidOperationException)
@@ -714,14 +713,14 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(string target)
+    public async Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(Guid targetId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking();
         return await actionGroups.Where(ag =>
                 (ag.State == ActionGroupState.Started || ag.State == ActionGroupState.Created) &&
-                ag.Actions.Any(a => (a.State == ActionState.Started || a.State == ActionState.Created) && a.Target.NodeId == target))
+                ag.Actions.Any(a => (a.State == ActionState.Started || a.State == ActionState.Created) && a.Target.Node!.Id == targetId))
             .ToListAsync();
     }
 
@@ -745,7 +744,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>().AsNoTracking().Where(a =>
                 a.IsQueued &&
-                a.Actions.Any(action => action.Target.NodeId == stationName &&
+                a.Actions.Any(action => action.Target.Node!.Name == stationName &&
                                         (action.State == ActionState.Created || action.State == ActionState.Started || action.State == ActionState.Paused)) &&
                 (a.State == ActionGroupState.Started || // currently running orders to this station
                  a.State == ActionGroupState.Paused || // or paused orders with not completed action to this station
@@ -758,19 +757,19 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>().AsNoTracking().Where(a =>
-            a.Actions.Any(action => action.Target.NodeId == stationName) &&
+            a.Actions.Any(action => action.Target.Node!.Name == stationName) &&
             a.State == ActionGroupState.Paused
         ).ToListAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<string> targets)
+    public async Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<Guid> targets)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>().AsNoTracking();
         return await actionGroups.Where(ag => ag.AssignedAgv == agvId
                                               && ag.State == ActionGroupState.Created
-                                              && ag.Actions.All(a => targets.Contains(a.Target.NodeId ?? string.Empty)))
+                                              && ag.Actions.All(a => targets.Contains(a.Target.Node != null ? a.Target.Node.Id : Guid.Empty)))
             .ToListAsync();
     }
 }

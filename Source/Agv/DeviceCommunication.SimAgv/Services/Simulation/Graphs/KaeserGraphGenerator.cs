@@ -59,12 +59,12 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
     private const string ManualCharge = "ManualCharge";
 
     private const float North = 0f;
-    private const float South = (float)Math.PI;
+    private const float South = (float) Math.PI;
 
     private const float StationSpacing = 2f;
 
     private const float RowSpacing = 2f;
-    
+
     private const float X5 = 5f;
     private const float X6 = X5 + StationSpacing;
     private const float X7 = X6 + StationSpacing;
@@ -111,49 +111,49 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
     {
         var nodes = new GraphNode[]
         {
-            new(Charge0) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col2, Y = Row0, TimeStamp = _timeStamp },
-            new(Charge1) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col3, Y = Row0, TimeStamp = _timeStamp },
-            new(Charge2) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col4, Y = Row0, TimeStamp = _timeStamp },
-            new(Charge3) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col5, Y = Row0, TimeStamp = _timeStamp },
-            new(ManualCharge) { Type = AgvGraph.NodeType.Charge, Theta = North, X = X7, Y = Row1, TimeStamp = _timeStamp },
+            new(Charge0.ToGuid(), Charge0) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col2, Y = Row0, TimeStamp = _timeStamp },
+            new(Charge1.ToGuid(), Charge1) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col3, Y = Row0, TimeStamp = _timeStamp },
+            new(Charge2.ToGuid(), Charge2) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col4, Y = Row0, TimeStamp = _timeStamp },
+            new(Charge3.ToGuid(), Charge3) { Type = AgvGraph.NodeType.Charge, Theta = North, X = Col5, Y = Row0, TimeStamp = _timeStamp },
+            new(ManualCharge.ToGuid(), ManualCharge) { Type = AgvGraph.NodeType.Charge, Theta = North, X = X7, Y = Row1, TimeStamp = _timeStamp },
 
-            new (Pd1) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X1, Y = Row1, TimeStamp = _timeStamp },
-            new (Pd2) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X2, Y = Row1, TimeStamp = _timeStamp },
-            new (Pd3) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X3, Y = Row1, TimeStamp = _timeStamp },
-            new (Pd4) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col5, Y = Y4, TimeStamp = _timeStamp},
-            new (Pd5) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X5, Y = Row6, TimeStamp = _timeStamp },
-            new (Pd6) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X6, Y = Row6, TimeStamp = _timeStamp },
-            new (Pd7) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X7, Y = Row6, TimeStamp = _timeStamp },
-            new (Pd8) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col0, Y = Row6, TimeStamp = _timeStamp },
+            new(Pd1.ToGuid(), Pd1) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X1, Y = Row1, TimeStamp = _timeStamp },
+            new(Pd2.ToGuid(), Pd2) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X2, Y = Row1, TimeStamp = _timeStamp },
+            new(Pd3.ToGuid(), Pd3) { Type = AgvGraph.NodeType.PickDrop, Theta = North, X = X3, Y = Row1, TimeStamp = _timeStamp },
+            new(Pd4.ToGuid(), Pd4) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col5, Y = Y4, TimeStamp = _timeStamp },
+            new(Pd5.ToGuid(), Pd5) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X5, Y = Row6, TimeStamp = _timeStamp },
+            new(Pd6.ToGuid(), Pd6) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X6, Y = Row6, TimeStamp = _timeStamp },
+            new(Pd7.ToGuid(), Pd7) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = X7, Y = Row6, TimeStamp = _timeStamp },
+            new(Pd8.ToGuid(), Pd8) { Type = AgvGraph.NodeType.PickDrop, Theta = South, X = Col0, Y = Row6, TimeStamp = _timeStamp },
 
-            new (Park2) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Ywp17, TimeStamp = _timeStamp },
-            new (Park1) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Row4, TimeStamp = _timeStamp },
-            new (Park0) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Row5, TimeStamp = _timeStamp },
+            new(Park2.ToGuid(), Park2) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Ywp17, TimeStamp = _timeStamp },
+            new(Park1.ToGuid(), Park1) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Row4, TimeStamp = _timeStamp },
+            new(Park0.ToGuid(), Park0) { Type = AgvGraph.NodeType.Park, Theta = South, X = Col5, Y = Row5, TimeStamp = _timeStamp },
 
-            new(Wp00) { Type = AgvGraph.NodeType.WayPoint, X = X5, Y = Row5, TimeStamp = _timeStamp },
-            new(Wp01) { Type = AgvGraph.NodeType.WayPoint, X = X6, Y = Row5, TimeStamp = _timeStamp },
-            new(Wp02) { Type = AgvGraph.NodeType.WayPoint, X = X7, Y = Row5, TimeStamp = _timeStamp },
-            new(Wp03) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row5, TimeStamp = _timeStamp },
-            new(Wp04) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row3, TimeStamp = _timeStamp },
-            new(Wp05) { Type = AgvGraph.NodeType.WayPoint, X = Col1, Y = Row3, TimeStamp = _timeStamp },
-            new(Wp06) { Type = AgvGraph.NodeType.WayPoint, X = Col1, Y = Row2, TimeStamp = _timeStamp },
-            new(Wp07) { Type = AgvGraph.NodeType.WayPoint, X = X1, Y = Row2, TimeStamp = _timeStamp },
-            new(Wp08) { Type = AgvGraph.NodeType.WayPoint, X = Col2, Y = Row1, TimeStamp = _timeStamp },
-            new(Wp09) { Type = AgvGraph.NodeType.WayPoint, X = Col3, Y = Row1, TimeStamp = _timeStamp },
-            new(Wp10) { Type = AgvGraph.NodeType.WayPoint, X = Col4, Y = Row1, TimeStamp = _timeStamp },
-            new(Wp11) { Type = AgvGraph.NodeType.WayPoint, X = Col5, Y = Row1, TimeStamp = _timeStamp },
-            new(Wp12) { Type = AgvGraph.NodeType.WayPoint, X = Col2, Y = Row2, TimeStamp = _timeStamp },
-            new(Wp13) { Type = AgvGraph.NodeType.WayPoint, X = Col3, Y = Row2, TimeStamp = _timeStamp },
-            new(Wp14) { Type = AgvGraph.NodeType.WayPoint, X = Col4, Y = Row2, TimeStamp = _timeStamp },
-            new(Wp15) { Type = AgvGraph.NodeType.WayPoint, X = Col5, Y = Row2, TimeStamp = _timeStamp },
-            new(Wp16) { Type = AgvGraph.NodeType.WayPoint, X = Col2, Y = Row3, TimeStamp = _timeStamp },
-            new(Wp17) { Type = AgvGraph.NodeType.WayPoint, X = Xwp17, Y = Ywp17, TimeStamp = _timeStamp },
-            new(Wp18) { Type = AgvGraph.NodeType.WayPoint, X = Col5, Y = Ywp18, TimeStamp = _timeStamp },
-            new(Wp19) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 2f * (Col2 - X1) / 5f, Y = Row2, TimeStamp = _timeStamp },
-            new(Wp20) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 3f * (Col2 - X1) / 5f,  Y = Row2, TimeStamp = _timeStamp },
-            new(Wp21) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 4f * (Col2 - X1) / 5f,  Y = Row2, TimeStamp = _timeStamp },
-            new(Wp22) { Type = AgvGraph.NodeType.WayPoint, X = Col0,  Y = Row2, TimeStamp = _timeStamp },
-            new(Wp23) { Type = AgvGraph.NodeType.WayPoint, X = Col0,  Y = Row4, TimeStamp = _timeStamp }
+            new(Wp00.ToGuid(), Wp00) { Type = AgvGraph.NodeType.WayPoint, X = X5, Y = Row5, TimeStamp = _timeStamp },
+            new(Wp01.ToGuid(), Wp01) { Type = AgvGraph.NodeType.WayPoint, X = X6, Y = Row5, TimeStamp = _timeStamp },
+            new(Wp02.ToGuid(), Wp02) { Type = AgvGraph.NodeType.WayPoint, X = X7, Y = Row5, TimeStamp = _timeStamp },
+            new(Wp03.ToGuid(), Wp03) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row5, TimeStamp = _timeStamp },
+            new(Wp04.ToGuid(), Wp04) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row3, TimeStamp = _timeStamp },
+            new(Wp05.ToGuid(), Wp05) { Type = AgvGraph.NodeType.WayPoint, X = Col1, Y = Row3, TimeStamp = _timeStamp },
+            new(Wp06.ToGuid(), Wp06) { Type = AgvGraph.NodeType.WayPoint, X = Col1, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp07.ToGuid(), Wp07) { Type = AgvGraph.NodeType.WayPoint, X = X1, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp08.ToGuid(), Wp08) { Type = AgvGraph.NodeType.WayPoint, X = Col2, Y = Row1, TimeStamp = _timeStamp },
+            new(Wp09.ToGuid(), Wp09) { Type = AgvGraph.NodeType.WayPoint, X = Col3, Y = Row1, TimeStamp = _timeStamp },
+            new(Wp10.ToGuid(), Wp10) { Type = AgvGraph.NodeType.WayPoint, X = Col4, Y = Row1, TimeStamp = _timeStamp },
+            new(Wp11.ToGuid(), Wp11) { Type = AgvGraph.NodeType.WayPoint, X = Col5, Y = Row1, TimeStamp = _timeStamp },
+            new(Wp12.ToGuid(), Wp12) { Type = AgvGraph.NodeType.WayPoint, X = Col2, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp13.ToGuid(), Wp13) { Type = AgvGraph.NodeType.WayPoint, X = Col3, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp14.ToGuid(), Wp14) { Type = AgvGraph.NodeType.WayPoint, X = Col4, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp15.ToGuid(), Wp15) { Type = AgvGraph.NodeType.WayPoint, X = Col5, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp16.ToGuid(), Wp16) { Type = AgvGraph.NodeType.WayPoint, X = Col2, Y = Row3, TimeStamp = _timeStamp },
+            new(Wp17.ToGuid(), Wp17) { Type = AgvGraph.NodeType.WayPoint, X = Xwp17, Y = Ywp17, TimeStamp = _timeStamp },
+            new(Wp18.ToGuid(), Wp18) { Type = AgvGraph.NodeType.WayPoint, X = Col5, Y = Ywp18, TimeStamp = _timeStamp },
+            new(Wp19.ToGuid(), Wp19) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 2f * (Col2 - X1) / 5f, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp20.ToGuid(), Wp20) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 3f * (Col2 - X1) / 5f, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp21.ToGuid(), Wp21) { Type = AgvGraph.NodeType.WayPoint, X = X1 + 4f * (Col2 - X1) / 5f, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp22.ToGuid(), Wp22) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row2, TimeStamp = _timeStamp },
+            new(Wp23.ToGuid(), Wp23) { Type = AgvGraph.NodeType.WayPoint, X = Col0, Y = Row4, TimeStamp = _timeStamp }
         };
         GraphEdge[] edges =
         {
@@ -233,7 +233,7 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
             CreatePolypath(Wp16, Park2, [new EdgeCoefficient(Col5, Row3)], nodes),
             CreatePolypath(Park1, Wp17, [new EdgeCoefficient(Xwp17, Row4)], nodes),
             CreatePolypath(Wp17, Wp11, [new EdgeCoefficient(Xwp17, Row1)], nodes),
-            CreatePolypath(Wp18, Wp15, [new EdgeCoefficient(Xwp17,  Ywp18), new EdgeCoefficient(Xwp17,  Row2)], nodes),
+            CreatePolypath(Wp18, Wp15, [new EdgeCoefficient(Xwp17, Ywp18), new EdgeCoefficient(Xwp17, Row2)], nodes),
             CreatePolypath(ManualCharge, Wp22, [new EdgeCoefficient(X7, Row2)], nodes),
             CreatePolypath(Wp22, ManualCharge, [new EdgeCoefficient(X7, Row2)], nodes)
         };
@@ -242,20 +242,20 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
 
     private GraphEdge CreateDirect(string fromNodeId, string toNodeId, GraphNode[] nodes)
     {
-        var sourceNode = nodes.Single(n => n.Id == fromNodeId);
-        var targetNode = nodes.Single(n => n.Id == toNodeId);
-        float length = (float)Mathematics.EuclideanDistance(sourceNode, targetNode);
-        return GraphEdge.CreateDirect(fromNodeId, toNodeId, length, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, length, toNodeId), _timeStamp);
+        var sourceNode = nodes.Single(n => n.Name == fromNodeId);
+        var targetNode = nodes.Single(n => n.Name == toNodeId);
+        float length = (float) Mathematics.EuclideanDistance(sourceNode, targetNode);
+        return GraphEdge.CreateDirect(fromNodeId.ToGuid(), toNodeId.ToGuid(), length, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, length, toNodeId), _timeStamp);
     }
 
     private GraphEdge CreatePolypath(string fromNodeId, string toNodeId, List<EdgeCoefficient> pathPoints, GraphNode[] nodes)
     {
-        var sourceNode = nodes.Single(n => n.Id == fromNodeId).AsVector3();
-        var targetNode = nodes.Single(n => n.Id == toNodeId).AsVector3();
+        var sourceNode = nodes.Single(n => n.Name == fromNodeId).AsVector3();
+        var targetNode = nodes.Single(n => n.Name == toNodeId).AsVector3();
         List<Vector3> points = [sourceNode];
-        points.AddRange(pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)));
+        points.AddRange(pathPoints.Select(c => new Vector3((float) c.X!, (float) c.Y!, 0f)));
         points.Add(targetNode);
         double length = new Polypath(points).GetLength();
-        return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float)length, toNodeId), _timeStamp);
+        return GraphEdge.CreatePolypath(fromNodeId.ToGuid(), toNodeId.ToGuid(), (float) length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float) length, toNodeId), _timeStamp);
     }
 }

@@ -34,7 +34,7 @@ public class NodeCommandHandler(
     IConsumer<ClearNodesFromAgv>,
     IConsumer<SetNodeApproachingProperties>,
     IConsumer<InitializeNodeApproachingProperties>,
-    IConsumer<FreeStationOccupancy>, 
+    IConsumer<FreeStationOccupancy>,
     IConsumer<OccupyStation>,
     IConsumer<UnblockStation>,
     IConsumer<StationReserved>
@@ -44,7 +44,7 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<FreeNode> context)
     {
-        string nodeId = context.Message.NodeId;
+        var nodeId = context.Message.NodeId;
         bool reservedOnly = context.Message.ReservedOnly;
         var station = await stationRepository.GetStation(nodeId);
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
@@ -94,7 +94,7 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateNodeOccupancy> context)
     {
-        (var agvCorrelationId, string? oldLastNodeId, string? newLastNodeId) = context.Message;
+        (var agvCorrelationId, Guid? oldLastNodeId, Guid? newLastNodeId) = context.Message;
         logger.LogTrace("{MessageType} for AGV {CorrelationId} received", nameof(UpdateNodeOccupancy), agvCorrelationId);
 
         ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
@@ -104,13 +104,13 @@ public class NodeCommandHandler(
         if (oldLastNode != null && oldLastNode.IsOccupiedByAgv(agvCorrelationId))
         {
             var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(agvCorrelationId);
-            if (currentAction?.Target.NodeId == oldLastNodeId)
+            if (currentAction?.Target.Node?.Id == oldLastNodeId)
             {
                 logger.LogInformation("Node {NodeId} is occupied by AGV {AgvCorrelationId} and has an active action going towards it, this might be a redock, so not unoccupying it", oldLastNode, agvCorrelationId);
             }
             else
             {
-                var node = await graphRepository.GetNodeAsync(oldLastNodeId!);
+                var node = await graphRepository.GetNodeAsync(oldLastNodeId!.Value);
                 if (node.IsDropStation() || node.IsPickStation())
                 {
                     logger.LogInformation("Not un-occupying station {Station} based on last node id, only explicit freeing via command", oldLastNodeId);
@@ -118,7 +118,7 @@ public class NodeCommandHandler(
                 }
                 logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);
                 await nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
-                await PublishNodeStateChange(context, oldLastNodeId!);
+                await PublishNodeStateChange(context, oldLastNodeId.Value);
                 nodeLocksForAgv.Remove(oldLastNode);
             }
         }
@@ -128,8 +128,8 @@ public class NodeCommandHandler(
             if (newLastNode.IsReservedForAgv(agvCorrelationId))
             {
                 logger.LogWarning("Setting {NodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
-                await nodeStateRepository.OccupyNodeAsync(newLastNodeId!, agvCorrelationId);
-                await PublishNodeStateChange(context, newLastNodeId!);
+                await nodeStateRepository.OccupyNodeAsync(newLastNodeId!.Value, agvCorrelationId);
+                await PublishNodeStateChange(context, newLastNodeId.Value);
                 nodeLocksForAgv.Remove(newLastNode);
             }
             if (newLastNode.IsOccupiedByAgv(agvCorrelationId))
@@ -153,7 +153,7 @@ public class NodeCommandHandler(
         ICollection<Task> tasks = [];
         foreach (var node in nodeLocks)
         {
-            if (!agvActionGroups.Any(a => a.Actions.Any(action => action.Target.NodeId == node.NodeId)))
+            if (!agvActionGroups.Any(a => a.Actions.Any(action => action.Target.Node?.Id == node.NodeId)))
             {
                 logger.LogWarning("For agv {AgvCorrelationId} free residual node {NodeId}", agvCorrelationId, node.NodeId);
 
@@ -167,7 +167,7 @@ public class NodeCommandHandler(
         await Task.WhenAll(tasks);
     }
 
-    private async Task PublishNodeStateChange(IPublishEndpoint context, string nodeId)
+    private async Task PublishNodeStateChange(IPublishEndpoint context, Guid nodeId)
     {
         var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
         Guid? stationId;
@@ -197,7 +197,8 @@ public class NodeCommandHandler(
             return;
         }
         var dateModified = DateTime.UtcNow;
-        await context.Publish(new NodeStateChanged(new NodeLock(nodeId, NodeLockState.Free, false, null, dateModified), stationId, user, lockReason, lockDescription));
+        var node = await graphRepository.GetNodeAsync(nodeId);
+        await context.Publish(new NodeStateChanged(new NodeLock(node, NodeLockState.Free, false, null, dateModified), stationId, user, lockReason, lockDescription));
     }
 
     /// <summary>
@@ -205,20 +206,20 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<SetNodeApproachingProperties> context)
     {
-        (var mapId, string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        (var mapId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
 
         var node = await graphRepository.GetNodeAsync(nodeId);
         dockingDirection ??= DockingDirection.Both;
-        
+
         logger.LogInformation("Setting approaching properties for node {NodeId} on map {MapId}: docking direction {DockingDirection}, drop lift height {DropLiftHeight}, pick lift height {PickLiftHeight}", node, mapId, dockingDirection, dropLiftHeight, pickLiftHeight);
-        
+
         node.DockingDirection = dockingDirection;
         node.DropLiftHeight = dropLiftHeight;
         node.PickLiftHeight = pickLiftHeight;
 
         await graphRepository.UpdateNode(node);
 
-        await context.Publish(new NodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+        await context.Publish(new NodeApproachingPropertiesUpdated(mapId, node, pickLiftHeight, dropLiftHeight, dockingDirection));
     }
 
     /// <summary>
@@ -226,19 +227,19 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<InitializeNodeApproachingProperties> context)
     {
-        (string nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        (var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
 
         var node = await graphRepository.GetNodeAsync(nodeId);
-           
+
         node.DockingDirection = dockingDirection;
         node.DropLiftHeight = dropLiftHeight;
         node.PickLiftHeight = pickLiftHeight;
 
         await graphRepository.UpdateNode(node);
 
-        var mapId = await mapRepository.GetMapIdForNode(nodeId);
+        var mapId = await mapRepository.GetMapIdForNodeAsync(nodeId);
 
-        await context.Publish(new NodeApproachingPropertiesUpdated(mapId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+        await context.Publish(new NodeApproachingPropertiesUpdated(mapId, node, pickLiftHeight, dropLiftHeight, dockingDirection));
     }
 
     /// <summary>
@@ -246,20 +247,20 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
-        string stationName = context.Message.Station;
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(stationName);
+        var stationId = context.Message.StationId;
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(stationId);
         if (nodeState == null)
         {
-            logger.LogWarning("Could not retrieve node state for station {StationName}", stationName);
+            logger.LogWarning("Could not retrieve node state for station {StationName}", stationId);
             return;
         }
 
-        if (!await nodeStateRepository.FreeNodeAsync(stationName))
+        if (!await nodeStateRepository.FreeNodeAsync(stationId))
         {
-            logger.LogWarning("Could not free node {NodeId}, node is locked", stationName);
+            logger.LogWarning("Could not free node {NodeId}, node is locked", stationId);
         }
 
-        await PublishNodeStateChange(context, stationName);
+        await PublishNodeStateChange(context, stationId);
     }
 
     /// <summary>
@@ -267,7 +268,7 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<UnblockStation> context)
     {
-        string stationName = context.Message.Station;
+        var stationName = context.Message.Id;
         var nodeState = await nodeStateRepository.GetNodeStateAsync(stationName);
         if (nodeState == null)
         {
@@ -288,11 +289,11 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<OccupyStation> context)
     {
-        string stationName = context.Message.Station;
+        var station = context.Message.Station;
         var agv = context.Message.AgvCorrelationId;
 
-        await nodeStateRepository.ForceReserveNodeAsync(stationName, agv);
-        await PublishNodeStateChange(context, stationName);
+        await nodeStateRepository.ForceReserveNodeAsync(station.Id, agv);
+        await PublishNodeStateChange(context, station.Id);
     }
 
     /// <summary>
@@ -300,9 +301,9 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<StationReserved> context)
     {
-        string stationName = context.Message.StationName;
+        var stationId = context.Message.StationId;
         var agv = context.Message.AgvCorrelationId;
-        await nodeStateRepository.ForceReserveNodeAsync(stationName, agv);
-        await PublishNodeStateChange(context, stationName);
+        await nodeStateRepository.ForceReserveNodeAsync(stationId, agv);
+        await PublishNodeStateChange(context, stationId);
     }
 }

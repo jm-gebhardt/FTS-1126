@@ -51,9 +51,9 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<StationCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
-            c.Message<OccupyStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
-            c.Message<FreeStationOccupancy>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
-            c.Message<UnblockStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station));
+            c.Message<OccupyStation>(x => x.UsePartitioner(partitioner, p => p.Message.Station.Id));
+            c.Message<FreeStationOccupancy>(x => x.UsePartitioner(partitioner, p => p.Message.StationId));
+            c.Message<UnblockStation>(x => x.UsePartitioner(partitioner, p => p.Message.Id));
         });
 
         cfg.AddConsumer<JamStateEventHandler>();

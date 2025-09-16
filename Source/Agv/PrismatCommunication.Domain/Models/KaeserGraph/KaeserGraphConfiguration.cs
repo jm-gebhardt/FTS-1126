@@ -103,7 +103,7 @@ public class KaeserGraphConfiguration
     /// <summary>
     /// The waiting position in the short loop by Target source.
     /// </summary>
-    public Dictionary<string, string> WaitingPositionByAklSource = new ();
+    public Dictionary<string, string> WaitingPositionByAklSource = new();
 
     /// <summary>
     /// The waiting position in the short loop by AKL target.
@@ -143,9 +143,9 @@ public class KaeserGraphConfiguration
     public Dictionary<string, List<string>> DoppelspielPickTargets { get; private set; } =
         new()
         {
-            {"1050", ["1040", "1020"]},
-            {"1060", ["1020", "1040"]},
-            {"9070", ["9060"]}
+            { "1050", ["1040", "1020"] },
+            { "1060", ["1020", "1040"] },
+            { "9070", ["9060"] }
         };
 
     /// <summary>
@@ -154,10 +154,10 @@ public class KaeserGraphConfiguration
     public Dictionary<string, string> AklDoppelspielPickTargets { get; private set; } =
         new()
         {
-            {"2110", "2130"},
-            {"2210", "2230"},
-            {"2310", "2330"},
-            {"2410", "2430"}
+            { "2110", "2130" },
+            { "2210", "2230" },
+            { "2310", "2330" },
+            { "2410", "2430" }
         };
 
     /// <summary>
@@ -175,7 +175,7 @@ public class KaeserGraphConfiguration
     /// </summary>
     /// <param name="pickTarget"></param>
     /// <returns></returns>
-   public string GetDoppelspielDropTargetForPick(string pickTarget) => DoppelspielPickTargets.FirstOrDefault(kv => kv.Value.Contains(pickTarget)).Key ?? string.Empty;
+    public string GetDoppelspielDropTargetForPick(string pickTarget) => DoppelspielPickTargets.FirstOrDefault(kv => kv.Value.Contains(pickTarget)).Key ?? string.Empty;
 
     /// <summary>
     /// Get the pick target corresponding to the given drop target.
@@ -187,7 +187,7 @@ public class KaeserGraphConfiguration
     /// <summary>
     /// Provides a mapping of trigger points to nodes.
     /// </summary>
-    public IConcurrentDictionaryProvider<string, string> TriggerPointMapping { get; }
+    public IConcurrentDictionaryProvider<string, Guid> TriggerPointMapping { get; }
 
     /// <summary>
     /// True, if the queue at APL is occupied by agvs.
@@ -195,14 +195,14 @@ public class KaeserGraphConfiguration
     public bool QueueIsOccupied { get; private set; } = true;
 
     /// <inheritdoc cref="KaeserGraphConfiguration"/>>
-    public KaeserGraphConfiguration(IConcurrentDictionaryProvider<string, string> triggerPointMapping)
+    public KaeserGraphConfiguration(IConcurrentDictionaryProvider<string, Guid> triggerPointMapping)
     {
         IsLoaded = false;
         TriggerPointMapping = triggerPointMapping;
 
-        TriggerPointMapping.Add(CheckCargoTriggerName, "");
-        TriggerPointMapping.Add(DecisionPoint1TriggerName, "");
-        TriggerPointMapping.Add(DoppelspielTriggerName, "");
+        TriggerPointMapping.Add(CheckCargoTriggerName, Guid.Empty);
+        TriggerPointMapping.Add(DecisionPoint1TriggerName, Guid.Empty);
+        TriggerPointMapping.Add(DoppelspielTriggerName, Guid.Empty);
 
         StationMapping = new Dictionary<string, string>()
         {
@@ -249,7 +249,7 @@ public class KaeserGraphConfiguration
     /// </summary>
     /// <param name="triggerPointName">The name of the trigger point.</param>
     /// <param name="nodeId">The node id.</param>
-    public void UpdateTriggerPointNodeId(string triggerPointName, string nodeId)
+    public void UpdateTriggerPointNodeId(string triggerPointName, Guid nodeId)
     {
         TriggerPointMapping.Add(triggerPointName, nodeId);
     }
@@ -522,7 +522,7 @@ public class KaeserGraphConfiguration
     /// <returns>True, if the target is an AKL drop station.</returns>
     public bool IsDropAtAkl(string target)
     {
-        return  AklDoppelspielPickTargets.ContainsKey(target);
+        return AklDoppelspielPickTargets.ContainsKey(target);
     }
 
     /// <summary>

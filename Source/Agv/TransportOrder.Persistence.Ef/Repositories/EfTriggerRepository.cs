@@ -36,7 +36,7 @@ public class EfTriggerRepository : ITriggerRepository
     {
         return context.Set<Location>().AsSplitQuery().SingleOrDefaultAsync(l => l.Id == location.Id);
     }
-    
+
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task AddOrUpdate(Trigger trigger, bool updateLocations)
     {
@@ -67,13 +67,15 @@ public class EfTriggerRepository : ITriggerRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        return await context.Set<Trigger>()
+        List<Trigger> listAsync = await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
             .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
             .AsNoTracking()
             .AsSplitQuery()
             .ToListAsync();
+
+        return listAsync;
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
@@ -183,13 +185,13 @@ public class EfTriggerRepository : ITriggerRepository
     {
         _triggerLocationDictionaryProvider.ConcurrentDict.AddOrUpdate(location.Id, location, (_, _) => location);
         _logger.LogDebug("{Method}: Added trigger {TriggerId} to location {LocationId} (NodeId: {NodeId}, EdgeId: {EdgeId}, Polygon: {IsPolygon}, Number of AGVs: {AgvCount})",
-            nameof(AddTriggerLocationToDictionary), trigger.Id, location.Id, location.NodeId, location.EdgeId, location.Polygon.Count > 0, location.Agvs.Count);
+            nameof(AddTriggerLocationToDictionary), trigger.Id, location.Id, location.Node, location.EdgeId, location.Polygon.Count > 0, location.Agvs.Count);
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public ICollection<Location> GetNodeTriggerLocations(string nodeId)
+    public ICollection<Location> GetNodeTriggerLocations(Guid nodeId)
     {
-        return _triggerLocationDictionaryProvider.ConcurrentDict.Values.Where(l => l.NodeId == nodeId).ToList();
+        return _triggerLocationDictionaryProvider.ConcurrentDict.Values.Where(l => l.Node?.Id == nodeId).ToList();
     }
 
     /// <inheritdoc  cref="ITriggerRepository"/>>
@@ -239,7 +241,7 @@ public class EfTriggerRepository : ITriggerRepository
                         Location = location,
                         Action = PolygonTriggerAction.Left
                     });
-                    _logger.LogDebug("{Method}: AGV {AgvId} left polygon.", nameof(GetPolygonTriggerLocations), agvId);
+                    _logger.LogDebug("{Method}: AGV {AgvId} left polygon", nameof(GetPolygonTriggerLocations), agvId);
 
                     var locationRecord = await GetLocationByIdAsync(context, location);
                     if (locationRecord != null)

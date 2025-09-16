@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
@@ -230,9 +231,8 @@ public class MapController : Controller
     [Route("/map/{correlationId:guid}/nodes/setApproachingProperties")]
     public async Task<ActionResult> SetApproachProperties(Guid correlationId, [FromQuery] string nodeId, [FromQuery] double? pickLiftHeight, [FromQuery] double? dropLiftHeight, [FromQuery] DockingDirection? dockingDirection)
     {
-        await _nodeApproachingPropertiesClient.GetResponse<Success>(new TrySettingNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
+        await _nodeApproachingPropertiesClient.GetResponse<Success>(new TrySettingNodeApproachingProperties(correlationId, nodeId.ToGuid(), pickLiftHeight, dropLiftHeight, dockingDirection));
         _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemNodeApproachingPropertiesUpdated } });
-
         return Ok();
     }
 }

@@ -21,8 +21,8 @@ public class Queue
     /// <inheritdoc cref="Queue"/>>
     public Queue(string name, ICollection<QueueNode> nodes)
     {
-        Name=name;
-        Nodes=nodes;
+        Name = name;
+        Nodes = nodes;
     }
 }
 
@@ -45,7 +45,7 @@ public class QueueNode
     /// <inheritdoc cref="QueueNode"/>>
     public QueueNode(string nodeId, int position)
     {
-        NodeId=nodeId;
-        Position=position;
+        NodeId = nodeId;
+        Position = position;
     }
 }

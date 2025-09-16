@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations;
@@ -19,13 +20,13 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithOccupancies((1, agvCorrelationId));
 
-        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy("WP-8", agvCorrelationId));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy("WP-8".ToGuid(), agvCorrelationId));
 
         await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
 
         var occupancyAfter = await fixture.StationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         occupancyAfter.ShouldNotBeNull();
-        occupancyAfter.Station.ShouldBe(fixture.Occupancies[0].Station);
+        occupancyAfter.StationId.ShouldBe(fixture.Occupancies[0].StationId);
     }
 
     [TestMethod]
@@ -36,7 +37,7 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithOccupancies((1, agvCorrelationId));
 
-        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy(fixture.Occupancies[0].Station, agvCorrelationId));
+        await fixture.TestHarness.Bus.Publish(new FreeStationOccupancy(fixture.Occupancies[0].StationId, agvCorrelationId));
 
         await fixture.ShouldHaveConsumedAsync<FreeStationOccupancy>();
 
@@ -52,7 +53,7 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithOccupancies((1, agvCorrelationId));
 
-        await fixture.TestHarness.Bus.Publish(new UnblockStation(fixture.Occupancies[0].Station));
+        await fixture.TestHarness.Bus.Publish(new UnblockStation(fixture.Occupancies[0].StationId, fixture.Occupancies[0].StationName));
 
         await fixture.ShouldHaveConsumedAsync<UnblockStation>();
 
@@ -80,9 +81,9 @@ public class StationCommandHandlerTest
     {
         var fixture = new StationCommandHandlerTestFixture();
 
-        string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
+        string stationId = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
 
-        await fixture.PublishMessageAsync<StationUnlocked, string>(new StationUnlocked(station));
+        await fixture.PublishMessageAsync(new StationUnlocked(stationId.ToGraphNode()));
 
         await fixture.ShouldHavePublishedAsync<RequestJamState>();
     }
@@ -92,7 +93,7 @@ public class StationCommandHandlerTest
     {
         var fixture = new StationCommandHandlerTestFixture();
 
-        await fixture.PublishMessageAsync<StationUnlocked, string>(new StationUnlocked("a station"));
+        await fixture.PublishMessageAsync(new StationUnlocked("a station".ToGraphNode()));
 
         await fixture.ShouldNotHavePublishedAsync<RequestJamState>();
     }

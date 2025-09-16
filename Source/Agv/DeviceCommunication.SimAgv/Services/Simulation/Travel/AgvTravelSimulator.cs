@@ -108,13 +108,13 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         double entryAngle = 0;
         BaseEdge? followingEdge;
 
-        if (nodes.Count == 1 && CurrentNode != null && !AddedVirtualNodes.Contains(CurrentNode.Id))
+        if (nodes.Count == 1 && CurrentNode != null && !AddedVirtualNodes.Contains(CurrentNode.Name))
         {
             EstimateTimeForChargeAction(nodes);
             return;
         }
 
-        if (nodes.Count == 1 && CurrentNode != null && AddedVirtualNodes.Contains(CurrentNode.Id))
+        if (nodes.Count == 1 && CurrentNode != null && AddedVirtualNodes.Contains(CurrentNode.Name))
         {
             EstimateTimeToGetBackToGraph(nodes.Single(), entryTime, agvData, initialVelocity);
             return;
@@ -155,7 +155,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     private void EstimateTimeForChargeAction(IReadOnlyList<string> nodes)
     {
         CurrentEdge = null;
-        CurrentNode = _nodes.Single(e => e.Id == nodes.Single());
+        CurrentNode = _nodes.Single(e => e.Name == nodes.Single());
 
         // already there
         TravelDuration = TimeSpan.Zero;
@@ -163,9 +163,9 @@ public class AgvTravelSimulator : IAgvTravelSimulator
 
     private void EstimateTimeToGetBackToGraph(string targetNode, DateTime entryTime, AgvData agvData, double initialVelocity)
     {
-        ResetAddedVirtualNodes(CurrentNode!.Id);
-        var target = _nodes.Single(n => n.Id == targetNode);
-        var graphEdge = GraphEdge.CreateDirect(CurrentNode.Id, targetNode, (float) Mathematics.EuclideanDistance(CurrentNode, target), Guid.NewGuid(), _timeStamp);
+        ResetAddedVirtualNodes(CurrentNode!.Name);
+        var target = _nodes.Single(n => n.Name == targetNode);
+        var graphEdge = GraphEdge.CreateDirect(CurrentNode.Id, targetNode.ToGuid(), (float) Mathematics.EuclideanDistance(CurrentNode, target), Guid.NewGuid(), _timeStamp);
         var edge = new DirectEdge(graphEdge, CurrentNode, target) { TimeStamp = _timeStamp };
         Edges.Add(edge);
         AddedVirtualEdges.Add(edge.Id);
@@ -184,12 +184,14 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     /// <inheritdoc />
     public void EstimateTravelTimes(AgvPosition targetPosition, DateTime entryTime, AgvData agvData, double initialVelocity)
     {
-        var virtualSource = new GraphNode(Guid.NewGuid().ToString()) { X = Position.X, Y = Position.Y, Theta = Position.Theta, TimeStamp = _timeStamp };
-        var virtualTarget = new GraphNode(Guid.NewGuid().ToString()) { X = targetPosition.X, Y = targetPosition.Y, Theta = targetPosition.Theta, TimeStamp = _timeStamp };
+        string virtualSourceName = Guid.NewGuid().ToString();
+        var virtualSource = new GraphNode(virtualSourceName.ToGuid(), virtualSourceName) { X = Position.X, Y = Position.Y, Theta = Position.Theta, TimeStamp = _timeStamp };
+        string virtualTargetName = Guid.NewGuid().ToString();
+        var virtualTarget = new GraphNode(virtualTargetName.ToGuid(), virtualSourceName) { X = targetPosition.X, Y = targetPosition.Y, Theta = targetPosition.Theta, TimeStamp = _timeStamp };
         _nodes.Add(virtualSource);
-        AddedVirtualNodes.Add(virtualSource.Id);
+        AddedVirtualNodes.Add(virtualSource.Name);
         _nodes.Add(virtualTarget);
-        AddedVirtualNodes.Add(virtualTarget.Id);
+        AddedVirtualNodes.Add(virtualTarget.Name);
 
         var graphEdge = GraphEdge.CreateDirect(virtualSource.Id, virtualTarget.Id, (float) Mathematics.EuclideanDistance(virtualSource, virtualTarget), Guid.NewGuid(), _timeStamp);
         var edge = new DirectEdge(graphEdge, virtualSource, virtualTarget) { TimeStamp = _timeStamp };
@@ -243,8 +245,8 @@ public class AgvTravelSimulator : IAgvTravelSimulator
 
     private float GetOrientation(AgvPosition position)
     {
-        bool isMoveToCoordinate = AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Id);
-        bool isMoveBackToGraph = !AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Id) && AddedVirtualNodes.Contains(CurrentEdge.SourceNode.Id);
+        bool isMoveToCoordinate = AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Name);
+        bool isMoveBackToGraph = !AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Name) && AddedVirtualNodes.Contains(CurrentEdge.SourceNode.Name);
 
         if (isMoveToCoordinate || isMoveBackToGraph)
         {
@@ -283,7 +285,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     {
         foreach (string node in AddedVirtualNodes.Where(n => n != nodeToKeep))
         {
-            _nodes.Remove(_nodes.Single(n => n.Id == node));
+            _nodes.Remove(_nodes.Single(n => n.Name == node));
         }
         AddedVirtualNodes = AddedVirtualNodes.Except(AddedVirtualNodes.Where(n => n != nodeToKeep)).ToList();
     }

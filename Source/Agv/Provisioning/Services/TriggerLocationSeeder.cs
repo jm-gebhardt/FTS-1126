@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.Provisioning.Models;
@@ -28,9 +29,9 @@ public class TriggerLocationSeeder : JsonSeeder<TriggerLocation>
     protected override async Task<object> GetMessageAsync(TriggerLocation data)
     {
         var triggerGuid = TriggerProperties.GetTriggerId(data.TriggerUrn, data.TriggerVersion);
-        
+
         ICollection<PolygonPoint> polygonPoints = data.Polygon ?? [];
-        var addTriggerLocation = new AddTriggerLocation(triggerGuid, data.NodeId, data.EdgeId, polygonPoints, data.MapId, data.ConfigurationParameters);
+        var addTriggerLocation = new AddTriggerLocation(triggerGuid, data.NodeId?.ToGraphNode(), data.EdgeId, polygonPoints, data.MapId, data.ConfigurationParameters);
 
         return await Task.FromResult(addTriggerLocation);
     }

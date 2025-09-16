@@ -15,9 +15,9 @@ public class Server : SocketBase
     private const int TcpResendInterval = 1000;
 
     private Socket? _serverSocket;
-    
+
     /// <inheritdoc cref="Client"/>>
-    public Server(ILogger<SocketBase> logger, TelegramCommunicationConfiguration configuration) : base(logger)
+    public Server(ILogger<Server> logger, TelegramCommunicationConfiguration configuration) : base(logger)
     {
         Configuration = configuration;
     }

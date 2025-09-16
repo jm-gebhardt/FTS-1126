@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -56,6 +57,15 @@ public static class MockAgvDbExtensions
             return agv == null ? null : new AgvPositionStatus(agv.CorrelationId, agv.SerialNumber, new AgvPosition(true, 1, 1, 0, 0));
         });
         repoMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync([]);
+
+        foreach (var agv in agvs)
+        {
+            Guid? lastNode = agv.AgvStatus?.LastNodeId;
+            if (lastNode != null)
+            {
+                repoMock.AddNode(lastNode.Value.ToGraphNode());
+            }
+        }
     }
 
     private static void AddNonExistingAgvs(this Mock<IAgvDb> repoMock, params Guid[] agvCorrelationIds)
@@ -95,9 +105,26 @@ public static class MockAgvDbExtensions
         repoMock.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(graphExists);
     }
 
-    public static void AddNode(this Mock<IAgvDb> repoMock, GraphNode? node)
+    public static void SetupNodeFallbacks(this Mock<IAgvDb> repoMock)
     {
-        repoMock.Setup(x => x.Graphs.TryGetNodeAsync(It.IsAny<string>())).ReturnsAsync(node);
+        repoMock.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
+        repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
+        repoMock.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
+        repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
+    }
+
+    public static void AddNode(this Mock<IAgvDb> repoMock, params GraphNode?[] nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (node != null)
+            {
+                repoMock.Setup(x => x.Graphs.GetNodeAsync(node.Id)).ReturnsAsync(node);
+                repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+                repoMock.Setup(x => x.Graphs.GetNodeAsync(node.Id)).ReturnsAsync(node);
+                repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+            }
+        }
     }
 
     public static void AddAgvData(this Mock<IAgvDb> repoMock, AgvData? agvData)

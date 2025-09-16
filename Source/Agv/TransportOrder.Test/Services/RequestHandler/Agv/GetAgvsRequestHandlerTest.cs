@@ -32,7 +32,7 @@ public class GetAgvsRequestHandlerTest
     [TestMethod]
     public async Task GetAgvsRequestHandler_RepositoryContainsAgv_NoActionGroup_AgvReturned()
     {
-        var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { AgvGenerator.GenerateIdleAgv(lastNodeId: null) };
+        var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { AgvGenerator.GenerateIdleAgv(lastNodeName: null) };
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(agvs)
@@ -51,7 +51,7 @@ public class GetAgvsRequestHandlerTest
     public async Task GetAgvsRequestHandler_RepositoryContainsAgvWithLastNode_HasCurrentAction_AgvReturned()
     {
         const string myLastNodeId = "myLastNodeId";
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeId: myLastNodeId);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: myLastNodeId);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
@@ -72,16 +72,18 @@ public class GetAgvsRequestHandlerTest
         respondActionGroup.Actions.First().CorrelationId.ShouldBe(actionGroup.Actions.First().CorrelationId);
 
         respondAgv.LastNode.ShouldNotBeNull();
-        respondAgv.LastNode!.Id.ShouldBe(myLastNodeId);
+        respondAgv.LastNode!.Id.ShouldBe(myLastNodeId.ToGuid());
     }
 
     [TestMethod]
     public async Task GetAgvsRequestHandler_RepositoryContainsMultipleAgvsWithLastNode_ReturnAllAgvs()
     {
-        const string myLastNodeId = "myLastNodeId";
-        var agv1 = AgvGenerator.GenerateIdleAgv(1, lastNodeId: myLastNodeId + "1");
-        var agv2 = AgvGenerator.GenerateIdleAgv(2, lastNodeId: null);
-        var agv3 = AgvGenerator.GenerateIdleAgv(3, lastNodeId: myLastNodeId + "3");
+        const string myLastNodeName1 = "myLastNodeId";
+        const string myLastNodeName2 = myLastNodeName1 + "2";
+        const string mzLastNodeName3 = myLastNodeName1 + "3";
+        var agv1 = AgvGenerator.GenerateIdleAgv(1, lastNodeName: myLastNodeName2);
+        var agv2 = AgvGenerator.GenerateIdleAgv(2, lastNodeName: null);
+        var agv3 = AgvGenerator.GenerateIdleAgv(3, lastNodeName: mzLastNodeName3);
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv2, agv3 })
@@ -94,18 +96,20 @@ public class GetAgvsRequestHandlerTest
         GraphNode?[] lastNodes = response.Message.Agvs.OrderBy(a => a.SerialNumber).Select(a => a.LastNode).ToArray();
         lastNodes.ShouldNotBeNull();
         lastNodes[0].ShouldNotBeNull();
-        lastNodes[0]!.Id.ShouldBe(myLastNodeId + "1");
+        lastNodes[0]!.Id.ShouldBe(myLastNodeName2.ToGuid());
         lastNodes[1].ShouldBeNull();
         lastNodes[2].ShouldNotBeNull();
-        lastNodes[2]!.Id.ShouldBe(myLastNodeId + "3");
+        lastNodes[2]!.Id.ShouldBe(mzLastNodeName3.ToGuid());
     }
 
     [TestMethod]
     public async Task GetAgvsRequestHandler_RepositoryContainsMultipleAgvsWithLastNode_ReturnSpecificAgv()
     {
-        const string myLastNodeId = "myLastNodeId";
-        var agv1 = AgvGenerator.GenerateIdleAgv(1, lastNodeId: myLastNodeId + "1");
-        var agv2 = AgvGenerator.GenerateIdleAgv(2, lastNodeId: myLastNodeId + "2");
+        const string myLastNodeId1 = "myLastNodeId";
+        const string myLastNodeName2 = myLastNodeId1 + "2";
+        const string myLastNodeName3 = myLastNodeId1 + "3";
+        var agv1 = AgvGenerator.GenerateIdleAgv(1, lastNodeName: myLastNodeName2);
+        var agv2 = AgvGenerator.GenerateIdleAgv(2, lastNodeName: myLastNodeName3);
         var agv3 = AgvGenerator.GenerateIdleAgv(3);
         AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
@@ -116,7 +120,7 @@ public class GetAgvsRequestHandlerTest
         Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
         response.Message.Agvs.Count.ShouldBe(1);
         response.Message.Agvs.First().CorrelationId.ShouldBe(agv2.CorrelationId);
-        response.Message.Agvs.First().LastNode!.Id.ShouldBe(myLastNodeId + "2");
+        response.Message.Agvs.First().LastNode!.Id.ShouldBe(myLastNodeName3.ToGuid());
     }
 
     [TestMethod]

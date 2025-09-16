@@ -64,15 +64,15 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                     //only check if nodes exist in case that there is no route, otherwise it's confirmed to be existing already
                     RuleForEach(p => p.Actions).ChildRules(action =>
                     {
-                        action.RuleFor(a => a.Target.NodeId)
-                            .MustAsync(async (nodeId, _) => await TargetNodeExists(nodeId!))
-                            .When(a => !a.IsMoveToCoordinate)
-                            .WithReason(a => a.ActionType switch
-                            {
-                                ActionType.Pick => Reasons.PickStationNodeDoesNotExist,
-                                ActionType.Drop => Reasons.DropStationNodeDoesNotExist,
-                                _ => Reasons.TargetNodeDoesNotExist
-                            }, a => a.Target.NodeId);
+                        action.When(a => !a.IsMoveToCoordinate, () =>
+                            action.RuleFor(a => a.Target.Node!.Id)
+                                .MustAsync(async (nodeId, _) => await TargetNodeExists(nodeId))
+                                .WithReason(a => a.ActionType switch
+                                {
+                                    ActionType.Pick => Reasons.PickStationNodeDoesNotExist,
+                                    ActionType.Drop => Reasons.DropStationNodeDoesNotExist,
+                                    _ => Reasons.TargetNodeDoesNotExist
+                                }, a => a.Target.Node!.Name));
                     });
                 });
             });
@@ -103,7 +103,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                     var drop = a.First(ac => ac.ActionType == ActionType.Drop);
 
                     return pick.Target != drop.Target;
-                }).WithReason(Reasons.SourceTargetIdentical, a => a.Actions.First(ac => ac.ActionType == ActionType.Pick).Target.NodeId);
+                }).WithReason(Reasons.SourceTargetIdentical, a => a.Actions.First(ac => ac.ActionType == ActionType.Pick).Target.Node?.Name);
         });
 
         When(p => p.AssignedAgv != null, () =>
@@ -228,8 +228,8 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         return stack == 0;
     }
 
-    private Task<bool> TargetNodeExists(string nodeId)
+    private Task<bool> TargetNodeExists(Guid nodeId)
     {
-        return _graphRepository.NodeExistsAsync(nodeId);
+        return _graphRepository.NodeExistsByIdAsync(nodeId);
     }
 }
