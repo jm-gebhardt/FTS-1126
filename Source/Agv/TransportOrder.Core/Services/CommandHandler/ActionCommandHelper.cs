@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Gebhardt.Acc.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -16,7 +15,6 @@ using MassTransit;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
-using Agv = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Agv;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -31,7 +29,6 @@ public class ActionCommandHelper
     private readonly IStationRepository _stationRepository;
     private readonly IRouteService _routeService;
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly IMapper _mapper;
     private readonly IBus _bus;
     private readonly IAgvDb _agvDb;
 
@@ -41,15 +38,14 @@ public class ActionCommandHelper
         IAgvDb agvDb,
         IActionGroupRepository actionGroupRepository,
         IStationRepository stationRepository,
-        IBus bus,
-        IMapper mapper)
+        IBus bus
+    )
     {
         _logger = logger;
         _routeService = routeService;
         _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
         _stationRepository = stationRepository;
-        _mapper = mapper;
         _bus = bus;
     }
 
@@ -68,10 +64,7 @@ public class ActionCommandHelper
             _logger.LogDebug("Agv with CorrelationId {AgvCorrelationId} is not ready to be set to busy", assignedAgv.CorrelationId);
             return false;
         }
-        _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} is set to busy for action {Action} of group {ActionGroupCorrelationId}", assignedAgv.CorrelationId, action.CorrelationId, action.ParentId);
 
-        // here the state has changed in all cases
-        await PublishStateChange(assignedAgv);
         bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
         Route? route = null;
         if (action is { IsMoveToCoordinate: false, Target.Node: not null })
@@ -108,10 +101,11 @@ public class ActionCommandHelper
         }
 
         _logger.LogDebug(
-            "Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}. AGV set to busy",
+            "Starting action with CorrelationId: {ActionCorrelationId} of group {ActionGroupCorrelationId} for Agv {AgvCorrelationId}",
             action.CorrelationId,
             action.ParentId,
             assignedAgv.CorrelationId);
+
         return true;
     }
 
@@ -173,12 +167,6 @@ public class ActionCommandHelper
         {
             // ignored
         }
-    }
-
-    private async Task PublishStateChange(Domain.Models.Agv.Agv agv)
-    {
-        var agvMessageContent = _mapper.Map<Agv>(agv);
-        await _bus.Publish(new AgvStateChanged(agv.CorrelationId, agv.CurrentAgvState, agv.PreviousAgvState, agvMessageContent));
     }
 
     /// <summary>

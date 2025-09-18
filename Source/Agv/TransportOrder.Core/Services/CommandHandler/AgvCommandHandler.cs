@@ -560,9 +560,11 @@ public class AgvCommandHandler :
         }
 
         bool isIdle = agv.CurrentAgvState == AgvState.Idle && !agvStatus.Busy;
+        bool idleSent = false;
         if (isIdle && oldStatus!.Busy)
         {
             await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+            idleSent = true;
         }
         if (!wasOnline && agv.IsOnline)
         {
@@ -571,7 +573,7 @@ public class AgvCommandHandler :
                 $"AGV {agv.SerialNumber} is online",
                 new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
 
-            if (isIdle)
+            if (isIdle && !idleSent)
             {
                 await context.Publish(new AgvBecameIdle(agv.CorrelationId));
             }
@@ -1085,14 +1087,12 @@ public class AgvCommandHandler :
     {
         var (action, agvCorrelationId) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        bool isAvailable = agv.TryTransitionToBusy(false, ignoreError: true);
 
-        if (!isAvailable)
+        if (!agv.TryTransitionToBusy(false, ignoreError: true))
         {
             _logger.LogInformation("Agv {AgvCorrelationId} is not available for busy", agv.CorrelationId);
             return;
         }
-        _logger.LogInformation("Agv {AgvCorrelationId} is set to busy for action {ActionId}", agv.CorrelationId, action.CorrelationId);
 
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(action.ParentId);
         if (actionGroup == null)
@@ -1107,6 +1107,7 @@ public class AgvCommandHandler :
             return;
         }
 
+        _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} was set to busy for action {Action} of group {ActionGroupCorrelationId}", agv.CorrelationId, action.CorrelationId, action.ParentId);
         if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Charge) || actionGroup.IsManual)
         {
             await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
@@ -1118,7 +1119,7 @@ public class AgvCommandHandler :
 
                 if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
                 {
-                    _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+                    _logger.LogError("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
                     return;
                 }
                 _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
@@ -1127,17 +1128,17 @@ public class AgvCommandHandler :
             });
             return;
         }
-
         if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
         {
-            _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
+            _logger.LogError("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
             return;
         }
+        await PublishStateChange(context, agv, context.CancellationToken);
+
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             await TryDequeueAgv(context, agv, actionGroup.CorrelationId);
             _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
-            await PublishStateChange(context, agv, context.CancellationToken);
             await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
         });
     }
@@ -1265,13 +1266,9 @@ public class AgvCommandHandler :
         ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
         ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
 
-        foreach (var agv in agvsAtQueueHeads)
+        foreach (var agv in agvsAtQueueHeads.Union(readyAgvs.Select(a => a.CorrelationId)))
         {
             await context.Publish(new AgvBecameIdle(agv));
-        }
-        foreach (var agv in readyAgvs)
-        {
-            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
         }
     }
 
