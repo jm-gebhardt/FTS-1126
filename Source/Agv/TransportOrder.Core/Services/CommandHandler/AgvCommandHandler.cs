@@ -22,7 +22,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -100,7 +99,6 @@ public class AgvCommandHandler :
     private readonly IQueueRepository _queueRepository;
     private readonly INodeStateRepository _nodeStateRepository;
     private readonly IChargingPointManager _chargingPointManager;
-    private readonly IMetricCollectionService _metricCollectionService;
     private readonly IStationRepository _stationRepository;
     private readonly ISemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider;
 
@@ -112,7 +110,6 @@ public class AgvCommandHandler :
         IQueueManager queueManager,
         IChargingPointManager chargingPointManager,
         INodeStateRepository nodeStateRepository,
-        IMetricCollectionService metricCollectionService,
         IMapper mapper,
         SystemOptions systemOptions,
         IStationRepository stationRepository,
@@ -129,7 +126,6 @@ public class AgvCommandHandler :
         _queueManager = queueManager;
         _nodeStateRepository = nodeStateRepository;
         _mapper = mapper;
-        _metricCollectionService = metricCollectionService;
         _systemOptions = systemOptions;
         _chargingPointManager = chargingPointManager;
         _stationRepository = stationRepository;
@@ -356,7 +352,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvErrorChanged> context)
     {
-        (var correlationId, List<AgvError> errors) = context.Message;
+        (var correlationId, List<AgvError> errors, _, _) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         bool hadError = agv.HasError;
         bool agvHasError = errors.HasAnyError();
@@ -445,8 +441,7 @@ public class AgvCommandHandler :
         bool isReady = agv.IsReady;
 
         LogBatteryStates(oldStatus, agv.AgvStatus, agvSettings);
-        _metricCollectionService.CollectBatteryChargeMetrics(agvStatus);
-
+        
         if (!wasReady && isReady)
         {
             _logger.LogAgvInformation(LogCodes.AgvReady, correlationId, "AGV Ready",

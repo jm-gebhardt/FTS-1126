@@ -488,7 +488,6 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]
@@ -506,7 +505,6 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
         await fixture.ShouldHavePublishedAsync<TriggerDoppelspielpartnerQueueing>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [DataRow(CurrentActionGroupPolicy.Pause, false)]
@@ -566,7 +564,6 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
         await fixture.ShouldHavePublishedAsync<PauseActionGroup>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -585,7 +582,6 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
         await fixture.ShouldHavePublishedAsync<TryEnqueueAgv>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -732,7 +728,6 @@ public class ActionCommandHandlerTest
         abortedMessage.Action.CorrelationId.ShouldBe(expectedAbortedAction.CorrelationId);
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -751,7 +746,6 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -776,7 +770,6 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionAborted>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -792,7 +785,6 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
         await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]
@@ -831,7 +823,6 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(new AbortActionGroup(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging));
         await fixture.ShouldHaveConsumedAsync<AbortActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionAborted>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]
@@ -855,7 +846,6 @@ public class ActionCommandHandlerTest
         abortedMessage.Action.CorrelationId.ShouldBe(expectedAbortedAction.CorrelationId);
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldNotHavePublishedAsync<AutomaticActionWithdrawn>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -2045,7 +2035,6 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<SaveActionGroupAbortion>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<AutomaticActionWithdrawn>();
-        fixture.VerifyOrderCompletionMetricsCollected(Times.Once());
     }
 
     [TestMethod]

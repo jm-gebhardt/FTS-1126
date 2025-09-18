@@ -14,7 +14,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
@@ -35,7 +34,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Agv;
@@ -54,7 +52,6 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IParkPointService> _parkPointService = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
-    private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
@@ -89,10 +86,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
-        collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _routeService.Object);
-        _metricCollectorServiceMock.Setup(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>())).Verifiable();
         AgvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
         return this;
@@ -166,11 +161,6 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         _queueManager.Setup(x => x.TryEnqueueAgv(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(queueNode?.ToGuid());
         AgvDb.AddNode(queueNode?.ToGraphNode());
         return this;
-    }
-
-    public void VerifyBatteryMetricsCollected(Times callTimes)
-    {
-        _metricCollectorServiceMock.Verify(x => x.CollectBatteryChargeMetrics(It.IsAny<AgvStatus>()), callTimes);
     }
 
     public AgvCommandHandlerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)

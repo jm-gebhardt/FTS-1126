@@ -13,7 +13,6 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -69,7 +68,6 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _graphRepositoryMock.Object);
             sc.AddTransient(_ => _actionGroupValidationService.Object);
-            sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
             sc.AddTransient<ActionCommandHelper>();
             sc.AddTransient(_ => _queueManager.Object);
         });

@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
@@ -291,5 +292,22 @@ public class PrometheusMetricCollectionServiceTest
 
         PrometheusMetricCollector.StationJamStateCounter.WithLabels(station.ToString()).Value.ShouldBe(0);
         PrometheusMetricCollector.StationJamStateDurationGauge.WithLabels(station.ToString()).Value.ShouldBe(duration);
+    }
+
+    [DataRow(ActionType.Charge, 0, 0, 1)]
+    [DataRow(ActionType.Pick, 0, 1, 0)]
+    [DataRow(ActionType.Drop, 1, 0, 0)]
+    [TestMethod]
+    public async Task CollectStationOrderCompletionMetrics_WithStation_CountersUpdated(ActionType actionType, int dropCount, int pickCount, int chargeCount)
+    {
+        var station = new Station{Id = Guid.NewGuid()};
+        var fixture = new PrometheusMetricCollectionServiceTestFixture()
+            .WithStation(station);
+
+        await fixture.Service.CollectStationOrderCompletionMetrics(actionType, station.Id);
+
+        PrometheusMetricCollector.StationChargeCounter.WithLabels(station.Id.ToString()).Value.ShouldBe(chargeCount);
+        PrometheusMetricCollector.StationPickCounter.WithLabels(station.Id.ToString()).Value.ShouldBe(pickCount);
+        PrometheusMetricCollector.StationDropCounter.WithLabels(station.Id.ToString()).Value.ShouldBe(dropCount);
     }
 }

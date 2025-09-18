@@ -3,13 +3,13 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 

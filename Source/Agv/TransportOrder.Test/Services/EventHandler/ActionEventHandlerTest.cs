@@ -147,8 +147,7 @@ public class ActionEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.TestHarness.Bus.Publish(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
-        await fixture.ShouldHaveConsumedAsync<ActionCanceled>();
+        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 
@@ -158,8 +157,7 @@ public class ActionEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.TestHarness.Bus.Publish(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
-        await fixture.ShouldHaveConsumedAsync<ActionCanceled>();
+        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 
@@ -169,8 +167,7 @@ public class ActionEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Aborted);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.TestHarness.Bus.Publish(new ActionCanceled(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
-        await fixture.ShouldHaveConsumedAsync<ActionCanceled>();
+        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
         await fixture.ShouldHavePublishedAsync<HandleActionAbortion>();
     }
 
@@ -182,8 +179,7 @@ public class ActionEventHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: state);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.TestHarness.Bus.Publish(new ActionCanceled(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
-        await fixture.ShouldHaveConsumedAsync<ActionCanceled>();
+        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 

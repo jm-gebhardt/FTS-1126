@@ -34,7 +34,7 @@ public class NodeStateChangedConsumerTest
         const bool hasPalletJam = true;
         var fixture = new ConsumerHubTestFixture<NodeChangedConsumer, IMapPublisher>();
 
-        await fixture.PublishMessageAsync(new JamStateChanged(stationId, hasPalletJam));
+        await fixture.PublishMessageAsync(new JamStateChanged(stationId, hasPalletJam, DateTime.UtcNow.AddMinutes(1), false, DateTime.UtcNow));
 
         fixture.PublisherMock.Verify(h => h.SendJamStateUpdate(stationId, hasPalletJam), Times.Once);
     }

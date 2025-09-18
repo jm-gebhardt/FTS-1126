@@ -59,4 +59,19 @@ internal static class MetricNameConfiguration
     /// Metric name for  <see cref="PrometheusMetricCollector.StationJamStateDurationGauge"/>.
     /// </summary>
     internal const string StationJamStateDuration = "ACC_STATION_JAMSTATE_DURATION";
+
+    /// <summary>
+    /// Metric name for  <see cref="PrometheusMetricCollector.StationPickCounter"/>.
+    /// </summary>
+    internal const string StationPickCount = "ACC_STATION_PICK_COUNT";
+
+    /// <summary>
+    /// Metric name for  <see cref="PrometheusMetricCollector.StationDropCounter"/>.
+    /// </summary>
+    internal const string StationDropCount = "ACC_STATION_DROP_COUNT";
+
+    /// <summary>
+    /// Metric name for  <see cref="PrometheusMetricCollector.StationChargeCounter"/>.
+    /// </summary>
+    internal const string StationChargeCount = "ACC_STATION_CHARGE_COUNT";
 }

@@ -14,7 +14,6 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
@@ -37,7 +36,6 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupValidationService> _actionGroupValidationService = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
-    private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IQueueManager> _queueManager = new();
 
@@ -68,20 +66,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
-        collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient<ActionCommandHelper>();
-        _metricCollectorServiceMock.Setup(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<Guid?>())).Verifiable();
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         return this;
-    }
-
-    public void VerifyOrderCompletionMetricsCollected(Times callTimes)
-    {
-        _metricCollectorServiceMock.Verify(x => x.CollectOrderCompletionMetrics(It.IsAny<ActionGroup>(), It.IsAny<Guid?>()), callTimes);
     }
 
     public void VerifyGetNextManualActionGroupForAgvAsyncInput(Guid agvCorrelationId, List<ActionType>? allowedActionTypes = null)

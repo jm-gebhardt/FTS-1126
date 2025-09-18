@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
@@ -38,4 +39,11 @@ public interface IMetricCollectionService
     /// <param name="currentChangedDate">The current jam state change time.</param>
     /// <param name="currentHasPalletJam">The current jam state.</param>
     void CollectJamStateMetrics(Guid stationId, DateTime lastChangedDate, bool previousHasPalletJam, DateTime currentChangedDate, bool currentHasPalletJam);
+
+    /// <summary>
+    /// Collect station order completion metrics.
+    /// </summary>
+    /// <param name="actionType">The type of the completed action.</param>
+    /// <param name="targetNodeId">The id of the target node.</param>
+    Task CollectStationOrderCompletionMetrics(ActionType actionType, Guid targetNodeId);
 }

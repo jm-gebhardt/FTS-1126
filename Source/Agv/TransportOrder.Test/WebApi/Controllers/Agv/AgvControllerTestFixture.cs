@@ -18,7 +18,6 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
@@ -372,7 +371,6 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient(_ => _queueRepository.Object);
-            sc.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
             sc.AddTransient(_ => _restrictedAreaRepository.Object);
         });
         base.Build();

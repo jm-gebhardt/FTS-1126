@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
@@ -25,14 +24,12 @@ public class AgvErrorCommandHandler :
 {
     private readonly IAgvDb _agvDb;
     private readonly ILogger<AgvErrorCommandHandler> _logger;
-    private readonly IMetricCollectionService _metricCollector;
 
     /// <inheritdoc cref="AgvErrorCommandHandler"/>>
-    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger, IMetricCollectionService metricCollector)
+    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger)
     {
         _agvDb = agvDb;
         _logger = logger;
-        _metricCollector = metricCollector;
     }
 
     private void LogErrors(List<AgvError> errors, Agv agv)
@@ -100,9 +97,8 @@ public class AgvErrorCommandHandler :
         {
             await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrors, resolvedErrors, correlationId);
             LogErrors(newErrors, agv);
-            _metricCollector.CollectSafetyFieldViolationMetrics(correlationId, newErrors, resolvedErrors);
             IReadOnlyList<AgvError> allErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
-            await publishEndpoint.Publish(new AgvErrorChanged(correlationId, allErrors.ToList()));
+            await publishEndpoint.Publish(new AgvErrorChanged(correlationId, allErrors.ToList(), newErrors, resolvedErrors));
         }
 
         foreach (var error in newErrors)

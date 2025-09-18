@@ -9,5 +9,7 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 /// </summary>
 /// <param name="CorrelationId">The CorrelationId of the Agv</param>
 /// <param name="Errors">All current errors of the Agv</param>
+/// <param name="NewErrors">New errors of the Agv</param>
+/// <param name="ResolvedErrors">Resolved errors of the Agv</param>
 [PublicAPI]
-public record AgvErrorChanged(Guid CorrelationId, List<AgvError> Errors) : CorrelatedBy<Guid>;
+public record AgvErrorChanged(Guid CorrelationId, List<AgvError> Errors, List<AgvError> NewErrors, List<AgvError> ResolvedErrors) : CorrelatedBy<Guid>;

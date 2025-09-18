@@ -94,4 +94,28 @@ public static class PrometheusMetricCollector
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
+
+    /// <summary>
+    /// The completed pick per station counter.
+    /// </summary>
+    public static readonly Counter StationPickCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.StationPickCount, "Station pick count", new CounterConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
+
+    /// <summary>
+    /// The completed drop per station counter.
+    /// </summary>
+    public static readonly Counter StationDropCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.StationDropCount, "Station drop count", new CounterConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
+
+    /// <summary>
+    /// The completed charge per station counter.
+    /// </summary>
+    public static readonly Counter StationChargeCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.StationChargeCount, "Station charge count", new CounterConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
 }

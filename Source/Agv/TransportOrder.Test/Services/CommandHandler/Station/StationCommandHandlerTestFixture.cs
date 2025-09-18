@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -16,7 +15,6 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
     public readonly Mock<INodeStateRepository> NodeStateRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IGraphRepository> _graphRepository = new();
-    private readonly Mock<IMetricCollectionService> _metricCollectorServiceMock = new();
 
     public StationCommandHandlerTestFixture()
     {
@@ -29,10 +27,8 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         collection.AddTransient(_ => NodeStateRepository.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _graphRepository.Object);
-        collection.AddTransient(_ => _metricCollectorServiceMock.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<Guid>())).Verifiable();
         _stationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Verifiable();
-        _metricCollectorServiceMock.Setup(x => x.CollectJamStateMetrics(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<bool>(), It.IsAny<DateTime>(), It.IsAny<bool>())).Verifiable();
         return this;
     }
 
@@ -79,10 +75,5 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
     public void VerifyStationsAdded(Times times)
     {
         _stationRepository.Verify(x => x.AddStations(It.IsAny<AgvGraph>()), times);
-    }
-
-    public void VerifyMetricsCollected()
-    {
-        _metricCollectorServiceMock.Verify(x => x.CollectJamStateMetrics(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<bool>(), It.IsAny<DateTime>(), It.IsAny<bool>()), Times.Once);
     }
 }

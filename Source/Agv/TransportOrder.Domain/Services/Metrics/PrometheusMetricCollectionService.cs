@@ -9,7 +9,7 @@ using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 
 /// <inheritdoc cref="IMetricCollectionService"/>>
-public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupRepository actionGroupRepository) : IMetricCollectionService
+public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupRepository actionGroupRepository, IStationRepository stationRepository) : IMetricCollectionService
 {
     /// <inheritdoc cref="IMetricCollectionService"/>>
     public async Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, Guid? lastNodeId = null)
@@ -196,6 +196,41 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         {
             double timePassed = (currentChangedDate - lastChangedDate).TotalSeconds;
             PrometheusMetricCollector.StationJamStateDurationGauge.WithLabels(stationId.ToString()).Set(timePassed);
+        }
+    }
+
+    /// <inheritdoc cref="IMetricCollectionService"/>>
+    public async Task CollectStationOrderCompletionMetrics(ActionType actionType, Guid targetNodeId)
+    {
+        if (!new List<ActionType> { ActionType.Charge, ActionType.Pick, ActionType.Drop }.Contains(actionType))
+        {
+            return;
+        }
+        var station = await stationRepository.GetRequiredStationBaseInformation(targetNodeId);
+        if (station == null)
+        {
+            return;
+        }
+
+        switch (actionType)
+        {
+            case ActionType.Charge:
+                PrometheusMetricCollector.StationChargeCounter.WithLabels(station.Id.ToString()).Inc();
+                break;
+
+            case ActionType.Pick:
+                PrometheusMetricCollector.StationPickCounter.WithLabels(station.Id.ToString()).Inc();
+                break;
+
+            case ActionType.Drop:
+                PrometheusMetricCollector.StationDropCounter.WithLabels(station.Id.ToString()).Inc();
+                break;
+
+            case ActionType.Move:
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(actionType), actionType, null);
         }
     }
 }

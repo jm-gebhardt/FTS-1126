@@ -17,7 +17,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -74,7 +73,6 @@ public class ActionCommandHandler :
     private readonly IActionGroupRetrievalService _actionGroupRetrievalService;
     private readonly IAgvDb _agvDb;
     private readonly IActionGroupDurationEstimationService _durationEstimationService;
-    private readonly IMetricCollectionService _metricCollectionService;
     private readonly ActionCommandHelper _actionCommandHelper;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly TimeProvider _timeProvider;
@@ -93,7 +91,6 @@ public class ActionCommandHandler :
         IActionGroupDurationEstimationService durationEstimationService,
         IQueueManager queueManager,
         IAgvDb agvDb,
-        IMetricCollectionService metricCollectionService,
         IMapper mapper,
         IBus bus,
         ILogger<ActionCommandHandler> logger,
@@ -114,7 +111,6 @@ public class ActionCommandHandler :
         _actionGroupValidationService = actionGroupValidationService;
         _actionGroupRetrievalService = actionGroupRetrievalService;
         _durationEstimationService = durationEstimationService;
-        _metricCollectionService = metricCollectionService;
         _queueManager = queueManager;
         _mapper = mapper;
         _bus = bus;
@@ -772,6 +768,11 @@ public class ActionCommandHandler :
             await context.Publish(new DropActionCompleted(actionGroup.CorrelationId, action.CorrelationId, action.CompletedDate.GetValueOrDefault()), cancellationToken);
         }
 
+        if (action.ActionType == ActionType.Charge)
+        {
+            await context.Publish(new ChargeActionCompleted(actionGroup.CorrelationId, action.CorrelationId), cancellationToken);
+        }
+
         if (actionGroup.State != ActionGroupState.Completed)
         {
             await context.Publish(new NonChargingActionCompleted(agvCorrelationId), cancellationToken);
@@ -807,7 +808,6 @@ public class ActionCommandHandler :
         _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully",
             new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
-        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
     }
 
     /// <summary>
@@ -870,7 +870,6 @@ public class ActionCommandHandler :
             var serviceNode = await _agvDb.Graphs.GetNodeAsync(serviceNodeId);
             await context.Publish(new AutomaticActionWithdrawn(actionGroup.AssignedAgv, serviceNode, true));
         }
-        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup, agv.AgvStatus!.LastNodeId);
     }
 
     /// <summary>
@@ -1127,10 +1126,10 @@ public class ActionCommandHandler :
 
         _logger.LogOrderInformation(LogCodes.OrderIncomplete, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Action Target Set",
-            $"Target {targetNodeId} set for action {nextAction.ActionType} of order {actionGroup.OrderId}",
+            $"Target {targetNode.Name} set for action {nextAction.ActionType} of order {actionGroup.OrderId}",
             new Dictionary<string, object?>
             {
-                { LogLabels.NodeId, targetNodeId },
+                { LogLabels.NodeId, targetNode.Name },
                 { LogLabels.ActionType, nextAction.ActionType.ToString() },
                 { LogLabels.OrderId, actionGroup.OrderId }
             });
@@ -1196,7 +1195,6 @@ public class ActionCommandHandler :
                 { LogLabels.Reason, reason },
                 { LogLabels.ReasonDescription, reason }
             });
-        await _metricCollectionService.CollectOrderCompletionMetrics(actionGroup);
     }
 
     /// <summary>

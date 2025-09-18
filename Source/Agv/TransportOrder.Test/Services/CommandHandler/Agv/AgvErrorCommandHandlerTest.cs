@@ -38,7 +38,6 @@ public class AgvErrorCommandHandlerTest
         errorChanged.Errors.Count.ShouldBe(2);
         var errorReceived = await fixture.GetFirstPublishedMessageAsync<AgvErrorReceived>();
         errorReceived.Error.CorrelationId.ShouldBe(errors[1].CorrelationId);
-        fixture.VerifyMetricsCollected(Times.Once());
     }
 
     [TestMethod]
@@ -53,6 +52,5 @@ public class AgvErrorCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<UpdateErrorStatus>();
         await fixture.ShouldHavePublishedAsync<AgvErrorChanged>();
         await fixture.ShouldHavePublishedAsync<AgvErrorReceived>();
-        fixture.VerifyMetricsCollected(Times.Once());
     }
 }

@@ -73,6 +73,8 @@ public static class CoreBusRegistrationExtensions
 
         RegisterTriggerHandlers(busRegistrationConfigurator);
 
+        busRegistrationConfigurator.AddConsumer<MetricsCollectionEventHandler>();
+
         return busRegistrationConfigurator;
     }
 
