@@ -41,12 +41,12 @@ public interface IAgvTravelSimulator
     /// <summary>
     /// Estimates travel times on the current edges.
     /// </summary>
-    void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTime entryTime, AgvData agvData, double initialVelocity);
+    void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTimeOffset entryTime, AgvData agvData, double initialVelocity);
 
     /// <summary>
     /// Estimates travel time to target position.
     /// </summary>
-    void EstimateTravelTimes(AgvPosition targetPosition, DateTime entryTime, AgvData agvData, double initialVelocity);
+    void EstimateTravelTimes(AgvPosition targetPosition, DateTimeOffset entryTime, AgvData agvData, double initialVelocity);
 
     /// <summary>
     /// Updates the current position.

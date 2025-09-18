@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.KaeserSidecar.Domain.Configuration;
@@ -63,7 +62,7 @@ public static class ServiceCollectionExtension
             (serviceProvider, _) =>
             {
                 var logger = serviceProvider.GetRequiredService<ILogger<ToWePlcTelegramProcessor>>();
-                var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+                var timeProvider = serviceProvider.GetRequiredService<TimeProvider>();
                 var queue = serviceProvider.GetRequiredKeyedService<ConcurrentQueue<ConveyorTelegram>>(plc);
                 return new ToWePlcTelegramProcessor(logger, timeProvider, config, queue);
             });
@@ -149,7 +148,7 @@ public static class ServiceCollectionExtension
             (serviceProvider, _) =>
             {
                 var logger = serviceProvider.GetRequiredService<ILogger<AgvAplCargoStateProcessor>>();
-                var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+                var timeProvider = serviceProvider.GetRequiredService<TimeProvider>();
                 return new AgvAplCargoStateProcessor(logger, timeProvider, config);
             });
 

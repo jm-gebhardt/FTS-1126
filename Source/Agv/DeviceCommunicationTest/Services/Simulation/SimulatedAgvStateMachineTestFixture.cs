@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = null) : BaseStateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgvSaga>(inactivityTimeout: inactivityTimeout)
 {
     private Options _options = SimulateOptionsGenerator.GenerateSimulateOptions("S1", "D1", nodeTravelTime: 500);
-    private readonly List<SimulatedAgvSaga> _agvSagas = new();
+    private readonly List<SimulatedAgvSaga> _agvSagas = [];
 
     public new SimulatedAgvStateMachineTestFixture Build()
     {

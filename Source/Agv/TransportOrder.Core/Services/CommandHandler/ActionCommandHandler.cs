@@ -77,6 +77,7 @@ public class ActionCommandHandler :
     private readonly IMetricCollectionService _metricCollectionService;
     private readonly ActionCommandHelper _actionCommandHelper;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly TimeProvider _timeProvider;
     private readonly IQueueManager _queueManager;
 
     private const string QueuingOrderId = "Queuing";
@@ -97,11 +98,13 @@ public class ActionCommandHandler :
         IBus bus,
         ILogger<ActionCommandHandler> logger,
         ActionCommandHelper actionCommandHelper,
-        IPublishEndpoint publishEndpoint
+        IPublishEndpoint publishEndpoint,
+        TimeProvider timeProvider
     )
     {
         _actionCommandHelper = actionCommandHelper;
         _publishEndpoint = publishEndpoint;
+        _timeProvider = timeProvider;
         _logger = logger;
         _routeService = routeService;
         _agvDb = agvDb;
@@ -141,7 +144,7 @@ public class ActionCommandHandler :
             DockingDirection? nodeDockingDirection = targetNode?.DockingDirection;
             bool startNodeIsStation = await GetStartNodeIsStation(action);
             // ensure nodes are set before DockFront is diagnosed, to allow identification of Doppelspiel
-            actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges);
+            actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges, _timeProvider.GetUtcNow());
             actionGroup.SetDockFrontOfAction(action.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
             actionGroup.SetCargoLiftHeightForAction(action.CorrelationId, targetNode?.PickLiftHeight, targetNode?.DropLiftHeight);
             await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
@@ -162,7 +165,7 @@ public class ActionCommandHandler :
                     {
                         { LogLabels.OrderId, actionGroup.OrderId }
                     });
-                await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
+                await context.Publish(new ActionGroupStarted(actionGroupMessageContent, actionGroup.CorrelationId, _timeProvider.GetUtcNow().UtcDateTime), cancellationToken);
             }
             _logger.LogOrderInformation(
                 LogCodes.OrderActionStarted,
@@ -616,7 +619,7 @@ public class ActionCommandHandler :
             {
                 throw new ValidationException(validationResult.Errors);
             }
-            actionGroup.InvalidateActionGroup(validationResult.ToReasons());
+            actionGroup.InvalidateActionGroup(validationResult.ToReasons(), _timeProvider.GetUtcNow());
             var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
             List<string> validationFailureReasons = validationResult.Errors.Select(error => error.ErrorMessage).ToList();
             _logger.LogOrderWarning(LogCodes.OrderInvalid, actionGroupMessageContent.AssignedAgv.GetValueOrDefault(),
@@ -739,7 +742,7 @@ public class ActionCommandHandler :
                 throw new CargoStateMismatchException(action.CorrelationId, hasCargo);
             }
         }
-        actionGroup.CompleteAction(correlationId);
+        actionGroup.CompleteAction(correlationId, _timeProvider.GetUtcNow());
         await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
 
         if (action.ActionType is ActionType.Pick or ActionType.Drop)
@@ -800,7 +803,7 @@ public class ActionCommandHandler :
             await context.Publish(new SwitchMode(agv.CorrelationId), cancellationToken);
         }
         await context.Publish(new NonChargingActionCompleted(agvCorrelationId, isQueueing), cancellationToken);
-        await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow), cancellationToken);
+        await context.Publish(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, _timeProvider.GetUtcNow().UtcDateTime), cancellationToken);
         _logger.LogOrderInformation(LogCodes.OrderCompleted, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Completed", $"Order {actionGroup.OrderId} was completed successfully",
             new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
@@ -830,7 +833,7 @@ public class ActionCommandHandler :
             return;
         }
         var agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
-        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason());
+        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason(), _timeProvider.GetUtcNow());
 
         if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && agv.IsQueueing)
         {
@@ -909,8 +912,8 @@ public class ActionCommandHandler :
                 return;
         }
 
-        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction ?? actionGroup.Actions.First(), null, ActionState.Canceled, cancelReason.ToReason());
-        await context.PublishAndRespond(new ActionGroupCanceled(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
+        actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(actionGroup.FirstNotStartedAction ?? actionGroup.Actions.First(), null, ActionState.Canceled, cancelReason.ToReason(), _timeProvider.GetUtcNow());
+        await context.PublishAndRespond(new ActionGroupCanceled(actionGroupMessageContent, actionGroup.CorrelationId, _timeProvider.GetUtcNow().UtcDateTime));
         _logger.LogOrderWarning(LogCodes.OrderCanceled, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Canceled",
             $"Order {actionGroup.OrderId} was canceled due to {context.Message.CancelReason}",
@@ -951,7 +954,7 @@ public class ActionCommandHandler :
             await context.Publish(new ActionAborted(agvCorrelationId.Value, _mapper.Map<MessageAgvAction>(action)));
         }
 
-        actionGroup.ResetActionGroup(!(actionGroup.IsManual || keepAgv));
+        actionGroup.ResetActionGroup(_timeProvider.GetUtcNow().UtcDateTime, !(actionGroup.IsManual || keepAgv));
         await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
         var actionGroupWithNodes = await _actionGroupRetrievalService.EnrichActionGroupWithNodesAsync(actionGroup);
         if (actionGroupWithNodes.Actions.Any(a => new[] { AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park }.Contains(a.TargetNodeType)))
@@ -990,7 +993,7 @@ public class ActionCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv.GetValueOrDefault());
         var activeAction = actionGroup.FirstNotCompletedAction;
         ActionState? actionState = activeAction?.State;
-        actionGroup.PauseActionGroup(pauseReason.ToReason());
+        actionGroup.PauseActionGroup(pauseReason.ToReason(), _timeProvider.GetUtcNow());
 
         await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
 
@@ -1035,7 +1038,7 @@ public class ActionCommandHandler :
             return;
         }
 
-        actionGroup.ResumeActionGroup(removeStationReason);
+        actionGroup.ResumeActionGroup(removeStationReason, _timeProvider.GetUtcNow());
 
         await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
 
@@ -1177,7 +1180,7 @@ public class ActionCommandHandler :
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(abortedActionId);
 
         var abortReason = reason.ToReason();
-        actionGroup.AbortAction(abortedActionId, abortReason != null ? [abortReason] : []);
+        actionGroup.AbortAction(abortedActionId, abortReason != null ? [abortReason] : [], _timeProvider.GetUtcNow());
 
         await _actionGroupRepository.UpdateAsync(actionGroup);
 
@@ -1322,7 +1325,7 @@ public class ActionCommandHandler :
             DockingDirection? nodeDockingDirection = targetNode.DockingDirection;
             actionGroup.AssignedAgv = closestAgvRoute.agv;
             bool? previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(closestAgvRoute.agv.Value, actionGroup.CorrelationId);
-            actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges);
+            actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges, _timeProvider.GetUtcNow());
             actionGroup.HasPriority = true;
             actionGroup.SetDockFrontOfAction(actionToStart.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
 
@@ -1339,7 +1342,7 @@ public class ActionCommandHandler :
                 assignedAgv.SerialNumber,
                 _mapper.Map<MessageAgvAction>(actionToStart), abortedAction.CorrelationId));
 
-            await context.Publish(new ActionGroupStarted(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, DateTime.UtcNow));
+            await context.Publish(new ActionGroupStarted(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, _timeProvider.GetUtcNow().UtcDateTime));
             await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedAction.CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
 
             // Log for ui
@@ -1380,7 +1383,7 @@ public class ActionCommandHandler :
 
             var assignedAgv = actionGroup.AssignedAgv!.Value;
 
-            actionGroup.ResetActionGroup();
+            actionGroup.ResetActionGroup(_timeProvider.GetUtcNow());
             actionGroup.Queue();
             actionGroup.HasPriority = true;
 

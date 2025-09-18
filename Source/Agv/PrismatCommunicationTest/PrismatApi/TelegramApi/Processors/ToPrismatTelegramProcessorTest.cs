@@ -42,7 +42,7 @@ public class ToPrismatTelegramProcessorTest
         TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(ServiceKeyProvider.ToPrismat, true)
             .Build();
         var now = DateTime.UtcNow;
-        var telegram = new Arrival(DateTime.UtcNow, "position", "hu");
+        var telegram = new Arrival(now, "position", "hu");
         fixture.TimeProvider.SetNow(now);
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
         fixture.Processor.HasSendDemand().ShouldBeTrue();
@@ -77,10 +77,10 @@ public class ToPrismatTelegramProcessorTest
         TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram> fixture = new TelegramProcessorTestFixture<ToPrismatTelegramProcessor, PrismatTelegram>(ServiceKeyProvider.ToPrismat, true)
             .Build();
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
         fixture.TimeProvider.SetNow(now);
 
-        var telegram = new Arrival(DateTime.UtcNow, "position", "hu");
+        var telegram = new Arrival(now.UtcDateTime, "position", "hu");
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
 
         // First sending attempt

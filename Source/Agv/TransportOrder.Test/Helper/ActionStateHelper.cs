@@ -9,7 +9,7 @@ internal static class ActionStateHelper
     {
         foreach (var action in actionGroup.Actions)
         {
-            action.UpdateActionState(state);
+            action.UpdateActionState(state, DateTimeOffset.Now);
         }
     }
 }

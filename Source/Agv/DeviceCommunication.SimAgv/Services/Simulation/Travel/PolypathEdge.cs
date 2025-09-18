@@ -21,12 +21,12 @@ public class PolypathEdge : BaseEdge
         var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
 
         (List<GraphEdge> sections, List<GraphNode> nodes) = edge.GetSections(sourceNode, targetNode);
-        nodes.AddRange([sourceNode, targetNode] );
+        nodes.AddRange([sourceNode, targetNode]);
         foreach (var section in sections)
         {
             var source = nodes.Single(n => n.Id == section.FromNodeId);
             var target = nodes.Single(n => n.Id == section.ToNodeId);
-            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && Sections.Count == 0) { TimeStamp = timeStamp};
+            var directEdge = new DirectEdge(section, source, target, agvGoesBackwards && Sections.Count == 0) { TimeStamp = timeStamp };
             Sections.Add(directEdge);
         }
         _currentSection = Sections.First();
@@ -35,10 +35,10 @@ public class PolypathEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    public override void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTime entryTime)
+    public override void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTimeOffset entryTime)
     {
         InitialVelocity = initialVelocity;
-        EntryTime = entryTime;
+        EntryTime = entryTime.UtcDateTime;
         Sections.ForEach(s =>
         {
             s.EstimateTravelTime(agvData, initialVelocity, entryTime);
@@ -67,13 +67,13 @@ public class PolypathEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    public override AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation)
+    public override AgvPosition GetCurrentPosition(DateTimeOffset now, AgvData agvData, float previousOrientation)
     {
         GetCurrentSection(now);
         return _currentSection.GetCurrentPosition(now, agvData, GetPreviousOrientation(previousOrientation));
     }
 
-    private void GetCurrentSection(DateTime now)
+    private void GetCurrentSection(DateTimeOffset now)
     {
         var section = Sections.SingleOrDefault(s => s.EstimatedExitTime >= now && s.EntryTime <= now);
         _currentSection = section ?? Sections.Last();

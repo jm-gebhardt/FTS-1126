@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.Common.Testing.Time;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Processors;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
@@ -38,7 +37,7 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
                 (serviceProvider, _) =>
                 {
                     var logger = serviceProvider.GetRequiredService<ILogger<ToWePlcTelegramProcessor>>();
-                    var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+                    var timeProvider = serviceProvider.GetRequiredService<TimeProvider>();
                     return new ToWePlcTelegramProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration(), _queue);
                 });
 
@@ -46,7 +45,7 @@ public class TelegramConveyorCommunicatorTestFixture: FixtureBase
                 (serviceProvider, _) =>
                 {
                     var logger = serviceProvider.GetRequiredService<ILogger<AgvAplCargoStateProcessor>>();
-                    var timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+                    var timeProvider = serviceProvider.GetRequiredService<TimeProvider>();
                     return new AgvAplCargoStateProcessor(logger, timeProvider, TestConfigurationProvider.GetConfiguration());
                 });
             s.AddSingleton(_ => new FakeTimeProvider());

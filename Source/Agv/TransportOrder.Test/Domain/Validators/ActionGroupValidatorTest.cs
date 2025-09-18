@@ -236,7 +236,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_WhenStateOfActionGroupIsNotCreated_Fails()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => new GraphNode(n.ToGuid(), n)).ToArray(), []); // manually setting to not Created state
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => new GraphNode(n.ToGuid(), n)).ToArray(), [], DateTimeOffset.Now); // manually setting to not Created state
         var agv = AgvGenerator.GenerateIdleAgv();
 
         var fixture = new ActionGroupValidatorTestFixture()
@@ -383,7 +383,7 @@ public class ActionGroupValidatorTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        actionGroup.CancelActionGroup();
+        actionGroup.CancelActionGroup(DateTimeOffset.Now);
 
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)

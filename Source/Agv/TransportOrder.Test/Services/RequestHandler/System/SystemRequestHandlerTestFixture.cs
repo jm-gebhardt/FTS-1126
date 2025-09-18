@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.System;
 public class SystemRequestHandlerTestFixture<TRequestClient> : MediatorTestFixture<TRequestClient, SystemRequestHandler, MockConsumer>
     where TRequestClient : class
 {
-    public SystemRequestHandlerTestFixture<TRequestClient> WithCurrentTime(DateTime currentTime)
+    public SystemRequestHandlerTestFixture<TRequestClient> WithCurrentTime(DateTimeOffset currentTime)
     {
         TimeProvider.SetNow(currentTime);
         return this;

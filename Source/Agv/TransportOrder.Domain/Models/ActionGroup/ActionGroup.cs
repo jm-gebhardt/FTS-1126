@@ -256,15 +256,16 @@ public class ActionGroup
     /// Completes the specified action.
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
-    public void CompleteAction(Guid actionId)
+    /// <param name="now">The current time.</param>
+    public void CompleteAction(Guid actionId, DateTimeOffset now)
     {
         if (State == ActionGroupState.Paused && Actions[^1].CorrelationId != actionId)
         {
             var actionToPause = Actions[Actions.ToList().FindIndex(a => a.CorrelationId == actionId) + 1];
-            UpdateActionState(actionToPause.CorrelationId, ActionState.Paused);
+            UpdateActionState(actionToPause.CorrelationId, ActionState.Paused, now);
         }
 
-        UpdateActionState(actionId, ActionState.Completed);
+        UpdateActionState(actionId, ActionState.Completed, now);
     }
 
     /// <summary>
@@ -272,7 +273,8 @@ public class ActionGroup
     /// Alternatively pauses the first action that is in created if none is started.
     /// </summary>
     /// <param name="reason">Pause reason.</param>
-    public void PauseActionGroup(Reason? reason)
+    /// <param name="now">The current time.</param>
+    public void PauseActionGroup(Reason? reason, DateTimeOffset now)
     {
         var action = FirstNotCompletedAction;
         if (action == null)
@@ -295,14 +297,15 @@ public class ActionGroup
             }
         }
 
-        UpdateActionState(action.CorrelationId, ActionState.Paused);
+        UpdateActionState(action.CorrelationId, ActionState.Paused, now);
     }
 
     /// <summary>
     /// Resumes the paused action of this action group.
     /// </summary>
     /// <param name="removeStationReason">True: Remove lock station reason.</param>
-    public void ResumeActionGroup(bool removeStationReason)
+    /// <param name="now">The current time.</param>
+    public void ResumeActionGroup(bool removeStationReason, DateTimeOffset now)
     {
         var action = Actions.FirstOrDefault(a => a.State == ActionState.Paused);
         if (action == null)
@@ -325,7 +328,7 @@ public class ActionGroup
 
         if (Reasons.IsNullOrEmpty())
         {
-            UpdateActionState(action.CorrelationId, ActionState.Created);
+            UpdateActionState(action.CorrelationId, ActionState.Created, now);
             HasPriority = true;
         }
     }
@@ -334,9 +337,10 @@ public class ActionGroup
     /// Invalidates the specified action.
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
-    public void InvalidateAction(Guid actionId)
+    /// <param name="now">The current time.</param>
+    public void InvalidateAction(Guid actionId, DateTimeOffset now)
     {
-        UpdateActionState(actionId, ActionState.Invalid);
+        UpdateActionState(actionId, ActionState.Invalid, now);
     }
 
     /// <summary>
@@ -344,35 +348,39 @@ public class ActionGroup
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
     /// <param name="reasons">The reasons for the abort.</param>
-    public void AbortAction(Guid actionId, IEnumerable<Reason> reasons)
+    /// <param name="now">The current time.</param>
+    public void AbortAction(Guid actionId, IEnumerable<Reason> reasons, DateTimeOffset now)
     {
         Reasons.AddRange(reasons);
-        UpdateActionState(actionId, ActionState.Aborted);
+        UpdateActionState(actionId, ActionState.Aborted, now);
     }
 
     /// <summary>
     /// Sets the specified action into the failed state.
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
-    public void SetActionFailed(Guid actionId)
+    /// <param name="now">The current time.</param>
+    public void SetActionFailed(Guid actionId, DateTimeOffset now)
     {
-        UpdateActionState(actionId, ActionState.Failed);
+        UpdateActionState(actionId, ActionState.Failed, now);
     }
 
     /// <summary>
     /// Cancels the specified action.
     /// </summary>
     /// <param name="actionId">The id of the action.</param>
-    public void CancelAction(Guid actionId)
+    /// <param name="now">The current time.</param>
+    public void CancelAction(Guid actionId, DateTimeOffset now)
     {
-        UpdateActionState(actionId, ActionState.Canceled);
+        UpdateActionState(actionId, ActionState.Canceled, now);
     }
 
     /// <summary>
     /// Reset the state of the action to <see cref="ActionState.Created"/>.
     /// </summary>
     /// <param name="action">The action.</param>
-    private void ResetAction(AgvAction action)
+    /// <param name="now">The current time.</param>
+    private void ResetAction(AgvAction action, DateTimeOffset now)
     {
         action.StartedDate = null;
         action.CompletedDate = null;
@@ -381,7 +389,7 @@ public class ActionGroup
         action.Edges = [];
         action.PriorRunAndPauseDuration = 0;
         EstimatedDuration = TimeSpan.Zero;
-        action.UpdateActionState(ActionState.Created);
+        action.UpdateActionState(ActionState.Created, now);
         UpdateActionGroupState();
     }
 
@@ -391,11 +399,12 @@ public class ActionGroup
     /// <param name="actionId">The id of the action.</param>
     /// <param name="nodes">The nodes of the action.</param>
     /// <param name="edges">The edges of the action.</param>
-    public void StartAction(Guid actionId, GraphNode[] nodes, Guid[] edges)
+    /// <param name="now">The current time.</param>
+    public void StartAction(Guid actionId, GraphNode[] nodes, Guid[] edges, DateTimeOffset now)
     {
         Actions.Single(a => a.CorrelationId == actionId).Nodes = nodes;
         Actions.Single(a => a.CorrelationId == actionId).Edges = edges;
-        UpdateActionState(actionId, ActionState.Started);
+        UpdateActionState(actionId, ActionState.Started, now);
     }
 
     /// <summary>
@@ -496,9 +505,9 @@ public class ActionGroup
         }
     }
 
-    private void UpdateActionState(Guid actionId, ActionState state)
+    private void UpdateActionState(Guid actionId, ActionState state, DateTimeOffset now)
     {
-        Actions.Single(a => a.CorrelationId == actionId).UpdateActionState(state);
+        Actions.Single(a => a.CorrelationId == actionId).UpdateActionState(state, now);
         UpdateActionGroupState();
     }
 
@@ -506,7 +515,8 @@ public class ActionGroup
     /// Cancels the <see cref="ActionGroup"/> and all the child <see cref="AgvAction"/>.
     /// </summary>
     /// <returns></returns>
-    public bool CancelActionGroup()
+    /// <param name="now">The current time.</param>
+    public bool CancelActionGroup(DateTimeOffset now)
     {
         if (Actions.Any(a => a.State != ActionState.Created))
         {
@@ -514,7 +524,7 @@ public class ActionGroup
         }
         foreach (var agvAction in Actions)
         {
-            CancelAction(agvAction.CorrelationId);
+            CancelAction(agvAction.CorrelationId, now);
         }
         return true;
     }
@@ -523,12 +533,13 @@ public class ActionGroup
     /// Resets the <see cref="ActionGroup"/> and all <see cref="AgvAction"/> to
     /// <see cref="ActionState.Created"/>.
     /// </summary>
+    /// <param name="now">The current time.</param>
     /// <param name="resetAssignedAgv">If true, the assigned agv is set to null.</param>
-    public void ResetActionGroup(bool resetAssignedAgv = true)
+    public void ResetActionGroup(DateTimeOffset now, bool resetAssignedAgv = true)
     {
         foreach (var agvAction in Actions)
         {
-            ResetAction(agvAction);
+            ResetAction(agvAction, now);
         }
         if (resetAssignedAgv)
         {
@@ -543,12 +554,13 @@ public class ActionGroup
     /// </summary>
     /// <param name="reasons"></param>
     /// <returns></returns>
-    public void InvalidateActionGroup(IEnumerable<Reason> reasons)
+    /// <param name="now">The current time.</param>
+    public void InvalidateActionGroup(IEnumerable<Reason> reasons, DateTimeOffset now)
     {
         Reasons.AddRange(reasons);
         foreach (var agvAction in Actions)
         {
-            InvalidateAction(agvAction.CorrelationId);
+            InvalidateAction(agvAction.CorrelationId, now);
         }
     }
 
@@ -573,13 +585,13 @@ public class ActionGroup
     /// <param name="actionDuration">The duration of each action [s].</param>
     /// <param name="startDate">The start date.</param>
     /// <param name="idleTimeBetweenActions">The idle time between actions [s].</param>
-    public void SetFixedDatesFromDurations(double actionDuration, DateTime startDate, double idleTimeBetweenActions)
+    public void SetFixedDatesFromDurations(double actionDuration, DateTimeOffset startDate, double idleTimeBetweenActions)
     {
-        StartedDate = startDate;
+        StartedDate = startDate.UtcDateTime;
         foreach (var action in Actions)
         {
-            action.StartedDate = startDate;
-            action.CompletedDate = startDate.AddSeconds(actionDuration);
+            action.StartedDate = startDate.UtcDateTime;
+            action.CompletedDate = startDate.AddSeconds(actionDuration).UtcDateTime;
             startDate = action.CompletedDate!.Value.AddSeconds(idleTimeBetweenActions);
         }
         CompletedDate = Actions[^1].CompletedDate;
@@ -651,7 +663,7 @@ public class ActionGroup
     /// <param name="expirationTime">Time span of expiration.</param>
     /// <param name="now">Current time stamp.</param>
     /// <returns>True if the started or created date are prior to the expiration time.</returns>
-    public bool IsOutdated(TimeSpan expirationTime, DateTime now)
+    public bool IsOutdated(TimeSpan expirationTime, DateTimeOffset now)
     {
         var expirationDate = now.Add(-expirationTime);
         if (StartedDate < expirationDate)

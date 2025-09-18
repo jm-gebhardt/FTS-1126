@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Services;
 using Gebhardt.Acc.KaeserSidecar.CmdOptions;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
@@ -43,7 +42,7 @@ public static class HostBuilderExtension
         {
             try
             {
-                services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
+                services.AddSingleton(TimeProvider.System);
                 //Configure masstransit
                 services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(); });
             }

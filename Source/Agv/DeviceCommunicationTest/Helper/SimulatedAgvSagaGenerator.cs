@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.Common.Time;
+using Gebhardt.Acc.Common.Testing.Time;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 
@@ -17,7 +17,7 @@ public static class SimulatedAgvSagaGenerator
         AgvAction? currentAction = null,
         AgvGraph? agvGraph = null,
         AgvData? agvData = null,
-        ITimeProvider? timeProvider = null,
+        TimeProvider? timeProvider = null,
         bool graphExists = true,
         bool dataExists = true,
         string currentState = nameof(SimulatedAgvStateMachine.Idle),
@@ -52,7 +52,7 @@ public static class SimulatedAgvSagaGenerator
             DateTime.MinValue,
             DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
-        var simulatedAgvSaga = new SimulatedAgvSaga(agv, simulationSpeed, initialSoc, batteryChargeRate, timeProvider ?? new DateTimeNowUtcProvider(), currentNode)
+        var simulatedAgvSaga = new SimulatedAgvSaga(agv, simulationSpeed, initialSoc, batteryChargeRate, timeProvider ?? new FakeTimeProvider(), currentNode)
         {
             Action = currentAction,
             CurrentState = currentState,

@@ -25,7 +25,7 @@ public static class OrderGenerator
         if (startedActionType != null)
         {
             var action = actions.Single(a => a.ActionType == startedActionType);
-            actionGroup.StartAction(action.CorrelationId, [], []);
+            actionGroup.StartAction(action.CorrelationId, [], [], DateTimeOffset.Now);
         }
         return actionGroup;
     }

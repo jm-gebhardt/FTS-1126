@@ -60,7 +60,7 @@ public class BezierEdge : SimpleEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>
-    public override AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation)
+    public override AgvPosition GetCurrentPosition(DateTimeOffset now, AgvData agvData, float previousOrientation)
     {
         double travelDistance = GetEdgeTravelDistance(agvData, now);
         double interValPosition = Math.Clamp(travelDistance / Length, 0, 1);
@@ -76,7 +76,7 @@ public class BezierEdge : SimpleEdge
         return new AgvPosition(true, position.X, position.Y, SourceNode.Z, theta);
     }
 
-    private float GetOrientation(DateTime now, double intervalPosition, float previousOrientation)
+    private float GetOrientation(DateTimeOffset now, double intervalPosition, float previousOrientation)
     {
         // ensure orientation is based on relative position on edge > 0
         intervalPosition = Math.Clamp(intervalPosition, 0.01, 1);

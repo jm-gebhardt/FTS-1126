@@ -44,10 +44,10 @@ public class ToWePlcTelegramProcessorTest
         TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(ServiceKeyProvider.AplWeStation, null)
             .Build();
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
         fixture.TimeProvider.SetNow(now);
 
-        var telegram = new Life(DateTime.UtcNow);
+        var telegram = new Life(now.UtcDateTime);
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
 
         // First sending attempt

@@ -30,7 +30,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -103,7 +102,7 @@ public static class WebHostBuilderExtensions
                     o.TokenValidationParameters.ValidateAudience = false;
                     o.TokenValidationParameters.ValidateIssuerSigningKey = false;
                     o.TokenValidationParameters.SignatureValidator =
-                        delegate(string token, TokenValidationParameters _)
+                        (token, _) =>
                         {
                             var jwt = new JsonWebToken(token);
                             return jwt;
@@ -115,7 +114,7 @@ public static class WebHostBuilderExtensions
                             var accessToken = ctx.Request.Query[AccessToken];
 
                             if (!string.IsNullOrEmpty(accessToken) &&
-                                (ctx.HttpContext.WebSockets.IsWebSocketRequest || ctx.Request.Headers["Accept"] == "text/event-stream"))
+                                (ctx.HttpContext.WebSockets.IsWebSocketRequest || ctx.Request.Headers.Accept == "text/event-stream"))
                             {
                                 ctx.Token = accessToken;
                             }
@@ -157,7 +156,7 @@ public static class WebHostBuilderExtensions
                     In = ParameterLocation.Header,
                     Description = "Please enter a valid token",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey,
+                    Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
                     Scheme = JwtBearerDefaults.AuthenticationScheme
                 };
@@ -169,7 +168,7 @@ public static class WebHostBuilderExtensions
                         {
                             Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
                         },
-                        new string[] { }
+                        []
                     }
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);

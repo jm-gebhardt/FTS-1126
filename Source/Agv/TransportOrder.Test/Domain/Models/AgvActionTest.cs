@@ -11,32 +11,33 @@ public class AgvActionTest
     [TestMethod]
     public void UpdateActionState_WhenActionStateIsStartedAndDifferentFromPreviousState_SetStartedDate()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var actionToUpdateState = actionGroup.Actions.First();
         const ActionState newState = ActionState.Started;
         actionToUpdateState.StartedDate.ShouldBeNull();
 
-        actionToUpdateState.UpdateActionState(newState);
+        actionToUpdateState.UpdateActionState(newState, now);
 
         actionToUpdateState.State.ShouldBe(newState);
         actionToUpdateState.StartedDate.ShouldNotBeNull();
-        actionToUpdateState.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionToUpdateState.StartedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
     public void UpdateActionState_WhenActionStateIsStartedAndSameFromPreviousState_DoesNotSetStartedDate()
     {
+        var now = DateTimeOffset.Now;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var actionToUpdateState = actionGroup.Actions.First();
         var previousStartedDate = DateTime.Today.AddDays(-10);
         const ActionState state = ActionState.Started;
 
-        actionToUpdateState.UpdateActionState(state);
+        actionToUpdateState.UpdateActionState(state, now);
 
         actionToUpdateState.StartedDate = previousStartedDate;
 
-        actionToUpdateState.UpdateActionState(state);
+        actionToUpdateState.UpdateActionState(state, now);
 
         actionToUpdateState.State.ShouldBe(state);
         actionToUpdateState.StartedDate.ShouldBe(previousStartedDate);
@@ -45,34 +46,35 @@ public class AgvActionTest
     [TestMethod]
     public void UpdateActionState_WhenActionStateIsCompletedAndDifferentFromPreviousState_SetCompletedDate()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var actionToUpdateState = actionGroup.Actions.First();
         const ActionState state = ActionState.Started;
         const ActionState newState = ActionState.Completed;
 
-        actionToUpdateState.UpdateActionState(state);
+        actionToUpdateState.UpdateActionState(state, now);
 
         actionToUpdateState.CompletedDate.ShouldBeNull();
 
-        actionToUpdateState.UpdateActionState(newState);
+        actionToUpdateState.UpdateActionState(newState, now);
 
         actionToUpdateState.State.ShouldBe(newState);
         actionToUpdateState.CompletedDate.ShouldNotBeNull();
-        actionToUpdateState.CompletedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionToUpdateState.CompletedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
     public void UpdateActionState_WhenActionStateIsCompletedAndSameFromPreviousState_DoesNotSetCompletedDate()
     {
+        var now = DateTimeOffset.Now;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var actionToUpdateState = actionGroup.Actions.First();
+        var actionToUpdateState = actionGroup.Actions[0];
         var previousCompletedDate = DateTime.Today.AddDays(-10);
         const ActionState state = ActionState.Completed;
-        actionToUpdateState.UpdateActionState(state);
+        actionToUpdateState.UpdateActionState(state, now);
         actionToUpdateState.CompletedDate = previousCompletedDate;
 
-        actionToUpdateState.UpdateActionState(state);
+        actionToUpdateState.UpdateActionState(state, now);
 
         actionToUpdateState.State.ShouldBe(state);
         actionToUpdateState.CompletedDate.ShouldBe(previousCompletedDate);

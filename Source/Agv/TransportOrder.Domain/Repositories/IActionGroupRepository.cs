@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -173,7 +174,8 @@ public interface IActionGroupRepository
     /// <param name="agv">The assigned agv.</param>
     /// <param name="state">The new actionGroupState.</param>
     /// <param name="reason">If set it will be added to the Reasons of the ActionGroup as justification.</param>
-    Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Models.Agv.Agv? agv, ActionState state, Reason? reason = null);
+    /// <param name="now"></param>
+    Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Agv? agv, ActionState state, Reason? reason, DateTimeOffset now);
 
     /// <summary>
     /// Determine if there is any drop action which is not completed (agv loaded).

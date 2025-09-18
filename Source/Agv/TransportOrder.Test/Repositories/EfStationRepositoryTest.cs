@@ -159,7 +159,7 @@ public class EfStationRepositoryTest
 
         string destination = graph.Nodes.First(n => n.IsStation()).Name;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
-        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], [], DateTimeOffset.Now);
         await fixture.AddAsync(actionGroup);
 
         await fixture.Repository.AddStations(graph);
@@ -202,7 +202,7 @@ public class EfStationRepositoryTest
 
         string destination = graph.Nodes.First(n => n.IsStation()).Name;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
-        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], [], DateTimeOffset.Now);
         await fixture.AddAsync(actionGroup);
 
         await fixture.Repository.AddStations(graph);

@@ -44,9 +44,9 @@ public class SlantedEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    public override void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTime entryTime)
+    public override void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTimeOffset entryTime)
     {
-        EntryTime = entryTime;
+        EntryTime = entryTime.UtcDateTime;
         _sections.ForEach(s =>
         {
             s.EstimateTravelTime(agvData, initialVelocity, entryTime);
@@ -61,13 +61,13 @@ public class SlantedEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    public override AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation)
+    public override AgvPosition GetCurrentPosition(DateTimeOffset now, AgvData agvData, float previousOrientation)
     {
         GetCurrentSection(now);
         return _currentSection.GetCurrentPosition(now, agvData, GetPreviousOrientation(previousOrientation));
     }
 
-    private void GetCurrentSection(DateTime now)
+    private void GetCurrentSection(DateTimeOffset now)
     {
         var section = _sections.SingleOrDefault(s => s.EstimatedExitTime >= now && s.EntryTime <= now);
         _currentSection = section ?? _sections.Last();

@@ -8,7 +8,6 @@ using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
@@ -72,7 +71,7 @@ public static class TransportOrderHostBuilderExtensions
     private static void RegisterConfigurationServices(SystemOptions systemOptions, IServiceCollection services, HostBuilderContext context)
     {
         services.AddSingleton(_ => systemOptions);
-        services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
+        services.AddSingleton(TimeProvider.System);
         services.AddHostedService<AgvSettingsInitializer>();
         services.AddHostedService<InMemoryCacheInitializer>();
         services.AddHostedService<FactoryTimeZoneInitializer>();

@@ -1,24 +1,26 @@
-﻿using Gebhardt.Acc.Common.Time;
+﻿namespace Gebhardt.Acc.Common.Testing.Time;
 
-namespace Gebhardt.Acc.Common.Testing.Time;
-
-public class FakeTimeProvider : ITimeProvider
+public class FakeTimeProvider : TimeProvider
 {
-    private DateTime _now;
+    private bool _useRealNow;
+    private DateTimeOffset _now;
 
-    public DateTime Now() => _now;
-
-    public FakeTimeProvider()
+    public FakeTimeProvider(bool useRealNow = true)
     {
+        _useRealNow = useRealNow;
     }
 
-    public FakeTimeProvider(DateTime now)
-    {
-        _now = now;
-    }
-
-    public void SetNow(DateTime now)
+    public FakeTimeProvider(DateTimeOffset now)
     {
         _now = now;
+        _useRealNow = false;
     }
+
+    public void SetNow(DateTimeOffset now)
+    {
+        _now = now;
+        _useRealNow = false;
+    }
+
+    public override DateTimeOffset GetUtcNow() => _useRealNow ? DateTimeOffset.UtcNow : _now;
 }

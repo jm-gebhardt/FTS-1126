@@ -367,7 +367,7 @@ public class AgvEventHandlerTest
         mode.PrepareSwitch(ModeType.Maintenance, currentActionPolicy: policy);
         var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], [], DateTimeOffset.Now);
         var fixture = new AgvEventHandlerTestFixture()
             .WithActionGroups([actionGroup])
             .WithAgv(agv);
@@ -393,7 +393,7 @@ public class AgvEventHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
         agv.IsQueueing = isQueueing;
         var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agv.CorrelationId, doNotPause: true);
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], [], DateTimeOffset.Now);
         var fixture = new AgvEventHandlerTestFixture()
             .WithActionGroups([actionGroup])
             .WithAgv(agv, isQueueHead);

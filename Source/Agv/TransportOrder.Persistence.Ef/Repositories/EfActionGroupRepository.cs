@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
@@ -341,7 +342,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Domain.Models.Agv.Agv? agv, ActionState state, Reason? reason = null!)
+    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Agv? agv, ActionState state, Reason? reason, DateTimeOffset now)
     {
         var actionGroupCorrelationId = action.ParentId;
 
@@ -356,7 +357,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             throw new ActionGroupNotFoundException(actionGroupCorrelationId);
         }
 
-        action.UpdateActionState(state);
+        action.UpdateActionState(state, now);
 
         var actionToUpdate = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId);
         context.Entry(actionToUpdate).CurrentValues.SetValues(action);

@@ -83,7 +83,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             return ag ?? throw new ActionGroupNotFoundException(c);
         });
         _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>()))!.ReturnsAsync((AgvAction action, TransportOrder.Domain.Models.Agv.Agv _, ActionState _, Reason? _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
+        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>(), It.IsAny<DateTimeOffset>()))!.ReturnsAsync((AgvAction action, TransportOrder.Domain.Models.Agv.Agv _, ActionState _, Reason? _, DateTimeOffset _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
         _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((TransportOrder.Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
         _graphRepositoryMock.Setup(x => x.NodeExistsByIdAsync(It.IsAny<Guid>())).ReturnsAsync(true);
     }

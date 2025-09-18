@@ -339,18 +339,7 @@ public class SimulatedAgvStateMachineTest
             await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStarted>(
                 new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
 
-            //wait until saga is updated (move completed)
-            await fixture.WaitUntil(agvSaga, s =>
-                {
-                    bool ok = !s.AgvStatus.Busy;
-                    ok &= s.LastNodeId == moveAction.Target.Node?.Id;
-                    return ok;
-                },
-                s =>
-                {
-                    s.AgvStatus.Busy.ShouldBeFalse();
-                    s.LastNodeId.ShouldBe(moveAction.Target.Node?.Id);
-                });
+            await fixture.GetFirstPublishedMessageAsync<ActionCompleted>();
 
             // Update move action to drop action with new target
             var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdated>(

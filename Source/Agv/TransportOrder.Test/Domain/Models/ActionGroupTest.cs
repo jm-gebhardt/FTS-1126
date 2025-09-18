@@ -29,8 +29,8 @@ public class ActionGroupTest
     public void VerifyAllStateTransition_ForActionGroupWithTwoActions(ActionState actionState1, ActionState actionState2, ActionGroupState actionGroupState)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        actionGroup.Actions.ElementAt(0).UpdateActionState(actionState1);
-        actionGroup.Actions.ElementAt(1).UpdateActionState(actionState2);
+        actionGroup.Actions.ElementAt(0).UpdateActionState(actionState1, DateTimeOffset.Now);
+        actionGroup.Actions.ElementAt(1).UpdateActionState(actionState2, DateTimeOffset.Now);
         actionGroup.UpdateActionGroupState();
         actionGroup.State.ShouldBe(actionGroupState);
     }
@@ -48,19 +48,19 @@ public class ActionGroupTest
     [TestMethod]
     public void UpdateActionGroupState_WhenActionGroupStateIsStartedAndDifferentFromPreviousState_UpdateActionGroupStateToStartedAndSetStartedDate()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         actionGroup.StartedDate.ShouldBeNull();
         GraphNode[] nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
         Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
 
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges, now);
         actionGroup.UpdateActionGroupState();
 
         actionGroup.State.ShouldBe(ActionGroupState.Started);
         actionGroup.StartedDate.ShouldNotBeNull();
-        actionGroup.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionGroup.StartedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
         actionGroup.Actions[0].Nodes.ShouldBe(nodes);
     }
 
@@ -70,7 +70,7 @@ public class ActionGroupTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var previousDate = DateTime.Today.AddDays(-10);
 
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], [], DateTimeOffset.Now);
         actionGroup.StartedDate = previousDate;
 
         actionGroup.UpdateActionGroupState();
@@ -82,7 +82,7 @@ public class ActionGroupTest
     [TestMethod]
     public void UpdateActionGroupState_WhenActionGroupStateIsCompletedAndDifferentFromPreviousState_UpdateActionGroupStateToCompletedAndSetCompletedDate()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         actionGroup.SetActionState(ActionState.Completed);
@@ -92,7 +92,7 @@ public class ActionGroupTest
 
         actionGroup.State.ShouldBe(ActionGroupState.Completed);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        actionGroup.CompletedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionGroup.CompletedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -118,39 +118,39 @@ public class ActionGroupTest
     public void UpdateActionGroupState_WhenOneActionFailedOrCanceled_ActionGroupFailsOrIsCanceled()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
 
-        actionGroup.SetActionFailed(actionGroup.Actions.First().CorrelationId);
+        actionGroup.SetActionFailed(actionGroup.Actions.First().CorrelationId, DateTimeOffset.Now);
 
         actionGroup.State.ShouldBe(ActionGroupState.Failed);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        actionGroup.CompletedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionGroup.CompletedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
     public void UpdateActionGroupState_WhenOneActionCanceled_ActionGroupIsCanceled()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
 
-        actionGroup.CancelAction(actionGroup.Actions.First().CorrelationId);
+        actionGroup.CancelAction(actionGroup.Actions.First().CorrelationId, now);
 
         actionGroup.State.ShouldBe(ActionGroupState.Canceled);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        actionGroup.CompletedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionGroup.CompletedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
     public void UpdateActionGroupState_WhenOneActionInvalid_ActionGroupInvalid()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
 
-        actionGroup.InvalidateAction(actionGroup.Actions.First().CorrelationId);
+        actionGroup.InvalidateAction(actionGroup.Actions.First().CorrelationId, now);
 
         actionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now, DateTime.UtcNow);
+        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -184,7 +184,7 @@ public class ActionGroupTest
             assignedAgv: Guid.NewGuid(),
             startedDate: DateTime.UtcNow,
             completedDate: DateTime.UtcNow);
-        actionGroup.CompleteAction(actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId);
+        actionGroup.CompleteAction(actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).CorrelationId, DateTimeOffset.Now);
         actionGroup.State.ShouldBe(ActionGroupState.Completed);
         actionGroup.AssignedAgv.ShouldNotBeNull();
     }
@@ -198,7 +198,7 @@ public class ActionGroupTest
             dropActionState: ActionState.Started,
             assignedAgv: Guid.NewGuid(),
             createdDate: createdDate);
-        actionGroup.ResetActionGroup();
+        actionGroup.ResetActionGroup(DateTimeOffset.Now);
 
         actionGroup.AssignedAgv.ShouldBeNull();
         actionGroup.StartedDate.ShouldBeNull();
@@ -220,7 +220,7 @@ public class ActionGroupTest
             dropActionState: ActionState.Started,
             assignedAgv: agv,
             createdDate: createdDate);
-        actionGroup.ResetActionGroup(false);
+        actionGroup.ResetActionGroup(DateTimeOffset.Now, false);
 
         actionGroup.AssignedAgv.ShouldNotBeNull();
         actionGroup.AssignedAgv.ShouldBe(agv);
@@ -236,17 +236,17 @@ public class ActionGroupTest
     [TestMethod]
     public void StartAction_ValidData_NodesAndDatesSet()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         actionGroup.StartedDate.ShouldBeNull();
         GraphNode[] nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
         Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges, now);
 
         actionGroup.State.ShouldBe(ActionGroupState.Started);
         actionGroup.StartedDate.ShouldNotBeNull();
-        actionGroup.StartedDate.Value.ShouldBeInRange(now, DateTime.UtcNow);
+        actionGroup.StartedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
         actionGroup.Actions[0].Nodes.ShouldBe(nodes);
     }
 
@@ -301,139 +301,142 @@ public class ActionGroupTest
     }
 
     [TestMethod]
-    public async Task PauseAndResumeActionGroup_PausedOnce_DurationSetCorrectly()
+    public void PauseAndResumeActionGroup_PausedOnce_DurationSetCorrectly()
     {
         var waitingTime = TimeSpan.FromSeconds(2);
         var agvGuid = Guid.NewGuid();
-        var createdDate = DateTime.UtcNow;
+        var now = DateTimeOffset.Now;
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: agvGuid,
-            createdDate: createdDate);
+            createdDate: now.UtcDateTime);
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
         var dropAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
 
         // Run pick action
-        actionGroup.StartAction(pickAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
-        actionGroup.CompleteAction(pickAction.CorrelationId);
+        actionGroup.StartAction(pickAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
+        actionGroup.CompleteAction(pickAction.CorrelationId, now);
 
         // Start drop action
-        actionGroup.StartAction(dropAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.StartAction(dropAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Pause
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
-        await Task.Delay(waitingTime);
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), now);
+        now = now.Add(waitingTime);
 
         // Resume
-        actionGroup.ResumeActionGroup(false);
-        actionGroup.StartAction(dropAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.ResumeActionGroup(false, now);
+        actionGroup.StartAction(dropAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Complete
-        actionGroup.CompleteAction(dropAction.CorrelationId);
+        actionGroup.CompleteAction(dropAction.CorrelationId, now);
 
         double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations, tolerance: 1.5); // tolerance is N*truncation of double to long (in each ResumeActionGroup)
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations);
     }
 
     [TestMethod]
-    public async Task PauseAndResumeActionGroup_MoveAction_PausedOnce_DurationSetCorrectly()
+    public void PauseAndResumeActionGroup_MoveAction_PausedOnce_DurationSetCorrectly()
     {
         var waitingTime = TimeSpan.FromSeconds(2);
         var agvGuid = Guid.NewGuid();
+        var now = DateTimeOffset.Now;
 
         var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvGuid);
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
 
         // Start move action
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Pause
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
-        await Task.Delay(waitingTime);
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), now);
+        now = now.Add(waitingTime);
 
         // Resume
-        actionGroup.ResumeActionGroup(false);
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.ResumeActionGroup(false, now);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Complete
-        actionGroup.CompleteAction(moveAction.CorrelationId);
+        actionGroup.CompleteAction(moveAction.CorrelationId, now);
 
         double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations, tolerance: 1.5);
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations);
     }
 
     [TestMethod]
-    public async Task PauseAndResumeActionGroup_MoveAction_PausedMultipleTimes_DurationSetCorrectly()
+    public void PauseAndResumeActionGroup_MoveAction_PausedMultipleTimes_DurationSetCorrectly()
     {
         var waitingTime = TimeSpan.FromSeconds(1);
         var agvGuid = Guid.NewGuid();
+        var now = DateTimeOffset.Now;
 
         var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvGuid);
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
 
         // Start move action
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Pause
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
-        await Task.Delay(waitingTime);
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), now);
+        now = now.Add(waitingTime);
 
         // Resume
-        actionGroup.ResumeActionGroup(false);
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.ResumeActionGroup(false, now);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Pause again
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
-        await Task.Delay(waitingTime);
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), now);
+        now = now.Add(waitingTime);
 
         // Resume again
-        actionGroup.ResumeActionGroup(false);
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.ResumeActionGroup(false, now);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Complete
-        actionGroup.CompleteAction(moveAction.CorrelationId);
+        actionGroup.CompleteAction(moveAction.CorrelationId, now);
 
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(moveAction.Duration!.Value.TotalSeconds, tolerance: 2.5); // tolerance is N*truncation of double to long (in each ResumeActionGroup)
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(moveAction.Duration!.Value.TotalSeconds);
     }
 
     [TestMethod]
-    public async Task PauseAndResumeActionGroup_MoveAction_Paused2days_DurationSetCorrectly()
+    public void PauseAndResumeActionGroup_MoveAction_Paused2days_DurationSetCorrectly()
     {
         var waitingTime = TimeSpan.FromSeconds(2);
         var agvGuid = Guid.NewGuid();
+        var now = DateTimeOffset.Now;
 
         var actionGroup = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvGuid);
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
 
         // Start move action
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Pause
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), now);
         // Set dates to 2 days ago
         actionGroup.GetType().GetProperty(nameof(actionGroup.StartedDate))!.SetValue(actionGroup, actionGroup.StartedDate.GetValueOrDefault().AddDays(-2));
         moveAction.GetType().GetProperty(nameof(moveAction.StartedDate))!.SetValue(moveAction, moveAction.StartedDate.GetValueOrDefault().AddDays(-2));
         moveAction.GetType().GetProperty(nameof(moveAction.PausedDate))!.SetValue(moveAction, moveAction.PausedDate.GetValueOrDefault().AddDays(-2));
 
         // Resume
-        actionGroup.ResumeActionGroup(false);
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
-        await Task.Delay(waitingTime);
+        actionGroup.ResumeActionGroup(false, now);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], now);
+        now = now.Add(waitingTime);
 
         // Complete
-        actionGroup.CompleteAction(moveAction.CorrelationId);
+        actionGroup.CompleteAction(moveAction.CorrelationId, now);
 
         double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations, tolerance: 1.5); // tolerance is N*truncation of double to long (in each ResumeActionGroup)
+        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations);
     }
 
     [TestMethod]
@@ -447,7 +450,7 @@ public class ActionGroupTest
             dropActionState: ActionState.Started,
             assignedAgv: agvGuid,
             createdDate: createdDate);
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), DateTimeOffset.Now);
 
         actionGroup.AssignedAgv.ShouldBe(agvGuid);
         actionGroup.StartedDate.ShouldNotBeNull();
@@ -470,7 +473,7 @@ public class ActionGroupTest
             dropActionState: ActionState.Started,
             assignedAgv: agvGuid,
             createdDate: createdDate);
-        actionGroup.PauseActionGroup(PauseReason.LockedStation.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.LockedStation.ToReason(), DateTimeOffset.Now);
 
         actionGroup.AssignedAgv.ShouldBe(agvGuid);
         actionGroup.StartedDate.ShouldNotBeNull();
@@ -493,9 +496,9 @@ public class ActionGroupTest
             dropActionState: ActionState.Started,
             assignedAgv: agvGuid,
             createdDate: createdDate);
-        actionGroup.PauseActionGroup(PauseReason.LockedStation.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.LockedStation.ToReason(), DateTimeOffset.Now);
 
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), DateTimeOffset.Now);
 
         actionGroup.AssignedAgv.ShouldBe(agvGuid);
         actionGroup.StartedDate.ShouldNotBeNull();
@@ -518,9 +521,9 @@ public class ActionGroupTest
             dropActionState: ActionState.Started,
             assignedAgv: agvGuid,
             createdDate: createdDate);
-        actionGroup.PauseActionGroup(PauseReason.UserMode.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.UserMode.ToReason(), DateTimeOffset.Now);
 
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), DateTimeOffset.Now);
 
         actionGroup.AssignedAgv.ShouldBe(agvGuid);
         actionGroup.StartedDate.ShouldNotBeNull();
@@ -543,9 +546,9 @@ public class ActionGroupTest
             dropActionState: ActionState.Started,
             assignedAgv: agvGuid,
             createdDate: createdDate);
-        actionGroup.PauseActionGroup(PauseReason.LockMode.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.LockMode.ToReason(), DateTimeOffset.Now);
 
-        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason());
+        actionGroup.PauseActionGroup(PauseReason.MaintenanceMode.ToReason(), DateTimeOffset.Now);
 
         actionGroup.AssignedAgv.ShouldBe(agvGuid);
         actionGroup.StartedDate.ShouldNotBeNull();
@@ -1342,7 +1345,7 @@ public class ActionGroupTest
             DateTime.UtcNow,
             agv);
 
-        actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], [], DateTimeOffset.Now);
 
         actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
     }
@@ -1373,8 +1376,8 @@ public class ActionGroupTest
             DateTime.UtcNow,
             agv);
 
-        actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], []);
-        actionGroup.CompleteAction(actionGroup.Actions.Single().CorrelationId);
+        actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], [], DateTimeOffset.Now);
+        actionGroup.CompleteAction(actionGroup.Actions.Single().CorrelationId, DateTimeOffset.Now);
 
         actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
     }

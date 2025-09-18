@@ -223,8 +223,9 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// Updates the state of the Action and its Dates
     /// </summary>
-    /// <param name="state">The new state</param>
-    public void UpdateActionState(ActionState state)
+    /// <param name="state">The new state.</param>
+    /// <param name="now">The current time.</param>
+    public void UpdateActionState(ActionState state, DateTimeOffset now)
     {
         if (State == state)
         {
@@ -233,7 +234,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 
         if (State == ActionState.Paused && PausedDate != null)
         {
-            var pauseTimeSpan = (TimeSpan) (DateTime.UtcNow - PausedDate);
+            var pauseTimeSpan = (TimeSpan) (now.UtcDateTime - PausedDate);
             var previousRunTime = (TimeSpan) (PausedDate - StartedDate.GetValueOrDefault());
             PriorRunAndPauseDuration += (long) pauseTimeSpan.TotalSeconds + (long) previousRunTime.TotalSeconds;
 
@@ -242,7 +243,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 
         State = state;
 
-        SetDates();
+        SetDates(now);
     }
 
     /// <summary>
@@ -264,29 +265,27 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         Target.Node = new GraphNode(targetNode.Id, targetNode.Name);
     }
 
-    private void SetDates()
+    private void SetDates(DateTimeOffset now)
     {
-        var now = DateTime.UtcNow;
-
         switch (State)
         {
             case ActionState.Started:
-                StartedDate = now;
+                StartedDate = now.UtcDateTime;
                 break;
 
             case ActionState.Completed:
-                CompletedDate = now;
+                CompletedDate = now.UtcDateTime;
                 break;
 
             case ActionState.Failed:
             case ActionState.Aborted:
             case ActionState.Canceled:
             case ActionState.Invalid:
-                CompletedDate = now;
+                CompletedDate = now.UtcDateTime;
                 break;
 
             case ActionState.Paused:
-                PausedDate = now;
+                PausedDate = now.UtcDateTime;
                 break;
         }
     }

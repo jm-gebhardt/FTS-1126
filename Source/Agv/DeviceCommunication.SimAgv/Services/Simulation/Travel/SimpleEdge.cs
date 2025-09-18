@@ -48,10 +48,10 @@ public class SimpleEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>
-    public override void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTime entryTime)
+    public override void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTimeOffset entryTime)
     {
         InitialVelocity = initialVelocity;
-        EntryTime = entryTime;
+        EntryTime = entryTime.UtcDateTime;
         
         StopForTurnIntoEdge = EntryAngle >= agvData.TurnOnSpotThreshold && agvData.TurnOnSpotThreshold != 0;
         double time = 0;
@@ -181,7 +181,7 @@ public class SimpleEdge : BaseEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>
-    public override AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation)
+    public override AgvPosition GetCurrentPosition(DateTimeOffset now, AgvData agvData, float previousOrientation)
     {
        return new AgvPosition(true, 0, 0, 0,  0);
     }
@@ -192,7 +192,7 @@ public class SimpleEdge : BaseEdge
     /// <param name="agvData">The agv data.</param>
     /// <param name="now">The current time.</param>
     /// <returns></returns>
-    public double GetEdgeTravelDistance(AgvData agvData, DateTime now)
+    public double GetEdgeTravelDistance(AgvData agvData, DateTimeOffset now)
     {
         double distance = 0;
         double secondsOnSection;

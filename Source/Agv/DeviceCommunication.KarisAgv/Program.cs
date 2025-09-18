@@ -7,7 +7,6 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.Common.Configuration;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
@@ -145,7 +144,7 @@ try
     {
         services.AddSingleton<IAgvRepository, AgvRepository>();
         services.AddSingleton<IGraphRepository, EfGraphRepository>();
-        services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
+        services.AddSingleton<TimeProvider>();
 
         services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
     });

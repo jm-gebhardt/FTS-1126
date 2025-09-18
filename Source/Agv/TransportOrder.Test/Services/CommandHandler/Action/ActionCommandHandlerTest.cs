@@ -708,7 +708,7 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
         (await fixture.ConsumerHarness.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
-        fixture.ActionGroupRepository.Verify(a => a.UpdateActionAndGroupStateAsync(actionGroup.Actions[0], null, ActionState.Canceled, It.Is<Reason>(r => r.Template.Equals("ActionGroup was canceled manually"))));
+        fixture.ActionGroupRepository.Verify(a => a.UpdateActionAndGroupStateAsync(actionGroup.Actions[0], null, ActionState.Canceled, It.Is<Reason>(r => r.Template.Equals("ActionGroup was canceled manually")), It.IsAny<DateTimeOffset>()));
     }
 
     [TestMethod]
@@ -1580,7 +1580,7 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.UserMode));
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
-        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions.First().CorrelationId, [], [], DateTimeOffset.Now);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup, existsPriorToTest: true);
@@ -1867,7 +1867,7 @@ public class ActionCommandHandlerTest
             agv.CorrelationId);
         if (state == ActionState.Started)
         {
-            actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], []);
+            actionGroup.StartAction(actionGroup.Actions.Single().CorrelationId, [], [], DateTimeOffset.Now);
         }
         string[] nodes = ["Node1", "Node2"];
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
@@ -1938,7 +1938,7 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], [], DateTimeOffset.Now);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup)
@@ -1955,8 +1955,8 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateBusyAgv();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
-        actionGroup.CompleteAction(actionGroup.Actions[0].CorrelationId);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], [], DateTimeOffset.Now);
+        actionGroup.CompleteAction(actionGroup.Actions[0].CorrelationId, DateTimeOffset.Now);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup)
@@ -1979,7 +1979,7 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateBusyAgv(mode: mode);
 
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, [], [], DateTimeOffset.Now);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup)

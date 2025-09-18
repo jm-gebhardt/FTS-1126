@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.System;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using JetBrains.Annotations;
 using MassTransit;
@@ -15,11 +14,11 @@ public class SystemRequestHandler :
     IConsumer<GetSystemTime>,
     IConsumer<UpdateHostOrderGeneration>
 {
-    private readonly ITimeProvider _timeProvider;
+    private readonly TimeProvider _timeProvider;
     private readonly IBus _bus;
 
     /// <inheritdoc cref="SystemRequestHandler"/>
-    public SystemRequestHandler(ITimeProvider timeProvider, IBus bus)
+    public SystemRequestHandler(TimeProvider timeProvider, IBus bus)
     {
         _timeProvider = timeProvider;
         _bus = bus;
@@ -28,7 +27,7 @@ public class SystemRequestHandler :
     /// <inheritdoc />
     public Task Consume(ConsumeContext<GetSystemTime> context)
     {
-        var systemTime = _timeProvider.Now();
+        var systemTime = _timeProvider.GetUtcNow().UtcDateTime;
         var response = new GotSystemTime(systemTime);
         return context.RespondAsync(response);
     }

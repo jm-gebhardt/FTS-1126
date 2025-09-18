@@ -14,7 +14,7 @@ public class DirectEdge : SimpleEdge
     }
 
     /// <inheritdoc cref="BaseEdge"/>
-    public override AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation)
+    public override AgvPosition GetCurrentPosition(DateTimeOffset now, AgvData agvData, float previousOrientation)
     {
         double travelDistance = GetEdgeTravelDistance(agvData, now);
         (float x, float y, float z) = GetPositionFromDistance(travelDistance);

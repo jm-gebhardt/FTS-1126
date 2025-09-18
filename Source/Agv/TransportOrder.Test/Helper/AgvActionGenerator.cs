@@ -23,10 +23,10 @@ public static class AgvActionGenerator
         {
             Sequence = 0
         };
-        moveAction.UpdateActionState(actionStateMove);
+        moveAction.UpdateActionState(actionStateMove, DateTimeOffset.Now);
 
         var chargeAction = GenerateChargeAction(groupId, targetNodeName, 1);
-        chargeAction.UpdateActionState(actionStateCharge);
+        chargeAction.UpdateActionState(actionStateCharge, DateTimeOffset.Now);
 
         chargeAction.Nodes = [targetNodeName.ToGraphNode()];
         var actionGroup = new ActionGroup(groupId,
@@ -73,7 +73,7 @@ public static class AgvActionGenerator
         {
             parkAction.Nodes = [targetNodeName.ToGraphNode()];
         }
-        parkAction.UpdateActionState(actionState);
+        parkAction.UpdateActionState(actionState, DateTimeOffset.Now);
         return parkAction;
     }
 
@@ -94,7 +94,7 @@ public static class AgvActionGenerator
         {
             parkAction.Nodes = [targetNodeName.ToGraphNode()];
         }
-        parkAction.UpdateActionState(actionState);
+        parkAction.UpdateActionState(actionState, DateTimeOffset.Now);
         var actionGroup = new ActionGroup(groupId, string.Empty, [parkAction], ActionGroupCreator.TransportOrder, doNotPause: doNotPause) { AssignedAgv = assignedAgv };
         actionGroup.UpdateActionGroupState();
         if (completedDate != null)
@@ -109,7 +109,7 @@ public static class AgvActionGenerator
         var actionGroup = GeneratePickDropActionGroup(source: source, destination: destination);
         foreach (var action in actionGroup.Actions)
         {
-            actionGroup.StartAction(action.CorrelationId, [], []);
+            actionGroup.StartAction(action.CorrelationId, [], [], DateTimeOffset.Now);
             action.CompletedDate = action.StartedDate!.Value.AddSeconds(actionDuration);
             action.State = ActionState.Completed;
         }
@@ -154,14 +154,14 @@ public static class AgvActionGenerator
             Sequence = partial == 3 ? 1 : 0,
             InfoToAgv = infoToAgv
         };
-        pickAction.UpdateActionState(pickActionState);
+        pickAction.UpdateActionState(pickActionState, DateTimeOffset.Now);
         var dropNode = destination != null ? destination == "" ? null : destination.ToGraphNode() : AgvGraphGenerator.DestinationClose;
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, dropNode, groupId)
         {
             Sequence = partial == 3 ? 0 : 1,
             InfoToAgv = dropInfoToAgv
         };
-        dropAction.UpdateActionState(dropActionState);
+        dropAction.UpdateActionState(dropActionState, DateTimeOffset.Now);
 
         List<AgvAction> actions = partial switch
         {
@@ -227,7 +227,7 @@ public static class AgvActionGenerator
             Sequence = 0,
             InfoToAgv = infoToAgv
         };
-        pickAction.UpdateActionState(pickActionState);
+        pickAction.UpdateActionState(pickActionState, DateTimeOffset.Now);
         var moveAction = new AgvAction(moveActionGuid, ActionType.Move, AgvGraphGenerator.Waypoint3, groupId)
         {
             Sequence = 1
@@ -241,7 +241,7 @@ public static class AgvActionGenerator
             Sequence = 2,
             InfoToAgv = dropInfoToAgv
         };
-        dropAction.UpdateActionState(dropActionState);
+        dropAction.UpdateActionState(dropActionState, DateTimeOffset.Now);
 
         List<AgvAction> actions = [pickAction, moveAction, dropAction];
 
@@ -298,19 +298,19 @@ public static class AgvActionGenerator
         {
             Sequence = 0
         };
-        moveAction.UpdateActionState(moveActionState);
+        moveAction.UpdateActionState(moveActionState, DateTimeOffset.Now);
 
         var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, targetNode: null, groupId)
         {
             Sequence = 1,
             InfoToAgv = infoToAgv
         };
-        pickAction.UpdateActionState(pickActionState);
+        pickAction.UpdateActionState(pickActionState, DateTimeOffset.Now);
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, destination != null ? destination.ToGraphNode() : AgvGraphGenerator.DestinationClose, groupId)
         {
             Sequence = 2
         };
-        dropAction.UpdateActionState(dropActionState);
+        dropAction.UpdateActionState(dropActionState, DateTimeOffset.Now);
 
         var actions = new List<AgvAction> { moveAction, pickAction, dropAction };
 
@@ -364,19 +364,19 @@ public static class AgvActionGenerator
             Sequence = 0,
             InfoToAgv = infoToAgv
         };
-        pickAction.UpdateActionState(pickActionState);
+        pickAction.UpdateActionState(pickActionState, DateTimeOffset.Now);
 
         var moveAction = new AgvAction(moveActionGuid, ActionType.Move, moveDestination != null ? moveDestination.ToGraphNode() : AgvGraphGenerator.Waypoint3, groupId)
         {
             Sequence = 1
         };
-        moveAction.UpdateActionState(moveActionState);
+        moveAction.UpdateActionState(moveActionState, DateTimeOffset.Now);
 
         var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, targetNode: null, groupId)
         {
             Sequence = 2
         };
-        dropAction.UpdateActionState(dropActionState);
+        dropAction.UpdateActionState(dropActionState, DateTimeOffset.Now);
 
         var actions = new List<AgvAction> { pickAction, moveAction, dropAction };
 
@@ -447,7 +447,7 @@ public static class AgvActionGenerator
         {
             Nodes = []
         };
-        moveAction.UpdateActionState(moveActionState);
+        moveAction.UpdateActionState(moveActionState, DateTimeOffset.Now);
         var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, hasPriority: true, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration };
         actionGroup.UpdateActionGroupState();
 
@@ -485,30 +485,30 @@ public static class AgvActionGenerator
         switch (state)
         {
             case ActionGroupState.Started:
-                actionGroup.StartAction(actionId, [], []);
+                actionGroup.StartAction(actionId, [], [], DateTimeOffset.Now);
                 break;
 
             case ActionGroupState.Completed:
                 foreach (var action in actionGroup.Actions)
                 {
-                    actionGroup.CompleteAction(action.CorrelationId);
+                    actionGroup.CompleteAction(action.CorrelationId, DateTimeOffset.Now);
                 }
                 break;
 
             case ActionGroupState.Canceled:
-                actionGroup.CancelActionGroup();
+                actionGroup.CancelActionGroup(DateTimeOffset.Now);
                 break;
 
             case ActionGroupState.Failed:
-                actionGroup.SetActionFailed(actionId);
+                actionGroup.SetActionFailed(actionId, DateTimeOffset.Now);
                 break;
 
             case ActionGroupState.Invalid:
-                actionGroup.InvalidateAction(actionId);
+                actionGroup.InvalidateAction(actionId, DateTimeOffset.Now);
                 break;
 
             case ActionGroupState.Aborted:
-                actionGroup.AbortAction(actionId, Enumerable.Empty<Reason>());
+                actionGroup.AbortAction(actionId, [], DateTimeOffset.Now);
                 break;
 
             case ActionGroupState.Paused:

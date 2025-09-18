@@ -29,9 +29,9 @@ public class ActionGroupMessageSerializationTest
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
         var dropAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
-        actionGroup.StartAction(moveAction.CorrelationId, ["a node".ToGraphNode()], [Guid.NewGuid()]);
+        actionGroup.StartAction(moveAction.CorrelationId, ["a node".ToGraphNode()], [Guid.NewGuid()], DateTimeOffset.Now);
         actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, "target".ToGraphNode());
-        actionGroup.CompleteAction(moveAction.CorrelationId);
+        actionGroup.CompleteAction(moveAction.CorrelationId, DateTimeOffset.Now);
         dropAction.Nodes = ["node 1".ToGraphNode(), "node2".ToGraphNode()];
         dropAction.Edges = [Guid.NewGuid()];
         dropAction.AdditionalInfo = "SAP:9070";

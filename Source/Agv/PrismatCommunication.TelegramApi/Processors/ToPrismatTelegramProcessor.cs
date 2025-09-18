@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -34,12 +33,12 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <summary>
     /// Timestamp when last telegram was send.
     /// </summary>
-    public DateTime LastTelegramSend { get; private set; }
+    public DateTimeOffset LastTelegramSend { get; private set; }
 
     /// <summary>
     /// Start of waiting for acknowledgement
     /// </summary>
-    public DateTime AwaitAcknowledgementStart { get; private set; }
+    public DateTimeOffset AwaitAcknowledgementStart { get; private set; }
 
     /// <summary>
     /// Maximum time to wait for acknowledgements [ms]
@@ -58,16 +57,17 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
 
     private int _acknowledgementWaitTime;
     private readonly ILogger<ToPrismatTelegramProcessor> _logger;
-    private readonly ITimeProvider _timeProvider;
+    private readonly TimeProvider _timeProvider;
     private readonly TelegramCommunicationConfiguration _configuration;
 
     /// <summary>
     /// Provides a processor for telegrams sent to prismat
     /// </summary>
-    public ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logger, ITimeProvider timeProvider, [FromKeyedServices(ServiceKeyProvider.ToPrismat)] TelegramCommunicationConfiguration configuration, ObservableConcurrentQueue<PrismatTelegram> observableQueue)
+    public ToPrismatTelegramProcessor(ILogger<ToPrismatTelegramProcessor> logger, TimeProvider timeProvider, [FromKeyedServices(ServiceKeyProvider.ToPrismat)] TelegramCommunicationConfiguration configuration, ObservableConcurrentQueue<PrismatTelegram> observableQueue)
     {
         _logger = logger;
         _timeProvider = timeProvider;
+        AwaitAcknowledgementStart = _timeProvider.GetUtcNow();
         _configuration = configuration;
         RestartRequested = false;
         SendQueue = observableQueue;
@@ -87,9 +87,9 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
         {
             _logger.LogInformation("Resending telegram {Telegram}, remaining attempts {RemainingAttempts}", CurrentTelegram.ToString(), RemainingAttempts);
             telegram = CurrentTelegram!.ToString()!;
-            LastTelegramSend = _timeProvider.Now();
+            LastTelegramSend = _timeProvider.GetUtcNow();
             RemainingAttempts -= 1;
-            AwaitAcknowledgementStart = _timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.GetUtcNow();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             ReceiveAcknowledgement = true;
             return true;
@@ -113,9 +113,9 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
             _logger.LogInformation("ToPrismatProcessor: Sending next telegram {Next}", telegram);
             ReceiveAcknowledgement = true;
             CurrentTelegram = nextTelegram;
-            LastTelegramSend = _timeProvider.Now();
+            LastTelegramSend = _timeProvider.GetUtcNow();
             RemainingAttempts = MaxRetryAttempts;
-            AwaitAcknowledgementStart = _timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.GetUtcNow();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             return true;
         }
@@ -128,7 +128,7 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override bool ShouldReceiveTelegram()
     {
-        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int)(_timeProvider.Now() - AwaitAcknowledgementStart).TotalMilliseconds;
+        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int) (_timeProvider.GetUtcNow() - AwaitAcknowledgementStart).TotalMilliseconds;
         return ReceiveAcknowledgement && _acknowledgementWaitTime > 0;
     }
 
@@ -191,9 +191,9 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// </summary>
     public void TrySendLifeTelegram()
     {
-        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
+        if (_timeProvider.GetUtcNow() - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
         {
-            SendQueue.Enqueue(new Life(DateTime.UtcNow));
+            SendQueue.Enqueue(new Life(_timeProvider.GetUtcNow().UtcDateTime));
         }
     }
 

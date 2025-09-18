@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Messages.Filters;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
@@ -43,7 +42,7 @@ public static class HostBuilderExtension
         {
             try
             {
-                services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
+                services.AddSingleton(TimeProvider.System);
                 services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(simulateOptions != null); }, rabbitMqConfiguration: (ctx, cfg) =>
                 {
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);

@@ -116,7 +116,7 @@ public abstract class BaseEdge : GraphEdge
     /// <param name="orientation">The orientation on the edge.</param>
     /// <param name="previousOrientation">The orientation on the previous edge.</param>
     /// <returns></returns>
-    public static float GetPartialOrientation(DateTime now, DateTime initialTurnTime, DateTime entryTime, float orientation, float previousOrientation)
+    public static float GetPartialOrientation(DateTimeOffset now, DateTime initialTurnTime, DateTime entryTime, float orientation, float previousOrientation)
     {
         if (now >= initialTurnTime)
         {
@@ -148,12 +148,12 @@ public abstract class BaseEdge : GraphEdge
     /// <summary>
     /// Estimates the time the agv travels on the edge.
     /// </summary>
-    public abstract void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTime entryTime);
+    public abstract void EstimateTravelTime(AgvData agvData, double initialVelocity, DateTimeOffset entryTime);
 
     /// <summary>
     /// Gets the current position of the agv on the edge.
     /// </summary>
-    public abstract AgvPosition GetCurrentPosition(DateTime now, AgvData agvData, float previousOrientation);
+    public abstract AgvPosition GetCurrentPosition(DateTimeOffset now, AgvData agvData, float previousOrientation);
 
     /// <summary>
     /// Gets the agv orientation [rad].

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.KaeserConveyorTelegramApi.Telegrams;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -35,12 +34,12 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
     /// <summary>
     /// Timestamp when last telegram was send.
     /// </summary>
-    public DateTime LastTelegramSend { get; private set; }
+    public DateTimeOffset LastTelegramSend { get; private set; }
 
     /// <summary>
     /// Start of waiting for acknowledgement
     /// </summary>
-    public DateTime AwaitAcknowledgementStart { get; private set; }
+    public DateTimeOffset AwaitAcknowledgementStart { get; private set; }
 
     /// <summary>
     /// Maximum time to wait for acknowledgements [ms]
@@ -59,14 +58,15 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
 
     private int _acknowledgementWaitTime;
     private readonly ILogger<AgvAplCargoStateProcessor> _logger;
-    private readonly ITimeProvider _timeProvider;
+    private readonly TimeProvider _timeProvider;
     private readonly TelegramCommunicationConfiguration _configuration;
 
     /// <inheritdoc cref="AgvAplCargoStateProcessor"/>>
-    public AgvAplCargoStateProcessor(ILogger<AgvAplCargoStateProcessor> logger, ITimeProvider timeProvider, TelegramCommunicationConfiguration configuration)
+    public AgvAplCargoStateProcessor(ILogger<AgvAplCargoStateProcessor> logger, TimeProvider timeProvider, TelegramCommunicationConfiguration configuration)
     {
         _logger = logger;
         _timeProvider = timeProvider;
+        AwaitAcknowledgementStart = _timeProvider.GetUtcNow();
         _configuration = configuration;
         RestartRequested = false;
     }
@@ -85,9 +85,9 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
         {
             _logger.LogInformation("Resending telegram {Telegram}, remaining attempts {RemainingAttempts}", CurrentTelegram.ToString(), RemainingAttempts);
             telegram = CurrentTelegram!.ToString()!;
-            LastTelegramSend = _timeProvider.Now();
+            LastTelegramSend = _timeProvider.GetUtcNow();
             RemainingAttempts -= 1;
-            AwaitAcknowledgementStart = _timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.GetUtcNow();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             ReceiveAcknowledgement = true;
             return true;
@@ -111,9 +111,9 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
             _logger.LogInformation("ToConveyorProcessor: Sending next telegram {Next}", telegram);
             ReceiveAcknowledgement = true;
             CurrentTelegram = nextTelegram;
-            LastTelegramSend = _timeProvider.Now();
+            LastTelegramSend = _timeProvider.GetUtcNow();
             RemainingAttempts = MaxRetryAttempts;
-            AwaitAcknowledgementStart = _timeProvider.Now();
+            AwaitAcknowledgementStart = _timeProvider.GetUtcNow();
             _acknowledgementWaitTime = MaxAcknowledgementWaitTime;
             return true;
         }
@@ -126,7 +126,7 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>
     public override bool ShouldReceiveTelegram()
     {
-        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int)(_timeProvider.Now() - AwaitAcknowledgementStart).TotalMilliseconds;
+        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int) (_timeProvider.GetUtcNow() - AwaitAcknowledgementStart).TotalMilliseconds;
         return ReceiveAcknowledgement && _acknowledgementWaitTime > 0;
     }
 
@@ -191,9 +191,9 @@ public class AgvAplCargoStateProcessor : TelegramProcessorBase<ConveyorTelegram>
     /// </summary>
     public void TrySendLifeTelegram()
     {
-        if (DateTime.UtcNow - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
+        if (_timeProvider.GetUtcNow() - LastTelegramSend > TimeSpan.FromSeconds(_configuration.LifeTelegramInterval) && !ShouldReceiveTelegram())
         {
-            SendQueue.Enqueue(new Life(DateTime.UtcNow));
+            SendQueue.Enqueue(new Life(_timeProvider.GetUtcNow().UtcDateTime));
         }
     }
 

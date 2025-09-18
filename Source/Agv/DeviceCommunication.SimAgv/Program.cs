@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Logging;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
@@ -120,7 +119,7 @@ try
         hostBuilder.ConfigureServices((_, services) =>
         {
             services.AddSingleton<IAgvRepository, AgvRepository>();
-            services.AddSingleton<ITimeProvider, DateTimeNowUtcProvider>();
+            services.AddSingleton<TimeProvider>();
 
             services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
         });

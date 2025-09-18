@@ -25,7 +25,7 @@ public class AgvActionValidatorTest
     public async Task ValidateAsync_WhenStateIsNotNullButNotCreated_Fails()
     {
         var action = AgvActionGenerator.GenerateParkAction();
-        action.UpdateActionState(ActionState.Canceled);
+        action.UpdateActionState(ActionState.Canceled, DateTimeOffset.Now);
 
         var agvActionValidator = new AgvActionValidator();
 

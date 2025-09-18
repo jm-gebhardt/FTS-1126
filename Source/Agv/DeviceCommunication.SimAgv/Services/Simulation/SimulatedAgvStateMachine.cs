@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Commands;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Speed;
@@ -166,7 +165,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private readonly ILogger<SimulatedAgvStateMachine> _logger;
     private readonly Options _options;
-    private readonly ITimeProvider _timeProvider;
+    private readonly TimeProvider _timeProvider;
     private IScheduleConfigurator<SimulatedAgvSaga, ScheduleStatusUpdate> _statusUpdateScheduleConfiguration = null!;
     private IScheduleConfigurator<SimulatedAgvSaga, SchedulePositionUpdate> _signalPositionScheduleConfiguration = null!;
 
@@ -182,7 +181,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <param name="logger"></param>
     /// <param name="options"></param>
     /// <param name="timeProvider"></param>
-    public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger, Options options, ITimeProvider timeProvider)
+    public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger, Options options, TimeProvider timeProvider)
     {
         _logger = logger;
         _options = options;
@@ -395,11 +394,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .ThenAsync(PublishPositionAsync);
     }
 
-    private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, StartActionCommand> c)
+    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, StartActionCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
-        c.Saga.ActionStartDate = DateTime.UtcNow;
+        c.Saga.ActionStartDate = _timeProvider.GetUtcNow();
         if (c.Message.Action.IsMoveToCoordinate)
         {
             c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
@@ -408,11 +407,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.Select(n => n.Name).ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
-    private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> c)
+    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
-        c.Saga.ActionStartDate = DateTime.UtcNow;
+        c.Saga.ActionStartDate = _timeProvider.GetUtcNow();
         if (c.Message.Action.IsMoveToCoordinate)
         {
             c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
@@ -421,11 +420,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.Select(n => n.Name).ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
-    private static void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, AbortAndStartActionCommand> c)
+    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, AbortAndStartActionCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
-        c.Saga.ActionStartDate = DateTime.UtcNow;
+        c.Saga.ActionStartDate = _timeProvider.GetUtcNow();
         if (c.Message.Action.IsMoveToCoordinate)
         {
             c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
@@ -800,7 +799,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity)
     {
-        return eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = DateTime.UtcNow);
+        return eventActivity.Then(ctx => ctx.Saga.TimeOfStateTransition = _timeProvider.GetUtcNow());
     }
     #endregion
 }

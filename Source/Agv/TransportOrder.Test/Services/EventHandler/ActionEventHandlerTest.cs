@@ -34,7 +34,7 @@ public class ActionEventHandlerTest
         var agv = Guid.NewGuid();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
         var action = actionGroup.Actions.First();
-        actionGroup.AbortAction(action.CorrelationId, []);
+        actionGroup.AbortAction(action.CorrelationId, [], DateTimeOffset.Now);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
         var actionCompletedEvent = new ActionCompleted(action.CorrelationId, agv);
@@ -50,7 +50,7 @@ public class ActionEventHandlerTest
         var agv = Guid.NewGuid();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
         var action = actionGroup.Actions.First();
-        actionGroup.CompleteAction(action.CorrelationId);
+        actionGroup.CompleteAction(action.CorrelationId, DateTimeOffset.Now);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
         var actionCompletedEvent = new ActionCompleted(action.CorrelationId, agv);

@@ -2,7 +2,6 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Testing.Time;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Data;
@@ -30,7 +29,7 @@ public class SimulatedAgvSagaTest
             DateTime.MinValue,
             DateTime.UtcNow,
             AgvGraph: null, AgvData: agvData);
-        var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider());
+        var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new FakeTimeProvider());
 
         saga.AgvData.ShouldNotBe(agvData);
         saga.AgvData.ShouldBe(agvData.SetSimulationSpeed(simulationSpeed));
@@ -227,14 +226,15 @@ public class SimulatedAgvSagaTest
     {
         var now = new DateTime(3000, 1, 1, 0, 5, 0);
         var finish = now.AddSeconds(5);
-        var saga = SimulatedAgvSagaGenerator.Generate(timeProvider: new FakeTimeProvider(now));
+        var fakeTimeProvider = new FakeTimeProvider(now);
+        var saga = SimulatedAgvSagaGenerator.Generate(timeProvider: fakeTimeProvider);
         // As we do not have a travel duration: ActionFinishDate = ActionStartDate
         saga.ActionStartDate = finish;
         saga.Action = AgvActionGenerator.GenerateMoveAction();
         saga.TravelSimulator = new AgvTravelSimulatorMock().Object;
         var remainingDuration = (TimeSpan) saga.RemainingDuration!;
 
-        var expectedRemaining = (DateTime) saga.ActionFinishDate! - now;
+        var expectedRemaining = saga.ActionFinishDate!.Value - now;
         remainingDuration.TotalSeconds.ShouldBe(expectedRemaining.TotalSeconds);
     }
 
@@ -258,7 +258,7 @@ public class SimulatedAgvSagaTest
             DateTime.MinValue,
             DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
-        var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node2.Name]);
+        var saga = new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new FakeTimeProvider(), null, [node2.Name]);
         saga.SpawnNodeIds.ShouldNotBeNull();
         saga.SpawnNodeIds.Length.ShouldBe(1);
         saga.SpawnNodeIds[0].ShouldBe(node2.Name);
@@ -286,6 +286,6 @@ public class SimulatedAgvSagaTest
             DateTime.UtcNow,
             AgvGraph: agvGraph, AgvData: agvData);
 
-        Should.Throw<ArgumentException>(() => new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new DateTimeNowUtcProvider(), null, [node1.Name, node2.Name, unknownNode]));
+        Should.Throw<ArgumentException>(() => new SimulatedAgvSaga(agv, simulationSpeed, 75, 0.1, new FakeTimeProvider(), null, [node1.Name, node2.Name, unknownNode]));
     }
 }

@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Time;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 
@@ -11,11 +10,11 @@ public class AgvTravelSimulator : IAgvTravelSimulator
 {
     private readonly List<GraphNode> _nodes = new();
 
-    private DateTime? _pausedFrom;
+    private DateTimeOffset? _pausedFrom;
     private TimeSpan _pauseTime = TimeSpan.Zero;
 
-    private readonly ITimeProvider _timeProvider;
-    private readonly DateTime _timeStamp = DateTime.UtcNow;
+    private readonly TimeProvider _timeProvider;
+    private readonly DateTime _timeStamp;
 
     /// <summary>
     /// All edges of the agvs graph as <see cref="BaseEdge"/>.
@@ -51,7 +50,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             var pauseTime = _pauseTime;
             if (_pausedFrom != null)
             {
-                var activePause = _timeProvider.Now() - _pausedFrom.Value;
+                var activePause = _timeProvider.GetUtcNow() - _pausedFrom.Value;
                 pauseTime += activePause;
             }
             return pauseTime;
@@ -67,10 +66,11 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     private float OrientationOnPreviousEdge { get; set; }
 
     /// <inheritdoc cref="IAgvTravelSimulator"/>>
-    public AgvTravelSimulator(AgvGraph? graph, AgvPosition position, ITimeProvider timeProvider)
+    public AgvTravelSimulator(AgvGraph? graph, AgvPosition position, TimeProvider timeProvider)
     {
         Position = position;
         _timeProvider = timeProvider;
+        _timeStamp = _timeProvider.GetUtcNow().DateTime;
         if (graph == null)
         {
             return;
@@ -97,7 +97,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     }
 
     /// <inheritdoc />
-    public void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTime entryTime, AgvData agvData, double initialVelocity)
+    public void EstimateTravelTimes(IReadOnlyList<string> nodes, IReadOnlyList<Guid> edges, DateTimeOffset entryTime, AgvData agvData, double initialVelocity)
     {
         Reset();
         if (nodes.Count < 1)
@@ -161,7 +161,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         TravelDuration = TimeSpan.Zero;
     }
 
-    private void EstimateTimeToGetBackToGraph(string targetNode, DateTime entryTime, AgvData agvData, double initialVelocity)
+    private void EstimateTimeToGetBackToGraph(string targetNode, DateTimeOffset entryTime, AgvData agvData, double initialVelocity)
     {
         ResetAddedVirtualNodes(CurrentNode!.Name);
         var target = _nodes.Single(n => n.Name == targetNode);
@@ -182,7 +182,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     }
 
     /// <inheritdoc />
-    public void EstimateTravelTimes(AgvPosition targetPosition, DateTime entryTime, AgvData agvData, double initialVelocity)
+    public void EstimateTravelTimes(AgvPosition targetPosition, DateTimeOffset entryTime, AgvData agvData, double initialVelocity)
     {
         string virtualSourceName = Guid.NewGuid().ToString();
         var virtualSource = new GraphNode(virtualSourceName.ToGuid(), virtualSourceName) { X = Position.X, Y = Position.Y, Theta = Position.Theta, TimeStamp = _timeStamp };
@@ -216,7 +216,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     /// <inheritdoc />
     public void UpdatePosition(AgvData agvData)
     {
-        var currentTime = _timeProvider.Now();
+        var currentTime = _timeProvider.GetUtcNow();
         // deduct pause time from currentTime, so simulate the time as if the agv was not paused
         currentTime -= PauseTime;
 
@@ -259,7 +259,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
     /// <inheritdoc />
     public void Pause()
     {
-        _pausedFrom = _timeProvider.Now();
+        _pausedFrom = _timeProvider.GetUtcNow();
     }
 
     /// <inheritdoc />
@@ -271,7 +271,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             return;
         }
 
-        _pauseTime += _timeProvider.Now() - _pausedFrom.Value;
+        _pauseTime += _timeProvider.GetUtcNow() - _pausedFrom.Value;
         _pausedFrom = null;
     }
 
@@ -304,7 +304,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         AddedVirtualEdges = [];
     }
 
-    private BaseEdge GetCurrentEdge(DateTime currentTime)
+    private BaseEdge GetCurrentEdge(DateTimeOffset currentTime)
     {
         var current = FollowingEdges.SingleOrDefault(e => e.EstimatedExitTime > currentTime && e.EntryTime <= currentTime);
         if ((current != null && !current.Equals(CurrentEdge)) || (current == null && CurrentEdge != null))

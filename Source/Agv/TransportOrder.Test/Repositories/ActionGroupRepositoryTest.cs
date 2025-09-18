@@ -419,7 +419,7 @@ public class ActionGroupRepositoryTest
         actionGroupInRepository.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(actionToUpdateState.State);
         actionGroupInRepository.AssignedAgv.ShouldBeNull();
 
-        var updatedActionGroup = await fixture.ActionGroupRepository.UpdateActionAndGroupStateAsync(actionToUpdateState, agv, ActionState.Started);
+        var updatedActionGroup = await fixture.ActionGroupRepository.UpdateActionAndGroupStateAsync(actionToUpdateState, agv, ActionState.Started, null, DateTimeOffset.Now);
 
         actionGroupInRepository = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
         actionGroupInRepository.ShouldNotBeNull();
@@ -446,7 +446,7 @@ public class ActionGroupRepositoryTest
         actionGroupInRepository.Actions.First(a => a.CorrelationId == actionToUpdateState.CorrelationId).State.ShouldBe(actionToUpdateState.State);
         actionGroupInRepository.AssignedAgv.ShouldBeNull();
 
-        var updatedActionGroup = await fixture.ActionGroupRepository.UpdateActionAndGroupStateAsync(actionToUpdateState, null, ActionState.Started);
+        var updatedActionGroup = await fixture.ActionGroupRepository.UpdateActionAndGroupStateAsync(actionToUpdateState, null, ActionState.Started, null, DateTimeOffset.Now);
 
         actionGroupInRepository = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
         actionGroupInRepository.ShouldNotBeNull();
@@ -508,8 +508,8 @@ public class ActionGroupRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => n.ToGraphNode()).ToArray(), []);
-        actionGroup.CompleteAction(actionGroup.Actions[0].CorrelationId);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => n.ToGraphNode()).ToArray(), [], DateTimeOffset.Now);
+        actionGroup.CompleteAction(actionGroup.Actions[0].CorrelationId, DateTimeOffset.Now);
 
         var subsequentAction = actionGroup.Actions.ElementAt(1);
 
@@ -528,7 +528,7 @@ public class ActionGroupRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = agv.CorrelationId;
 
-        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => n.ToGraphNode()).ToArray(), []);
+        actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, new[] { "source", "way", "target" }.Select(n => n.ToGraphNode()).ToArray(), [], DateTimeOffset.Now);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
@@ -1045,7 +1045,7 @@ public class ActionGroupRepositoryTest
         var chargeGroup = AgvActionGenerator.GenerateChargeActionGroup(targetNodeName: station);
         var parkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
         var startedParkGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: station);
-        startedParkGroup.StartAction(startedParkGroup.Actions.First().CorrelationId, [], []);
+        startedParkGroup.StartAction(startedParkGroup.Actions.First().CorrelationId, [], [], DateTimeOffset.Now);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([
@@ -1279,7 +1279,7 @@ public class ActionGroupRepositoryTest
         const string target = "targetNode";
         var agv = Guid.NewGuid();
         var startedActionGroupToTarget = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: target, assignedAgv: agv);
-        startedActionGroupToTarget.StartAction(startedActionGroupToTarget.Actions.Single().CorrelationId, [], []);
+        startedActionGroupToTarget.StartAction(startedActionGroupToTarget.Actions.Single().CorrelationId, [], [], DateTimeOffset.Now);
 
         var notStartedActionGroupToTarget = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: target, assignedAgv: agv);
 

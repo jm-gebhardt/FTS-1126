@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -51,7 +50,7 @@ public static class WebHostBuilderExtension
                     o.TokenValidationParameters.ValidateAudience = false;
                     o.TokenValidationParameters.ValidateIssuerSigningKey = false;
                     o.TokenValidationParameters.SignatureValidator =
-                        delegate(string token, TokenValidationParameters _)
+                        (token, _) =>
                         {
                             var jwt = new JsonWebToken(token);
                             return jwt;

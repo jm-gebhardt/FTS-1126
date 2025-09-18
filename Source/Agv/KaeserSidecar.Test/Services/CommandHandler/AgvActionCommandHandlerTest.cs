@@ -206,7 +206,7 @@ public class AgvActionCommandHandlerTest
         string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
         var actionGroup = AgvActionGenerator.ConvertFromMessage(actionGroupMessageContent);
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
-        actionGroup.StartAction(moveAction.CorrelationId, [], []);
+        actionGroup.StartAction(moveAction.CorrelationId, [], [], DateTimeOffset.Now);
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
         actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, station.ToGraphNode());
         actionGroup.SetTargetForAction(pickAction.CorrelationId, station.ToGraphNode());
@@ -305,7 +305,7 @@ public class AgvActionCommandHandlerTest
     {
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
-        actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId);
+        actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId, DateTimeOffset.Now);
         actionGroup.IsManual = true;
         var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
         var fixture = new AgvActionCommandHandlerTestFixture()

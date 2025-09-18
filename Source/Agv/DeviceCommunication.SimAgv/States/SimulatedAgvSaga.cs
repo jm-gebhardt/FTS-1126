@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Contracts;
-using Gebhardt.Acc.Common.Time;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
@@ -18,7 +17,7 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.States;
 [PublicAPI]
 public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 {
-    private readonly ITimeProvider _timeProvider;
+    private readonly TimeProvider _timeProvider;
 
     private const float InitialTheta = 0f;
 
@@ -94,17 +93,17 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <summary>
     /// Gets the time of the last state transition.
     /// </summary>
-    public DateTime TimeOfStateTransition { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset TimeOfStateTransition { get; set; }
 
     /// <summary>
     /// Gets the time of the last lock state change.
     /// </summary>
-    public DateTime TimeOfLockStateChanged { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset TimeOfLockStateChanged { get; set; }
 
     /// <summary>
     /// Gets the commissioning date of the agv.
     /// </summary>
-    public DateTime CommissioningDate { get; set; }
+    public DateTimeOffset CommissioningDate { get; set; }
 
     /// <summary>
     /// Gets the total distance driven by the agv since commissioning.
@@ -278,7 +277,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <summary>
     /// Time the action processing started (set to null when finished)
     /// </summary>
-    public DateTime? ActionStartDate { get; set; }
+    public DateTimeOffset? ActionStartDate { get; set; }
 
     /// <summary>
     /// Time the action takes to complete
@@ -308,12 +307,12 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// Time the order will be finished
     /// This value is calculated base on OrderStartDate and the number of nodes. Keeps running when the drive is paused, e.g. due to an error.
     /// </summary>
-    public DateTime? ActionFinishDate => ActionStartDate != null ? ActionStartDate + ActionDuration + TravelSimulator.PauseTime : null;
+    public DateTimeOffset? ActionFinishDate => ActionStartDate != null ? ActionStartDate.Value + ActionDuration + TravelSimulator.PauseTime : null;
 
     /// <summary>
     /// Remaining duration of the action. Keeps running when the drive is paused, e.g. due to an error.
     /// </summary>
-    public TimeSpan? RemainingDuration => ActionFinishDate - _timeProvider.Now();
+    public TimeSpan? RemainingDuration => ActionFinishDate - _timeProvider.GetUtcNow();
 
     /// <summary>
     /// Simulated Agv errors
@@ -346,7 +345,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         int simulationSpeed,
         int initialBatteryCharge,
         double batteryChargeRate,
-        ITimeProvider timeProvider,
+        TimeProvider timeProvider,
         string? currentState = null,
         AgvGraph? agvGraph = null,
         AgvData? agvData = null,
@@ -361,6 +360,8 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         }
         BatteryChargeRate = batteryChargeRate;
         _timeProvider = timeProvider;
+        TimeOfStateTransition = _timeProvider.GetUtcNow();
+        TimeOfLockStateChanged = _timeProvider.GetUtcNow();
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
         SetSimulationSpeed(simulationSpeed);
@@ -404,7 +405,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <param name="timeProvider"></param>
     /// <param name="currentNode"></param>
     /// <param name="spawnNodeIds"></param>
-    public SimulatedAgvSaga(SimulatedAgv agv, int simulationSpeed, int initialBatteryCharge, double batteryChargeRate, ITimeProvider timeProvider, GraphNode? currentNode = null, string[]? spawnNodeIds = null)
+    public SimulatedAgvSaga(SimulatedAgv agv, int simulationSpeed, int initialBatteryCharge, double batteryChargeRate, TimeProvider timeProvider, GraphNode? currentNode = null, string[]? spawnNodeIds = null)
     {
         _timeProvider = timeProvider;
         CorrelationId = agv.CorrelationId;
@@ -446,7 +447,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 
     private static double GetBatteryTemperature() => 20 + GetRandomNoise(0.1);
 
-    private DateTime? GetEstimatedFullyChargedTime(bool charging) => charging ? _timeProvider.Now().AddSeconds((MaxCharge - SimulatedBatteryCharge) / BatteryChargeRate) : null;
+    private DateTime? GetEstimatedFullyChargedTime(bool charging) => charging ? _timeProvider.GetUtcNow().AddSeconds((MaxCharge - SimulatedBatteryCharge) / BatteryChargeRate).UtcDateTime : null;
 
     private double GetBatteryCurrent()
     {
@@ -600,7 +601,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
             AgvRemovedFromZones ? null : GetZoneIds(),
             null,
             TotalDistance,
-            (float) (DateTime.UtcNow - CommissioningDate).TotalHours
+            (float) (_timeProvider.GetUtcNow() - CommissioningDate).TotalHours
         );
     }
 }

@@ -297,7 +297,7 @@ public class AgvTravelSimulatorTest
         //Mock previous move action to charger:
         simulator.GetType().GetProperty(nameof(AgvTravelSimulator.CurrentNode))!.SetValue(simulator, node);
 
-        simulator.EstimateTravelTimes(new List<string> { node.Name }, [], fakeTimeProvider.Now(), agvData, 0);
+        simulator.EstimateTravelTimes(new List<string> { node.Name }, [], fakeTimeProvider.GetUtcNow().UtcDateTime, agvData, 0);
 
         simulator.CurrentEdge.ShouldBeNull();
         simulator.CurrentNode.ShouldBe(node);

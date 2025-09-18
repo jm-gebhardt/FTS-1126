@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Testing.Time;
-using Gebhardt.Acc.Common.Time;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -96,7 +95,7 @@ public class FixtureBase
     {
         AddServices(s =>
         {
-            s.AddSingleton<ITimeProvider>(_ => TimeProvider);
+            s.AddSingleton<TimeProvider>(_ => TimeProvider);
             AddAutoMapper(s);
         });
         AddServices(_serviceCollection);
