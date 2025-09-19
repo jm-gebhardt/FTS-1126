@@ -144,7 +144,7 @@ try
     {
         services.AddSingleton<IAgvRepository, AgvRepository>();
         services.AddSingleton<IGraphRepository, EfGraphRepository>();
-        services.AddSingleton<TimeProvider>();
+        services.AddSingleton(TimeProvider.System);
 
         services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
     });

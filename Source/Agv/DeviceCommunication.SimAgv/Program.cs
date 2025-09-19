@@ -119,7 +119,7 @@ try
         hostBuilder.ConfigureServices((_, services) =>
         {
             services.AddSingleton<IAgvRepository, AgvRepository>();
-            services.AddSingleton<TimeProvider>();
+            services.AddSingleton(TimeProvider.System);
 
             services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
         });
