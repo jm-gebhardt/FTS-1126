@@ -1,9 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Filter.ReadModelParser;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
-using static Gebhardt.Acc.Common.Filter.ReadModelParser.Filter<Gebhardt.Acc.CommonTest.Filter.FilterableTestHelper, Gebhardt.Acc.CommonTest.Filter.FilterReadModelTestHelperReadModel>;
 
 namespace Gebhardt.Acc.CommonTest.Filter;
 
@@ -13,7 +11,7 @@ public class FilterParserBaseTests
     [TestMethod]
     public void VerifyParsed_ValidData_ParsesCorrectly()
     {
-        VerifyParsing(1, 1, 1, 1).ShouldBeTrue();
+        Filter<FilterableTestHelper, FilterReadModelTestHelperReadModel>.VerifyParsing(1, 1, 1, 1).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -48,7 +46,7 @@ public class FilterParserBaseTests
 
         var filter = new CollectionFilter(variant, nameof(TestCollectionEntity.Values), new FilterLeaf<string>(nameof(TestCollectionEntity.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntity.StringValue),ComparisonVariant.Like, "AAA"));
 
-        ICollection<TestCollectionEntityReadModel> result = await filterBy(filter, null, null);
+        ICollection<TestCollectionEntityReadModel> result = await filterBy(filter);
 
         result.Count.ShouldBe(expectedCount);
     }
@@ -69,11 +67,11 @@ public class FilterParserBaseTests
             fixture.Add(coll);
         }
         
-        var filterBy = Filter<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilter(fixture.ContextFactory);
+        var filterBy = Filter<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
         var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new FilterLeaf<int>(nameof(TestCollectionEntityReadModel.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
 
-        ICollection<TestCollectionEntityReadModel> result = await filterBy(filter, 4, 10);
+        ICollection<TestCollectionEntityReadModel> result = await filterBy(filter, 4, 10, SortOrdering.Desc, []);
 
         result.Count.ShouldBe(10);
     }
@@ -92,7 +90,7 @@ public class FilterParserBaseTests
             fixture.Add(coll);
         }
 
-        var filterBy = Filter<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilter(fixture.ContextFactory);
+        var filterBy = Filter<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
         var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new FilterLeaf<int>(nameof(TestCollectionEntityReadModel.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
 
@@ -100,7 +98,7 @@ public class FilterParserBaseTests
 
         for (int i = 0; i < 10; i++)
         {
-            results.Add(filterBy.Invoke(filter, i, 10));
+            results.Add(filterBy.Invoke(filter, i, 10, SortOrdering.Desc, []));
         }
 
         ICollection<TestCollectionEntityReadModel>[] awaitedResults = await Task.WhenAll(results);
@@ -125,11 +123,11 @@ public class FilterParserBaseTests
         var entity = new TestDbEntity("1", 1);
         fixture.Add(entity);
 
-        var filterBy = Filter<TestDbEntity, TestDbEntityReadModel>.CreateFilter(fixture.ContextFactory);
+        var filterBy = Filter<TestDbEntity, TestDbEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [], [new FilterLeaf<Guid>(nameof(TestDbEntityReadModel.Key), ComparisonVariant.Equals, entity.Key)]);
 
-        ICollection<TestDbEntityReadModel> result = await filterBy.Invoke(filter, 0, 10);
+        ICollection<TestDbEntityReadModel> result = await filterBy.Invoke(filter, 0, 10, SortOrdering.Desc, []);
 
         result.Count.ShouldBe(1);
     }
@@ -144,11 +142,11 @@ public class FilterParserBaseTests
         fixture.Add(target);
         fixture.Add(source);
 
-        var filterBy = Filter<TestJoinSourceEntity, TestJoinSourceReadModel>.CreateFilter(fixture.ContextFactory);
+        var filterBy = Filter<TestJoinSourceEntity, TestJoinSourceReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [], [new FilterLeaf<int>(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, 10)]);
 
-        ICollection<TestJoinSourceReadModel> result = await filterBy(filter, 0, 10);
+        ICollection<TestJoinSourceReadModel> result = await filterBy(filter, 0, 10, SortOrdering.Desc, []);
 
         result.Count.ShouldBe(1);
     }

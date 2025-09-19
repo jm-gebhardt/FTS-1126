@@ -742,9 +742,15 @@ public static class FilterExpressionBuilder
     /// <summary>
     /// 
     /// </summary>
-    public static IOrderedQueryable<T> OrderByAccessor<T>(this IQueryable<T> queryable, LambdaExpression expression)
+    public static IOrderedQueryable<T> OrderByAccessor<T>(this IQueryable<T> queryable, LambdaExpression expression, SortOrdering? ordering = SortOrdering.Desc)
     {
-        return queryable.ApplyAccessor<IOrderedQueryable<T>, IQueryable<T>, T>(nameof(Queryable.OrderByDescending), typeof(Queryable), expression);
+        string orderingMethod = ordering switch
+        {
+            SortOrdering.Asc => nameof(Queryable.OrderBy),
+            _ => nameof(Queryable.OrderByDescending)
+        };
+
+        return queryable.ApplyAccessor<IOrderedQueryable<T>, IQueryable<T>, T>(orderingMethod, typeof(Queryable), expression);
     }
 
     /// <summary>

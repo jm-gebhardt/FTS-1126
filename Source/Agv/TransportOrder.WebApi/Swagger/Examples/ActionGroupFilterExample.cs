@@ -20,7 +20,7 @@ public class ActionGroupFilterExample : IOperationFilter
     /// <inheritdoc />
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        if (context.MethodInfo.Name != nameof(ActionGroupsController.FilterTest))
+        if (context.MethodInfo.Name != nameof(ActionGroupsController.Filtered))
         {
             return;
         }

@@ -1,6 +1,7 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Filter.Dtos;
+using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -94,9 +95,9 @@ public class ActionGroupsController : Controller
     /// </summary>
     [HttpPost]
     [Route("/actionGroups/filtered")]
-    public async Task<ActionResult<IEnumerable<FilteredActionGroupDto>>> FilterTest([FromBody] FilterBaseDto filter)
+    public async Task<ActionResult<IEnumerable<FilteredActionGroupDto>>> Filtered([FromBody] FilterBaseDto filter, int pageNumber, int pageSize, SortOrdering ordering, ICollection<string>? orderingProperties)
     {
-        Response<GotFilteredActionGroups> result = await _filterTestRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter));
+        Response<GotFilteredActionGroups> result = await _filterTestRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, ordering, orderingProperties ?? []));
         var mapped = _mapper.Map<List<FilteredActionGroupDto>>(result.Message.ActionGroups);
 
         return Ok(mapped);

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Filter.ReadModelParser;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -20,8 +21,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
-    /// <inheritdoc cref="Filter{TEntity,TReadModel}.FilterBy"/>
-    private readonly Filter<ActionGroup, ActionGroupFilterReadModel>.FilterBy _filter;
+    /// <inheritdoc cref="Filter{TEntity,TReadModel}.FilterByPaginatedWithOrdering"/>
+    private readonly Filter<ActionGroup, ActionGroupFilterReadModel>.FilterByPaginatedWithOrdering _filter;
 
     private readonly IMapper _mapper;
 
@@ -31,7 +32,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     public ActionGroupRetrievalService(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper)
     {
         _dbContextFactory = dbContextFactory;
-        _filter = Filter<ActionGroup, ActionGroupFilterReadModel>.CreateFilter(_dbContextFactory);
+        _filter = Filter<ActionGroup, ActionGroupFilterReadModel>.CreateFilterWithPagination(_dbContextFactory);
         _mapper = mapper;
     }
 
@@ -44,9 +45,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
     
     /// <inheritdoc />
-    public async Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize)
+    public async Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties)
     {
-        return _mapper.Map<ICollection<ActionGroupFilterReadModel>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filterBase, pageNr, pageSize));
+        return _mapper.Map<ICollection<ActionGroupFilterReadModel>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filterBase, pageNr, pageSize, order, orderProperties));
     }
 
     /// <inheritdoc />

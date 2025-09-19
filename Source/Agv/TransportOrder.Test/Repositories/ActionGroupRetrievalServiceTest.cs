@@ -650,7 +650,7 @@ public class ActionGroupRetrievalServiceTest
                 new FilterLeaf<DateTime>(nameof(ActionGroupFilterReadModel.StartedDate), ComparisonVariant.Geq, DateTime.MinValue),
                 new FilterLeaf<Guid>(nameof(ActionGroupFilterReadModel.AssignedAgv) + FilterBase.AccessLevelSeparator + nameof(AgvFilterReadModel.CorrelationId), ComparisonVariant.Equals, agv.CorrelationId)
             ]
-        ), 0, 10);
+        ), 0, 10, SortOrdering.Desc, []);
 
         result.Count.ShouldBe(1);
     }

@@ -1,8 +1,9 @@
 ﻿using Gebhardt.Acc.Common.Filter.Dtos;
+using Gebhardt.Acc.Common.Filter.Enums;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
 /// 
 /// </summary>
-public record GetFilteredActionGroups(FilterBaseDto Filter);
+public record GetFilteredActionGroups(FilterBaseDto Filter, int PageNumber, int PageSize, SortOrdering Ordering, ICollection<string> SortProperties);

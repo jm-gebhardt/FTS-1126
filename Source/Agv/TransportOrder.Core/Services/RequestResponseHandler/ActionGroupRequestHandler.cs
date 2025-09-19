@@ -239,9 +239,11 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<GetFilteredActionGroups> context)
     {
+        (var filterDto, int pageNumber, int pageSize, var ordering, ICollection<string> orderProps) = context.Message;
+
         var filter = context.Message.Filter.Translate<ActionGroup, ActionGroupFilterReadModel>();
 
-        ICollection<FilteredActionGroup> result = await _retrievalService.Filter(filter, 0, 10);
+        ICollection<FilteredActionGroup> result = await _retrievalService.Filter(filter, pageNumber, pageSize, ordering, orderProps);
 
         await context.RespondAsync(new GotFilteredActionGroups(result));
     }

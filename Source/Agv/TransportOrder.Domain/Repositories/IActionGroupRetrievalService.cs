@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -59,5 +60,7 @@ public interface IActionGroupRetrievalService
     /// <param name="filterBase"></param>
     /// <param name="pageNr"></param>
     /// <param name="pageSize"></param>
-    Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize);
+    /// <param name="order"></param>
+    /// <param name="orderProperties"></param>
+    Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties);
 }

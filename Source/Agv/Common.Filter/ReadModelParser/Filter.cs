@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.Expressions;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
@@ -237,26 +238,27 @@ public sealed class Filter<TDomainObject, TReadModel> : Filter where TReadModel 
     /// <summary>
     /// Filters an entity by the provided filter.
     /// </summary>
-    /// <param name="filterBase">The filter to use.</param>
-    /// <param name="pageNr">The page to use for pagination.</param>
-    /// <param name="pageSize">The page size</param>
+    /// <param name="filter">The filter to use.</param>
     /// <returns>The filtered result.</returns>
-    public delegate Task<ICollection<TReadModel>> FilterBy(FilterBase filterBase, int? pageNr, int? pageSize);
+    public delegate Task<ICollection<TReadModel>> FilterBy(FilterBase filter);
 
     /// <summary>
-    /// Creates a filter for the entity defined by the attributes <see cref="Filter.FilterProperty"/>, <see cref="Filter.JoinProperty"/>, <see cref="Filter.NavigationProperty"/> and <see cref="Filter.KeyProperty"/>
+    /// 
     /// </summary>
-    /// <typeparam name="TDbContext">The db context type.</typeparam>
-    /// <param name="contextFactory">The db context factory</param>
-    /// <param name="orderBy">(optional) The expression to order the result by.</param>
-    /// <returns>The filter.</returns>
-    [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See non-generic Filter).")]
-    public static FilterBy CreateFilter<TDbContext>(IDbContextFactory<TDbContext> contextFactory, Func<IQueryable<TReadModel>, IOrderedQueryable<TReadModel>>? orderBy = null) where TDbContext : DbContext
+    /// <param name="filterBase"></param>
+    /// <param name="pageNr"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="ordering"></param>
+    /// <param name="orderByProperties"></param>
+    /// <returns></returns>
+    public delegate Task<ICollection<TReadModel>> FilterByPaginatedWithOrdering(FilterBase filterBase, int? pageNr, int? pageSize, SortOrdering? ordering, ICollection<string> orderByProperties);
+
+    private delegate IQueryable<TReadModel> ApplyFiltering<in TDbContext>(TDbContext context, FilterBase filter);
+
+    private static ApplyFiltering<TDbContext> CreateFilterApplier<TDbContext>() where TDbContext : DbContext
     {
-        return async delegate (FilterBase filterBase, int? pageNr, int? pageSize)
+        return (context, filterBase) =>
         {
-            await using var context = await contextFactory.CreateDbContextAsync();
-            
             Dictionary<int, FilterBase> batches = filterBase.SplitFilters(_totalLayers, _domainPropertyAccessors);
 
             IQueryable<TDomainObject> query = context.Set<TDomainObject>()
@@ -270,7 +272,7 @@ public sealed class Filter<TDomainObject, TReadModel> : Filter where TReadModel 
             for (int layerIndex = 1; layerIndex < _includeLayers.Count; layerIndex++)
             {
                 query = query.Include(_includeLayers[layerIndex]);
-                
+
                 if (!batches.TryGetValue(layerIndex, out var filter))
                 {
                     continue;
@@ -295,9 +297,9 @@ public sealed class Filter<TDomainObject, TReadModel> : Filter where TReadModel 
             {
                 if (_joinProperties[_totalLayers[layerIndex]] is not
                     {
-                        QueryableCreator: { } queryableCreator, 
-                        RootKeyAccessor: { } ownKeyAccessor, 
-                        OtherKeyAccessor: { } otherKeyAccessor, 
+                        QueryableCreator: { } queryableCreator,
+                        RootKeyAccessor: { } ownKeyAccessor,
+                        OtherKeyAccessor: { } otherKeyAccessor,
                         MergeExpression: { } mergeExpression
                     })
                 {
@@ -312,42 +314,106 @@ public sealed class Filter<TDomainObject, TReadModel> : Filter where TReadModel 
                 }
             }
 
-            IOrderedQueryable<TReadModel> orderedQuery;
+            return projectedQuery;
+        };
+    }
+    
+    /// <summary>
+    /// Creates a filter for the entity defined by the attributes <see cref="Filter.FilterProperty"/>, <see cref="Filter.JoinProperty"/>, <see cref="Filter.NavigationProperty"/> and <see cref="Filter.KeyProperty"/>
+    /// </summary>
+    /// <typeparam name="TDbContext">The db context type.</typeparam>
+    /// <param name="contextFactory">The db context factory</param>
+    /// <returns>The filter.</returns>
+    [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See non-generic Filter).")]
+    public static FilterBy CreateFilter<TDbContext>(IDbContextFactory<TDbContext> contextFactory) where TDbContext : DbContext
+    {
+        ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
 
-            bool useDefaultOrdering = orderBy == null;
+        return async delegate (FilterBase filterBase)
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
 
-            if (!useDefaultOrdering)
+            return await filterer(context, filterBase).ToListAsync();
+        };
+    }
+
+    /// <summary>
+    /// Creates a filter for the entity defined by the attributes <see cref="Filter.FilterProperty"/>, <see cref="Filter.JoinProperty"/>, <see cref="Filter.NavigationProperty"/> and <see cref="Filter.KeyProperty"/>
+    /// </summary>
+    /// <typeparam name="TDbContext">The db context type.</typeparam>
+    /// <param name="contextFactory">The db context factory</param>
+    /// <returns>The filter.</returns>
+    [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See non-generic Filter).")]
+    public static FilterByPaginatedWithOrdering CreateFilterWithPagination<TDbContext>(IDbContextFactory<TDbContext> contextFactory) where TDbContext : DbContext
+    {
+        ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
+
+        return async delegate (FilterBase filterBase, int? pageNr, int? pageSize, SortOrdering? ordering, ICollection<string> orderByProperties) 
+        {
+            await using var context = await contextFactory.CreateDbContextAsync();
+
+            IQueryable<TReadModel> projectedQuery = filterer(context, filterBase);
+
+            IOrderedQueryable<TReadModel>? orderedQuery = null;
+
+            List<string> incomingKeys = orderByProperties.Where(s => _keyProperties.Contains(s)).ToList();
+
+            IEnumerable<string> incomingProps = orderByProperties.Where(s => !_keyProperties.Contains(s));
+
+            IEnumerable<string> remainingKeys = _keyProperties.Except(incomingKeys);
+
+            foreach (string prop in incomingProps)
             {
-                orderedQuery = orderBy!(projectedQuery);
-            }
-            else
-            {
-                if (_keyAccessors.TryGetValue(_keyProperties.First(), out var accessor))
+                if (!PropertyAccessors.TryGetValue(prop, out var accessor))
                 {
-                    orderedQuery = projectedQuery.OrderByAccessor(accessor);
+                    continue;
                 }
-                else
+                if (orderedQuery == null)
                 {
-                    throw new FilterExecutionException($"Could not find accessor for {_keyProperties.First()}");
+                    orderedQuery = projectedQuery.OrderByAccessor(accessor, ordering);
+                    continue;
                 }
+                orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
             }
 
-            foreach (string keyProperty in useDefaultOrdering ? _keyProperties.Skip(1) : _keyProperties)
+            foreach (string key in incomingKeys)
             {
-                if (_keyAccessors.TryGetValue(keyProperty, out var accessor))
+                if (!_keyAccessors.TryGetValue(key, out var accessor))
                 {
-                    orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
+                    continue;
                 }
+                if (orderedQuery == null)
+                {
+                    orderedQuery = projectedQuery.OrderByAccessor(accessor, ordering);
+                    continue;
+                }
+                orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
             }
+
+            foreach (string key in remainingKeys)
+            {
+                if (!_keyAccessors.TryGetValue(key, out var accessor))
+                {
+                    continue;
+                }
+                if (orderedQuery == null)
+                {
+                    orderedQuery = projectedQuery.OrderByAccessor(accessor, ordering);
+                    continue;
+                }
+                orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
+            }
+
+            projectedQuery = orderedQuery as IQueryable<TReadModel> ?? projectedQuery;
 
             bool usePagination = pageNr != null && pageSize != null;
             if (usePagination)
             {
-                projectedQuery = orderedQuery.Skip(pageNr!.Value * pageSize!.Value)
+                projectedQuery = projectedQuery.Skip(pageNr!.Value * pageSize!.Value)
                     .Take(pageSize.Value);
             }
 
-            return await (usePagination ? projectedQuery.ToListAsync() : orderedQuery.ToListAsync());
+            return await projectedQuery.ToListAsync();
         };
     }
     
