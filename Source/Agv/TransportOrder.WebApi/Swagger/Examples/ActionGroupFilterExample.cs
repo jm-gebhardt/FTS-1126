@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
-using Gebhardt.Acc.Common.Filter.Dtos;
+using Gebhardt.Acc.Common.Filter.Api;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -27,56 +28,54 @@ public class ActionGroupFilterExample : IOperationFilter
 
         FilterBaseDto example = new CombinationFilterDto(
             [
-                new CombinationFilterDto([], [
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.AssignedAgv) + FilterBase.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString()),
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.AssignedAgv) + FilterBase.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString()),
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.AssignedAgv) + FilterBase.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString())
+                new CombinationFilterDto([
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString()),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString()),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString())
                 ], LogicalCombinationVariant.Or),
-                new CombinationFilterDto([], [
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.HandlingUnit), ComparisonVariant.Like, "HU012"),
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.HandlingUnit), ComparisonVariant.Like, "HU0112")
+                new CombinationFilterDto([
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.HandlingUnit), ComparisonVariant.Like, "HU012"),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.HandlingUnit), ComparisonVariant.Like, "HU0112")
                 ], LogicalCombinationVariant.Or),
                 new CollectionFilterDto(
-                    new CombinationFilterDto([], [
-                        new FilterLeafDto(nameof(FilteredActionGroupDto.Actions) + FilterBase.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Charge)),
-                        new FilterLeafDto(nameof(FilteredActionGroupDto.Actions) + FilterBase.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Pick))
+                    new CombinationFilterDto([
+                        new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Charge)),
+                        new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Pick))
                     ], LogicalCombinationVariant.Or),
                     nameof(FilteredActionGroupDto.Actions),
                     CollectionAggregateVariant.Any
                 ),
                 new CollectionFilterDto(
-                    new CombinationFilterDto([], [
-                        new FilterLeafDto(nameof(FilteredActionGroupDto.Actions) + FilterBase.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Pick)),
-                        new FilterLeafDto(nameof(FilteredActionGroupDto.Actions) + FilterBase.AccessLevelSeparator + nameof(FilteredActionDto.Target) + FilterBase.AccessLevelSeparator + nameof(FilteredActionTargetDto.Node) + FilterBase.AccessLevelSeparator + nameof(FilteredGraphNodeDto.Name), ComparisonVariant.Equals, "ExampleSourceNodeName")
+                    new CombinationFilterDto([
+                        new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Pick)),
+                        new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.Target) + IFilter.AccessLevelSeparator + nameof(FilteredActionTargetDto.Node) + IFilter.AccessLevelSeparator + nameof(FilteredGraphNodeDto.Name), ComparisonVariant.Equals, "ExampleSourceNodeName")
                     ], LogicalCombinationVariant.And),
                     nameof(FilteredActionGroupDto.Actions),
                     CollectionAggregateVariant.Any
                 ),
                 new CollectionFilterDto(
-                    new CombinationFilterDto([], [
-                        new FilterLeafDto(nameof(FilteredActionGroupDto.Actions) + FilterBase.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Drop)),
-                        new FilterLeafDto(nameof(FilteredActionGroupDto.Actions) + FilterBase.AccessLevelSeparator + nameof(FilteredActionDto.Target) + FilterBase.AccessLevelSeparator + nameof(FilteredActionTargetDto.Node) + FilterBase.AccessLevelSeparator + nameof(FilteredGraphNodeDto.Name), ComparisonVariant.Equals, "ExampleTargetNodeName")
+                    new CombinationFilterDto( [
+                        new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.ActionType), ComparisonVariant.Equals, nameof(ActionType.Drop)),
+                        new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.Target) + IFilter.AccessLevelSeparator + nameof(FilteredActionTargetDto.Node) + IFilter.AccessLevelSeparator + nameof(FilteredGraphNodeDto.Name), ComparisonVariant.Equals, "ExampleTargetNodeName")
                     ], LogicalCombinationVariant.And),
                     nameof(FilteredActionGroupDto.Actions),
                     CollectionAggregateVariant.Any
                 ),
-                new CombinationFilterDto([], [
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.EstimatedDuration), ComparisonVariant.Gt, TimeSpan.MinValue.ToString()),
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.EstimatedDuration), ComparisonVariant.Lt, TimeSpan.MaxValue.ToString())
+                new CombinationFilterDto([
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.EstimatedDuration), ComparisonVariant.Gt, TimeSpan.MinValue.ToString()),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.EstimatedDuration), ComparisonVariant.Lt, TimeSpan.MaxValue.ToString())
                 ], LogicalCombinationVariant.Or),
-                new CombinationFilterDto([], [
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Completed)),
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Canceled)),
-                    new FilterLeafDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Aborted))
-                ], LogicalCombinationVariant.Or)
-            ],
-            [
-                new FilterLeafDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.InvariantCulture)),
-                new FilterLeafDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.InvariantCulture)),
-                new FilterLeafDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.InvariantCulture)),
-                new FilterLeafDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.InvariantCulture)),
-                new FilterLeafDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.InvariantCulture)),
-                new FilterLeafDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.InvariantCulture))
+                new CombinationFilterDto([
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Completed)),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Canceled)),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Aborted))
+                ], LogicalCombinationVariant.Or),
+                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.InvariantCulture)),
+                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.InvariantCulture)),
+                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.InvariantCulture)),
+                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.InvariantCulture)),
+                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.InvariantCulture)),
+                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.InvariantCulture))
             ],
             LogicalCombinationVariant.And
         );

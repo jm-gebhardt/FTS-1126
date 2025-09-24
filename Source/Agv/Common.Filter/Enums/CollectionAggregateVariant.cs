@@ -1,7 +1,7 @@
 ﻿namespace Gebhardt.Acc.Common.Filter.Enums;
 
 /// <summary>
-/// Represents an aggregate variant for a collection.
+/// Represents a logical aggregate variant for a collection.
 /// </summary>
 public enum CollectionAggregateVariant
 {

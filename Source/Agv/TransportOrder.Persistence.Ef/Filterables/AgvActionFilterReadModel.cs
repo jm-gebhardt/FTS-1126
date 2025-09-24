@@ -5,74 +5,47 @@ using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvActio
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 
-/// <summary>
-/// 
-/// </summary>
+/// <inheritdoc cref="AgvAction"/>
 [PublicAPI]
 public class AgvActionFilterReadModel : AgvAction, IFilterReadModel<AgvAction, AgvActionFilterReadModel>
 {
-    /// <summary>
-    /// Unique CorrelationId of this action
-    /// </summary>
-    [Filter.KeyProperty]
+    /// <inheritdoc cref="AgvAction.CorrelationId"/>
+    [FilterReadModelBinderBase.KeyProperty]
     public new Guid CorrelationId { get; init; } 
 
-    /// <inheritdoc cref="Domain.Models.ActionGroup.AgvAction" />
-    [Filter.FilterProperty]
-    public new int Sequence { get; init; } 
+    /// <inheritdoc cref="AgvAction.Sequence"/>
+    [FilterReadModelBinderBase.FilterProperty]
+    public new int Sequence { get; init; }
 
-    /// <summary>
-    /// The current state of the action
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="AgvAction.State"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new ActionState State { get; init; }
 
-    /// <summary>
-    /// The type of the action, e.g. Pick or Drop
-    /// </summary>
-    [Filter.FilterProperty]
-    public new ActionType ActionType { get; init; } 
+    /// <inheritdoc cref="AgvAction.Sequence"/>
+    [FilterReadModelBinderBase.FilterProperty]
+    public new ActionType ActionType { get; init; }
 
-    /// <summary>
-    /// The target of the action.
-    /// </summary>
-    [Filter.NavigationProperty]
+    /// <inheritdoc cref="AgvAction.Target"/>
+    [FilterReadModelBinderBase.NavigationProperty]
     public new ActionTargetReadModel Target { get; init; } = null!;
 
-    /// <summary>
-    /// Date the action was created (UTC)
-    /// </summary>
-    [Filter.FilterProperty]
-    public new DateTime CreatedDate { get; init; } 
+    /// <inheritdoc cref="AgvAction.CreatedDate"/>
+    [FilterReadModelBinderBase.FilterProperty]
+    public new DateTime CreatedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been started (UTC)
-    /// </summary>
-    [Filter.FilterProperty]
-    public new DateTime? StartedDate { get; init; } 
+    /// <inheritdoc cref="AgvAction.StartedDate"/>
+    [FilterReadModelBinderBase.FilterProperty]
+    public new DateTime? StartedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been completed (UTC)
-    /// </summary>
-    [Filter.FilterProperty]
-    public new DateTime? CompletedDate { get; init; } 
+    /// <inheritdoc cref="AgvAction.CompletedDate"/>
+    [FilterReadModelBinderBase.FilterProperty]
+    public new DateTime? CompletedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been paused at (UTC)
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="AgvAction.PausedDate"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new DateTime? PausedDate { get; init; }
 
-    /// <summary>
-    /// Whether this <see cref="AgvAction"/> should be skipped.
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="AgvAction.ShouldSkip"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new bool ShouldSkip { get; init; }
-
-    /// <summary>
-    /// Automapper ctor.
-    /// </summary>
-    public AgvActionFilterReadModel()
-    {
-    }
 }

@@ -5,7 +5,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Filter.FilterBuilder;
+using Gebhardt.Acc.Common.Filter.Api;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
@@ -92,7 +92,7 @@ public static class WebHostBuilderExtensions
                 })
                 .AddApplicationPart(typeof(SimulationController).Assembly)
                 .AddFilterSerializer()
-				.AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+                .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
             var config = context.Configuration.GetSection("KEYCLOAK");
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -155,6 +155,9 @@ public static class WebHostBuilderExtensions
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                 options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
                 options.OperationFilter<ActionGroupFilterExample>();
+
+                options.AddFilterSwaggerExtensions();
+
                 options.CustomSchemaIds(Swagger.CustomSchemaSelector.RemoveDtoSuffix);
                 var securityScheme = new OpenApiSecurityScheme
                 {
@@ -259,8 +262,8 @@ public static class WebHostBuilderExtensions
         {
             options.SwaggerEndpoint(new RestApiGroup());
             options.SwaggerEndpoint(new HubApiGroup());
+            options.ShowExtensions();
         });
-        app.UseSwaggerUI();
         return app;
     }
 }

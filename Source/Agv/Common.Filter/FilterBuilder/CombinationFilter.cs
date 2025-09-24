@@ -10,28 +10,58 @@ namespace Gebhardt.Acc.Common.Filter.FilterBuilder;
 /// Represents a filter that combines multiple filters.
 /// </summary>
 /// <param name="combinationVariantType"></param>
-/// <param name="childNodes"></param>
-/// <param name="leaves"></param>
+/// <param name="children"></param>
 [PublicAPI]
-public sealed class CombinationFilter(LogicalCombinationVariant combinationVariantType, List<FilterBase> childNodes, List<IFilterLeaf> leaves) : FilterBase(childNodes, leaves)
+public sealed class CombinationFilter(LogicalCombinationVariant combinationVariantType, List<IFilter> children) : IFilter
 {
+    internal List<IFilter> Children => children;
+
     /// <summary>
     /// The way that all the children of this filter are combined.
     /// </summary>
     public LogicalCombinationVariant CombinationVariantType => combinationVariantType;
 
     /// <inheritdoc />
-    public override LambdaExpression ToExpressionTree(Dictionary<string, LambdaExpression> accessors)
+    public Dictionary<int, IFilter> SplitFilter(List<string> names, Dictionary<string, (LambdaExpression, bool)>? domainAccessors = null)
     {
-        List<LambdaExpression> childExpressions = ChildNodes.Select(n => n.ToExpressionTree(accessors)).Concat(Leaves.Select(l => l.ToExpressionTree(accessors))).ToList();
+        if (StopSplitting())
+        {
+            return new Dictionary<int, IFilter> { { GetDeepestSubstringIndex(names, domainAccessors?.Keys), this } };
+        }
+
+        IEnumerable<Dictionary<int, IFilter>> intermediate = Children.Select(c => c.SplitFilter(names, domainAccessors));
+
+        Dictionary<int, CombinationFilter> result = new();
+
+        foreach (Dictionary<int, IFilter> childSplit in intermediate)
+        {
+            foreach ((int index, var child) in childSplit)
+            {
+                if (result.TryGetValue(index, out var existingSplit))
+                {
+                    existingSplit.Children.Add(child);
+                    continue;
+                }
+                result.Add(index, new CombinationFilter(CombinationVariantType, [child]));
+            }
+        }
+
+        return result.ToDictionary(kv => kv.Key, IFilter (kv) => kv.Value);
+    }
+
+    /// <inheritdoc />
+    public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
+    {
+        List<LambdaExpression> childExpressions = Children.Select(n => n.ToExpressionTree(accessors)).ToList();
 
         if (childExpressions.Count == 1)
         {
             return childExpressions.First();
         }
 
-        accessors.TryGetValue(DomainFilterLayer, out var lambda);
-        var inputType = lambda?.Parameters.FirstOrDefault()?.Type;
+        accessors.TryGetValue(IFilter.DomainFilterLayer, out var lambda);
+
+        var inputType = lambda.Item1?.Parameters.FirstOrDefault()?.Type;
 
         if (inputType == null)
         {
@@ -43,25 +73,15 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
             childExpressions.Aggregate((p1, p2) => FilterExpressionBuilder.ConnectPredicates(p1, p2, CombinationVariantType));
     }
 
-    /// <inheritdoc cref="FilterBase"/>
-    protected override bool StopSplitting()
+    /// <inheritdoc cref="IFilter"/>
+    private bool StopSplitting()
     {
         return CombinationVariantType == LogicalCombinationVariant.Or;
     }
 
-    /// <inheritdoc cref="FilterBase"/>
-    protected override FilterBase CreateSameVariant(FilterBase? childFilter)
+    /// <inheritdoc />
+    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? domainAccessorKeys = null)
     {
-        return new CombinationFilter(
-            CombinationVariantType,
-            childFilter == null ? [] : [childFilter],
-            []
-        );
-    }
-
-    /// <inheritdoc cref="FilterBase"/>
-    protected override FilterBase CreateSameVariant(List<IFilterLeaf> leaves)
-    {
-        return new CombinationFilter(CombinationVariantType, [], leaves);
+        return Children.Select(c => c.GetDeepestSubstringIndex(names, domainAccessorKeys)).Max();
     }
 }

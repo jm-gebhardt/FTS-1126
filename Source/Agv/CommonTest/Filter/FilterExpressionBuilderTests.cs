@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Filter;
@@ -267,7 +266,7 @@ public class FilterExpressionBuilderTests
 
         Expression<Func<TestCollectionEntity, List<TestDbEntity>>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestCollectionEntity, List<TestDbEntity>>(nameof(TestCollectionEntity.Values));
 
-        Expression<Func<TestCollectionEntity, bool>> accessorAndPredicate = FilterExpressionBuilder.Compose(accessor, aggregatePredicate);
+        Expression<Func<TestCollectionEntity, bool>> accessorAndPredicate = ExpressionHelper.Compose(accessor, aggregatePredicate);
 
         List<TestCollectionEntity> results = await context.Set<TestCollectionEntity>().Include(a => a.Values).Where(accessorAndPredicate).ToListAsync();
 
@@ -277,11 +276,39 @@ public class FilterExpressionBuilderTests
     [TestMethod]
     public void CreateIdentityExpression_ValidData_CreatesIdentityExpression()
     {
-        Expression<Func<string, string>> identity = FilterExpressionBuilder.CreateIdentityExpression<string>();
+        Expression<Func<string, string>> identity = ExpressionHelper.CreateIdentityExpression<string>();
 
         const string test = "Test";
 
         identity.Compile().Invoke(test).ShouldBe(test);
+    }
+
+    [TestMethod]
+    public void MakeNullCoalescing_ValueAccess_CoalescesCorrectly()
+    {
+        TestValueHolder<TestValueHolder<int>>? nullableValue = null;
+
+        Expression<Func<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>(nameof(TestValueHolder<TestValueHolder<int>>.Value));
+
+        Should.Throw<NullReferenceException>(() => accessor.Compile()(nullableValue));
+
+        Expression<Func<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>> nullableAccessor = FilterExpressionBuilder.MakeNullCoalescing(accessor);
+
+        nullableAccessor.Compile()(nullableValue).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void CreateCoalescingStructAccessor_ValueAccessRefType_CoalescesCorrectly()
+    {
+        DateTime? nullableValue = null;
+        
+        Expression<Func<DateTime?, DayOfWeek?>> nullableAccessor = FilterExpressionBuilder.CreateCoalescingStructAccessor<DateTime, DayOfWeek>(nameof(DateTime.DayOfWeek));
+
+        nullableAccessor.Compile()(nullableValue).ShouldBeNull();
+
+        nullableValue = DateTime.UtcNow;
+        
+        nullableAccessor.Compile()(nullableValue).ShouldBe(nullableValue.Value.DayOfWeek);
     }
 }
 

@@ -1,8 +1,10 @@
 ﻿using Gebhardt.Acc.Common.Filter.ReadModelParser;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using static Gebhardt.Acc.Common.Filter.ReadModelParser.FilterReadModelBinderBase;
 
 namespace Gebhardt.Acc.CommonTest.Filter;
 
@@ -16,6 +18,10 @@ public class TestDbEntity()
 
     public int IntValue { get; init; }
 
+    public int? NullablePrimitive { get; init; }
+
+    public Dictionary<string, string> Converted { get; init; } = new();
+
     public TestDbEntity(string stringValue, int intValue) : this()
     {
         StringValue = stringValue;
@@ -25,17 +31,25 @@ public class TestDbEntity()
 
 public class TestDbEntityReadModel : TestDbEntity, IFilterReadModel<TestDbEntity, TestDbEntityReadModel>
 {
-    [Common.Filter.ReadModelParser.Filter.KeyProperty]
-    [Common.Filter.ReadModelParser.Filter.FilterProperty]
+    [KeyProperty]
+    [FilterProperty]
     public new Guid Key { get; init; } = Guid.NewGuid();
 
-    [Common.Filter.ReadModelParser.Filter.FilterProperty]
+    [FilterProperty]
     [UsedImplicitly]
     public new string StringValue { get; init; } = "";
 
-    [Common.Filter.ReadModelParser.Filter.FilterProperty]
+    [FilterProperty]
     [UsedImplicitly]
     public new int IntValue { get; init; }
+
+    [FilterProperty]
+    [UsedImplicitly]
+    public new int? NullablePrimitive { get; init; }
+
+    [HasConversion]
+    [UsedImplicitly]
+    public new Dictionary<string, string> Converted { get; init; } = new();
 }
 
 public class TestCollectionEntity()
@@ -52,11 +66,11 @@ public class TestCollectionEntity()
 
 public class TestCollectionEntityReadModel : TestCollectionEntity, IFilterReadModel<TestCollectionEntity, TestCollectionEntityReadModel>
 {
-    [Common.Filter.ReadModelParser.Filter.KeyProperty]
+    [KeyProperty]
     [UsedImplicitly]
     public new Guid Key { get; init; } = Guid.NewGuid();
 
-    [Common.Filter.ReadModelParser.Filter.NavigationProperty]
+    [NavigationProperty]
     public new IEnumerable<TestDbEntityReadModel> Values { get; [UsedImplicitly] init; } = [];
 }
 
@@ -64,7 +78,9 @@ public class TestJoinSourceEntity()
 {
     public Guid TjsKey { get; } = Guid.NewGuid();
 
-    public Guid TjtFKey { get; init; } = Guid.Empty;
+    public Guid? TjtFKey { get; init; } = Guid.Empty;
+
+    public bool Exists { get; init; } = true;
 
     public TestJoinSourceEntity(Guid targetKey) : this()
     {
@@ -74,14 +90,18 @@ public class TestJoinSourceEntity()
 
 public class TestJoinSourceReadModel : TestJoinSourceEntity, IFilterReadModel<TestJoinSourceEntity, TestJoinSourceReadModel>
 {
-    [Common.Filter.ReadModelParser.Filter.KeyProperty]
+    [KeyProperty]
     [UsedImplicitly]
     public new Guid TjsKey { get; init; } = Guid.NewGuid();
 
-    public Guid TjtFKeyKey { get; init; } = Guid.Empty;
+    public Guid? TjtFKeyKey { get; init; }
 
-    [Common.Filter.ReadModelParser.Filter.JoinProperty(nameof(TjtFKeyKey), nameof(TestJoinTargetEntity.TjTKey))]
-    public new TestJoinTargetReadModel TjtFKey { get; init; } = null!;
+    [JoinProperty(nameof(TjtFKeyKey), nameof(TestJoinTargetEntity.TjTKey), true)]
+    public new TestJoinTargetReadModel? TjtFKey { get; init; } = null!;
+
+    [FilterProperty]
+    [UsedImplicitly]
+    public new bool Exists { get; init; }
 }
 
 public class TestJoinTargetEntity()
@@ -98,11 +118,11 @@ public class TestJoinTargetEntity()
 
 public class TestJoinTargetReadModel : TestJoinTargetEntity, IFilterReadModel<TestJoinTargetEntity, TestJoinTargetReadModel>
 {
-    [Common.Filter.ReadModelParser.Filter.KeyProperty]
+    [KeyProperty]
     [UsedImplicitly]
     public new Guid TjTKey { get; init; } = Guid.NewGuid();
 
-    [Common.Filter.ReadModelParser.Filter.FilterProperty]
+    [FilterProperty]
     public new int Value { get; init; } 
 }
 
@@ -130,6 +150,8 @@ public class TestDbEntityConfiguration : IEntityTypeConfiguration<TestDbEntity>
     {
         builder.Property(e => e.IntValue);
         builder.Property(e => e.StringValue);
+        builder.Property(e => e.NullablePrimitive);
+        builder.Property(e => e.Converted).HasJsonConversion();
         builder.HasKey(e => e.Key);
     }
 }

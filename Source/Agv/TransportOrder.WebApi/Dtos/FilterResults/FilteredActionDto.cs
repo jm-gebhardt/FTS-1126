@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Filter.Api.Swagger;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
@@ -11,63 +11,44 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 [PublicAPI]
 public record FilteredActionDto
 {
-    /// <summary>
-    /// Unique CorrelationId of this action
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.CorrelationId"/>
+    [SwaggerFilterableProperty]
     public Guid CorrelationId { get; init; }
 
-    /// <inheritdoc cref="Domain.Models.ActionGroup.AgvAction.Sequence" />
+    /// <inheritdoc cref="AgvAction.Sequence" />
+    [SwaggerFilterableProperty]
     public int Sequence { get; init; }
 
-    /// <summary>
-    /// The current state of the action
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.State"/>
+    [SwaggerFilterableProperty]
     public ActionState State { get; init; }
 
-    /// <summary>
-    /// The type of the action, e.g. Pick or Drop
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.ActionType"/>
+    [SwaggerFilterableProperty]
     public ActionType ActionType { get; init; }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public FilteredActionTargetDto? Target;
+    /// <inheritdoc cref="AgvAction.Target"/>
+    [SwaggerFilterableProperty]
+    public FilteredActionTargetDto? Target { get; init; }
 
     /// <summary>
-    /// 
+    /// The node type of the target.
     /// </summary>
     public AgvGraph.NodeType TargetNodeType = AgvGraph.NodeType.WayPoint;
 
-    /// <summary>
-    /// Date the action was created (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.CreatedDate"/>
+    [SwaggerFilterableProperty]
     public DateTime CreatedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been started (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.StartedDate"/>
+    [SwaggerFilterableProperty]
     public DateTime? StartedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been completed (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.CompletedDate"/>
+    [SwaggerFilterableProperty]
     public DateTime? CompletedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been paused at (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.PausedDate"/>
+    [SwaggerFilterableProperty]
     public DateTime? PausedDate { get; init; }
-
-    /// <summary>
-    /// Whether this <see cref="AgvAction"/> should be skipped.
-    /// </summary>
-    public bool ShouldSkip { get; init; }
-
-    /// <summary>
-    /// Automapper ctor.
-    /// </summary>
-    public FilteredActionDto()
-    {
-    }
 }

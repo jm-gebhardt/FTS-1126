@@ -1,28 +1,18 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="Position"></param>
-/// <param name="Node"></param>
+/// <inheritdoc cref="ActionTarget"/>
 [PublicAPI]
 public record FilteredActionTarget(FilteredAgvPosition? Position, FilteredGraphNode? Node);
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="X"></param>
-/// <param name="Y"></param>
-/// <param name="Z"></param>
-/// <param name="Theta"></param>
+/// <inheritdoc cref="AgvPosition"/>
 [PublicAPI]
 public record FilteredAgvPosition(float X, float Y, float Z, float Theta);
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="Name"></param>
+/// <inheritdoc cref="GraphNode"/>
 [PublicAPI]
 public record FilteredGraphNode(string Name);

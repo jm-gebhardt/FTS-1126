@@ -1,21 +1,22 @@
 ﻿using System.Globalization;
 using System.Text.Json;
-using Gebhardt.Acc.Common.Filter.Dtos;
+using Gebhardt.Acc.Common.Filter.Api;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
+using Gebhardt.Acc.Common.Filter.Api.Swagger;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Filter;
 
 [TestClass]
-public class FilterDtoTranslatorTests
+public class FilterExtensionsTests
 {
     [TestMethod]
     public void TranslateFilterDto_ValidData_TranslatesFilter()
     {
-        var dto = new CombinationFilterDto( [], [new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And);
+        var dto = new CombinationFilterDto([new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And);
 
         var result = dto.Translate<TestJoinSourceEntity, TestJoinSourceReadModel>();
         result.ShouldNotBeNull();
@@ -24,7 +25,7 @@ public class FilterDtoTranslatorTests
     [TestMethod]
     public void TranslateFilterDto_DateValue_TranslatesFilter()
     {
-        var dto = new CombinationFilterDto([], [new FilterLeafDto(nameof(SubPropertyHelperReadModel.Date), ComparisonVariant.Equals, DateTime.UtcNow.ToString(CultureInfo.CurrentCulture))], LogicalCombinationVariant.And);
+        var dto = new CombinationFilterDto( [new ValueComparisonFilterDto(nameof(SubPropertyHelperReadModel.Date), ComparisonVariant.Equals, DateTime.UtcNow.ToString(CultureInfo.CurrentCulture))], LogicalCombinationVariant.And);
 
         var result = dto.Translate<SubPropertyHelper, SubPropertyHelperReadModel>();
         result.ShouldNotBeNull();
@@ -34,23 +35,29 @@ public class FilterDtoTranslatorTests
     public void TranslateFilterDto_MultipleChildren_TranslatesFilter()
     {
         var dto = new CombinationFilterDto([
-            new CombinationFilterDto([], [new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And),
-            new CombinationFilterDto([], [new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And),
-            new CombinationFilterDto([], [new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And),
-            new CombinationFilterDto([], [new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And)
-        ], [new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And);
+            new CombinationFilterDto([new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And),
+            new CombinationFilterDto([new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And),
+            new CombinationFilterDto([new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And),
+            new CombinationFilterDto([new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And),
+        new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "10")
+        ], LogicalCombinationVariant.And);
 
-        var result = dto.Translate<TestJoinSourceEntity, TestJoinSourceReadModel>();
+        var result = dto.Translate<TestJoinSourceEntity, TestJoinSourceReadModel>() as CombinationFilter;
         result.ShouldNotBeNull();
-        result.Leaves.Count.ShouldBe(1);
-        result.ChildNodes.Count.ShouldBe(4);
-        result.ChildNodes.ShouldAllBe(n => n.Leaves.Count == 1);
+        result.Children.Count.ShouldBe(5);
+        foreach (var child in result.Children)
+        {
+            if (child is CombinationFilter comb)
+            {
+                comb.Children.Count.ShouldBe(1);
+            }
+        }
     }
 
     [TestMethod]
-    public void TranslateFilterDto_ValueMismatch_Throws()
+    public void TranslateFilterDto_TypeMismatch_Throws()
     {
-        var dto = new CombinationFilterDto([], [new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture))], LogicalCombinationVariant.And);
+        var dto = new CombinationFilterDto([new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture))], LogicalCombinationVariant.And);
 
         Should.Throw<FilterBuilderException>(() => dto.Translate<TestJoinSourceEntity, TestJoinSourceReadModel>());
     }
@@ -58,20 +65,22 @@ public class FilterDtoTranslatorTests
     [TestMethod]
     public void TranslateFilterDto_CollectionFilterValidData_TranslatesFilter()
     {
-        var dto = new CollectionFilterDto(new FilterLeafDto(nameof(TestCollectionEntityReadModel.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Equals, "1"), nameof(TestCollectionEntityReadModel.Values), CollectionAggregateVariant.All);
+        var dto = new CollectionFilterDto(new ValueComparisonFilterDto(nameof(TestCollectionEntityReadModel.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Equals, "1"), nameof(TestCollectionEntityReadModel.Values), CollectionAggregateVariant.All);
 
         var result =  dto.Translate<TestCollectionEntity, TestCollectionEntityReadModel>() as CollectionFilter;
         result.ShouldNotBeNull();
-        result.Leaves.Count.ShouldBe(1);
         result.CollectionName.ShouldBe(nameof(TestCollectionEntityReadModel.Values));
-        result.Leaves[0].Name.ShouldBe(nameof(TestCollectionEntityReadModel.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue));
-        (result.Leaves[0] as FilterLeaf<int>).ShouldNotBeNull();
+        (result.Child is ValueComparisonFilter<int>).ShouldBeTrue();
+        if (result.Child is ValueComparisonFilter<int> child)
+        {
+            child.Name.ShouldBe(nameof(TestCollectionEntityReadModel.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue));
+        }
     }
 
     [TestMethod]
     public void TranslateFilterDto_CollectionFilterWithNoCollection_Throws()
     {
-        var dto = new CollectionFilterDto(new FilterLeafDto(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "1"), nameof(TestJoinSourceReadModel.TjtFKey), CollectionAggregateVariant.All);
+        var dto = new CollectionFilterDto(new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "1"), nameof(TestJoinSourceReadModel.TjtFKey), CollectionAggregateVariant.All);
 
         Should.Throw<FilterBuilderException>(() => dto.Translate<TestJoinSourceEntity, TestJoinSourceReadModel>());
     }
@@ -80,10 +89,10 @@ public class FilterDtoTranslatorTests
     public void JsonSerialize_ValidData_RoundTripIsIdempotent()
     {
         FilterBaseDto dto = new CombinationFilterDto([
-            new CombinationFilterDto([], [new FilterLeafDto("ABC", ComparisonVariant.Equals, "101")], LogicalCombinationVariant.Or),
-            new CollectionFilterDto(new CombinationFilterDto([], [], LogicalCombinationVariant.And), "TestCollectionName", CollectionAggregateVariant.Any),
-            new CollectionFilterDto(new FilterLeafDto("GHI", ComparisonVariant.Neq, "Test"), "TestCollectionName", CollectionAggregateVariant.Any)
-        ], [new FilterLeafDto("DEF", ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And);
+            new CombinationFilterDto([new ValueComparisonFilterDto("ABC", ComparisonVariant.Equals, "101")], LogicalCombinationVariant.Or),
+            new CollectionFilterDto(new CombinationFilterDto([], LogicalCombinationVariant.And), "TestCollectionName", CollectionAggregateVariant.Any),
+            new CollectionFilterDto(new ValueComparisonFilterDto("GHI", ComparisonVariant.Neq, "Test"), "TestCollectionName", CollectionAggregateVariant.Any),
+            new ValueComparisonFilterDto("DEF", ComparisonVariant.Equals, "10")], LogicalCombinationVariant.And);
 
         var opt = new JsonSerializerOptions { Converters = { new FilterJsonConverter() }, WriteIndented = true};
 

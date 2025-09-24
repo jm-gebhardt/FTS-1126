@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Filter.Api.Swagger;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
@@ -9,80 +10,59 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 [PublicAPI]
 public record FilteredActionGroupDto
 {
-    /// <summary>
-    /// Correlation id of this action group.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.CorrelationId"/>
+    [SwaggerFilterableProperty]
     public Guid CorrelationId { get; init; }
 
-    /// <summary>
-    /// A unique ID of the order that clamps all the corresponding actions.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.OrderId"/>
+    [SwaggerFilterableProperty]
     public string OrderId { get; init; } = null!;
 
-    /// <summary>
-    /// The id of the assigned agv that will execute the ActionGroup.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.AssignedAgv"/>
+    [SwaggerFilterableProperty]
     public FilteredAgvDto? AssignedAgv { get; init; }
 
-    /// <summary>
-    /// The creation date of the action (UTC).
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.CreatedDate"/>
+    [SwaggerFilterableProperty]
     public DateTime CreatedDate { get; init; }
 
-    /// <summary>
-    /// The date the action has been started (UTC).
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.StartedDate"/>
+    [SwaggerFilterableProperty]
     public DateTime? StartedDate { get; init; }
 
-    /// <summary>
-    /// The date the action has been completed (UTC).
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.CompletedDate"/>
+    [SwaggerFilterableProperty]
     public DateTime? CompletedDate { get; init; }
 
-    /// <summary>
-    /// The state of the ActionGroup.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.State"/>
+    [SwaggerFilterableProperty]
     public ActionGroupState State { get; init; }
 
-    /// <summary>
-    /// True, if the action group is queued.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.IsQueued"/>
+    [SwaggerFilterableProperty]
     public bool IsQueued { get; init; }
 
-    /// <summary>
-    /// List of actions (ordered by sequence).
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.Actions"/>
+    [SwaggerFilterableProperty]
     public List<FilteredActionDto>? Actions { get; init; }
 
-    /// <summary>
-    /// If true, then this ActionGroup was created manually, not by the system.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.IsManual"/>
+    [SwaggerFilterableProperty]
     public bool IsManual { get; init; }
 
-    /// <summary>
-    /// The creator of the <see cref="ActionGroup"/>.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.Creator"/>
+    [SwaggerFilterableProperty]
     public ActionGroupCreator Creator { get; init; }
 
-    /// <summary>
-    /// The estimated duration based on the estimated duration of the actions.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.EstimatedDuration"/>
+    [SwaggerFilterableProperty]
     public TimeSpan? EstimatedDuration { get; init; }
 
-    /// <summary>
-    /// If true, then this ActionGroup has priority over others (starts immediately).
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.HasPriority"/>
+    [SwaggerFilterableProperty]
     public bool HasPriority { get; init; }
 
-    /// <summary>
-    /// The handling unit corresponding to this ActionGroup.
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
+    [SwaggerFilterableProperty]
     public string? HandlingUnit { get; init; }
-
-    /// <summary>
-    /// Automapper ctor.
-    /// </summary>
-    public FilteredActionGroupDto()
-    {
-    }
 }

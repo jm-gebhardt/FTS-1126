@@ -3,7 +3,6 @@
 namespace Gebhardt.Acc.Common.Filter.Exceptions;
 
 /// <summary>
-/// Represents an exception raised, when the parsing of a <see cref="Filter{TEntity,TReadModel}"/> fails.
+/// Represents an exception raised, when the parsing of a <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/> fails.
 /// </summary>
-/// <param name="message"></param>
 public class FilterParserException(string message) : Exception(message);

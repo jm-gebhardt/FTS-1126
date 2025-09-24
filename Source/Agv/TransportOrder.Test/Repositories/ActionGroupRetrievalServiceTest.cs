@@ -644,11 +644,10 @@ public class ActionGroupRetrievalServiceTest
 
         ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(new CombinationFilter(
             LogicalCombinationVariant.And,
-            [],
             [
-                new FilterLeaf<ActionGroupState>(nameof(ActionGroupFilterReadModel.State), ComparisonVariant.Equals, ActionGroupState.Completed),
-                new FilterLeaf<DateTime>(nameof(ActionGroupFilterReadModel.StartedDate), ComparisonVariant.Geq, DateTime.MinValue),
-                new FilterLeaf<Guid>(nameof(ActionGroupFilterReadModel.AssignedAgv) + FilterBase.AccessLevelSeparator + nameof(AgvFilterReadModel.CorrelationId), ComparisonVariant.Equals, agv.CorrelationId)
+                new ValueComparisonFilter<ActionGroupState>(nameof(ActionGroupFilterReadModel.State), ComparisonVariant.Equals, ActionGroupState.Completed),
+                new ValueComparisonFilter<DateTime>(nameof(ActionGroupFilterReadModel.StartedDate), ComparisonVariant.Geq, DateTime.MinValue),
+                new ValueComparisonFilter<Guid>(nameof(ActionGroupFilterReadModel.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(AgvFilterReadModel.CorrelationId), ComparisonVariant.Equals, agv.CorrelationId)
             ]
         ), 0, 10, SortOrdering.Desc, []);
 

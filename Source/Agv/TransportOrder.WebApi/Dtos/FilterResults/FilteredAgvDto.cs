@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Filter.Api.Swagger;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
@@ -9,60 +11,43 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 [PublicAPI]
 public record FilteredAgvDto
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public string LastNodeId = "";
+    /// <inheritdoc cref="AgvStatus.LastNodeId"/>
+    [SwaggerFilterableProperty]
+    public string LastNodeId { get; init; } = "";
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public bool IsDisturbed;
+    /// <inheritdoc cref="AgvStatus.Disturbed"/>
+    [SwaggerFilterableProperty]
+    public bool IsDisturbed { get; init; }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public bool IsAutomatic;
+    /// <inheritdoc cref="AgvStatus.Automatic"/>
+    [SwaggerFilterableProperty]
+    public bool IsAutomatic { get; init; }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public bool IsCharging;
+    /// <inheritdoc cref="AgvStatus.Charging"/>
+    [SwaggerFilterableProperty]
+    public bool IsCharging { get; init; }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public ICollection<string> Zones = [];
+    /// <inheritdoc cref="AgvStatus.ZoneIds"/>
+    [SwaggerFilterableProperty]
+    public ICollection<string> Zones { get; init; } = [];
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public ICollection<string> Stations = [];
+    /// <inheritdoc cref="AgvStatus.StationIds"/>
+    [SwaggerFilterableProperty]
+    public ICollection<string> Stations { get; init; } = [];
 
-    /// <summary>
-    /// Correlation id of the agv.
-    /// </summary>
+    /// <inheritdoc cref="Domain.Models.Agv.Agv.CorrelationId"/>
+    [SwaggerFilterableProperty]
     public Guid CorrelationId { get; init; }
 
-    /// <summary>
-    /// Serial number of the agv.
-    /// </summary>
+    /// <inheritdoc cref="Domain.Models.Agv.Agv.SerialNumber"/>
+    [SwaggerFilterableProperty]
     public string SerialNumber { get; init; } = null!;
 
-    /// <summary>
-    /// The name of the agv.
-    /// </summary>
+    /// <inheritdoc cref="Domain.Models.Agv.Agv.Name"/>
+    [SwaggerFilterableProperty]
     public string Name { get; private set; } = null!;
 
-    /// <summary>
-    /// The mode of the agv.
-    /// </summary>
+    /// <inheritdoc cref="Domain.Models.Agv.Agv.Mode"/>
+    [SwaggerFilterableProperty]
     public AgvModeDto Mode { get; init; } = null!;
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public FilteredAgvDto()
-    {
-    }
 }

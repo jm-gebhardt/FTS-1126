@@ -10,30 +10,24 @@ namespace Gebhardt.Acc.Common.Filter.FilterBuilder;
 /// Represents a filter that applies an aggregation to a collection.
 /// </summary>
 [PublicAPI]
-public sealed class CollectionFilter : FilterBase
+public sealed class CollectionFilter : IFilter
 {
     /// <summary>
-    /// Represents a filter that applies an aggregation to a collection.
+    /// Child of this collection filter.
     /// </summary>
-    /// <param name="variant">The aggregation variant.</param>
-    /// <param name="collectionName">The name of the collection.</param>
-    /// <param name="leaf">The leaf to apply inside the aggregation.</param>
-    public CollectionFilter(CollectionAggregateVariant variant, string collectionName, IFilterLeaf leaf) : base([], [leaf])
-    {
-        AggregateVariant = variant;
-        CollectionName = collectionName;
-    }
+    public IFilter Child;
 
     /// <summary>
     /// Represents a filter that applies an aggregation to a collection.
     /// </summary>
     /// <param name="variant">The aggregation variant.</param>
     /// <param name="collectionName">The name of the collection.</param>
-    /// <param name="subFilter">The sub filter to apply inside the aggregation if any.</param>
-    public CollectionFilter(CollectionAggregateVariant variant, string collectionName, FilterBase? subFilter) : base(subFilter == null ? [] : [subFilter], [])
+    /// <param name="child">The sub filter to apply inside the aggregation.</param>
+    public CollectionFilter(CollectionAggregateVariant variant, string collectionName, IFilter child)
     {
         AggregateVariant = variant;
         CollectionName = collectionName;
+        Child = child;
     }
 
     /// <summary>
@@ -47,32 +41,26 @@ public sealed class CollectionFilter : FilterBase
     public string CollectionName { get; }
 
     /// <inheritdoc />
-    protected override FilterBase CreateSameVariant(FilterBase? childFilter)
+    public Dictionary<int, IFilter> SplitFilter(List<string> names, Dictionary<string, (LambdaExpression, bool)>? domainAccessors = null)
     {
-        return new CollectionFilter(AggregateVariant, CollectionName, childFilter);
+        return StopSplitting() 
+            ? new Dictionary<int, IFilter> { { GetDeepestSubstringIndex(names, domainAccessors?.Keys), this } } 
+            : Child.SplitFilter(names, domainAccessors).ToDictionary(kv => kv.Key, IFilter (kv) => new CollectionFilter(AggregateVariant, CollectionName, kv.Value));
     }
 
     /// <inheritdoc />
-    protected override FilterBase CreateSameVariant(List<IFilterLeaf> leaves)
+    public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
     {
-        return new CollectionFilter(AggregateVariant, CollectionName, leaves.First());
-    }
-
-    /// <inheritdoc />
-    public override LambdaExpression ToExpressionTree(Dictionary<string, LambdaExpression> accessors)
-    {
-        var childExpression = Leaves.Count == 1 ? Leaves.First().ToExpressionTree(accessors) : ChildNodes.First().ToExpressionTree(accessors);
+        var childExpression = Child.ToExpressionTree(accessors);
         if (childExpression == null)
         {
             throw new FilterExecutionException($"Could not convert subtree for method {nameof(ToExpressionTree)} to expression tree");
         }
 
-        if (!accessors.TryGetValue(CollectionName, out var accessor))
+        if (!accessors.TryGetValue(CollectionName, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
         {
             throw new FilterExecutionException($"No accessor for {CollectionName} in {nameof(CollectionFilter)}");
         }
-
-        var inputType = accessor.Parameters.Select(p => p.Type).First();
 
         var outputType = accessor.ReturnType;
 
@@ -87,12 +75,26 @@ public sealed class CollectionFilter : FilterBase
             collectionBaseType = outputType.GetEnumerableContentType() ?? throw new FilterExecutionException($"Accessor expression tree does not return collection for {nameof(CollectionFilter)}");
         }
 
-        return FilterExpressionBuilder.BuildAggregationPredicate(collectionBaseType, inputType, childExpression, accessor, AggregateVariant);
+        return FilterExpressionBuilder.CreateAggregationPredicate(collectionBaseType, childExpression, accessor, AggregateVariant);
+    }
+
+    private bool StopSplitting()
+    {
+        return AggregateVariant is CollectionAggregateVariant.Any;
     }
 
     /// <inheritdoc />
-    protected override bool StopSplitting()
+    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? domainAccessorKeys = null)
     {
-        return AggregateVariant is CollectionAggregateVariant.Any;
+        var maxSearch = ^0;
+
+        if (domainAccessorKeys?.Contains(CollectionName) ?? false)
+        {
+            maxSearch = names.FindIndex(e => e == IFilter.ReadModelFilterLayer) + 1;
+        }
+
+        int collectionNameIdx = names[..maxSearch].Select((n, i) => CollectionName.StartsWith(n) ? i : 0).Max();
+
+        return Math.Max(Child.GetDeepestSubstringIndex(names, domainAccessorKeys), collectionNameIdx);
     }
 }

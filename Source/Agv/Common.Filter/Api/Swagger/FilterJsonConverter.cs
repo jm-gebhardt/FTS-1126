@@ -1,8 +1,9 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 
-namespace Gebhardt.Acc.Common.Filter.Dtos;
+namespace Gebhardt.Acc.Common.Filter.Api.Swagger;
 
 /// <inheritdoc />
 public class FilterJsonConverter : JsonConverter<FilterBaseDto>
@@ -23,6 +24,11 @@ public class FilterJsonConverter : JsonConverter<FilterBaseDto>
             return root.Deserialize<CombinationFilterDto>(options);
         }
 
+        if (root.TryGetProperty(nameof(ValueComparisonFilterDto.Variant), out _))
+        {
+            return root.Deserialize<ValueComparisonFilterDto>(options);
+        }
+
         throw new FilterBuilderException($"Could not deserialize {nameof(FilterBaseDto)}: {root}");
     }
 
@@ -39,8 +45,12 @@ public class FilterJsonConverter : JsonConverter<FilterBaseDto>
                 JsonSerializer.Serialize(writer, comb, options);
                 break;
 
+            case ValueComparisonFilterDto comp:
+                JsonSerializer.Serialize(writer, comp, options);
+                break;
+
             default:
-                // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract Could be streamed in as null from unsafe code.
                 throw new FilterBuilderException($"Unknown filter type {value?.GetType().Name}");
         }
     }

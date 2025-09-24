@@ -1,7 +1,7 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Filter.FilterBuilder;
+using Gebhardt.Acc.Common.Filter.Api;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -241,7 +241,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     {
         (var filterDto, int pageNumber, int pageSize, var ordering, ICollection<string> orderProps) = context.Message;
 
-        var filter = context.Message.Filter.Translate<ActionGroup, ActionGroupFilterReadModel>();
+        var filter = filterDto.Translate<ActionGroup, ActionGroupFilterReadModel>();
 
         ICollection<FilteredActionGroup> result = await _retrievalService.Filter(filter, pageNumber, pageSize, ordering, orderProps);
 

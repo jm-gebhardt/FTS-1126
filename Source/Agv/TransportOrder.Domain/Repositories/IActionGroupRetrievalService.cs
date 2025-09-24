@@ -57,10 +57,10 @@ public interface IActionGroupRetrievalService
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="filterBase"></param>
+    /// <param name="filter"></param>
     /// <param name="pageNr"></param>
     /// <param name="pageSize"></param>
     /// <param name="order"></param>
     /// <param name="orderProperties"></param>
-    Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties);
+    Task<ICollection<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties);
 }

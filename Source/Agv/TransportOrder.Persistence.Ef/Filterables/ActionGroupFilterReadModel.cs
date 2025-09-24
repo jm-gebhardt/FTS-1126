@@ -11,98 +11,67 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 [PublicAPI]
 public class ActionGroupFilterReadModel : ActionGroup, IFilterReadModel<ActionGroup, ActionGroupFilterReadModel>
 {
-    /// <inheritdoc cref="ActionGroup"/>
-    [Filter.KeyProperty]
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.CorrelationId"/>
+    [FilterReadModelBinderBase.KeyProperty]
+    [FilterReadModelBinderBase.FilterProperty]
     public new Guid CorrelationId { get; init; }
 
-    /// <summary>
-    /// A unique ID of the order that clamps all the corresponding actions
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.OrderId"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new string OrderId { get; init; } = null!;
 
     /// <summary>
-    /// The id of the assigned agv that will execute the ActionGroup.
+    /// Read model of the assigned agv.
     /// </summary>
-    [Filter.JoinProperty(nameof(AssignedAgvKey), nameof(AgvFilterReadModel.CorrelationId))]
+    [FilterReadModelBinderBase.JoinProperty(nameof(AssignedAgvKey), nameof(AgvFilterReadModel.CorrelationId), true)]
     public new AgvFilterReadModel? AssignedAgv { get; init; }
 
-    /// <summary>
-    /// Key of <see cref="AssignedAgv"/>
-    /// </summary>
+    /// <inheritdoc cref="ActionGroup.AssignedAgv"/>
     public Guid? AssignedAgvKey { get; init; }
 
-    /// <summary>
-    /// The creation date of the action (UTC).
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.CreatedDate"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new DateTime CreatedDate { get; init; }
 
-    /// <summary>
-    /// The date the action has been started (UTC).
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.StartedDate"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new DateTime? StartedDate { get; init; }
 
-    /// <summary>
-    /// The date the action has been completed (UTC).
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.CompletedDate"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new DateTime? CompletedDate { get; init; }
 
     /// <summary>
     /// The state of the ActionGroup.
     /// </summary>
-    [Filter.FilterProperty]
+    [FilterReadModelBinderBase.FilterProperty]
     public new ActionGroupState State { get; init; }
 
-    /// <summary>
-    /// True, if the action group is queued.
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.IsQueued"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new bool IsQueued { get; init; }
 
-    /// <summary>
-    /// List of actions (ordered by sequence).
-    /// </summary>
-    [Filter.NavigationProperty]
+    /// <inheritdoc cref="ActionGroup.Actions"/>
+    [FilterReadModelBinderBase.NavigationProperty]
     public new IEnumerable<AgvActionFilterReadModel>? Actions { get; init; }
 
-    /// <summary>
-    /// If true, then this ActionGroup was created manually, not by the system.
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.IsManual"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new bool IsManual { get; init; }
 
-    /// <summary>
-    /// The creator of the <see cref="ActionGroup"/>.
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.Creator"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new ActionGroupCreator Creator { get; init; }
 
-    /// <summary>
-    /// The estimated duration based on the estimated duration of the actions.
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.EstimatedDuration"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new TimeSpan? EstimatedDuration { get; init; }
 
-    /// <summary>
-    /// If true, then this ActionGroup has priority over others (starts immediately).
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.HasPriority"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new bool HasPriority { get; init; }
 
-    /// <summary>
-    /// The handling unit corresponding to this ActionGroup.
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new string? HandlingUnit { get; init; } 
-
-    /// <summary>
-    /// Automapper ctor.
-    /// </summary>
-    public ActionGroupFilterReadModel() 
-    {
-    }
 }

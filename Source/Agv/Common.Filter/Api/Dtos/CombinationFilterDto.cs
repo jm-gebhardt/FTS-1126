@@ -2,7 +2,7 @@
 using Gebhardt.Acc.Common.Filter.Enums;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.Common.Filter.Dtos;
+namespace Gebhardt.Acc.Common.Filter.Api.Dtos;
 
 /// <summary>
 /// Data transfer object of a direct filter i.e. one where the proper
@@ -13,12 +13,7 @@ public record CombinationFilterDto : FilterBaseDto
     /// <summary>
     /// The children attached to this filter.
     /// </summary>
-    public ICollection<FilterBaseDto> ChildNodes { get; } 
-
-    /// <summary>
-    /// The leaves attached to this filter.
-    /// </summary>
-    public ICollection<FilterLeafDto> Leaves { get; }
+    public ICollection<FilterBaseDto> Children { get; } 
 
     /// <summary>
     /// The combination variant that the leaves and child nodes will be combined with.
@@ -29,10 +24,9 @@ public record CombinationFilterDto : FilterBaseDto
     /// Constructor.
     /// </summary>
     [JsonConstructor]
-    public CombinationFilterDto(ICollection<FilterBaseDto> childNodes, ICollection<FilterLeafDto> leaves, LogicalCombinationVariant combination)
+    public CombinationFilterDto(ICollection<FilterBaseDto> children, LogicalCombinationVariant combination)
     {
-        ChildNodes = childNodes;
-        Leaves = leaves;
+        Children = children;
         Combination = combination;
     }
 }

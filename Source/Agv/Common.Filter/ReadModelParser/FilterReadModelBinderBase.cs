@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.Common.Filter.ReadModelParser;
 
 /// <summary>
-/// Holds properties common to all variants of filter.
+/// Holds static properties common to all variants of <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>.
 /// </summary>
 [PublicAPI]
-public abstract class Filter
+public abstract class FilterReadModelBinderBase
 {
     private static readonly ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression> _typeMappings = new();
 
@@ -22,28 +22,28 @@ public abstract class Filter
     protected static IReadOnlyDictionary<Tuple<Type, Type>, LambdaExpression> TypeMappings => _typeMappings;
 
     /// <summary>
-    /// 
+    /// Tries to get a type mapping for the provided types.
     /// </summary>
-    /// <param name="t1"></param>
-    /// <param name="t2"></param>
-    /// <param name="result"></param>
-    /// <returns></returns>
-    protected static bool TryGetTypeMapping(Type t1, Type t2, [MaybeNullWhen(false)] out LambdaExpression result) 
+    /// <param name="from">First type.</param>
+    /// <param name="to">Second type.</param>
+    /// <param name="result">The type mapping <see cref="LambdaExpression"/> if it exists.</param>
+    /// <returns>true if the binding exists, false otherwise.</returns>
+    protected static bool TryGetTypeMapping(Type from, Type to, [MaybeNullWhen(false)] out LambdaExpression result) 
     {
-        if (t1 == t2)
+        if (from == to)
         {
-            throw new FilterParserException($"Filtering is only supported for explicit read models: {t1.FullName}");
+            throw new FilterParserException($"Filtering is only supported for explicit read models: {from.FullName}");
         }
-        return _typeMappings.TryGetValue(new Tuple<Type, Type>(t1, t2), out result);
+        return _typeMappings.TryGetValue(new Tuple<Type, Type>(from, to), out result);
     }
 
     /// <summary>
-    /// 
+    /// Tries to add a type mapping.
     /// </summary>
-    /// <param name="t1"></param>
-    /// <param name="t2"></param>
-    /// <param name="mapping"></param>
-    protected static bool TryAddTypeMapping(Type t1, Type t2, LambdaExpression mapping) => _typeMappings.TryAdd(new Tuple<Type, Type>(t1, t2), mapping);
+    /// <param name="from">First type.</param>
+    /// <param name="to">Second type.</param>
+    /// <param name="mapping">The mapping to get from one type to the other.</param>
+    protected static bool TryAddTypeMapping(Type from, Type to, LambdaExpression mapping) => _typeMappings.TryAdd(new Tuple<Type, Type>(from, to), mapping);
 
     /// <summary>
     /// Signifies that this property is part of the key of this entity.
@@ -56,6 +56,13 @@ public abstract class Filter
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public sealed class FilterProperty : Attribute;
+    
+    /// <summary>
+    /// Signifies that this property has a conversion defined.<br/>
+    /// Properties with conversions can never be filtered before materializing.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class HasConversion : Attribute;
 
     /// <summary>
     /// Defines a sub property that will be included with the queryable at filter execution. Must be instanceof <see cref="IFilterReadModel{TEntity,TReadModel}"/> or a collection thereof.
@@ -69,8 +76,9 @@ public abstract class Filter
     /// </summary>
     /// <param name="ownKeyProperty">The key property on this type.</param>
     /// <param name="otherKeyProperty">The key property on the target type.</param>
+    /// <param name="isOuterJoin">If this is a LEFT OUTER JOIN.</param>
     [AttributeUsage(AttributeTargets.Property)]
-    public sealed class JoinProperty(string ownKeyProperty, string otherKeyProperty) : InternalSubProperty
+    public sealed class JoinProperty(string ownKeyProperty, string otherKeyProperty, bool isOuterJoin = false) : InternalSubProperty
     {
         /// <summary>
         /// The key property on this type.
@@ -81,6 +89,11 @@ public abstract class Filter
         /// The key property on the target type.
         /// </summary>
         public string OtherKeyProperty => otherKeyProperty;
+
+        /// <summary>
+        /// If this is a LEFT OUTER JOIN.
+        /// </summary>
+        public bool IsOuterJoin => isOuterJoin;
     }
 
     /// <summary>
@@ -151,6 +164,11 @@ public abstract class Filter
         /// The subtree contents.
         /// </summary>
         IParsedFilterable SubTree { get; }
+
+        /// <summary>
+        /// Whether this property is declared as nullable.
+        /// </summary>
+        bool MaybeNull { get; }
     }
 
     /// <summary>
@@ -208,10 +226,20 @@ public abstract class Filter
         /// Expression to merge root with a value from this level.
         /// </summary>
         LambdaExpression? MergeExpression { get; }
+
+        /// <summary>
+        /// Whether the join should be LEFT OUTER or not.
+        /// </summary>
+        bool IsOuterJoin { get; }
+
+        /// <summary>
+        /// Collection of members that will not be mapped.
+        /// </summary>
+        ICollection<string> UnmappedMembers { get; }
     }
 
     /// <summary>
-    /// Leaf of a parsed <see cref="Filter{TEntity,TReadModel}"/>
+    /// Leaf of a parsed <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>
     /// </summary>
     /// <typeparam name="TRoot">The root type of the domain model.</typeparam>
     /// <typeparam name="TSelf">The type of the leaf property</typeparam>
@@ -234,7 +262,7 @@ public abstract class Filter
     }
     
     /// <summary>
-    /// Leaf of a parsed <see cref="Filter{TEntity,TReadModel}"/>
+    /// Leaf of a parsed <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>
     /// </summary>
     /// <typeparam name="TRoot">The root type.</typeparam>
     /// <typeparam name="TCollection">Intermediary type to represent a collection of <typeparamref name="TSelf"/>.</typeparam>
@@ -260,10 +288,10 @@ public abstract class Filter
     }
 
     /// <summary>
-    /// Subtree of a <see cref="Filter{TEntity,TReadModel}"/> that is a collection.
+    /// Subtree of a <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/> that is a collection.
     /// </summary>
     /// <typeparam name="TRoot">The root type.</typeparam>
-    /// <typeparam name="TCollection">Intermediary type to represent a collection of <typeparamref name="TSelf"/>.</typeparam>
+    /// <typeparam name="TRmCollection">Intermediary type to represent a collection of <typeparamref name="TSelf"/>.</typeparam>
     /// <typeparam name="TSelf">The type of the collections contents.</typeparam>
     /// <typeparam name="TSelfReadModel"></typeparam>
     /// <typeparam name="TRootReadModel"></typeparam>
@@ -271,12 +299,13 @@ public abstract class Filter
     /// <param name="accessorExpression">An expression to reach the collection of this sub-property.</param>
     /// <param name="domainAccessorExpression">An expression to reach the collection of this sub-property.</param>
     /// <param name="subTree">The subtree.</param>
-    private class ParsedFilterableCollectionSubTree<TRoot, TRootReadModel, TCollection, TSelf, TSelfReadModel>(string name, Expression<Func<TRootReadModel, TCollection>> accessorExpression, IParsedFilterable subTree, Expression<Func<TRoot, TCollection>>? domainAccessorExpression = null) : IParsedFilterableCollectionSubTree
+    /// <param name="maybeNull">If this subtree was declared as nullable.</param>
+    private class ParsedFilterableCollectionSubTree<TRoot, TRootReadModel, TRmCollection, TSelf, TSelfReadModel>(string name, Expression<Func<TRootReadModel, TRmCollection>> accessorExpression, IParsedFilterable subTree, bool maybeNull, LambdaExpression? domainAccessorExpression = null) : IParsedFilterableCollectionSubTree
         where TRoot : class
         where TRootReadModel : class
         where TSelfReadModel : class, IFilterReadModel<TSelf, TSelfReadModel>, TSelf, new()
         where TSelf : class
-        where TCollection : IEnumerable<TSelfReadModel>
+        where TRmCollection : IEnumerable<TSelfReadModel>
     {
         /// <inheritdoc />
         public string Name => name;
@@ -289,10 +318,13 @@ public abstract class Filter
 
         /// <inheritdoc />
         public IParsedFilterable SubTree => subTree;
+
+        /// <inheritdoc />>
+        public bool MaybeNull => maybeNull;
     }
-    
+
     /// <summary>
-    /// Subtree of a <see cref="Filter{TEntity,TReadModel}"/>.
+    /// Subtree of a <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>.
     /// </summary>
     /// <typeparam name="TRoot">The root type.</typeparam>
     /// <typeparam name="TSelf">The type of this sub-property.</typeparam>
@@ -302,7 +334,8 @@ public abstract class Filter
     /// <param name="accessorExpression">An expression to reach this sub-property.</param>
     /// <param name="domainAccessorExpression">An expression to reach this sub-property.</param>
     /// <param name="subTree">The subtree.</param>
-    private class ParsedFilterableSubTree<TRoot, TRootReadModel, TSelf, TSelfReadModel>(string name, Expression<Func<TRootReadModel, TSelfReadModel>> accessorExpression, IParsedFilterable subTree, Expression<Func<TRoot, TSelf>>? domainAccessorExpression = null) : IParsedFilterableSubTree
+    /// <param name="maybeNull">If this subtree was declared as nullable.</param>
+    private class ParsedFilterableSubTree<TRoot, TRootReadModel, TSelf, TSelfReadModel>(string name, Expression<Func<TRootReadModel, TSelfReadModel>> accessorExpression, IParsedFilterable subTree, bool maybeNull, LambdaExpression? domainAccessorExpression = null) : IParsedFilterableSubTree
         where TRoot : class
         where TRootReadModel : class
         where TSelfReadModel : class, IFilterReadModel<TSelf, TSelfReadModel>, TSelf, new()
@@ -319,6 +352,9 @@ public abstract class Filter
 
         /// <inheritdoc />
         public IParsedFilterable SubTree => subTree;
+
+        /// <inheritdoc />
+        public bool MaybeNull => maybeNull;
     }
 
     /// <summary>
@@ -387,8 +423,9 @@ public abstract class Filter
     /// <param name="name">Name of the property.</param>
     /// <param name="accessor">Accessor from root.</param>
     /// <param name="subTree">Subtree.</param>
+    /// <param name="maybeNull">If this subtree is nullable.</param>
     /// <param name="domainAccessor">Accessor from domain root.</param>
-    protected static IParsedFilterableSubTree SubTreeFromTypes(Type root, Type rootReadModel, Type self, Type selfReadModel, string name, LambdaExpression accessor, IParsedFilterable subTree, LambdaExpression? domainAccessor = null)
+    protected static IParsedFilterableSubTree SubTreeFromTypes(Type root, Type rootReadModel, Type self, Type selfReadModel, string name, LambdaExpression accessor, IParsedFilterable subTree, bool maybeNull, LambdaExpression? domainAccessor = null)
     {
         if (!rootReadModel.IsAssignableTo(root))
         {
@@ -402,7 +439,7 @@ public abstract class Filter
 
         var subType = typeof(ParsedFilterableSubTree<,,,>).MakeGenericType(root, rootReadModel, self, selfReadModel);
 
-        if (Activator.CreateInstance(subType, name, accessor, subTree, domainAccessor) is IParsedFilterableSubTree result)
+        if (Activator.CreateInstance(subType, name, accessor, subTree, maybeNull, domainAccessor) is IParsedFilterableSubTree result)
         {
             return result;
         }
@@ -420,8 +457,9 @@ public abstract class Filter
     /// <param name="name">Name of the property.</param>
     /// <param name="accessor">Accessor from the read model.</param>
     /// <param name="subTree">The subtree.</param>
+    /// <param name="maybeNull">If this subtree is nullable.</param>
     /// <param name="domainAccessor">The accessor from the domain object if the types match.</param>
-    protected static IParsedFilterableCollectionSubTree CollectionSubTreeFromTypes(Type root, Type rootReadModel, Type collection, Type self, Type selfReadModel, string name, LambdaExpression accessor, IParsedFilterable subTree, LambdaExpression? domainAccessor = null)
+    protected static IParsedFilterableCollectionSubTree CollectionSubTreeFromTypes(Type root, Type rootReadModel, Type collection, Type self, Type selfReadModel, string name, LambdaExpression accessor, IParsedFilterable subTree, bool maybeNull, LambdaExpression? domainAccessor = null)
     {
         if (!rootReadModel.IsAssignableTo(root))
         {
@@ -440,14 +478,17 @@ public abstract class Filter
 
         var subType = typeof(ParsedFilterableCollectionSubTree<,,,,>).MakeGenericType(root, rootReadModel, collection, self, selfReadModel);
 
-        if (Activator.CreateInstance(subType, name, accessor, subTree, domainAccessor) is IParsedFilterableCollectionSubTree result)
+        if (Activator.CreateInstance(subType, name, accessor, subTree, maybeNull, domainAccessor) is IParsedFilterableCollectionSubTree result)
         {
             return result;
         }
         throw new FilterParserException($"Could not parse collection sub tree {root.Name}, {name}");
     }
 
-    internal Filter()
+    /// <summary>
+    /// Not supposed to be instantiated.
+    /// </summary>
+    internal FilterReadModelBinderBase()
     {
     }
 }

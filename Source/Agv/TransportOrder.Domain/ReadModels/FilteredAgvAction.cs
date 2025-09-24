@@ -9,53 +9,33 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 [PublicAPI]
 public record FilteredAgvAction
 {
-    /// <summary>
-    /// Unique CorrelationId of this action
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.CorrelationId"/>
     public Guid CorrelationId { get; init; }
 
-    /// <summary>
-    /// The position of this action in the action group sequence.
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.Sequence"/>
     public int Sequence { get; init; }
 
-    /// <summary>
-    /// The current state of the action
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.State"/>
     public ActionState State { get; init; }
 
-    /// <summary>
-    /// The type of the action, e.g. Pick or Drop
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.ActionType"/>
     public ActionType ActionType { get; init; }
 
-    /// <summary>
-    /// The target of the action.
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.Target"/>
     public FilteredActionTarget Target { get; init; } = null!;
 
-    /// <summary>
-    /// Date the action was created (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.CreatedDate"/>
     public DateTime CreatedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been started (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.StartedDate"/>
     public DateTime? StartedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been completed (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.CompletedDate"/>
     public DateTime? CompletedDate { get; init; }
 
-    /// <summary>
-    /// Date the action has been paused at (UTC)
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.PausedDate"/>
     public DateTime? PausedDate { get; init; }
 
-    /// <summary>
-    /// Whether this <see cref="AgvAction"/> should be skipped.
-    /// </summary>
+    /// <inheritdoc cref="AgvAction.IsSkipped"/>
     public bool ShouldSkip { get; init; }
 }

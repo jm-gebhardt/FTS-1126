@@ -1,6 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Filter.Dtos;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;

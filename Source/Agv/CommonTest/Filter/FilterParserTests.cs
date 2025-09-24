@@ -11,7 +11,7 @@ public class FilterParserBaseTests
     [TestMethod]
     public void VerifyParsed_ValidData_ParsesCorrectly()
     {
-        Filter<FilterableTestHelper, FilterReadModelTestHelperReadModel>.VerifyParsing(1, 1, 1, 1).ShouldBeTrue();
+        FilterReadModelBinder<FilterableTestHelper, FilterReadModelTestHelperReadModel>.VerifyParsing(1, 1, 1, 1).ShouldBeTrue();
     }
 
     [TestMethod]
@@ -42,9 +42,9 @@ public class FilterParserBaseTests
         fixture.Add(coll1);
         fixture.Add(coll2);
 
-        var filterBy = Filter<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilter(fixture.ContextFactory);
+        var filterBy = FilterReadModelBinder<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilter(fixture.ContextFactory);
 
-        var filter = new CollectionFilter(variant, nameof(TestCollectionEntity.Values), new FilterLeaf<string>(nameof(TestCollectionEntity.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntity.StringValue),ComparisonVariant.Like, "AAA"));
+        var filter = new CollectionFilter(variant, nameof(TestCollectionEntity.Values), new ValueComparisonFilter<string>(nameof(TestCollectionEntity.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntity.StringValue),ComparisonVariant.Like, "AAA"));
 
         ICollection<TestCollectionEntityReadModel> result = await filterBy(filter);
 
@@ -67,9 +67,9 @@ public class FilterParserBaseTests
             fixture.Add(coll);
         }
         
-        var filterBy = Filter<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
+        var filterBy = FilterReadModelBinder<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
-        var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new FilterLeaf<int>(nameof(TestCollectionEntityReadModel.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
+        var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new ValueComparisonFilter<int>(nameof(TestCollectionEntityReadModel.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
 
         ICollection<TestCollectionEntityReadModel> result = await filterBy(filter, 4, 10, SortOrdering.Desc, []);
 
@@ -90,9 +90,9 @@ public class FilterParserBaseTests
             fixture.Add(coll);
         }
 
-        var filterBy = Filter<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
+        var filterBy = FilterReadModelBinder<TestCollectionEntity, TestCollectionEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
-        var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new FilterLeaf<int>(nameof(TestCollectionEntityReadModel.Values) + FilterBase.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
+        var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new ValueComparisonFilter<int>(nameof(TestCollectionEntityReadModel.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
 
         List<Task<ICollection<TestCollectionEntityReadModel>>> results = [];
 
@@ -123,9 +123,9 @@ public class FilterParserBaseTests
         var entity = new TestDbEntity("1", 1);
         fixture.Add(entity);
 
-        var filterBy = Filter<TestDbEntity, TestDbEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
+        var filterBy = FilterReadModelBinder<TestDbEntity, TestDbEntityReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
-        var filter = new CombinationFilter(LogicalCombinationVariant.And, [], [new FilterLeaf<Guid>(nameof(TestDbEntityReadModel.Key), ComparisonVariant.Equals, entity.Key)]);
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<Guid>(nameof(TestDbEntityReadModel.Key), ComparisonVariant.Equals, entity.Key)]);
 
         ICollection<TestDbEntityReadModel> result = await filterBy.Invoke(filter, 0, 10, SortOrdering.Desc, []);
 
@@ -139,15 +139,77 @@ public class FilterParserBaseTests
 
         var target = new TestJoinTargetEntity(10);
         var source = new TestJoinSourceEntity(target.TjTKey);
+        var outer = new TestJoinSourceEntity();
         fixture.Add(target);
         fixture.Add(source);
+        fixture.Add(outer);
 
-        var filterBy = Filter<TestJoinSourceEntity, TestJoinSourceReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
+        var filterBy = FilterReadModelBinder<TestJoinSourceEntity, TestJoinSourceReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
 
-        var filter = new CombinationFilter(LogicalCombinationVariant.And, [], [new FilterLeaf<int>(nameof(TestJoinSourceReadModel.TjtFKey) + FilterBase.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, 10)]);
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<int>(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, 10)]);
 
         ICollection<TestJoinSourceReadModel> result = await filterBy(filter, 0, 10, SortOrdering.Desc, []);
 
         result.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterBy_WithOuterJoin_RetrievesCorrectItemCount()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var target = new TestJoinTargetEntity(10);
+        var source = new TestJoinSourceEntity(target.TjTKey);
+        var outer = new TestJoinSourceEntity();
+        fixture.Add(target);
+        fixture.Add(source);
+        fixture.Add(outer);
+
+        var filterBy = FilterReadModelBinder<TestJoinSourceEntity, TestJoinSourceReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
+
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<bool>(nameof(TestJoinSourceReadModel.Exists), ComparisonVariant.Equals, true)]);
+
+        ICollection<TestJoinSourceReadModel> result = await filterBy(filter, 0, 10, SortOrdering.Desc, []);
+
+        result.Count.ShouldBe(2);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterBy_NullableStruct_RetrievesCorrectItemCount()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var empty = new TestDbEntity("10",10);
+        var full = new TestDbEntity("10",10) {NullablePrimitive = 10};
+        fixture.Add(empty);
+        fixture.Add(full);
+
+        var filterBy = FilterReadModelBinder<TestDbEntity, TestDbEntityReadModel>.CreateFilter(fixture.ContextFactory);
+
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<int?>(nameof(TestDbEntity.NullablePrimitive) , ComparisonVariant.Equals, 10)]);
+
+        ICollection<TestDbEntityReadModel> result = await filterBy(filter);
+
+        result.Count.ShouldBe(1);
+    }
+    
+    [TestMethod]
+    public async Task InvokeFilterBy_ValueConversion_RetrievesCorrectItemCount()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var empty = new TestDbEntity("10", 4);
+        var full = new TestDbEntity("10", 10) { Converted = new Dictionary<string, string>{{"a", "b"}}};
+        fixture.Add(empty);
+        fixture.Add(full);
+
+        var filterBy = FilterReadModelBinder<TestDbEntity, TestDbEntityReadModel>.CreateFilter(fixture.ContextFactory);
+
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<int>(nameof(TestDbEntity.IntValue), ComparisonVariant.Equals, 10)]);
+
+        ICollection<TestDbEntityReadModel> result = await filterBy(filter);
+
+        result.Count.ShouldBe(1);
+        result.First().Converted.ShouldContainKeyAndValue("a", "b");
     }
 }

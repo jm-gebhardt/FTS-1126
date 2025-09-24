@@ -1,28 +1,19 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Filter.Api.Swagger;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="Position"></param>
-/// <param name="Node"></param>
+/// <inheritdoc cref="ActionTarget"/>
 [PublicAPI]
-public record FilteredActionTargetDto(FilteredAgvPositionDto? Position, FilteredGraphNodeDto? Node);
+public record FilteredActionTargetDto([property: SwaggerFilterableProperty] FilteredAgvPositionDto? Position, [property: SwaggerFilterableProperty] FilteredGraphNodeDto? Node);
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="X"></param>
-/// <param name="Y"></param>
-/// <param name="Z"></param>
-/// <param name="Theta"></param>
+/// <inheritdoc cref="AgvPosition"/>
 [PublicAPI]
-public record FilteredAgvPositionDto(float X, float Y, float Z, float Theta);
+public record FilteredAgvPositionDto([property: SwaggerFilterableProperty] float X, [property: SwaggerFilterableProperty] float Y, [property: SwaggerFilterableProperty] float Z, [property: SwaggerFilterableProperty] float Theta);
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="Name"></param>
+/// <inheritdoc cref="GraphNode"/>
 [PublicAPI]
-public record FilteredGraphNodeDto(string Name);
+public record FilteredGraphNodeDto([property: SwaggerFilterableProperty]string Name);

@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Filter.Dtos;
+﻿using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;

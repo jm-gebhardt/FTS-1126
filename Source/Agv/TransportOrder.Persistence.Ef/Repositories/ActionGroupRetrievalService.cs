@@ -21,8 +21,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
-    /// <inheritdoc cref="Filter{TEntity,TReadModel}.FilterByPaginatedWithOrdering"/>
-    private readonly Filter<ActionGroup, ActionGroupFilterReadModel>.FilterByPaginatedWithOrdering _filter;
+    /// <inheritdoc cref="FilterReadModelBinder{TDomainObject,TReadModel}.FilterByPaginatedWithOrdering"/>
+    private readonly FilterReadModelBinder<ActionGroup, ActionGroupFilterReadModel>.FilterByPaginatedWithOrdering _filter;
 
     private readonly IMapper _mapper;
 
@@ -32,7 +32,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     public ActionGroupRetrievalService(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper)
     {
         _dbContextFactory = dbContextFactory;
-        _filter = Filter<ActionGroup, ActionGroupFilterReadModel>.CreateFilterWithPagination(_dbContextFactory);
+        _filter = FilterReadModelBinder<ActionGroup, ActionGroupFilterReadModel>.CreateFilterWithPagination(_dbContextFactory);
         _mapper = mapper;
     }
 
@@ -45,9 +45,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
     
     /// <inheritdoc />
-    public async Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties)
+    public async Task<ICollection<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties)
     {
-        return _mapper.Map<ICollection<ActionGroupFilterReadModel>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filterBase, pageNr, pageSize, order, orderProperties));
+        return _mapper.Map<ICollection<ActionGroupFilterReadModel>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
     }
 
     /// <inheritdoc />

@@ -9,28 +9,18 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 [PublicAPI]
 public record FilteredAgv
 {
-    /// <summary>
-    /// Correlation id of this agv.
-    /// </summary>
+    /// <inheritdoc cref="Agv.CorrelationId"/>
     public Guid CorrelationId { get; init; }
 
-    /// <summary>
-    /// Serial number of the agv.
-    /// </summary>
+    /// <inheritdoc cref="Agv.SerialNumber"/>
     public string SerialNumber { get; init; } = null!;
 
-    /// <summary>
-    /// The name of the agv.
-    /// </summary>
+    /// <inheritdoc cref="Agv.Name"/>
     public string Name { get; private set; } = null!;
 
-    /// <summary>
-    /// Last received agv status.
-    /// </summary>
+    /// <inheritdoc cref="Agv.AgvStatus"/>
     public AgvStatus? AgvStatus { get; set; }
 
-    /// <summary>
-    /// The mode of the agv.
-    /// </summary>
+    /// <inheritdoc cref="Agv.Mode"/>
     public AgvMode Mode { get; init; } = null!;
 }

@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Filter.ReadModelParser;
-using static Gebhardt.Acc.Common.Filter.ReadModelParser.Filter;
+using static Gebhardt.Acc.Common.Filter.ReadModelParser.FilterReadModelBinderBase;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.CommonTest.Filter;

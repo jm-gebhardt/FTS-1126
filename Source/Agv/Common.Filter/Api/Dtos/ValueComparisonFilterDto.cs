@@ -2,13 +2,13 @@
 using Gebhardt.Acc.Common.Filter.Enums;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.Common.Filter.Dtos;
+namespace Gebhardt.Acc.Common.Filter.Api.Dtos;
 
 /// <summary>
 /// Represents a filter leaf that compares a value with the property behind the name.
 /// </summary>
 [PublicAPI]
-public record FilterLeafDto
+public record ValueComparisonFilterDto : FilterBaseDto
 {
     /// <summary>
     /// The property name as reachable in the hierarchy from the root of the comparison.
@@ -30,7 +30,7 @@ public record FilterLeafDto
     /// Constructor.
     /// </summary>
     [JsonConstructor]
-    public FilterLeafDto(string name, ComparisonVariant variant, string content)
+    public ValueComparisonFilterDto(string name, ComparisonVariant variant, string content)
     {
         Name = name;
         Variant = variant;

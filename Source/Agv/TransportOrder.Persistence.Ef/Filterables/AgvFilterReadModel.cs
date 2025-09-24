@@ -10,35 +10,24 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 [PublicAPI]
 public class AgvFilterReadModel : Agv, IFilterReadModel<Agv, AgvFilterReadModel>
 {
-    /// <summary>
-    /// Correlation id of the agv.
-    /// </summary>
-    [Filter.FilterProperty]
-    [Filter.KeyProperty]
+    /// <inheritdoc cref="Agv.CorrelationId"/>
+    [FilterReadModelBinderBase.FilterProperty]
+    [FilterReadModelBinderBase.KeyProperty]
     public new Guid CorrelationId { get; init; }
 
-    /// <summary>
-    /// Serial number of the agv.
-    /// </summary>
-    [Filter.FilterProperty]
+    /// <inheritdoc cref="Agv.SerialNumber"/>
+    [FilterReadModelBinderBase.FilterProperty]
     public new string SerialNumber { get; init; } = null!;
 
-    /// <summary>
-    /// The name of the agv.
-    /// </summary>
-    [Filter.FilterProperty]
-    public new string Name { get; private set; } = null!;
+    /// <inheritdoc cref="Agv.Name"/>
+    [FilterReadModelBinderBase.FilterProperty]
+    public new string Name { get; init; } = null!;
 
-    /// <summary>
-    /// Last received agv status.
-    /// </summary>
-    [Filter.NavigationProperty]
-    public new AgvStatus? AgvStatus { get; set; }
+    /// <inheritdoc cref="Agv.AgvStatus"/>
+    [FilterReadModelBinderBase.NavigationProperty]
+    public new AgvStatus? AgvStatus { get; init; }
 
-    /// <summary>
-    /// The mode of the agv.
-    /// </summary>
-    [Filter.NavigationProperty]
-
+    /// <inheritdoc cref="Agv.Mode"/>
+    [FilterReadModelBinderBase.NavigationProperty]
     public new AgvMode Mode { get; init; } = null!;
 }
