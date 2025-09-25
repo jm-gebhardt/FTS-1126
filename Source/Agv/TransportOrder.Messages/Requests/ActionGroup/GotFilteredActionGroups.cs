@@ -3,7 +3,7 @@
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 
 /// <summary>
-/// 
+/// Represents a response to <see cref="GetFilteredActionGroups"/>.
 /// </summary>
-/// <param name="ActionGroups"></param>
+/// <param name="ActionGroups">The filtered action groups.</param>
 public record GotFilteredActionGroups(ICollection<FilteredActionGroup> ActionGroups);
