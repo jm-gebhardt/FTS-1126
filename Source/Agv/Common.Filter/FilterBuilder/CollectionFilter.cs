@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.Expressions;
@@ -51,31 +52,38 @@ public sealed class CollectionFilter : IFilter
     /// <inheritdoc />
     public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
     {
-        var childExpression = Child.ToExpressionTree(accessors);
-        if (childExpression == null)
+        try
         {
-            throw new FilterExecutionException($"Could not convert subtree for method {nameof(ToExpressionTree)} to expression tree");
-        }
+            var childExpression = Child.ToExpressionTree(accessors);
+            if (childExpression == null)
+            {
+                throw new FilterExecutionException($"Could not convert subtree for method {nameof(ToExpressionTree)} to expression tree");
+            }
 
-        if (!accessors.TryGetValue(CollectionName, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
+            if (!accessors.TryGetValue(CollectionName, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
+            {
+                throw new FilterExecutionException($"No accessor for {CollectionName} in {nameof(CollectionFilter)}");
+            }
+
+            var outputType = accessor.ReturnType;
+
+            Type collectionBaseType;
+
+            if (outputType.IsGenericType && outputType.GetGenericTypeDefinition() == typeof(ICollection<>))
+            {
+                collectionBaseType = outputType.GenericTypeArguments.First();
+            }
+            else
+            {
+                collectionBaseType = outputType.GetEnumerableContentType() ?? throw new FilterExecutionException($"Accessor expression tree does not return collection for {nameof(CollectionFilter)}");
+            }
+
+            return FilterExpressionBuilder.CreateAggregationPredicate(collectionBaseType, childExpression, accessor, AggregateVariant);
+        }
+        catch (TargetInvocationException ex)
         {
-            throw new FilterExecutionException($"No accessor for {CollectionName} in {nameof(CollectionFilter)}");
+            throw ex.GetBaseException();
         }
-
-        var outputType = accessor.ReturnType;
-
-        Type collectionBaseType;
-
-        if (outputType.IsGenericType && outputType.GetGenericTypeDefinition() == typeof(ICollection<>))
-        {
-            collectionBaseType = outputType.GenericTypeArguments.First();
-        }
-        else
-        {
-            collectionBaseType = outputType.GetEnumerableContentType() ?? throw new FilterExecutionException($"Accessor expression tree does not return collection for {nameof(CollectionFilter)}");
-        }
-
-        return FilterExpressionBuilder.CreateAggregationPredicate(collectionBaseType, childExpression, accessor, AggregateVariant);
     }
 
     private bool StopSplitting()

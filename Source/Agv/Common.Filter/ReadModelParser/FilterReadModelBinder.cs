@@ -236,7 +236,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
 
         TryAddTypeMapping(domModel, readModel, newProjection);
     }
-
+    
     // ReSharper disable once StaticMemberInGenericType // Intentional, as all Filterable are supposed to have their own layers.
     private static readonly List<string> _includeLayers = [];
 
@@ -270,63 +270,70 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
     {
         return (context, filterBase) =>
         {
-            Dictionary<int, IFilter> batches = filterBase.SplitFilter(_totalLayers, _domainPropertyAccessors);
-
-            IQueryable<TDomainObject> query = context.Set<TDomainObject>()
-                .AsNoTracking();
-
-            if (batches.TryGetValue(0, out var baseLevelFilter))
+            try
             {
-                query = query.Where(baseLevelFilter.ToExpressionTree(_domainPropertyAccessors).AsPredicate<TDomainObject>());
-            }
+                Dictionary<int, IFilter> batches = filterBase.SplitFilter(_totalLayers, _domainPropertyAccessors);
 
-            for (int layerIndex = 1; layerIndex < _includeLayers.Count; layerIndex++)
-            {
-                query = query.Include(_includeLayers[layerIndex]);
+                IQueryable<TDomainObject> query = context.Set<TDomainObject>()
+                    .AsNoTracking();
 
-                if (!batches.TryGetValue(layerIndex, out var filter))
+                if (batches.TryGetValue(0, out var baseLevelFilter))
                 {
-                    continue;
+                    query = query.Where(baseLevelFilter.ToExpressionTree(_domainPropertyAccessors).AsPredicate<TDomainObject>());
                 }
 
-                query = query.Where(filter.ToExpressionTree(_domainPropertyAccessors).AsPredicate<TDomainObject>());
-            }
+                for (int layerIndex = 1; layerIndex < _includeLayers.Count; layerIndex++)
+                {
+                    query = query.Include(_includeLayers[layerIndex]);
 
-            if (!TryGetTypeMapping(typeof(TDomainObject), typeof(TReadModel), out var projection))
-            {
-                throw new FilterExecutionException($"Could not find projection for type {typeof(TDomainObject).FullName}");
-            }
-
-            IQueryable<TReadModel> projectedQuery = query.ApplyProjection<TReadModel, TDomainObject>(projection);
-
-            if (batches.TryGetValue(_includeLayers.Count, out var readModelBase))
-            {
-                projectedQuery = projectedQuery.Where(readModelBase.ToExpressionTree(PropertyAccessors).AsPredicate<TReadModel>());
-            }
-
-            for (int layerIndex = _includeLayers.Count + 1; layerIndex < _totalLayers.Count; layerIndex++)
-            {
-                if (_joinProperties[_totalLayers[layerIndex]] is not
+                    if (!batches.TryGetValue(layerIndex, out var filter))
                     {
-                        QueryableCreator: { } queryableCreator,
-                        RootKeyAccessor: { } ownKeyAccessor,
-                        OtherKeyAccessor: { } otherKeyAccessor,
-                        MergeExpression: { } mergeExpression,
-                        IsOuterJoin: var isOuterJoin
-                    })
-                {
-                    throw new FilterExecutionException($"Could not create join for {_totalLayers[layerIndex]}");
+                        continue;
+                    }
+
+                    query = query.Where(filter.ToExpressionTree(_domainPropertyAccessors).AsPredicate<TDomainObject>());
                 }
 
-                projectedQuery = projectedQuery.ApplyJoin(queryableCreator.Invoke(context), ownKeyAccessor, otherKeyAccessor, mergeExpression, isOuterJoin);
-
-                if (batches.TryGetValue(layerIndex, out var predicate))
+                if (!TryGetTypeMapping(typeof(TDomainObject), typeof(TReadModel), out var projection))
                 {
-                    projectedQuery = projectedQuery.Where(predicate.ToExpressionTree(PropertyAccessors).AsPredicate<TReadModel>());
+                    throw new FilterExecutionException($"Could not find projection for type {typeof(TDomainObject).FullName}");
                 }
+
+                IQueryable<TReadModel> projectedQuery = query.ApplyProjection<TReadModel, TDomainObject>(projection);
+
+                if (batches.TryGetValue(_includeLayers.Count, out var readModelBase))
+                {
+                    projectedQuery = projectedQuery.Where(readModelBase.ToExpressionTree(PropertyAccessors).AsPredicate<TReadModel>());
+                }
+
+                for (int layerIndex = _includeLayers.Count + 1; layerIndex < _totalLayers.Count; layerIndex++)
+                {
+                    if (_joinProperties[_totalLayers[layerIndex]] is not
+                        {
+                            QueryableCreator: { } queryableCreator,
+                            RootKeyAccessor: { } ownKeyAccessor,
+                            OtherKeyAccessor: { } otherKeyAccessor,
+                            MergeExpression: { } mergeExpression,
+                            IsOuterJoin: var isOuterJoin
+                        })
+                    {
+                        throw new FilterExecutionException($"Could not create join for {_totalLayers[layerIndex]}");
+                    }
+
+                    projectedQuery = projectedQuery.ApplyJoin(queryableCreator.Invoke(context), ownKeyAccessor, otherKeyAccessor, mergeExpression, isOuterJoin);
+
+                    if (batches.TryGetValue(layerIndex, out var predicate))
+                    {
+                        projectedQuery = projectedQuery.Where(predicate.ToExpressionTree(PropertyAccessors).AsPredicate<TReadModel>());
+                    }
+                }
+
+                return projectedQuery;
             }
-
-            return projectedQuery;
+            catch (TargetInvocationException ex)
+            {
+                throw ex.GetBaseException();
+            }
         };
     }
     
@@ -365,67 +372,73 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
             await using var context = await contextFactory.CreateDbContextAsync();
 
             IQueryable<TReadModel> projectedQuery = filterer(context, filter);
-
-            IOrderedQueryable<TReadModel>? orderedQuery = null;
-
-            List<string> incomingKeys = orderByProperties.Where(s => _keyProperties.Contains(s)).ToList();
-
-            IEnumerable<string> incomingProps = orderByProperties.Where(s => !_keyProperties.Contains(s));
-
-            IEnumerable<string> remainingKeys = _keyProperties.Except(incomingKeys);
-
-            foreach (string prop in incomingProps)
+            try
             {
-                if (!PropertyAccessors.TryGetValue(prop, out var accessor))
-                {
-                    continue;
-                }
-                if (orderedQuery == null)
-                {
-                    orderedQuery = projectedQuery.OrderByAccessor(accessor.Item1, ordering);
-                    continue;
-                }
-                orderedQuery = orderedQuery.ThenOrderByAccessor(accessor.Item1);
-            }
+                IOrderedQueryable<TReadModel>? orderedQuery = null;
 
-            foreach (string key in incomingKeys)
+                List<string> incomingKeys = orderByProperties.Where(s => _keyProperties.Contains(s)).ToList();
+
+                IEnumerable<string> incomingProps = orderByProperties.Where(s => !_keyProperties.Contains(s));
+
+                IEnumerable<string> remainingKeys = _keyProperties.Except(incomingKeys);
+
+                foreach (string prop in incomingProps)
+                {
+                    if (!PropertyAccessors.TryGetValue(prop, out var accessor))
+                    {
+                        continue;
+                    }
+                    if (orderedQuery == null)
+                    {
+                        orderedQuery = projectedQuery.OrderByAccessor(accessor.Item1, ordering);
+                        continue;
+                    }
+                    orderedQuery = orderedQuery.ThenOrderByAccessor(accessor.Item1);
+                }
+
+                foreach (string key in incomingKeys)
+                {
+                    if (!_keyAccessors.TryGetValue(key, out var accessor))
+                    {
+                        continue;
+                    }
+                    if (orderedQuery == null)
+                    {
+                        orderedQuery = projectedQuery.OrderByAccessor(accessor, ordering);
+                        continue;
+                    }
+                    orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
+                }
+
+                foreach (string key in remainingKeys)
+                {
+                    if (!_keyAccessors.TryGetValue(key, out var accessor))
+                    {
+                        continue;
+                    }
+                    if (orderedQuery == null)
+                    {
+                        orderedQuery = projectedQuery.OrderByAccessor(accessor, ordering);
+                        continue;
+                    }
+                    orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
+                }
+
+                projectedQuery = orderedQuery as IQueryable<TReadModel> ?? projectedQuery;
+
+                bool usePagination = pageNr != null && pageSize != null;
+                if (usePagination)
+                {
+                    projectedQuery = projectedQuery.Skip(pageNr!.Value * pageSize!.Value)
+                        .Take(pageSize.Value);
+                }
+
+                return await projectedQuery.ToListAsync();
+            }
+            catch (TargetInvocationException ex)
             {
-                if (!_keyAccessors.TryGetValue(key, out var accessor))
-                {
-                    continue;
-                }
-                if (orderedQuery == null)
-                {
-                    orderedQuery = projectedQuery.OrderByAccessor(accessor, ordering);
-                    continue;
-                }
-                orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
+                throw ex.GetBaseException();
             }
-
-            foreach (string key in remainingKeys)
-            {
-                if (!_keyAccessors.TryGetValue(key, out var accessor))
-                {
-                    continue;
-                }
-                if (orderedQuery == null)
-                {
-                    orderedQuery = projectedQuery.OrderByAccessor(accessor, ordering);
-                    continue;
-                }
-                orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
-            }
-
-            projectedQuery = orderedQuery as IQueryable<TReadModel> ?? projectedQuery;
-
-            bool usePagination = pageNr != null && pageSize != null;
-            if (usePagination)
-            {
-                projectedQuery = projectedQuery.Skip(pageNr!.Value * pageSize!.Value)
-                    .Take(pageSize.Value);
-            }
-
-            return await projectedQuery.ToListAsync();
         };
     }
     

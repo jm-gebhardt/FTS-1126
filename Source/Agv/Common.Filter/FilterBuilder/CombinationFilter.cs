@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.Expressions;
@@ -52,25 +53,32 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
     /// <inheritdoc />
     public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
     {
-        List<LambdaExpression> childExpressions = Children.Select(n => n.ToExpressionTree(accessors)).ToList();
-
-        if (childExpressions.Count == 1)
+        try 
         {
-            return childExpressions.First();
+            List<LambdaExpression> childExpressions = Children.Select(n => n.ToExpressionTree(accessors)).ToList();
+
+            if (childExpressions.Count == 1)
+            {
+                return childExpressions.First();
+            }
+
+            accessors.TryGetValue(IFilter.DomainFilterLayer, out var lambda);
+
+            var inputType = lambda.Item1?.Parameters.FirstOrDefault()?.Type;
+
+            if (inputType == null)
+            {
+                throw new FilterBuilderException("Could not determine input type in direct filter");
+            }
+
+            return childExpressions.Count == 0 ?
+                FilterExpressionBuilder.CreateConstantTruePredicate(inputType) :
+                childExpressions.Aggregate((p1, p2) => FilterExpressionBuilder.ConnectPredicates(p1, p2, CombinationVariantType));
         }
-
-        accessors.TryGetValue(IFilter.DomainFilterLayer, out var lambda);
-
-        var inputType = lambda.Item1?.Parameters.FirstOrDefault()?.Type;
-
-        if (inputType == null)
+        catch (TargetInvocationException ex)
         {
-            throw new FilterBuilderException("Could not determine input type in direct filter");
+            throw ex.GetBaseException();
         }
-
-        return childExpressions.Count == 0 ? 
-            FilterExpressionBuilder.CreateConstantTruePredicate(inputType) : 
-            childExpressions.Aggregate((p1, p2) => FilterExpressionBuilder.ConnectPredicates(p1, p2, CombinationVariantType));
     }
 
     /// <inheritdoc cref="IFilter"/>

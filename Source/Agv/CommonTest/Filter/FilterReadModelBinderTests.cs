@@ -329,6 +329,27 @@ public class FilterReadModelBinderTests
 
         result.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
     }
+    
+    [TestMethod]
+    public void ToExpressionTree_WeirdValueTypes_BuildsExpressionTree()
+    {
+        TimeSpan? nullableTimeSpan = null;
+
+        var filter = new ValueComparisonFilter<TimeSpan?>("test", ComparisonVariant.Geq, TimeSpan.FromMicroseconds(12));
+
+        var compTo = new { test = nullableTimeSpan };
+
+        var accessors = new Dictionary<string, (LambdaExpression, bool)>
+        {
+            {"", (ExpressionHelper.CreateIdentityExpression(compTo.GetType()), false)},
+            { "test", (FilterExpressionBuilder.CreatePropertyAccess(compTo.GetType(), typeof(TimeSpan?), "test"), true)}
+        };
+
+        bool? result = filter.ToExpressionTree(accessors).Compile().DynamicInvoke(compTo) as bool?;
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeFalse();
+    }
 
     private class TestValueHolder(int value, string stringValue)
     {

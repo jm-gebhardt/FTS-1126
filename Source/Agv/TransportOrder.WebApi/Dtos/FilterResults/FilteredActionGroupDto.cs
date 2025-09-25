@@ -19,7 +19,6 @@ public record FilteredActionGroupDto
     public string OrderId { get; init; } = null!;
 
     /// <inheritdoc cref="ActionGroup.AssignedAgv"/>
-    [SwaggerFilterableProperty]
     public FilteredAgvDto? AssignedAgv { get; init; }
 
     /// <inheritdoc cref="ActionGroup.CreatedDate"/>

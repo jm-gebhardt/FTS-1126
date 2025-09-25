@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.Expressions;
@@ -32,25 +33,32 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
     {
-        if (!accessors.TryGetValue(Name, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
+        try
         {
-            throw new FilterExecutionException($"No accessor for {Name} in {nameof(ValueComparisonFilter<TContent>)}");
+            if (!accessors.TryGetValue(Name, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
+            {
+                throw new FilterExecutionException($"No accessor for {Name} in {nameof(ValueComparisonFilter<TContent>)}");
+            }
+
+            bool noAccessor = Name == string.Empty;
+
+            var inputType = noAccessor ? typeof(TContent) : accessor.Parameters.Select(p => p.Type).First();
+
+            if (Variant == ComparisonVariant.Like)
+            {
+                return FilterExpressionBuilder.GenerateContainsPredicate(inputType, content, Name, noAccessor ? null : accessor);
+            }
+
+            bool isNullable = Nullable.GetUnderlyingType(accessor.ReturnType) != null && Nullable.GetUnderlyingType(typeof(TContent)) == null;
+
+            var predicate = FilterExpressionBuilder.GeneratePredicate(inputType, typeof(TContent), content, Name, Variant, noAccessor ? null : accessor, isNullable);
+
+            return predicate;
         }
-
-        bool noAccessor = Name == string.Empty;
-
-        var inputType = noAccessor ? typeof(TContent) : accessor.Parameters.Select(p => p.Type).First();
-
-        if (Variant == ComparisonVariant.Like)
+        catch (TargetInvocationException ex)
         {
-            return FilterExpressionBuilder.GenerateContainsPredicate(inputType, content, Name, noAccessor ? null : accessor);
+            throw ex.GetBaseException();
         }
-
-        bool isNullable = Nullable.GetUnderlyingType(accessor.ReturnType) != null && Nullable.GetUnderlyingType(typeof(TContent)) == null;
-
-        var predicate = FilterExpressionBuilder.GeneratePredicate(inputType, typeof(TContent), content, Name, Variant, noAccessor ? null : accessor, isNullable);
-
-        return predicate;
     }
 
     /// <inheritdoc />

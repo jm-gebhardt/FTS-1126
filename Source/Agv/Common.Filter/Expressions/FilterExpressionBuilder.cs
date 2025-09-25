@@ -18,6 +18,9 @@ internal static class FilterExpressionBuilder
     /// <param name="discardedInput">Type of the input parameter. Will not be used by the resulting lambda expression.</param>
     public static LambdaExpression CreateConstantTruePredicate(Type discardedInput) => Expression.Lambda(Expression.Constant(true, typeof(bool)), false, Expression.Parameter(discardedInput, "_"));
 
+    /// <inheritdoc cref="CreateConstantTruePredicate"/>
+    private static Expression<Func<T, bool>> CreateConstantTruePredicate<T>() => Expression.Lambda<Func<T, bool>>(Expression.Constant(true, typeof(bool)), false, Expression.Parameter(typeof(T), "_"));
+
     /// <inheritdoc cref="CreatePropertyAccess{TInstance,TProperty}(string)"/>
     public static LambdaExpression CreatePropertyAccess(Type instanceType, Type propertyType, string propertyName)
     {
@@ -141,6 +144,11 @@ internal static class FilterExpressionBuilder
         return ExpressionHelper.Compose(propAccess, compareCall);
     }
 
+    private static LambdaExpression CreateCompareToExpression(Type instance, Type property, object other, string propertyName, LambdaExpression? accessor = null)
+    {
+        return GetGenericMethod(nameof(CreateCompareToExpression), [instance, property], 3).Invoke(null, [other, propertyName, accessor]) as LambdaExpression ?? throw new FilterBuilderException($"Could not build compare to for {propertyName} on {instance.Name}");
+    }
+
     /// <inheritdoc cref="ConnectPredicates{T}"/>
     public static LambdaExpression ConnectPredicates(LambdaExpression p1, LambdaExpression p2, LogicalCombinationVariant combinationVariantType)
     {
@@ -240,6 +248,11 @@ internal static class FilterExpressionBuilder
         return ExpressionHelper.Compose(compareExpression, result);
     }
 
+    private static LambdaExpression GeneratePredicate(Type input, LambdaExpression compareExpression, ComparisonVariant variant)
+    {
+        return GetGenericMethod(nameof(GeneratePredicate), [input], 2).Invoke(null, [compareExpression, variant]) as LambdaExpression ?? throw new FilterBuilderException($"Could not create predicate for {input.Name} and comparison {variant.ToString()}");
+    }
+
     /// <inheritdoc cref="GenerateContainsPredicate{T}"/>
     public static LambdaExpression GenerateContainsPredicate(Type inputType, object? other, string name, LambdaExpression? accessor)
     {
@@ -290,7 +303,7 @@ internal static class FilterExpressionBuilder
             throw new FilterBuilderException($"Could not create filter leaf expression for {name}, type of other does not match the supposed type ({other?.GetType()} != {otherType})");
         }
         
-        var generator = GetGenericMethod(nameof(FilterExpressionBuilder.GeneratePredicate), [inputType, otherType], isNullable ? 3 : 4);
+        var generator = GetGenericMethod(nameof(GeneratePredicate), [inputType, otherType], isNullable ? 3 : 4);
 
         object?[] parameters = isNullable ? [other, comparison, accessor] : [other, name, comparison, accessor];
 
@@ -309,15 +322,33 @@ internal static class FilterExpressionBuilder
     /// <param name="accessor">Optional accessor of the property.</param>
     public static Expression<Func<T, bool>> GeneratePredicate<T, TProperty>(TProperty other, string propertyName, ComparisonVariant variant, Expression<Func<T, TProperty>>? accessor = null)
     {
-        bool isComparable = typeof(TProperty).IsAssignableTo(typeof(IComparable<TProperty>));
-        bool canCompare = isComparable || variant is ComparisonVariant.Equals or ComparisonVariant.Neq;
+        bool noAccessorNeeded = typeof(T) == typeof(TProperty) && propertyName == string.Empty;
+
+        if (!noAccessorNeeded)
+        {
+            accessor ??= CreatePropertyAccess<T, TProperty>(propertyName);
+        }
+
+        bool isNullableValueType = Nullable.GetUnderlyingType(typeof(TProperty)) != null;
+        var baseType = Nullable.GetUnderlyingType(typeof(TProperty)) ?? typeof(TProperty);
+        var compType = typeof(IComparable<>).MakeGenericType(baseType);
+
+        bool isComparable = baseType.IsAssignableTo(compType);
+        bool isEqualityComparison = variant is ComparisonVariant.Equals or ComparisonVariant.Neq;
+
+        bool canCompare = isComparable || isEqualityComparison;
 
         if (!canCompare)
         {
             throw new FilterExecutionException($"Cannot build comparison predicate for type {typeof(TProperty).FullName} and comparison {variant.ToString()}");
         }
 
-        if (!isComparable)
+        if (isNullableValueType)
+        {
+            return CreateNullsafeComparisonPredicate(other, propertyName, variant, accessor);
+        }
+
+        if (isEqualityComparison && !isComparable)
         {
             Expression<Func<T, bool>> predicate = GenerateEqualsPredicate(other, propertyName, accessor);
 
@@ -327,6 +358,70 @@ internal static class FilterExpressionBuilder
         Expression<Func<T, int>> comparison = CreateCompareToExpression(other, propertyName, accessor);
 
         return GeneratePredicate(comparison, variant);
+    }
+
+    /// <summary>
+    /// Creates a comparison on a nullable value type.
+    /// </summary>
+    /// <typeparam name="T">The base type that the nullable type is on.</typeparam>
+    /// <typeparam name="TProperty">The nullable property type.</typeparam>
+    /// <param name="other">The object to compare to.</param>
+    /// <param name="propertyName">The name of the property.</param>
+    /// <param name="variant">The variant of the comparison. Any non-equality comparison always returns null if null is one of the operands.</param>
+    /// <param name="accessor">Accessor to get to <typeparamref name="TProperty"/> from <typeparamref name="T"/>.</param>
+    private static Expression<Func<T, bool>> CreateNullsafeComparisonPredicate<T, TProperty>(TProperty other, string propertyName, ComparisonVariant variant, Expression<Func<T, TProperty>>? accessor)
+    {
+        if (other == null)
+        {
+            return CreateIsNullPredicate(variant, propertyName, accessor);
+        }
+
+        bool noAccessorNeeded = typeof(T) == typeof(TProperty) && propertyName == string.Empty;
+        
+        var baseType = Nullable.GetUnderlyingType(typeof(TProperty)) ?? typeof(TProperty);
+
+        Expression<Func<T, bool>> nullcheck = noAccessorNeeded ? CreateNotNullCheck<T>() : ExpressionHelper.Compose(accessor!, CreateNotNullCheck<TProperty>());
+
+        var param = nullcheck.Parameters.First();
+
+        var nonNullAccessor = noAccessorNeeded ?  null : CreatePropertyAccessWithCast(typeof(T), baseType, propertyName);
+        var compTo = CreateCompareToExpression(typeof(T), baseType, other, propertyName, nonNullAccessor);
+        compTo = GeneratePredicate(typeof(T), compTo, variant);
+
+        var compToBody = compTo.Body.ReplaceParameter(compTo.Parameters.First(), param);
+
+        var resultBody = Expression.AndAlso(nullcheck.Body, compToBody);
+
+        return Expression.Lambda<Func<T, bool>>(resultBody, false, param);
+    }
+
+    /// <summary>
+    /// Creates a nullcheck predicate that tests the incoming property on <typeparamref name="T"/> against null equality depending on the variant.
+    /// </summary>
+    /// <typeparam name="T">The type that holds the property.</typeparam>
+    /// <typeparam name="TProperty">The type of the property.</typeparam>
+    /// <param name="variant">The comparison type. Any not Equal-ish variant will always be false.</param>
+    /// <param name="propertyName">The name of the property.</param>
+    /// <param name="accessor">Accessor to get to <typeparamref name="TProperty"/> from <typeparamref name="T"/>.</param>
+    private static Expression<Func<T, bool>> CreateIsNullPredicate<T, TProperty>(ComparisonVariant variant, string propertyName, Expression<Func<T, TProperty>>? accessor)
+    {
+        bool isEqualityComparison = variant is not (ComparisonVariant.Gt or ComparisonVariant.Lt or ComparisonVariant.Like);
+        bool noAccessorNeeded = typeof(T) == typeof(TProperty) && propertyName == string.Empty;
+        
+        // Anything compared to null that is not an equality check will be false (Mimicking the falsiness of NULL in a database context).
+        if (!isEqualityComparison)
+        {
+            return NegatePredicate(CreateConstantTruePredicate<T>());
+        }
+
+        Expression<Func<TProperty, bool>> nullcheck = CreateNotNullCheck<TProperty>();
+
+        if (variant is not ComparisonVariant.Neq)
+        {
+            nullcheck = NegatePredicate(nullcheck);
+        }
+
+        return noAccessorNeeded ? Expression.Lambda<Func<T, bool>>(nullcheck.Body, false, nullcheck.Parameters.First()) : ExpressionHelper.Compose(accessor!, nullcheck);
     }
 
     /// <inheritdoc cref="GeneratePredicate{T}"/>
