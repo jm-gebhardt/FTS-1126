@@ -16,12 +16,12 @@ public record CollectionFilterDto : FilterBaseDto
     public CollectionAggregateVariant Aggregation { get; } = CollectionAggregateVariant.All;
 
     /// <summary>
-    /// The child filter. Mutually exclusive with leaf.
+    /// The child filter.
     /// </summary>
     public FilterBaseDto Child { get; }
 
     /// <summary>
-    /// The fully qualified name of the collection from the root of the read model.
+    /// The fully qualified name of the collection from the root of the read model. Nesting levels separated by &quot;.&quot;
     /// </summary>
     public string Name { get; } = string.Empty;
 

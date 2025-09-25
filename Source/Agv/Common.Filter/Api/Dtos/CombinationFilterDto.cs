@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Gebhardt.Acc.Common.Filter.Api.Dtos;
 
 /// <summary>
-/// Data transfer object of a direct filter i.e. one where the proper
+/// Data transfer object of a combination filter. All children of this filter will be semantically combined with the combination variant.
 /// </summary>
 [PublicAPI]
 public record CombinationFilterDto : FilterBaseDto
