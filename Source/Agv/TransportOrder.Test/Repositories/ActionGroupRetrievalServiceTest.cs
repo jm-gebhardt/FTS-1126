@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Filter.Api;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -12,6 +13,7 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
+using Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -652,5 +654,30 @@ public class ActionGroupRetrievalServiceTest
         ), 0, 10, SortOrdering.Desc, []);
 
         result.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task Filter_ExampleFilter_FiltersActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var agv = AgvGenerator.GenerateBusyAgv();
+
+        var actionGroupCreatedFirst = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1), completedDate: DateTime.UtcNow.AddHours(-23), assignedAgv: agv.CorrelationId);
+
+        foreach (var a in actionGroupCreatedFirst.Actions)
+        {
+            actionGroupCreatedFirst.CompleteAction(a.CorrelationId, DateTimeOffset.UtcNow);
+        }
+
+        var actionGroupCreatedSecond = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1), assignedAgv: agv.CorrelationId);
+
+        await fixture.AddAsync(agv);
+        await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+        var filter = ActionGroupFilterExample.ExampleDto.Translate<ActionGroup, ActionGroupFilterReadModel>();
+        ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(filter, 0, 10, SortOrdering.Desc, []);
+
+        result.Count.ShouldBe(0);
     }
 }

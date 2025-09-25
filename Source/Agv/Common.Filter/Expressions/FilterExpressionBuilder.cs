@@ -378,13 +378,13 @@ internal static class FilterExpressionBuilder
 
         bool noAccessorNeeded = typeof(T) == typeof(TProperty) && propertyName == string.Empty;
         
-        var baseType = Nullable.GetUnderlyingType(typeof(TProperty)) ?? typeof(TProperty);
+        var baseType = Nullable.GetUnderlyingType(typeof(TProperty?)) ?? typeof(TProperty);
 
-        Expression<Func<T, bool>> nullcheck = noAccessorNeeded ? CreateNotNullCheck<T>() : ExpressionHelper.Compose(accessor!, CreateNotNullCheck<TProperty>());
+        Expression<Func<T, bool>> nullcheck = noAccessorNeeded ? CreateNotNullCheck<T>() : ExpressionHelper.Compose(accessor!, CreateNotNullCheck<TProperty?>());
 
         var param = nullcheck.Parameters.First();
 
-        var nonNullAccessor = noAccessorNeeded ?  null : CreatePropertyAccessWithCast(typeof(T), baseType, propertyName);
+        var nonNullAccessor = noAccessorNeeded ?  null : Expression.Lambda(Expression.Convert(accessor!.Body, baseType), false, accessor.Parameters.First());
         var compTo = CreateCompareToExpression(typeof(T), baseType, other, propertyName, nonNullAccessor);
         compTo = GeneratePredicate(typeof(T), compTo, variant);
 
