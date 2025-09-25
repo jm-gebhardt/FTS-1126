@@ -2,6 +2,7 @@
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
@@ -9,7 +10,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 public class TransportOrderActionGroupRepository : EfActionGroupRepository, ITransportOrderActionGroupRepository
 {
     /// <inheritdoc cref="ITransportOrderActionGroupRepository"/>>
-    public TransportOrderActionGroupRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory) : base(dbContextFactory)
+    public TransportOrderActionGroupRepository(ILogger<EfActionGroupRepository> logger, IDbContextFactory<TransportOrderDbContext> dbContextFactory) : base(logger, dbContextFactory)
     {
     }
 }

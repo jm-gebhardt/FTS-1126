@@ -1,5 +1,7 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -9,7 +11,7 @@ public class ActionGroupRepositoryTestFixture : TransportOrderDbFixture
 
     public ActionGroupRepositoryTestFixture()
     {
-        ActionGroupRepository = new EfActionGroupRepository(ContextFactory);
+        ActionGroupRepository = new EfActionGroupRepository(new Mock<ILogger<EfActionGroupRepository>>().Object, ContextFactory);
     }
 
     public ActionGroupRepositoryTestFixture WithActionGroups(IEnumerable<ActionGroup> actionGroups)

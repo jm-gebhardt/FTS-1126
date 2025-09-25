@@ -12,6 +12,7 @@ using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
@@ -22,11 +23,13 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 public class EfActionGroupRepository : IActionGroupRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
+    private readonly ILogger<EfActionGroupRepository> _logger;
 
     /// <inheritdoc cref="EfActionGroupRepository"/>
-    public EfActionGroupRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    public EfActionGroupRepository(ILogger<EfActionGroupRepository> logger, IDbContextFactory<TransportOrderDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -543,7 +546,10 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Set<ActionGroup>().Update(actionGroup);
-        await context.SaveChangesAsync();
+        int result = await context.SaveChangesAsync();
+        _logger.LogInformation("Update action group async save affected {RowsAffected} rows", result);
+        await context.Entry(actionGroup).ReloadAsync();
+        _logger.LogInformation("Action group {ActionGroupCorrelationId} state after saving update {State}", actionGroup.CorrelationId, actionGroup.State);
     }
 
     /// <inheritdoc />
