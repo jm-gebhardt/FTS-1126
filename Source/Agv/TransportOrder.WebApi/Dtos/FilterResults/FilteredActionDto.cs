@@ -28,7 +28,6 @@ public record FilteredActionDto
     public ActionType ActionType { get; init; }
 
     /// <inheritdoc cref="AgvAction.Target"/>
-    [SwaggerFilterableProperty]
     public FilteredActionTargetDto? Target { get; init; }
 
     /// <summary>

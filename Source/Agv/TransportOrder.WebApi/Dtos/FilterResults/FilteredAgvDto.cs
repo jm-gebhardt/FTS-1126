@@ -12,27 +12,21 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 public record FilteredAgvDto
 {
     /// <inheritdoc cref="AgvStatus.LastNodeId"/>
-    [SwaggerFilterableProperty]
     public string LastNodeId { get; init; } = "";
 
     /// <inheritdoc cref="AgvStatus.Disturbed"/>
-    [SwaggerFilterableProperty]
     public bool IsDisturbed { get; init; }
 
     /// <inheritdoc cref="AgvStatus.Automatic"/>
-    [SwaggerFilterableProperty]
     public bool IsAutomatic { get; init; }
 
     /// <inheritdoc cref="AgvStatus.Charging"/>
-    [SwaggerFilterableProperty]
     public bool IsCharging { get; init; }
 
     /// <inheritdoc cref="AgvStatus.ZoneIds"/>
-    [SwaggerFilterableProperty]
     public ICollection<string> Zones { get; init; } = [];
 
     /// <inheritdoc cref="AgvStatus.StationIds"/>
-    [SwaggerFilterableProperty]
     public ICollection<string> Stations { get; init; } = [];
 
     /// <inheritdoc cref="Domain.Models.Agv.Agv.CorrelationId"/>

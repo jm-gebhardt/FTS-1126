@@ -42,7 +42,6 @@ public record FilteredActionGroupDto
     public bool IsQueued { get; init; }
 
     /// <inheritdoc cref="ActionGroup.Actions"/>
-    [SwaggerFilterableProperty]
     public List<FilteredActionDto>? Actions { get; init; }
 
     /// <inheritdoc cref="ActionGroup.IsManual"/>

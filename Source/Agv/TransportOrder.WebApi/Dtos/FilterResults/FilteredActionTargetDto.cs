@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 
 /// <inheritdoc cref="ActionTarget"/>
 [PublicAPI]
-public record FilteredActionTargetDto([property: SwaggerFilterableProperty] FilteredAgvPositionDto? Position, [property: SwaggerFilterableProperty] FilteredGraphNodeDto? Node);
+public record FilteredActionTargetDto(FilteredAgvPositionDto? Position, FilteredGraphNodeDto? Node);
 
 /// <inheritdoc cref="AgvPosition"/>
 [PublicAPI]
