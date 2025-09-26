@@ -29,8 +29,14 @@ public interface IFilter
     /// <summary>
     /// Creates an expression tree from this filter .
     /// </summary>
-    /// <param name="accessors">Mapping of parameter name -> accessor expression.</param>
+    /// <param name="accessors">Mapping of parameter name -> accessor expression & nullability.</param>
     public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors);
     
-    internal int GetDeepestSubstringIndex(List<string> names, ICollection<string>? domainAccessorKeys = null);
+    /// <summary>
+    /// Gets the highest index of the name that is a substring of the names in the filter. <br/>
+    /// If <paramref name="names"/> contains <see cref="ReadModelFilterLayer"/> then the index search will be restricted to values before it if the name is contained in <paramref name="earlyBreaks"/>.
+    /// </summary>
+    /// <param name="names">List og the names to checkt against.</param>
+    /// <param name="earlyBreaks">The index search breaks early if the name is found in this collection.</param>
+    internal int GetDeepestSubstringIndex(List<string> names, ICollection<string>? earlyBreaks = null);
 }

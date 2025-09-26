@@ -116,7 +116,7 @@ internal static class FilterExpressionBuilder
     /// <typeparam name="TInstance">The type that contains the comparable property.</typeparam>
     /// <param name="other">The object that contains the comparable property.</param>
     /// <param name="propertyName">The name of the comparable property.</param>
-    /// <param name="accessor"></param>
+    /// <param name="accessor">An optional accessor expression to reach the property from <typeparamref name="TInstance"/>.</param>
     /// <returns>An expression that compares an input to the property on the other object.</returns>
     public static Expression<Func<TInstance, int>> CreateCompareToExpression<TInstance, TProperty>(TProperty other, string propertyName, Expression<Func<TInstance, TProperty>>? accessor = null)
     {
@@ -226,7 +226,6 @@ internal static class FilterExpressionBuilder
     /// <param name="compareExpression">An expression containing a CompareTo call and a closure of the value to compare to.</param>
     /// <param name="variant">The variant of the comparison.</param>
     /// <returns>An expression containing the predicate comparing the incoming value with the closure according to the <see cref="ComparisonVariant"/>.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">If the variant does not exist.</exception>
     private static Expression<Func<T, bool>> GeneratePredicate<T>(Expression<Func<T, int>> compareExpression, ComparisonVariant variant)
     {
         var param = Expression.Parameter(typeof(int), "i");

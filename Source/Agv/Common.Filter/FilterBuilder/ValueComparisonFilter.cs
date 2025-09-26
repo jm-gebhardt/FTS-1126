@@ -23,14 +23,8 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
     {
         return new Dictionary<int, IFilter> { { GetDeepestSubstringIndex(names, domainAccessors?.Keys), this } };
     }
-    
-    /// <summary>
-    /// Creates the expression tree for this leaf.
-    /// </summary>
-    /// <param name="accessors">The accessors for the base object.</param>
-    /// <returns></returns>
-    /// <exception cref="InvalidCastException"></exception>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
+
+    /// <inheritdoc cref="IFilter.ToExpressionTree"/>
     public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
     {
         try
@@ -57,16 +51,16 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
         }
         catch (TargetInvocationException ex)
         {
-            throw ex.GetBaseException();
+            throw ex.GetBaseExceptionKeepingStacktrace();
         }
     }
 
     /// <inheritdoc />
-    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? domainAccessorKeys = null)
+    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? earlyBreaks = null)
     {
         var maxSearch = ^0;
 
-        if (domainAccessorKeys?.Contains(Name) ?? false)
+        if (earlyBreaks?.Contains(Name) ?? false)
         {
             maxSearch = names.FindIndex(e => e == IFilter.ReadModelFilterLayer) + 1;
         }

@@ -14,16 +14,16 @@ public class FilterableProfile : Profile
     /// </summary>
     public FilterableProfile()
     {
-        CreateMap<ActionGroupFilterReadModel, FilteredActionGroup>(MemberList.Destination);
+        CreateMap<ActionGroupFilterable, FilteredActionGroup>(MemberList.Destination);
 
-        CreateMap<AgvActionFilterReadModel, FilteredAgvAction>(MemberList.Destination);
+        CreateMap<AgvActionFilterable, FilteredAgvAction>(MemberList.Destination);
 
-        CreateMap<AgvFilterReadModel, FilteredAgv>(MemberList.Destination);
+        CreateMap<AgvFilterable, FilteredAgv>(MemberList.Destination);
 
-        CreateMap<ActionTargetReadModel, FilteredActionTarget>(MemberList.Destination);
+        CreateMap<ActionTargetFilterable, FilteredActionTarget>(MemberList.Destination);
 
-        CreateMap<GraphNodeReadModel, FilteredGraphNode>(MemberList.Destination);
+        CreateMap<GraphNodeFilterable, FilteredGraphNode>(MemberList.Destination);
 
-        CreateMap<AgvPositionReadModel, FilteredAgvPosition>(MemberList.Destination);
+        CreateMap<AgvPositionFilterable, FilteredAgvPosition>(MemberList.Destination);
     }
 }

@@ -2,8 +2,8 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Filter.Enums;
+using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
-using Gebhardt.Acc.Common.Filter.ReadModelParser;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
@@ -21,8 +21,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
-    /// <inheritdoc cref="FilterReadModelBinder{TDomainObject,TReadModel}.FilterByPaginatedWithOrdering"/>
-    private readonly FilterReadModelBinder<ActionGroup, ActionGroupFilterReadModel>.FilterByPaginatedWithOrdering _filter;
+    /// <inheritdoc cref="FilterableBinder{TDomainObject,TReadModel}.FilterByPaginatedWithOrdering"/>
+    private readonly FilterableBinder<ActionGroup, ActionGroupFilterable>.FilterByPaginatedWithOrdering _filter;
 
     private readonly IMapper _mapper;
 
@@ -32,7 +32,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     public ActionGroupRetrievalService(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper)
     {
         _dbContextFactory = dbContextFactory;
-        _filter = FilterReadModelBinder<ActionGroup, ActionGroupFilterReadModel>.CreateFilterWithPagination(_dbContextFactory);
+        _filter = FilterableBinder<ActionGroup, ActionGroupFilterable>.CreateFilterWithPagination(_dbContextFactory);
         _mapper = mapper;
     }
 
@@ -45,9 +45,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
     
     /// <inheritdoc />
-    public async Task<ICollection<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties)
+    public async Task<ICollection<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
     {
-        return _mapper.Map<ICollection<ActionGroupFilterReadModel>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
+        return _mapper.Map<ICollection<ActionGroupFilterable>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
     }
 
     /// <inheritdoc />

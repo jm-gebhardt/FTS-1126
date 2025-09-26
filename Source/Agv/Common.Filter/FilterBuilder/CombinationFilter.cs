@@ -77,7 +77,7 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
         }
         catch (TargetInvocationException ex)
         {
-            throw ex.GetBaseException();
+            throw ex.GetBaseExceptionKeepingStacktrace();
         }
     }
 
@@ -88,8 +88,8 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
     }
 
     /// <inheritdoc />
-    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? domainAccessorKeys = null)
+    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? earlyBreaks = null)
     {
-        return Children.Select(c => c.GetDeepestSubstringIndex(names, domainAccessorKeys)).Max();
+        return Children.Select(c => c.GetDeepestSubstringIndex(names, earlyBreaks)).Max();
     }
 }

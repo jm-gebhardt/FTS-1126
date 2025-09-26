@@ -11,4 +11,4 @@ namespace Gebhardt.Acc.Common.Filter.Api.Dtos;
 /// </ul>
 /// </summary>
 [PublicAPI]
-public abstract record FilterBaseDto;
+public abstract record FilterDto;

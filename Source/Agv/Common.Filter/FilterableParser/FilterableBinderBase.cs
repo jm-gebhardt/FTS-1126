@@ -6,18 +6,18 @@ using Gebhardt.Acc.Common.Filter.Expressions;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.Acc.Common.Filter.ReadModelParser;
+namespace Gebhardt.Acc.Common.Filter.FilterableParser;
 
 /// <summary>
-/// Holds static properties common to all variants of <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>.
+/// Holds static properties common to all variants of <see cref="FilterableBinder{TDomainObject,TReadModel}"/>.
 /// </summary>
 [PublicAPI]
-public abstract class FilterReadModelBinderBase
+public abstract class FilterableBinderBase
 {
     private static readonly ConcurrentDictionary<Tuple<Type, Type>, LambdaExpression> _typeMappings = new();
 
     /// <summary>
-    /// Type mappings defined for all <see cref="IFilterReadModel{TEntity,TReadModel}"/> pairings.
+    /// Type mappings defined for all <see cref="IFilterable{TEntity,TReadModel}"/> pairings.
     /// </summary>
     protected static IReadOnlyDictionary<Tuple<Type, Type>, LambdaExpression> TypeMappings => _typeMappings;
 
@@ -44,70 +44,6 @@ public abstract class FilterReadModelBinderBase
     /// <param name="to">Second type.</param>
     /// <param name="mapping">The mapping to get from one type to the other.</param>
     protected static bool TryAddTypeMapping(Type from, Type to, LambdaExpression mapping) => _typeMappings.TryAdd(new Tuple<Type, Type>(from, to), mapping);
-
-    /// <summary>
-    /// Signifies that this property is part of the key of this entity.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public sealed class KeyProperty : Attribute;
-
-    /// <summary>
-    /// Signifies that this property can be filtered.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public sealed class FilterProperty : Attribute;
-    
-    /// <summary>
-    /// Signifies that this property has a conversion defined.<br/>
-    /// Properties with conversions can never be filtered before materializing.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public sealed class HasConversion : Attribute;
-
-    /// <summary>
-    /// Defines a sub property that will be included with the queryable at filter execution. Must be instanceof <see cref="IFilterReadModel{TEntity,TReadModel}"/> or a collection thereof.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
-    public sealed class NavigationProperty : InternalSubProperty;
-
-    /// <summary>
-    /// Defines a sub property that is joined to the queryable at filter execution. Must be instanceof <see cref="IFilterReadModel{TEntity,TReadModel}"/>.
-    /// The key properties must match in type.
-    /// </summary>
-    /// <param name="ownKeyProperty">The key property on this type.</param>
-    /// <param name="otherKeyProperty">The key property on the target type.</param>
-    /// <param name="isOuterJoin">If this is a LEFT OUTER JOIN.</param>
-    [AttributeUsage(AttributeTargets.Property)]
-    public sealed class JoinProperty(string ownKeyProperty, string otherKeyProperty, bool isOuterJoin = false) : InternalSubProperty
-    {
-        /// <summary>
-        /// The key property on this type.
-        /// </summary>
-        public string OwnKeyProperty => ownKeyProperty;
-
-        /// <summary>
-        /// The key property on the target type.
-        /// </summary>
-        public string OtherKeyProperty => otherKeyProperty;
-
-        /// <summary>
-        /// If this is a LEFT OUTER JOIN.
-        /// </summary>
-        public bool IsOuterJoin => isOuterJoin;
-    }
-
-    /// <summary>
-    /// Internal base class for attributes.
-    /// </summary>
-    public abstract class InternalSubProperty : Attribute
-    {
-        /// <summary>
-        /// Prevent inheritance outside.
-        /// </summary>
-        internal InternalSubProperty()
-        {
-        }
-    }
 
     /// <summary>
     /// Parsed leaf property.
@@ -239,7 +175,7 @@ public abstract class FilterReadModelBinderBase
     }
 
     /// <summary>
-    /// Leaf of a parsed <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>
+    /// Leaf of a parsed <see cref="FilterableBinder{TDomainObject,TReadModel}"/>
     /// </summary>
     /// <typeparam name="TRoot">The root type of the domain model.</typeparam>
     /// <typeparam name="TSelf">The type of the leaf property</typeparam>
@@ -262,7 +198,7 @@ public abstract class FilterReadModelBinderBase
     }
     
     /// <summary>
-    /// Leaf of a parsed <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>
+    /// Leaf of a parsed <see cref="FilterableBinder{TDomainObject,TReadModel}"/>
     /// </summary>
     /// <typeparam name="TRoot">The root type.</typeparam>
     /// <typeparam name="TCollection">Intermediary type to represent a collection of <typeparamref name="TSelf"/>.</typeparam>
@@ -288,7 +224,7 @@ public abstract class FilterReadModelBinderBase
     }
 
     /// <summary>
-    /// Subtree of a <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/> that is a collection.
+    /// Subtree of a <see cref="FilterableBinder{TDomainObject,TReadModel}"/> that is a collection.
     /// </summary>
     /// <typeparam name="TRoot">The root type.</typeparam>
     /// <typeparam name="TRmCollection">Intermediary type to represent a collection of <typeparamref name="TSelf"/>.</typeparam>
@@ -303,7 +239,7 @@ public abstract class FilterReadModelBinderBase
     private class ParsedFilterableCollectionSubTree<TRoot, TRootReadModel, TRmCollection, TSelf, TSelfReadModel>(string name, Expression<Func<TRootReadModel, TRmCollection>> accessorExpression, IParsedFilterable subTree, bool maybeNull, LambdaExpression? domainAccessorExpression = null) : IParsedFilterableCollectionSubTree
         where TRoot : class
         where TRootReadModel : class
-        where TSelfReadModel : class, IFilterReadModel<TSelf, TSelfReadModel>, TSelf, new()
+        where TSelfReadModel : class, IFilterable<TSelf, TSelfReadModel>, TSelf, new()
         where TSelf : class
         where TRmCollection : IEnumerable<TSelfReadModel>
     {
@@ -324,7 +260,7 @@ public abstract class FilterReadModelBinderBase
     }
 
     /// <summary>
-    /// Subtree of a <see cref="FilterReadModelBinder{TDomainObject,TReadModel}"/>.
+    /// Subtree of a <see cref="FilterableBinder{TDomainObject,TReadModel}"/>.
     /// </summary>
     /// <typeparam name="TRoot">The root type.</typeparam>
     /// <typeparam name="TSelf">The type of this sub-property.</typeparam>
@@ -338,7 +274,7 @@ public abstract class FilterReadModelBinderBase
     private class ParsedFilterableSubTree<TRoot, TRootReadModel, TSelf, TSelfReadModel>(string name, Expression<Func<TRootReadModel, TSelfReadModel>> accessorExpression, IParsedFilterable subTree, bool maybeNull, LambdaExpression? domainAccessorExpression = null) : IParsedFilterableSubTree
         where TRoot : class
         where TRootReadModel : class
-        where TSelfReadModel : class, IFilterReadModel<TSelf, TSelfReadModel>, TSelf, new()
+        where TSelfReadModel : class, IFilterable<TSelf, TSelfReadModel>, TSelf, new()
         where TSelf : class
     {
         /// <inheritdoc />
@@ -488,7 +424,7 @@ public abstract class FilterReadModelBinderBase
     /// <summary>
     /// Not supposed to be instantiated.
     /// </summary>
-    internal FilterReadModelBinderBase()
+    internal FilterableBinderBase()
     {
     }
 }

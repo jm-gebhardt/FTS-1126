@@ -88,7 +88,7 @@ public class FilterExtensionsTests
     [TestMethod]
     public void JsonSerialize_ValidData_RoundTripIsIdempotent()
     {
-        FilterBaseDto dto = new CombinationFilterDto([
+        FilterDto dto = new CombinationFilterDto([
             new CombinationFilterDto([new ValueComparisonFilterDto("ABC", ComparisonVariant.Equals, "101")], LogicalCombinationVariant.Or),
             new CollectionFilterDto(new CombinationFilterDto([], LogicalCombinationVariant.And), "TestCollectionName", CollectionAggregateVariant.Any),
             new CollectionFilterDto(new ValueComparisonFilterDto("GHI", ComparisonVariant.Neq, "Test"), "TestCollectionName", CollectionAggregateVariant.Any),
@@ -98,7 +98,7 @@ public class FilterExtensionsTests
 
         string serialized = JsonSerializer.Serialize(dto, opt);
 
-        var deserialized = JsonSerializer.Deserialize<FilterBaseDto>(serialized, opt);
+        var deserialized = JsonSerializer.Deserialize<FilterDto>(serialized, opt);
 
         deserialized.ShouldBeEquivalentTo(dto);
     }

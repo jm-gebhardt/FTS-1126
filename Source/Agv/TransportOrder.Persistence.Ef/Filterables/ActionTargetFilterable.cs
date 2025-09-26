@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Filter.ReadModelParser;
+using Gebhardt.Acc.Common.Filter.FilterableParser;
+using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
@@ -10,37 +11,37 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 /// Read model for action targets
 /// </summary>
 [PublicAPI]
-public record ActionTargetReadModel : ActionTarget, IFilterReadModel<ActionTarget, ActionTargetReadModel>
+public record ActionTargetFilterable : ActionTarget, IFilterable<ActionTarget, ActionTargetFilterable>
 {
     /// <inheritdoc cref="ActionTarget.Node"/>
-    [FilterReadModelBinderBase.NavigationProperty]
-    public new GraphNodeReadModel? Node { get; init; }
+    [NavigationProperty]
+    public new GraphNodeFilterable? Node { get; init; }
 
     /// <inheritdoc cref="ActionTarget.Position"/>
-    [FilterReadModelBinderBase.NavigationProperty]
-    public new AgvPositionReadModel? Position { get; init; }
+    [NavigationProperty]
+    public new AgvPositionFilterable? Position { get; init; }
 }
 
 /// <summary>
 /// Read model for agv positions.
 /// </summary>
 [PublicAPI]
-public record AgvPositionReadModel : AgvPosition, IFilterReadModel<AgvPosition, AgvPositionReadModel>
+public record AgvPositionFilterable : AgvPosition, IFilterable<AgvPosition, AgvPositionFilterable>
 {
     /// <inheritdoc cref="AgvPosition.X"/>
-    [FilterReadModelBinderBase.FilterProperty]
+    [FilterProperty]
     public new float X { get; init; }
 
     /// <inheritdoc cref="AgvPosition.Y"/>
-    [FilterReadModelBinderBase.FilterProperty]
+    [FilterProperty]
     public new float Y { get; init; }
 
     /// <inheritdoc cref="AgvPosition.Z"/>
-    [FilterReadModelBinderBase.FilterProperty]
+    [FilterProperty]
     public new float Z { get; init; }
 
     /// <inheritdoc cref="AgvPosition.Theta"/>
-    [FilterReadModelBinderBase.FilterProperty]
+    [FilterProperty]
     public new float Theta { get; init; }
 }
 
@@ -48,9 +49,9 @@ public record AgvPositionReadModel : AgvPosition, IFilterReadModel<AgvPosition, 
 /// ReadModel of a graph node.
 /// </summary>
 [PublicAPI]
-public class GraphNodeReadModel : GraphNode, IFilterReadModel<GraphNode, GraphNodeReadModel>
+public class GraphNodeFilterable : GraphNode, IFilterable<GraphNode, GraphNodeFilterable>
 {
     /// <inheritdoc cref="GraphNode.Name"/>
-    [FilterReadModelBinderBase.FilterProperty]
+    [FilterProperty]
     public new string Name { get; init; } = "";
 }

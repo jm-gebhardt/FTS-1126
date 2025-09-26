@@ -21,7 +21,7 @@ public class ActionGroupFilterExample : IOperationFilter
     /// <summary>
     /// The example dto that will be attached by this operation filter.
     /// </summary>
-    public static readonly FilterBaseDto ExampleDto = new CombinationFilterDto(
+    public static readonly FilterDto ExampleDto = new CombinationFilterDto(
         [
             new CombinationFilterDto([
                 new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString()),

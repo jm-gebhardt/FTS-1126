@@ -5,10 +5,10 @@ using JetBrains.Annotations;
 namespace Gebhardt.Acc.Common.Filter.Api.Dtos;
 
 /// <summary>
-/// Represents a direct value comparison to a property.
+/// Provides a dto for a direct value comparison to a property.
 /// </summary>
 [PublicAPI]
-public record ValueComparisonFilterDto : FilterBaseDto
+public record ValueComparisonFilterDto : FilterDto
 {
     /// <summary>
     /// The property name as reachable in the hierarchy from the root of the comparison. Different nesting levels should be accessed with &quot;.&quot; i.e. &quot;A.B&quot; <br/>

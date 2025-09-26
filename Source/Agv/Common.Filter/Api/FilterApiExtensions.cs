@@ -4,8 +4,8 @@ using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Api.Swagger;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.Expressions;
+using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
-using Gebhardt.Acc.Common.Filter.ReadModelParser;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Any;
@@ -29,18 +29,18 @@ public static class FilterApiExtensions
     /// <typeparam name="TDomainObject">The domain object.</typeparam>
     /// <typeparam name="TReadModel">The read model.</typeparam>
     /// <param name="dto">The dto to translate.</param>
-    public static IFilter Translate<TDomainObject, TReadModel>(this FilterBaseDto dto) where TReadModel : class, TDomainObject, IFilterReadModel<TDomainObject, TReadModel>, new() where TDomainObject : class
+    public static IFilter Translate<TDomainObject, TReadModel>(this FilterDto dto) where TReadModel : class, TDomainObject, IFilterable<TDomainObject, TReadModel>, new() where TDomainObject : class
     {
-        Dictionary<string, (LambdaExpression, bool)> propertyAccessors = FilterReadModelBinder<TDomainObject, TReadModel>.PropertyAccessors;
+        Dictionary<string, (LambdaExpression, bool)> propertyAccessors = FilterableBinder<TDomainObject, TReadModel>.PropertyAccessors;
 
         return FromDto(dto, propertyAccessors);
     }
 
-    private static IFilter FromDto(FilterBaseDto? dto, Dictionary<string, (LambdaExpression, bool)> propertyAccessors)
+    private static IFilter FromDto(FilterDto? dto, Dictionary<string, (LambdaExpression, bool)> propertyAccessors)
     {
         if (dto is null)
         {
-            throw new FilterBuilderException("Could not translate filter because the dto was null");
+            throw new FilterDtoParserException("Could not translate filter because the dto was null");
         }
 
         return dto switch
@@ -48,7 +48,7 @@ public static class FilterApiExtensions
             CombinationFilterDto combDto => FromDto(combDto, propertyAccessors),
             CollectionFilterDto collDto => FromDto(collDto, propertyAccessors),
             ValueComparisonFilterDto valCompDto => FromDto(valCompDto, propertyAccessors),
-            _ => throw new FilterBuilderException($"Unknown dto type: {dto.GetType().Name}")
+            _ => throw new FilterDtoParserException($"Unknown dto type: {dto.GetType().Name}")
         };
     }
 
@@ -65,17 +65,17 @@ public static class FilterApiExtensions
 
         if (child == null)
         {
-            throw new FilterBuilderException($"Could not create collection filter for  {dto.Name}, needs to have exactly one child but had {child}");
+            throw new FilterDtoParserException($"Could not create collection filter for  {dto.Name}, needs to have exactly one child but had {child}");
         }
 
         if (!propertyAccessors.TryGetValue(dto.Name, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
         {
-            throw new FilterBuilderException($"Could not create collection filter for {dto.Name}, no accessor registered");
+            throw new FilterDtoParserException($"Could not create collection filter for {dto.Name}, no accessor registered");
         }
 
         if (accessor.ReturnType.GetEnumerableContentType() == null)
         {
-            throw new FilterBuilderException($"Could not create collection filter for {dto.Name}, underlying property is not a collection");
+            throw new FilterDtoParserException($"Could not create collection filter for {dto.Name}, underlying property is not a collection");
         }
 
         return new CollectionFilter(dto.Aggregation, dto.Name, FromDto(child, propertyAccessors));
@@ -85,12 +85,12 @@ public static class FilterApiExtensions
     {
         if (dto.Name == string.Empty)
         {
-            throw new FilterBuilderException("Could not create leaf filter, name was empty");
+            throw new FilterDtoParserException("Could not create leaf filter, name was empty");
         }
 
         if (!propertyAccessors.TryGetValue(dto.Name, out var accessorInfo) || accessorInfo is not {Item1 : { } accessor})
         {
-            throw new FilterBuilderException($"Could not create leaf filter for {dto.Name}, no accessor registered");
+            throw new FilterDtoParserException($"Could not create leaf filter for {dto.Name}, no accessor registered");
         }
 
         bool isCollection = accessor.ReturnType.GetEnumerableContentType() != null;
@@ -111,14 +111,14 @@ public static class FilterApiExtensions
 
         if (convertedValue == null)
         {
-            throw new FilterBuilderException($"Could not create leaf filter for {dto.Name}, conversion of {dto.Content} to {propType.Name} failed");
+            throw new FilterDtoParserException($"Could not create leaf filter for {dto.Name}, conversion of {dto.Content} to {propType.Name} failed");
         }
 
         var valueType = typeof(ValueComparisonFilter<>).MakeGenericType(propType);
 
         if (Activator.CreateInstance(valueType, isCollection ? string.Empty : dto.Name, dto.Variant, convertedValue) is not IValueComparisonFilter leaf)
         {
-            throw new FilterBuilderException($"Could not create leaf {dto.Name}");
+            throw new FilterDtoParserException($"Could not create leaf {dto.Name}");
         }
 
         return leaf;
@@ -127,14 +127,14 @@ public static class FilterApiExtensions
     /// <summary>
     /// Translates this filter dto into an <see cref="OpenApiObject"/>.
     /// </summary>
-    public static OpenApiObject ToOpenApiObject(this FilterBaseDto dto)
+    public static OpenApiObject ToOpenApiObject(this FilterDto dto)
     {
         return dto switch
         {
             CollectionFilterDto coll => ToOpenApiObject(coll),
             CombinationFilterDto comb => ToOpenApiObject(comb),
             ValueComparisonFilterDto comp => ToOpenApiObject(comp),
-            _ => throw new ArgumentOutOfRangeException(nameof(dto))
+            _ => throw new FilterDtoParserException(nameof(dto))
         };
     }
 

@@ -1,11 +1,11 @@
-﻿using Gebhardt.Acc.Common.Filter.ReadModelParser;
-using static Gebhardt.Acc.Common.Filter.ReadModelParser.FilterReadModelBinderBase;
+﻿using Gebhardt.Acc.Common.Filter.FilterableParser;
+using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.CommonTest.Filter;
 
 [UsedImplicitly]
-internal class FilterReadModelTestHelperReadModel : FilterableTestHelper, IFilterReadModel<FilterableTestHelper, FilterReadModelTestHelperReadModel>
+internal class FilterableTestHelperReadModel : FilterableTestHelper, IFilterable<FilterableTestHelper, FilterableTestHelperReadModel>
 {
     [FilterProperty]
     [UsedImplicitly]
@@ -28,7 +28,7 @@ internal class FilterReadModelTestHelperReadModel : FilterableTestHelper, IFilte
 }
 
 [UsedImplicitly]
-internal class SubPropertyHelperReadModel : SubPropertyHelper, IFilterReadModel<SubPropertyHelper, SubPropertyHelperReadModel>
+internal class SubPropertyHelperReadModel : SubPropertyHelper, IFilterable<SubPropertyHelper, SubPropertyHelperReadModel>
 {
     [FilterProperty]
     [UsedImplicitly]

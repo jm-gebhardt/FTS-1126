@@ -1,7 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
-using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -10,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SortDirection = Gebhardt.Acc.Common.Filter.Enums.SortDirection;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 
@@ -95,9 +95,9 @@ public class ActionGroupsController : Controller
     /// </summary>
     [HttpPost]
     [Route("/actionGroups/filtered")]
-    public async Task<ActionResult<IEnumerable<FilteredActionGroupDto>>> Filtered([FromBody] FilterBaseDto filter, int pageNumber, int pageSize, SortOrdering ordering, ICollection<string>? orderingProperties)
+    public async Task<ActionResult<IEnumerable<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties)
     {
-        Response<GotFilteredActionGroups> result = await _filterTestRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, ordering, orderingProperties ?? []));
+        Response<GotFilteredActionGroups> result = await _filterTestRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []));
         var mapped = _mapper.Map<List<FilteredActionGroupDto>>(result.Message.ActionGroups);
 
         return Ok(mapped);

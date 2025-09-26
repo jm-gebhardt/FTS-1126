@@ -82,7 +82,7 @@ public sealed class CollectionFilter : IFilter
         }
         catch (TargetInvocationException ex)
         {
-            throw ex.GetBaseException();
+            throw ex.GetBaseExceptionKeepingStacktrace();
         }
     }
 
@@ -92,17 +92,17 @@ public sealed class CollectionFilter : IFilter
     }
 
     /// <inheritdoc />
-    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? domainAccessorKeys = null)
+    public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? earlyBreaks = null)
     {
         var maxSearch = ^0;
 
-        if (domainAccessorKeys?.Contains(CollectionName) ?? false)
+        if (earlyBreaks?.Contains(CollectionName) ?? false)
         {
             maxSearch = names.FindIndex(e => e == IFilter.ReadModelFilterLayer) + 1;
         }
 
         int collectionNameIdx = names[..maxSearch].Select((n, i) => CollectionName.StartsWith(n) ? i : 0).Max();
 
-        return Math.Max(Child.GetDeepestSubstringIndex(names, domainAccessorKeys), collectionNameIdx);
+        return Math.Max(Child.GetDeepestSubstringIndex(names, earlyBreaks), collectionNameIdx);
     }
 }

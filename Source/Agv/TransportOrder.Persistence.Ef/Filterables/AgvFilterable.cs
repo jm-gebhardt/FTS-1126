@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Filter.ReadModelParser;
+﻿using Gebhardt.Acc.Common.Filter.FilterableParser;
+using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 
@@ -8,26 +9,26 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 /// Read model of an agv filter.
 /// </summary>
 [PublicAPI]
-public class AgvFilterReadModel : Agv, IFilterReadModel<Agv, AgvFilterReadModel>
+public class AgvFilterable : Agv, IFilterable<Agv, AgvFilterable>
 {
     /// <inheritdoc cref="Agv.CorrelationId"/>
-    [FilterReadModelBinderBase.FilterProperty]
-    [FilterReadModelBinderBase.KeyProperty]
+    [FilterProperty]
+    [KeyProperty]
     public new Guid CorrelationId { get; init; }
 
     /// <inheritdoc cref="Agv.SerialNumber"/>
-    [FilterReadModelBinderBase.FilterProperty]
+    [FilterProperty]
     public new string SerialNumber { get; init; } = null!;
 
     /// <inheritdoc cref="Agv.Name"/>
-    [FilterReadModelBinderBase.FilterProperty]
+    [FilterProperty]
     public new string Name { get; init; } = null!;
 
     /// <inheritdoc cref="Agv.AgvStatus"/>
-    [FilterReadModelBinderBase.NavigationProperty]
+    [NavigationProperty]
     public new AgvStatus? AgvStatus { get; init; }
 
     /// <inheritdoc cref="Agv.Mode"/>
-    [FilterReadModelBinderBase.NavigationProperty]
+    [NavigationProperty]
     public new AgvMode Mode { get; init; } = null!;
 }

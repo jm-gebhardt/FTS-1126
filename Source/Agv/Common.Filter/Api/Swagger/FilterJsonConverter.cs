@@ -6,10 +6,10 @@ using Gebhardt.Acc.Common.Filter.Exceptions;
 namespace Gebhardt.Acc.Common.Filter.Api.Swagger;
 
 /// <inheritdoc />
-public class FilterJsonConverter : JsonConverter<FilterBaseDto>
+public class FilterJsonConverter : JsonConverter<FilterDto>
 {
     /// <inheritdoc/>
-    public override FilterBaseDto? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override FilterDto? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         using var document = JsonDocument.ParseValue(ref reader); 
         var root = document.RootElement;
@@ -29,11 +29,11 @@ public class FilterJsonConverter : JsonConverter<FilterBaseDto>
             return root.Deserialize<ValueComparisonFilterDto>(options);
         }
 
-        throw new FilterBuilderException($"Could not deserialize {nameof(FilterBaseDto)}: {root}");
+        throw new FilterDtoParserException($"Could not deserialize {nameof(FilterDto)}: {root}");
     }
 
     /// <inheritdoc />
-    public override void Write(Utf8JsonWriter writer, FilterBaseDto value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, FilterDto value, JsonSerializerOptions options)
     {
         switch (value)
         {
@@ -51,7 +51,7 @@ public class FilterJsonConverter : JsonConverter<FilterBaseDto>
 
             default:
                 // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract Could be streamed in as null from unsafe code.
-                throw new FilterBuilderException($"Unknown filter type {value?.GetType().Name}");
+                throw new FilterDtoParserException($"Unknown filter type {value?.GetType().Name}");
         }
     }
 }

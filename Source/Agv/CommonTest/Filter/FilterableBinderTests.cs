@@ -7,7 +7,7 @@ using Shouldly;
 namespace Gebhardt.Acc.CommonTest.Filter;
 
 [TestClass]
-public class FilterReadModelBinderTests
+public class FilterableBinderTests
 {
     [TestMethod]
     public void SplitFilter_UniformFilter_FilterSplit()

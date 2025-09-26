@@ -4,21 +4,22 @@ using System.Reflection;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.Expressions;
+using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace Gebhardt.Acc.Common.Filter.ReadModelParser;
+namespace Gebhardt.Acc.Common.Filter.FilterableParser;
 
 /// <summary>
-/// Binds <typeparamref name="TDomainObject"/> and <typeparamref name="TReadModel"/> for the purpose of creating database filter delegates.
+/// Binds <typeparamref name="TDomainObject"/> and <typeparamref name="TFilterable"/> for the purpose of creating database filter delegates.
 /// </summary>
 /// <typeparam name="TDomainObject">The domain object to be filtered.</typeparam>
-/// <typeparam name="TReadModel">The read model for <typeparamref name="TDomainObject"/> that will be returned from the filter queries and describes what can be filtered.</typeparam>
+/// <typeparam name="TFilterable">The read model for <typeparamref name="TDomainObject"/> that will be returned from the filter queries and describes what can be filtered.</typeparam>
 [PublicAPI]
-public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterReadModelBinderBase where TReadModel : class, TDomainObject, IFilterReadModel<TDomainObject, TReadModel>, new() where TDomainObject : class
+public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBinderBase where TFilterable : class, TDomainObject, IFilterable<TDomainObject, TFilterable>, new() where TDomainObject : class
 {
-    private FilterReadModelBinder()
+    private FilterableBinder()
     {
     }
 
@@ -52,7 +53,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
     // ReSharper disable once StaticMemberInGenericType // Intentional here, as every Filterable<TEntity> needs its own join properties.
     private static readonly Dictionary<string, IParsedFilterable> _joinProperties = new();
 
-    private static readonly ParsedFilterable<TDomainObject, TReadModel> _parsedFilterable = new();
+    private static readonly ParsedFilterable<TDomainObject, TFilterable> _parsedFilterable = new();
 
     /// <summary>
     /// Verifies the parsed filterable against the provided values.
@@ -65,7 +66,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
                _parsedFilterable.CollectionSubTrees.Count == collectionSubTreeCount;
     }
 
-    static FilterReadModelBinder()
+    static FilterableBinder()
     {
         CreateAccessorMap();
 
@@ -80,7 +81,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
     private static void CreateAccessorMap()
     {
         // Empty string always self-references the base entity by convention.
-        PropertyAccessors.Add(IFilter.DomainFilterLayer, (ExpressionHelper.CreateIdentityExpression<TReadModel>(), false));
+        PropertyAccessors.Add(IFilter.DomainFilterLayer, (ExpressionHelper.CreateIdentityExpression<TFilterable>(), false));
         _domainPropertyAccessors.Add(IFilter.DomainFilterLayer, (ExpressionHelper.CreateIdentityExpression<TDomainObject>(), false));
 
         const string accumulatedName = IFilter.DomainFilterLayer;
@@ -102,14 +103,14 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
             }
             else
             {
-                var type = typeof(TReadModel).GetProperty(key)?.PropertyType;
+                var type = typeof(TFilterable).GetProperty(key)?.PropertyType;
 
                 if (type == null)
                 {
                     throw new FilterParserException($"Could not create type for {key}");
                 }
 
-                var accessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TReadModel), type, key);
+                var accessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TFilterable), type, key);
 
                 if (accessor == null)
                 {
@@ -251,20 +252,19 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
     /// </summary>
     /// <param name="filter">The filter to use.</param>
     /// <returns>The filtered result.</returns>
-    public delegate Task<ICollection<TReadModel>> FilterBy(IFilter filter);
+    public delegate Task<ICollection<TFilterable>> FilterBy(IFilter filter);
 
     /// <summary>
-    /// 
+    /// Filters an entity by the provided filter with pagination and sorting.
     /// </summary>
-    /// <param name="filter"></param>
-    /// <param name="pageNr"></param>
-    /// <param name="pageSize"></param>
-    /// <param name="ordering"></param>
-    /// <param name="orderByProperties"></param>
-    /// <returns></returns>
-    public delegate Task<ICollection<TReadModel>> FilterByPaginatedWithOrdering(IFilter filter, int? pageNr, int? pageSize, SortOrdering? ordering, ICollection<string> orderByProperties);
+    /// <param name="filter">The filter.</param>
+    /// <param name="pageNr">The page number.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="ordering">The direction to sort.</param>
+    /// <param name="orderByProperties">The properties to sort.</param>
+    public delegate Task<ICollection<TFilterable>> FilterByPaginatedWithOrdering(IFilter filter, int? pageNr, int? pageSize, SortDirection? ordering, ICollection<string> orderByProperties);
 
-    private delegate IQueryable<TReadModel> ApplyFiltering<in TDbContext>(TDbContext context, IFilter filter);
+    private delegate IQueryable<TFilterable> ApplyFiltering<in TDbContext>(TDbContext context, IFilter filter);
 
     private static ApplyFiltering<TDbContext> CreateFilterApplier<TDbContext>() where TDbContext : DbContext
     {
@@ -294,16 +294,16 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
                     query = query.Where(filter.ToExpressionTree(_domainPropertyAccessors).AsPredicate<TDomainObject>());
                 }
 
-                if (!TryGetTypeMapping(typeof(TDomainObject), typeof(TReadModel), out var projection))
+                if (!TryGetTypeMapping(typeof(TDomainObject), typeof(TFilterable), out var projection))
                 {
                     throw new FilterExecutionException($"Could not find projection for type {typeof(TDomainObject).FullName}");
                 }
 
-                IQueryable<TReadModel> projectedQuery = query.ApplyProjection<TReadModel, TDomainObject>(projection);
+                IQueryable<TFilterable> projectedQuery = query.ApplyProjection<TFilterable, TDomainObject>(projection);
 
                 if (batches.TryGetValue(_includeLayers.Count, out var readModelBase))
                 {
-                    projectedQuery = projectedQuery.Where(readModelBase.ToExpressionTree(PropertyAccessors).AsPredicate<TReadModel>());
+                    projectedQuery = projectedQuery.Where(readModelBase.ToExpressionTree(PropertyAccessors).AsPredicate<TFilterable>());
                 }
 
                 for (int layerIndex = _includeLayers.Count + 1; layerIndex < _totalLayers.Count; layerIndex++)
@@ -324,7 +324,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
 
                     if (batches.TryGetValue(layerIndex, out var predicate))
                     {
-                        projectedQuery = projectedQuery.Where(predicate.ToExpressionTree(PropertyAccessors).AsPredicate<TReadModel>());
+                        projectedQuery = projectedQuery.Where(predicate.ToExpressionTree(PropertyAccessors).AsPredicate<TFilterable>());
                     }
                 }
 
@@ -332,18 +332,18 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
             }
             catch (TargetInvocationException ex)
             {
-                throw ex.GetBaseException();
+                throw ex.GetBaseExceptionKeepingStacktrace();
             }
         };
     }
     
     /// <summary>
-    /// Creates a filter for the entity defined by the attributes <see cref="FilterReadModelBinderBase.FilterProperty"/>, <see cref="FilterReadModelBinderBase.JoinProperty"/>, <see cref="FilterReadModelBinderBase.NavigationProperty"/> and <see cref="FilterReadModelBinderBase.KeyProperty"/>
+    /// Creates a filter for the entity defined by the attributes <see cref="FilterProperty"/>, <see cref="JoinProperty"/>, <see cref="NavigationProperty"/> and <see cref="KeyProperty"/>
     /// </summary>
     /// <typeparam name="TDbContext">The db context type.</typeparam>
     /// <param name="contextFactory">The db context factory</param>
     /// <returns>The filter.</returns>
-    [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See non-generic Filter).")]
+    [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See base class).")]
     public static FilterBy CreateFilter<TDbContext>(IDbContextFactory<TDbContext> contextFactory) where TDbContext : DbContext
     {
         ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
@@ -357,24 +357,24 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
     }
 
     /// <summary>
-    /// Creates a filter for the entity defined by the attributes <see cref="FilterReadModelBinderBase.FilterProperty"/>, <see cref="FilterReadModelBinderBase.JoinProperty"/>, <see cref="FilterReadModelBinderBase.NavigationProperty"/> and <see cref="FilterReadModelBinderBase.KeyProperty"/>
+    /// Creates a filter for the entity defined by the attributes <see cref="FilterProperty"/>, <see cref="JoinProperty"/>, <see cref="NavigationProperty"/> and <see cref="KeyProperty"/>
     /// </summary>
     /// <typeparam name="TDbContext">The db context type.</typeparam>
     /// <param name="contextFactory">The db context factory</param>
     /// <returns>The filter.</returns>
-    [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See non-generic Filter).")]
+    [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See base class).")]
     public static FilterByPaginatedWithOrdering CreateFilterWithPagination<TDbContext>(IDbContextFactory<TDbContext> contextFactory) where TDbContext : DbContext
     {
         ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
 
-        return async delegate (IFilter filter, int? pageNr, int? pageSize, SortOrdering? ordering, ICollection<string> orderByProperties) 
+        return async delegate (IFilter filter, int? pageNr, int? pageSize, SortDirection? ordering, ICollection<string> orderByProperties) 
         {
             await using var context = await contextFactory.CreateDbContextAsync();
 
-            IQueryable<TReadModel> projectedQuery = filterer(context, filter);
+            IQueryable<TFilterable> projectedQuery = filterer(context, filter);
             try
             {
-                IOrderedQueryable<TReadModel>? orderedQuery = null;
+                IOrderedQueryable<TFilterable>? orderedQuery = null;
 
                 List<string> incomingKeys = orderByProperties.Where(s => _keyProperties.Contains(s)).ToList();
 
@@ -424,7 +424,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
                     orderedQuery = orderedQuery.ThenOrderByAccessor(accessor);
                 }
 
-                projectedQuery = orderedQuery as IQueryable<TReadModel> ?? projectedQuery;
+                projectedQuery = orderedQuery as IQueryable<TFilterable> ?? projectedQuery;
 
                 bool usePagination = pageNr != null && pageSize != null;
                 if (usePagination)
@@ -437,14 +437,14 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
             }
             catch (TargetInvocationException ex)
             {
-                throw ex.GetBaseException();
+                throw ex.GetBaseExceptionKeepingStacktrace();
             }
         };
     }
     
     private static List<Tuple<PropertyInfo, PropertyInfo>> GetShadowingProperties()
     {
-        PropertyInfo[] shadowing = typeof(TReadModel).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        PropertyInfo[] shadowing = typeof(TFilterable).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
         PropertyInfo[] originals = typeof(TDomainObject).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         List<Tuple<PropertyInfo, PropertyInfo>> result = [];
@@ -493,9 +493,9 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
     /// <summary>
     /// Parsed version of this Filterable.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TRm"></typeparam>
-    private class ParsedFilterable<T, TRm> : IParsedFilterable where TRm : class, T, IFilterReadModel<T, TRm>, new() where  T : class
+    /// <typeparam name="T">The entity type.</typeparam>
+    /// <typeparam name="TF">The filterable type.</typeparam>
+    private class ParsedFilterable<T, TF> : IParsedFilterable where TF : class, T, IFilterable<T, TF>, new() where  T : class
     {
         public List<IParsedFilterableLeaf> Leaves { get; } = [];
 
@@ -525,8 +525,8 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
         {
             IsOuterJoin = isOuterJoin;
 
-            var ownKeyType = typeof(TReadModel).GetProperty(ownKey)?.PropertyType;
-            var otherKeyType = typeof(TRm).GetProperty(otherKey)?.PropertyType;
+            var ownKeyType = typeof(TFilterable).GetProperty(ownKey)?.PropertyType;
+            var otherKeyType = typeof(TF).GetProperty(otherKey)?.PropertyType;
 
             if (otherKeyType == null || ownKeyType == null)
             {
@@ -540,7 +540,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
                 return;
             }
 
-            RootKeyAccessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TReadModel), ownKeyType, ownKey);
+            RootKeyAccessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TFilterable), ownKeyType, ownKey);
 
             OtherKeyAccessor = ownKeyIsNullable ? 
                 FilterExpressionBuilder.CreatePropertyAccessWithCast(typeof(T), ownKeyType, otherKey) : 
@@ -548,16 +548,16 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
             
             QueryableCreator = context => context.Set<T>().AsNoTracking();
             
-            if (!TryGetTypeMapping(typeof(T), typeof(TRm), out var memberInitializer))
+            if (!TryGetTypeMapping(typeof(T), typeof(TF), out var memberInitializer))
             {
-                memberInitializer = TypeInitializerExpressionBuilder.CreateMemberInitializerExpression<T, TRm>(TypeMappings, MemberMappings, UnmappedMembers);
+                memberInitializer = TypeInitializerExpressionBuilder.CreateMemberInitializerExpression<T, TF>(TypeMappings, MemberMappings, UnmappedMembers);
             }
 
             if (IsOuterJoin)
             {
-                memberInitializer = FilterExpressionBuilder.MakeNullCoalescing(memberInitializer.Parameters.First(), memberInitializer.Body, typeof(TRm));
+                memberInitializer = FilterExpressionBuilder.MakeNullCoalescing(memberInitializer.Parameters.First(), memberInitializer.Body, typeof(TF));
             }
-            MergeExpression = TypeInitializerExpressionBuilder.CreateInitializerWithMixin<TReadModel, T>(name, memberInitializer);
+            MergeExpression = TypeInitializerExpressionBuilder.CreateInitializerWithMixin<TFilterable, T>(name, memberInitializer);
         }
 
         private ParsedFilterable(bool isJoin)
@@ -571,7 +571,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
 
         private void ExtractConvertedProperties()
         {
-            List<Tuple<PropertyInfo, PropertyInfo>> conversionProperties = FilterReadModelBinder<T, TRm>.GetPropertiesWithConversion();
+            List<Tuple<PropertyInfo, PropertyInfo>> conversionProperties = FilterableBinder<T, TF>.GetPropertiesWithConversion();
 
             foreach (var (originalProp , newProp) in conversionProperties)
             {
@@ -590,7 +590,7 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
 
         private void ExtractSubTrees(bool isJoin)
         {
-            List<Tuple<PropertyInfo, PropertyInfo>> subProperties = FilterReadModelBinder<T,TRm>.GetSubTreeProperties();
+            List<Tuple<PropertyInfo, PropertyInfo>> subProperties = FilterableBinder<T,TF>.GetSubTreeProperties();
 
             foreach (var (originalProp, newProperty) in subProperties)
             {
@@ -599,12 +599,12 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
                 
                 bool canAccessDomainObject = !isJoin;
 
-                if (!typeof(IFilterReadModel).IsAssignableFrom(newBasePropType))
+                if (!typeof(IFilterable).IsAssignableFrom(newBasePropType))
                 {
                     continue;
                 }
 
-                var accessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TRm), newProperty.PropertyType, newProperty.Name);
+                var accessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TF), newProperty.PropertyType, newProperty.Name);
 
                 var domainAccessor = canAccessDomainObject ? FilterExpressionBuilder.CreatePropertyAccess(typeof(T), originalProp.PropertyType, newProperty.Name) : null;
 
@@ -612,12 +612,12 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
 
                 if (Attribute.GetCustomAttribute(newProperty, typeof(JoinProperty)) is JoinProperty joinProperty)
                 {
-                    if (newBasePropType.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IFilterReadModel<,>))?.GenericTypeArguments.FirstOrDefault() is not { } originalDomainModel)
+                    if (newBasePropType.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IFilterable<,>))?.GenericTypeArguments.FirstOrDefault() is not { } originalDomainModel)
                     {
-                        throw new FilterParserException($"Could not parse property {newProperty.Name} for filterable {typeof(TRm).FullName}");
+                        throw new FilterParserException($"Could not parse property {newProperty.Name} for filterable {typeof(TF).FullName}");
                     }
 
-                    subTree = ParsedFilterableFromTypes(typeof(T), typeof(TRm), originalDomainModel, newBasePropType, joinProperty.OwnKeyProperty, joinProperty.OtherKeyProperty, newProperty.Name, joinProperty.IsOuterJoin);
+                    subTree = ParsedFilterableFromTypes(typeof(T), typeof(TF), originalDomainModel, newBasePropType, joinProperty.OwnKeyProperty, joinProperty.OtherKeyProperty, newProperty.Name, joinProperty.IsOuterJoin);
 
                     originalBasePropType = originalDomainModel;
 
@@ -625,27 +625,27 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
                 }
                 else
                 {
-                    subTree = ParsedFilterableFromTypes(typeof(T), typeof(TRm), originalBasePropType, newBasePropType);
+                    subTree = ParsedFilterableFromTypes(typeof(T), typeof(TF), originalBasePropType, newBasePropType);
                 }
 
                 if (newBasePropType != newProperty.PropertyType)
                 {
-                    CollectionSubTrees.Add(CollectionSubTreeFromTypes(typeof(T), typeof(TRm), newProperty.PropertyType, originalBasePropType, newBasePropType, newProperty.Name, accessor, subTree, newProperty.MemberMaybeNull(), domainAccessor));
+                    CollectionSubTrees.Add(CollectionSubTreeFromTypes(typeof(T), typeof(TF), newProperty.PropertyType, originalBasePropType, newBasePropType, newProperty.Name, accessor, subTree, newProperty.MemberMaybeNull(), domainAccessor));
                 }
                 else
                 {
-                    SubTrees.Add(SubTreeFromTypes(typeof(T), typeof(TRm), originalBasePropType, newBasePropType, newProperty.Name, accessor, subTree, newProperty.MemberMaybeNull(), domainAccessor));
+                    SubTrees.Add(SubTreeFromTypes(typeof(T), typeof(TF), originalBasePropType, newBasePropType, newProperty.Name, accessor, subTree, newProperty.MemberMaybeNull(), domainAccessor));
                 }
             }
         }
 
         private void ExtractLeaves(bool isJoin)
         {
-            List<Tuple<PropertyInfo, PropertyInfo>> filterProperties = FilterReadModelBinder<T, TRm>.GetLeafProperties();
+            List<Tuple<PropertyInfo, PropertyInfo>> filterProperties = FilterableBinder<T, TF>.GetLeafProperties();
 
             foreach (var (oldProperty, newProperty) in filterProperties)
             {
-                var accessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TRm), newProperty.PropertyType, newProperty.Name);
+                var accessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TF), newProperty.PropertyType, newProperty.Name);
 
                 bool canAccessDomainObject = newProperty.PropertyType == oldProperty.PropertyType && !isJoin;
 
@@ -655,11 +655,11 @@ public sealed class FilterReadModelBinder<TDomainObject, TReadModel> : FilterRea
 
                 if (newCollectionType != null)
                 {
-                    CollectionLeaves.Add(CollectionLeafFromTypes(typeof(T), typeof(TRm), newProperty.PropertyType, newCollectionType, newProperty.Name, accessor, domainAccessor));
+                    CollectionLeaves.Add(CollectionLeafFromTypes(typeof(T), typeof(TF), newProperty.PropertyType, newCollectionType, newProperty.Name, accessor, domainAccessor));
                 }
                 else
                 {
-                    Leaves.Add(LeafFromTypes(typeof(T), typeof(TRm), newProperty.PropertyType, newProperty.Name, accessor, domainAccessor));
+                    Leaves.Add(LeafFromTypes(typeof(T), typeof(TF), newProperty.PropertyType, newProperty.Name, accessor, domainAccessor));
                 }
             }
         }

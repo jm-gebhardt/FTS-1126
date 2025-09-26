@@ -1,10 +1,10 @@
-﻿using Gebhardt.Acc.Common.Filter.ReadModelParser;
+﻿using Gebhardt.Acc.Common.Filter.FilterableParser;
+using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using static Gebhardt.Acc.Common.Filter.ReadModelParser.FilterReadModelBinderBase;
 
 namespace Gebhardt.Acc.CommonTest.Filter;
 
@@ -29,7 +29,7 @@ public class TestDbEntity()
     }
 }
 
-public class TestDbEntityReadModel : TestDbEntity, IFilterReadModel<TestDbEntity, TestDbEntityReadModel>
+public class TestDbEntityReadModel : TestDbEntity, IFilterable<TestDbEntity, TestDbEntityReadModel>
 {
     [KeyProperty]
     [FilterProperty]
@@ -64,7 +64,7 @@ public class TestCollectionEntity()
     }
 }
 
-public class TestCollectionEntityReadModel : TestCollectionEntity, IFilterReadModel<TestCollectionEntity, TestCollectionEntityReadModel>
+public class TestCollectionEntityReadModel : TestCollectionEntity, IFilterable<TestCollectionEntity, TestCollectionEntityReadModel>
 {
     [KeyProperty]
     [UsedImplicitly]
@@ -88,7 +88,7 @@ public class TestJoinSourceEntity()
     }
 }
 
-public class TestJoinSourceReadModel : TestJoinSourceEntity, IFilterReadModel<TestJoinSourceEntity, TestJoinSourceReadModel>
+public class TestJoinSourceReadModel : TestJoinSourceEntity, IFilterable<TestJoinSourceEntity, TestJoinSourceReadModel>
 {
     [KeyProperty]
     [UsedImplicitly]
@@ -116,7 +116,7 @@ public class TestJoinTargetEntity()
     }
 }
 
-public class TestJoinTargetReadModel : TestJoinTargetEntity, IFilterReadModel<TestJoinTargetEntity, TestJoinTargetReadModel>
+public class TestJoinTargetReadModel : TestJoinTargetEntity, IFilterable<TestJoinTargetEntity, TestJoinTargetReadModel>
 {
     [KeyProperty]
     [UsedImplicitly]

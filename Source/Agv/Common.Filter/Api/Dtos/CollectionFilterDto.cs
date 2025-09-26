@@ -5,10 +5,10 @@ using JetBrains.Annotations;
 namespace Gebhardt.Acc.Common.Filter.Api.Dtos;
 
 /// <summary>
-/// Represents a collection aggregate filter.
+/// Provides a dto for a collection aggregate filter.
 /// </summary>
 [PublicAPI]
-public record CollectionFilterDto : FilterBaseDto
+public record CollectionFilterDto : FilterDto
 {
     /// <summary>
     /// The aggregation to perform.
@@ -18,7 +18,7 @@ public record CollectionFilterDto : FilterBaseDto
     /// <summary>
     /// The child filter.
     /// </summary>
-    public FilterBaseDto Child { get; }
+    public FilterDto Child { get; }
 
     /// <summary>
     /// The fully qualified name of the collection from the root of the read model. Nesting levels separated by &quot;.&quot;
@@ -29,7 +29,7 @@ public record CollectionFilterDto : FilterBaseDto
     /// Constructor
     /// </summary>
     [JsonConstructor]
-    public CollectionFilterDto(FilterBaseDto child, string name, CollectionAggregateVariant aggregation)
+    public CollectionFilterDto(FilterDto child, string name, CollectionAggregateVariant aggregation)
     {
         Child = child;
         Aggregation = aggregation;

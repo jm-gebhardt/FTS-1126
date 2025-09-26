@@ -62,5 +62,5 @@ public interface IActionGroupRetrievalService
     /// <param name="pageSize"></param>
     /// <param name="order"></param>
     /// <param name="orderProperties"></param>
-    Task<ICollection<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortOrdering order, ICollection<string> orderProperties);
+    Task<ICollection<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties);
 }

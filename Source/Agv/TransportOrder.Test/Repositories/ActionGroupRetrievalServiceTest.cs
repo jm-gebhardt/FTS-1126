@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
+using SortDirection = Gebhardt.Acc.Common.Filter.Enums.SortDirection;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -647,11 +648,11 @@ public class ActionGroupRetrievalServiceTest
         ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(new CombinationFilter(
             LogicalCombinationVariant.And,
             [
-                new ValueComparisonFilter<ActionGroupState>(nameof(ActionGroupFilterReadModel.State), ComparisonVariant.Equals, ActionGroupState.Completed),
-                new ValueComparisonFilter<DateTime>(nameof(ActionGroupFilterReadModel.StartedDate), ComparisonVariant.Geq, DateTime.MinValue),
-                new ValueComparisonFilter<Guid>(nameof(ActionGroupFilterReadModel.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(AgvFilterReadModel.CorrelationId), ComparisonVariant.Equals, agv.CorrelationId)
+                new ValueComparisonFilter<ActionGroupState>(nameof(ActionGroupFilterable.State), ComparisonVariant.Equals, ActionGroupState.Completed),
+                new ValueComparisonFilter<DateTime>(nameof(ActionGroupFilterable.StartedDate), ComparisonVariant.Geq, DateTime.MinValue),
+                new ValueComparisonFilter<Guid>(nameof(ActionGroupFilterable.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(AgvFilterable.CorrelationId), ComparisonVariant.Equals, agv.CorrelationId)
             ]
-        ), 0, 10, SortOrdering.Desc, []);
+        ), 0, 10, SortDirection.Desc, []);
 
         result.Count.ShouldBe(1);
     }
@@ -675,8 +676,8 @@ public class ActionGroupRetrievalServiceTest
         await fixture.AddAsync(agv);
         await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
-        var filter = ActionGroupFilterExample.ExampleDto.Translate<ActionGroup, ActionGroupFilterReadModel>();
-        ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(filter, 0, 10, SortOrdering.Desc, []);
+        var filter = ActionGroupFilterExample.ExampleDto.Translate<ActionGroup, ActionGroupFilterable>();
+        ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(filter, 0, 10, SortDirection.Desc, []);
 
         result.Count.ShouldBe(0);
     }

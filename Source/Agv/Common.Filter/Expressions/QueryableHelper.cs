@@ -17,12 +17,12 @@ internal static class QueryableHelper
     /// </summary>
     /// <param name="queryable">The queryable to order.</param>
     /// <param name="keySelector">The key selector expression.</param>
-    /// <param name="ordering"></param>
-    public static IOrderedQueryable<T> OrderByAccessor<T>(this IQueryable<T> queryable, LambdaExpression keySelector, SortOrdering? ordering = SortOrdering.Desc)
+    /// <param name="ordering">The direction of the order by.</param>
+    public static IOrderedQueryable<T> OrderByAccessor<T>(this IQueryable<T> queryable, LambdaExpression keySelector, SortDirection? ordering = SortDirection.Desc)
     {
         var orderingMethod = ordering switch
         {
-            SortOrdering.Asc => GetGenericMethod(nameof(OrderByAscending), [typeof(T), keySelector.ReturnType], 2),
+            SortDirection.Asc => GetGenericMethod(nameof(OrderByAscending), [typeof(T), keySelector.ReturnType], 2),
             _ => GetGenericMethod(nameof(OrderByDescending), [typeof(T), keySelector.ReturnType], 2)
         };
 
@@ -67,13 +67,12 @@ internal static class QueryableHelper
     }
 
     /// <summary>
-    /// 
+    /// Applies a weakly typed select projection to a queryable.
     /// </summary>
-    /// <typeparam name="TOut"></typeparam>
-    /// <typeparam name="TIn"></typeparam>
-    /// <param name="queryable"></param>
-    /// <param name="expression"></param>
-    /// <returns></returns>
+    /// <typeparam name="TOut">Result after projection.</typeparam>
+    /// <typeparam name="TIn">Queryable content before projection.</typeparam>
+    /// <param name="queryable">The queryable.</param>
+    /// <param name="expression">The projection expression. Has to have the underlying delegate type &lt;<typeparamref name="TIn"/>, <typeparamref name="TOut"/>&gt;</param>
     public static IQueryable<TOut> ApplyProjection<TOut, TIn>(this IQueryable<TIn> queryable, LambdaExpression expression) where TOut : TIn
     {
         return queryable.Select(expression.AsStronglyTyped<TIn, TOut>());
@@ -155,8 +154,7 @@ internal static class QueryableHelper
                 }
         ).SelectMany(
             other => other.InnerCollection.DefaultIfEmpty(),
-            // ReSharper disable once RedundantAnonymousTypePropertyName used in SelectOuterInner
-            (self, other) => new { Outer = self.Outer, Inner = other }
+            (self, other) => new { self.Outer, Inner = other }
         ).SelectOuterInner(resultSelector);
     }
 
