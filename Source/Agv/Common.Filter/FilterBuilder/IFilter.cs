@@ -29,7 +29,7 @@ public interface IFilter
     /// <summary>
     /// Creates an expression tree from this filter .
     /// </summary>
-    /// <param name="accessors">Mapping of parameter name -> accessor expression & nullability.</param>
+    /// <param name="accessors">Mapping of parameter name -> accessor expression &amp; nullability.</param>
     public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors);
     
     /// <summary>

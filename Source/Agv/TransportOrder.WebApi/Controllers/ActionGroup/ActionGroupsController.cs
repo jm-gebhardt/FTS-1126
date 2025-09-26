@@ -95,10 +95,10 @@ public class ActionGroupsController : Controller
     /// </summary>
     [HttpPost]
     [Route("/actionGroups/filtered")]
-    public async Task<ActionResult<IEnumerable<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties)
+    public async Task<ActionResult<PagedResult<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties)
     {
         Response<GotFilteredActionGroups> result = await _filterTestRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []));
-        var mapped = _mapper.Map<List<FilteredActionGroupDto>>(result.Message.ActionGroups);
+        var mapped = _mapper.Map<PagedResult<FilteredActionGroupDto>>(result.Message.ActionGroups);
 
         return Ok(mapped);
     }

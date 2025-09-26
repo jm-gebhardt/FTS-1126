@@ -82,7 +82,7 @@ public class FilterExtensionsTests
     {
         var dto = new CollectionFilterDto(new ValueComparisonFilterDto(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, "1"), nameof(TestJoinSourceReadModel.TjtFKey), CollectionAggregateVariant.All);
 
-        Should.Throw<FilterBuilderException>(() => dto.Translate<TestJoinSourceEntity, TestJoinSourceReadModel>());
+        Should.Throw<FilterDtoParserException>(() => dto.Translate<TestJoinSourceEntity, TestJoinSourceReadModel>());
     }
 
     [TestMethod]

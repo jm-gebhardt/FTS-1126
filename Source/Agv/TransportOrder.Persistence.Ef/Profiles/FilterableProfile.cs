@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 
@@ -14,6 +15,8 @@ public class FilterableProfile : Profile
     /// </summary>
     public FilterableProfile()
     {
+        CreateMap(typeof(PagedResult<>), typeof(PagedResult<>));
+
         CreateMap<ActionGroupFilterable, FilteredActionGroup>(MemberList.Destination);
 
         CreateMap<AgvActionFilterable, FilteredAgvAction>(MemberList.Destination);

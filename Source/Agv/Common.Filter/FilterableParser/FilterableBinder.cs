@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.Filter.Expressions;
@@ -262,7 +263,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     /// <param name="pageSize">The page size.</param>
     /// <param name="ordering">The direction to sort.</param>
     /// <param name="orderByProperties">The properties to sort.</param>
-    public delegate Task<ICollection<TFilterable>> FilterByPaginatedWithOrdering(IFilter filter, int? pageNr, int? pageSize, SortDirection? ordering, ICollection<string> orderByProperties);
+    public delegate Task<PagedResult<TFilterable>> FilterByPaginatedWithOrdering(IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties);
 
     private delegate IQueryable<TFilterable> ApplyFiltering<in TDbContext>(TDbContext context, IFilter filter);
 
@@ -367,7 +368,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     {
         ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
 
-        return async delegate (IFilter filter, int? pageNr, int? pageSize, SortDirection? ordering, ICollection<string> orderByProperties) 
+        return async delegate (IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties) 
         {
             await using var context = await contextFactory.CreateDbContextAsync();
 
@@ -426,14 +427,15 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
                 projectedQuery = orderedQuery as IQueryable<TFilterable> ?? projectedQuery;
 
-                bool usePagination = pageNr != null && pageSize != null;
-                if (usePagination)
+                IQueryable<TFilterable> prePaginated = projectedQuery;
+
+                projectedQuery = projectedQuery.Skip(pageNr * pageSize);
+                if (pageNr + pageSize != 0)
                 {
-                    projectedQuery = projectedQuery.Skip(pageNr!.Value * pageSize!.Value)
-                        .Take(pageSize.Value);
+                    projectedQuery = projectedQuery.Take(pageSize);
                 }
 
-                return await projectedQuery.ToListAsync();
+                return new PagedResult<TFilterable>(await projectedQuery.ToListAsync(), await prePaginated.CountAsync(), pageNr, pageSize);
             }
             catch (TargetInvocationException ex)
             {

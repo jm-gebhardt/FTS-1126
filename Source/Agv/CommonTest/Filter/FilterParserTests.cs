@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Filter.Enums;
+﻿using Gebhardt.Acc.Common.Filter.Api.Dtos;
+using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Shouldly;
@@ -72,7 +73,7 @@ public class FilterParserBaseTests
 
         var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new ValueComparisonFilter<int>(nameof(TestCollectionEntityReadModel.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
 
-        ICollection<TestCollectionEntityReadModel> result = await filterBy(filter, 4, 10, SortDirection.Desc, []);
+        ICollection<TestCollectionEntityReadModel> result = (await filterBy(filter, 4, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(10);
     }
@@ -95,14 +96,14 @@ public class FilterParserBaseTests
 
         var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new ValueComparisonFilter<int>(nameof(TestCollectionEntityReadModel.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
 
-        List<Task<ICollection<TestCollectionEntityReadModel>>> results = [];
+        List<Task<PagedResult<TestCollectionEntityReadModel>>> results = [];
 
         for (int i = 0; i < 10; i++)
         {
             results.Add(filterBy.Invoke(filter, i, 10, SortDirection.Desc, []));
         }
 
-        ICollection<TestCollectionEntityReadModel>[] awaitedResults = await Task.WhenAll(results);
+        List<ICollection<TestCollectionEntityReadModel>> awaitedResults = (await Task.WhenAll(results)).Select(a => a.Items).ToList();
 
         List<HashSet<int>> intValues = awaitedResults.Select(t => t.SelectMany(e => e.Values.Select(ee => ee.IntValue)).ToHashSet()).ToList();
 
@@ -128,7 +129,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<Guid>(nameof(TestDbEntityReadModel.Key), ComparisonVariant.Equals, entity.Key)]);
 
-        ICollection<TestDbEntityReadModel> result = await filterBy.Invoke(filter, 0, 10, SortDirection.Desc, []);
+        ICollection<TestDbEntityReadModel> result = (await filterBy.Invoke(filter, 0, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(1);
     }
@@ -149,7 +150,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<int>(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, 10)]);
 
-        ICollection<TestJoinSourceReadModel> result = await filterBy(filter, 0, 10, SortDirection.Desc, []);
+        ICollection<TestJoinSourceReadModel> result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(1);
     }
@@ -170,7 +171,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<bool>(nameof(TestJoinSourceReadModel.Exists), ComparisonVariant.Equals, true)]);
 
-        ICollection<TestJoinSourceReadModel> result = await filterBy(filter, 0, 10, SortDirection.Desc, []);
+        ICollection<TestJoinSourceReadModel> result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(2);
     }

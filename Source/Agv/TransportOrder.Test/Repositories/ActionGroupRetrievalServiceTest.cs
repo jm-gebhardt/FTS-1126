@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Filter.Api;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -645,7 +646,7 @@ public class ActionGroupRetrievalServiceTest
         await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
-        ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(new CombinationFilter(
+        PagedResult<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(new CombinationFilter(
             LogicalCombinationVariant.And,
             [
                 new ValueComparisonFilter<ActionGroupState>(nameof(ActionGroupFilterable.State), ComparisonVariant.Equals, ActionGroupState.Completed),
@@ -654,7 +655,10 @@ public class ActionGroupRetrievalServiceTest
             ]
         ), 0, 10, SortDirection.Desc, []);
 
-        result.Count.ShouldBe(1);
+        result.Items.Count.ShouldBe(1);
+        result.PageSize.ShouldBe(10);
+        result.CurrentPage.ShouldBe(0);
+        result.TotalCount.ShouldBe(1);
     }
 
     [TestMethod]
@@ -677,8 +681,11 @@ public class ActionGroupRetrievalServiceTest
         await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
         var filter = ActionGroupFilterExample.ExampleDto.Translate<ActionGroup, ActionGroupFilterable>();
-        ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(filter, 0, 10, SortDirection.Desc, []);
+        PagedResult<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(filter, 0, 10, SortDirection.Desc, []);
 
-        result.Count.ShouldBe(0);
+        result.Items.Count.ShouldBe(0);
+        result.PageSize.ShouldBe(10);
+        result.CurrentPage.ShouldBe(0);
+        result.TotalCount.ShouldBe(0);
     }
 }

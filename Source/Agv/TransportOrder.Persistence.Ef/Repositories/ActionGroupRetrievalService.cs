@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
@@ -45,9 +46,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
     
     /// <inheritdoc />
-    public async Task<ICollection<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
+    public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
     {
-        return _mapper.Map<ICollection<ActionGroupFilterable>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
+        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>( await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
     }
 
     /// <inheritdoc />
