@@ -21,7 +21,7 @@ public record CollectionFilterDto : FilterDto
     public FilterDto Child { get; }
 
     /// <summary>
-    /// The fully qualified name of the collection from the root of the read model. Nesting levels separated by &quot;.&quot;
+    /// The fully qualified name of the collection from the root of the read model. Nesting levels separated by ".".
     /// </summary>
     public string Name { get; } = string.Empty;
 

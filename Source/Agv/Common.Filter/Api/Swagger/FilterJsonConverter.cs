@@ -37,16 +37,16 @@ public class FilterJsonConverter : JsonConverter<FilterDto>
     {
         switch (value)
         {
-            case CollectionFilterDto coll:
-                JsonSerializer.Serialize(writer, coll, options);
+            case CollectionFilterDto collectionFilterDto:
+                JsonSerializer.Serialize(writer, collectionFilterDto, options);
                 break;
 
-            case CombinationFilterDto comb:
-                JsonSerializer.Serialize(writer, comb, options);
+            case CombinationFilterDto combinationFilterDto:
+                JsonSerializer.Serialize(writer, combinationFilterDto, options);
                 break;
 
-            case ValueComparisonFilterDto comp:
-                JsonSerializer.Serialize(writer, comp, options);
+            case ValueComparisonFilterDto valueComparisonFilterDto:
+                JsonSerializer.Serialize(writer, valueComparisonFilterDto, options);
                 break;
 
             default:

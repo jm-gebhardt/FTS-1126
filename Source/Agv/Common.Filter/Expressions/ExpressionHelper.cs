@@ -27,7 +27,6 @@ internal static class ExpressionHelper
     /// <param name="body">The expression to replace in.</param>
     /// <param name="oldParameter">The parameter expression to replace.</param>
     /// <param name="replacement">The expression to replace with.</param>
-    /// <returns></returns>
     public static Expression ReplaceParameter(this Expression body, ParameterExpression oldParameter, Expression replacement)
     {
         return new ParameterReplacer(oldParameter, replacement).Visit(body);
@@ -112,6 +111,10 @@ internal static class ExpressionHelper
         return Expression.Lambda<Func<TIn, TOut>>(expression.Body, expression.TailCall, expression.Parameters);
     }
 
+    /// <summary>
+    /// Creates a pretty parameter name for a type.
+    /// </summary>
+    /// <param name="type">The type to generate the name for.</param>
     public static string PrettyParameterName(this Type type)
     {
         return type.ShortDisplayName() + "_param";

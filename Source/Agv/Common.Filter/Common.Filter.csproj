@@ -5,7 +5,6 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="AutoMapper" />
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="Swashbuckle.AspNetCore" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />

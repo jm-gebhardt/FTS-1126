@@ -81,7 +81,7 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
         
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GeneratePredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
+        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
 
         List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
 
@@ -134,7 +134,7 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GeneratePredicate<TestDbEntity, string>(targetValue, nameof(TestDbEntity.StringValue), variant);
+        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, string>(targetValue, nameof(TestDbEntity.StringValue), variant);
 
         List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
 
@@ -162,7 +162,7 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GeneratePredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
+        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
 
         Expression<Func<TestDbEntity, bool>> inverted = FilterExpressionBuilder.NegatePredicate(predicate);
 
@@ -186,8 +186,8 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate1 = FilterExpressionBuilder.GeneratePredicate<TestDbEntity, int>(1, nameof(TestDbEntity.IntValue), ComparisonVariant.Geq);
-        Expression<Func<TestDbEntity, bool>> predicate2 = FilterExpressionBuilder.GeneratePredicate<TestDbEntity, string>("3", nameof(TestDbEntity.StringValue), ComparisonVariant.Geq);
+        Expression<Func<TestDbEntity, bool>> predicate1 = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(1, nameof(TestDbEntity.IntValue), ComparisonVariant.Geq);
+        Expression<Func<TestDbEntity, bool>> predicate2 = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, string>("3", nameof(TestDbEntity.StringValue), ComparisonVariant.Geq);
 
         Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.ConnectPredicates(predicate1, predicate2, op);
         

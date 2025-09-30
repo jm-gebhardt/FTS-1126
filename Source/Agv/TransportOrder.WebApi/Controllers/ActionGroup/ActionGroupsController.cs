@@ -23,7 +23,7 @@ public class ActionGroupsController : Controller
     private readonly IRequestClient<GetActionGroups> _getAgvActionGroupsRequest;
     private readonly IRequestClient<GetActionGroupCountsByState> _getAgvActionGroupCountsByStateRequest;
     private readonly IRequestClient<GetActionGroupStatistics> _durationStatisticsRequest;
-    private readonly IRequestClient<GetFilteredActionGroups> _filterTestRequest;
+    private readonly IRequestClient<GetFilteredActionGroups> _filteredActionGroupsRequest;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -33,13 +33,13 @@ public class ActionGroupsController : Controller
         IRequestClient<GetActionGroups> getAgvActionGroupsRequest,
         IRequestClient<GetActionGroupCountsByState> getAgvActionGroupCountsByStateRequest,
         IRequestClient<GetActionGroupStatistics> durationStatisticsRequest,
-        IRequestClient<GetFilteredActionGroups> filterTestRequest)
+        IRequestClient<GetFilteredActionGroups> filteredActionGroupsRequest)
     {
         _mapper = mapper;
         _getAgvActionGroupsRequest = getAgvActionGroupsRequest;
         _getAgvActionGroupCountsByStateRequest = getAgvActionGroupCountsByStateRequest;
         _durationStatisticsRequest = durationStatisticsRequest;
-        _filterTestRequest = filterTestRequest;
+        _filteredActionGroupsRequest = filteredActionGroupsRequest;
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public class ActionGroupsController : Controller
     [Route("/actionGroups/filtered")]
     public async Task<ActionResult<PagedResult<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties)
     {
-        Response<GotFilteredActionGroups> result = await _filterTestRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []));
+        Response<GotFilteredActionGroups> result = await _filteredActionGroupsRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []));
         var mapped = _mapper.Map<PagedResult<FilteredActionGroupDto>>(result.Message.ActionGroups);
 
         return Ok(mapped);

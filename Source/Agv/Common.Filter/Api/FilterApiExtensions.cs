@@ -65,7 +65,7 @@ public static class FilterApiExtensions
 
         if (child == null)
         {
-            throw new FilterDtoParserException($"Could not create collection filter for  {dto.Name}, needs to have exactly one child but had {child}");
+            throw new FilterDtoParserException($"Could not create collection filter for  {dto.Name}, child was null.");
         }
 
         if (!propertyAccessors.TryGetValue(dto.Name, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })

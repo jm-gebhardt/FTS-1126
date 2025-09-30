@@ -45,7 +45,7 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
 
             bool isNullable = Nullable.GetUnderlyingType(accessor.ReturnType) != null && Nullable.GetUnderlyingType(typeof(TContent)) == null;
 
-            var predicate = FilterExpressionBuilder.GeneratePredicate(inputType, typeof(TContent), content, Name, Variant, noAccessor ? null : accessor, isNullable);
+            var predicate = FilterExpressionBuilder.GenerateNumericalPredicate(inputType, typeof(TContent), content, Name, Variant, noAccessor ? null : accessor, isNullable);
 
             return predicate;
         }

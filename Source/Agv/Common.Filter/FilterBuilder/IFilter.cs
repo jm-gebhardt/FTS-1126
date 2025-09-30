@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Gebhardt.Acc.Common.Filter.Exceptions;
 
 namespace Gebhardt.Acc.Common.Filter.FilterBuilder;
 
@@ -30,6 +31,7 @@ public interface IFilter
     /// Creates an expression tree from this filter .
     /// </summary>
     /// <param name="accessors">Mapping of parameter name -> accessor expression &amp; nullability.</param>
+    /// <exception cref="FilterExecutionException">If there are structural issues with the filter/accessor combination, i.e. accessors missing, type mismatches or similar.</exception>
     public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors);
     
     /// <summary>

@@ -68,7 +68,7 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
 
             if (inputType == null)
             {
-                throw new FilterBuilderException("Could not determine input type in direct filter");
+                throw new FilterExecutionException("Could not determine input type in direct filter");
             }
 
             return childExpressions.Count == 0 ?

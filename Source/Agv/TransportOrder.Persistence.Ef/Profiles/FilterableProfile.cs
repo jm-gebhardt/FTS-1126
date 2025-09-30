@@ -17,16 +17,16 @@ public class FilterableProfile : Profile
     {
         CreateMap(typeof(PagedResult<>), typeof(PagedResult<>));
 
-        CreateMap<ActionGroupFilterable, FilteredActionGroup>(MemberList.Destination);
+        CreateMap<ActionGroupFilterable, FilteredActionGroup>();
 
-        CreateMap<AgvActionFilterable, FilteredAgvAction>(MemberList.Destination);
+        CreateMap<AgvActionFilterable, FilteredAgvAction>();
 
-        CreateMap<AgvFilterable, FilteredAgv>(MemberList.Destination);
+        CreateMap<AgvFilterable, FilteredAgv>();
 
-        CreateMap<ActionTargetFilterable, FilteredActionTarget>(MemberList.Destination);
+        CreateMap<ActionTargetFilterable, FilteredActionTarget>();
 
-        CreateMap<GraphNodeFilterable, FilteredGraphNode>(MemberList.Destination);
+        CreateMap<GraphNodeFilterable, FilteredGraphNode>();
 
-        CreateMap<AgvPositionFilterable, FilteredAgvPosition>(MemberList.Destination);
+        CreateMap<AgvPositionFilterable, FilteredAgvPosition>();
     }
 }
