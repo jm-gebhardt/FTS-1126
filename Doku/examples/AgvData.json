@@ -11,6 +11,7 @@
   "Payload": 35,
   "MaxVelocityTurn": 0.01,
   "MaxVelocityTurnOnSpot": 0.02,
+  "TurnOnSpotThreshold": 0.01,
   "Acceleration": 0.34,
   "Sensors": [
     {

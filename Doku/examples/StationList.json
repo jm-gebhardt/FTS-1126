@@ -1,57 +1,168 @@
 {
-  "SerialNumber": "AGV-01",
-  "ModificationDate": "2022-07-06T13:14:15",
-  "RequestId": "ccc7afc4-4682-44f2-8f03-2e5866574e67",
-  "Stations": [
+  "serialNumber": "agv00",
+  "modificationDate": "2025-09-26T10:00:00",
+  "requestId": "7c30a053-ba14-48e7-8fc8-519748ec0162",
+  "stations": [
     {
-      "Function": "Pick",
-      "Identifier": "SRC_01",
-      "Position": {
-        "Theta": 90.0,
-        "X": 10.0,
-        "Y": 0.0
+      "function": [
+        "Both"
+      ],
+      "identifier": "AP01",
+      "position": {
+        "theta": -1.5707963267948966,
+        "x": -6.4865826656398786,
+        "y": 4.1478640398784483
       },
-      "typeId": "T1"
+      "typeId": ""
     },
     {
-      "Function": "Both",
-      "Identifier": "STN_01",
-      "Position": {
-        "Theta": 90.0,
-        "X": 40.0,
-        "Y": 0.0
+      "function": [
+        "Both"
+      ],
+      "identifier": "AP02",
+      "position": {
+        "theta": -1.5707963267948966,
+        "x": -5.0045826656398775,
+        "y": 4.1208640398784482
       },
-      "typeId": "T2"
+      "typeId": ""
     },
     {
-      "Function": "Charge",
-      "Identifier": "CRG_01",
-      "Position": {
-        "Theta": 180.0,
-        "X": 0.0,
-        "Y": 30.0
+      "function": [
+        "Both"
+      ],
+      "identifier": "AP03",
+      "position": {
+        "theta": -1.5707963267948966,
+        "x": 1.5394173343601221,
+        "y": 4.2358640398784484
       },
-      "typeId": "C1"
+      "typeId": ""
     },
     {
-      "Function": "Drop",
-      "Identifier": "DST_01",
-      "Position": {
-        "Theta": 270.0,
-        "X": 30.0,
-        "Y": 40.0
+      "function": [
+        "Both"
+      ],
+      "identifier": "AP04",
+      "position": {
+        "theta": -1.5707963267948966,
+        "x": 2.9934173343601218,
+        "y": 4.2358640398784484
       },
-      "typeId": "T2"
+      "typeId": ""
     },
     {
-      "Function": "Drop",
-      "Identifier": "DST_02",
-      "Position": {
-        "Theta": 270.0,
-        "X": 40.0,
-        "Y": 40.0
+      "function": [
+        "Both"
+      ],
+      "identifier": "APL1",
+      "position": {
+        "theta": -1.5707963267948966,
+        "x": 19.059417334360123,
+        "y": -8.962135960121552
       },
-      "typeId": "T1"
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Both"
+      ],
+      "identifier": "PS01",
+      "position": {
+        "theta": 1.5707963267948966,
+        "x": 1.536417334360122,
+        "y": 13.166864039878449
+      },
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Both"
+      ],
+      "identifier": "PS02",
+      "position": {
+        "theta": 1.5707963267948966,
+        "x": -0.35858266563987851,
+        "y": 13.132864039878449
+      },
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Both"
+      ],
+      "identifier": "PS03",
+      "position": {
+        "theta": 1.5847589608108512,
+        "x": -2.2765826656398778,
+        "y": 13.123864039878448
+      },
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Charge",
+        "Park"
+      ],
+      "identifier": "charger1",
+      "position": {
+        "theta": 1.5707963267948966,
+        "x": -4.016582665639878,
+        "y": 14.554864039878449
+      },
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Charge",
+        "Park"
+      ],
+      "identifier": "charger2",
+      "position": {
+        "theta": 1.5707963267948966,
+        "x": 12.041417334360123,
+        "y": 9.8108640398784495
+      },
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Charge",
+        "Park"
+      ],
+      "identifier": "charger3",
+      "position": {
+        "theta": 1.5707963267948966,
+        "x": 13.475417334360122,
+        "y": 9.8168640398784479
+      },
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Charge",
+        "Park"
+      ],
+      "identifier": "charger4",
+      "position": {
+        "theta": 1.5707963267948966,
+        "x": 14.913417334360123,
+        "y": 9.8208640398784492
+      },
+      "typeId": ""
+    },
+    {
+      "function": [
+        "Charge",
+        "Park"
+      ],
+      "identifier": "charger5",
+      "position": {
+        "theta": 1.5707963267948966,
+        "x": 16.361417334360123,
+        "y": 9.8248640398784488
+      },
+      "typeId": ""
     }
   ]
 }

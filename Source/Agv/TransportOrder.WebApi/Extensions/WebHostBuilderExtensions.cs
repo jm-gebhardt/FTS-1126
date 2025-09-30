@@ -141,12 +141,13 @@ public static class WebHostBuilderExtensions
                             {
                                 Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
                             },
-                            new string[] { }
+                            []
                         }
                     });
                     opt.AddOperationFilter(new SecurityRequirementsOperationFilter(true, JwtBearerDefaults.AuthenticationScheme));
                 });
                 options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
+                options.SchemaFilter<EnumDictionaryOptionalSchemaFilter>();
                 options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                 options.UseAllOfForInheritance(); // Allows $ref objects to be nullable

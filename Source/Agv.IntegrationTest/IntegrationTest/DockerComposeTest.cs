@@ -1,5 +1,5 @@
+using Gebhardt.Acc.IntegrationTest.Helpers;
 using Gebhardt.Acc.IntegrationTest.Utils;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shouldly;
 
 namespace Gebhardt.Acc.IntegrationTest;
@@ -10,48 +10,48 @@ namespace Gebhardt.Acc.IntegrationTest;
 [TestClass]
 public class DockerComposeTest
 {
-    private const string DockerRegistry = "registry.gitlab.com";
-    private const string DockerRegistryRepository = "registry.gitlab.com/tar4/karis_virtual";
-    private static readonly string[] ExcludedContainers = new[] { "mssqlbootstrap_1" };
-
-    private const string DockerRegistryUser = "gebhardt";
-
-    private readonly string _dockerRegistryPassword =
-        Environment.GetEnvironmentVariable(EnvVars.DockerRegistryPassword)
-        ?? throw new InvalidOperationException($"Environment variable {EnvVars.DockerRegistryPassword} must be set.");
+    private readonly string _dockerRegistryUrl = EnvHelper.GetRequiredEnvVar(EnvVars.DockerRegistryUrl);
+    private readonly string _dockerRegistryRepository = EnvHelper.GetRequiredEnvVar(EnvVars.DockerRegistryRepository);
+    private readonly string _dockerRegistryUser = EnvHelper.GetRequiredEnvVar(EnvVars.DockerRegistryUser);
+    private readonly string _dockerRegistryPassword = EnvHelper.GetRequiredEnvVar(EnvVars.DockerRegistryPassword);
 
     /// <summary>
     /// Start and stop all services without VirtualAgv
     /// </summary>
     [TestMethod]
-    public void ComposeTest()
+    public async Task ComposeTest()
     {
-        var dc = new DockerCompose(EnvVars.ComposeFileEnvVar);
-        dc.Up().ShouldBeTrue();
-        dc.AreRunning(ExcludedContainers).ShouldBeTrue();
-        dc.Down().ShouldBeTrue();
-        dc.AreRemoved().ShouldBeTrue();
+        var dc = new DockerCompose([EnvVars.ComposeFileEnvVar]);
+        await dc.InitializeAsync();
+        (await dc.AreRemovedAsync()).ShouldBeTrue();
+        (await dc.UpAsync()).ShouldBeTrue();
+        (await dc.DownAsync()).ShouldBeTrue();
+        (await dc.AreRemovedAsync()).ShouldBeTrue();
     }
 
     /// <summary>
     /// Start and stop all services
     /// </summary>
     [TestMethod]
-    public void CombinedComposeTest()
+    public async Task CombinedComposeTest()
     {
-        
-        var dc = new DockerCompose(EnvVars.ComposeFileEnvVar);
-        var dcVirtual = new DockerCompose(EnvVars.ComposeFileEnvVarVirtualAgv, DockerRegistry,
-            DockerRegistryRepository, DockerRegistryUser, _dockerRegistryPassword);
-        dc.Up().ShouldBeTrue();
-        dc.AreRunning(ExcludedContainers).ShouldBeTrue();
-        dcVirtual.Login();
-        dcVirtual.Pull();
-        dcVirtual.Up("taragv1").ShouldBeTrue();
-        dcVirtual.AreRunning(ExcludedContainers).ShouldBeTrue();
-        dcVirtual.Down().ShouldBeTrue();
-        dcVirtual.AreRemoved().ShouldBeTrue();
-        dc.Down().ShouldBeTrue();
-        dc.AreRemoved().ShouldBeTrue();
+        var dc = new DockerCompose([EnvVars.ComposeFileEnvVar]);
+        await dc.InitializeAsync();
+        var dcVirtual = new DockerCompose([EnvVars.ComposeFileEnvVarVirtualAgv],
+            _dockerRegistryUrl,
+            _dockerRegistryRepository,
+            _dockerRegistryUser,
+            _dockerRegistryPassword,
+            dc.EnvFile);
+        (await dc.AreRemovedAsync()).ShouldBeTrue();
+        (await dc.UpAsync()).ShouldBeTrue();
+        (await dcVirtual.LoginAsync()).ShouldBeTrue();
+        (await dcVirtual.PullAsync()).ShouldBeTrue();
+        (await dcVirtual.AreRemovedAsync()).ShouldBeTrue();
+        (await dcVirtual.UpAsync()).ShouldBeTrue();
+        (await dcVirtual.DownAsync()).ShouldBeTrue();
+        (await dcVirtual.AreRemovedAsync()).ShouldBeTrue();
+        (await dc.DownAsync()).ShouldBeTrue();
+        (await dc.AreRemovedAsync()).ShouldBeTrue();
     }
 }

@@ -1,91 +1,82 @@
 ﻿using System.Diagnostics;
+using Gebhardt.Acc.IntegrationTest.Commands;
+using Gebhardt.Acc.IntegrationTest.Helpers;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.IntegrationTest.Utils;
 
 /// <summary>
-/// Generates Environment file from template
+/// Generates Environment file via bin script
 /// </summary>
 public class EnvFile
 {
-    /// <summary>
-    /// File path of generated environment file
-    /// </summary>
-    public string? FilePath;
+    private readonly ILogger _logger;
+
+    private readonly string _binFilePath;
 
     /// <summary>
-    /// Default user
+    /// File path of generated environment file.
     /// </summary>
-    public const string DefaultUser = "defaultuser";
+    public string? EnvFilePath { get; set; }
 
-    /// <summary>
-    /// Default password
-    /// </summary>
-    public const string DefaultPassword = "agvs!Ar3Aw3som3";
-    
-    /// <summary>
-    /// Default connectionString
-    /// </summary>
-    public const string DefaultConnectionString = $"Server=mssql;Database=ffcmain;User Id={DefaultUser};Password={DefaultPassword};Encrypt=False";
-
-    /// <summary>
-    /// Default docker compose profiles
-    /// </summary>
-    private const string DefaultComposeProfiles = "karisagv,wcs,infrastructure";
-
-    private readonly string _composeDirectoryPath;
-    private string EnvTemplateFile => $"{_composeDirectoryPath}/.env.template";
-    private Dictionary<string, string> _dict = new();
+    public string RabbitMqUser { get; set; } = null!;
+    public string RabbitMqPassword { get; set; } = null!;
+    public string DatabaseUser { get; set; } = null!;
+    public string DatabasePassword { get; set; } = null!;
+    public string KeycloakClientId { get; set; } = null!;
+    public string KeycloakUsername { get; set; } = null!;
+    public string KeycloakUserPassword { get; set; } = null!;
 
     /// <summary>
     /// EnvFile Constructor
     /// </summary>
-    /// <param name="composeFilePath"></param>
+    /// <param name="binFilePath"></param>
+    /// <param name="logger"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public EnvFile(string? composeFilePath = null)
+    public EnvFile(string binFilePath, ILogger logger)
     {
-        _composeDirectoryPath =
-            Path.GetDirectoryName(composeFilePath)
-            ?? throw new InvalidOperationException($"Environment variable {EnvVars.ComposeFileEnvVar} must be set");
+        _binFilePath = binFilePath;
+        _logger = logger;
     }
 
     /// <summary>
-    /// Generates Env file based on template
-    /// Variables are generated as follows:
-    /// *_USER => user
-    /// *_PASSWORD => agvs!Ar3Aw3som3
-    /// all others will be left empty
+    /// Generates Env file via script.
     /// <returns>File path of generated env file</returns>
     /// </summary>
-    public string Create()
+    public async Task CreateAsync()
     {
-        if (FilePath != null)
+        if (EnvFilePath != null)
         {
-            return FilePath;
+            return;
         }
 
-        var envTemplate = File.ReadAllLines(EnvTemplateFile);
-        _dict = envTemplate
-            .Where(l => !string.IsNullOrEmpty(l) && !l.StartsWith('#'))
-            .Select(line => line.Split('='))
-            .ToDictionary(split => split[0], split => string.Join('=', split[1..split.Length]));
-
-        foreach (var key in _dict.Keys)
+        var result = new Command($"yes | {PathHelper.ToDockerPath(_binFilePath)}", _logger);
+        
+        if (!await result.ExecuteAsync(TimeSpan.FromSeconds(10)))
         {
-            _dict[key] = key.Split("_").Last() switch
-            {
-                "USER" => DefaultUser,
-                "PASSWORD" => DefaultPassword,
-                "PROFILES" => DefaultComposeProfiles,
-                _ => _dict[key]
-            };
-
-            _dict[key] = key.Contains("CONNECTIONSTRING") ? DefaultConnectionString : _dict[key];
+            throw new Exception("Failed to create env file");
         }
 
-        FilePath = Path.GetTempFileName();
-        Trace.WriteLine($"FilePath for .env file: {FilePath}");
-        File.WriteAllLines(FilePath, from kvp in _dict select kvp.Key + "=" + kvp.Value);
+        EnvFilePath = Path.GetTempFileName();
 
-        return FilePath;
+        var parent = Directory.GetParent(_binFilePath)!.FullName;
+        parent = Directory.GetParent(parent)!.FullName;
+        var envFilePath = Path.Combine(parent, ".env");
+
+        File.Copy(envFilePath, EnvFilePath, true);
+
+        var lines = (await File.ReadAllLinesAsync(EnvFilePath)).ToList();
+        RabbitMqUser = GetValue(lines, "RABBITMQ_USER");
+        RabbitMqPassword = GetValue(lines, "RABBITMQ_PASSWORD");
+        DatabaseUser = GetValue(lines, "MSSQL_DEFAULT_USER");
+        DatabasePassword = GetValue(lines, "MSSQL_DEFAULT_USER_PASSWORD");
+        KeycloakClientId = GetValue(lines, "KEYCLOAK_CLIENTID");
+        KeycloakUsername = "agv";
+        KeycloakUserPassword = "agv";
+    }
+
+    private static string GetValue(List<string> lines, string key)
+    {
+        return lines.Single(l => l.StartsWith($"{key}=")).Split('=')[1].Trim('"');
     }
 }

@@ -120,39 +120,6 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
     /// <inheritdoc />
     public async Task<bool> SetCargoAsync(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos)
     {
-        (ICollection<Cargo> cargosToAdd, ICollection<Cargo> cargosToUpdate, ICollection<Cargo> cargosToRemove) = UpdateInMemoryCargo(agvCorrelationId, cargos);
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-
-        if (cargosToAdd.Count == 0 && cargosToUpdate.Count == 0 && cargosToRemove.Count == 0)
-        {
-            return false;
-        }
-
-        DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
-
-        await dbSet.AddRangeAsync(cargosToAdd);
-        dbSet.UpdateRange(cargosToUpdate);
-        dbSet.RemoveRange(cargosToRemove);
-
-        int affectedRows = await dbContext.SaveChangesAsync();
-
-        return affectedRows != 0;
-    }
-
-    /// <inheritdoc />
-    public async Task LoadInMemoryCache()
-    {
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-        foreach ((var agvCorrelationId, List<Cargo> cargos) in await dbContext.Set<Cargo>()
-                     .GroupBy(c => c.AgvCorrelationId)
-                     .ToDictionaryAsync(q => q.Key, q => q.ToList()))
-        {
-            agvCargos.ConcurrentDict[agvCorrelationId] = cargos;
-        }
-    }
-
-    private (ICollection<Cargo> cargosToAdd, ICollection<Cargo> cargosToUpdate, ICollection<Cargo> cargosToRemove) UpdateInMemoryCargo(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos)
-    {
         agvCargos.ConcurrentDict.TryGetValue(agvCorrelationId, out List<Cargo>? inMemoryCargos);
 
         List<Cargo> previousCargos = inMemoryCargos ?? [];
@@ -160,7 +127,39 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
         List<Cargo> cargosToUpdate = cargos.Where(c => previousCargos.Any(p => p.CorrelationId == c.CorrelationId)).ToList();
         List<Cargo> cargosToRemove = previousCargos.Where(p => cargos.All(c => c.CorrelationId != p.CorrelationId)).ToList();
 
-        agvCargos.ConcurrentDict[agvCorrelationId] = [.. cargosToAdd, ..cargosToUpdate];
-        return (cargosToAdd, cargosToUpdate, cargosToRemove);
+        if (cargosToAdd.Count == 0 && cargosToUpdate.Count == 0 && cargosToRemove.Count == 0)
+        {
+            return false;
+        }
+
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+
+        DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
+
+        dbSet.AddRange(cargosToAdd);
+        foreach (var cargo in cargosToUpdate)
+        {
+            dbContext.Attach(cargo);
+            dbContext.Entry(cargo).State = EntityState.Modified;
+        }
+        dbSet.RemoveRange(cargosToRemove);
+        
+        int affectedRows = await dbContext.SaveChangesAsync();
+        agvCargos.ConcurrentDict[agvCorrelationId] = [..cargosToAdd, ..cargosToUpdate];
+
+        return affectedRows != 0;
+    }
+
+    /// <inheritdoc />
+    public async Task LoadInMemoryCache()
+    {
+        agvCargos.ConcurrentDict.Clear();
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+        foreach ((var agvCorrelationId, List<Cargo> cargos) in await dbContext.Set<Cargo>()
+                     .GroupBy(c => c.AgvCorrelationId)
+                     .ToDictionaryAsync(q => q.Key, q => q.ToList()))
+        {
+            agvCargos.ConcurrentDict[agvCorrelationId] = cargos;
+        }
     }
 }

@@ -1,76 +1,30 @@
-using Gebhardt.Acc.IntegrationTest.Agv;
-using Gebhardt.Acc.IntegrationTest.Utils;
-using Gebhardt.Acc.IntegrationTest.Utils.Db;
-using Gebhardt.Acc.IntegrationTest.Utils.Db.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shouldly;
-
-
 namespace Gebhardt.Acc.IntegrationTest;
 
 /// <summary>
 /// CompleteOrderTest
 /// </summary>
-// /////// Graph for integration test ///////////////////////////////
-// 
-// Pick: SRC_01
-// Drop: DST_01, DST_02
-// Pick/Drop: STN_01
-// Charge: CRG_01
-// Park: -
-// 
-//            SRC_01                         STN_01         0     //
-//             |                               |            |     //
-//            11 -------- 21                  41           -1     //
-//                         |                   |            |     //
-//            12 <<<<<<<< 22                  42           -2     //
-//             V           |                   |            |     //
-// CRG_01 --- 13 >>>>>>>> 23 ------- 33 ----- 43           -3     //
-//                                    |        |            |     //
-//                                 DST_01     DST_02       -4     //
-//                                                          |     //
-//   0  ---    1   ---    2   ---    3   ---    4   ---     5   - //
-// /////////////////////////////////////////////////////////////////
-
 [TestClass]
 public class CompleteOrderTest
 {
-    private DockerCompose? _dockerCompose;
-    private static readonly string[] ExcludedContainers = new[] { "mssqlbootstrap_1" };
-    private RestApi? _restApi;
+    private TestFixture _testFixture = null!;
 
     /// <summary>
     /// Start all docker services before each test
     /// </summary>
     [TestInitialize]
-    public void StartServices()
+    public async Task StartServicesAsync()
     {
-        _dockerCompose.ShouldBeNull();
-        _restApi.ShouldBeNull();
-        _dockerCompose = new DockerCompose(EnvVars.ComposeFileEnvVar);
-        _restApi = new RestApi(
-            Environment.GetEnvironmentVariable(EnvVars.KeycloakClientId) ?? string.Empty,
-            Environment.GetEnvironmentVariable(EnvVars.KeycloakUsername)?? string.Empty,
-            Environment.GetEnvironmentVariable(EnvVars.KeycloakUserPassword)?? string.Empty
-        );
-        
-        _dockerCompose.AreRemoved().ShouldBeTrue();
-        _dockerCompose.Up().ShouldBeTrue();
-        _dockerCompose.AreRunning(ExcludedContainers).ShouldBeTrue();
+        _testFixture = new TestFixture();
+        await _testFixture.StartAsync();
     }
 
     /// <summary>
     /// Remove all docker services after test
     /// </summary>
     [TestCleanup]
-    public void StopServices()
+    public async Task StopServicesAsync()
     {
-        _dockerCompose.ShouldNotBeNull();
-        _restApi.ShouldNotBeNull();
-        _dockerCompose.Down().ShouldBeTrue();
-        _dockerCompose.AreRemoved().ShouldBeTrue();
-        _dockerCompose = null;
-        _restApi = null;
+        await _testFixture.StopAsync();
     }
 
     /// <summary>
@@ -79,13 +33,8 @@ public class CompleteOrderTest
     [TestMethod]
     public async Task SingleAgvAdd_OrderProcessedSuccessful()
     {
-        var cancellationTokenSource = new CancellationTokenSource();
-        var agv = await AddAgv("Agv#1", cancellationTokenSource.Token);
-        _ = agv.SubscribeToCompleteOrdersSuccessfully();
-        await AddAndCompleteOrder("Order#1");
-
-        await cancellationTokenSource.CancelAsync();
-        cancellationTokenSource.Dispose();
+        var agv = await _testFixture.AddAgv("Agv#1");
+        await _testFixture.AddAndCompleteOrder("PS01", "APL1", agv.agvCorrelationId);
     }
 
     /// <summary>
@@ -94,58 +43,11 @@ public class CompleteOrderTest
     [TestMethod]
     public async Task TwoAgvAdd_FourOrderProcessedSuccessful()
     {
-        var cancellationTokenSource = new CancellationTokenSource();
-        var agv0 = await AddAgv("Agv#1", cancellationTokenSource.Token);
-        var agv1 = await AddAgv("Agv#2", cancellationTokenSource.Token);
-        _ = agv0.SubscribeToCompleteOrdersSuccessfully();
-        _ = agv1.SubscribeToCompleteOrdersSuccessfully();
-        await AddAndCompleteOrder("Order#1");
-        await AddAndCompleteOrder("Order#2");
-        await AddAndCompleteOrder("Order#3");
-        await AddAndCompleteOrder("Order#4");
-
-        await cancellationTokenSource.CancelAsync();
-        cancellationTokenSource.Dispose();
-    }
-
-    private async Task<TestAgv> AddAgv(string agvSerialNumber, CancellationToken token)
-    {
-
-        var agv = new TestAgv(agvSerialNumber);
-        await agv.SubscribeDataTopics();
-
-        _ = agv.StartSendingStatus(token);
-
-        var restAgv = await _restApi!.WaitForAgv(agv.SerialNumber);
-        restAgv.ShouldNotBeNull();
-
-        (await _restApi.WaitForAgvData(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-        (await _restApi.WaitForAgvGraph(restAgv["correlationId"]?.ToString())).ShouldNotBeNull();
-        var restMaps = await _restApi.WaitForMaps();
-        var restMap = restMaps!.FirstOrDefault();
-        restMap.ShouldNotBeNull();
-        (await _restApi.WaitForMap(restMap["correlationId"]?.ToString()!, restAgv["correlationId"]?.ToString()!)).ShouldNotBeNull();
-
-        (await _restApi.SetAgvIdle(restAgv["correlationId"]?.ToString())).ShouldBeTrue();
-
-        return agv;
-    }
-
-    private async Task AddAndCompleteOrder(string orderId)
-    {
-        const string leNo = "123";
-        const string source = "SRC_01";
-        const string destination = "DST_01";
-        var context = new WcsDbContext();
-
-        (await context.Database.CanConnectAsync()).ShouldBeTrue();
-
-        await context.AddNewOrder(orderId, leNo, source, destination);
-        await context.SaveChangesAsync();
-        
-        var actionGroup = await _restApi!.WaitForFinishedActionGroupForOrder(orderId, true);
-        actionGroup.ShouldNotBeNull();
-        
-        context.FromAgv.Any(o => o.OrderId == orderId && o.Status == OrderStatus.Finished).ShouldBeTrue();
+        var agv0 = await _testFixture.AddAgv("Agv#1");
+        var agv1 = await _testFixture.AddAgv("Agv#2");
+        await _testFixture.AddAndCompleteOrder("PS01", "APL1", agv0.agvCorrelationId);
+        await _testFixture.AddAndCompleteOrder("PS01", "APL1", agv1.agvCorrelationId);
+        await _testFixture.AddAndCompleteOrder("PS01", "APL1", agv0.agvCorrelationId);
+        await _testFixture.AddAndCompleteOrder("PS01", "APL1", agv1.agvCorrelationId);
     }
 }

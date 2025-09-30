@@ -1,7 +1,7 @@
-using System.Diagnostics;
-using System.Text;
+using Gebhardt.Acc.IntegrationTest.Commands;
+using Gebhardt.Acc.IntegrationTest.Helpers;
+using Gebhardt.Acc.IntegrationTest.Models;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Polly;
 
 namespace Gebhardt.Acc.IntegrationTest.Utils;
@@ -11,231 +11,188 @@ namespace Gebhardt.Acc.IntegrationTest.Utils;
 /// </summary>
 public class DockerCompose
 {
-    private readonly EnvFile _envFile;
+    private static readonly string[] ExcludedContainers = ["mssql.config", "sqlpad", "provisioning"];
 
     private readonly ILogger _logger;
-
     private readonly string[] _composeFiles;
-
     private readonly string _dockerRegistry;
-
     private readonly string _dockerRegistryRepository;
-
     private readonly string _dockerRegistryUser;
-
     private readonly string _dockerRegistryPassword;
+    public EnvFile EnvFile { get; }
 
     /// <summary>
     /// Constructor
-    /// <param name="composeFilesLocation">The list of compose files locations</param>
+    /// <param name="composeFilesLocations">The list of compose files environment variable names</param>
     /// <param name="dockerRegistry">The name of the docker registry where to pull specific containers from</param>
     /// <param name="dockerRegistryRepository">The name of the docker repository where to pull specific containers from</param>
     /// <param name="dockerRegistryUser">The user for the docker registry</param>
     /// <param name="dockerRegistryPassword">The password for the docker registry</param>
+    /// <param name="envFile">The env file to use. If null, the default env file will be created</param>
     /// </summary>
-    public DockerCompose(string composeFilesLocation, string dockerRegistry = "",
-        string dockerRegistryRepository = "", string dockerRegistryUser = "", string dockerRegistryPassword = "")
+    public DockerCompose(string[] composeFilesLocations, string dockerRegistry = "", string dockerRegistryRepository = "", string dockerRegistryUser = "",
+        string dockerRegistryPassword = "", EnvFile? envFile = null)
     {
         var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
-        _composeFiles = Environment.GetEnvironmentVariable(composeFilesLocation)?.Split(',')
-                        ?? throw new InvalidOperationException(
-                            $"Environment variable {composeFilesLocation} must be set.");
+        _composeFiles = composeFilesLocations.SelectMany(e => EnvHelper.GetRequiredEnvVar(e).Split(',').Select(f => f.Trim().Trim('"'))).ToArray();
         _dockerRegistry = dockerRegistry;
         _dockerRegistryRepository = dockerRegistryRepository;
         _dockerRegistryUser = dockerRegistryUser;
         _dockerRegistryPassword = dockerRegistryPassword;
 
         _logger = loggerFactory.CreateLogger<DockerCompose>();
-        _envFile = new EnvFile(_composeFiles.First());
-        _envFile.Create();
+        var agvDevCombPath = FindAgvDevCombPath();
+
+        EnvFile = envFile ?? new EnvFile(Path.Combine(agvDevCombPath, "bin", "17_create_kaeserkaris_env.sh"), _logger);
     }
+
+    public Task InitializeAsync() => EnvFile.CreateAsync();
+
+    private static string FindAgvDevCombPath()
+    {
+        var agvDevCombPath = Environment.CurrentDirectory;
+        while (Directory.Exists(agvDevCombPath) && Path.GetFileName(agvDevCombPath) != "AgvDevComb")
+        {
+            agvDevCombPath = Directory.GetParent(agvDevCombPath)?.FullName ?? string.Empty;
+        }
+
+        return agvDevCombPath;
+    }
+
+    /// <summary>
+    /// <example>default_transportoder_1 -> transportorder</example>
+    /// </summary>
+    /// <param name="containerName"></param>
+    /// <returns></returns>
+    private static string GetServiceName(string containerName)
+    {
+        var parts = containerName.Split('_');
+        return parts.Length switch
+        {
+            < 2 => containerName,
+            >= 3 when int.TryParse(parts[^1], out _) => parts[^2],
+            _ => parts[^1]
+        };
+    }
+
 
     /// <summary>
     /// Login to registry
     /// </summary>
     /// <returns></returns>
-    public bool Login()
+    public async Task<bool> LoginAsync()
     {
-        return RunDockerCommand($"login {_dockerRegistry} -u {_dockerRegistryUser} -p {_dockerRegistryPassword}");
+        var loginCommand = new DockerLoginCommand(_dockerRegistry, _dockerRegistryUser, _dockerRegistryPassword, _logger);
+        if (!await loginCommand.ExecuteAsync(TimeSpan.FromSeconds(30)))
+        {
+            _logger.LogError("docker login failed: {Error}", loginCommand.Stderr);
+            return false;
+        }
+
+        _logger.LogInformation("Docker login success: {Output}", loginCommand.Stdout);
+
+        return true;
     }
 
     /// <summary>
     /// Pull containers
-    /// Timeout 300s
     /// </summary>
     /// <returns></returns>
-    public bool Pull()
+    public async Task<bool> PullAsync()
     {
-        return RunDockerCommand($"pull {_dockerRegistryRepository}", 300000);
+        var pullCommand = new DockerCommand($"pull {_dockerRegistryRepository}", _logger);
+        var result = await pullCommand.ExecuteAsync(TimeSpan.FromMinutes(5));
+        return result;
     }
 
     /// <summary>
     /// Create Containers
     /// </summary>
-    public bool Up(string specificContainers = "")
+    public async Task<bool> UpAsync(string specificContainers = "")
     {
-        return RunDockerComposeCommand($"up {specificContainers} -d", 640000);
-    }
+        var dockerCommand = new DockerComposeCommand($"up{(!string.IsNullOrEmpty(specificContainers) ? $" {specificContainers}" : "")} -d",
+            _composeFiles,
+            EnvFile.EnvFilePath!,
+            _logger);
+        var result = await dockerCommand.ExecuteAsync(TimeSpan.FromMinutes(10));
 
-    /// <summary>
-    /// Stop Containers
-    /// </summary>
-    /// <returns>true if command execution was successful</returns>
-    public bool Stop()
-    {
-        return RunDockerComposeCommand("stop");
+        result &= await AreRunningAsync(ExcludedContainers);
+
+        return result;
     }
 
     /// <summary>
     /// Removes everything
     /// </summary>
     /// <returns>true if command execution was successful</returns>
-    public bool Down()
+    public async Task<bool> DownAsync()
     {
-        return RunDockerComposeCommand("down -v --remove-orphans");
+        var dockerCommand = new DockerComposeCommand("down -v --remove-orphans", _composeFiles, EnvFile.EnvFilePath!, _logger);
+        var mainDown = await dockerCommand.ExecuteAsync(TimeSpan.FromMinutes(10));
+
+        var removeNetworkCommand = new DockerCommand("network rm agv_net", _logger);
+        // the network might be removed already, so just ignore the result
+        await removeNetworkCommand.ExecuteAsync(TimeSpan.FromSeconds(10));
+        return mainDown;
     }
 
     /// <summary>
-    /// Are all containers removed
+    /// Check if all containers are removed.
     /// </summary>
     /// <returns>true if all containers have been removed</returns>
-    public bool AreRemoved()
+    public async Task<bool> AreRemovedAsync(bool useAParameter = true)
     {
-        var success = RunCommand("ps -a --format=json", out var stdout);
-        Trace.WriteLine($"Running docker container: {stdout}");
+        var psCommand = new DockerComposePsCommand(_composeFiles, EnvFile.EnvFilePath!, _logger, useAParameter);
 
-        if (!success)
+        var containers = await psCommand.ParseContainersAsync();
+        if (containers == null)
         {
             return false;
         }
 
-        // Due to https://github.com/docker/compose/issues/10958 check for both
-        return stdout is "[]" or "";
-    }
-
-    /// <summary>
-    /// Are all started services in state "running" 
-    /// </summary>
-    /// <returns>true if all containers are running</returns>
-    public bool AreRunning(string[]? excludedContainers = null)
-    {
-        var stdout = "";
-        excludedContainers ??= Array.Empty<string>();
-        var polly = Policy
-            .HandleResult<bool>(c => c == false || stdout == string.Empty)
-            .WaitAndRetry(5, (_, retryCount) =>
-            {   
-                _logger.LogError("try: {RetryCount}, Stdout: {Stdout}", retryCount, stdout);
-                return TimeSpan.FromSeconds(2);
-            });
-
-        // Due to https://github.com/docker/compose/issues/10958 jq is used to fix the json
-        var success = polly.Execute(() =>
-            RunCommand(" ps --no-trunc --format '{\"name\":\"{{.Names}}\",\"state\":\"{{.State}}\"}' | jq -sc",
-                out stdout));
-
-
-        if (!success)
+        if (containers.Count > 0)
         {
+            _logger.LogError("Still running containers: {RunningContainers}", string.Join(", ", containers.Select(c => c.Name)));
             return false;
         }
 
-        var containers = JsonConvert.DeserializeObject<List<DockerContainer>>(stdout);
-
-        var failedContainers = containers?.Where(c => !excludedContainers.Any(e => c.Name.EndsWith(e)))
-            .Where(c => !c.State.Equals("running"));
-
-        return failedContainers?.Count() == 0;
+        return true;
     }
 
-    /// <summary>
-    /// Run a docker compose command, output will be printed to stdout/stderr
-    /// </summary>
-    /// <param name="args"></param>
-    /// <param name="timeout"></param>
-    private bool RunDockerComposeCommand(string args, int timeout = 120000)
+    private async Task<bool> AreRunningAsync(string[]? excludedContainers = null, TimeSpan? timeout = null)
     {
-        return RunCommand(args, out _, true, timeout);
-    }
+        var defaultSleepTime = TimeSpan.FromSeconds(5);
+        var defaultTimeout = TimeSpan.FromMinutes(1);
+        var retryCount = (int) ((timeout ?? defaultTimeout).TotalSeconds / defaultSleepTime.TotalSeconds);
 
-    /// <summary>
-    /// Run a docker compose command, output will be printed to stdout/stderr
-    /// </summary>
-    /// <param name="args"></param>
-    /// <param name="timeout"></param>
-    private bool RunDockerCommand(string args, int timeout = 120000)
-    {
-        return RunCommand(args, out _, false, timeout);
-    }
+        var policy = Policy
+            .HandleResult<bool>(result => result == false)
+            .WaitAndRetryAsync(
+                retryCount: retryCount,
+                sleepDurationProvider: _ => defaultSleepTime,
+                onRetry: (_, timespan, retryAttempt, _) =>
+                {
+                    _logger.LogInformation("Waiting for all containers to be running... Retry {RetryAttempt} in {SleepDuration}", retryAttempt, timespan);
+                });
 
-    /// <summary>
-    /// Run a docker command and write output to stdout variable
-    /// </summary>
-    /// <param name="args"></param>
-    /// <param name="dockerComposeCommand"></param>
-    /// <param name="timeout"></param>
-    /// <param name="stdout"></param>
-    /// <returns>Returns true if exit code is zero</returns>
-    private bool RunCommand(string args, out string stdout, bool dockerComposeCommand = true, int timeout = 120000)
-    {
-        var cmdOutput = new StringBuilder();
-        var composeFiles = $"-f {string.Join(" -f ", _composeFiles)}";
-        var cmd = dockerComposeCommand
-            ? $"docker compose {composeFiles} --env-file \"{_envFile.FilePath}\" "
-            : " docker ";
-
-        _logger.LogInformation("Executing {Command}{CommandArguments}", cmd, args);
-
-        using var process = new Process()
+        var result = await policy.ExecuteAsync(async () =>
         {
-            StartInfo =
+            var psCommand = new DockerComposePsCommand(_composeFiles, EnvFile.EnvFilePath!, _logger);
+
+            var containers = await psCommand.ParseContainersAsync();
+            if (containers == null)
             {
-                FileName = "bash",
-                ArgumentList = { "-c", "--", cmd + args },
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
+                return false;
             }
-        };
-        
-        using var outputWaitHandle = new AutoResetEvent(false);
-        process.OutputDataReceived += (sender, e) =>
-        {
-            Console.WriteLine(e.Data);
-            
-            if (e.Data == null)
-            {
-                outputWaitHandle.Set();
-            }
-            else
-            {
-                cmdOutput.AppendLine(e.Data);
-            }
-        };
-        process.ErrorDataReceived += (sender, e) =>
-        {
-            Console.Error.WriteLine(e.Data);
-        };
-           
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-            
-            
-        if (process.WaitForExit(timeout) &&
-            outputWaitHandle.WaitOne(timeout))
-        {
-            stdout = cmdOutput.ToString();
-            var exitCode = process.ExitCode;
-            process.Close();
-            return exitCode == 0;
-        }
 
-        process.Kill();
-        _logger.LogError("Command timeout {CommandArguments}", args);
-        process.WaitForExit();
-        stdout = string.Empty;
-        return false;
+            var failedContainers = containers
+                .Where(c => !excludedContainers?.Contains(GetServiceName(c.Name), StringComparer.OrdinalIgnoreCase) ?? true)
+                .Where(c => c.State != ContainerState.Running || c.Health != ContainerHealth.Healthy);
+
+            var success = !failedContainers.Any() && containers.Count > 0;
+            return success;
+        });
+
+        return result;
     }
 }
