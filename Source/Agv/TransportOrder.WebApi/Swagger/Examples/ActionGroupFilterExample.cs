@@ -13,7 +13,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 namespace Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
 
 /// <summary>
-/// 
+/// Adds an example body to the <see cref="ActionGroupsController.Filtered"/> endpoint.
 /// </summary>
 [UsedImplicitly]
 public class ActionGroupFilterExample : IOperationFilter

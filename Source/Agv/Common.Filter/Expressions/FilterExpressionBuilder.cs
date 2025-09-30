@@ -132,8 +132,7 @@ internal static class FilterExpressionBuilder
 
         var compareBody = Expression.Call(otherConstant, compareMethod, otherParam);
 
-        bool noAccessorNeeded = typeof(TInstance) == typeof(TProperty) && propertyName == string.Empty;
-        if (noAccessorNeeded)
+        if (!NeedsAccessor<TInstance, TProperty>(propertyName))
         {
             return Expression.Lambda<Func<TInstance, int>>(compareBody, otherParam);
         }

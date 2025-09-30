@@ -48,7 +48,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     /// <inheritdoc />
     public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
     {
-        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>( await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
+        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>(await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
     }
 
     /// <inheritdoc />
