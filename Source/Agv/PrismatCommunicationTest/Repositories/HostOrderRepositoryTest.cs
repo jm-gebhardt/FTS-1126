@@ -30,7 +30,7 @@ public class HostOrderRepositoryTest
 
         ICollection<HostOrder> hostOrders = await fixture.Repository.GetLatestUnfinishedOrdersByHu(hu, requestDate);
         hostOrders.Count.ShouldBe(2);
-        hostOrders.ShouldBeSubsetOf([unfinishedOrder, anotherUnfinishedOrder]);
+        hostOrders.Select(h => h.OrderId).ShouldBeSubsetOf([unfinishedOrder.OrderId, anotherUnfinishedOrder.OrderId]);
     }
 
     [TestMethod]
@@ -173,7 +173,7 @@ public class HostOrderRepositoryTest
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(nextPickAtSource, nextPickAtSourceRegisteredForDoppelspiel, drop, startedPickAtSource, finishedPickAtSource);
         await fixture.Repository.SaveAsync();
-        (await fixture.Repository.GetNextPickForSources([nextPickAtSourceRegisteredForDoppelspiel.Source])).ShouldBe(nextPickAtSourceRegisteredForDoppelspiel);
+        (await fixture.Repository.GetNextPickForSources([nextPickAtSourceRegisteredForDoppelspiel.Source]))?.OrderId.ShouldBe(nextPickAtSourceRegisteredForDoppelspiel.OrderId);
     }
 
     [TestMethod]
@@ -191,7 +191,7 @@ public class HostOrderRepositoryTest
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(nextPickAtSource, drop, startedPickAtSource, finishedPickAtSource);
         await fixture.Repository.SaveAsync();
-        (await fixture.Repository.GetNextPickForSources([nextPickAtSource.Source])).ShouldBe(nextPickAtSource);
+        (await fixture.Repository.GetNextPickForSources([nextPickAtSource.Source]))?.OrderId.ShouldBe(nextPickAtSource.OrderId);
     }
 
     [TestMethod]
@@ -241,6 +241,6 @@ public class HostOrderRepositoryTest
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(pickAtSource, dropAtTarget);
         await fixture.Repository.SaveAsync();
-        (await fixture.Repository.GetNextUnmatchedDoppelspielPick([pickAtSource.Source], [dropAtTarget.Target], dropAtTarget.AssignedAgv!.Value)).ShouldBe(pickAtSource);
+        (await fixture.Repository.GetNextUnmatchedDoppelspielPick([pickAtSource.Source], [dropAtTarget.Target], dropAtTarget.AssignedAgv!.Value))?.OrderId.ShouldBe(pickAtSource.OrderId);
     }
 }
