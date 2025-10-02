@@ -96,6 +96,7 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     public async Task SaveAsync()
     {
         await Context.SaveChangesAsync();
+        Context.ChangeTracker.Clear();
     }
 }
 
