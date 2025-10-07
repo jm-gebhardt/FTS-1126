@@ -5,15 +5,15 @@ using System.Collections.Concurrent;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TriggerDoppelspiel;
 
 /// <summary>
 /// Represents a trigger that initiates the "Doppelspiel"
 /// </summary>
-/// <param name="bus"></param>
 [PublicAPI]
-public class DoppelspielTrigger(IBus bus) : IFfcTrigger
+public class DoppelspielTrigger(IBus bus, ILogger<DoppelspielTrigger> logger) : IFfcTrigger
 {
     private const string PropertyName = "TargetStationName";
     private const string PropertyDescription = "Name of the target station where Doppelspiel is done";
@@ -57,8 +57,10 @@ public class DoppelspielTrigger(IBus bus) : IFfcTrigger
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
-    public Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
+    public async Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
-        return Task.CompletedTask;
+        parameters.TryGetValue(PropertyName, out var targetStationName);
+        logger.LogInformation("Agv {AgvCorrelationId} left Doppelspiel trigger of station {TargetStationName}", agvStatus.CorrelationId, targetStationName);
+        await bus.Publish(new AgvLeftDoppelspielTrigger(agvStatus.CorrelationId, targetStationName?.Value ?? _propertyValue));
     }
 }

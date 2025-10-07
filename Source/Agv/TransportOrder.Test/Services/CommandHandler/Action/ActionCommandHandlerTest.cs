@@ -504,7 +504,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
-        await fixture.ShouldHavePublishedAsync<TriggerDoppelspielpartnerQueueing>();
+        await fixture.ShouldHavePublishedAsync<TriggerDoppelspielPartnerQueueing>();
     }
 
     [DataRow(CurrentActionGroupPolicy.Pause, false)]

@@ -63,7 +63,7 @@ public class DoppelspielTriggerPointEventHandler(
             var nextPickOrder = sources != null ? await hostOrderRepository.GetNextPickForSources(sources) : null;
             bool agvHasCriticalBatteryLevel = await agvSettingsService.CheckAgvHasCriticalBatteryLevel(agvStatus.CorrelationId);
             Guid? nextPickOrderId = nextPickOrder == null || nextPickOrder.IsQueued ? null : nextPickOrder.CorrelationId;
-            bool shouldPickNext = !agvHasCriticalBatteryLevel && nextPickOrderId != null && await CanBeUsedForDoppelspiel(nextPickOrder);
+            bool shouldPickNext = !agvHasCriticalBatteryLevel && await CanBeUsedForDoppelspiel(nextPickOrder) && hostOrder.CanRunDoppelspiel;
             var pickNode = shouldPickNext ? action.Target.Node : null;
             logger.LogInformation("Dropping agv {AgvCorrelationId} passed Doppelspiel trigger point and will drop at {Target} and pick next {ShouldPick} order {PickOrderCorrelationId} and has critical battery level {HasLowBatteryLevel}", actionGroup.AssignedAgv!.Value, action.Target.Node?.Name, shouldPickNext, nextPickOrderId, agvHasCriticalBatteryLevel);
             await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, hostOrder.CorrelationId, nextPickOrderId, shouldPickNext, pickNode));

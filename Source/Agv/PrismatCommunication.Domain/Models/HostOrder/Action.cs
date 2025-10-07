@@ -10,15 +10,15 @@ namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 public record Action
 {
     /// <inheritdoc cref="Action"/>>
-    public Action(Guid CorrelationId, Guid ActionGroupId, string Node, ActionType ActionType, int SequenceNumber, Dictionary<InfoToAgvKey, string>? InfoToAgv, DateTime? FinishedDate = null)
+    public Action(Guid correlationId, Guid actionGroupId, string node, ActionType actionType, int sequenceNumber, Dictionary<InfoToAgvKey, string>? infoToAgv, DateTime? finishedDate = null)
     {
-        this.CorrelationId = CorrelationId;
-        this.ActionGroupId = ActionGroupId;
-        this.Node = Node;
-        this.ActionType = ActionType;
-        this.SequenceNumber = SequenceNumber;
-        this.InfoToAgv = InfoToAgv;
-        this.FinishedDate = FinishedDate;
+        CorrelationId = correlationId;
+        ActionGroupId = actionGroupId;
+        Node = node;
+        ActionType = actionType;
+        SequenceNumber = sequenceNumber;
+        InfoToAgv = infoToAgv;
+        FinishedDate = finishedDate;
     }
 
     /// <summary>
@@ -51,7 +51,51 @@ public record Action
 
     /// <summary>Information that will be sent to the agv.</summary>
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; init; }
-    
+
     /// <summary>The time the action has been finished.</summary>
     public DateTime? FinishedDate { get; private set; }
+
+    /// <summary>
+    /// True, if the action is registered for a Doppelspiel
+    /// </summary>
+    public bool IsRegisteredForDoppelspiel { get; private set; }
+
+    /// <summary>
+    /// The correlation id of the Doppelspiel partner order, if any.
+    /// </summary>
+    public Guid? DoppelspielPartner { get; private set; }
+
+    /// <summary>
+    /// Register the action for Doppelspiel
+    /// </summary>
+    public void RegisterForDoppelspiel()
+    {
+        IsRegisteredForDoppelspiel = true;
+    }
+
+    /// <summary>
+    /// Set a Doppelspiel partner.
+    /// </summary>
+    public void SetDoppelspielPartner(Guid doppelspielPartner)
+    {
+        IsRegisteredForDoppelspiel = true;
+        DoppelspielPartner = doppelspielPartner;
+    }
+
+    /// <summary>
+    /// Remove the Doppelspiel association.
+    /// </summary>
+    public void ResetDoppelspielPartner()
+    {
+        DoppelspielPartner = null;
+    }
+
+    /// <summary>
+    /// Unregister from Doppelspiel.
+    /// </summary>
+    public void UnregisterFromDoppelspiel()
+    {
+        IsRegisteredForDoppelspiel = false;
+        DoppelspielPartner = null;
+    }
 }

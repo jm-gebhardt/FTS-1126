@@ -8,9 +8,9 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 public class ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null) : ActionGroupTestFixtureBase<ActionCommandHandler>(inactivityTimeout)
 {
     [UsedImplicitly]
-    private class MockRequestConsumer : IConsumer<TriggerDoppelspielpartnerQueueing>
+    private class MockRequestConsumer : IConsumer<TriggerDoppelspielPartnerQueueing>
     {
-        public async Task Consume(ConsumeContext<TriggerDoppelspielpartnerQueueing> context)
+        public async Task Consume(ConsumeContext<TriggerDoppelspielPartnerQueueing> context)
         {
             await context.RespondAsync(new DoppelspielPartnerQueued(null));
         }

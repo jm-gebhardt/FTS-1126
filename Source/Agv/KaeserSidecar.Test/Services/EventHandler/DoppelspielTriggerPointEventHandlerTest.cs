@@ -19,6 +19,7 @@ public class DoppelspielTriggerPointEventHandlerTest
         var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
+        dropHostOrder.ConsiderForDoppelspiel();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(groupId: dropHostOrder.CorrelationId, assignedAgv: agvData.CorrelationId, source: OrderGenerator.KaeserConfiguration
             .StationMapping[dropOrderDetails.Source], destination: OrderGenerator.KaeserConfiguration
             .StationMapping[dropOrderDetails.Destination]);
@@ -54,6 +55,7 @@ public class DoppelspielTriggerPointEventHandlerTest
 
         var dropOrderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var dropHostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(dropOrderDetails);
+        dropHostOrder.ConsiderForDoppelspiel();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(groupId : dropHostOrder.CorrelationId, assignedAgv: agvData.CorrelationId, source: OrderGenerator.KaeserConfiguration
             .StationMapping[dropOrderDetails.Source], destination: OrderGenerator.KaeserConfiguration
             .StationMapping[dropOrderDetails.Destination]);
@@ -159,8 +161,8 @@ public class DoppelspielTriggerPointEventHandlerTest
             .StationMapping[dropOrderDetails.Destination]);
         actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).State = ActionState.Started;
         var previousPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        dropHostOrder.RegisterForDoppelspiel();
-        previousPickOrder.RegisterForDoppelspiel();
+        dropHostOrder.RegisterDoppelspiel(ActionType.Drop);
+        previousPickOrder.RegisterDoppelspiel(ActionType.Pick);
         previousPickOrder.IsQueued = true;
         var fixture = new DoppelspielTriggerPointEventHandlerTestFixture()
             .WithAgvHasCriticalBatteryLevel(false)

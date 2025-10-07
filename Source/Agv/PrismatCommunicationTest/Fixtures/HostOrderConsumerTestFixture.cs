@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Services;
+﻿using Gebhardt.Acc.Common.Messages.Queue;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -6,6 +7,7 @@ using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Semaphores;
 using Gebhardt.Acc.PrismatCommunication.Domain.Services;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,6 +28,30 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     private HostOrder? _nextHostOrder;
     private StationGroup? _stationGroup;
 
+    // Disable, as only set when HostOrderCommandHandler is tested
+    // ReSharper disable once StaticMemberInGenericType
+    private static int? _quantity;
+
+    [UsedImplicitly]
+    private class MockRequestConsumer : IConsumer<GetQueueFillQuantities>
+    {
+        public async Task Consume(ConsumeContext<GetQueueFillQuantities> context)
+        {
+            if (_quantity == null)
+            {
+                await context.RespondAsync(new GotQueueFillQuantities([]));
+                return;
+            }
+            await context.RespondAsync(new GotQueueFillQuantities([new QueueFillQuantity(OrderGenerator.KaeserConfiguration.AplQueueName, 2, 2, _quantity.Value)]));
+        }
+    }
+
+    protected override void ConfigureMassTransitTestHarness(IBusRegistrationConfigurator busRegistrationConfigurator)
+    {
+        base.ConfigureMassTransitTestHarness(busRegistrationConfigurator);
+        busRegistrationConfigurator.AddConsumer<MockRequestConsumer>();
+    }
+
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
@@ -39,8 +65,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture()
+    public HostOrderConsumerTestFixture(int? enteredAgvs=null)
     {
+        _quantity = enteredAgvs;
         _stationRepository.Setup(x => x.GetStationGroup(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(() => _stationGroup);
         HostOrderRepositoryMock.Setup(x => x.GetNextHostOrderForStationGroup(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>())).ReturnsAsync(() => _nextHostOrder);
 
@@ -74,6 +101,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
 
     public HostOrderConsumerTestFixture<TConsumer> WithHostOrderRepository(HostOrder? hostOrder)
     {
+        HostOrderRepositoryMock.Setup(x => x.AddAsync(It.IsAny<HostOrder>())).Verifiable();
         HostOrderRepositoryMock.Setup(x => x.Add(It.IsAny<HostOrder>())).Verifiable();
         HostOrderRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync(hostOrder!);
@@ -90,6 +118,12 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
+    public HostOrderConsumerTestFixture<TConsumer> WithCurrentOrderForAgv(HostOrder? hostOrder)
+    {
+        HostOrderRepositoryMock.Setup(x => x.GetCurrentHostOrderForAgv(It.IsAny<Guid>())).ReturnsAsync(hostOrder);
+        return this;
+    }
+
     public HostOrderConsumerTestFixture<TConsumer> WithHostOrderWithSameHu(HostOrder? hostOrder)
     {
         HostOrderRepositoryMock.Setup(x => x.GetLatestUnfinishedOrderByHu(It.IsAny<string>())).ReturnsAsync(hostOrder);
@@ -97,9 +131,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithUnMatchedPickOrder(HostOrder? hostOrder)
+    public HostOrderConsumerTestFixture<TConsumer> WithUnmatchedPickOrder(HostOrder? hostOrder)
     {
-        HostOrderRepositoryMock.Setup(x => x.GetNextUnmatchedDoppelspielPick(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>(), It.IsAny<Guid>())).ReturnsAsync(hostOrder);
+        HostOrderRepositoryMock.Setup(x => x.GetNextUnmatchedDoppelspielPick(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>(), It.IsAny<Guid?>())).ReturnsAsync(hostOrder);
         return this;
     }
 
@@ -109,9 +143,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture<TConsumer> WithDropOrderHeadingTowardsDoppelSpielTriggerPoint(Guid? correlationId)
+    public HostOrderConsumerTestFixture<TConsumer> WithDropOrderEligibleForDoppelSpiel(Guid? correlationId)
     {
-        HostOrderRepositoryMock.Setup(x => x.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(It.IsAny<string>())).ReturnsAsync(correlationId);
+        HostOrderRepositoryMock.Setup(x => x.GetNextDropOrderEligibleForDoppelspiel(It.IsAny<string>())).ReturnsAsync(correlationId);
         return this;
     }
 
@@ -121,9 +155,9 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public void VerifyHostOrderAdded(Times times = default)
+    public void VerifyHostOrderAdded(bool canRunDoppelspiel=true,Times times = default)
     {
-        HostOrderRepositoryMock.Verify(x => x.Add(It.IsAny<HostOrder>()), times);
+        HostOrderRepositoryMock.Verify(x => x.Add(It.Is<HostOrder>(ho => ho.CanRunDoppelspiel == canRunDoppelspiel)), times);
     }
 
     public void VerifyReportOrderCompletion(string? destination = null, Times times = default)
@@ -139,11 +173,6 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     public void VerifyReportOrderError(string hu, string source, string destination, int errorCode, Times times = default)
     {
         _hostCommunicatorMock.Verify(x => x.ReportOrderError(hu, source, destination, errorCode, It.IsAny<string>(), It.IsAny<DateTime>()), times);
-    }
-
-    public void VerifyDoppelspielIsNull(Times times)
-    {
-        HostOrderRepositoryMock.Verify(r => r.UpdateAsync(It.Is<HostOrder>(ho => ho.DoppelspielPartner == null)), times);
     }
 
     public void Dispose()

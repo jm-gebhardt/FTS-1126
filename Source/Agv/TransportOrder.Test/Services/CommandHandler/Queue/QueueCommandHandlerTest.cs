@@ -1,5 +1,8 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -186,5 +189,145 @@ public class QueueCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_EmptyQueue_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithActionGroups([]);
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_NoOrderToAssign_PublishesQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.Node?.Name);
+        var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithActionGroups([])
+            .WithQueueInternalMoves([moveToHead, moveToCenter])
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        ICollection<QueueActionGroup> queueActionGroupMessages = fixture.GetPublishedMessages<QueueActionGroup>();
+        queueActionGroupMessages.Count.ShouldBe(1);
+
+        queue.Head.ShouldNotBeNull();
+
+        Guid? agv = queue.Head.GetCurrentAgv();
+        var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
+        message.ShouldNotBeNull();
+        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.Actions.Count.ShouldBe(1);
+        message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
+
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
+        ICollection<CancelOrAbortActionGroup> cancelOrAbortActionGroupMessages = fixture.GetPublishedMessages<CancelOrAbortActionGroup>();
+        cancelOrAbortActionGroupMessages.Count.ShouldBe(1);
+        cancelOrAbortActionGroupMessages.Single().CorrelationId.ShouldBe(moveToCenter.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_OrderToAssign_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.Node?.Name);
+        var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueue(queue)
+            .WithActionGroups([])
+            .WithQueueInternalMoves([moveToHead, moveToCenter])
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_HeadNodeReserved_NoOrderToAssign_PublishesQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithActionGroups([])
+            .WithQueueInternalMoves([])
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        queueActionGroupMessages.Count.ShouldBe(1);
+
+        queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv().ShouldNotBeNull();
+
+        Guid? agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
+        var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
+        message.ShouldNotBeNull();
+        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.Actions.Count.ShouldBe(1);
+        message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
+
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_PreviousEvacuation_NoOrderToAssign_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        Guid? agv = queue.Head?.GetCurrentAgv();
+        string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
+        var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
+
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithActionGroups([queueActionGroup])
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_PreviousEvacuation_OrderToAssign_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        Guid? agv = queue.Head?.GetCurrentAgv();
+        string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
+        var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
+
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueue(queue)
+            .WithActionGroups([queueActionGroup])
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
     }
 }

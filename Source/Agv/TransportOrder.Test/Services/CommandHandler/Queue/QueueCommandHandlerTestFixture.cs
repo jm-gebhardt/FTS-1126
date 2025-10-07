@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -9,6 +10,8 @@ using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
+using JetBrains.Annotations;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -22,8 +25,11 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
 
-    public QueueCommandHandlerTestFixture()
+    private static Guid? _orderToAssign;
+
+    public QueueCommandHandlerTestFixture(Guid? orderToAssign = null)
     {
+        _orderToAssign = orderToAssign;
         _agvDb.SetupNodeFallbacks();
         AddServices(s =>
         {
@@ -33,6 +39,21 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
             s.AddSingleton<ISemaphoreProvider<IQueueingSemaphore>>(_ => _queueSemaphoreProvider);
         });
         Build();
+    }
+
+    [UsedImplicitly]
+    private class MockRequestConsumer : IConsumer<TryAssignDelayedOrderToAgv>
+    {
+        public async Task Consume(ConsumeContext<TryAssignDelayedOrderToAgv> context)
+        {
+            await context.RespondAsync(new AssignedDelayedOrder(_orderToAssign));
+        }
+    }
+
+    protected override void ConfigureMassTransitTestHarness(IBusRegistrationConfigurator busRegistrationConfigurator)
+    {
+        base.ConfigureMassTransitTestHarness(busRegistrationConfigurator);
+        busRegistrationConfigurator.AddConsumer<MockRequestConsumer>();
     }
 
     protected override IEnumerable<Profile> GetProfiles()
@@ -48,6 +69,12 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
             var graphNode = Mapper.Map<GraphNode>(queueNode.Node);
             _agvDb.AddNode(graphNode);
         }
+        return this;
+    }
+
+    public QueueCommandHandlerTestFixture WithNode(GraphNode node)
+    {
+        _agvDb.AddNode(node);
         return this;
     }
 

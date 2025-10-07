@@ -32,17 +32,18 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
-    public async Task<Guid?> GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(string dropTarget)
+    public async Task<Guid?> GetNextDropOrderEligibleForDoppelspiel(string dropTarget)
     {
         var order = await _context.Set<HostOrder>().Where(
-                h => !h.PassedTriggerPoint
+                h => h.CanRunDoppelspiel
                      && h.CanceledDate == null
                      && h.FinishedDate == null
                      && h.IsQueued
-                     && !h.IsRegisteredForDoppelspiel
                      && h.Actions.Any(a => a.ActionType == ActionType.Drop && a.Node == dropTarget)
+                     && !h.Actions.Any(a => a.ActionType == ActionType.Drop && a.IsRegisteredForDoppelspiel)
                      && h.Actions.Any(a  => a.ActionType == ActionType.Pick && a.FinishedDate != null))
-            .OrderBy(o => o.StartedDate).FirstOrDefaultAsync();
+            .OrderBy(o => o.StartedDate)
+            .ThenBy(o => o.ConsideredForDoppelspielDate).FirstOrDefaultAsync();
         return order?.CorrelationId;
     }
 
@@ -86,12 +87,11 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                      h.FailedDate == null &&
                      h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
             .OrderBy(h => h.CreatedDate)
-            .ThenByDescending(h => h.IsRegisteredForDoppelspiel)
             .FirstOrDefaultAsync();
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
-    public async Task<HostOrder?> GetNextUnmatchedDoppelspielPick(ICollection<string> sources, ICollection<string> targets, Guid correlationId)
+    public async Task<HostOrder?> GetNextUnmatchedDoppelspielPick(ICollection<string> sources, ICollection<string> targets, Guid? correlationId)
     {
         List<HostOrder> pickOrders = await _context.Set<HostOrder>().Where(
                 h => !h.IsQueued &&
@@ -99,19 +99,19 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                      h.FinishedDate == null &&
                      h.StartedDate == null &&
                      h.FailedDate == null &&
-                     h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
-            .OrderBy(h => h.CreatedDate)
-            .ThenByDescending(h => h.IsRegisteredForDoppelspiel).ToListAsync();
+                     h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.IsRegisteredForDoppelspiel && a.DoppelspielPartner == null))
+            .OrderBy(h => h.CreatedDate).ToListAsync();
 
         int drops = await _context.Set<HostOrder>().Where(
                 h => 
+                    h.CanRunDoppelspiel &&
                     h.CorrelationId != correlationId &&
                      h.CanceledDate == null &&
                      h.FinishedDate == null &&
                      h.StartedDate == null &&
                      h.FailedDate == null &&
-                     h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node)))
-            .OrderBy(h => h.CreatedDate).CountAsync();
+                     h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.DoppelspielPartner == null))
+            .OrderBy(h => h.ConsideredForDoppelspielDate).CountAsync();
         
         if (pickOrders.Count <= drops)
         {
@@ -120,5 +120,17 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
         }
 
         return pickOrders.Skip(drops).FirstOrDefault();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task<HostOrder?> GetCurrentHostOrderForAgv(Guid agv)
+    {
+        return await _context.Set<HostOrder>()
+            .Where(h => h.IsQueued &&
+                        h.AssignedAgv == agv &&
+                        h.FinishedDate == null &&
+                        h.FailedDate == null &&
+                        h.StartedDate != null)
+            .OrderByDescending(h => h.StartedDate).FirstOrDefaultAsync();
     }
 }

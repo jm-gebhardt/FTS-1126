@@ -194,6 +194,11 @@ public class KaeserGraphConfiguration
     /// </summary>
     public bool QueueIsOccupied { get; private set; } = true;
 
+    /// <summary>
+    /// Name of the apl queue.
+    /// </summary>
+    public string AplQueueName { get; private set; } = "AplQueue";
+
     /// <inheritdoc cref="KaeserGraphConfiguration"/>>
     public KaeserGraphConfiguration(IConcurrentDictionaryProvider<string, Guid> triggerPointMapping)
     {
@@ -543,5 +548,24 @@ public class KaeserGraphConfiguration
     public bool IsOccupancyLimitedNode(string nodeId)
     {
         return ConveyorStationMapping.ContainsKey(nodeId) || StationMapping.ContainsValue(nodeId);
+    }
+
+    /// <summary>
+    /// Get the target specification
+    /// </summary>
+    /// <param name="stationName">The name of the station.</param>
+    public ICollection<string> GetPrismatTargetForStationName(string stationName)
+    {
+        List<string> prismatSourcesAndTargets = StationMapping.Where(x => x.Value == stationName)
+            .Select(x => x.Key).ToList();
+        if (prismatSourcesAndTargets.Intersect(PrismatOutputLanes).Any())
+        {
+            return PrismatOutputLanes;
+        }
+        if (prismatSourcesAndTargets.Contains(PrismatAplTarget))
+        {
+            return [PrismatAplTarget];
+        }
+        return [];
     }
 }

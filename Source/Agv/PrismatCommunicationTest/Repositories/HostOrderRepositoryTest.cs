@@ -53,12 +53,13 @@ public class HostOrderRepositoryTest
     }
 
     [TestMethod]
-    public async Task GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint_ValidData_DoppelspielPartnerReturned()
+    public async Task GetNextDropOrderEligibleForDoppelspiel_ValidData_DoppelspielPartnerReturned()
     {
         var doppelspielPartnerCandidate = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         doppelspielPartnerCandidate.Start(DateTime.UtcNow, Guid.NewGuid());
         doppelspielPartnerCandidate.FinishAction(DateTime.UtcNow, ActionType.Pick);
         doppelspielPartnerCandidate.IsQueued = true;
+        doppelspielPartnerCandidate.ConsiderForDoppelspiel();
 
         var unfinishedPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         unfinishedPickOrder.IsQueued = true;
@@ -66,16 +67,15 @@ public class HostOrderRepositoryTest
 
         var notStartedOrderPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
 
-        var passedTriggerPointOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
-        passedTriggerPointOrder.Start(DateTime.UtcNow, Guid.NewGuid());
-        passedTriggerPointOrder.FinishAction(DateTime.UtcNow, ActionType.Pick);
-        passedTriggerPointOrder.IsQueued = true;
-        passedTriggerPointOrder.PassTriggerPoint();
+        var notConsideredForDoppelspielOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
+        notConsideredForDoppelspielOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        notConsideredForDoppelspielOrder.FinishAction(DateTime.UtcNow, ActionType.Pick);
+        notConsideredForDoppelspielOrder.IsQueued = true;
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange(doppelspielPartnerCandidate, notStartedOrderPickOrder, unfinishedPickOrder, passedTriggerPointOrder);
+        fixture.Repository.AddRange(doppelspielPartnerCandidate, notStartedOrderPickOrder, unfinishedPickOrder, notConsideredForDoppelspielOrder);
         await fixture.Repository.SaveAsync();
-        (await fixture.Repository.GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(doppelspielPartnerCandidate.Target)).ShouldBe(doppelspielPartnerCandidate.CorrelationId);
+        (await fixture.Repository.GetNextDropOrderEligibleForDoppelspiel(doppelspielPartnerCandidate.Target)).ShouldBe(doppelspielPartnerCandidate.CorrelationId);
     }
 
     [TestMethod]
@@ -159,9 +159,9 @@ public class HostOrderRepositoryTest
     public async Task GetNextPickForSources_OrderRegisteredForDoppelspiel_ReturnsRegisteredNextPick()
     {
         var createdDate = DateTime.UtcNow;
-        var nextPickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(), createdDate: createdDate);
-        var nextPickAtSourceRegisteredForDoppelspiel = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(), createdDate: createdDate);
-        nextPickAtSourceRegisteredForDoppelspiel.RegisterForDoppelspiel();
+        var nextUnqueuedPickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(), createdDate: createdDate);
+        var nextQueuedPick = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(), createdDate: createdDate);
+        nextQueuedPick.IsQueued = true;
         var drop = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
         var startedPickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
         startedPickAtSource.Start(DateTime.UtcNow, Guid.NewGuid());
@@ -170,9 +170,9 @@ public class HostOrderRepositoryTest
         finishedPickAtSource.Finish(DateTime.UtcNow);
 
         var fixture = new HostOrderRepositoryTestFixture();
-        fixture.Repository.AddRange(nextPickAtSource, nextPickAtSourceRegisteredForDoppelspiel, drop, startedPickAtSource, finishedPickAtSource);
+        fixture.Repository.AddRange(nextUnqueuedPickAtSource, nextQueuedPick, drop, startedPickAtSource, finishedPickAtSource);
         await fixture.Repository.SaveAsync();
-        (await fixture.Repository.GetNextPickForSources([nextPickAtSourceRegisteredForDoppelspiel.Source]))?.OrderId.ShouldBe(nextPickAtSourceRegisteredForDoppelspiel.OrderId);
+        (await fixture.Repository.GetNextPickForSources([nextQueuedPick.Source]))?.OrderId.ShouldBe(nextUnqueuedPickAtSource.OrderId);
     }
 
     [TestMethod]
@@ -213,7 +213,10 @@ public class HostOrderRepositoryTest
     public async Task GetNextUnmatchedDoppelspielPick_AllPicksAreMatched_ReturnsNull()
     {
         var pickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        pickAtSource.RegisterDoppelspiel(ActionType.Pick);
         var dropAtTarget = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        dropAtTarget.ConsiderForDoppelspiel();
+        dropAtTarget.RegisterDoppelspiel(ActionType.Drop);
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(pickAtSource, dropAtTarget);
         await fixture.Repository.SaveAsync();
@@ -225,6 +228,8 @@ public class HostOrderRepositoryTest
     {
         var pickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
         var dropAtTarget = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        dropAtTarget.ConsiderForDoppelspiel();
+        dropAtTarget.RegisterDoppelspiel(ActionType.Drop);
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(dropAtTarget);
         await fixture.Repository.SaveAsync();
@@ -235,11 +240,72 @@ public class HostOrderRepositoryTest
     public async Task GetNextUnmatchedDoppelspielPick_UnmatchedPick_ReturnsPickOrder()
     {
         var pickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        pickAtSource.RegisterDoppelspiel(ActionType.Pick);
         var dropAtTarget = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
         dropAtTarget.Start(DateTime.UtcNow, Guid.NewGuid());
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(pickAtSource, dropAtTarget);
         await fixture.Repository.SaveAsync();
         (await fixture.Repository.GetNextUnmatchedDoppelspielPick([pickAtSource.Source], [dropAtTarget.Target], dropAtTarget.AssignedAgv!.Value))?.OrderId.ShouldBe(pickAtSource.OrderId);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentHostOrderForAgv_ValidData_ReturnsHostOrder()
+    {
+        var agv = Guid.NewGuid();
+        var createdUnassignedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        createdUnassignedOrder.IsQueued = true;
+
+        var abortedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        abortedOrder.IsQueued = true;
+        abortedOrder.Start(DateTime.UtcNow, agv);
+        abortedOrder.HandleFailure(DateTime.UtcNow);
+
+        var finishedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        finishedOrder.IsQueued = true;
+        finishedOrder.Start(DateTime.UtcNow, agv);
+        finishedOrder.Finish(DateTime.UtcNow);
+
+        var startedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        startedOrder.IsQueued = true;
+        startedOrder.Start(DateTime.UtcNow, agv);
+
+        var startedOrderDifferentAgv = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        startedOrderDifferentAgv.IsQueued = true;
+        startedOrderDifferentAgv.Start(DateTime.UtcNow, Guid.NewGuid());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(createdUnassignedOrder, abortedOrder, finishedOrder, startedOrder, startedOrderDifferentAgv);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetCurrentHostOrderForAgv(agv))?.CorrelationId.ShouldBe(startedOrder.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetCurrentHostOrderForAgv_NoStartedOrderForAgv_ReturnsNull()
+    {
+        var agv = Guid.NewGuid();
+        var createdUnassignedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        createdUnassignedOrder.IsQueued = true;
+
+        var abortedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        abortedOrder.IsQueued = true;
+        abortedOrder.Start(DateTime.UtcNow, agv);
+        abortedOrder.HandleFailure(DateTime.UtcNow);
+
+        var finishedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        finishedOrder.IsQueued = true;
+        finishedOrder.Start(DateTime.UtcNow, agv);
+        finishedOrder.Finish(DateTime.UtcNow);
+
+        var startedOrderDifferentAgv = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        startedOrderDifferentAgv.IsQueued = true;
+        startedOrderDifferentAgv.Start(DateTime.UtcNow, Guid.NewGuid());
+
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(createdUnassignedOrder, abortedOrder, finishedOrder, startedOrderDifferentAgv);
+        await fixture.Repository.SaveAsync();
+
+        (await fixture.Repository.GetCurrentHostOrderForAgv(agv)).ShouldBeNull();
     }
 }

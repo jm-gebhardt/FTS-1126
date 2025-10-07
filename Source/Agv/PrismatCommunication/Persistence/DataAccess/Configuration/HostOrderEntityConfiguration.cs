@@ -25,7 +25,8 @@ public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>
             o.Property(p => p.InfoToAgv).HasJsonConversion();
         });
         builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
-        builder.Property(e => e.DoppelspielPartner);
+        builder.Property(e => e.CanRunDoppelspiel);
+        builder.Property(e => e.ConsideredForDoppelspielDate);
         builder.Ignore(e => e.TransportOrderId);
         builder.Property(e => e.Hu).HasMaxLength(DbStringLimits.Hu);
         builder.Navigation(e => e.Actions).AutoInclude();

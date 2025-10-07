@@ -61,9 +61,14 @@ public class HostOrder
     public DateTime? FailedDate { get; private set; }
 
     /// <summary>
-    /// True, if the host order passed a trigger point.
+    /// True, if the host order can be considered for Doppelspiel.
     /// </summary>
-    public bool PassedTriggerPoint { get; private set; }
+    public bool CanRunDoppelspiel { get; private set; }
+
+    /// <summary>
+    /// The time since when the order can be considered for Doppelspiel.
+    /// </summary>
+    public DateTime? ConsideredForDoppelspielDate { get; private set; }
 
     /// <summary>
     /// True, if the host order has been queued.
@@ -81,19 +86,34 @@ public class HostOrder
     public string TransportOrderId => GetTransportOrderId(Hu);
 
     /// <summary>
-    /// The host order correlation id that belongs to the Doppelspiel (either pick or drop partner).
-    /// </summary>
-    public Guid? DoppelspielPartner { get; private set; }
-
-    /// <summary>
-    /// True, if the order is registered for a Doppelspiel
-    /// </summary>
-    public bool IsRegisteredForDoppelspiel { get; private set; }
-
-    /// <summary>
     /// True, if the orders Doppelspiel partner has been queued yet.
     /// </summary>
-    public bool HasQueuedDoppelspielpartner => IsRegisteredForDoppelspiel && DoppelspielPartner != null;
+    public bool HasQueuedDoppelspielpartner => Actions.Any(a => a is { ActionType: ActionType.Drop, DoppelspielPartner: not null });
+
+    /// <summary>
+    /// The drop of the order.
+    /// </summary>
+    public Action? Drop => Actions.FirstOrDefault(a => a.ActionType == ActionType.Drop);
+
+    /// <summary>
+    /// The pick of the order.
+    /// </summary>
+    public Action? Pick => Actions.FirstOrDefault(a => a.ActionType == ActionType.Pick);
+
+    /// <summary>
+    /// True, if the order should be delayed for Doppelspiel.
+    /// </summary>
+    public bool Delay => Actions.Any(a => a is { ActionType: ActionType.Pick, DoppelspielPartner: null, IsRegisteredForDoppelspiel: true });
+
+    /// <summary>
+    /// True, if the order is registered for  Doppelspiel during drop.
+    /// </summary>
+    public bool IsRegisteredForDoppelspielDrop => Actions.Any(a => a is { ActionType: ActionType.Drop, IsRegisteredForDoppelspiel: true });
+
+    /// <summary>
+    /// True, if the order is registered for  Doppelspiel during pick.
+    /// </summary>
+    public bool IsRegisteredForDoppelspielPick => Actions.Any(a => a is { ActionType: ActionType.Pick, IsRegisteredForDoppelspiel: true });
 
     /// <summary>
     /// The source of the host order.
@@ -150,25 +170,37 @@ public class HostOrder
     /// <summary>
     /// Register order for Doppelspiel.
     /// </summary>
-    public void RegisterForDoppelspiel()
+    public void RegisterDoppelspiel(ActionType actionType)
     {
-        IsRegisteredForDoppelspiel = true;
+        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
+        if (action != null)
+        {
+            action.RegisterForDoppelspiel();
+        }
     }
 
     /// <summary>
     /// Unregister order from Doppelspiel.
     /// </summary>
-    public void UnRegisterFromDoppelspiel()
+    public void UnregisterFromDoppelspiel(ActionType actionType)
     {
-        IsRegisteredForDoppelspiel = false;
+        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
+        if (action != null)
+        {
+            action.UnregisterFromDoppelspiel();
+        }
     }
 
     /// <summary>
     /// Register order as Doppelspiel partner.
     /// </summary>
-    public void SetDoppelspielpartner(Guid partnerOrder)
+    public void SetDoppelspielpartner(Guid partnerOrder, ActionType actionType)
     {
-        DoppelspielPartner = partnerOrder;
+        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
+        if (action != null)
+        {
+            action.SetDoppelspielPartner(partnerOrder);
+        }
     }
 
     /// <summary>
@@ -237,11 +269,12 @@ public class HostOrder
     }
 
     /// <summary>
-    /// Pass trigger point.
+    /// Consider the order for Doppelspiel.
     /// </summary>
-    public void PassTriggerPoint()
+    public void ConsiderForDoppelspiel()
     {
-        PassedTriggerPoint = true;
+        CanRunDoppelspiel = true;
+        ConsideredForDoppelspielDate = DateTime.UtcNow;
     }
 
     /// <summary>

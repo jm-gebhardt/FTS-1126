@@ -364,8 +364,8 @@ public class ActionCommandHelper
 
         try
         {
-            IRequestClient<TriggerDoppelspielpartnerQueueing>? requestClient = context.CreateRequestClient<TriggerDoppelspielpartnerQueueing>(_bus);
-            Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielpartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.Node!), cancellationToken);
+            IRequestClient<TriggerDoppelspielPartnerQueueing>? requestClient = context.CreateRequestClient<TriggerDoppelspielPartnerQueueing>(_bus);
+            Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielPartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.Node!), cancellationToken);
             if (response.Message.CorrelationId == null)
             {
                 return;

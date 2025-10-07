@@ -1,5 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
@@ -31,7 +33,10 @@ public static class BusRegistrationExtension
             partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<CancelInvalidHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<AbortHostOrder, HostOrderCommandHandler>(c);
-            c.Message<PassTriggerPoint>(x => x.UsePartitioner(partitioner, p => p.Message.DroppingHostOrderCorrelationId));
+            partitioner.PartitionMessageById<ConsiderForDoppelspiel, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<ResetDoppelspielPartner, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<TriggerDoppelspielPartnerQueueing, HostOrderCommandHandler>(c);
+            c.Message<TryQueueDoppelspielPartner>(x => x.UsePartitioner(partitioner, p => p.Message.DroppingHostOrderCorrelationId));
 
             var huPartitioner = c.CreatePartitioner(16);
             c.Message<CreateHostOrder>(x => x.UsePartitioner(huPartitioner, p => p.Message.Hu));
@@ -58,6 +63,7 @@ public static class BusRegistrationExtension
 
         cfg.AddRequestClient<AddOrUpdateStationGroup>();
         cfg.AddRequestClient<GetTriggerMapping>();
+        cfg.AddRequestClient<GetQueueFillQuantities>();
 
         if (isSimulationMode)
         {

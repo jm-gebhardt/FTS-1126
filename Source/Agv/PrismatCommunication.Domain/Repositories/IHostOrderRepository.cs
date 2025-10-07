@@ -30,10 +30,10 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     Task<HostOrder?> GetLatestUnfinishedOrderByHu(string hu);
 
     /// <summary>
-    /// Get the next drop order heading towards the Doppelspiel trigger point with the given drop target.
+    /// Get the next drop order that could run a Doppelspiel.
     /// </summary>
     /// <param name="dropTarget">The pick target to check.</param>
-    Task<Guid?> GetNextDropOrderHeadingTowardsDoppelspielTriggerPoint(string dropTarget);
+    Task<Guid?> GetNextDropOrderEligibleForDoppelspiel(string dropTarget);
 
     /// <summary>
     /// Get the next host order to be queued for a station group given by sources and targets.
@@ -66,5 +66,11 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// <param name="targets">The target SAPs.</param>
     /// <param name="correlationId">The current drop order correlation id.</param>
     /// <returns>A host order, if there is any.</returns>
-    Task<HostOrder?> GetNextUnmatchedDoppelspielPick(ICollection<string> sources, ICollection<string> targets, Guid correlationId);
+    Task<HostOrder?> GetNextUnmatchedDoppelspielPick(ICollection<string> sources, ICollection<string> targets, Guid? correlationId);
+
+    /// <summary>
+    /// Gets the current host order for an agv.
+    /// </summary>
+    /// <param name="agv">The correlation id of the agv.</param>
+    Task<HostOrder?> GetCurrentHostOrderForAgv(Guid agv);
 }

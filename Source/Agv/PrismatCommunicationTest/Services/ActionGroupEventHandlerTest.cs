@@ -123,7 +123,7 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
-    public async Task DroppingAgvPassedDoppelspielTriggerPoint_ValidData_PublishesPassTriggerPoint()
+    public async Task DroppingAgvPassedDoppelspielTriggerPoint_ValidData_PublishesTryQueueDoppelspielPartner()
     {
         var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action".ToGraphNode(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true, "pickNode".ToGraphNode());
 
@@ -132,7 +132,7 @@ public class ActionGroupEventHandlerTest
         await fixture.TestHarness.Bus.Publish(agvPassedDoppelspielTriggerPoint);
 
         await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
-        await fixture.ShouldHavePublishedAsync<PassTriggerPoint>();
+        await fixture.ShouldHavePublishedAsync<TryQueueDoppelspielPartner>();
     }
 
     [TestMethod]
