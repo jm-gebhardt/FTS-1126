@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 
 /// <inheritdoc cref="IHostOrderRepository"/>>.
-public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRepository<HostOrder, PrismatCommunicationDbContext>(context), IHostOrderRepository
+public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRepository<HostOrder, PrismatCommunicationDbContext>(context, true), IHostOrderRepository
 {
     private readonly PrismatCommunicationDbContext _context = context;
 

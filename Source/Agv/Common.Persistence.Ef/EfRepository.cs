@@ -21,6 +21,8 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     /// </summary>
     protected readonly IQueryable<T> DbSet;
 
+    private readonly bool _selfManaged;
+
     /// <summary>
     /// Initializes a new <see cref="EfRepository{T,TContext}" /> instance.
     /// </summary>
@@ -28,6 +30,14 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     {
         Context = context;
         DbSet = Context.Set<T>();
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="EfRepository{T,TContext}" /> instance that is self-managed.
+    /// </summary>
+    protected EfRepository(TContext context, bool selfManaged) : this(context)
+    {
+        _selfManaged = selfManaged;
     }
 
     /// <inheritdoc />
@@ -96,7 +106,10 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
     public async Task SaveAsync()
     {
         await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
+        if (!_selfManaged)
+        {
+            Context.ChangeTracker.Clear();
+        }
     }
 }
 
