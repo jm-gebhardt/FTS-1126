@@ -585,14 +585,17 @@ public class ActionGroup
     /// <param name="actionDuration">The duration of each action [s].</param>
     /// <param name="startDate">The start date.</param>
     /// <param name="idleTimeBetweenActions">The idle time between actions [s].</param>
-    public void SetFixedDatesFromDurations(double actionDuration, DateTimeOffset startDate, double idleTimeBetweenActions)
+    public void SetFixedDatesFromDurations(double? actionDuration, DateTimeOffset startDate, double? idleTimeBetweenActions)
     {
         StartedDate = startDate.UtcDateTime;
         foreach (var action in Actions)
         {
             action.StartedDate = startDate.UtcDateTime;
-            action.CompletedDate = startDate.AddSeconds(actionDuration).UtcDateTime;
-            startDate = action.CompletedDate!.Value.AddSeconds(idleTimeBetweenActions);
+            if (actionDuration != null)
+            {
+                action.CompletedDate = startDate.AddSeconds((double) actionDuration).UtcDateTime;
+                startDate = action.CompletedDate.Value.AddSeconds(idleTimeBetweenActions.GetValueOrDefault(0));
+            }
         }
         CompletedDate = Actions[^1].CompletedDate;
     }

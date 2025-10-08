@@ -60,7 +60,13 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         // Accept delay in idle duration collection.
         // Collection during completion ensures the agv accepted and actually
         // executed the action group and dates are written to the db.
-        IReadOnlyList<Models.ActionGroup.ActionGroup> latestActionGroups = await actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Aborted], toDate: currentActionGroup.CompletedDate!.Value.AddMilliseconds(-1), assignedAgvCorrelationId: agvCorrelationId, maxItems: 2, sortBy: SortBy.CompletedDate, sortDescending: true);
+        IReadOnlyList<Models.ActionGroup.ActionGroup> latestActionGroups = await actionGroupRepository.GetActionGroupsAsync(
+            states: [ActionGroupState.Completed, ActionGroupState.Aborted],
+            toDate: currentActionGroup.CompletedDate?.AddMilliseconds(-1),
+            assignedAgvCorrelationId: agvCorrelationId,
+            maxItems: 2, 
+            sortBy: SortBy.CompletedDate, 
+            sortDescending: true);
         if (latestActionGroups.Count < 1)
         {
             return;

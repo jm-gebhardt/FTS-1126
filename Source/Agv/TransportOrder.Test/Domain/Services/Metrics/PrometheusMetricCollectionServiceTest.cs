@@ -153,6 +153,31 @@ public class PrometheusMetricCollectionServiceTest
     }
 
     [TestMethod]
+    public async Task CollectOrderCompletionMetrics_AbortedOrder_MetricsUpdated( )
+    {
+        var agvId = Guid.NewGuid();
+        var graph = AgvGraphGenerator.CreateDefaultGraph();
+        var startedDate = DateTime.UtcNow;
+
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Aborted,
+            dropActionState: ActionState.Created,
+            assignedAgv: agvId);
+        actionGroup.SetFixedDatesFromDurations(null, startedDate, null);
+
+        var fixture = new PrometheusMetricCollectionServiceTestFixture()
+            .AddGraph(graph)
+            .AddActionGroups([actionGroup]);
+
+        await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
+
+        PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateBusyCargoGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+    }
+
+    [TestMethod]
     public async Task CollectOrderCompletionMetrics_ParkOrder_MetricsUpdated()
     {
         var agvId = Guid.NewGuid();

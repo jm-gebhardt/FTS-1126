@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Messages.System;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -16,12 +17,14 @@ public class SystemRequestHandler :
 {
     private readonly TimeProvider _timeProvider;
     private readonly IBus _bus;
+    private readonly ILogger _logger;
 
     /// <inheritdoc cref="SystemRequestHandler"/>
-    public SystemRequestHandler(TimeProvider timeProvider, IBus bus)
+    public SystemRequestHandler(TimeProvider timeProvider, IBus bus, ILogger<SystemRequestHandler> logger)
     {
         _timeProvider = timeProvider;
         _bus = bus;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -40,10 +43,12 @@ public class SystemRequestHandler :
         if (context.Message.IsEnabled)
         {
             await _bus.Publish(new ResumeOrderGeneration());
+            _logger.LogInformation("Host order generation resumed");
         }
         else
         {
             await _bus.Publish(new PauseOrderGeneration());
+            _logger.LogInformation("Host order generation paused");
         }
         await context.RespondAsync(new Success());
     }

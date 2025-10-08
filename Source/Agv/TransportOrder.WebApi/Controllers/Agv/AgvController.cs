@@ -524,7 +524,7 @@ public class AgvController : Controller
     public async Task<ActionResult> SetMaintenanceMode(
         Guid correlationId,
         [FromQuery] MaintenanceReason maintenanceReason,
-        [FromQuery] string reasonDescription,
+        [FromQuery] [Required] string reasonDescription,
         [FromQuery] AssignedActionGroupPolicy assignedActionGroupsPolicy = AssignedActionGroupPolicy.Reset,
         [FromQuery] CurrentActionGroupPolicy currentActionGroupPolicy = CurrentActionGroupPolicy.Pause,
         [FromQuery] bool cancelManualActions = false)
