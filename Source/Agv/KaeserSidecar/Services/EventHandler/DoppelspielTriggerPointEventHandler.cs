@@ -86,7 +86,7 @@ public class DoppelspielTriggerPointEventHandler(
 
     private Task<bool> CanBeUsedForDoppelspiel(HostOrder? hostOrder)
     {
-        if (hostOrder?.IsQueued == true)
+        if (hostOrder == null || hostOrder.IsQueued)
         {
             return Task.FromResult(false);
         }
