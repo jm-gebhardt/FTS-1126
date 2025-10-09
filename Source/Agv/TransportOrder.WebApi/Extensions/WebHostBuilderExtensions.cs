@@ -231,10 +231,10 @@ public static class WebHostBuilderExtensions
         {
             endpoints.MapControllers();
             endpoints.MapHub<AgvHub>(AgvHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
-            endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath);
-            endpoints.MapHub<MapHub>(MapHub.UrlPath);
-            endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath);
-            endpoints.MapHub<RestrictedAreaHub>(RestrictedAreaHub.UrlPath);
+            endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
+            endpoints.MapHub<MapHub>(MapHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
+            endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
+            endpoints.MapHub<RestrictedAreaHub>(RestrictedAreaHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
         });
 
         app.UseSwagger(c =>
