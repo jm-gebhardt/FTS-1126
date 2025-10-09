@@ -12,6 +12,7 @@ public class ActionGroupsControllerTestFixture : MockRequestClientControllerTest
     private GotActionGroupStatistics _gotActionGroupStatistics = null!;
     private GotActionGroups _gotActionGroups = null!;
     private GotActionGroupCountsByState _gotActionGroupCountsByState = null!;
+    private readonly GotFilteredActionGroups _gotFilteredActionGroups = null!;
 
     protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile()];
 
@@ -20,6 +21,7 @@ public class ActionGroupsControllerTestFixture : MockRequestClientControllerTest
         AddRequestClient<GetActionGroupStatistics, GotActionGroupStatistics>(() => _gotActionGroupStatistics);
         AddRequestClient<GetActionGroups, GotActionGroups>(() => _gotActionGroups);
         AddRequestClient<GetActionGroupCountsByState, GotActionGroupCountsByState>(() => _gotActionGroupCountsByState);
+        AddRequestClient<GetFilteredActionGroups, GotFilteredActionGroups>(() => _gotFilteredActionGroups);
     }
     
     public new ActionGroupsControllerTestFixture Build()

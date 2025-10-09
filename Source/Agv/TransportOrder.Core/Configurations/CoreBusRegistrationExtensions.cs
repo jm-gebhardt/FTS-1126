@@ -366,6 +366,7 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddRequestClient<TriggerSetTarget>();
         configurator.AddRequestClient<GetActionGroupStatistics>();
+        configurator.AddRequestClient<GetFilteredActionGroups>();
         configurator.AddConsumer<ActionGroupStatisticsRequestHandler>();
     }
 

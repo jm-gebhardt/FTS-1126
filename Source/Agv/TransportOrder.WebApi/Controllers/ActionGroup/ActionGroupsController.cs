@@ -1,12 +1,15 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SortDirection = Gebhardt.Acc.Common.Filter.Enums.SortDirection;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 
@@ -20,6 +23,7 @@ public class ActionGroupsController : Controller
     private readonly IRequestClient<GetActionGroups> _getAgvActionGroupsRequest;
     private readonly IRequestClient<GetActionGroupCountsByState> _getAgvActionGroupCountsByStateRequest;
     private readonly IRequestClient<GetActionGroupStatistics> _durationStatisticsRequest;
+    private readonly IRequestClient<GetFilteredActionGroups> _filteredActionGroupsRequest;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -28,12 +32,14 @@ public class ActionGroupsController : Controller
     public ActionGroupsController(IMapper mapper,
         IRequestClient<GetActionGroups> getAgvActionGroupsRequest,
         IRequestClient<GetActionGroupCountsByState> getAgvActionGroupCountsByStateRequest,
-        IRequestClient<GetActionGroupStatistics> durationStatisticsRequest)
+        IRequestClient<GetActionGroupStatistics> durationStatisticsRequest,
+        IRequestClient<GetFilteredActionGroups> filteredActionGroupsRequest)
     {
         _mapper = mapper;
         _getAgvActionGroupsRequest = getAgvActionGroupsRequest;
         _getAgvActionGroupCountsByStateRequest = getAgvActionGroupCountsByStateRequest;
         _durationStatisticsRequest = durationStatisticsRequest;
+        _filteredActionGroupsRequest = filteredActionGroupsRequest;
     }
 
     /// <summary>
@@ -82,5 +88,18 @@ public class ActionGroupsController : Controller
     {
         Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()));
         return Ok(_mapper.Map<List<ActionDurationStatisticsDto>>(response.Message.DurationStatistics));
+    }
+
+    /// <summary>
+    /// Gets filtered action groups.
+    /// </summary>
+    [HttpPost]
+    [Route("/actionGroups/filtered")]
+    public async Task<ActionResult<PagedResult<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties)
+    {
+        Response<GotFilteredActionGroups> result = await _filteredActionGroupsRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []));
+        var mapped = _mapper.Map<PagedResult<FilteredActionGroupDto>>(result.Message.ActionGroups);
+
+        return Ok(mapped);
     }
 }

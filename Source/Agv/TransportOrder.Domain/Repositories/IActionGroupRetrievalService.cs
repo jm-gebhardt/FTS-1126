@@ -1,4 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
+using Gebhardt.Acc.Common.Filter.Enums;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -51,4 +54,14 @@ public interface IActionGroupRetrievalService
     /// <param name="nodeType"></param>
     /// <returns></returns>
     public Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType);
+
+    /// <summary>
+    /// Gets a filtered paginated collection of <see cref="FilteredActionGroup"/>
+    /// </summary>
+    /// <param name="filter">The <see cref="IFilter"/> to use.</param>
+    /// <param name="pageNr">The page number.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="order">The direction to order.</param>
+    /// <param name="orderProperties">The properties to order by.</param>
+    Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties);
 }

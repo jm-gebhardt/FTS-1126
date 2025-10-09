@@ -39,7 +39,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         await context.AddAsync(actionGroup);
         return await context.SaveChangesAsync() > 0;
     }
-
+    
     /// <inheritdoc />
     public async Task<bool> AddOrUpdateAsync(ActionGroup actionGroup)
     {

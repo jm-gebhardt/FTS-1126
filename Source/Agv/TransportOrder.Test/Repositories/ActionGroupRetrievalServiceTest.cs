@@ -2,16 +2,24 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Filter.Api;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
+using Gebhardt.Acc.Common.Filter.Enums;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
+using Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
+using SortDirection = Gebhardt.Acc.Common.Filter.Enums.SortDirection;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -616,5 +624,68 @@ public class ActionGroupRetrievalServiceTest
         actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.Pick);
         actualActionGroup.Actions.Last().TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
+    }
+
+    [TestMethod]
+    public async Task Filter_ValidFilter_FiltersActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var agv = AgvGenerator.GenerateBusyAgv();
+
+        var actionGroupCreatedFirst = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1), completedDate: DateTime.UtcNow.AddHours(-23), assignedAgv: agv.CorrelationId);
+
+        foreach (var a in actionGroupCreatedFirst.Actions)
+        {
+            actionGroupCreatedFirst.CompleteAction(a.CorrelationId, DateTimeOffset.UtcNow);
+        }
+
+        var actionGroupCreatedSecond = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1), assignedAgv: agv.CorrelationId);
+
+        await fixture.AddAsync(agv);
+        await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        PagedResult<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(new CombinationFilter(
+            LogicalCombinationVariant.And,
+            [
+                new ValueComparisonFilter<ActionGroupState>(nameof(ActionGroupFilterable.State), ComparisonVariant.Equals, ActionGroupState.Completed),
+                new ValueComparisonFilter<DateTime>(nameof(ActionGroupFilterable.StartedDate), ComparisonVariant.Geq, DateTime.MinValue),
+                new ValueComparisonFilter<Guid>(nameof(ActionGroupFilterable.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(AgvFilterable.CorrelationId), ComparisonVariant.Equals, agv.CorrelationId)
+            ]
+        ), 0, 10, SortDirection.Desc, []);
+
+        result.Items.Count.ShouldBe(1);
+        result.PageSize.ShouldBe(10);
+        result.CurrentPage.ShouldBe(0);
+        result.TotalCount.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task Filter_ExampleFilter_FiltersActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var agv = AgvGenerator.GenerateBusyAgv();
+
+        var actionGroupCreatedFirst = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1), completedDate: DateTime.UtcNow.AddHours(-23), assignedAgv: agv.CorrelationId);
+
+        foreach (var a in actionGroupCreatedFirst.Actions)
+        {
+            actionGroupCreatedFirst.CompleteAction(a.CorrelationId, DateTimeOffset.UtcNow);
+        }
+
+        var actionGroupCreatedSecond = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1), assignedAgv: agv.CorrelationId);
+
+        await fixture.AddAsync(agv);
+        await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+        var filter = ActionGroupFilterExample.ExampleDto.Translate<ActionGroup, ActionGroupFilterable>();
+        PagedResult<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(filter, 0, 10, SortDirection.Desc, []);
+
+        result.Items.Count.ShouldBe(0);
+        result.PageSize.ShouldBe(10);
+        result.CurrentPage.ShouldBe(0);
+        result.TotalCount.ShouldBe(0);
     }
 }

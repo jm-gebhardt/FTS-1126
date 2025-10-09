@@ -1,11 +1,17 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Filter.Api.Dtos;
+using Gebhardt.Acc.Common.Filter.Enums;
+using Gebhardt.Acc.Common.Filter.FilterableParser;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 using Microsoft.EntityFrameworkCore;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
@@ -16,12 +22,19 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
+    /// <inheritdoc cref="FilterableBinder{TDomainObject,TReadModel}.FilterByPaginatedWithOrdering"/>
+    private readonly FilterableBinder<ActionGroup, ActionGroupFilterable>.FilterByPaginatedWithOrdering _filter;
+
+    private readonly IMapper _mapper;
+
     /// <summary>
     /// Initializes a new <see cref="ActionGroupRetrievalService"/> instance.
     /// </summary>
-    public ActionGroupRetrievalService(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    public ActionGroupRetrievalService(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper)
     {
         _dbContextFactory = dbContextFactory;
+        _filter = FilterableBinder<ActionGroup, ActionGroupFilterable>.CreateFilterWithPagination(_dbContextFactory);
+        _mapper = mapper;
     }
 
     private async Task<TransportOrderDbContext> CreateDbContextAsync()
@@ -30,6 +43,12 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         // no need for tracking as we are returning read models only
         context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return context;
+    }
+    
+    /// <inheritdoc />
+    public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
+    {
+        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>(await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
     }
 
     /// <inheritdoc />

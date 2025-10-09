@@ -22,6 +22,7 @@
         <PackageReference Include="CommandLineParser" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
         <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj" />

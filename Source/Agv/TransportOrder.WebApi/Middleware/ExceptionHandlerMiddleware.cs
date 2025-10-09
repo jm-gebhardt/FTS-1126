@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Filter.Exceptions;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -38,6 +39,10 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             AllAgvsOfflineException => HttpStatusCode.Conflict,
             AgvNotInZoneException => HttpStatusCode.Conflict,
             BitmapDecodingException => HttpStatusCode.BadRequest,
+            FilterBuilderException => HttpStatusCode.BadRequest,
+            FilterDtoParserException => HttpStatusCode.UnprocessableEntity,
+            FilterParserException => HttpStatusCode.BadRequest,
+            FilterExecutionException => HttpStatusCode.BadRequest,
             _ => HttpStatusCode.InternalServerError
         };
 
