@@ -95,13 +95,13 @@ public class HeadEvacuationOrAssignmentTrigger(IBus bus, ILogger<HeadEvacuationO
     /// <inheritdoc cref="IFfcTrigger"/>>
     public Task InvokeActionGroupChanged(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
     public Task Leave(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     private bool ShouldEvacuate(Dictionary<string, ConfigurationParameter> parameters)
