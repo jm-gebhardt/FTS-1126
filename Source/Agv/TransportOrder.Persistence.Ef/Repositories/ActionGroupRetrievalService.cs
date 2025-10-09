@@ -1,11 +1,15 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
+using Gebhardt.Acc.Common.Filter.ReadModelParser;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 using Microsoft.EntityFrameworkCore;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
@@ -16,12 +20,19 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
 
+    /// <inheritdoc cref="Filter{TEntity,TReadModel}.FilterBy"/>
+    private readonly Filter<ActionGroup, ActionGroupFilterReadModel>.FilterBy _filter;
+
+    private readonly IMapper _mapper;
+
     /// <summary>
     /// Initializes a new <see cref="ActionGroupRetrievalService"/> instance.
     /// </summary>
-    public ActionGroupRetrievalService(IDbContextFactory<TransportOrderDbContext> dbContextFactory)
+    public ActionGroupRetrievalService(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper)
     {
         _dbContextFactory = dbContextFactory;
+        _filter = Filter<ActionGroup, ActionGroupFilterReadModel>.CreateFilter(_dbContextFactory);
+        _mapper = mapper;
     }
 
     private async Task<TransportOrderDbContext> CreateDbContextAsync()
@@ -30,6 +41,12 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         // no need for tracking as we are returning read models only
         context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return context;
+    }
+    
+    /// <inheritdoc />
+    public async Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize)
+    {
+        return _mapper.Map<ICollection<ActionGroupFilterReadModel>, ICollection<FilteredActionGroup>>( await _filter.Invoke(filterBase, pageNr, pageSize));
     }
 
     /// <inheritdoc />

@@ -1,6 +1,7 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -11,9 +12,11 @@ using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -30,7 +33,8 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     IConsumer<TryReassignActionGroup>,
     IConsumer<TriggerActionCompletion>,
     IConsumer<TriggerActionGroupQueueing>,
-    IConsumer<TriggerSetTarget>
+    IConsumer<TriggerSetTarget>,
+    IConsumer<GetFilteredActionGroups>
 {
     private readonly IBus _bus;
     private readonly IActionGroupRetrievalService _retrievalService;
@@ -228,5 +232,17 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         await _bus.Publish(new SetTargetForAction(actionCorrelationId, correlationId, actionGroup.AssignedAgv, targetNode.Id));
         _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderTargetSet } });
         await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetFilteredActionGroups"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetFilteredActionGroups> context)
+    {
+        var filter = context.Message.Filter.Translate<ActionGroup, ActionGroupFilterReadModel>();
+
+        ICollection<FilteredActionGroup> result = await _retrievalService.Filter(filter, 0, 10);
+
+        await context.RespondAsync(new GotFilteredActionGroups(result));
     }
 }

@@ -33,6 +33,22 @@ public static class NodeTypeExtension
     }
 
     /// <summary>
+    /// Converts an action type into the node type that the action can be performed on.
+    /// </summary>
+    /// <param name="actionType">The action type to convert.</param>
+    public static NodeType ToNodeType(this ActionType actionType)
+    {
+        return actionType switch
+        {
+            ActionType.Pick => NodeType.Pick,
+            ActionType.Drop => NodeType.Drop,
+            ActionType.Move => NodeType.WayPoint,
+            ActionType.Charge => NodeType.Charge,
+            _ => NodeType.WayPoint
+        };
+    }
+
+    /// <summary>
     /// True, if the node is of the given type.
     /// </summary>
     /// <param name="type">The node type.</param>

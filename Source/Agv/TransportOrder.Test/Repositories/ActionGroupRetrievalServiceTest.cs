@@ -2,12 +2,16 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Filter.Enums;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -616,5 +620,38 @@ public class ActionGroupRetrievalServiceTest
         actualActionGroup.Actions.Count.ShouldBe(actionGroup.Actions.Count);
         actualActionGroup.Actions.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.Pick);
         actualActionGroup.Actions.Last().TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
+    }
+
+    [TestMethod]
+    public async Task Filter_ValidFilter_FiltersActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var agv = AgvGenerator.GenerateBusyAgv();
+
+        var actionGroupCreatedFirst = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(-1), completedDate: DateTime.UtcNow.AddHours(-23), assignedAgv: agv.CorrelationId);
+
+        foreach (var a in actionGroupCreatedFirst.Actions)
+        {
+            actionGroupCreatedFirst.CompleteAction(a.CorrelationId, DateTimeOffset.UtcNow);
+        }
+
+        var actionGroupCreatedSecond = AgvActionGenerator.GeneratePickDropActionGroup(createdDate: DateTime.UtcNow.AddDays(1), assignedAgv: agv.CorrelationId);
+
+        await fixture.AddAsync(agv);
+        await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        ICollection<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(new CombinationFilter(
+            LogicalCombinationVariant.And,
+            [],
+            [
+                new FilterLeaf<ActionGroupState>(nameof(ActionGroupFilterReadModel.State), ComparisonVariant.Equals, ActionGroupState.Completed),
+                new FilterLeaf<DateTime>(nameof(ActionGroupFilterReadModel.StartedDate), ComparisonVariant.Geq, DateTime.MinValue),
+                new FilterLeaf<Guid>(nameof(ActionGroupFilterReadModel.AssignedAgv) + FilterBase.AccessLevelSeparator + nameof(AgvFilterReadModel.CorrelationId), ComparisonVariant.Equals, agv.CorrelationId)
+            ]
+        ), 0, 10);
+
+        result.Count.ShouldBe(1);
     }
 }

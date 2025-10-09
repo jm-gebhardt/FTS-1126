@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
@@ -23,6 +24,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
+using Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -89,7 +91,8 @@ public static class WebHostBuilderExtensions
                         !isSimulationMode && cm.ControllerType == typeof(SimulationController)));
                 })
                 .AddApplicationPart(typeof(SimulationController).Assembly)
-                .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+                .AddFilterSerializer()
+				.AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
             var config = context.Configuration.GetSection("KEYCLOAK");
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -151,6 +154,7 @@ public static class WebHostBuilderExtensions
                 options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                 options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
+                options.OperationFilter<ActionGroupFilterExample>();
                 options.CustomSchemaIds(Swagger.CustomSchemaSelector.RemoveDtoSuffix);
                 var securityScheme = new OpenApiSecurityScheme
                 {

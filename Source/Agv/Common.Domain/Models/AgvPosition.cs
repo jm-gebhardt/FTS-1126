@@ -40,7 +40,10 @@ public record AgvPosition
     /// </summary>
     public float? DeviationRange { get; init; }
 
-    private AgvPosition()
+    /// <summary>
+    /// Ctor
+    /// </summary>
+    public AgvPosition()
     {
     }
 

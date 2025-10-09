@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -51,4 +52,12 @@ public interface IActionGroupRetrievalService
     /// <param name="nodeType"></param>
     /// <returns></returns>
     public Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="filterBase"></param>
+    /// <param name="pageNr"></param>
+    /// <param name="pageSize"></param>
+    Task<ICollection<FilteredActionGroup>> Filter(FilterBase filterBase, int pageNr, int pageSize);
 }

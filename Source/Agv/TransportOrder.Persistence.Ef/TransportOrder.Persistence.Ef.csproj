@@ -33,12 +33,16 @@
         <Compile Remove="Configurations\**" />
         <EmbeddedResource Remove="Configurations\**" />
         <Folder Remove="Configurations\**" />
-        <Folder Include="Migrations\" />
+        <Folder Include="Profiles\" />
+        <None Remove="Configurations\**" />
+        <Compile Remove="Migrations\Db_TransportOrderDbContext\20231228102336_CompletionResults.cs" />
+        <Compile Remove="Migrations\Db_TransportOrderDbContext\20231228102336_CompletionResults.Designer.cs" />
     </ItemGroup>
     <ItemGroup>
         <None Remove="DataAccess\Configuration\o0fbniyx.am4~" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />
         <ProjectReference Include="..\Common.Persistence.Ef\Common.Persistence.Ef.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />

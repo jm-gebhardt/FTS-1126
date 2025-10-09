@@ -1,9 +1,11 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Filter.Dtos;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +22,7 @@ public class ActionGroupsController : Controller
     private readonly IRequestClient<GetActionGroups> _getAgvActionGroupsRequest;
     private readonly IRequestClient<GetActionGroupCountsByState> _getAgvActionGroupCountsByStateRequest;
     private readonly IRequestClient<GetActionGroupStatistics> _durationStatisticsRequest;
+    private readonly IRequestClient<GetFilteredActionGroups> _filterTestRequest;
     private readonly IMapper _mapper;
 
     /// <summary>
@@ -28,12 +31,14 @@ public class ActionGroupsController : Controller
     public ActionGroupsController(IMapper mapper,
         IRequestClient<GetActionGroups> getAgvActionGroupsRequest,
         IRequestClient<GetActionGroupCountsByState> getAgvActionGroupCountsByStateRequest,
-        IRequestClient<GetActionGroupStatistics> durationStatisticsRequest)
+        IRequestClient<GetActionGroupStatistics> durationStatisticsRequest,
+        IRequestClient<GetFilteredActionGroups> filterTestRequest)
     {
         _mapper = mapper;
         _getAgvActionGroupsRequest = getAgvActionGroupsRequest;
         _getAgvActionGroupCountsByStateRequest = getAgvActionGroupCountsByStateRequest;
         _durationStatisticsRequest = durationStatisticsRequest;
+        _filterTestRequest = filterTestRequest;
     }
 
     /// <summary>
@@ -82,5 +87,18 @@ public class ActionGroupsController : Controller
     {
         Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()));
         return Ok(_mapper.Map<List<ActionDurationStatisticsDto>>(response.Message.DurationStatistics));
+    }
+
+    /// <summary>
+    /// Gets filtered action groups.
+    /// </summary>
+    [HttpPost]
+    [Route("/actionGroups/filtered")]
+    public async Task<ActionResult<IEnumerable<FilteredActionGroupDto>>> FilterTest([FromBody] FilterBaseDto filter)
+    {
+        Response<GotFilteredActionGroups> result = await _filterTestRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter));
+        var mapped = _mapper.Map<List<FilteredActionGroupDto>>(result.Message.ActionGroups);
+
+        return Ok(mapped);
     }
 }

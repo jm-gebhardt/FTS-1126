@@ -1,10 +1,12 @@
 ﻿using FluentValidation;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.PrismatCommunication.Domain.Services;
 
 /// <inheritdoc cref="IHostOrderValidationService"/>>
+[UsedImplicitly]
 public class HostOrderValidationService(IValidator<HostOrder> orderValidator, ILogger<HostOrderValidationService> logger): IHostOrderValidationService
 {
     /// <inheritdoc cref="IHostOrderValidationService"/>>

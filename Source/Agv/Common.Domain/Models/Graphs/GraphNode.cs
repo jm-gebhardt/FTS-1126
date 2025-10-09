@@ -99,7 +99,7 @@ public class GraphNode : IEquatable<GraphNode>
 
     /// <inheritdoc cref="GraphNode"/>>
     [JsonConstructor]
-    private GraphNode()
+    public GraphNode()
     {
     }
 
