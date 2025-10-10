@@ -68,7 +68,7 @@ public class HostOrderCommandHandler(
         hostOrder.AddAction(orderDetails.Destination, ActionType.Drop, dropInfoToAgv);
 
         // Consider all orders for Doppelspiel right away that are not dropping at APL
-        if (hostOrder.Drop?.Node != configuration.PrismatAplTarget )
+        if (hostOrder.Drop?.Node != configuration.PrismatAplTarget)
         {
             hostOrder.ConsiderForDoppelspiel();
         }
@@ -162,16 +162,16 @@ public class HostOrderCommandHandler(
         await hostOrderRepository.SaveAsync();
     }
 
-    private async Task QueueUnmatchedDoppelspielPicks(IPublishEndpoint context, ICollection<string> targets, Guid? dropOrder=null)
+    private async Task QueueUnmatchedDoppelspielPicks(IPublishEndpoint context, ICollection<string> targets, Guid? dropOrder = null)
     {
         await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
             HostOrder? unmatchedPick = null;
-                List<string>? sources = configuration.DoppelspielPickTargets.GetValueOrDefault(targets.First());
-                if (sources != null)
-                {
-                    unmatchedPick = await hostOrderRepository.GetNextUnmatchedDoppelspielPick(sources, targets, dropOrder);
-                }
+            List<string>? sources = configuration.DoppelspielPickTargets.GetValueOrDefault(targets.First());
+            if (sources != null)
+            {
+                unmatchedPick = await hostOrderRepository.GetNextUnmatchedDoppelspielPick(sources, targets, dropOrder);
+            }
 
             if (unmatchedPick is { IsQueued: false })
             {
@@ -574,6 +574,11 @@ public class HostOrderCommandHandler(
     public async Task Consume(ConsumeContext<QueueUnmatchedDoppelspielPicks> context)
     {
         ICollection<string> targets = configuration.GetPrismatTargetForStationName(context.Message.Station);
+        if (targets.Count == 0)
+        {
+            logger.LogWarning("No targets configured for station {Station}, cannot queue unmatched Doppelspiel picks", context.Message.Station);
+            return;
+        }
         await QueueUnmatchedDoppelspielPicks(context, targets);
         await hostOrderRepository.SaveAsync();
     }
