@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -37,6 +38,11 @@ public class ResendActionRequestHandler(IMapper mapper, IAgvDb agvDb, IActionGro
         {
             await context.RespondAsync(new ActionNotFound());
             return;
+        }
+
+        if (action.IsIncomplete)
+        {
+            throw new NotInCorrectStateException("Cannot resend an incomplete action");
         }
 
         await bus.Publish(new Common.Messages.ActionGroups.Commands.ResendAction(agvId, agv.SerialNumber, mapper.Map<AgvAction>(action)));

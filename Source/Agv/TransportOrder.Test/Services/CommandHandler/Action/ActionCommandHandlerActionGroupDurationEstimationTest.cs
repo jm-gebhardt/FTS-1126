@@ -11,15 +11,18 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 public class ActionCommandHandlerActionGroupDurationEstimationTest
 {
     [TestMethod]
-    public async Task Consume_EstimateActionGroupDuration_NotFirstAction_NotUpdatedPublishesActionDurationEstimated()
+    public async Task Consume_EstimateActionGroupDuration_AlreadyEstimated_DoesNotEstimate()
     {
         var fixture = new ActionGroupEstimationTestFixture()
             .WithLastActionIsMoveToCoordinate(false)
-            .AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(duration: TimeSpan.FromMinutes(2)));
+            .AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(completedDate: DateTime.UtcNow, 
+                startedDate: DateTime.UtcNow.AddMinutes(-2),
+                estimatedDuration: TimeSpan.FromSeconds(10)
+                ));
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.Last(), fixture.Agv.CorrelationId, fixture.ActionGroup.CorrelationId));
-        
-        await fixture.ShouldHavePublishedAsync<ActionDurationEstimated>();
+
+        await fixture.ShouldNotHavePublishedAsync<ActionDurationEstimated>();
         fixture.VerifyActionGroupUpdate(Times.Never());
     }
 
@@ -41,7 +44,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
     {
         var fixture = new ActionGroupEstimationTestFixture()
             .WithLastActionIsMoveToCoordinate(false);
-        fixture.AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: fixture.Agv.CorrelationId, duration: TimeSpan.Zero))
+        fixture.AddActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: fixture.Agv.CorrelationId))
             .AddRouteOnCosts(42).AddNonRouteCosts(1);
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
@@ -57,7 +60,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
         var fixture = new ActionGroupEstimationTestFixture()
             .WithLastActionIsMoveToCoordinate(false)
             .AddDuration(2);
-        fixture.AddActionGroup(AgvActionGenerator.GenerateMoveToCoordinateActionGroup(assignedAgv: fixture.Agv.CorrelationId, duration: TimeSpan.Zero));
+        fixture.AddActionGroup(AgvActionGenerator.GenerateMoveToCoordinateActionGroup(assignedAgv: fixture.Agv.CorrelationId));
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
 
@@ -72,7 +75,7 @@ public class ActionCommandHandlerActionGroupDurationEstimationTest
         var fixture = new ActionGroupEstimationTestFixture()
             .WithLastActionIsMoveToCoordinate(true)
             .AddDuration(2);
-        fixture.AddActionGroup(AgvActionGenerator.GenerateMoveActionGroup(assignedAgv: fixture.Agv.CorrelationId, duration: TimeSpan.Zero));
+        fixture.AddActionGroup(AgvActionGenerator.GenerateMoveActionGroup(assignedAgv: fixture.Agv.CorrelationId));
 
         await fixture.PublishMessageAsync(new EstimateActionGroupDuration(fixture.ActionGroup.Actions.First(), fixture.ActionGroup.AssignedAgv!.Value, fixture.ActionGroup.CorrelationId));
 

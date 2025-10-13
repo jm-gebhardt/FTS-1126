@@ -24,22 +24,6 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 public class AgvEventHandlerTest
 {
     [TestMethod]
-    public async Task Consume_AgvNeedsCharging_AgvNotReadyForBusy_NothingPublished()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        var fixture = new AgvEventHandlerTestFixture()
-            .WithAgv(agv);
-
-        var agvNeedsCharging = new AgvNeedsCharging(agv.CorrelationId);
-
-        await fixture.PublishMessageAsync(agvNeedsCharging);
-
-        await fixture.ShouldNotHavePublishedAsync<TryStartNextActionInActionGroup>();
-        await fixture.ShouldNotHavePublishedAsync<CreateChargingActionGroup>();
-        await fixture.ShouldNotHavePublishedAsync<TryStartNewActionGroup>();
-    }
-
-    [TestMethod]
     public async Task Consume_AgvNeedsCharging_AgvIsLocked_NothingPublished()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));

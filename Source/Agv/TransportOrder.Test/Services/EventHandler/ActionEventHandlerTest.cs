@@ -85,15 +85,47 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_NodesSelectedForAction_ValidData_PublishesEstimateActionGroupDuration()
+    public async Task Consume_NodesSelectedForAction_NotYetEstimated_PublishesEstimateActionGroupDuration()
     {
-        var fixture = new ActionEventHandlerTestFixture();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var nodesSelectedForAction = new NodesSelectedForAction(actionGroup.Actions.First(), Guid.NewGuid());
+        var assignedAgv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: assignedAgv);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var nodesSelectedForAction = new NodesSelectedForAction(actionGroup.Actions.First(), assignedAgv);
         await fixture.TestHarness.Bus.Publish(nodesSelectedForAction);
 
         await fixture.ShouldHaveConsumedAsync<NodesSelectedForAction>();
         await fixture.ShouldHavePublishedAsync<EstimateActionGroupDuration>();
+    }
+
+    [TestMethod]
+    public async Task Consume_NodesSelectedForAction_AlreadyEstimated_PublishesPrepareAgvForStartingAction()
+    {
+        var assignedAgv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: assignedAgv);
+        actionGroup.EstimatedDuration = TimeSpan.FromSeconds(5);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var nodesSelectedForAction = new NodesSelectedForAction(actionGroup.Actions.First(), assignedAgv);
+        await fixture.TestHarness.Bus.Publish(nodesSelectedForAction);
+
+        await fixture.ShouldHaveConsumedAsync<NodesSelectedForAction>();
+        await fixture.ShouldHavePublishedAsync<PrepareAgvForStartingAction>();
+    }
+
+    [TestMethod]
+    public async Task Consume_NodesSelectedForAction_AssignedAgvMismatch_DoesNotPublishAnything()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.AssignedAgv = Guid.NewGuid();
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var nodesSelectedForAction = new NodesSelectedForAction(actionGroup.Actions.First(), Guid.NewGuid());
+        await fixture.TestHarness.Bus.Publish(nodesSelectedForAction);
+
+        await fixture.ShouldHaveConsumedAsync<NodesSelectedForAction>();
+        await fixture.ShouldNotHavePublishedAsync<EstimateActionGroupDuration>();
+        await fixture.ShouldNotHavePublishedAsync<PrepareAgvForStartingAction>();
     }
 
     [TestMethod]

@@ -135,7 +135,7 @@ public static class AgvActionGenerator
         DateTime createdDate = default,
         DateTime? completedDate = null,
         DateTime? startedDate = null,
-        TimeSpan? duration = null,
+        TimeSpan? estimatedDuration = null,
         bool hasPriority = false,
         bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null,
@@ -174,7 +174,7 @@ public static class AgvActionGenerator
         var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms)
         {
             AssignedAgv = assignedAgv,
-            EstimatedDuration = duration,
+            EstimatedDuration = estimatedDuration,
             HasPriority = hasPriority,
             HandlingUnit = handlingUnit
         };

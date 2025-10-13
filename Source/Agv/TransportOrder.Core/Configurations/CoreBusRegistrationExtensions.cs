@@ -241,6 +241,8 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
             c.Message<TryStartNewActionGroup>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
+            c.Message<EstimateActionGroupDuration>(x =>
+                x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
 
             var actionPartitioner = c.CreatePartitioner(PartitionCount);
             c.Message<CompleteActionOfActionGroup>(x =>

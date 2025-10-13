@@ -746,7 +746,7 @@ public class ActionGroupRepositoryTest
             dropActionState: ActionState.Completed,
             startedDate: startedDate,
             completedDate: completedDate,
-            duration: duration);
+            estimatedDuration: duration);
         var otherActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([pickDropActionGroup, otherActionGroup])
@@ -769,7 +769,7 @@ public class ActionGroupRepositoryTest
             dropActionState: ActionState.Completed,
             startedDate: startedDate,
             completedDate: completedDate,
-            duration: duration);
+            estimatedDuration: duration);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
             .BuildAsync();
@@ -791,7 +791,7 @@ public class ActionGroupRepositoryTest
             dropActionState: ActionState.Completed,
             startedDate: startedDate,
             completedDate: completedDate,
-            duration: duration);
+            estimatedDuration: duration);
         var otherActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([pickDropActionGroup, otherActionGroup])
@@ -813,7 +813,7 @@ public class ActionGroupRepositoryTest
             pickActionState: ActionState.Completed,
             dropActionState: ActionState.Started,
             startedDate: startedDate,
-            duration: duration);
+            estimatedDuration: duration);
         var otherActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([uncompletedPickDropActionGroup, otherActionGroup])

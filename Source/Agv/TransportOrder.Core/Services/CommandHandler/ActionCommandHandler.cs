@@ -184,30 +184,24 @@ public class ActionCommandHandler :
     /// </summary>    
     public async Task Consume(ConsumeContext<EstimateActionGroupDuration> context)
     {
-        var agvId = context.Message.AgvId;
+        var agvId = context.Message.AgvCorrelationId;
         var action = context.Message.Action;
         var actionGroupId = context.Message.ActionGroupId;
-
-        if (!action.IsFirstAction)
-        {
-            // The duration has already been estimated previously.
-            await context.Publish(new ActionDurationEstimated(action, agvId, actionGroupId));
-            return;
-        }
 
         Task<Domain.Models.ActionGroup.ActionGroup> actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
         Task<Agv> agvTask = _agvDb.Agvs.GetAgvAsync(agvId);
         Task<AgvData?> agvDataTask = _agvDb.Data.GetAgvDataAsync(agvId);
-        await Task.WhenAll(actionGroupTask, agvTask, agvDataTask);
-        var actionGroup = actionGroupTask.Result;
-        var assignedAgv = agvTask.Result;
-        var agvData = agvDataTask.Result;
+        var actionGroup = await actionGroupTask;
 
-        if (actionGroup.AssignedAgv.GetValueOrDefault() != agvId)
+        if (actionGroup.EstimatedDuration != null)
         {
-            _logger.LogDebug("Action group {ActionGroupCorrelationId} is already assigned to another agv {AgvCorrelationId}/{OtherAgv}", actionGroup.CorrelationId, actionGroup.AssignedAgv, agvId);
+            // Duration has already been estimated (race condition) so return to break parallel execution.
             return;
         }
+
+        await Task.WhenAll(actionGroupTask, agvTask, agvDataTask);
+        var assignedAgv = agvTask.Result;
+        var agvData = agvDataTask.Result;
         double duration = 0;
         bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
         if (!lastActionWasMoveToCoordinate && !action.IsMoveToCoordinate)
@@ -373,8 +367,7 @@ public class ActionCommandHandler :
             }
 
             var currentAssignedActionGroup = await _actionGroupRepository.GetCurrentAssignedActionGroupAsync(agv.CorrelationId);
-            if (currentAssignedActionGroup != null &&
-                chosenActionGroup.CorrelationId != currentAssignedActionGroup.CorrelationId)
+            if (currentAssignedActionGroup != null && chosenActionGroup.CorrelationId != currentAssignedActionGroup.CorrelationId)
             {
                 _logger.LogInformation("Skip starting action group {ChosenActionGroupCorrelationId} for agv {AgvCorrelationId} because another action group {CurrentAssignedActionGroupCorrelationId} is already assigned",
                     chosenActionGroup.CorrelationId, agv.CorrelationId, currentAssignedActionGroup.CorrelationId);
@@ -396,8 +389,9 @@ public class ActionCommandHandler :
                         {
                             { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, agv.SerialNumber }
                         });
+
+                    await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
                 }
-                await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
                 await context.Publish(new NodesSelectedForAction(action, agv.CorrelationId), cancellationToken);
             }
         }, context.CancellationToken);

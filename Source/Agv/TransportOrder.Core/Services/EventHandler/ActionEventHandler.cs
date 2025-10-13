@@ -67,7 +67,22 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<NodesSelectedForAction> context)
     {
-        await context.Publish(new EstimateActionGroupDuration(context.Message.Action, context.Message.AssignedAgv, context.Message.Action.ParentId));
+        var agvId = context.Message.AssignedAgv;
+        var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(context.Message.Action.CorrelationId);
+        if (actionGroup.AssignedAgv.GetValueOrDefault() != agvId)
+        {
+            logger.LogDebug("Action group {ActionGroup} is already assigned to another agv {AgvCorrelationId}/{OtherAgv}", actionGroup.CorrelationId, actionGroup.AssignedAgv, agvId);
+            return;
+        }
+
+        if (actionGroup.EstimatedDuration == null)
+        {
+            await context.Publish(new EstimateActionGroupDuration(context.Message.Action, context.Message.AssignedAgv, context.Message.Action.ParentId));
+        }
+        else
+        {
+            await context.Publish(new PrepareAgvForStartingAction(context.Message.Action, agvId));
+        }
     }
 
     /// <inheritdoc />

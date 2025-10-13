@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using MassTransit;
 using Shouldly;
 
@@ -8,6 +9,13 @@ namespace Gebhardt.Acc.Common.Testing.Helpers;
 /// </summary>
 public static class MediatorShould
 {
+    /// <inheritdoc cref="ThrowRequestExceptionAsync{TException}(Task,string?)"/>
+    [PublicAPI]
+    public static Task<TException> ThrowRequestExceptionAsync<TException>(Func<Task> actual, string? customMessage = null) where TException : Exception
+    {
+        return ThrowRequestExceptionAsync<TException>(actual(), customMessage);
+    }
+
     /// <summary>
     /// Asserts that the given type of exception is thrown during the request
     /// </summary>
@@ -16,7 +24,7 @@ public static class MediatorShould
     /// <typeparam name="TException"></typeparam>
     /// <returns></returns>
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public static async Task<TException> ThrowRequestExceptionAsync<TException>(Func<Task> actual, string? customMessage = null) where TException : Exception
+    public static async Task<TException> ThrowRequestExceptionAsync<TException>(Task actual, string? customMessage = null) where TException : Exception
     {
         var result = await Should.ThrowAsync<RequestException>(actual, customMessage);
         var baseException = result.GetBaseException().GetBaseException();
