@@ -175,8 +175,6 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
-        List<Guid> unknownTargetNodeIds = graphNodes.Count == 0 ? targetNodeIds : targetNodeIds.Except(graphNodes.Select(n => n.Id)).ToList();
-
         Dictionary<Guid, ActionGroupReadModel?> result = agvCorrelationIds.ToDictionary(
             agvCorrelationId => agvCorrelationId,
             agvCorrelationId =>
@@ -197,7 +195,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     actionGroup.State,
                     actionGroup.Creator,
                     actionGroup.HandlingUnit,
-                    GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
+                    GetAgvActionReadModel(actionGroup, graphNodes),
                     actionGroup.IsManual,
                     actionGroup.HasPriority,
                     actionGroup.IsQueued,
@@ -209,59 +207,28 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         return result;
     }
 
-    private static List<AgvActionReadModel> GetAgvActionReadModel(ActionGroup actionGroup, IReadOnlyCollection<EfNode> graphNodes, IReadOnlyCollection<Guid> unknownTargetNodeIds)
+    private static List<AgvActionReadModel> GetAgvActionReadModel(ActionGroup actionGroup, IReadOnlyCollection<EfNode> graphNodes)
     {
-        var agvActionReadModels1 = new List<AgvActionReadModel>();
-        var agvActionReadModels2 = new List<AgvActionReadModel>();
-        var agvActionReadModels3 = new List<AgvActionReadModel>();
-
-        if (graphNodes.Count != 0)
-        {
-            agvActionReadModels1 = actionGroup.Actions.Join(graphNodes, a => a.Target.Node?.Id, nOuter => nOuter.Id, (a, n) =>
-                    new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State, a.ActionType,
-                        a.Target.Node!.Id, a.Target.Node.Name, n.Type.GetTypeForActionType(a.ActionType), a.Nodes.Select(nInner => nInner.Name).ToArray(), a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PriorRunAndPauseDuration, a.ShouldSkip, a.InfoToAgv, a.AdditionalInfo))
-                .Distinct().ToList();
-
-            if (unknownTargetNodeIds.Count == 0)
-            {
-                return agvActionReadModels1.ToList();
-            }
-        }
-
-        if (unknownTargetNodeIds.Count != 0)
-        {
-            agvActionReadModels2 = actionGroup.Actions.Join(unknownTargetNodeIds, a => a.Target.Node?.Id, u => u, (a, _) =>
-                new AgvActionReadModel(a.CorrelationId, a.ParentId, a.Sequence, a.State, a.ActionType,
-                    a.Target.Node!.Id, a.Target.Node.Name, AgvGraph.NodeType.WayPoint, a.Nodes.Select(n => n.Name).ToArray(), a.Edges, a.CreatedDate, a.StartedDate, a.CompletedDate, a.PausedDate, a.PriorRunAndPauseDuration, a.ShouldSkip, a.InfoToAgv, a.AdditionalInfo)).Distinct().ToList();
-            if (graphNodes.Count == 0)
-            {
-                return agvActionReadModels2.ToList();
-            }
-        }
-
-        if (unknownTargetNodeIds.Count == 0 && graphNodes.Count == 0)
-        {
-            agvActionReadModels3 = actionGroup.Actions.Select(a => new AgvActionReadModel(a.CorrelationId,
-                a.ParentId,
-                a.Sequence,
-                a.State,
-                a.ActionType,
-                Guid.Empty,
-                string.Empty,
-                AgvGraph.NodeType.WayPoint,
-                a.Nodes.Select(n => n.Name).ToArray(),
-                a.Edges,
-                a.CreatedDate,
-                a.StartedDate,
-                a.CompletedDate,
-                a.PausedDate,
-                a.PriorRunAndPauseDuration,
-                a.ShouldSkip,
-                a.InfoToAgv,
-                a.AdditionalInfo)).ToList();
-        }
-
-        return agvActionReadModels2.Union(agvActionReadModels1).Union(agvActionReadModels3).ToList();
+        return actionGroup.Actions.GroupJoin(graphNodes, a => a.Target.Node?.Id, g => g.Id, (action, nodes) => new { action, node = nodes.SingleOrDefault() }).Select(an => new AgvActionReadModel(
+            an.action.CorrelationId,
+            an.action.ParentId,
+            an.action.Sequence,
+            an.action.State,
+            an.action.ActionType,
+            an.node?.Id ?? Guid.Empty,
+            an.node?.Name ?? string.Empty,
+            an.node?.Type.GetTypeForActionType(an.action.ActionType) ?? AgvGraph.NodeType.WayPoint,
+            an.action.Nodes.Select(n => n.Name).ToArray(),
+            an.action.Edges,
+            an.action.CreatedDate,
+            an.action.StartedDate,
+            an.action.CompletedDate,
+            an.action.PausedDate,
+            an.action.PriorRunAndPauseDuration,
+            an.action.ShouldSkip,
+            an.action.InfoToAgv,
+            an.action.AdditionalInfo
+        )).ToList();
     }
 
     /// <inheritdoc />
@@ -275,8 +242,6 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
-        List<Guid> unknownTargetNodeIds = graphNodes.Count == 0 ? targetNodeIds : targetNodeIds.Except(graphNodes.Select(n => n.Id)).ToList();
-
         var result = new ActionGroupReadModel(actionGroup.CorrelationId,
             actionGroup.OrderId,
             actionGroup.AssignedAgv,
@@ -287,7 +252,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.State,
             actionGroup.Creator,
             actionGroup.HandlingUnit,
-            GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
+            GetAgvActionReadModel(actionGroup, graphNodes),
             actionGroup.IsManual,
             actionGroup.HasPriority,
             actionGroup.IsQueued,
@@ -316,8 +281,6 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
-        List<Guid> unknownTargetNodeIds = graphNodes.Count == 0 ? targetNodeIds : targetNodeIds.Except(graphNodes.Select(n => n.Id)).ToList();
-
         return new ActionGroupReadModel(actionGroup.CorrelationId,
             actionGroup.OrderId,
             actionGroup.AssignedAgv,
@@ -328,7 +291,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.State,
             actionGroup.Creator,
             actionGroup.HandlingUnit,
-            GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
+            GetAgvActionReadModel(actionGroup, graphNodes),
             actionGroup.IsManual,
             actionGroup.HasPriority,
             actionGroup.IsQueued,
@@ -355,8 +318,6 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
-        List<Guid> unknownTargetNodeIds = graphNodes.Count == 0 ? targetNodeIds : targetNodeIds.Except(graphNodes.Select(n => n.Id)).ToList();
-
         return new ActionGroupReadModel(actionGroup.CorrelationId,
             actionGroup.OrderId,
             actionGroup.AssignedAgv,
@@ -367,7 +328,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.State,
             actionGroup.Creator,
             actionGroup.HandlingUnit,
-            GetAgvActionReadModel(actionGroup, graphNodes, unknownTargetNodeIds),
+            GetAgvActionReadModel(actionGroup, graphNodes),
             actionGroup.IsManual,
             actionGroup.HasPriority,
             actionGroup.IsQueued,

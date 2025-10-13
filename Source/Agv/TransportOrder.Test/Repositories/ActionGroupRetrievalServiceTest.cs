@@ -112,6 +112,32 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
+    public async Task GetActionGroupsWithNodesAsync_ActionGroupWithIncompleteAction_GetsActionGroupReadModelEnrichedWithNodeTypes()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
+        await fixture.AddAsync(actionGroup);
+        var moveToCoordinateActionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup();
+        await fixture.AddAsync(moveToCoordinateActionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await fixture.ActionGroupRetrievalService
+            .GetActionGroupsWithNodesAsync(new List<ActionGroupState>(), null, null, 2);
+
+        ICollection<AgvActionReadModel> actionsWithTargetNodes = actionGroups.Single(a => a.CorrelationId == actionGroup.CorrelationId).Actions.OrderBy(a => a.Sequence).ToList();
+        actionsWithTargetNodes.Count.ShouldBe(actionGroup.Actions.Count);
+        actionsWithTargetNodes.First(a => a.ActionType == ActionType.Move).TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
+        actionsWithTargetNodes.First(a => a.ActionType == ActionType.Pick).TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
+        actionsWithTargetNodes.First(a => a.ActionType == ActionType.Drop).TargetNodeType.ShouldBe(AgvGraph.NodeType.Drop);
+
+        ICollection<AgvActionReadModel> movesToCoordinates = actionGroups.Single(a => a.CorrelationId == moveToCoordinateActionGroup.CorrelationId).Actions;
+        movesToCoordinates.Count.ShouldBe(moveToCoordinateActionGroup.Actions.Count);
+        movesToCoordinates.First().TargetNodeName.ShouldBeEmpty();
+        movesToCoordinates.First().TargetNodeType.ShouldBe(AgvGraph.NodeType.WayPoint);
+    }
+
+    [TestMethod]
     public async Task GetActionGroupsWithNodesAsync_UnknownTargetNodeId_GetsActionGroupReadModelEnrichedWithWayPointType()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();
