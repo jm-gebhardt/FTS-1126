@@ -1006,7 +1006,7 @@ public class HostOrderCommandHandlerTest
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithUnmatchedPickOrder(nextPickOrder);
 
-        var command = new QueueUnmatchedDoppelspielPicks(OrderGenerator.KaeserConfiguration.StationMapping[nextPickOrder.Target]);
+        var command = new QueueUnmatchedDoppelspielPicks(OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First());
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<QueueUnmatchedDoppelspielPicks>();
 
@@ -1016,11 +1016,10 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_QueueUnmatchedDoppelspielPicks_NoNextUnmatchedPick_DoesNotPublishQueueHostOrder()
     {
-        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithUnmatchedPickOrder(null);
 
-        var command = new QueueUnmatchedDoppelspielPicks(OrderGenerator.KaeserConfiguration.StationMapping[nextPickOrder.Target]);
+        var command = new QueueUnmatchedDoppelspielPicks(OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First());
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<QueueUnmatchedDoppelspielPicks>();
 

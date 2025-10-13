@@ -558,7 +558,7 @@ public class KaeserGraphConfiguration
     {
         List<string> prismatSourcesAndTargets = StationMapping.Where(x => x.Value == stationName)
             .Select(x => x.Key).ToList();
-        if (prismatSourcesAndTargets.Intersect(PrismatOutputLanes).Any())
+        if (ConveyorStationMapping.ContainsKey(stationName))
         {
             return PrismatOutputLanes;
         }

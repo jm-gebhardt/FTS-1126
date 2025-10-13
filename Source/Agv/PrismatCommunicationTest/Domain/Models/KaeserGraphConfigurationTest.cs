@@ -94,4 +94,16 @@ public class KaeserGraphConfigurationTest
 
         kaeserGraph.IsOccupancyLimitedNode("Waypoint").ShouldBeFalse();
     }
+
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(2)]
+    [TestMethod]
+    public void GetPrismatTargetForStationName_ConveyorStation_Returns10501060(int index)
+    {
+        var kaeserGraph = OrderGenerator.KaeserConfiguration;
+        string stationName = kaeserGraph.ConveyorStationMapping.Keys.ToArray()[index];
+
+        kaeserGraph.GetPrismatTargetForStationName(stationName).ShouldBe(new List<string>{ "1050", "1060" });
+    }
 }
