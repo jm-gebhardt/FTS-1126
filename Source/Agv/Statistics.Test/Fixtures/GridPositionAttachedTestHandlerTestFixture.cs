@@ -12,6 +12,8 @@ internal class GridPositionAttachedTestHandlerTestFixture
 {
     private readonly Mock<IReadOnlyAgvScopedPositionCache<Guid>> _positionCacheMock = new();
 
+    private bool _shouldAct;
+
     public Mock<IAgvScopedPositionCache<TestMessage>> PendingCacheMock { get; } = new();
 
     public Mock<IPublishEndpoint> PublishEndpointMock { get; } = new();
@@ -20,7 +22,7 @@ internal class GridPositionAttachedTestHandlerTestFixture
 
     public GridPositionAttachedTestHandlerTestFixture()
     {
-        Handler = new TestHandler(_positionCacheMock.Object, PendingCacheMock.Object, PublishEndpointMock.Object, Mock.Of<ILogger<TestHandler>>());
+        Handler = new TestHandler(_positionCacheMock.Object, PendingCacheMock.Object, PublishEndpointMock.Object, () => _shouldAct, Mock.Of<ILogger<TestHandler>>());
     }
 
     public static ConsumeContext<TestMessage> CreateContext(TestMessage message)
@@ -47,6 +49,12 @@ internal class GridPositionAttachedTestHandlerTestFixture
     public GridPositionAttachedTestHandlerTestFixture WithNoPendingMessages()
     {
         PendingCacheMock.Setup(x => x.TryRemove(It.IsAny<string>(), It.IsAny<AgvPosition>(), It.IsAny<DateTime>(), out It.Ref<List<TestMessage>?>.IsAny)).Returns(false);
+        return this;
+    }
+
+    public GridPositionAttachedTestHandlerTestFixture ShouldAct(bool result)
+    {
+        _shouldAct = result;
         return this;
     }
 }

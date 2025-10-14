@@ -29,13 +29,11 @@ public class WifiMetricsEventHandler : GridPositionAttachedHandlerBase<AgvWifiMe
     }
 
     /// <inheritdoc />
-    protected override async Task HandleWithGridIdsAsync(AgvWifiMetricsReceived message, List<Guid> gridIds)
-    {
-        if (!await _filter.ShouldActAsync(message))
-        {
-            return;
-        }
+    protected override Task<bool> ShouldActAsync(AgvWifiMetricsReceived message) => _filter.ShouldActAsync(message);
 
-        await PublishEndpoint.Publish(new AddWifiMetrics(message.Metrics, gridIds));
+    /// <inheritdoc />
+    protected override Task HandleWithGridIdsAsync(AgvWifiMetricsReceived message, List<Guid> gridIds)
+    {
+        return PublishEndpoint.Publish(new AddWifiMetrics(message.Metrics, gridIds));
     }
 }

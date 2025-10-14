@@ -10,9 +10,13 @@ public class TestHandler(
     IReadOnlyAgvScopedPositionCache<Guid> positionCache,
     IAgvScopedPositionCache<TestMessage> pendingCache,
     IPublishEndpoint publishEndpoint,
-    ILogger<TestHandler> logger) : GridPositionAttachedHandlerBase<TestMessage>(positionCache, pendingCache, publishEndpoint, logger)
+    Func<bool> shouldAct,
+    ILogger<TestHandler> logger
+) : GridPositionAttachedHandlerBase<TestMessage>(positionCache, pendingCache, publishEndpoint, logger)
 {
     public readonly List<(TestMessage, List<Guid>)> HandledMessages = [];
+
+    protected override Task<bool> ShouldActAsync(TestMessage message) => Task.FromResult(shouldAct());
 
     protected override Task HandleWithGridIdsAsync(TestMessage message, List<Guid> gridIds)
     {

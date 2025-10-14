@@ -22,6 +22,9 @@ public class AgvErrorEventHandler : GridPositionAttachedHandlerBase<AgvErrorRece
     }
 
     /// <inheritdoc />
+    protected override Task<bool> ShouldActAsync(AgvErrorReceived message) => Task.FromResult(true);
+
+    /// <inheritdoc />
     protected override Task HandleWithGridIdsAsync(AgvErrorReceived message, List<Guid> gridIds)
     {
         return PublishEndpoint.Publish(new AddError(message.Error, gridIds));

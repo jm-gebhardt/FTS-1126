@@ -28,11 +28,13 @@ public abstract class InMemoryFilter<T> : IMessageFilter<T> where T : class, IMe
 
     /// <summary>
     /// Specifies the minimum elapsed time that should be considered before a new object is eligible for processing, regardless of whether it meets the usual criteria for significance or difference.
+    /// If this is set to TimeSpan.MinValue or TimeSpan.Zero, this feature is effectively disabled, meaning only the content difference will be considered (or MaxInterval if enabled).
     /// </summary>
     public virtual TimeSpan MinInterval => _configuration.MinInterval;
 
     /// <summary>
     /// Defines the maximum time that can elapse before a new object must be processed, regardless of whether it meets the usual criteria for significance or difference.
+    /// If it is set to TimeSpan.MaxValue, this feature is effectively disabled.
     /// </summary>
     public virtual TimeSpan MaxInterval => _configuration.MaxInterval;
 
@@ -58,9 +60,8 @@ public abstract class InMemoryFilter<T> : IMessageFilter<T> where T : class, IMe
         {
             var timeDifference = currentData.MessageCreatedDate - (_previousData?.MessageCreatedDate ?? DateTime.MinValue);
 
-            bool isMaxIntervalExceeded = timeDifference > MaxInterval;
-
-            bool isMinIntervalExceeded = timeDifference > MinInterval || MinInterval == TimeSpan.Zero;
+            bool isMaxIntervalExceeded = timeDifference >= MaxInterval && MaxInterval != TimeSpan.MaxValue;
+            bool isMinIntervalExceeded = timeDifference >= MinInterval || MinInterval == TimeSpan.MinValue || MinInterval == TimeSpan.Zero;
 
             bool isDataSignificant = _previousData == null || ShouldActOnData(currentData, _previousData);
 

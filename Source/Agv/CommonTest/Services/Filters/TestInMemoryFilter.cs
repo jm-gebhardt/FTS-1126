@@ -5,9 +5,9 @@ namespace Gebhardt.Acc.CommonTest.Services.Filters;
 
 internal class TestInMemoryFilter(bool shouldPublishBasedOnReturnValue) : InMemoryFilter<Message>(new SemaphoreProvider())
 {
-    public override TimeSpan MinInterval { get; }
+    public override TimeSpan MinInterval { get; } = TimeSpan.MinValue;
 
-    public override TimeSpan MaxInterval { get; }
+    public override TimeSpan MaxInterval { get; } = TimeSpan.MaxValue;
 
     internal TestInMemoryFilter(bool shouldPublishBasedOnReturnValue, TimeSpan minSilence, TimeSpan maxSilence) : this(shouldPublishBasedOnReturnValue)
     {

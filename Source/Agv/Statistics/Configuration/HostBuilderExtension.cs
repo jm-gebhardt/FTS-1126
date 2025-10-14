@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -136,7 +135,7 @@ public static class HostBuilderExtension
     private static void RegisterFilters(IServiceCollection services)
     {
         // Agv position
-        services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000) { MinInterval = TimeSpan.FromSeconds(3), MaxInterval = TimeSpan.FromSeconds(20) });
+        services.AddSingleton(new AgvPositionConfiguration(0, 0, 0) { MinInterval = TimeSpan.FromSeconds(5), MaxInterval = TimeSpan.FromSeconds(5) });
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
         services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedInMemoryFilter>();
         // Wi-Fi metrics

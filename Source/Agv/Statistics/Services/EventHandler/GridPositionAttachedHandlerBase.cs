@@ -40,6 +40,13 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
     }
 
     /// <summary>
+    /// Determines whether we have to act on that message.
+    /// </summary>
+    /// <param name="message">The message to evaluate for action suitability.</param>
+    /// <returns>A boolean indicating whether the action should proceed.</returns>
+    protected abstract Task<bool> ShouldActAsync(TMessage message);
+
+    /// <summary>
     /// Handles a message with the already persisted grid IDs.
     /// </summary>
     /// <param name="message">The message object.</param>
@@ -50,6 +57,10 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
     public async Task Consume(ConsumeContext<TMessage> context)
     {
         var message = context.Message;
+        if (!await ShouldActAsync(message))
+        {
+            return;
+        }
 
         var timeStamp = message.MessageCreatedDate;
         if (_positionCache.TryGet(message.SerialNumber, message.AgvPosition, timeStamp, out List<Guid>? gridIds))
@@ -82,7 +93,10 @@ public abstract class GridPositionAttachedHandlerBase<TMessage> :
                 pending.Count, message.SerialNumber, message.AgvPosition);
             foreach (var original in pending)
             {
-                await HandleWithGridIdsAsync(original, message.GridPositionIds);
+                if (await ShouldActAsync(original))
+                {
+                    await HandleWithGridIdsAsync(original, message.GridPositionIds);
+                }
             }
         }
         else

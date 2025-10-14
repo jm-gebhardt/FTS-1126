@@ -17,7 +17,8 @@ public class GridPositionAttachedHandlerBaseTest
         var gridIds = new List<Guid> { Guid.NewGuid() };
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithCachedPosition(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, gridIds);
+            .WithCachedPosition(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, gridIds)
+            .ShouldAct(true);
 
         await fixture.Handler.Consume(GridPositionAttachedTestHandlerTestFixture.CreateContext(message));
 
@@ -31,7 +32,8 @@ public class GridPositionAttachedHandlerBaseTest
         var message = new TestMessage();
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithNoCachedPosition();
+            .WithNoCachedPosition()
+            .ShouldAct(true);
 
         await fixture.Handler.Consume(GridPositionAttachedTestHandlerTestFixture.CreateContext(message));
 
@@ -51,7 +53,8 @@ public class GridPositionAttachedHandlerBaseTest
         var gridIds = new List<Guid> { Guid.NewGuid() };
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithPendingMessages(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, [message]);
+            .WithPendingMessages(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, [message])
+            .ShouldAct(true);
 
         await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, gridIds));
 
@@ -62,30 +65,46 @@ public class GridPositionAttachedHandlerBaseTest
     [TestMethod]
     public async Task OnGridPositionPersisted_WithMultiplePending_CallsHandlerForAll()
     {
-        var msg1 = new TestMessage();
-        var msg2 = new TestMessage { SerialNumber = msg1.SerialNumber, AgvPosition = msg1.AgvPosition };
+        var message1 = new TestMessage();
+        var message2 = new TestMessage { SerialNumber = message1.SerialNumber, AgvPosition = message1.AgvPosition };
         var gridIds = new List<Guid> { Guid.NewGuid() };
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithPendingMessages(msg1.SerialNumber, msg1.AgvPosition, msg1.MessageCreatedDate, [msg1, msg2]);
+            .WithPendingMessages(message1.SerialNumber, message1.AgvPosition, message1.MessageCreatedDate, [message1, message2])
+            .ShouldAct(true);
 
-        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(msg1.SerialNumber, msg1.AgvPosition, msg1.MessageCreatedDate, gridIds));
+        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(message1.SerialNumber, message1.AgvPosition, message1.MessageCreatedDate, gridIds));
 
         fixture.Handler.HandledMessages.Count.ShouldBe(2);
-        fixture.Handler.HandledMessages.ShouldContain((msg1, gridIds));
-        fixture.Handler.HandledMessages.ShouldContain((msg2, gridIds));
+        fixture.Handler.HandledMessages.ShouldContain((message1, gridIds));
+        fixture.Handler.HandledMessages.ShouldContain((message2, gridIds));
     }
 
     [TestMethod]
     public async Task OnGridPositionPersisted_WithoutPending_DoesNothing()
     {
-        var msg = new TestMessage();
+        var message = new TestMessage();
         var gridIds = new List<Guid> { Guid.NewGuid() };
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
-            .WithNoPendingMessages();
+            .WithNoPendingMessages()
+            .ShouldAct(true);
 
-        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(msg.SerialNumber, msg.AgvPosition, msg.MessageCreatedDate, gridIds));
+        await fixture.Handler.OnGridPositionPersisted(new GridPositionPersisted(message.SerialNumber, message.AgvPosition, message.MessageCreatedDate, gridIds));
+
+        fixture.Handler.HandledMessages.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task HandleWithGridIds_FilterReturnsFalse_DoesNotPublishAddWifiMetrics()
+    {
+        var message = new TestMessage();
+
+        var fixture = new GridPositionAttachedTestHandlerTestFixture()
+            .WithNoPendingMessages()
+            .ShouldAct(false);
+
+        await fixture.Handler.Consume(GridPositionAttachedTestHandlerTestFixture.CreateContext(message));
 
         fixture.Handler.HandledMessages.ShouldBeEmpty();
     }

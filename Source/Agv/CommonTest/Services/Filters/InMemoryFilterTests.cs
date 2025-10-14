@@ -27,22 +27,24 @@ public class InMemoryFilterTests
     [TestMethod]
     public async Task ShouldPublish_AfterMaxSilencePeriodIsExceeded_ReturnsTrue()
     {
-        var filter = new TestInMemoryFilter(false);
-        var previousMessage = new Message(DateTime.UtcNow);
+        var filter = new TestInMemoryFilter(false, TimeSpan.MinValue, TimeSpan.FromSeconds(10));
+        var lastMessageDate = DateTime.UtcNow;
+        var previousMessage = new Message(lastMessageDate);
         await filter.ShouldActAsync(previousMessage);
 
-        var newMessage = new Message(DateTime.UtcNow.AddSeconds(filter.MaxInterval.TotalSeconds));
+        var newMessage = new Message(lastMessageDate.AddSeconds(filter.MaxInterval.TotalSeconds));
         (await filter.ShouldActAsync(newMessage)).ShouldBeTrue();
     }
 
     [TestMethod]
     public async Task ShouldPublish_BeforeMaxSilencePeriodIsExceeded_ReturnsFalse()
     {
-        var filter = new TestInMemoryFilter(false);
-        var previousMessage = new Message(DateTime.UtcNow);
+        var filter = new TestInMemoryFilter(false, TimeSpan.MinValue, TimeSpan.FromSeconds(10));
+        var lastMessageDate = DateTime.UtcNow;
+        var previousMessage = new Message(lastMessageDate);
         await filter.ShouldActAsync(previousMessage);
 
-        var newMessage = new Message(DateTime.UtcNow.AddSeconds(filter.MaxInterval.TotalSeconds - 1));
+        var newMessage = new Message(lastMessageDate.AddSeconds(filter.MaxInterval.TotalSeconds - 1));
         (await filter.ShouldActAsync(newMessage)).ShouldBeFalse();
     }
 
