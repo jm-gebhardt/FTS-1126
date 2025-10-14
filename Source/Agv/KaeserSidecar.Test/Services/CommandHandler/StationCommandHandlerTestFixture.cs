@@ -34,7 +34,7 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         Occupancies = occupiedCountAndAgv.Select(o =>
         {
             string stationName = $"Station-{Guid.NewGuid()}";
-            return new StationOccupancy(stationName.ToGuid(), stationName, o.Count, o.AgvId);
+            return new StationOccupancy(stationName.ToGuid(), o.Count, o.AgvId);
         }).ToList();
 
         StationRepository.WithOccupancies(Occupancies);

@@ -33,7 +33,7 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, 0, null))
             .WithPalletJam(null)
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
 
@@ -64,7 +64,7 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, 0, null))
             .WithPalletJam(WaitingHandlerTestFixture.Target.ToGuid())
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
 
@@ -85,7 +85,7 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, 0, null))
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup))
             .WithWaitingPointAction(new WaitingPointAction(moveAction.CorrelationId, agv, DateTime.Now));
 
@@ -104,7 +104,7 @@ public class WaitingHandlerTest
         var waitingPointAction = new WaitingPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now);
         waitingPointAction.SetTarget(WaitingHandlerTestFixture.Target.ToGuid());
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, 0, null))
             .WithWaitingPointAction(waitingPointAction);
 
         await fixture.HandleAsync();
@@ -122,7 +122,7 @@ public class WaitingHandlerTest
         moveAction.StartedDate = DateTime.UtcNow;
 
         var fixture = new WaitingHandlerTestFixture()
-            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, "", 0, null))
+            .WithOccupancy(new StationOccupancy(WaitingHandlerTestFixture.TargetId, 0, null))
             .AddActionGroup(AgvActionGenerator.ConvertFromMessage(actionGroup));
 
         await fixture.Handler.StartHandling(moveAction.CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate);

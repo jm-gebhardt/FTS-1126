@@ -95,10 +95,10 @@ public class TargetSelector(
                 var agvCorrelationId = actionGroup.AssignedAgv!.Value;
                 logger.LogInformation("Trigger target selection for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
 
-                (Guid? stationId, string? stationName) = await SelectTarget(_consideredStations);
+                Guid? stationId = await SelectTarget(_consideredStations);
                 if (stationId != null)
                 {
-                    logger.LogInformation("Selected target {Target} for agv {Agv} running action group {ActionGroup} and adding to station", stationName, agvCorrelationId, actionGroup.CorrelationId);
+                    logger.LogInformation("Selected target {Target} for agv {Agv} running action group {ActionGroup} and adding to station", stationId, agvCorrelationId, actionGroup.CorrelationId);
                     // occupy station when target is selected already, so that we can use the occupancy status to select future targets
                     await stationRepository.OccupyStation(stationId.Value, agvCorrelationId);
                     _lastEvaluatedActions.Add(action.Value);
@@ -118,11 +118,11 @@ public class TargetSelector(
         _consideredStations = stationCount;
     }
 
-    private async Task<(Guid? StationId, string? StationName)> SelectTarget(int consideredStations)
+    private async Task<Guid?> SelectTarget(int consideredStations)
     {
         StationOccupancy? selectedTarget = null;
         ICollection<StationOccupancy> occupancies = await stationRepository.GetStationOccupancy();
-        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByNames(configuration.ConveyorStationMapping.Keys.ToArray());
+        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByIdsAsync(configuration.ConveyorStationMapping.Keys.Select(k => k.ToGuid()).ToList());
 
         //Try to take the station that is not occupied, is not locked, and was not chosen last (to compensate for the delay between setting target and starting action)
         // If jam state is used, the station is only considered available without a jam
@@ -131,12 +131,12 @@ public class TargetSelector(
         {
             if (!occupancy.IsEmpty)
             {
-                logger.LogInformation("Station: {Station} is not free, as it's occupied by {OccupancyCount} agv, StationCount set to {StationCount}", occupancy.StationId, occupancy.Count, consideredStations);
+                logger.LogInformation("Station: {StationId} is not free, as it's occupied by {OccupancyCount} agv, StationCount set to {StationCount}", occupancy.StationId, occupancy.Count, consideredStations);
                 continue;
             }
             if (_useJamState)
             {
-                string jamStateStation = configuration.ConveyorStationMapping[occupancy.StationName];
+                string jamStateStation = configuration.ConveyorStationMapping.Single(m => m.Key.ToGuid() == occupancy.StationId).Value;
                 logger.LogInformation("Considering jam state for station {Target}", occupancy.StationId);
                 bool hasPalletJam = await GetJamState(jamStateStation.ToGuid());
                 if (hasPalletJam)
@@ -148,7 +148,7 @@ public class TargetSelector(
             selectedTarget = occupancy;
             break;
         }
-        return (selectedTarget?.StationId, selectedTarget?.StationName);
+        return selectedTarget?.StationId;
     }
 
     private async Task<bool> GetJamState(Guid stationId)
@@ -165,8 +165,8 @@ public class TargetSelector(
         ICollection<StationOccupancy> orderedOccupancies = [];
         foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Take(consideredStations))
         {
-            var occupancy = unorderedOccupancies.SingleOrDefault(o => o.StationName == conveyorStationMapping.Key) ??
-                            new StationOccupancy(conveyorStationMapping.Key.ToGuid(), conveyorStationMapping.Key, 0, null);
+            var occupancy = unorderedOccupancies.SingleOrDefault(o => o.StationId == conveyorStationMapping.Key.ToGuid()) ??
+                            new StationOccupancy(conveyorStationMapping.Key.ToGuid(), 0, null);
 
             if (!stations.First(s => s.Id == occupancy.StationId).IsLocked)
             {

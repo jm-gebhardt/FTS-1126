@@ -74,7 +74,7 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
     private TargetSelectorTestFixture WithStations(ICollection<Station> stations)
     {
         Stations = stations.ToList();
-        _transportOrderDb.Setup(x => x.Stations.GetStationsByNames(It.IsAny<string[]>())).ReturnsAsync(stations);
+        _transportOrderDb.Setup(x => x.Stations.GetStationsByIdsAsync(It.IsAny<List<Guid>>())).ReturnsAsync(stations);
         return this;
     }
 
@@ -89,7 +89,7 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
             .Select((station, index) =>
             {
                 (int Count, Guid? AgvId) value = occupiedCountAndAgv.ElementAtOrDefault(index);
-                return new StationOccupancy(station.Value, station.Key, value.Count, value.AgvId);
+                return new StationOccupancy(station.Value, value.Count, value.AgvId);
             })
             .ToList();
 

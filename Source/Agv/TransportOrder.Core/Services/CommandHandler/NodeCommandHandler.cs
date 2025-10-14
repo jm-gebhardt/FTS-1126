@@ -113,7 +113,7 @@ public class NodeCommandHandler(
                 var node = await graphRepository.GetNodeAsync(oldLastNodeId!.Value);
                 if (node.IsDropStation() || node.IsPickStation())
                 {
-                    logger.LogInformation("Not un-occupying station {Station} based on last node id, only explicit freeing via command", oldLastNodeId);
+                    logger.LogInformation("Not un-occupying station {StationId} based on last node id, only explicit freeing via command", oldLastNodeId);
                     return;
                 }
                 logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);

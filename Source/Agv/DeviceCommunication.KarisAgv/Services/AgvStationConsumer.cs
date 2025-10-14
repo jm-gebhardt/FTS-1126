@@ -20,7 +20,7 @@ public class AgvStationConsumer(ILogger<AgvStationConsumer> logger) : IConsumer<
     {
         (string stationId, string agvToRemove, string actingAgv) = context.Message;
 
-        logger.LogInformation("Sending request to remove agv {AgvToRemove} from station {Station} to agv {ActingAgv}", agvToRemove, stationId, actingAgv);
+        logger.LogInformation("Sending request to remove agv {AgvToRemove} from station {StationId} to agv {ActingAgv}", agvToRemove, stationId, actingAgv);
 
         await context.PublishMqtt(new MqttRequestStationRemoveAgv(actingAgv, Guid.NewGuid(), agvToRemove, stationId), context.CancellationToken);
     }

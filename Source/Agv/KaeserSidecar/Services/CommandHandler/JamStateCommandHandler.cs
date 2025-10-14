@@ -28,7 +28,7 @@ public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJam
         if (jamState == null)
         {
             jamState = new JamState(stationId, state, timeStamp);
-            logger.LogInformation("Adding jam state {State} for station {Station}", jamState.State, jamState.StationId);
+            logger.LogInformation("Adding jam state {State} for station {StationId}", jamState.State, jamState.StationId);
             await jamStateRepository.AddAsync(jamState);
             return;
         }
@@ -39,7 +39,7 @@ public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJam
 
         jamState.SetState(state, timeStamp);
         await jamStateRepository.UpdateAsync(jamState);
-        logger.LogInformation("Updating jam state {State} for station {Station}", jamState.State, jamState.StationId);
+        logger.LogInformation("Updating jam state {State} for station {StationId}", jamState.State, jamState.StationId);
     }
 
     /// <summary>

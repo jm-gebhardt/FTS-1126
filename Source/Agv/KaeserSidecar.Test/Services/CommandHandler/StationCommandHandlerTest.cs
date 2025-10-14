@@ -53,7 +53,7 @@ public class StationCommandHandlerTest
         var fixture = new StationCommandHandlerTestFixture()
             .WithOccupancies((1, agvCorrelationId));
 
-        await fixture.TestHarness.Bus.Publish(new UnblockStation(fixture.Occupancies[0].StationId, fixture.Occupancies[0].StationName));
+        await fixture.TestHarness.Bus.Publish(new UnblockStation(fixture.Occupancies[0].StationId));
 
         await fixture.ShouldHaveConsumedAsync<UnblockStation>();
 

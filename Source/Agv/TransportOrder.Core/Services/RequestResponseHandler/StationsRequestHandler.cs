@@ -158,10 +158,10 @@ public class StationsRequestHandler(
         var station = await stationRepository.GetStation(context.Message.StationId);
         string user = context.Message.User;
 
-        logger.LogStationInformation(LogCodes.StationUnblocked, station.Id, "Station Unblocked", "Station was unblocked", new Dictionary<string, object?>{{LogLabels.User, user}});
-        logger.LogStationInformation(LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationUnblocked}});
+        logger.LogStationInformation(LogCodes.StationUnblocked, station.Id, "Station Unblocked", "Station was unblocked", new Dictionary<string, object?> { { LogLabels.User, user } });
+        logger.LogStationInformation(LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationUnblocked } });
 
-        await bus.Publish(new Common.Messages.Stations.UnblockStation(station.Id, station.Name));
+        await bus.Publish(new Common.Messages.Stations.UnblockStation(station.Id));
 
         await context.RespondAsync(new Success());
     }

@@ -11,11 +11,6 @@ public class StationOccupancy
     public Guid StationId { get; init; }
 
     /// <summary>
-    /// The station name.
-    /// </summary>
-    public string StationName { get; init; }
-
-    /// <summary>
     /// The agv count.
     /// </summary>
     public int Count { get; private set; }
@@ -31,10 +26,9 @@ public class StationOccupancy
     public Guid? AgvCorrelationId { get; private set; }
 
     /// <inheritdoc cref="StationOccupancy"/>>
-    public StationOccupancy(Guid stationId, string stationName, int count, Guid? agvCorrelationId)
+    public StationOccupancy(Guid stationId, int count, Guid? agvCorrelationId)
     {
         StationId = stationId;
-        StationName = stationName;
         Count = count;
         AgvCorrelationId = agvCorrelationId;
     }

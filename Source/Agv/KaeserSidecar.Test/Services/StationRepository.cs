@@ -16,21 +16,7 @@ public class StationRepository : IStationRepository
         foreach (KeyValuePair<string, string> station in configuration.ConveyorStationMapping)
         {
             var stationId = station.Key.ToGuid();
-            _stationOccupancies.Add(stationId, new StationOccupancy(stationId, station.Key, 0, null));
-        }
-    }
-
-    private void OccupyStation(Guid stationId, string stationName, Guid agv)
-    {
-        var stationOccupancy = new StationOccupancy(stationId, stationName, 1, agv);
-
-        if (_stationOccupancies.TryGetValue(stationId, out var occupancy))
-        {
-            occupancy.Add(agv);
-        }
-        else
-        {
-            _stationOccupancies.Add(stationId, stationOccupancy);
+            _stationOccupancies.Add(stationId, new StationOccupancy(stationId, 0, null));
         }
     }
 
@@ -40,9 +26,14 @@ public class StationRepository : IStationRepository
         if (_stationOccupancies.TryGetValue(stationId, out var occupancy))
         {
             occupancy.Add(agv);
-            return Task.CompletedTask;
         }
-        throw new KeyNotFoundException($"Station with id {stationId} not found in occupancy list.");
+        else
+        {
+            var stationOccupancy = new StationOccupancy(stationId, 1, agv);
+            _stationOccupancies.Add(stationId, stationOccupancy);
+        }
+
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
@@ -66,7 +57,7 @@ public class StationRepository : IStationRepository
     {
         if (!_stationOccupancies.TryGetValue(stationId, out var occupancy))
         {
-            occupancy = new StationOccupancy(stationId, stationId.ToString(), 0, null);
+            occupancy = new StationOccupancy(stationId, 0, null);
             _stationOccupancies.Add(stationId, occupancy);
         }
         return Task.FromResult(occupancy);
@@ -89,7 +80,7 @@ public class StationRepository : IStationRepository
         {
             for (int i = 0; i < occupancy.Count; i++)
             {
-                OccupyStation(occupancy.StationId, occupancy.StationName, (Guid) occupancy.AgvCorrelationId!);
+                OccupyStation(occupancy.StationId, (Guid) occupancy.AgvCorrelationId!);
             }
         }
     }

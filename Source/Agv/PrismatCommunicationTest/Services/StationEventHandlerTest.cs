@@ -193,7 +193,7 @@ public class StationEventHandlerTest
         using var fixture = new StationEventHandlerTestFixture()
             .WithStation(station);
 
-        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid(), station.Node));
+        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid()));
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
     }
 
@@ -204,7 +204,7 @@ public class StationEventHandlerTest
 
         using var fixture = new StationEventHandlerTestFixture();
 
-        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid(), station.Node));
+        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid()));
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 
@@ -216,7 +216,7 @@ public class StationEventHandlerTest
         using var fixture = new StationEventHandlerTestFixture()
             .WithStation(station);
 
-        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid(), station.Node));
+        await fixture.PublishMessageAsync(new UnblockStation(station.Node!.ToGuid()));
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 }

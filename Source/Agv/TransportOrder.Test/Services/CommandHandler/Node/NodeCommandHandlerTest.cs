@@ -357,7 +357,7 @@ public class NodeCommandHandlerTest
             .WithNodeState(null)
             .WithAnyStation();
 
-        await fixture.PublishMessageAsync(new UnblockStation(nodeName.ToGuid(), nodeName));
+        await fixture.PublishMessageAsync(new UnblockStation(nodeName.ToGuid()));
 
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
@@ -372,7 +372,7 @@ public class NodeCommandHandlerTest
             .WithNodeState(new NodeLock(node, NodeLockState.Occupied, false, agv, DateTime.UtcNow))
             .WithAnyStation();
 
-        await fixture.PublishMessageAsync(new UnblockStation(node.Id, node.Name));
+        await fixture.PublishMessageAsync(new UnblockStation(node.Id));
 
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();

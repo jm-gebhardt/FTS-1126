@@ -10,7 +10,7 @@ public interface ITransportOrderStationRepository : TransportOrder.Domain.Reposi
     /// <summary>
     /// Get all stations that match the given names.
     /// </summary>
-    /// <param name="stationNames">The names of the stations.</param>
+    /// <param name="stationIds">The Ids of the stations.</param>
     /// <returns>Collection of stations.</returns>
-    Task<ICollection<Station>> GetStationsByNames(string[] stationNames);
+    Task<ICollection<Station>> GetStationsByIdsAsync(List<Guid> stationIds);
 }

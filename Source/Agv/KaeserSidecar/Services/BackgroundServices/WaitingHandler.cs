@@ -91,7 +91,7 @@ public class WaitingHandler(
 
             _lastEvaluatedActions.Add(action.Value);
             // occupy station when target is selected already, so that we can use the occupancy status for future waiting
-            logger.LogInformation("Adding agv {Agv} to station {Station} for short loop waiting", agvCorrelationId, target);
+            logger.LogInformation("Adding agv {Agv} to station {StationId} for short loop waiting", agvCorrelationId, target);
             await stationRepository.OccupyStation(target, agvCorrelationId);
             await bus.Publish(new SetTargetForAction(action.Value, actionGroup.CorrelationId, agvCorrelationId, target), stoppingToken);
             await bus.Publish(new StationReserved(target, agvCorrelationId), stoppingToken);

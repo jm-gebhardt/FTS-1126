@@ -30,7 +30,7 @@ public class EfStationRepositoryTest
     {
         var agv = Guid.NewGuid();
         var fixture = new StationRepositoryTestFixture();
-        var stationOccupancy = new StationOccupancy("station".ToGuid(), "station", 1, agv);
+        var stationOccupancy = new StationOccupancy("station".ToGuid(), 1, agv);
         await fixture.Repository.AddAsync(stationOccupancy);
 
         await fixture.Repository.FreeStation(stationOccupancy.StationId);

@@ -543,11 +543,11 @@ public class KaeserGraphConfiguration
     /// <summary>
     /// Checks if the given node is limited by agv occupancy.
     /// </summary>
-    /// <param name="nodeId">The node id.</param>
+    /// <param name="nodeName">The node id.</param>
     /// <returns>True, if the node is occupancy-limited.</returns>
-    public bool IsOccupancyLimitedNode(string nodeId)
+    public bool IsOccupancyLimitedNode(string nodeName)
     {
-        return ConveyorStationMapping.ContainsKey(nodeId) || StationMapping.ContainsValue(nodeId);
+        return ConveyorStationMapping.ContainsKey(nodeName) || StationMapping.ContainsValue(nodeName);
     }
 
     /// <summary>

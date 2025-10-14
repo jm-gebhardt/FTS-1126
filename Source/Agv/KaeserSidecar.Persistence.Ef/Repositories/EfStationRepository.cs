@@ -24,7 +24,7 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
             return;
         }
 
-        stationOccupancy = new StationOccupancy(stationId, "", 1, agv);
+        stationOccupancy = new StationOccupancy(stationId, 1, agv);
         await AddAsync(stationOccupancy);
     }
 
@@ -44,11 +44,11 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
     public async Task<ICollection<StationOccupancy>> GetStationOccupancy()
     {
         ICollection<StationOccupancy> occupancies = await GetAll();
-        List<string> stations = occupancies.Select(o => o.StationName).ToList();
-        IEnumerable<string> missingStations = configuration.ConveyorStationMapping.Keys.Except(stations);
-        foreach (string station in missingStations)
+        List<Guid> stationIds = occupancies.Select(o => o.StationId).ToList();
+        IEnumerable<Guid> missingStations = configuration.ConveyorStationMapping.Keys.Select(x => x.ToGuid()).Except(stationIds);
+        foreach (var stationId in missingStations)
         {
-            occupancies.Add(new StationOccupancy(station.ToGuid(), station, 0, null));
+            occupancies.Add(new StationOccupancy(stationId, 0, null));
         }
         return occupancies;
     }
@@ -58,7 +58,7 @@ public class EfStationRepository(IDbContextFactory<KaeserSidecarDbContext> conte
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
         var stationOccupancy = await context.Set<StationOccupancy>().Where(s => s.StationId == stationId).SingleOrDefaultAsync();
-        return stationOccupancy ?? new StationOccupancy(stationId, "", 0, null);
+        return stationOccupancy ?? new StationOccupancy(stationId, 0, null);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>

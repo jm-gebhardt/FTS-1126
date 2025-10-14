@@ -22,9 +22,9 @@ public class TransportOrderStationRepository : TransportOrder.Persistence.Ef.Rep
     private IDbContextFactory<TransportOrderDbContext> ContextFactory { get; }
 
     /// <inheritdoc cref="ITransportOrderStationRepository"/>>
-    public async Task<ICollection<Station>> GetStationsByNames(string[] stationNames)
+    public async Task<ICollection<Station>> GetStationsByIdsAsync(List<Guid> stationIds)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        return await context.Set<Station>().Where(s => stationNames.Contains(s.Name)).ToListAsync();
+        return await context.Set<Station>().Where(s => stationIds.Contains(s.Id)).ToListAsync();
     }
 }

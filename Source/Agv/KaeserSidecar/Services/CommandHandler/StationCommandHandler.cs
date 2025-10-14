@@ -47,10 +47,10 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         var occupancy = await stationRepository.GetOccupancyByAgvCorrelationId(agvCorrelationId);
         if (occupancy?.StationId != station)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station {Station} at all, ignoring FreeStationOccupancy command", agvCorrelationId, station);
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station {StationId} at all, ignoring FreeStationOccupancy command", agvCorrelationId, station);
             return;
         }
-        logger.LogInformation("{Message}: Removing agv {Agv} from station: {Station}", nameof(FreeStationOccupancy), agvCorrelationId, station);
+        logger.LogInformation("{Message}: Removing agv {Agv} from station: {StationId}", nameof(FreeStationOccupancy), agvCorrelationId, station);
 
         await stationRepository.FreeStation(occupancy.StationId);
     }
@@ -68,7 +68,7 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         {
             return;
         }
-        logger.LogInformation("{Message}: Removing agv {Agv} from station: {Station}", nameof(SolveResourceErrorsReceived), agvCorrelationId, occupancy.StationId);
+        logger.LogInformation("{Message}: Removing agv {Agv} from station: {StationId}", nameof(SolveResourceErrorsReceived), agvCorrelationId, occupancy.StationId);
         await context.Publish(new FreeStationOccupancy(occupancy.StationId, agvCorrelationId));
     }
 
@@ -100,7 +100,7 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
             return;
         }
 
-        logger.LogInformation("Removing agv {Agv} from station: {Station}", occupancy.AgvCorrelationId, station);
+        logger.LogInformation("Removing agv {Agv} from station: {StationId}", occupancy.AgvCorrelationId, station);
 
         await stationRepository.FreeStation(station);
     }
