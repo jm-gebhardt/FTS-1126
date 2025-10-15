@@ -147,7 +147,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
 
         if (nextActionGroupsForAgv.Count > 0)
         {
-            nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroupsForAgv, nodesToAvoid);
+            nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroupsForAgv, []);
             if (nextActionGroup != null)
             {
                 return nextActionGroup;

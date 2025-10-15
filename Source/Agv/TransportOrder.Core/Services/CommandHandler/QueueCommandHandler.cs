@@ -204,18 +204,21 @@ public class QueueCommandHandler(
                 return;
             }
 
+            // Agv is already about to get evacuated, assignment to order may be to late
+            ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTargetId);
+            if (queueActionGroups.Any(q => q.AssignedAgv == agv))
+            {
+                logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists, not evacuating or assigning", agv);
+                return;
+            }
+
             if (await TryAssignHeadToOrder(context, triggeringAgv, agv, stationName))
             {
                 return;
             }
 
             logger.LogInformation("Evacuating head of queue {Queue}", queueName);
-            ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTargetId);
-            if (queueActionGroups.Any(q => q.AssignedAgv == agv))
-            {
-                logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists", agv);
-                return;
-            }
+            
             List<Guid> queueTargets = queue.NonEntryNodes.Except([queueHeadNode?.NodeId ?? Guid.Empty]).ToList();
             ICollection<Domain.Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.Value, queueTargets);
             await Task.WhenAll(queueInternalMoves.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag.CorrelationId))));

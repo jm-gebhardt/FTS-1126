@@ -551,6 +551,7 @@ public class HostOrderCommandHandler(
         if (await QueueHostOrder(context, pickingHostOrder, context.Message.AssignableAgv, context.Message.PickStation))
         {
             await context.RespondAsync(new AssignedDelayedOrder(pickingHostOrder.CorrelationId));
+            return;
         }
         logger.LogInformation("Queueing order {HostOrder} with pick node {Node} failed", pickingHostOrder.CorrelationId, context.Message.PickStation.Name);
         await context.RespondAsync(new AssignedDelayedOrder(null));

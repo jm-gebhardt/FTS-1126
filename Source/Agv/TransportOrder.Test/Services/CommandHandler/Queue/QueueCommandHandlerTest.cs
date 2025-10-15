@@ -307,7 +307,7 @@ public class QueueCommandHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
-        await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
     }
 
     [TestMethod]
@@ -328,6 +328,6 @@ public class QueueCommandHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
-        await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
     }
 }
