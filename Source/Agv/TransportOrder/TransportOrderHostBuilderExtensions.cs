@@ -20,6 +20,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Domain.Validators;
@@ -150,6 +151,8 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IStationRepository, EfStationRepository>();
         services.AddTransient<IZoneRepository, EfZoneRepository>();
         services.AddTransient<IQueueRepository, EfQueueRepository>();
+        services.AddTransient<ILogEntryRepository, EfLogEntryRepository>();
+        services.AddTransient<ILoggingService, LoggingService>();
 
         services.AddTransient<IMapRepository, EfMapRepository>();
 

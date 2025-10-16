@@ -1,17 +1,21 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Station;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.Common.Messages.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
+using LogEntryProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.LogEntryProfile;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Station;
 
@@ -29,6 +33,8 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
 
     private readonly Mock<IAgvDb> _agvDb = new();
 
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+
     [UsedImplicitly]
     private readonly Mock<IMapRepository> _mapRepository = new();
 
@@ -44,7 +50,8 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
 
     protected override IEnumerable<Profile> GetProfiles() =>
     [
-        new StationProfile()
+        new StationProfile(),
+        new LogEntryProfile()
     ];
 
     public new StationControllerTestFixture<TRequest, TRequestHandler> Build()
@@ -57,8 +64,10 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _actionGroupRepository.Object);
             sc.AddTransient(_ => _agvDb.Object);
+            sc.AddTransient(_ => _logEntryRepository.Object);
+            sc.AddTransient<ILoggingService, LoggingService>();
         });
-
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         base.Build();
         return this;
     }

@@ -30,5 +30,6 @@ public static class WebApiBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<TriggerChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<RestrictedAreaChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<MapChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<SystemChangedConsumer>();
     }
 }

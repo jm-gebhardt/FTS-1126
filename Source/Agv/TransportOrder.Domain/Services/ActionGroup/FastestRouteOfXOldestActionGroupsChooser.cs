@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -20,8 +21,9 @@ public class FastestRouteOfXOldestActionGroupsChooser : BaseChooseAgvActionGroup
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
-        ILogger<FastestRouteOfXOldestActionGroupsChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger)
+        ILogger<FastestRouteOfXOldestActionGroupsChooser> logger,
+        ILoggingService loggingService
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger, loggingService)
     {
         _numberOfOrders = 2;
     }

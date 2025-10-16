@@ -1,11 +1,11 @@
-﻿using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
@@ -28,6 +28,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     private readonly IStationRepository _stationRepository;
     private readonly IBus _bus;
     private readonly ILogger<SendAgvToChargerRequestHandler> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="SendAgvToChargerRequestHandler"/>
     public SendAgvToChargerRequestHandler(
@@ -37,7 +38,8 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         IChargingPointManager chargingPointManager,
         IStationRepository stationRepository,
         INodeStateRepository nodeStateRepository,
-        IBus bus
+        IBus bus,
+        ILoggingService loggingService
     )
     {
         _agvDb = agvDb;
@@ -47,6 +49,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         _logger = logger;
         _stationRepository = stationRepository;
         _bus = bus;
+        _loggingService = loggingService;
     }
 
     /// <inheritdoc/>
@@ -68,7 +71,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         await PublishNodeStateChange(charger.Id);
 
         await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger, ActionGroupCreator.TransportOrderWebApi));
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
 
         await context.RespondAsync(new Success());
     }

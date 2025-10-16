@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 using SignalRSwaggerGen.Attributes;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
@@ -135,4 +136,18 @@ public interface IAgvClient
     /// <param name="maintenance">The agv maintenance.</param>
     [SignalRMethod("AgvMaintained")]
     Task AgvMaintained(AgvMaintainedDto maintenance);
+
+    /// <summary>
+    /// Publishes the last created agv log to all clients.
+    /// </summary>
+    /// <param name="logEntry">The new log entry.</param>
+    [SignalRMethod("AgvLogCreated")]
+    Task AgvLogCreated(LogEntryCreatedDto logEntry);
+
+    /// <summary>
+    /// Publishes the last created battery log to all clients.
+    /// </summary>
+    /// <param name="logEntry">The new log entry.</param>
+    [SignalRMethod("BatteryLogCreated")]
+    Task BatteryLogCreated(LogEntryCreatedDto logEntry);
 }

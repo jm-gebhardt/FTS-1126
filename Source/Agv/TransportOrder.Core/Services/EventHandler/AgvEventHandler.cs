@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Exceptions;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -13,6 +12,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
@@ -59,6 +59,7 @@ public class AgvEventHandler :
     private readonly IAgvDb _agvDb;
     private readonly IQueueRepository _queueRepository;
     private readonly IQueueManager _queueManager;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="AgvEventHandler"/>
     public AgvEventHandler(
@@ -68,6 +69,7 @@ public class AgvEventHandler :
         IChargingPointManager chargingPointManager,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
+        ILoggingService loggingService,
         ILogger<AgvEventHandler> logger)
     {
         _actionGroupRepository = actionGroupRepository;
@@ -77,6 +79,7 @@ public class AgvEventHandler :
         _queueRepository = queueRepository;
         _queueManager = queueManager;
         _logger = logger;
+        _loggingService = loggingService;
     }
 
     /// <summary>
@@ -404,7 +407,7 @@ public class AgvEventHandler :
 
             if (candidatesToStopCharging.Count == 0)
             {
-                _logger.LogBatteryWarning(LogCodes.BatteryNeedsChargingAllOccupied, agv.CorrelationId, null, "Agv cannot charge", $"Agv {agv.CorrelationId} needs charging but no chargers are available and no charging agv has at least min charge level");
+                await _loggingService.LogBattery(_logger, LogLevel.Warning, LogCodes.BatteryNeedsChargingAllOccupied, agv.CorrelationId, null, "Agv cannot charge", $"Agv {agv.CorrelationId} needs charging but no chargers are available and no charging agv has at least min charge level");
                 return;
             }
 
@@ -453,7 +456,7 @@ public class AgvEventHandler :
 
             if (candidatesToStopCharging.Count == 0)
             {
-                _logger.LogBatteryWarning(LogCodes.BatteryNeedsChargingAllOccupied, agvWithCriticalBatteryLevel, null, "Agv cannot charge", $"Agv {agvWithCriticalBatteryLevel} needs charging but no chargers are available and no charging agv has at least min charge level");
+                await _loggingService.LogBattery(_logger, LogLevel.Warning, LogCodes.BatteryNeedsChargingAllOccupied, agvWithCriticalBatteryLevel, null, "Agv cannot charge", $"Agv {agvWithCriticalBatteryLevel} needs charging but no chargers are available and no charging agv has at least min charge level");
                 return;
             }
 

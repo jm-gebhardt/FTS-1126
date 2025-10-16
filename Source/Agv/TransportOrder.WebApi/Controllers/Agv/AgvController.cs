@@ -26,7 +26,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
-using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Microsoft.Extensions.Logging;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -84,6 +84,7 @@ public class AgvController : Controller
     private readonly IRequestClient<GetMaintenanceLogsForAgv> _getMaintenanceLogsClient;
     private readonly IMapper _mapper;
     private readonly ILogger<AgvController> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <summary>
     /// Init controller
@@ -127,7 +128,8 @@ public class AgvController : Controller
         IRequestClient<RemoveAgvFromZone> removeAgvFromZoneClient,
         IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient,
         IRequestClient<TriggerAddingMaintenanceLog> addMaintenanceLogClient,
-        IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient
+        IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient,
+        ILoggingService loggingService
     )
     {
         _logger = logger;
@@ -169,6 +171,7 @@ public class AgvController : Controller
         _removeAgvFromStationClient = removeAgvFromStationClient;
         _addMaintenanceLogClient = addMaintenanceLogClient;
         _getMaintenanceLogsClient = getMaintenanceLogsClient;
+        _loggingService = loggingService;
     }
 
     /// <summary>
@@ -440,7 +443,7 @@ public class AgvController : Controller
 
         if (response.Message is AcceptAgvSucceeded)
         {
-            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, email }, { LogLabels.Operation, LogCodes.AgvAccept } });
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, email }, { LogLabels.Operation, LogCodes.AgvAccept } });
             return Ok();
         }
 
@@ -488,7 +491,7 @@ public class AgvController : Controller
         {
             return NotFound();
         }
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvLocked } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvLocked } });
 
         return Ok();
     }
@@ -508,7 +511,7 @@ public class AgvController : Controller
         [FromQuery] bool cancelManualActions = false)
     {
         await _setUserModeClient.GetResponse<Success>(new SetUserMode(correlationId, User.GetEmail(), assignedActionGroupsPolicy, currentActionGroupPolicy, cancelManualActions));
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
 
         return Ok();
     }
@@ -539,7 +542,7 @@ public class AgvController : Controller
             cancelManualActions);
 
         await _setMaintenanceModeClient.GetResponse<Success>(setMaintenanceModeCommand);
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
 
         return Ok();
     }
@@ -554,7 +557,7 @@ public class AgvController : Controller
     public async Task<ActionResult> SetNormalMode(Guid correlationId)
     {
         await _setNormalModeClient.GetResponse<Success>(new SetNormalMode(correlationId, null));
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvModeChanged } });
 
         return Ok();
     }
@@ -710,7 +713,7 @@ public class AgvController : Controller
         {
             return NotFound();
         }
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvIdle } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.AgvIdle } });
 
         return Ok();
     }

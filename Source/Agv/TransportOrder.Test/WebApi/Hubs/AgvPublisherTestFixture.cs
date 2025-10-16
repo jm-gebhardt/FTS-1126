@@ -27,6 +27,7 @@ public class AgvPublisherTestFixture : PublisherFixture<AgvPublisher, AgvHub, IA
         yield return new ActionProfile();
         yield return new AgvErrorProfile();
         yield return new AgvGraphProfile();
+        yield return new LogEntryProfile();
     }
 
     public AgvPublisherTestFixture(bool useAutoMapper = false)

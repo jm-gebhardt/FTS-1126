@@ -1,9 +1,9 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
@@ -24,21 +24,23 @@ public class AgvErrorCommandHandler :
 {
     private readonly IAgvDb _agvDb;
     private readonly ILogger<AgvErrorCommandHandler> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="AgvErrorCommandHandler"/>>
-    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger)
+    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger, ILoggingService loggingService)
     {
         _agvDb = agvDb;
         _logger = logger;
+        _loggingService = loggingService;
     }
 
-    private void LogErrors(List<AgvError> errors, Agv agv)
+    private async Task LogErrors(List<AgvError> errors, Agv agv)
     {
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Fatal))
         {
             if (agvError.ErrorFlag == ErrorFlag.Battery)
             {
-                _logger.LogBatteryError(LogCodes.BatteryError, agv.CorrelationId, agvError.ErrorCode, "Battery Error",
+                await _loggingService.LogBattery(_logger, LogLevel.Error, LogCodes.BatteryError, agv.CorrelationId, agvError.ErrorCode, "Battery Error",
                     $"Battery of AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}",
                     new Dictionary<string, object?>
                     {
@@ -47,7 +49,7 @@ public class AgvErrorCommandHandler :
                     });
                 continue;
             }
-            _logger.LogAgvError(LogCodes.AgvError, agv.CorrelationId, agvError.ErrorCode, "AGV Error",
+            await _loggingService.LogAgv(_logger, LogLevel.Error, LogCodes.AgvError, agv.CorrelationId, agvError.ErrorCode, "AGV Error",
                 $"AGV {agv.SerialNumber} threw error {agvError.ErrorDescription}",
                 new Dictionary<string, object?>
                 {
@@ -59,7 +61,7 @@ public class AgvErrorCommandHandler :
         {
             if (agvError.ErrorFlag == ErrorFlag.Battery)
             {
-                _logger.LogBatteryWarning(LogCodes.BatteryWarning, agv.CorrelationId, agvError.ErrorCode,
+                await _loggingService.LogBattery(_logger, LogLevel.Warning, LogCodes.BatteryWarning, agv.CorrelationId, agvError.ErrorCode,
                     "Battery Warning", $"Battery of AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}",
                     new Dictionary<string, object?>
                     {
@@ -68,7 +70,7 @@ public class AgvErrorCommandHandler :
                     });
                 continue;
             }
-            _logger.LogAgvWarning(LogCodes.AgvWarning, agv.CorrelationId, agvError.ErrorCode, "AGV Warning",
+            await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvWarning, agv.CorrelationId, agvError.ErrorCode, "AGV Warning",
                 $"AGV {agv.SerialNumber} threw warning {agvError.ErrorDescription}",
                 new Dictionary<string, object?>
                 {
@@ -79,7 +81,7 @@ public class AgvErrorCommandHandler :
 
         foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Information))
         {
-            _logger.LogAgvInformation(LogCodes.AgvInformation, agv.CorrelationId, "AGV Information",
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvInformation, agv.CorrelationId, null, "AGV Information",
                 $"AGV {agv.SerialNumber} sent information {agvError.ErrorDescription}",
                 new Dictionary<string, object?>
                 {
@@ -96,7 +98,7 @@ public class AgvErrorCommandHandler :
         if (changed)
         {
             await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrors, resolvedErrors, correlationId);
-            LogErrors(newErrors, agv);
+            await LogErrors(newErrors, agv);
             IReadOnlyList<AgvError> allErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
             await publishEndpoint.Publish(new AgvErrorChanged(correlationId, allErrors.ToList(), newErrors, resolvedErrors));
         }

@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
 
@@ -32,6 +34,14 @@ public class ActionGroupPublisher : IActionGroupPublisher
     {
         var dto = _mapper.Map<ActionGroupDto>(actionGroup);
         _hubBroadcaster.Broadcast(c => c.ActionGroupChanged(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendLogEntryCreated(Guid correlationId, LogEntry logEntry)
+    {
+        var dto = new LogEntryCreatedDto(correlationId, _mapper.Map<LogEntryDto>(logEntry));
+        _hubBroadcaster.Broadcast(c => c.OrderLogCreated(dto));
         return Task.CompletedTask;
     }
 }

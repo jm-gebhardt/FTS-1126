@@ -1,12 +1,16 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -32,6 +36,8 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
 
     private Mock<IQueueManager> QueueManager { get; } = new();
 
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+
     public ChooseAgvActionGroupTestFixture(bool realRouteService = false)
     {
         AgvActionRepository.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
@@ -50,10 +56,14 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
             s.AddTransient(_ => QueueRepository.Object);
             s.AddTransient(_ => QueueManager.Object);
             s.AddTransient(_ => NodeStateRepository.Object);
+            s.AddTransient<ILoggingService, LoggingService>();
+            s.AddTransient(_ => _logEntryRepository.Object);
+            s.AddTransient(_ => new Mock<IBus>().Object);
             s.AddSingleton<IChooseAgvActionGroupService, TChooser>();
             RegisterLoggerMock<TChooser>(s);
         });
         QueueRepository.Setup(x => x.GetBlockedQueueNodes()).ReturnsAsync([]);
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
     }
 
     private void RegisterLoggerMock<T>(IServiceCollection services) where T : class

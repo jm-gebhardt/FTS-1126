@@ -4,12 +4,14 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
@@ -18,6 +20,7 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
@@ -46,6 +49,7 @@ using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using AgvPositionProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvPositionProfile;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
+using LogEntryProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.LogEntryProfile;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvGraph;
 using ResendAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.ResendAction;
@@ -75,6 +79,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     private readonly Mock<IQueueManager> _queueManager = new();
 
     private readonly Mock<IRouteService> _routeService = new();
+
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
@@ -272,6 +278,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<TriggerAddingMaintenanceLog> addMaintenanceLogClient = GetRequestClient<TriggerAddingMaintenanceLog>();
         IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient = GetRequestClient<GetMaintenanceLogsForAgv>();
 
+        var loggingService = new LoggingService(_logEntryRepository.Object, TestHarness.Bus, Mapper);
         var controller = new AgvController(new Mock<ILogger<AgvController>>().Object,
             Mapper,
             getAgvRequestClient,
@@ -310,7 +317,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             removeAgvFromZoneClient,
             removeAgvFromStationClient,
             addMaintenanceLogClient,
-            getMaintenanceLogsClient
+            getMaintenanceLogsClient,
+            loggingService
         )
         {
             ControllerContext = new ControllerContext(
@@ -335,7 +343,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         new AgvErrorProfile(),
         new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
         new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
-        new ActionProfile()
+        new ActionProfile(),
+        new LogEntryProfile()
     ];
 
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
@@ -371,11 +380,15 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient(_ => _queueRepository.Object);
+            sc.AddTransient(_ => _logEntryRepository.Object);
             sc.AddTransient(_ => _restrictedAreaRepository.Object);
+            sc.AddTransient<ILoggingService, LoggingService>();
         });
         base.Build();
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+
         return this;
     }
 }

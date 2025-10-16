@@ -14,6 +14,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
 using System.Globalization;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -23,20 +24,46 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// </summary>
 /// <inheritdoc cref="MoveAgvRequestHandler"/>>
 [UsedImplicitly]
-public class MoveAgvRequestHandler(
-    ILogger<MoveAgvRequestHandler> logger,
-    IAgvDb agvDb,
-    IBus bus,
-    INodeStateRepository nodeStateRepository,
-    IParkPointService parkPointService,
-    IChargingPointManager chargingPointManager,
-    IRestrictedAreaRepository restrictedAreaRepository,
-    IStationRepository stationRepository
-) :
+public class MoveAgvRequestHandler :
     IConsumer<MoveAgv>,
     IConsumer<ChargeAgv>,
     IConsumer<MoveAgvToCoordinate>
 {
+    private readonly ILogger<MoveAgvRequestHandler> _logger;
+    private readonly IAgvDb _agvDb;
+    private readonly IBus _bus;
+    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly IParkPointService _parkPointService;
+    private readonly IChargingPointManager _chargingPointManager;
+    private readonly IRestrictedAreaRepository _restrictedAreaRepository;
+    private readonly IStationRepository _stationRepository;
+    private readonly ILoggingService _loggingService;
+
+    /// <summary>
+    /// Provides handlers to (manually) move an agv.
+    /// </summary>
+    /// <inheritdoc cref="MoveAgvRequestHandler"/>>
+    public MoveAgvRequestHandler(ILogger<MoveAgvRequestHandler> logger,
+        IAgvDb agvDb,
+        IBus bus,
+        INodeStateRepository nodeStateRepository,
+        IParkPointService parkPointService,
+        IChargingPointManager chargingPointManager,
+        IRestrictedAreaRepository restrictedAreaRepository,
+        IStationRepository stationRepository,
+        ILoggingService loggingService)
+    {
+        _logger = logger;
+        _agvDb = agvDb;
+        _bus = bus;
+        _nodeStateRepository = nodeStateRepository;
+        _parkPointService = parkPointService;
+        _chargingPointManager = chargingPointManager;
+        _restrictedAreaRepository = restrictedAreaRepository;
+        _stationRepository = stationRepository;
+        _loggingService = loggingService;
+    }
+
     /// <summary>
     /// Handles the <see cref="MoveAgv"/> request.
     /// </summary>
@@ -44,14 +71,14 @@ public class MoveAgvRequestHandler(
     {
         (var agvCorrelationId, var targetNodeId, var creator, string user, double theta) = context.Message;
 
-        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.CanStartManualOperationalAction)
         {
             throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
         }
 
-        var targetNode = await agvDb.Graphs.GetNodeAsync(targetNodeId);
+        var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
 
         if (targetNode.NeedsReservation())
         {
@@ -73,7 +100,7 @@ public class MoveAgvRequestHandler(
             agvCorrelationId,
             creator,
             actionGroupId);
-        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
 
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
@@ -85,14 +112,14 @@ public class MoveAgvRequestHandler(
     {
         (var agvCorrelationId, var chargerId, string user) = context.Message;
 
-        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.CanStartManualOperationalAction)
         {
             throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
         }
 
-        var node = await agvDb.Graphs.GetNodeAsync(chargerId);
+        var node = await _agvDb.Graphs.GetNodeAsync(chargerId);
 
         if (!node.IsCharger())
         {
@@ -120,7 +147,7 @@ public class MoveAgvRequestHandler(
             agvCorrelationId,
             ActionGroupCreator.TransportOrderWebApi,
             actionGroupId);
-        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
 
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
@@ -132,14 +159,14 @@ public class MoveAgvRequestHandler(
     {
         (var agvCorrelationId, float x, float y, float theta, var creator, string user) = context.Message;
 
-        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.ShouldStartManualAction)
         {
             throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
         }
 
-        if (await restrictedAreaRepository.IsPointInRestrictedArea(x, y))
+        if (await _restrictedAreaRepository.IsPointInRestrictedArea(x, y))
         {
             throw new PositionIsInRestrictedAreaException(x, y);
         }
@@ -156,7 +183,7 @@ public class MoveAgvRequestHandler(
             agvCorrelationId,
             creator,
             actionGroupId);
-        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
 
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
@@ -166,11 +193,11 @@ public class MoveAgvRequestHandler(
         switch (type)
         {
             case AgvGraph.NodeType.Charge:
-                await chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId);
+                await _chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId);
                 break;
 
             case AgvGraph.NodeType.Park:
-                await parkPointService.ReserveParkAsync(targetNode.Id, agvCorrelationId);
+                await _parkPointService.ReserveParkAsync(targetNode.Id, agvCorrelationId);
                 break;
 
             default:
@@ -190,14 +217,14 @@ public class MoveAgvRequestHandler(
             isManual: true,
             creator: creator
         );
-        IRequestClient<QueueActionGroup>? requestClient = context.CreateRequestClient<QueueActionGroup>(bus);
+        IRequestClient<QueueActionGroup>? requestClient = context.CreateRequestClient<QueueActionGroup>(_bus);
         await requestClient.GetResponse<Success>(new QueueActionGroup(actionGroup, true));
     }
 
     private async Task PublishNodeStateChange(Guid nodeId)
     {
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
-        var station = await stationRepository.GetStation(nodeId);
-        await bus.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        var station = await _stationRepository.GetStation(nodeId);
+        await _bus.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 }

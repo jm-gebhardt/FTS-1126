@@ -25,6 +25,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
@@ -304,6 +305,8 @@ public static class CoreBusRegistrationExtensions
         RegisterMediatorTriggerHandlers(configurator);
 
         RegisterMediatorRestrictedAreaHandlers(configurator);
+
+        RegisterMediatorLogRequestHandlers(configurator);
     }
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)
@@ -459,6 +462,12 @@ public static class CoreBusRegistrationExtensions
     {
         configurator.AddConsumer<RouteRequestHandler>();
         configurator.AddRequestClient<GetRoute>();
+    }
+
+    private static void RegisterMediatorLogRequestHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<LogEntryRequestHandler>();
+        configurator.AddRequestClient<GetFilteredLogEntries>();
     }
 
     private static void RegisterMediatorMapHandlers(IMediatorRegistrationConfigurator configurator)

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
@@ -26,6 +27,8 @@ public class FilterableProfile : Profile
         CreateMap<ActionTargetFilterable, FilteredActionTarget>();
 
         CreateMap<GraphNodeFilterable, FilteredGraphNode>();
+
+        CreateMap<LogEntryFilterable, LogEntry>();
 
         CreateMap<AgvPositionFilterable, FilteredAgvPosition>();
     }

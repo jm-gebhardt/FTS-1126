@@ -2,16 +2,19 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Configurations;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -31,6 +34,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     public AgvSettingsReadModel AgvSettings => EfAgvSettingsProvider.DefaultSettings;
 
@@ -45,6 +49,8 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddTransient(_ => _actionGroupRetrievalService.Object);
             s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient(_ => _nodeStateRepositoryMock.Object);
+            s.AddTransient(_ => _logEntryRepository.Object);
+            s.AddTransient<ILoggingService, LoggingService>();
             if (bus != null)
             {
                 var descriptor = new ServiceDescriptor(typeof(IBus), _ => bus, ServiceLifetime.Singleton);
@@ -59,6 +65,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(AgvGenerator.GenerateIdleAgv());
         _agvDb.Setup(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(It.IsAny<AgvSettingsReadModel>(), It.IsAny<GroupType>(), It.IsAny<string>())).Verifiable();
         _agvDb.Setup(x => x.AgvSettings.ResetSettingPropertyToDefaultAsync(It.IsAny<Guid>(), It.IsAny<string>())).Verifiable();
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithLastMaintenance(TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog? maintenanceLog = null)

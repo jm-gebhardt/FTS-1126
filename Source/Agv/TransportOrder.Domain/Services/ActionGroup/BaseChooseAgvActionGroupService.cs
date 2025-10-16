@@ -1,12 +1,12 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Exceptions;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
@@ -20,6 +20,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     private readonly ILogger<BaseChooseAgvActionGroupService> _logger;
     private readonly IQueueRepository _queueRepository;
     private readonly IQueueManager _queueManager;
+    private readonly ILoggingService _loggingService;
 
     /// <summary>
     /// The route service
@@ -33,7 +34,8 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         IQueueRepository queueRepository,
         IQueueManager queueManager,
         IRouteService routeService,
-        ILogger<BaseChooseAgvActionGroupService> logger
+        ILogger<BaseChooseAgvActionGroupService> logger,
+        ILoggingService loggingService
     )
     {
         _logger = logger;
@@ -42,6 +44,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         _queueRepository = queueRepository;
         _queueManager = queueManager;
         RouteService = routeService;
+        _loggingService = loggingService;
     }
 
     /// <summary>
@@ -76,7 +79,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             }
             if (lockedNodeIds is { Count: > 0 })
             {
-                _logger.LogOrderWarning(LogCodes.OrderWithLockedStation, agv.CorrelationId,
+                await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderWithLockedStation, agv.CorrelationId,
                     chargingActionGroup.CorrelationId, "Order Contains Locked Station",
                     $"Order {chargingActionGroup.OrderId} contains locked station.",
                     new Dictionary<string, object?> { { LogLabels.OrderId, chargingActionGroup.OrderId } });
@@ -97,7 +100,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         {
             if (lockedNodeIds is { Count: > 0 } && chosenActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.Node!.Id)))
             {
-                _logger.LogOrderWarning(LogCodes.OrderWithLockedStation, agv.CorrelationId, chosenActionGroup.CorrelationId, "Order Contains Locked Station",
+                await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderWithLockedStation, agv.CorrelationId, chosenActionGroup.CorrelationId, "Order Contains Locked Station",
                     $"Order {chosenActionGroup.OrderId} contains locked station.",
                     new Dictionary<string, object?> { { LogLabels.OrderId, chosenActionGroup.OrderId } });
             }

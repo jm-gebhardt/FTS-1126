@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -13,6 +16,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using LogEntryProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.LogEntryProfile;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Map;
 
@@ -22,6 +26,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 {
     private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<INodeRepository> _nodeRepositoryMock = new();
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     public Mock<IMapRepository> MapRepositoryMock { get; private set; } = null!;
 
@@ -37,6 +42,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
         IRequestClient<GetMapStations> getStationsClient = GetRequestClient<GetMapStations>();
         IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
+        var loggingService = new LoggingService(_logEntryRepository.Object, TestHarness.Bus, Mapper);
         var controller = new MapController(Mapper,
             new Mock<ILogger<MapController>>().Object,
             getBackgroundImageRequestClient,
@@ -47,14 +53,17 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getMapGraphClient,
             getMapNodeStatesClient,
             getStationsClient,
-            nodeApproachingPropertiesClient);
+            nodeApproachingPropertiesClient,
+            loggingService
+            );
         return controller;
     }
 
     protected override IEnumerable<Profile> GetProfiles() =>
     [
         new MapProfile(),
-        new Gebhardt.Acc.TransportOrder.Messages.Profiles.MapProfile()
+        new Gebhardt.Acc.TransportOrder.Messages.Profiles.MapProfile(),
+        new LogEntryProfile()
     ];
 
     public MapControllerTestFixture(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> nodeStates) : this()
@@ -68,7 +77,10 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         {
             s.AddTransient(_ => _nodeRepositoryMock.Object);
             s.AddTransient(_ => _graphRepository.Object);
+            s.AddTransient(_ => _logEntryRepository.Object);
+            s.AddTransient<ILoggingService, LoggingService>();
         });
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
     }
 
     /// <summary>

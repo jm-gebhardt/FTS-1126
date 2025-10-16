@@ -1,11 +1,11 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using JetBrains.Annotations;
@@ -18,17 +18,35 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Provides handlers for agv error requests.
 /// </summary>
 [UsedImplicitly]
-public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus bus, INodeStateRepository nodeStateRepository, IAgvDb agvDb) :
+public class AgvErrorRequestHandler :
     IConsumer<SolveResourceBlockingErrors>
 {
+    private readonly ILogger<AgvErrorRequestHandler> _logger;
+    private readonly IBus _bus;
+    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly IAgvDb _agvDb;
+    private readonly ILoggingService _loggingService;
+
+    /// <summary>
+    /// Provides handlers for agv error requests.
+    /// </summary>
+    public AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus bus, INodeStateRepository nodeStateRepository, IAgvDb agvDb, ILoggingService loggingService)
+    {
+        _logger = logger;
+        _bus = bus;
+        _nodeStateRepository = nodeStateRepository;
+        _agvDb = agvDb;
+        _loggingService = loggingService;
+    }
+
     /// <summary>
     /// Handles the <see cref="SolveResourceBlockingErrors"/> request.
     /// </summary>
     public async Task Consume(ConsumeContext<SolveResourceBlockingErrors> context)
     {
         (var agvCorrelationId, string user, bool ignoreErrorState) = context.Message;
-        ICollection<NodeLock> nodeLocks = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
-        IReadOnlyList<AgvError> agvErrors = await agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        ICollection<NodeLock> nodeLocks = await _nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
+        IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         var resourceError = agvErrors.SingleOrDefault(e => e.IsResourceError());
         bool hasResourceErrors = resourceError != null;
         var queueBlockingError = agvErrors.SingleOrDefault(e => e.IsQueueBlockingError());
@@ -40,21 +58,21 @@ public class AgvErrorRequestHandler(ILogger<AgvErrorRequestHandler> logger, IBus
             {
                 foreach (var nodeLock in nodeLocks)
                 {
-                    logger.LogInformation("Solving resource blocking errors for agv {AgvCorrelationId} and node {NodeId}", agvCorrelationId, nodeLock.NodeId);
-                    await bus.Publish(new FreeNode(nodeLock.NodeId));
+                    _logger.LogInformation("Solving resource blocking errors for agv {AgvCorrelationId} and node {NodeId}", agvCorrelationId, nodeLock.NodeId);
+                    await _bus.Publish(new FreeNode(nodeLock.NodeId));
                 }
 
-                await bus.Publish(new ResolveSystemAgvError(agvCorrelationId, [resourceError!]));
+                await _bus.Publish(new ResolveSystemAgvError(agvCorrelationId, [resourceError!]));
             }
         }
 
         if (hasQueueBlockingError)
         {
-            await bus.Publish(new RemoveAgvFromQueue(agvCorrelationId));
+            await _bus.Publish(new RemoveAgvFromQueue(agvCorrelationId));
         }
 
-        await bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));
-        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode} });
+        await _bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode} });
 
         await context.RespondAsync(new Success());
     }

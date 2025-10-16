@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -18,8 +19,9 @@ public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
-        ILogger<DynamicPrioritizationChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService,  logger)
+        ILogger<DynamicPrioritizationChooser> logger,
+        ILoggingService loggingService
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService,  logger, loggingService)
     {
     }
 

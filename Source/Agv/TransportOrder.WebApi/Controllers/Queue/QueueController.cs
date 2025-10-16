@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
@@ -10,7 +11,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
-using Gebhardt.Acc.Common.Extensions;
 using DeleteQueue = Gebhardt.Acc.TransportOrder.Messages.Requests.Queue.DeleteQueue;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Queue;
@@ -27,15 +27,17 @@ public class QueueController : Controller
     private readonly IRequestClient<TryAddQueue> _addQueueClient;
     private readonly IRequestClient<DeleteQueue> _deleteQueueClient;
     private readonly ILogger<QueueController> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="QueueController"/>>
-    public QueueController(IMapper mapper, ILogger<QueueController> logger, IRequestClient<GetQueue> getQueueClient, IRequestClient<DeleteQueue> deleteQueueClient, IRequestClient<TryAddQueue> addQueueClient)
+    public QueueController(IMapper mapper, ILogger<QueueController> logger, IRequestClient<GetQueue> getQueueClient, IRequestClient<DeleteQueue> deleteQueueClient, IRequestClient<TryAddQueue> addQueueClient, ILoggingService loggingService)
     {
         _mapper = mapper;
         _logger = logger;
         _deleteQueueClient = deleteQueueClient;
         _getQueueClient = getQueueClient;
         _addQueueClient=addQueueClient;
+        _loggingService = loggingService;
     }
 
     /// <summary>
@@ -67,7 +69,7 @@ public class QueueController : Controller
         var queueNodes = _mapper.Map<List<QueueNode>>(nodes);
         Response<GotQueue> response = await _addQueueClient.GetResponse<GotQueue>(new TryAddQueue(name, queueNodes));
         var queue = _mapper.Map<QueueDto>(response.Message.Queue);
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemQueueAdded } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemQueueAdded } });
         return Ok(queue);
     }
 
@@ -82,7 +84,7 @@ public class QueueController : Controller
     public async Task<ActionResult> DeleteRestrictedArea([FromRoute] Guid id)
     {
         await _deleteQueueClient.GetResponse<Success>(new DeleteQueue(id));
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemQueueDeleted } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemQueueDeleted } });
         return Ok();
     }
 }

@@ -1,9 +1,9 @@
-﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
@@ -16,12 +16,16 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// Provides handlers for station-related commands.
 /// </summary>
 /// <inheritdoc cref="StationCommandHandler"/>>
+/// <remarks>
+/// Provides handlers for station-related commands.
+/// </remarks>
+/// <inheritdoc cref="StationCommandHandler"/>>
 [UsedImplicitly]
-public class StationCommandHandler(
-    INodeStateRepository nodeStateRepository,
+public class StationCommandHandler(INodeStateRepository nodeStateRepository,
     IStationRepository stationRepository,
     IGraphRepository graphRepository,
-    ILogger<StationCommandHandler> logger) :
+    ILogger<StationCommandHandler> logger,
+    ILoggingService loggingService) :
     IConsumer<LockStation>,
     IConsumer<UnlockStation>,
     IConsumer<Common.Messages.Maps.MapSaved>,
@@ -51,7 +55,7 @@ public class StationCommandHandler(
 
         await stationRepository.Update(station);
 
-        logger.LogStationInformation(LogCodes.StationLocked, id, "Station Locked",
+        await loggingService.LogStation(logger, LogLevel.Information, LogCodes.StationLocked, id, "Station Locked",
             $"User {user} locked station because {reason}",
             new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
         await context.Publish(new StationLocked(station.Name));
@@ -89,7 +93,7 @@ public class StationCommandHandler(
             await context.Publish(new NodeStateChanged(nodeState, station.Id, user, station.LockReason, station.LockDescription));
         }
 
-        logger.LogStationInformation(LogCodes.StationUnlocked, id, "Station Unlocked",
+        await loggingService.LogStation(logger, LogLevel.Information, LogCodes.StationUnlocked, id, "Station Unlocked",
             $"User {user} unlocked station",
             new Dictionary<string, object?> { { LogLabels.User, user } });
 

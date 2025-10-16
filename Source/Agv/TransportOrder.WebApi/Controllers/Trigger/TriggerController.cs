@@ -1,11 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
@@ -14,6 +13,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Trigger;
 
@@ -32,6 +32,7 @@ public class TriggerController : Controller
     private readonly IRequestClient<TryUpdateLocationConfigurationParameter> _updateLocationParameterRequestClient;
     private readonly IRequestClient<TryResetLocationConfigurationParameter> _resetLocationParameterRequestClient;
     private readonly ILogger<TriggerController> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="TriggerController"/>>
     public TriggerController(IMapper mapper,
@@ -41,7 +42,8 @@ public class TriggerController : Controller
         IRequestClient<TryRemoveTriggerLocation> removeTriggerLocationRequestClient,
         IRequestClient<TryUpdateDefaultConfigurationParameter> updateDefaultParameterRequestClient,
         IRequestClient<TryUpdateLocationConfigurationParameter> updateLocationParameterRequestClient,
-        IRequestClient<TryResetLocationConfigurationParameter> resetLocationParameterRequestClient)
+        IRequestClient<TryResetLocationConfigurationParameter> resetLocationParameterRequestClient,
+        ILoggingService loggingService)
     {
         _logger = logger;
         _getTriggerRequestClient = getTriggerRequestClient;
@@ -51,6 +53,7 @@ public class TriggerController : Controller
         _updateLocationParameterRequestClient = updateLocationParameterRequestClient;
         _resetLocationParameterRequestClient = resetLocationParameterRequestClient;
         _mapper = mapper;
+        _loggingService = loggingService;
     }
 
     /// <summary>
@@ -85,7 +88,8 @@ public class TriggerController : Controller
         ICollection<PolygonPoint> polygonPoints = location.Polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(location.Polygon) : [];
         ICollection<ConfigurationParameter>? parameters = location.ConfigurationParameters != null ? _mapper.Map<ICollection<ConfigurationParameter>>(location.ConfigurationParameters) : null;
         Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, location.NodeId?.ToGraphNode(), location.EdgeId, polygonPoints, location.MapId, parameters));
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerAssignedToLocation } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerAssignedToLocation } });
+
         var triggerLocationDto = _mapper.Map<TriggerLocationDto>(response.Message);
         return Ok(triggerLocationDto);
     }
@@ -103,7 +107,7 @@ public class TriggerController : Controller
     public async Task<ActionResult> RemoveTriggerLocation([FromRoute] Guid id, [FromRoute] Guid locationId)
     {
         await _removeTriggerLocationRequestClient.GetResponse<Success>(new TryRemoveTriggerLocation(id, locationId));
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerLocationRemoved } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerLocationRemoved } });
         return Ok();
     }
 
@@ -122,7 +126,7 @@ public class TriggerController : Controller
     public async Task<ActionResult> UpdateLocationConfigurationParameter([FromRoute] Guid id, [FromRoute] Guid locationId, [FromRoute] string name, [FromQuery] [Required] string value)
     {
         await _updateLocationParameterRequestClient.GetResponse<Success>(new TryUpdateLocationConfigurationParameter(id, locationId, name, value));
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerLocationConfigurationUpdated } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerLocationConfigurationUpdated } });
         return Ok();
     }
 
@@ -140,7 +144,7 @@ public class TriggerController : Controller
     public async Task<ActionResult> ResetLocationConfigurationParameter([FromRoute] Guid id, [FromRoute] Guid locationId, [FromRoute] string name)
     {
         await _resetLocationParameterRequestClient.GetResponse<Success>(new TryResetLocationConfigurationParameter(id, locationId, name));
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerLocationConfigurationReset } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerLocationConfigurationReset } });
         return Ok();
     }
 
@@ -158,7 +162,7 @@ public class TriggerController : Controller
     public async Task<ActionResult> UpdateDefaultConfigurationParameter([FromRoute] Guid id, [FromRoute] string name, [FromQuery] string value)
     {
         await _updateDefaultParameterRequestClient.GetResponse<Success>(new TryUpdateDefaultConfigurationParameter(id, name, value));
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerDefaultConfigurationUpdated } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerDefaultConfigurationUpdated } });
         return Ok();
     }
 }

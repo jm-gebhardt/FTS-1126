@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
@@ -39,4 +40,11 @@ public interface IMapPublisher
     /// Publishes map changes.
     /// </summary>
     Task SendMapChangedAsync(Messages.Requests.Map.Map map, bool hasBackgroundChanged);
+
+    /// <summary>
+    /// Publishes the last station log to all clients.
+    /// </summary>
+    /// <param name="correlationId">The station id.</param>
+    /// <param name="logEntry">The last station log entry.</param>
+    Task SendLogEntryCreated(Guid correlationId, LogEntry logEntry);
 }

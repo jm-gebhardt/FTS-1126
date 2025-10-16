@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using SignalRSwaggerGen.Attributes;
 
@@ -34,4 +35,11 @@ public interface IMapClient
     /// </summary>
     [SignalRMethod("MapChanged")]
     Task MapChanged(MapChangedDto mapChangedDto);
+
+    /// <summary>
+    /// Publishes the last created station log to all clients.
+    /// </summary>
+    /// <param name="logEntry">The new log entry.</param>
+    [SignalRMethod("StationLogCreated")]
+    Task StationLogCreated(LogEntryCreatedDto logEntry);
 }

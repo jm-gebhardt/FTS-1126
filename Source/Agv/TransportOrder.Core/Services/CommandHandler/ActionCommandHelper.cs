@@ -1,10 +1,11 @@
-﻿using Gebhardt.Acc.Common.Extensions;
+using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
@@ -31,6 +32,7 @@ public class ActionCommandHelper
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IBus _bus;
     private readonly IAgvDb _agvDb;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="ActionCommandHelper"/>>
     public ActionCommandHelper(ILogger<ActionCommandHelper> logger,
@@ -38,10 +40,12 @@ public class ActionCommandHelper
         IAgvDb agvDb,
         IActionGroupRepository actionGroupRepository,
         IStationRepository stationRepository,
-        IBus bus
-    )
+        ILoggingService loggingService,
+        IBus bus,
+        IMapper mapper)
     {
         _logger = logger;
+        _loggingService = loggingService;
         _routeService = routeService;
         _agvDb = agvDb;
         _actionGroupRepository = actionGroupRepository;
@@ -129,7 +133,7 @@ public class ActionCommandHelper
             switch (action.ActionType)
             {
                 case ActionType.Drop:
-                    _logger.LogStationInformation(LogCodes.StationAgvDropping, station.Id, "AGV Dropping",
+                   await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationAgvDropping, station.Id, "AGV Dropping",
                         $"AGV {agv.SerialNumber} is heading towards station to drop order {actionGroup.OrderId}",
                         new Dictionary<string, object?>
                         {
@@ -138,7 +142,7 @@ public class ActionCommandHelper
                     break;
 
                 case ActionType.Pick:
-                    _logger.LogStationInformation(LogCodes.StationAgvPicking, station.Id, "Agv Picking",
+                    await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationAgvPicking, station.Id, "Agv Picking",
                         $"AGV {agv.SerialNumber} is heading towards station to pick order {actionGroup.OrderId}",
                         new Dictionary<string, object?>
                         {
@@ -147,7 +151,7 @@ public class ActionCommandHelper
                     break;
 
                 case ActionType.Move:
-                    _logger.LogStationInformation(LogCodes.StationAgvMoving, station.Id, "AGV Moving",
+                    await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationAgvMoving, station.Id, "AGV Moving",
                         $"AGV {agv.SerialNumber} is heading towards station", new Dictionary<string, object?>
                         {
                             { LogLabels.AgvSerialNumber, agv.SerialNumber }
@@ -155,7 +159,7 @@ public class ActionCommandHelper
                     break;
 
                 case ActionType.Charge:
-                    _logger.LogStationInformation(LogCodes.StationAgvCharging, station.Id, "AGV Charging",
+                    await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationAgvCharging, station.Id, "AGV Charging",
                         $"AGV {agv.SerialNumber} starts charging at station", new Dictionary<string, object?>
                         {
                             { LogLabels.AgvSerialNumber, agv.SerialNumber }

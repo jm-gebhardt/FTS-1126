@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -23,8 +24,9 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
         INodeStateRepository nodeStateRepository,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
-        ILogger<AlternatingModeChooser> logger
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger)
+        ILogger<AlternatingModeChooser> logger,
+        ILoggingService loggingService
+    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger, loggingService)
     {
     }
 

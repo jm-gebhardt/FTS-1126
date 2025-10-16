@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
@@ -29,6 +29,7 @@ public class RestrictedAreaController : Controller
     private readonly IRequestClient<TryDeleteRestrictedArea> _deleteRestrictedAreaClient;
     private readonly IRequestClient<TryUpdateRestrictedArea> _updateRestrictedAreaClient;
     private readonly ILogger<RestrictedAreaController> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="RestrictedAreaController"/>>
     public RestrictedAreaController(IMapper mapper,
@@ -36,7 +37,8 @@ public class RestrictedAreaController : Controller
         IRequestClient<GetRestrictedArea> getRestrictedAreaClient,
         IRequestClient<AddRestrictedArea> addRestrictedAreaClient,
         IRequestClient<TryUpdateRestrictedArea> updateRestrictedAreaClient,
-        IRequestClient<TryDeleteRestrictedArea> deleteRestrictedAreaClient)
+        IRequestClient<TryDeleteRestrictedArea> deleteRestrictedAreaClient,
+        ILoggingService loggingService)
     {
         _mapper = mapper;
         _logger = logger;
@@ -44,8 +46,9 @@ public class RestrictedAreaController : Controller
         _addRestrictedAreaClient = addRestrictedAreaClient;
         _deleteRestrictedAreaClient = deleteRestrictedAreaClient;
         _updateRestrictedAreaClient = updateRestrictedAreaClient;
+        _loggingService = loggingService;
     }
-    
+
     /// <summary>
     /// Get a restricted area.
     /// </summary>
@@ -74,7 +77,7 @@ public class RestrictedAreaController : Controller
     {
         Response<RestrictedAreaAdded> response = await _addRestrictedAreaClient.GetResponse<RestrictedAreaAdded>(new AddRestrictedArea(_mapper.Map<ICollection<PolygonPoint>>(area)));
         var restrictedArea = _mapper.Map<RestrictedAreaDto>(response.Message.RestrictedArea);
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemRestrictedAreaAdded } });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemRestrictedAreaAdded } });
         return Ok(restrictedArea);
     }
 
@@ -90,7 +93,7 @@ public class RestrictedAreaController : Controller
     public async Task<ActionResult> DeleteRestrictedArea([FromRoute] Guid id)
     {
         await _deleteRestrictedAreaClient.GetResponse<Success>(new TryDeleteRestrictedArea(id));
-        _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemRestrictedAreaDeleted} });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemRestrictedAreaDeleted } });
         return Ok();
     }
 
@@ -105,10 +108,10 @@ public class RestrictedAreaController : Controller
     [HttpPatch]
     [Authorize(Policy = AuthorizationPolicies.RestrictedAreasFullAccess)]
     [Route("/restrictedArea/{id:guid}")]
-    public async Task<ActionResult> UpdateRestrictedArea([FromRoute] Guid id, [FromBody][Required] ICollection<PolygonPointDto> area)
+    public async Task<ActionResult> UpdateRestrictedArea([FromRoute] Guid id, [FromBody] [Required] ICollection<PolygonPointDto> area)
     {
-         await _updateRestrictedAreaClient.GetResponse<Success>(new TryUpdateRestrictedArea(id, _mapper.Map<ICollection<PolygonPoint>>(area)));
-         _logger.LogSystemInformation(LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemRestrictedAreaUpdated} });
+        await _updateRestrictedAreaClient.GetResponse<Success>(new TryUpdateRestrictedArea(id, _mapper.Map<ICollection<PolygonPoint>>(area)));
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemRestrictedAreaUpdated } });
         return Ok();
     }
 }

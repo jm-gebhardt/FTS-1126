@@ -1,6 +1,9 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using MassTransit;
@@ -8,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ActionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvPositionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.AgvPositionProfile;
+using LogEntryProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.LogEntryProfile;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -20,6 +24,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     public readonly Mock<THubContext> PublisherMock = new();
     protected readonly Mock<INodeStateRepository> NodeStateRepositoryMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     protected override IEnumerable<Profile> GetProfiles() =>
     [
@@ -36,7 +41,8 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         new TransportOrder.Messages.Profiles.AgvPositionProfile(),
         new ActionProfile(),
         new RestrictedAreaProfile(),
-        new PolygonPointProfile()
+        new PolygonPointProfile(),
+        new LogEntryProfile()
     ];
 
     public ConsumerHubTestFixture(params Action<IServiceCollection>[] services)
@@ -46,6 +52,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
     }
 
     public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
@@ -59,6 +66,8 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         collection.AddTransient(_ => AgvRouteServiceMock.Object);
         collection.AddTransient(_ => _actionGroupRepositoryMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
+        collection.AddTransient(_ => _logEntryRepository.Object);
+        collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
         return this;
     }

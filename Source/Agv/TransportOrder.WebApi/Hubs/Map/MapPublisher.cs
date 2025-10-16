@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
@@ -58,6 +60,14 @@ public class MapPublisher : IMapPublisher
     {
         var dto = _mapper.Map<MapChangedDto>((map, hasBackgroundChanged));
         _hubBroadcaster.Broadcast(c => c.MapChanged(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task SendLogEntryCreated(Guid correlationId, LogEntry logEntry)
+    {
+        var dto = new LogEntryCreatedDto(correlationId, _mapper.Map<LogEntryDto>(logEntry));
+        _hubBroadcaster.Broadcast(c => c.StationLogCreated(dto));
         return Task.CompletedTask;
     }
 }

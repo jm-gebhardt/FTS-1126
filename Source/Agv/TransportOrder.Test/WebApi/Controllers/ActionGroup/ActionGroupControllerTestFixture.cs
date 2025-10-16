@@ -2,17 +2,20 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.RequestHandlers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -48,6 +51,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> _actionGroups = new();
     private readonly Mock<IActionGroupDurationEstimationService> _actionGroupDurationEstimationService = new();
     private readonly Mock<IQueueManager> _queueManager = new();
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     public ActionGroupControllerTestFixture()
     {
@@ -70,7 +74,10 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _actionGroupValidationService.Object);
             sc.AddTransient<ActionCommandHelper>();
             sc.AddTransient(_ => _queueManager.Object);
+            sc.AddTransient(_ => _logEntryRepository.Object);
+            sc.AddTransient<ILoggingService, LoggingService>();
         });
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
@@ -118,7 +125,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         return controller;
     }
 
-    protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile(), new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile()];
+    protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile(), new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(), new LogEntryProfile()];
 
     public ActionGroupControllerTestFixture<TRequest, TRequestHandler> AddActionGroup(ActionGroupReadModel actionGroup)
     {

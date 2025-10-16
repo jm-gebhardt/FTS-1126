@@ -1,8 +1,12 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
@@ -23,5 +27,16 @@ public class ActionGroupChangedConsumerTest
 
         fixture.PublisherMock.Verify(h => h.SendActionGroupChangedAsync(
             It.IsAny<ActionGroupReadModel>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_LogEntryCreated_ValidData_SendsLogEntryCreated()
+    {
+        var fixture = new ConsumerHubTestFixture<ActionGroupChangedConsumer, IActionGroupPublisher>();
+        var logEntryDto = new LogEntryDto { Id = Guid.NewGuid(), ActionGroupCorrelationId = Guid.NewGuid(), Category = Categories.Order, LogCode = LogCodes.OrderOperatorInteraction, Timestamp = DateTime.UtcNow, LogLevel = nameof(LogLevel.Information) };
+
+        await fixture.PublishMessageAsync(new LogEntryCreated(logEntryDto));
+
+        fixture.PublisherMock.Verify(h => h.SendLogEntryCreated(logEntryDto.ActionGroupCorrelationId.GetValueOrDefault(), It.IsAny<LogEntry>()), Times.Once);
     }
 }

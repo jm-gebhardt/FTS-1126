@@ -1,8 +1,8 @@
-﻿using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using JetBrains.Annotations;
 using MassTransit;
@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Handles requests for agvs in zones.
 /// </summary>
 [UsedImplicitly]
-public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus bus, IAgvDb agvDb):
+public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus bus, IAgvDb agvDb, ILoggingService loggingService) :
     IConsumer<RemoveAgvFromAllZones>,
     IConsumer<RemoveAgvFromZone>
 {
@@ -40,7 +40,7 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
         publishTasks.Add(bus.Publish(new RemoveAgvFromAllZones(agvCorrelationId, user)));
         // respond
         publishTasks.Add(context.RespondAsync(new Success()));
-        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromZone } });
+        await loggingService.LogAgv(logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromZone } });
         await Task.WhenAll(publishTasks);
     }
 
@@ -73,7 +73,7 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
         }
 
         await bus.Publish(new Common.Messages.AgvManagement.Commands.RemoveAgvFromZone(onlineAgv.CorrelationId, onlineAgv.SerialNumber, agv.SerialNumber, zoneId));
-        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromZone } });
+        await loggingService.LogAgv(logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromZone } });
 
         await context.RespondAsync(new Success());
     }

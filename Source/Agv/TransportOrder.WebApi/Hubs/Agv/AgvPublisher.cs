@@ -2,12 +2,14 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 using AgvPositionStatus = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvPositionStatus;
 using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
 
@@ -188,6 +190,22 @@ public class AgvPublisher : IAgvPublisher
     {
         var dto = new MaintenanceLogCreatedDto(_mapper.Map<AgvMaintenanceLogDto>(maintenanceLog), correlationId);
         _hubBroadcaster.Broadcast(c => c.AgvMaintenanceLogCreated(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendLogEntryCreated(Guid correlationId, LogEntry logEntry)
+    {
+        var dto = new LogEntryCreatedDto(correlationId, _mapper.Map<LogEntryDto>(logEntry));
+        _hubBroadcaster.Broadcast(c => c.AgvLogCreated(dto));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendBatteryLogEntryCreated(Guid correlationId, LogEntry logEntry)
+    {
+        var dto = new LogEntryCreatedDto(correlationId, _mapper.Map<LogEntryDto>(logEntry));
+        _hubBroadcaster.Broadcast(c => c.BatteryLogCreated(dto));
         return Task.CompletedTask;
     }
 }

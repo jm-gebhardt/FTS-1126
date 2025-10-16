@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -10,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
@@ -31,6 +31,7 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly ITriggerRepository _triggerRepository;
     private readonly IMapper _mapper;
+    private readonly ILoggingService _loggingService;
 
     /// <summary>
     /// Constructor
@@ -40,6 +41,7 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
         IAgvDb agvDb,
         IActionGroupRepository actionGroupRepository,
         ITriggerRepository triggerRepository,
+        ILoggingService loggingService,
         IMapper mapper)
     {
         _logger = logger;
@@ -47,6 +49,7 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
         _actionGroupRepository = actionGroupRepository;
         _triggerRepository = triggerRepository;
         _mapper = mapper;
+        _loggingService = loggingService;
     }
 
     /// <summary>
@@ -133,7 +136,7 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
             await context.Publish(new AgvReachedTrigger(triggerLocation.TriggerId, triggerLocation.ConfigurationParameters.ToDictionary(k => k.Name, v => v), agvData!, agvStatusCommon!, commonActionGroup, commonCargoList, errorList.ToList()));
 
             var trigger = await _triggerRepository.GetById(triggerLocation.TriggerId);
-            _logger.LogAgvInformation(LogCodes.AgvReachedTrigger, agvId, "AGV Reached Trigger",
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvReachedTrigger, agvId, null, "AGV Reached Trigger",
                 $"AGV {agv.SerialNumber} reached trigger {trigger.DisplayName}",
                 new Dictionary<string, object?>
                 {

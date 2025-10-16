@@ -20,6 +20,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.RestrictedArea;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.System;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
@@ -62,6 +63,7 @@ public static class WebHostBuilderExtensions
             services.AddTransient<ITriggerPublisher, TriggerPublisher>();
             services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();
             services.AddTransient<IAgvPublisher, AgvPublisher>();
+            services.AddTransient<ISystemPublisher, SystemPublisher>();
             services.AddTransient<IMapPublisher, MapPublisher>();
             services.AddTransient<IRestrictedAreaPublisher, RestrictedAreaPublisher>();
 
@@ -78,6 +80,7 @@ public static class WebHostBuilderExtensions
             services.AddSingleton(typeof(IHubBroadcaster<,>), typeof(HubBroadcaster<,>));
 
             services.AddHub<AgvHub>();
+            services.AddHub<SystemHub>();
             services.AddHub<ActionGroupHub>();
             services.AddHub<MapHub>();
             services.AddHub<TriggerHub>();
@@ -154,11 +157,12 @@ public static class WebHostBuilderExtensions
                 options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
                 options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                 options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
-                options.OperationFilter<ActionGroupFilterExample>();
 
-                options.AddFilterSwaggerExtensions();
+                options.AddFilterExamples();
 
                 options.CustomSchemaIds(Swagger.CustomSchemaSelector.RemoveDtoSuffix);
+                
+                options.AddFilterSwaggerExtensions();
                 var securityScheme = new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
@@ -201,6 +205,12 @@ public static class WebHostBuilderExtensions
         return webHostBuilder;
     }
 
+    private static void AddFilterExamples(this SwaggerGenOptions options)
+    {
+        options.OperationFilter<ActionGroupFilterExample>();
+        options.OperationFilter<LogEntryFilterExample>();
+    }
+
     private static void AddHub<THub>(this IServiceCollection services) where THub : Hub
     {
         services.AddSingleton<IAbortableHubLifetimeManager<THub>, AbortableHubLifetimeManager<THub>>();
@@ -237,6 +247,7 @@ public static class WebHostBuilderExtensions
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHub<SystemHub>(SystemHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<AgvHub>(AgvHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<MapHub>(MapHub.UrlPath, o => { o.AllowStatefulReconnects = true; });

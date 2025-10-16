@@ -1,10 +1,10 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Exceptions;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.MassTransit;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
@@ -24,24 +24,23 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
     private readonly ILogger<ResetAgvErrorsRequestHandler> _logger;
     private readonly IAgvDb _agvDb;
     private readonly IMessageAwaiter<AgvErrorChanged> _agvErrorChangedAwaiter;
+    private readonly ILoggingService _loggingService;
 
     private readonly IBus _bus;
 
     /// <inheritdoc cref="ResetAgvErrorsRequestHandler"/>
-    /// <param name="agvDb"></param>
-    /// <param name="agvErrorChangedAwaiter"></param>
-    /// <param name="logger"></param>
-    /// <param name="bus"></param>
     public ResetAgvErrorsRequestHandler(
         IAgvDb agvDb,
         IMessageAwaiter<AgvErrorChanged> agvErrorChangedAwaiter,
         IBus bus,
-        ILogger<ResetAgvErrorsRequestHandler> logger)
+        ILogger<ResetAgvErrorsRequestHandler> logger,
+        ILoggingService loggingService)
     {
         _agvDb = agvDb;
         _agvErrorChangedAwaiter = agvErrorChangedAwaiter;
         _logger = logger;
         _bus = bus;
+        _loggingService = loggingService;
     }
 
     private bool AreAllErrorsResolved(ICollection<Guid> errorIdsToReset, AgvErrorChanged errorChange)
@@ -124,7 +123,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
                 checkContinuouslyUntilSuccess: errorsBySource.Count > 1);
 
             int numberOfResetErrors = errorIdsToReset.Count == 0 ? activeErrors.Count : errorIdsToReset.Count;
-            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvErrorReset} });
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvErrorReset} });
             await context.RespondAsync(new ResetAgvErrorsResult($"{numberOfResetErrors} error{(numberOfResetErrors == 1 ? "" : "s")} were reset successfully."));
         }
         catch (WaitForMessageFailedException<AgvErrorChanged> e)

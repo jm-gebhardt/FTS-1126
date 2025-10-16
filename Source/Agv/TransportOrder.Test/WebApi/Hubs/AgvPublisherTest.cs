@@ -1,4 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -6,6 +9,8 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 
@@ -277,5 +282,25 @@ public class AgvPublisherTest
         fixture.HubContextMock.Verify(c =>
             c.Clients.Client(fixture.TestConnectionId).AgvMaintenanceLogCreated(It.Is<MaintenanceLogCreatedDto>(dto =>
                 dto.AgvCorrelationId == agvCorrelationId && dto.MaintenanceLog.ExecutionDate == maintenanceLog.ExecutionDate && dto.MaintenanceLog.MaintenanceType == maintenanceLog.MaintenanceType)));
+    }
+
+    [TestMethod]
+    public async Task SendLogEntryCreated_AgvLog_BroadCastAgvLogCreated()
+    {
+        var fixture = new AgvPublisherTestFixture(useAutoMapper: true);
+        var data = new LogEntry(LogCodes.AgvOperatorInteraction, Categories.Agv, nameof(LogLevel.Information), DateTime.UtcNow, Guid.NewGuid(), null, null);
+
+        await fixture.Publisher.SendLogEntryCreated(data.AgvCorrelationId.GetValueOrDefault(), data);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvLogCreated(It.IsAny<LogEntryCreatedDto>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task SendBatteryLogEntryCreated_BatteryLog_BroadCastBatteryLogCreated()
+    {
+        var fixture = new AgvPublisherTestFixture(useAutoMapper: true);
+        var data = new LogEntry(LogCodes.BatteryCriticalChargeLevel, Categories.Battery, nameof(LogLevel.Information), DateTime.UtcNow, Guid.NewGuid(), null, null);
+
+        await fixture.Publisher.SendBatteryLogEntryCreated(data.AgvCorrelationId.GetValueOrDefault(), data);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).BatteryLogCreated(It.IsAny<LogEntryCreatedDto>()), Times.Once);
     }
 }

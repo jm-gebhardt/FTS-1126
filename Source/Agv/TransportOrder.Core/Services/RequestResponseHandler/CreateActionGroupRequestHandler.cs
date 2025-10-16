@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
@@ -30,6 +31,7 @@ public class CreateActionGroupRequestHandler :
     private readonly IActionGroupValidationService _actionGroupValidationService;
     private readonly IBus _bus;
     private readonly ILogger<CreateActionGroupRequestHandler> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="CreateActionGroupRequestHandler" />
     public CreateActionGroupRequestHandler(IActionGroupRetrievalService retrievalService,
@@ -38,14 +40,16 @@ public class CreateActionGroupRequestHandler :
         IBus bus,
         IAgvDb agvDb,
         IMapper mapper,
-        ILogger<CreateActionGroupRequestHandler> logger
-    )
+        ILogger<CreateActionGroupRequestHandler> logger, 
+        ILoggingService loggingService
+        )
     {
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
         _agvDb = agvDb;
         _mapper = mapper;
         _actionGroupValidationService = actionGroupValidationService;
+        _loggingService = loggingService;
         _bus = bus;
         _logger = logger;
     }
@@ -61,16 +65,16 @@ public class CreateActionGroupRequestHandler :
         actionGroup.Queue();
         await _actionGroupRepository.AddAsync(actionGroup);
 
-        _logger.LogOrderInformation(LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(),
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully",
             new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
-        _logger.LogOrderInformation(LogCodes.OrderQueued, agvCorrelationId.GetValueOrDefault(),
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderQueued, agvCorrelationId.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Queued", $"Order {actionGroup.OrderId} was queued successfully",
             new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
         await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agvCorrelationId));
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderCreated } });
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderCreated } });
         await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));
     }
 

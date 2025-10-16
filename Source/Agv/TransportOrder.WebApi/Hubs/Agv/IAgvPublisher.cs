@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -129,4 +130,18 @@ public interface IAgvPublisher
     /// <param name="maintenanceLog">The maintenance log.</param>
     /// <returns></returns>
     Task SendMaintenanceLogCreated(Guid correlationId, MaintenanceLog maintenanceLog);
+
+    /// <summary>
+    /// Publishes the last agv log to all clients.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="logEntry">The last agv log entry.</param>
+    Task SendLogEntryCreated(Guid correlationId, LogEntry logEntry);
+
+    /// <summary>
+    /// Publishes the last battery log to all clients.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="logEntry">The last agv log entry.</param>
+    Task SendBatteryLogEntryCreated(Guid correlationId, LogEntry logEntry);
 }

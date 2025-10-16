@@ -1,10 +1,15 @@
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +25,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     public Mock<IParkPointService> ParkPointService { get; } = new();
 
@@ -29,6 +35,8 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
     {
         _agvDb.SetupNodeFallbacks();
     }
+
+    protected override IEnumerable<Profile> GetProfiles() => [new LogEntryProfile()];
 
     public new MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> BuildAsync()
     {
@@ -40,6 +48,8 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
             s.AddTransient(_ => ParkPointService.Object);
             s.AddTransient(_ => ChargingPointManager.Object);
             s.AddTransient(_ => _restrictedAreaRepository.Object);
+            s.AddTransient(_ => _logEntryRepository.Object);
+            s.AddTransient<ILoggingService, LoggingService>();
         });
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
@@ -47,6 +57,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.Is<Guid>(y => y == "target".ToGuid()))).ReturnsAsync(new TransportOrder.Domain.Models.Node.NodeLock("target".ToGraphNode(), TransportOrder.Domain.Models.Node.NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow));
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         base.Build();
         return this;
     }

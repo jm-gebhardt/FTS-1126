@@ -1,8 +1,13 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Hubs;
@@ -42,12 +47,25 @@ public class ActionGroupHubTest
     public async Task SendActionGroupChangedAsync_SendsActionGroupChangedWithReason_To_ActionGroupChanged()
     {
         PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
-        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Paused, ActionGroupCreator.TransportOrder, "hu", new List<AgvActionReadModel>(), false, false, true, new List<Reason>() {new ("Maintenance")}, false);
+        var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Paused, ActionGroupCreator.TransportOrder, "hu", new List<AgvActionReadModel>(), false, false, true, new List<Reason>() { new("Maintenance") }, false);
         var expectedDto = Mock.Of<ActionGroupDto>();
 
         fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<TransportOrder.Messages.MessageContent.Agv>())).Returns(expectedDto);
 
         await fixture.Publisher.SendActionGroupChangedAsync(data);
         fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).ActionGroupChanged(It.IsAny<ActionGroupDto>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task SendLogEntryCreated_SendsLogEntryDto_BroadCastOrderLogCreated()
+    {
+        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var data = new LogEntry(LogCodes.OrderOperatorInteraction, Categories.Order, nameof(LogLevel.Information), DateTime.UtcNow, null, null, Guid.NewGuid());
+
+        var expectedDto = Mock.Of<LogEntryCreatedDto>();
+        fixture.MapperMock.Setup(m => m.Map<LogEntryCreatedDto>(It.IsAny<LogEntry>())).Returns(expectedDto);
+
+        await fixture.Publisher.SendLogEntryCreated(data.ActionGroupCorrelationId.GetValueOrDefault(), data);
+        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).OrderLogCreated(It.IsAny<LogEntryCreatedDto>()), Times.Once);
     }
 }

@@ -8,8 +8,8 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using AgvSettings = Gebhardt.Acc.TransportOrder.Messages.MessageContent.AgvSettings;
 
@@ -32,10 +32,12 @@ public class AgvSettingsRequestHandler :
     private readonly IMapper _mapper;
     private readonly IBus _bus;
     private readonly ILogger<AgvSettingsRequestHandler> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="AgvSettingsRequestHandler"/>
     public AgvSettingsRequestHandler(IAgvDb agvDb,
         ILogger<AgvSettingsRequestHandler> logger,
+        ILoggingService loggingService,
         IBus bus,
         IMapper mapper)
     {
@@ -43,6 +45,7 @@ public class AgvSettingsRequestHandler :
         _mapper = mapper;
         _bus = bus;
         _logger = logger;
+        _loggingService = loggingService;
     }
 
     /// <inheritdoc/>
@@ -84,8 +87,8 @@ public class AgvSettingsRequestHandler :
 
         var defaultSettingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
         await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, defaultSettingsGroup.GroupType, defaultSettingsGroup.Identifier);
-        _logger.LogSystemInformation(LogCodes.AgvOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.SystemAgvDefaultSettingUpdated } });
-        _logger.LogInformation("Default agv settings changed" );
+        await _loggingService.LogSystem(_logger, LogCodes.AgvOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.SystemAgvDefaultSettingUpdated } });
+        _logger.LogInformation("Default agv settings changed." );
         await context.RespondAsync(new Success());
     }
 
@@ -96,7 +99,7 @@ public class AgvSettingsRequestHandler :
     {
         var (correlationId, settings, user) = context.Message;
         await UpdateAgvSetting(correlationId, settings);
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
         await context.RespondAsync(new Success());
     }
 
@@ -112,7 +115,7 @@ public class AgvSettingsRequestHandler :
         await Task.WhenAll(updateTasks);
         foreach (var correlationId in correlationIds)
         {
-            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
         }
         await context.RespondAsync(new Success());
     }
@@ -124,7 +127,7 @@ public class AgvSettingsRequestHandler :
     {
         (var correlationId, string propertyName, string user) = context.Message;
         await ResetAgvSettingToDefault(correlationId, propertyName);
-        _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
 
         await context.RespondAsync(new Success());
     }
@@ -141,7 +144,7 @@ public class AgvSettingsRequestHandler :
         await Task.WhenAll(updateTasks);
         foreach (var correlationId in correlationIds)
         {
-            _logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, correlationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
         }
         await context.RespondAsync(new Success());
     }
@@ -150,7 +153,7 @@ public class AgvSettingsRequestHandler :
     {
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         await _agvDb.AgvSettings.ResetSettingPropertyToDefaultAsync(agv.AgvSettingsGroup, propertyName);
-        _logger.LogAgvInformation(LogCodes.AgvSettingsReset, agv.CorrelationId, "AGV Setting Reset", $"{propertyName} reset to default",
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvSettingsReset, agv.CorrelationId, null, "AGV Setting Reset", $"{propertyName} reset to default",
             new Dictionary<string, object?>{{LogLabels.PropertyName, propertyName}});
     }
 
@@ -159,14 +162,14 @@ public class AgvSettingsRequestHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
         await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, GroupType.SerialNumber, agv.SerialNumber);
         await _bus.Publish(new UpdateAgvSettingsGroupReference(correlationId));
-        LogSettingsUpdateForAgv(correlationId, settings);
+        await LogSettingsUpdateForAgv(correlationId, settings);
     }
 
-    private void LogSettingsUpdateForAgv(Guid correlationId, AgvSettingsReadModel settings)
+    private async Task LogSettingsUpdateForAgv(Guid correlationId, AgvSettingsReadModel settings)
     {
         foreach ((string name, object? value) in settings.GetValidPropertiesInformation())
         {
-            _logger.LogAgvInformation(LogCodes.AgvSettingUpdated, correlationId, "AGV Setting Updated", $"{name} updated to {value}",
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvSettingUpdated, correlationId, null, "AGV Setting Updated", $"{name} updated to {value}",
             new Dictionary<string, object?> { { LogLabels.PropertyName, name }, {LogLabels.PropertyValue, value} });
         }
     }

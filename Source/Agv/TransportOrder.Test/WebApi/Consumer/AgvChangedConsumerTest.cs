@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
@@ -13,6 +17,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 
@@ -129,8 +134,30 @@ public class AgvChangedConsumerTest
         fixture.PublisherMock.Verify(h => h.SendMaintenanceLogCreated(agvCorrelationId, log), Times.Once);
     }
 
+    [TestMethod]
+    public async Task Consume_LogEntryCreated_AgvLog_SendsLogEntryCreated()
+    {
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+        var logEntryDto = new LogEntryDto { Id = Guid.NewGuid(), AgvCorrelationId = Guid.NewGuid(), Category = Categories.Agv, LogCode = LogCodes.AgvOperatorInteraction, Timestamp = DateTime.UtcNow, LogLevel = nameof(LogLevel.Information) };
+
+        await fixture.PublishMessageAsync(new LogEntryCreated(logEntryDto));
+
+        fixture.PublisherMock.Verify(h => h.SendLogEntryCreated(logEntryDto.AgvCorrelationId.GetValueOrDefault(), It.IsAny<LogEntry>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_LogEntryCreated_BatteryLog_SendsLogEntryCreated()
+    {
+        var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
+        var logEntryDto = new LogEntryDto { Id = Guid.NewGuid(), AgvCorrelationId = Guid.NewGuid(), Category = Categories.Battery, LogCode = LogCodes.BatteryCriticalChargeLevel, Timestamp = DateTime.UtcNow, LogLevel = nameof(LogLevel.Information) };
+
+        await fixture.PublishMessageAsync(new LogEntryCreated(logEntryDto));
+
+        fixture.PublisherMock.Verify(h => h.SendBatteryLogEntryCreated(logEntryDto.AgvCorrelationId.GetValueOrDefault(), It.IsAny<LogEntry>()), Times.Once);
+    }
+
     private static Mapper GetMapper()
     {
-        return MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.AgvModeProfile());
+        return MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.AgvModeProfile(), new LogEntryProfile());
     }
 }

@@ -4,7 +4,9 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Testing.RequestHandlers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Test.Repositories;
@@ -20,12 +22,15 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     private readonly ActionGroupRetrievalServiceTestFixture _actionGroupRetrievalServiceTestFixture = new();
     private readonly ActionGroupRepositoryTestFixture _actionGroupRepositoryFixture = new();
     private readonly EfAgvGraphRepositoryTestFixture _graphRepositoryTestFixture = new();
+    private readonly EfLogEntryRepositoryTestFixture _logEntryRepositoryTestFixture = new();
     private EfAgvGraph? _efGraph;
     private TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
 
+    protected override IEnumerable<Profile> GetProfiles() => [new GraphProfile(), new LogEntryProfile(), new ActionProfile()];
+
     private static Mapper GetMapper()
     {
-        return MappingHelper.GetMapper(new GraphProfile());
+        return MappingHelper.GetMapper(new GraphProfile(), new LogEntryProfile());
     }
 
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
@@ -64,6 +69,8 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         AddServices(s => s.AddTransient<IActionGroupRetrievalService>(_ => _actionGroupRetrievalServiceTestFixture.ActionGroupRetrievalService));
         AddServices(s => s.AddTransient<IActionGroupRepository>(_ => _actionGroupRepositoryFixture.ActionGroupRepository));
         AddServices(s => s.AddTransient<IGraphRepository>(_ => _graphRepositoryTestFixture.Repository));
+        AddServices(s => s.AddTransient<ILogEntryRepository>(_ => _logEntryRepositoryTestFixture.Repository));
+        AddServices(s => s.AddTransient<ILoggingService, LoggingService>());
 
         await base.BuildAsync();
         Build();

@@ -1,6 +1,5 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Filter.Api;
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -10,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
@@ -43,17 +43,19 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     private readonly IGraphRepository _graphRepository;
     private readonly ILogger<ActionGroupRequestHandler> _logger;
     private readonly IMapper _mapper;
+    private readonly ILoggingService _loggingService;
 
     /// <summary>
     ///  Initializes a new <see cref="ActionGroupRequestHandler"/> instance.
     /// </summary>
-    public ActionGroupRequestHandler(ILogger<ActionGroupRequestHandler> logger, IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IGraphRepository graphRepository, IBus bus, IMapper mapper)
+    public ActionGroupRequestHandler(ILogger<ActionGroupRequestHandler> logger, IActionGroupRetrievalService retrievalService, IActionGroupRepository actionGroupRepository, IGraphRepository graphRepository, ILoggingService loggingService, IBus bus, IMapper mapper)
     {
         _bus = bus;
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
         _graphRepository = graphRepository;
         _logger = logger;
+        _loggingService = loggingService;
         _mapper = mapper;
     }
 
@@ -128,7 +130,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         {
             throw new ActionGroupStateInvalidException(actionGroup, failed.Reason);
         }
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderAborted } });
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderAborted } });
         await context.RespondAsync(new ActionGroupAbortionTriggered(correlationId));
     }
 
@@ -142,7 +144,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         IRequestClient<ResetActionGroup>? requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
         await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId, keepAgv));
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderReset } });
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderReset } });
         await context.RespondAsync(new ActionGroupResetTriggered(actionGroup.CorrelationId));
     }
 
@@ -160,7 +162,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         }
 
         await _bus.Publish(new ReassignActionGroup(actionGroup.CorrelationId, context.Message.AssignedAgv));
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderReassigned } });
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderReassigned } });
 
         await context.RespondAsync(new Success());
     }
@@ -185,7 +187,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         }
 
         await _bus.Publish(new CompleteActionOfActionGroup(actionCorrelationId, correlationId, ActionGroupCreator.TransportOrderWebApi));
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderActionCompleted } });
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderActionCompleted } });
 
         await context.RespondAsync(new Success());
     }
@@ -198,7 +200,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         var actionGroupCorrelationId = context.Message.CorrelationId;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
         await _bus.Publish(new ForceQueueActionGroup(actionGroupCorrelationId));
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderQueued } });
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.OrderQueued } });
 
         await context.RespondAsync(new Success());
     }
@@ -231,7 +233,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         _logger.LogInformation("Triggering setting target {TargetNode} for action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", targetNode.Name, actionCorrelationId, correlationId);
         await _bus.Publish(new SetTargetForAction(actionCorrelationId, correlationId, actionGroup.AssignedAgv, targetNode.Id));
-        _logger.LogOrderInformation(LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderTargetSet } });
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderTargetSet } });
         await context.RespondAsync(new Success());
     }
 

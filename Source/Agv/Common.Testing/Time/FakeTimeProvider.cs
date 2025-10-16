@@ -1,19 +1,13 @@
 ﻿namespace Gebhardt.Acc.Common.Testing.Time;
 
-public class FakeTimeProvider : TimeProvider
+public class FakeTimeProvider(bool useRealNow = true) : TimeProvider
 {
-    private bool _useRealNow;
+    private bool _useRealNow = useRealNow;
     private DateTimeOffset _now;
 
-    public FakeTimeProvider(bool useRealNow = true)
-    {
-        _useRealNow = useRealNow;
-    }
-
-    public FakeTimeProvider(DateTimeOffset now)
+    public FakeTimeProvider(DateTimeOffset now) : this(false)
     {
         _now = now;
-        _useRealNow = false;
     }
 
     public void SetNow(DateTimeOffset now)

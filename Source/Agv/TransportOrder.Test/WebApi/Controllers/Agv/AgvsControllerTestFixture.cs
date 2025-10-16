@@ -4,15 +4,18 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
@@ -36,6 +39,7 @@ using AgvData = Gebhardt.Acc.Common.Domain.Models.AgvData;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using AgvPositionProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvPositionProfile;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
+using LogEntryProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.LogEntryProfile;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Agv;
 
@@ -59,6 +63,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     private Mock<IActionGroupRepository> ActionGroupRepository { get; }
 
     private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
+
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; set; }
 
@@ -93,7 +99,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     public AgvsControllerTestFixture()
     {
         AgvDb = new Mock<IAgvDb>();
-
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
         ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
@@ -247,7 +253,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
         new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
         new ActionProfile(),
-        new CargoProfile()
+        new CargoProfile(),
+        new LogEntryProfile()
     ];
 
     public AgvsControllerTestFixture<TRequest, TRequestHandler> WithActiveAgvErrors(IReadOnlyList<AgvError> agvErrors)
@@ -269,6 +276,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             sc.AddTransient(_ => new Mock<IAgvPositionRepository>().Object);
             sc.AddTransient(_ => ActionGroupRepository.Object);
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
+            sc.AddTransient(_ => _logEntryRepository.Object);
+            sc.AddTransient<ILoggingService, LoggingService>();
         });
 
         base.Build();

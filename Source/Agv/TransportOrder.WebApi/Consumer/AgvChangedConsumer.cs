@@ -1,4 +1,6 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Messages.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
@@ -26,7 +28,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvZonesChanged>,
     IConsumer<AgvStationsChanged>,
     IConsumer<AgvMaintained>,
-    IConsumer<MaintenanceLogCreated>
+    IConsumer<MaintenanceLogCreated>,
+    IConsumer<LogEntryCreated>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -177,5 +180,22 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     {
         var (correlationId, maintenanceLog) = context.Message;
         await _agvPublisher.SendMaintenanceLogCreated(correlationId, maintenanceLog);
+    }
+
+    /// <inheritdoc cref="AgvChangedConsumer"/>>
+    public async Task Consume(ConsumeContext<LogEntryCreated> context)
+    {
+        var logEntry = context.Message.LogEntry;
+
+        if (logEntry.Category == Categories.Agv)
+        {
+            await _agvPublisher.SendLogEntryCreated(logEntry.AgvCorrelationId.GetValueOrDefault(), _mapper.Map<LogEntry>(logEntry));
+            return;
+        }
+
+        if (logEntry.Category == Categories.Battery)
+        {
+            await _agvPublisher.SendBatteryLogEntryCreated(logEntry.AgvCorrelationId.GetValueOrDefault(), _mapper.Map<LogEntry>(logEntry));
+        }
     }
 }

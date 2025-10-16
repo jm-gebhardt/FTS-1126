@@ -1,6 +1,9 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Station;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -23,6 +26,8 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
 
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
+    private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+
     protected override StationsController GetController()
     {
         IRequestClient<GetStations> getStationRequestClient = GetRequestClient<GetStations>();
@@ -42,8 +47,10 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _stationRepository.Object);
             sc.AddTransient(_ => _actionGroupRepository.Object);
+            sc.AddTransient(_ => _logEntryRepository.Object);
+            sc.AddTransient<ILoggingService, LoggingService>();
         });
-
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         base.Build();
         return this;
     }

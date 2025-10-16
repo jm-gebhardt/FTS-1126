@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -7,6 +6,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using JetBrains.Annotations;
 using MassTransit;
@@ -19,7 +19,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Provides handlers for instant action related requests.
 /// </summary>
 [UsedImplicitly]
-public class InstantActionsRequestHandler(ILogger<InstantActionsRequestHandler> logger, IAgvInstantActionDefinitionRepository repository, IAgvDb agvDb, IBus bus): 
+public class InstantActionsRequestHandler(ILogger<InstantActionsRequestHandler> logger, IAgvInstantActionDefinitionRepository repository, IAgvDb agvDb, IBus bus, ILoggingService loggingService) : 
     IConsumer<GetAgvInstantActionDefinitions>,
     IConsumer<GetAgvsInstantActionsDefinitions>,
     IConsumer<StartInstantAction>
@@ -70,7 +70,7 @@ public class InstantActionsRequestHandler(ILogger<InstantActionsRequestHandler> 
             Parameters = parameters
         });
 
-        logger.LogAgvInformation(LogCodes.AgvOperatorInteraction, agvCorrelationId, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvStartInstantAction } });
+        await loggingService.LogAgv(logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvStartInstantAction } });
         await context.RespondAsync(new Success());
     }
 }

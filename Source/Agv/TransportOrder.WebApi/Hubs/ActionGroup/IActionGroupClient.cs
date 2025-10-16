@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 using SignalRSwaggerGen.Attributes;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
@@ -22,4 +23,11 @@ public interface IActionGroupClient
     /// <param name="actionGroup"></param>
     [SignalRMethod("ActionGroupChanged")]
     Task ActionGroupChanged(ActionGroupDto actionGroup);
+
+    /// <summary>
+    /// Publishes the last created order log to all clients.
+    /// </summary>
+    /// <param name="logEntry">The new log entry.</param>
+    [SignalRMethod("OrderLogCreated")]
+    Task OrderLogCreated(LogEntryCreatedDto logEntry);
 }
