@@ -784,8 +784,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             _logger.LogInformation("Agv {AgvId} / {CorrelationId} aborted action {ActionType} for {OrderId}",
                 context.Saga.SerialNumber, context.Saga.CorrelationId, action.ActionType, action.ParentId);
-
-            await context.Publish(new ActionAbortionCompleted(action.CorrelationId, context.Saga.CorrelationId));
+            await context.Publish(new ActionCanceled(action.CorrelationId, context.Saga.CorrelationId));
         }
 
         context.Saga.AbortAction();

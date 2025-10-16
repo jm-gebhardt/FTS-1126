@@ -403,7 +403,7 @@ public class SimulatedAgvStateMachineTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionAbortedEvent()
+    public async Task Consume_ActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionCanceledEvent()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         var action = AgvActionGenerator.GenerateAction(startNodeId: graph.Nodes.First().Name, targetNodeId: graph.Nodes.Skip(1).First().Name);
@@ -420,7 +420,31 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
 
-        await fixture.ShouldHavePublishedAsync<ActionAbortionCompleted>();
+        await fixture.ShouldHavePublishedAsync<ActionCanceled>();
+        agvSaga.ActionStartDate.ShouldBeNull();
+        agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
+        agvSaga.LastActionAborted.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ChargeActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionCanceledEvent()
+    {
+        var graph = AgvGraphGenerator.CreateDefaultGraph();
+        var action = AgvActionGenerator.GenerateChargeAction(startNodeId: graph.Nodes.First().Name, targetNodeId: graph.Nodes.Skip(1).First().Name);
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(
+            currentState: nameof(SimulatedAgvStateMachine.BusyMoving),
+            currentAction:
+            action,
+            agvGraph:
+            graph);
+        var correlationId = agvSaga.CorrelationId;
+        var fixture = new SimulatedAgvStateMachineTestFixture(inactivityTimeout: TimeSpan.FromSeconds(6))
+            .WithAgv(agvSaga)
+            .Build();
+
+        await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
+
+        await fixture.ShouldHavePublishedAsync<ActionCanceled>();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         agvSaga.LastActionAborted.ShouldBeTrue();
@@ -443,7 +467,7 @@ public class SimulatedAgvStateMachineTest
             .Build();
 
         await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
-        await fixture.ShouldHavePublishedAsync<ActionAbortionCompleted>();
+        await fixture.ShouldHavePublishedAsync<ActionCanceled>();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         agvSaga.LastActionAborted.ShouldBeTrue();
