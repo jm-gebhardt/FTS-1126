@@ -242,27 +242,37 @@ public class NodeCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateNodeOccupancy_UnusedNodeLockAgvNotInQueue_NodeFreed()
+    [DataRow(59, false)]
+    [DataRow(61, true)]
+    public async Task Consume_UpdateNodeOccupancy_UnusedNodeLockAgvNotInQueue_NodeFreed(int ageInSeconds, bool shouldHaveBeenFreed)
     {
-        var unusedNodeState = new NodeLock("unused".ToGraphNode(), NodeLockState.Occupied, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
-        var usedNodeState = new NodeLock("usedNode".ToGraphNode(), NodeLockState.Reserved, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
+        var now = DateTime.UtcNow;
+        var modifiedDate = now.AddSeconds(-ageInSeconds);
+        var unusedNodeState = new NodeLock("unused".ToGraphNode(), NodeLockState.Occupied, false, AgvSerialNumber.ToGuid(), modifiedDate);
+        var usedNodeState = new NodeLock("usedNode".ToGraphNode(), NodeLockState.Reserved, false, AgvSerialNumber.ToGuid(), modifiedDate);
         var actionGroupToUsedNode = Helper.AgvActionGenerator.GenerateChargeActionGroup(targetNodeName: usedNodeState.Node.Name, assignedAgv: AgvSerialNumber.ToGuid());
         var fixture = new NodeCommandHandlerTestFixture()
             .WithActionGroups([actionGroupToUsedNode])
             .WithNodeStates([unusedNodeState, usedNodeState])
             .WithAnyStation()
             .WithQueue(null);
+        
+        fixture.TimeProvider.SetNow(now);
 
-        await fixture.TestHarness.Bus.Publish(
-            new UpdateNodeOccupancy(
-                AgvSerialNumber.ToGuid(),
-                "old".ToGuid(),
-                "new".ToGuid()));
+        await fixture.PublishMessageAsync(new UpdateNodeOccupancy(AgvSerialNumber.ToGuid(), "old".ToGuid(), "new".ToGuid()));
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
 
-        fixture.NodeStateRepository.Verify(r => r.FreeNodeAsync(unusedNodeState.NodeId), Times.Once);
+        if (shouldHaveBeenFreed)
+        {
+            await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+        }
+        else
+        {
+            await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        }
+
+        fixture.NodeStateRepository.Verify(r => r.FreeNodeAsync(unusedNodeState.NodeId), shouldHaveBeenFreed ? Times.Once : Times.Never);
         fixture.NodeStateRepository.Verify(r => r.FreeNodeAsync(usedNodeState.NodeId), Times.Never);
 
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);

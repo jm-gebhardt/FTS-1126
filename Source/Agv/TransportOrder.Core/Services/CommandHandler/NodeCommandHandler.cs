@@ -28,7 +28,9 @@ public class NodeCommandHandler(
     IActionGroupRepository actionGroupRepository,
     IGraphRepository graphRepository,
     IMapRepository mapRepository,
-    ILogger<NodeCommandHandler> logger) :
+    TimeProvider timeProvider,
+    ILogger<NodeCommandHandler> logger
+) :
     IConsumer<FreeNode>,
     IConsumer<UpdateNodeOccupancy>,
     IConsumer<ClearNodesFromAgv>,
@@ -151,7 +153,7 @@ public class NodeCommandHandler(
     {
         ICollection<ActionGroup> agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
         ICollection<Task> tasks = [];
-        foreach (var node in nodeLocks)
+        foreach (var node in nodeLocks.Where(l => l.ModifiedDate < timeProvider.GetUtcNow().AddMinutes(-1)))
         {
             if (!agvActionGroups.Any(a => a.Actions.Any(action => action.Target.Node?.Id == node.NodeId)))
             {
