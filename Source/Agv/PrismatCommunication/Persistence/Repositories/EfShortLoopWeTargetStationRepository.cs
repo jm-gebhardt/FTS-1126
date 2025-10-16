@@ -8,19 +8,39 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 
 /// <inheritdoc cref="IShortLoopWeTargetStationRepository"/>>
-public class EfShortLoopWeTargetStationRepository(PrismatCommunicationDbContext context) : EfRepository<ShortLoopWeTargetStation, PrismatCommunicationDbContext>(context), IShortLoopWeTargetStationRepository
+public class EfShortLoopWeTargetStationRepository(IDbContextFactory<PrismatCommunicationDbContext> contextFactory) : EfRepository<ShortLoopWeTargetStation, PrismatCommunicationDbContext, IDbContextFactory<PrismatCommunicationDbContext>>(contextFactory), IShortLoopWeTargetStationRepository
 {
     /// <inheritdoc cref="IShortLoopWeTargetStationRepository"/>>
     public async Task<ShortLoopWeTargetStation> GetTargetStation()
     {
-        var targetStation = await Context.Set<ShortLoopWeTargetStation>().SingleOrDefaultAsync();
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        var targetStation = await context.Set<ShortLoopWeTargetStation>().SingleOrDefaultAsync();
         return targetStation ?? throw new ShortLoopWeTargetStationNotFoundException();
     }
 
     /// <inheritdoc cref="IShortLoopWeTargetStationRepository"/>>
     public async Task UpdateAsync(ShortLoopWeTargetStation station)
     {
-        Context.Set<ShortLoopWeTargetStation>().Update(station);
-        await Context.SaveChangesAsync();
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        context.Set<ShortLoopWeTargetStation>().Update(station);
+        await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task LockStation(string station)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        var targetStation = await context.Set<ShortLoopWeTargetStation>().SingleOrDefaultAsync() ?? throw new ShortLoopWeTargetStationNotFoundException();
+        targetStation.LockedStations.Add(station);
+        await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task UnlockStation(string station)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        var targetStation = await context.Set<ShortLoopWeTargetStation>().SingleOrDefaultAsync() ?? throw new ShortLoopWeTargetStationNotFoundException();
+        targetStation.LockedStations.Remove(station);
+        await context.SaveChangesAsync();
     }
 }

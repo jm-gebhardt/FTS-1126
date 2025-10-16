@@ -34,7 +34,11 @@ public class StationEventHandler(
     public async Task Consume(ConsumeContext<StationLocked> context)
     {
         string lockedStation = context.Message.StationNodeId;
+
+        await targetStationRepository.LockStation(lockedStation);
+
         var shortLoopTarget = await targetStationRepository.GetTargetStation();
+
         if (lockedStation == shortLoopTarget.Current)
         {
             shortLoopTarget.UseNextAvailable(configuration);
@@ -49,8 +53,12 @@ public class StationEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<StationUnlocked> context)
     {
-        var shortLoopTarget = await targetStationRepository.GetTargetStation();
         string unlockedStation = context.Message.StationNode.Name;
+        
+        await targetStationRepository.UnlockStation(unlockedStation);
+        
+        var shortLoopTarget = await targetStationRepository.GetTargetStation();
+        
         if (unlockedStation == shortLoopTarget.Primary && shortLoopTarget.Current != shortLoopTarget.Primary)
         {
             shortLoopTarget.Reset();

@@ -18,4 +18,16 @@ public interface IShortLoopWeTargetStationRepository: IRepository<ShortLoopWeTar
     /// </summary>
     /// <param name="station">The updated station.</param>
     Task UpdateAsync(ShortLoopWeTargetStation station);
+
+    /// <summary>
+    /// Locks a station.
+    /// </summary>
+    /// <param name="station">The station to lock.</param>
+    Task LockStation(string station);
+
+    /// <summary>
+    /// Unlocks the station.
+    /// </summary>
+    /// <param name="station">The station to unlock.</param>
+    Task UnlockStation(string station);
 }

@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
@@ -23,6 +25,7 @@ public class InitializationProvider(
     ILogger<InitializationProvider> logger,
     IRequestClient<AddOrUpdateStationGroup> stationGroupRequestClient,
     IRequestClient<GetTriggerMapping> triggerRequestClient,
+    IRequestClient<GetLockedStations> lockedStationsRequestClient,
     IBus bus
 ) : BackgroundService
 {
@@ -58,6 +61,17 @@ public class InitializationProvider(
         try
         {
             var shortLoopTarget = await targetStationRepository.GetTargetStation();
+            try 
+            {
+                Response<GotLockedStations> lockedStations = await lockedStationsRequestClient.GetResponse<GotLockedStations>(new GetLockedStations());
+                IEnumerable<Task> tasks = shortLoopTarget.LockedStations.Except(lockedStations.Message.Stations).Select(targetStationRepository.UnlockStation);
+                tasks = tasks.Concat(lockedStations.Message.Stations.Select(targetStationRepository.LockStation));
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning("Could not retrieve locked stations, defaulting to empty: {reason}", e.Message);
+            }
             configuration.SetShortLoopTarget(shortLoopTarget.Current);
         }
         catch (ShortLoopWeTargetStationNotFoundException ex)
@@ -65,6 +79,17 @@ public class InitializationProvider(
             logger.LogWarning("{Reason}, creating from default", ex.Message);
             string defaultTarget = configuration.GetShortLoopTarget();
             var shortLoopTarget = new ShortLoopWeTargetStation(defaultTarget, defaultTarget);
+
+            try
+            {
+                Response<GotLockedStations> lockedStations = await lockedStationsRequestClient.GetResponse<GotLockedStations>(new GetLockedStations());
+                shortLoopTarget.LockedStations.AddRange(lockedStations.Message.Stations);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning("Could not retrieve locked stations, defaulting to empty: {reason}", e.Message);
+            }
+
             targetStationRepository.Add(shortLoopTarget);
             await targetStationRepository.SaveAsync();
         }

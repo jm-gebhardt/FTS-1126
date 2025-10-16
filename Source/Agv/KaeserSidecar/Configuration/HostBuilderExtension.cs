@@ -111,7 +111,9 @@ public static class HostBuilderExtension
                     m.UseCompatibilityLevel(120); // EF9 compatibility level
                 });
             });
-
+            services.AddDbContextFactory<PrismatCommunicationDbContext>(o =>
+                o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
+            
             services.AddTransient<IAgvSettingsService, AgvSettingsService>();
             services.AddSingleton<IStationRepository, EfStationRepository>();
             services.AddSingleton<IOrderRepository, EfOrderRepository>();

@@ -18,6 +18,11 @@ public class ShortLoopWeTargetStation
     public string Primary { get; init; }
 
     /// <summary>
+    /// The locked stations.
+    /// </summary>
+    public HashSet<string> LockedStations { get; } = [];
+
+    /// <summary>
     /// The current target.
     /// </summary>
     public string Current { get; private set; }
@@ -54,14 +59,6 @@ public class ShortLoopWeTargetStation
     public void UseNextAvailable(KaeserGraphConfiguration graphConfig)
     {
         string[] possibleTargets = graphConfig.ConveyorStationMapping.OrderByDescending<KeyValuePair<string, string>, string>(c => c.Value).Select(c => c.Key).ToArray();
-        int currentIndex = Array.IndexOf(possibleTargets, Current);
-        if (currentIndex == -1 || currentIndex == possibleTargets.Length - 1)
-        {
-            Current = possibleTargets[0];
-        }
-        else
-        {
-            Current = possibleTargets[currentIndex + 1];
-        }
+        Current = possibleTargets.First(s => !LockedStations.Contains(s));
     }
 }

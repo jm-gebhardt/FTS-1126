@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
@@ -23,7 +25,8 @@ public class StationCommandHandler(
     IConsumer<LockStation>,
     IConsumer<UnlockStation>,
     IConsumer<Common.Messages.Maps.MapSaved>,
-    IConsumer<UpdateStationJamState>
+    IConsumer<UpdateStationJamState>,
+    IConsumer<GetLockedStations>
 {
     /// <summary>
     /// Handles the <see cref="LockStation"/> command.
@@ -124,5 +127,13 @@ public class StationCommandHandler(
         station.PalletJamChangedDate = now;
         await stationRepository.Update(station);
         logger.LogInformation("Jam state of station {StationName} updated to {JamState}", station.Name, station.HasPalletJam);
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<GetLockedStations> context)
+    {
+        ICollection<Station> stations = await stationRepository.GetStations();
+
+        await context.RespondAsync(new GotLockedStations(stations.Where(s => s.IsLocked).Select(s => s.Name).ToList()));
     }
 }

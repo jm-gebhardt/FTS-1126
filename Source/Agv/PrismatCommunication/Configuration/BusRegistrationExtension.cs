@@ -1,7 +1,9 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.Queue;
+using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
@@ -53,7 +55,12 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<AgvEventHandler>();
         cfg.AddConsumer<ActionGroupEventHandler>();
         cfg.AddConsumer<TriggerEventHandler>();
-        cfg.AddConsumer<StationEventHandler>();
+        cfg.AddConsumer<StationEventHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(16);
+            c.Message<StationLocked>(x => x.UsePartitioner(partitioner, m => m.Message.StationNodeId));
+            c.Message<StationUnlocked>(x => x.UsePartitioner(partitioner, m => m.Message.CorrelationId));
+        });
         cfg.AddConsumer<StationCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(16);
@@ -64,6 +71,7 @@ public static class BusRegistrationExtension
         cfg.AddRequestClient<AddOrUpdateStationGroup>();
         cfg.AddRequestClient<GetTriggerMapping>();
         cfg.AddRequestClient<GetQueueFillQuantities>();
+        cfg.AddRequestClient<GetLockedStations>();
 
         if (isSimulationMode)
         {

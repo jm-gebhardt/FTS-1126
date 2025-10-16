@@ -21,6 +21,7 @@ public class StationEventHandlerTest
     {
         string station = OrderGenerator.KaeserConfiguration.GetShortLoopTarget();
         var shortLoopTarget = new ShortLoopWeTargetStation(station, station);
+        shortLoopTarget.LockedStations.Add(station);
 
         using var fixture = new StationEventHandlerTestFixture()
             .WithShortLoopTarget(shortLoopTarget);
