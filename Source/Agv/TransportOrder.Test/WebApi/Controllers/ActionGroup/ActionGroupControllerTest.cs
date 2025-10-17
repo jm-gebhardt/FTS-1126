@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
@@ -203,7 +204,7 @@ public class ActionGroupControllerTest
     public async Task SetTarget_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget(actionGroupState: ActionGroupState.Started);
-        var targetNode = "node".ToGraphNode();
+        var targetNode = NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop);
         ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .WithNode([targetNode])

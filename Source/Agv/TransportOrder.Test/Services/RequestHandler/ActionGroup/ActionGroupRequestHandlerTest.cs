@@ -399,7 +399,7 @@ public class ActionGroupRequestHandlerTest
             .AddDefaultGraph()
             .BuildAsync();
 
-        var node = fixture.GetExistingNode();
+        var node = fixture.GetExistingNode(AgvGraph.NodeType.Drop);
         await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, node, "user"));
 
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
@@ -482,6 +482,58 @@ public class ActionGroupRequestHandlerTest
         var node = fixture.GetExistingNode();
         await MediatorShould.ThrowRequestExceptionAsync<ActionGroupStateInvalidException>(async () =>
             await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.ShouldSkip).CorrelationId, node, "user")));
+    }
+
+    public static IEnumerable<object[]> AllNodeTypes() => Enum.GetValues(typeof(AgvGraph.NodeType)).Cast<AgvGraph.NodeType>().Select(v => new object[] { v });
+
+    [TestMethod]
+    [DynamicData(nameof(AllNodeTypes), DynamicDataSourceType.Method)]
+    public async Task Consume_TriggerSetTarget_ForPickActionWrongTargetNodeType_ThrowsInvalidNodeTypeException(AgvGraph.NodeType nodeType)
+    {
+        if (nodeType is AgvGraph.NodeType.Pick or AgvGraph.NodeType.PickDrop)
+        {
+            return;
+        }
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Created);
+
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .AddDefaultGraph(Guid.NewGuid(), AllNodeTypes().Select(n =>
+                {
+                    var type = (AgvGraph.NodeType) n[0];
+                    return NodeGenerator.GenerateNode(nodeName: type.ToString(), nodeType: type);
+                }).ToList())
+                .BuildAsync();
+
+        var node = fixture.GetExistingNode(nodeType);
+        await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId, node, "user")));
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(AllNodeTypes), DynamicDataSourceType.Method)]
+    public async Task Consume_TriggerSetTarget_ForDropActionWrongTargetNodeType_ThrowsInvalidNodeTypeException(AgvGraph.NodeType nodeType)
+    {
+        if (nodeType is AgvGraph.NodeType.Drop or AgvGraph.NodeType.PickDrop)
+        {
+            return;
+        }
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Created);
+
+        ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
+            await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+                .WithActionGroups(actionGroup)
+                .AddDefaultGraph(Guid.NewGuid(), AllNodeTypes().Select(n =>
+                {
+                    var type = (AgvGraph.NodeType) n[0];
+                    return NodeGenerator.GenerateNode(nodeName: type.ToString(), nodeType: type);
+                }).ToList())
+                .BuildAsync();
+
+        var node = fixture.GetExistingNode(nodeType);
+        await MediatorShould.ThrowRequestExceptionAsync<InvalidNodeTypeException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).CorrelationId, node, "user")));
     }
 
     [TestMethod]

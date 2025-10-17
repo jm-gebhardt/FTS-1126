@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -42,10 +43,10 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         return this;
     }
 
-    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> AddDefaultGraph(Guid correlationId = default)
+    public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> AddDefaultGraph(Guid correlationId = default, ICollection<GraphNode>? nodes = null)
     {
         correlationId = correlationId == Guid.Empty ? Guid.NewGuid() : correlationId;
-        var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+        var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId, nodes);
         var mapper = GetMapper();
         _efGraph = mapper.Map<EfAgvGraph>(graph);
 
@@ -96,9 +97,9 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
         return this;
     }
 
-    public Guid GetExistingNode()
+    public Guid GetExistingNode(AgvGraph.NodeType? nodeType = null)
     {
-        return (Guid) _efGraph?.Nodes.First().Id!;
+        return (Guid) _efGraph?.Nodes.First(n => nodeType == null || (AgvGraph.NodeType) n.Type == nodeType).Id!;
     }
 
     public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggeredActionCompletion()

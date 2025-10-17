@@ -259,7 +259,7 @@ public class ActionGroupController : Controller
     /// <response code="200">Ok</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group or action with given correlationId not found or the given target node has not been found.</response>
-    /// <response code="400">The action has already been completed.</response>
+    /// <response code="400">The action has already been completed or the target node is not of type Pick, Drop, or PickDrop.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId:guid}/setTarget")]
     public async Task<ActionResult> SetTarget(Guid correlationId, Guid actionCorrelationId, [FromQuery] [Required] string targetNode)

@@ -51,6 +51,8 @@ public static class NodeExtensions
     /// <summary>
     /// True if the given node is a pick station.
     /// </summary>
+    /// <param name="node">The graph node to check.</param>
+    /// <returns>True if the node is a pick station; otherwise, false.</returns>
     public static bool IsPickStation(this GraphNode node)
     {
         if (node.Type is AgvGraph.NodeType type)
@@ -69,6 +71,8 @@ public static class NodeExtensions
     /// <summary>
     /// True if the given node is a drop station.
     /// </summary>
+    /// <param name="node">The graph node to check.</param>
+    /// <returns>True if the node is a drop station; otherwise, false.</returns>
     public static bool IsDropStation(this GraphNode node)
     {
         if (node.Type is AgvGraph.NodeType type)
@@ -83,6 +87,13 @@ public static class NodeExtensions
             AgvGraph.NodeType.Drop, AgvGraph.NodeType.PickDrop
         }.Contains(n));
     }
+
+    /// <summary>
+    /// True if the given node is either a pick or drop (or PickDrop) station.
+    /// </summary>
+    /// <param name="node">The graph node to check.</param>
+    /// <returns>True if the node is a pick or drop station; otherwise, false.</returns>
+    public static bool IsPickOrDropStation(this GraphNode node) => node.IsPickStation() || node.IsDropStation();
 
     /// <summary>
     /// True if a nodes needs to be reserved.

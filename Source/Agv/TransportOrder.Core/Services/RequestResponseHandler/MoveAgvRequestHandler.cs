@@ -123,7 +123,7 @@ public class MoveAgvRequestHandler :
 
         if (!node.IsCharger())
         {
-            throw new InvalidNodeTypeException(node.Name, node.Type.ToString() ?? "", nameof(AgvGraph.NodeType.Charge));
+            throw new InvalidNodeTypeException(node.Name, node.TypeString(), nameof(AgvGraph.NodeType.Charge));
         }
 
         if (agv.AgvStatus?.LastNodeId != chargerId)

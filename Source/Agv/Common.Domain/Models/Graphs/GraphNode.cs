@@ -227,6 +227,18 @@ public class GraphNode : IEquatable<GraphNode>
     {
         return HashCode.Combine(Id, Name, Type, X, Y, Z, Theta);
     }
+
+    /// <summary>
+    /// String representation of the node type.
+    /// </summary>
+    public string TypeString()
+    {
+        if (Type is NodeType type)
+        {
+            return type.ToString();
+        }
+        return string.Join(",", ((ICollection<NodeType>) Type).Select(t => t.ToString()));
+    }
 }
 
 /// <summary>

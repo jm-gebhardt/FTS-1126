@@ -1,5 +1,7 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Filter.Api;
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -218,8 +220,6 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionNotFoundException("Action not found using id", "CorrelationId", actionCorrelationId);
         }
 
-        var targetNode = await _graphRepository.GetNodeAsync(targetNodeId);
-
         var action = actionGroup.Actions.First(a => a.CorrelationId == actionCorrelationId);
         if (action.ShouldSkip)
         {
@@ -229,6 +229,17 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         if (action.State == ActionState.Completed)
         {
             throw new ActionGroupStateInvalidException($"Action {action.CorrelationId} already completed");
+        }
+
+        var targetNode = await _graphRepository.GetNodeAsync(targetNodeId);
+
+        if (action.ActionType == ActionType.Pick && !targetNode.IsPickStation())
+        {
+            throw new InvalidNodeTypeException(targetNode.Name, targetNode.TypeString(), $"{nameof(AgvGraph.NodeType.Pick)}");
+        }
+        if (action.ActionType == ActionType.Drop && !targetNode.IsDropStation())
+        {
+            throw new InvalidNodeTypeException(targetNode.Name, targetNode.TypeString(), $"{nameof(AgvGraph.NodeType.Drop)}");
         }
 
         _logger.LogInformation("Triggering setting target {TargetNode} for action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", targetNode.Name, actionCorrelationId, correlationId);

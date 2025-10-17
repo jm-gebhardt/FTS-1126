@@ -42,6 +42,15 @@ public class NodeExtensionTest
     }
 
     [TestMethod]
+    [DataRow(AgvGraph.NodeType.Pick)]
+    [DataRow(AgvGraph.NodeType.Drop)]
+    [DataRow(AgvGraph.NodeType.PickDrop)]
+    public void IsPickOrDropStation_PickAndDropTypes_True(AgvGraph.NodeType nodeType)
+    {
+        NodeGenerator.GenerateNode(nodeName: "id", nodeType: nodeType).IsPickOrDropStation().ShouldBeTrue();
+    }
+
+    [TestMethod]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Drop })]
     [DataRow(new[] { AgvGraph.NodeType.Drop, AgvGraph.NodeType.Pick })]
     public void IsDropStation_DropTypesAdditionalType_True(ICollection<AgvGraph.NodeType> nodeTypes)
