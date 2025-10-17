@@ -33,9 +33,9 @@ public class ShortLoopWaitingPointEventHandlerTestFixture : MassTransitConsumerT
         _waitingHandlerMock.Setup(x => x.StopHandling(It.IsAny<Guid>())).Verifiable();
     }
 
-    public void VerifyActionHandled(Guid action, Guid agv, DateTime createdDate, Times times)
+    public void VerifyActionHandled(Guid action, Guid agv, Times times)
     {
-        _waitingHandlerMock.Verify(x => x.StartHandling(action, agv, createdDate), times);
+        _waitingHandlerMock.Verify(x => x.StartHandling(action, agv, It.IsAny<DateTime>()), times);
     }
 
     public void VerifyNoActionHandled()

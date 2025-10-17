@@ -78,6 +78,11 @@ public class StationRepository : IStationRepository
     {
         foreach (var occupancy in occupancies)
         {
+            if (occupancy.Count == 0)
+            {
+                _stationOccupancies.TryAdd(occupancy.StationId, occupancy);
+                continue;
+            }
             for (int i = 0; i < occupancy.Count; i++)
             {
                 OccupyStation(occupancy.StationId, (Guid) occupancy.AgvCorrelationId!);

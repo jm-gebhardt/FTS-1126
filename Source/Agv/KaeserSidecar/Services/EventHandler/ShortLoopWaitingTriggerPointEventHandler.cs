@@ -55,7 +55,9 @@ public class ShortLoopWaitingTriggerPointEventHandler(
             return;
         }
 
-        await waitingHandler.StartHandling(incompleteAction.CorrelationId, agvStatus.CorrelationId, actionGroup.CreatedDate);
+        // Use current time for order of action waiting handling to ensure competition with long loop
+        // is according to trigger entry time, i.e. order of arrival
+        await waitingHandler.StartHandling(incompleteAction.CorrelationId, agvStatus.CorrelationId, DateTime.UtcNow);
     }
 
     /// <summary>

@@ -66,11 +66,13 @@ public static class HostBuilderExtension
         {
             services.AddConfigurationTypeManager();
             services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
-            services.AddSingleton<IWaitingHandler, WaitingHandler>();
-            services.AddSingleton<IHostedService>(sp => (IHostedService) sp.GetRequiredService<IWaitingHandler>());
-
-            services.AddSingleton<ITargetSelector, TargetSelector>();
-            services.AddSingleton<IHostedService>(sp => (IHostedService) sp.GetRequiredService<ITargetSelector>());
+            
+            services.AddSingleton<PriorityAwareTargetSelector>();
+            services.AddSingleton<PriorityAwareWaitingHandler>();
+            services.AddSingleton<UnifiedTargetSelector>();
+            services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
+            services.AddSingleton<ITargetSelector>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
+            services.AddSingleton<IWaitingHandler>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
 
             services.AddHostedService<InitializationProvider>();
             // Add prismat communication db connection

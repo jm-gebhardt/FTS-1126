@@ -18,5 +18,6 @@ public class ShortLoopTargetStationEntityConfiguration: IEntityTypeConfiguration
         builder.Property(e => e.Current).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.Primary).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.LockedStations).HasJsonConversion();
+        builder.Ignore(e => e.IsLocked);
     }
 }

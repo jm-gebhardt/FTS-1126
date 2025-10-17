@@ -26,7 +26,7 @@ public class ShortLoopWaitingEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopWaitingHandler>();
 
-        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.Node == null).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
+        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.Node == null).CorrelationId, actionGroup.AssignedAgv!.Value, Times.Once());
     }
 
     [TestMethod]
@@ -44,7 +44,7 @@ public class ShortLoopWaitingEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<AgvPassedShortLoopWaitingHandler>();
 
-        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.Node == null).CorrelationId, actionGroup.AssignedAgv!.Value, actionGroup.CreatedDate, Times.Once());
+        fixture.VerifyActionHandled(actionGroup.Actions.Single(a => a.Target.Node == null).CorrelationId, actionGroup.AssignedAgv!.Value, Times.Once());
     }
 
     [TestMethod]

@@ -27,6 +27,11 @@ public class ShortLoopWeTargetStation
     /// </summary>
     public string Current { get; private set; }
 
+    /// <summary>
+    /// True, if the current target station is locked.
+    /// </summary>
+    public bool IsLocked => LockedStations.Contains(Current);
+
     /// <inheritdoc cref="ShortLoopWeTargetStation"/>>
     [PublicAPI]
     public ShortLoopWeTargetStation(Guid id, string primary, string current)
