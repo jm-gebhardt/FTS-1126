@@ -46,6 +46,7 @@ public class LogEntryFilterable : LogEntry, IFilterable<LogEntry, LogEntryFilter
     public new Guid? StationId { get; init; }
 
     /// <inheritdoc cref="LogEntry"/>>
+    [FilterProperty]
     public new DateTime Timestamp { get; init; }
 
     /// <inheritdoc cref="LogEntry"/>>
