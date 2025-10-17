@@ -25,7 +25,7 @@ public class EfGridAgvPositionRepository(StatisticsDbContext context) : EfReposi
     {
         IQueryable<GridAgvPosition> query = DbSet
             .Where(e => e.GridId == gridId)
-            .Include(e => e.MapAgvPositions)
+            .Include(e => e.MapAgvPositions!.Where(mp => mp.MapId == mapId))
             .Where(e => e.MapAgvPositions!.Any(mp => mp.MapId == mapId))
             .WhereIn(serialNumbers, e => e.SerialNumber)
             .WhereInTimeRange(fromDate, toDate, e => e.Timestamp);
@@ -37,7 +37,7 @@ public class EfGridAgvPositionRepository(StatisticsDbContext context) : EfReposi
     {
         List<ICollection<float>> frequencies = await query
             .GroupBy(e => new { e.XIndex, e.YIndex })
-            .Select(g => new List<float> { g.Key.XIndex, g.Key.YIndex, g.Count() } as ICollection<float>)
+            .Select(g => new List<float> { g.Key.XIndex, g.Key.YIndex, g.Sum(gp => gp.Weight) } as ICollection<float>)
             .ToListAsync();
 
         return new ScalarHeatmap(gridId, mapId, frequencies);

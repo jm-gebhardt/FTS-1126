@@ -13,7 +13,7 @@ public class EfAgvFieldViolationRepository(StatisticsDbContext context) : Heatma
     {
         IQueryable<AgvFieldViolation> query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers);
 
-        var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId);
+        var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId, g => g.Sum(a => a.ViolationCount));
 
         return heatmap;
     }

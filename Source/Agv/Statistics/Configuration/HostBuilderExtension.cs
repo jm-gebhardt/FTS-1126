@@ -59,7 +59,7 @@ public static class HostBuilderExtension
             try
             {
                 services.AddHostedService<InitialGridProvider>();
-                services.AddHostedService<HousekeepingStartup>();
+                services.AddHostedService<Housekeeping>();
                 services.ConfigureServicesMassTransit(context.Configuration, x =>
                 {
                     x.AddBusConsumers();
@@ -109,9 +109,10 @@ public static class HostBuilderExtension
             services.AddConfigurationTypeManager();
             services.AddDbContext<StatisticsDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
-                    m => m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName)));
+                    m => m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName).EnableRetryOnFailure()));
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();
             services.AddTransient<IMapRepository, EfMapRepository>();
+            services.AddTransient<IHouseKeepingRepository, EfHousekeepingRepository>();
             services.AddTransient<IGridRepository, EfGridRepository>();
             services.AddTransient<IAgvFieldViolationRepository, EfAgvFieldViolationRepository>();
             services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();

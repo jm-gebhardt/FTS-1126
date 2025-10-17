@@ -57,6 +57,12 @@ public class GridAgvPosition : ITimestamped
     public DateTime Timestamp { get; init; }
 
     /// <summary>
+    /// The weight of this position compared to other positions. Set by the compression.
+    /// </summary>
+    [PublicAPI]
+    public int Weight { get; } = 1;
+
+    /// <summary>
     /// The list of AgvMapPositions object.
     /// </summary>
     public ICollection<MapAgvPositions>? MapAgvPositions { get; init; }

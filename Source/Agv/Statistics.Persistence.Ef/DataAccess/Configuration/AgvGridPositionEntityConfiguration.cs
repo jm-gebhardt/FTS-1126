@@ -15,5 +15,6 @@ public class AgvGridPositionEntityConfiguration : IEntityTypeConfiguration<GridA
         builder.HasKey(a => a.PositionId);
         builder.Property(m => m.GridId);
         builder.Property(e => e.SerialNumber).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.Weight);
     }
 }

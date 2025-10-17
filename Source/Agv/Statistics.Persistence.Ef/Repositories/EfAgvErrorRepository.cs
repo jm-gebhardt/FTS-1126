@@ -17,7 +17,7 @@ public class EfAgvErrorRepository(StatisticsDbContext context) : HeatmapReposito
             .Where(e => e.ErrorLevel == errorLevel)
             .WhereIf(e => e.ErrorCode == errorCode, errorCode != null);
 
-        var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId);
+        var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId, g => g.Sum(ae => ae.ErrorCount));
 
         return heatmap;
     }

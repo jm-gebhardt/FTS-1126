@@ -14,11 +14,11 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
         <PackageReference Include="Microsoft.Data.SqlClient" />
         <PackageReference Include="System.Text.Json" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" >
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -29,9 +29,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Common.Persistence.Ef\Common.Persistence.Ef.csproj" />
         <ProjectReference Include="..\Statistics.Domain\Statistics.Domain.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Migrations\" />
     </ItemGroup>
     <Target Name="DisableWarnings" BeforeTargets="CoreCompile">
         <ItemGroup>

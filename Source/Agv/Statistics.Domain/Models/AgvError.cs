@@ -44,6 +44,11 @@ public class AgvError : IPositionedEntity
     /// </summary>
     public ErrorCategory ErrorCategory { get; init; }
 
+    /// <summary>
+    /// The amount that this error has happened in an aggregated timeframe.
+    /// </summary>
+    public int ErrorCount { get; init; } = 1;
+
     /// <inheritdoc cref="AgvError"/>>.
     public AgvError(Guid positionId, DateTime timestamp, ErrorLevel level, string code, string type, ErrorCategory category)
     {

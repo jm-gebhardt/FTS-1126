@@ -16,6 +16,7 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
         builder.Property(e => e.PositionId);
         builder.Property(o => o.ErrorCode).HasMaxLength(DbStringLimits.Description);
         builder.Property(o => o.ErrorType).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.ErrorCount);
         builder.HasOne(e => e.Position)
             .WithMany(p => p.AgvErrors) 
             .HasForeignKey(e => e.PositionId)
