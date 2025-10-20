@@ -73,4 +73,10 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// </summary>
     /// <param name="agv">The correlation id of the agv.</param>
     Task<HostOrder?> GetCurrentHostOrderForAgv(Guid agv);
+
+    /// <summary>
+    /// Gets all orders to the specified target.
+    /// </summary>
+    /// <param name="target">The target.</param>
+    Task<List<HostOrder>> GetConsideredOrdersToTarget(string target);
 }

@@ -532,6 +532,18 @@ public class HostOrderCommandHandler(
             await context.RespondAsync(new AssignedDelayedOrder(null));
             return;
         }
+
+        List<HostOrder> ordersToTarget = await hostOrderRepository.GetConsideredOrdersToTarget(droppingHostOrder.Target);
+        
+        bool hasOrdersAhead = ordersToTarget.FindIndex(h => h.CorrelationId == droppingHostOrder.CorrelationId) < ordersToTarget.Count - 1;
+        
+        if (hasOrdersAhead)
+        {
+            logger.LogInformation("{Message}: Host order {OrderCorrelationId} for agv {AgvCorrelationId} has orders ahead that might take Doppelspiel.", nameof(TryAssignDelayedOrderToAgv), droppingHostOrder.CorrelationId, context.Message.CorrelationId);
+            await context.RespondAsync(new AssignedDelayedOrder(null));
+            return;
+        }
+
         List<string>? sources = configuration.DoppelspielPickTargets.GetValueOrDefault(droppingHostOrder.Target);
         if (sources == null) // is not at station supposed to do Doppelspiel
         {

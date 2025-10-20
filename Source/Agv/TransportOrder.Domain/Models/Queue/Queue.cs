@@ -29,7 +29,10 @@ public class Queue
     /// </summary>
     public Guid Id { get; init; }
 
-    private QueueNode? QueueHead => Nodes.MinBy(n => n.Position);
+    /// <summary>
+    /// The queue node at the head of the queue if any.
+    /// </summary>
+    public QueueNode? QueueHead => Nodes.MinBy(n => n.Position);
 
     /// <summary>
     ///  The node at the position from which to dequeue if the queue isn't empty.

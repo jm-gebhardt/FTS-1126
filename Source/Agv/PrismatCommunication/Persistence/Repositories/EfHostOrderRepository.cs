@@ -133,4 +133,21 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                         h.StartedDate != null)
             .OrderByDescending(h => h.StartedDate).FirstOrDefaultAsync();
     }
+
+    /// <inheritdoc />
+    public async Task<List<HostOrder>> GetConsideredOrdersToTarget(string target)
+    {
+        return await _context.Set<HostOrder>()
+            .Where(h => h.CanceledDate == null &&
+                h.FinishedDate == null &&
+                h.StartedDate != null &&
+                h.FailedDate == null &&
+                h.ConsideredForDoppelspielDate != null &&
+                h.Target == target &&
+                h.Actions.Any(a => a.ActionType == ActionType.Drop && a.FinishedDate == null) &&
+                h.Actions.Any(a => a.ActionType == ActionType.Pick && a.FinishedDate != null)
+            )
+            .OrderBy(h => h.ConsideredForDoppelspielDate)
+            .ToListAsync();
+    }
 }

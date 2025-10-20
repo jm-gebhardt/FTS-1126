@@ -196,8 +196,9 @@ public class QueueCommandHandler(
                 logger.LogInformation("Not evacuating empty queue {Queue}", queue.Name);
                 return;
             }
-            var queueHeadNode = queue.Nodes.MinBy(n => n.Position);
+            var queueHeadNode = queue.QueueHead;
             Guid? agv = queueHeadNode?.GetCurrentAgv();
+
             if (agv == null)
             {
                 logger.LogInformation("No agv at head of queue {Queue}", queue.Name);
