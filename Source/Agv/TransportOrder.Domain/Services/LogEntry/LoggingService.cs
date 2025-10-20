@@ -118,7 +118,7 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
     public async Task LogSystem(ILogger logger,int code,  string title, string message, Dictionary<string, object?>? additionalLabels = null)
     {
         const LogLevel severity = LogLevel.Information;
-        var logEntry = await logEntryRepository.AddAsync(Categories.Station, code, severity.ToString(), null, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        var logEntry = await logEntryRepository.AddAsync(Categories.System, code, severity.ToString(), null, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
         logger.LogSystemInformation(code, title, message, additionalLabels);
         await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
     }
