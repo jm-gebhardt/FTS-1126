@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using MassTransit;
 
 namespace Gebhardt.Acc.Common.Extensions;
 
@@ -20,6 +21,16 @@ public static class PartitionerExtension
         where TConsumer : class
     {
         c.Message<TMessage>(x => x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
+        return partitioner;
+    }
+
+    /// <inheritdoc cref="PartitionMessageById{TMessage,TConsumer}"/>
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    public static IPartitioner PartitionMessageByString<TMessage, TConsumer>(this IPartitioner partitioner, IConsumerConfigurator<TConsumer> c)
+        where TMessage : class, CorrelatedBy<string>
+        where TConsumer : class
+    {
+        c.Message<TMessage>(x => x.UsePartitioner(partitioner, p => p.Message.CorrelationId.ToGuid()));
         return partitioner;
     }
 }

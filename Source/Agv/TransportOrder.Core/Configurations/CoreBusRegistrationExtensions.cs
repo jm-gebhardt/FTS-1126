@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -228,7 +229,13 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<DeleteRestrictedArea, RestrictedAreaCommandHandler>(c);
         });
 
-        busRegistrationConfigurator.AddConsumer<QueueCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<QueueCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageByString<EvacuateOrAssignQueueHead, QueueCommandHandler>(c);
+            partitioner.PartitionMessageByString<EvacuateQueueHead, QueueCommandHandler>(c);
+            partitioner.PartitionMessageByString<EvacuateQueue, QueueCommandHandler>(c);
+        });
         busRegistrationConfigurator.AddConsumer<SimulationCommandHandler>();
     }
 
