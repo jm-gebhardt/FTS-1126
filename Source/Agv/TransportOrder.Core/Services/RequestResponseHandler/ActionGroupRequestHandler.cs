@@ -156,6 +156,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<TryReassignActionGroup> context)
     {
         var correlationId = context.Message.CorrelationId;
+        _logger.LogInformation("Trying to reassign action group {ActionGroupCorrelationId} to agv {AssignedAgvCorrelationId}", correlationId, context.Message.AssignedAgv);
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
 
         if (!actionGroup.Actions.Any(a => a is { ActionType: ActionType.Pick, State: ActionState.Started or ActionState.Paused, ShouldSkip: false }))

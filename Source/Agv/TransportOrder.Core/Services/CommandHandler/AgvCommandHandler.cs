@@ -1106,7 +1106,8 @@ public class AgvCommandHandler :
             return;
         }
 
-        _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} was set to busy for action {Action} of group {ActionGroupCorrelationId}", agv.CorrelationId, action.CorrelationId, action.ParentId);
+        _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} was set to busy for action {Action} of group {ActionGroupCorrelationId}, IsQueueing: {IsQueueing}",
+            agv.CorrelationId, action.CorrelationId, actionGroup.CorrelationId, agv.IsQueueing);
         if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Charge) || actionGroup.IsManual)
         {
             await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>

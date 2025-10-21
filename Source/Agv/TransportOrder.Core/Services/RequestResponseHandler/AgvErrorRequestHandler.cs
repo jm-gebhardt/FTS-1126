@@ -45,6 +45,7 @@ public class AgvErrorRequestHandler :
     public async Task Consume(ConsumeContext<SolveResourceBlockingErrors> context)
     {
         (var agvCorrelationId, string user, bool ignoreErrorState) = context.Message;
+        _logger.LogInformation("Received SolveResourceBlockingErrors request for agv {AgvCorrelationId} with ignoreErrorState={IgnoreErrorState}", agvCorrelationId, ignoreErrorState);
         ICollection<NodeLock> nodeLocks = await _nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
         IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         var resourceError = agvErrors.SingleOrDefault(e => e.IsResourceError());
@@ -72,7 +73,7 @@ public class AgvErrorRequestHandler :
         }
 
         await _bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode} });
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode } });
 
         await context.RespondAsync(new Success());
     }
