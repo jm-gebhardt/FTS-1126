@@ -1063,77 +1063,89 @@ public class ActionCommandHandler :
     public async Task Consume(ConsumeContext<SetTargetForAction> context)
     {
         (var actionId, var actionGroupId, Guid? assignedAgv, var targetNodeId) = context.Message;
-
         var cancellationToken = context.CancellationToken;
-        var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
 
-        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
+        Task<GraphNode> targetNodeTask = _agvDb.Graphs.GetNodeAsync(targetNodeId);
+        Task<Domain.Models.ActionGroup.ActionGroup> actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
+        Task<bool> stationIsLockedTask = _actionCommandHelper.StationIsLockedIfExists(targetNodeId);
 
-        var nextAction = actionGroup.Actions.First(a => a.CorrelationId == actionId);
+        await Task.WhenAll(targetNodeTask, actionGroupTask, stationIsLockedTask);
+        var targetNode = targetNodeTask.Result;
+        var actionGroup = actionGroupTask.Result;
+        bool stationIsLocked = stationIsLockedTask.Result;
 
-        var currentAction = actionGroup.GetPreviousAction(actionId);
+        var targetAction = actionGroup.Actions.First(a => a.CorrelationId == actionId);
+        var previousAction = actionGroup.GetPreviousAction(actionId);
 
-        bool stationIsLocked = await _actionCommandHelper.StationIsLockedIfExists(targetNodeId);
-        bool shouldUpdate = !stationIsLocked && currentAction is { State: ActionState.Started } && assignedAgv != null;
-        if (nextAction.State == ActionState.Started || !nextAction.IsIncomplete)
+        var actionToUpdate = targetAction;
+        bool shouldUpdateAction = !stationIsLocked && assignedAgv != null;
+
+        bool canUpdatePreviousActionInstead = targetAction is { State: ActionState.Created, IsIncomplete: true } &&
+                                              previousAction?.State != ActionState.Completed && previousAction?.ActionType == ActionType.Move;
+        if (canUpdatePreviousActionInstead)
         {
-            // Reset of previously set action target: no next action needs to be skipped, i.e. next action is current action
-            currentAction = nextAction;
-            shouldUpdate = !stationIsLocked && assignedAgv != null;
+            // Update the previous move action to directly finish the job and skip the following action
+            actionToUpdate = previousAction!;
         }
+        shouldUpdateAction &= actionToUpdate.State == ActionState.Started;
 
         Agv? agv = null;
         Route? route = null;
-        if (shouldUpdate)
+
+        if (shouldUpdateAction)
         {
             agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
             route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
-            if (currentAction?.CorrelationId == nextAction.CorrelationId)
+
+            if (actionToUpdate.CorrelationId == targetAction.CorrelationId)
             {
                 actionGroup.SetTargetForAction(actionId, targetNode, route);
             }
             else
             {
-                currentAction = actionGroup.SetTargetForActionWithUpdate(actionId, targetNode, route);
+                actionToUpdate = actionGroup.SetTargetForActionWithUpdate(actionId, targetNode, route);
             }
-            bool startNodeIsStation = await GetStartNodeIsStation(currentAction);
+            bool startNodeIsStation = await GetStartNodeIsStation(actionToUpdate);
             bool? previousActionGroupDockFront = null;
-            if (currentAction.IsFirstAction)
+            if (actionToUpdate.IsFirstAction)
             {
-                // For diagnosing DockFront of the first action of the group we need the docking direction of the last completed action
                 previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agv.CorrelationId, actionGroup.CorrelationId);
             }
             DockingDirection? nodeDockingDirection = (await _agvDb.Graphs.GetNodeAsync(targetNodeId)).DockingDirection;
-            actionGroup.SetDockFrontOfAction(currentAction.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
-            actionGroup.SetCargoLiftHeightForAction(currentAction.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
+            actionGroup.SetDockFrontOfAction(actionToUpdate.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
+            actionGroup.SetCargoLiftHeightForAction(actionToUpdate.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
 
-        actionGroup.SetTargetForAction(actionId, targetNode, shouldUpdate ? route : null);
+        actionGroup.SetTargetForAction(actionId, targetNode, route);
 
         await _actionGroupRepository.UpdateAsync(actionGroup);
 
         if (assignedAgv != null)
         {
-            if (shouldUpdate)
+            if (shouldUpdateAction)
             {
-                var mappedAction = _mapper.Map<MessageAgvAction>(currentAction);
-                await context.Publish(new UpdateActionCommand((Guid) assignedAgv, agv!.SerialNumber, mappedAction), cancellationToken);
+                var mappedAction = _mapper.Map<MessageAgvAction>(actionToUpdate);
+                await context.Publish(new UpdateActionCommand(assignedAgv.Value, agv!.SerialNumber, mappedAction), cancellationToken);
             }
             else
             {
-                await context.Publish(new AgvBecameIdle(assignedAgv.Value), cancellationToken);
+                if (previousAction?.State != ActionState.Started)
+                {
+                    await context.Publish(new AgvBecameIdle(assignedAgv.Value), cancellationToken);
+                }
             }
         }
+
         await context.Publish(new ActionGroupChanged(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId), cancellationToken);
 
         await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderIncomplete, actionGroup.AssignedAgv.GetValueOrDefault(),
             actionGroup.CorrelationId, "Action Target Set",
-            $"Target {targetNode.Name} set for action {nextAction.ActionType} of order {actionGroup.OrderId}",
+            $"Target {targetNode.Name} set for action {targetAction.ActionType} of order {actionGroup.OrderId}",
             new Dictionary<string, object?>
             {
                 { LogLabels.NodeId, targetNode.Name },
-                { LogLabels.ActionType, nextAction.ActionType.ToString() },
+                { LogLabels.ActionType, targetAction.ActionType.ToString() },
                 { LogLabels.OrderId, actionGroup.OrderId }
             });
     }
