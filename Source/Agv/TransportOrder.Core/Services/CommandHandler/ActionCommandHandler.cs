@@ -1097,7 +1097,8 @@ public class ActionCommandHandler :
             agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
             route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
-
+            //Nodes will be overwritten, check before update if the start of the action was a station
+            bool startNodeIsStation = await GetStartNodeIsStation(actionToUpdate);
             if (actionToUpdate.CorrelationId == targetAction.CorrelationId)
             {
                 actionGroup.SetTargetForAction(actionId, targetNode, route);
@@ -1106,7 +1107,7 @@ public class ActionCommandHandler :
             {
                 actionToUpdate = actionGroup.SetTargetForActionWithUpdate(actionId, targetNode, route);
             }
-            bool startNodeIsStation = await GetStartNodeIsStation(actionToUpdate);
+
             bool? previousActionGroupDockFront = null;
             if (actionToUpdate.IsFirstAction)
             {

@@ -34,11 +34,12 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 [TestClass]
 public class ActionCommandHandlerTest
 {
-    private static readonly GraphNode _chargeNode = "Charge-1".ToGraphNode();
+    private const string ChargeNodeName = "Charge-1";
+    private static readonly GraphNode _chargeNode = new(ChargeNodeName.ToGuid(), ChargeNodeName){Type = AgvGraph.NodeType.Charge};
     private const string ParkNodeName = "Park-1";
     private static readonly GraphNode _parkNode = ParkNodeName.ToGraphNode();
     private const string StationNodeName = "Station-1";
-    private static readonly GraphNode _stationNode = StationNodeName.ToGraphNode();
+    private static readonly GraphNode _stationNode = new(StationNodeName.ToGuid(), StationNodeName) { Type = AgvGraph.NodeType.PickDrop };
 
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_ValidData_Publishes_StartActionCommandAndActionGroupChanged()
@@ -1758,6 +1759,41 @@ public class ActionCommandHandlerTest
             ag.Actions[2].Target.Node!.Name == _parkNode.Name)), Times.Once);
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_SetTargetForAction_Update_StartFromCharger_DockfrontSet()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Created,
+            moveActionState: ActionState.Started);
+        actionGroup.Actions[0].InfoToAgv = new Dictionary<InfoToAgvKey, string>();
+        var nodes = new List<GraphNode> { _chargeNode, "Node2".ToGraphNode() };
+        var edges = new[] { Guid.NewGuid() };
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup)
+            .AddAgv(agv)
+            .WithNode(nodes.Concat([_stationNode]).ToArray())
+            .AddRoute(nodes: nodes.Skip(1).Select(n => n.Name).Concat([_stationNode.Name]).ToArray(), edges: edges)
+            .WithLastActionDockFront(true);
+
+        var incompleteAction = actionGroup.Actions.First(a => a.IsIncomplete);
+        var moveAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Move);
+        const bool moveDockFront = false;
+        moveAction.Edges = edges;
+        moveAction.Nodes = nodes.ToArray();
+        moveAction.SetDockFrontValue(moveDockFront);
+
+        await fixture.PublishMessageAsync(new SetTargetForAction(incompleteAction.CorrelationId, actionGroup.CorrelationId, actionGroup.AssignedAgv, _stationNode.Id));
+
+        await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        
+        var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
+        updateActionCommand.Action.CorrelationId.ShouldBe(moveAction.CorrelationId);
+        updateActionCommand.Action.InfoToAgv!.GetDockFront().ShouldBe(moveDockFront);
     }
 
     [TestMethod]
