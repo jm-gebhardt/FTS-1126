@@ -29,6 +29,11 @@ public class TriggerRequestHandlerTestFixture<TMessage> : MediatorTestFixture<TM
 
     private MockConsumer ConsumerMock { get; set; } = null!;
 
+    public TriggerRequestHandlerTestFixture()
+    {
+        _graphRepository.Setup(x => x.ThrowIfNodeNotExistsAsync(It.IsAny<Guid?>())).ThrowsAsync(new NodeNotFoundException(nodeId: null));
+    }
+
     public new TriggerRequestHandlerTestFixture<TMessage> Build()
     {
         AddServices(s =>
@@ -71,9 +76,9 @@ public class TriggerRequestHandlerTestFixture<TMessage> : MediatorTestFixture<TM
     {
         _graphRepository.Setup(x => x.EdgeExistsAsync(It.IsAny<Guid>())).ReturnsAsync(exists);
         _graphRepository.Setup(x => x.NodeExistsByIdAsync(It.IsAny<Guid>())).ReturnsAsync(exists);
-        if (!exists)
+        if (exists)
         {
-            _graphRepository.Setup(x => x.ThrowIfNodeNotExistsAsync(It.IsAny<Guid>())).ThrowsAsync(new NodeNotFoundException(Guid.Empty));
+            _graphRepository.Setup(x => x.ThrowIfNodeNotExistsAsync(It.IsAny<Guid?>()));
         }
         return this;
     }

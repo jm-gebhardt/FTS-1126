@@ -84,7 +84,10 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             throw new TriggerAssignmentFailedException("More then one location set: only one of edge id, node id, or polygon must be provided");
         }
 
-        await graphRepository.ThrowIfNodeNotExistsAsync(nodeId);
+        if (nodeId != null)
+        {
+            await graphRepository.ThrowIfNodeNotExistsAsync(nodeId);
+        }
 
         if (edgeId != null && !await graphRepository.EdgeExistsAsync(edgeId.Value))
         {

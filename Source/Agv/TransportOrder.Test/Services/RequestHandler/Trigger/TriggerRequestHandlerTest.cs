@@ -383,7 +383,7 @@ public class TriggerRequestHandlerTest
 
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
-            .WithGraphElementExists(true)
+            .WithGraphElementExists(false)
             .WithMapExists(true)
             .WithLocationResponse(polygonLocation)
             .Build();
