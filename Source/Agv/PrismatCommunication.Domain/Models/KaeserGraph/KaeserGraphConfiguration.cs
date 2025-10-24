@@ -178,6 +178,11 @@ public class KaeserGraphConfiguration
     public string GetDoppelspielDropTargetForPick(string pickTarget) => DoppelspielPickTargets.FirstOrDefault(kv => kv.Value.Contains(pickTarget)).Key ?? string.Empty;
 
     /// <summary>
+    /// Get the drop targets corresponding to the given pick target.
+    /// </summary>
+    public string[] GetDoppelspielDropTargetsForPick(string pickTarget) => DoppelspielPickTargets.Where(kv => kv.Value.Contains(pickTarget)).Select(d => d.Key).ToArray();
+
+    /// <summary>
     /// Get the pick target corresponding to the given drop target.
     /// </summary>
     /// <param name="dropTarget"></param>

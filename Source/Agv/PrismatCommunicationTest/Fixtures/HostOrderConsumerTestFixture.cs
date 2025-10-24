@@ -137,6 +137,12 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
+    public HostOrderConsumerTestFixture<TConsumer> WithUnmatchedDropOrder(HostOrder? hostOrder)
+    {
+        HostOrderRepositoryMock.Setup(x => x.GetNextUnmatchedDoppelspielDrop(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<string>>(), It.IsAny<Guid?>())).ReturnsAsync(hostOrder);
+        return this;
+    }
+
     public HostOrderConsumerTestFixture<TConsumer> WithValidationError((int ErrorCode, string ErrorInfo)? error)
     {
         _validationService.Setup(x => x.ValidateAsync(It.IsAny<HostOrder>())).ReturnsAsync(error);
@@ -145,7 +151,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
 
     public HostOrderConsumerTestFixture<TConsumer> WithDropOrderEligibleForDoppelSpiel(Guid? correlationId)
     {
-        HostOrderRepositoryMock.Setup(x => x.GetNextDropOrderEligibleForDoppelspiel(It.IsAny<string>())).ReturnsAsync(correlationId);
+        HostOrderRepositoryMock.Setup(x => x.GetNextDropOrderEligibleForDoppelspiel(It.IsAny<string[]>())).ReturnsAsync(correlationId);
         return this;
     }
 

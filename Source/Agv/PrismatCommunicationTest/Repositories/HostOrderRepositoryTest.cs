@@ -75,7 +75,7 @@ public class HostOrderRepositoryTest
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(doppelspielPartnerCandidate, notStartedOrderPickOrder, unfinishedPickOrder, notConsideredForDoppelspielOrder);
         await fixture.Repository.SaveAsync();
-        (await fixture.Repository.GetNextDropOrderEligibleForDoppelspiel(doppelspielPartnerCandidate.Target)).ShouldBe(doppelspielPartnerCandidate.CorrelationId);
+        (await fixture.Repository.GetNextDropOrderEligibleForDoppelspiel(OrderGenerator.KaeserConfiguration.PrismatOutputLanes.ToArray())).ShouldBe(doppelspielPartnerCandidate.CorrelationId);
     }
 
     [TestMethod]
@@ -209,14 +209,20 @@ public class HostOrderRepositoryTest
         (await fixture.Repository.GetNextPickForSources([startedPickAtSource.Source])).ShouldBeNull();
     }
 
+    [DataRow(true)]
+    [DataRow(false)]
     [TestMethod]
-    public async Task GetNextUnmatchedDoppelspielPick_AllPicksAreMatched_ReturnsNull()
+    public async Task GetNextUnmatchedDoppelspielPick_AllPicksAreMatched_ReturnsNull(bool started)
     {
         var pickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
         pickAtSource.RegisterDoppelspiel(ActionType.Pick);
         var dropAtTarget = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
         dropAtTarget.ConsiderForDoppelspiel();
         dropAtTarget.RegisterDoppelspiel(ActionType.Drop);
+        if (started)
+        {
+            dropAtTarget.Start(DateTime.UtcNow, Guid.NewGuid());
+        }
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(pickAtSource, dropAtTarget);
         await fixture.Repository.SaveAsync();
@@ -247,6 +253,51 @@ public class HostOrderRepositoryTest
         fixture.Repository.AddRange(pickAtSource, dropAtTarget);
         await fixture.Repository.SaveAsync();
         (await fixture.Repository.GetNextUnmatchedDoppelspielPick([pickAtSource.Source], [dropAtTarget.Target], dropAtTarget.AssignedAgv!.Value))?.OrderId.ShouldBe(pickAtSource.OrderId);
+    }
+
+    [DataRow(true)]
+    [DataRow(false)]
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielDrop_AllDropAreMatched_ReturnsNull(bool started)
+    {
+        var pickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        pickAtSource.RegisterDoppelspiel(ActionType.Pick);
+        var dropAtTarget = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        dropAtTarget.ConsiderForDoppelspiel();
+        dropAtTarget.RegisterDoppelspiel(ActionType.Drop);
+        if (started)
+        {
+            dropAtTarget.Start(DateTime.UtcNow, Guid.NewGuid());
+        }
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(pickAtSource, dropAtTarget);
+        await fixture.Repository.SaveAsync();
+        (await fixture.Repository.GetNextUnmatchedDoppelspielDrop([pickAtSource.Source], [dropAtTarget.Target], Guid.NewGuid())).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielDrop_UnmatchedDrop_ReturnsDropOrder()
+    {
+        var pickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        pickAtSource.IsQueued = true;
+        var dropAtTarget = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        dropAtTarget.Start(DateTime.UtcNow, Guid.NewGuid());
+        dropAtTarget.RegisterDoppelspiel(ActionType.Drop);
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(pickAtSource, dropAtTarget);
+        await fixture.Repository.SaveAsync();
+        (await fixture.Repository.GetNextUnmatchedDoppelspielDrop([pickAtSource.Source], [dropAtTarget.Target], dropAtTarget.AssignedAgv!.Value))?.OrderId.ShouldBe(dropAtTarget.OrderId);
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielDrop_NoDrop_ReturnsNull()
+    {
+        var pickAtSource = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        var dropAtTarget = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        var fixture = new HostOrderRepositoryTestFixture();
+        fixture.Repository.AddRange(pickAtSource);
+        await fixture.Repository.SaveAsync();
+        (await fixture.Repository.GetNextUnmatchedDoppelspielDrop([pickAtSource.Source], [dropAtTarget.Target], Guid.NewGuid())).ShouldBeNull();
     }
 
     [TestMethod]

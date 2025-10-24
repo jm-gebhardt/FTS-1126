@@ -63,7 +63,7 @@ public class QueueCommandHandlerTest
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: Guid.NewGuid());
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([queueActionGroup]);
+            .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, 0);
         await fixture.TestHarness.Bus.Publish(command);
@@ -101,7 +101,7 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateEmptyQueue();
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([]);
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
         await fixture.TestHarness.Bus.Publish(command);
@@ -118,7 +118,7 @@ public class QueueCommandHandlerTest
         var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([])
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter]);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
@@ -151,7 +151,7 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([])
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([]);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
@@ -182,7 +182,7 @@ public class QueueCommandHandlerTest
 
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([queueActionGroup]);
+            .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
         await fixture.TestHarness.Bus.Publish(command);
@@ -197,7 +197,7 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateEmptyQueue();
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([]);
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
         await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
@@ -214,7 +214,7 @@ public class QueueCommandHandlerTest
         var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([])
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -248,7 +248,7 @@ public class QueueCommandHandlerTest
         var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
-            .WithActionGroups([])
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -266,7 +266,7 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([])
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -299,7 +299,7 @@ public class QueueCommandHandlerTest
 
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
-            .WithActionGroups([queueActionGroup])
+            .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
@@ -320,7 +320,27 @@ public class QueueCommandHandlerTest
 
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
-            .WithActionGroups([queueActionGroup])
+            .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value)
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_PreviousOrderToAssign_DoesNotPublishTryAssignDelayedOrderToAgv()
+    {
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Free, NodeLockState.Free, NodeLockState.Reserved]);
+        Guid? agv = queue.Head?.GetCurrentAgv();
+        var previousActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, destination:"APL1");
+
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueue(queue)
+            .WithActionGroups([previousActionGroup], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");

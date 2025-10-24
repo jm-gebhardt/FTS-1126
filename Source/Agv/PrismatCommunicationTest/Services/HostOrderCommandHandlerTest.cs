@@ -602,7 +602,7 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartner_PublishesQueueActionGroup()
+    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartnerForDrop_PublishesQueueActionGroup()
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
 
@@ -624,7 +624,29 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartner_StationIsOccupied_OrderLikelyReportedToConveyor_PublishesQueueActionGroup()
+    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartnerForPick_UnregistersDoppelspielDrop()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+
+        var doppelspielPartner = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        hostOrder.RegisterDoppelspiel(ActionType.Pick);
+        doppelspielPartner.RegisterDoppelspiel(ActionType.Drop);
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder])
+            .WithUnmatchedDropOrder(doppelspielPartner)
+            .WithinAklAgvLimit(true);
+
+        var command = new AbortHostOrder(hostOrder.CorrelationId);
+        await fixture.PublishMessageAsync(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        hostOrder.CanceledDate.ShouldNotBeNull();
+        doppelspielPartner.Pick?.DoppelspielPartner.ShouldBeNull();
+        doppelspielPartner.Pick?.IsRegisteredForDoppelspiel.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartnerForDrop_StationIsOccupied_OrderLikelyReportedToConveyor_PublishesQueueActionGroup()
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
 
@@ -644,7 +666,7 @@ public class HostOrderCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartner_StationIsOccupied_AklAgvLimitUnused_PublishesQueueActionGroup()
+    public async Task Consume_AbortHostOrder_HasNotQueuedDoppelspielpartnerForDrop_StationIsOccupied_AklAgvLimitUnused_PublishesQueueActionGroup()
     {
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
 

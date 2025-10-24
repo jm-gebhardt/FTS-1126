@@ -133,7 +133,7 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
     public async Task Consume(ConsumeContext<ActionGroupCanceled> context)
     {
         var (_, correlationId, _) = context.Message;
-
+        logger.LogInformation("Action group cancelled {ActionGroupCorrelationId}", correlationId);
         await context.Publish(new AbortHostOrder(correlationId));
     }
 }

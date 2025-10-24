@@ -204,12 +204,24 @@ public class QueueCommandHandler(
                 return;
             }
 
-            // Agv is already about to get evacuated, assignment to order may be to late
+            // Agv is already about to get evacuated, assignment to order may be too late
             ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTargetId);
             if (queueActionGroups.Any(q => q.AssignedAgv == agv))
             {
                 logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists, not evacuating or assigning", agv);
                 return;
+            }
+
+            if (queueHeadNode?.OccupiedAgv == null) // if the head is only reserved, not occupied
+            {  
+                // If the agv reserved for the queue head has already been assigned to a pick at station, do not evacuate or try to assign to another one,
+                // it will run the other one, once reaching the queue head
+                ICollection<Domain.Models.ActionGroup.ActionGroup> picksAtStation = await actionGroupRepository.GetCurrentActionGroupsToTarget(stationName.ToGuid());
+                if (picksAtStation.Any(p => p.AssignedAgv == agv))
+                {
+                    logger.LogInformation("Agv {AgvCorrelationId} at queue head already assigned to pick at {Station}, not evacuating or assigning", agv, stationName);
+                    return;
+                }
             }
 
             if (await TryAssignHeadToOrder(context, triggeringAgv, agv, stationName))

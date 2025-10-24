@@ -78,10 +78,32 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
         return this;
     }
 
-    public QueueCommandHandlerTestFixture WithActionGroups(ICollection<ActionGroup> actionGroups)
+    public QueueCommandHandlerTestFixture WithActionGroups(ICollection<ActionGroup> picks, ICollection<ActionGroup> evacuationMoves, Guid station, Guid evacuationTarget)
     {
-        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
-        foreach (var actionGroup in actionGroups)
+        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>())).ReturnsAsync((Guid s) =>
+        {
+            if (s == station)
+            {
+                return picks;
+            }
+            if (s == evacuationTarget)
+            {
+                return evacuationMoves;
+            }
+            return [];
+        });
+        foreach (var actionGroup in picks)
+        {
+            foreach (var action in actionGroup.Actions)
+            {
+                var targetNode = action.Target.Node;
+                if (targetNode != null)
+                {
+                    _agvDb.AddNode(targetNode);
+                }
+            }
+        }
+        foreach (var actionGroup in evacuationMoves)
         {
             foreach (var action in actionGroup.Actions)
             {
