@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -14,6 +13,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
 using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Microsoft.Extensions.Logging;
 

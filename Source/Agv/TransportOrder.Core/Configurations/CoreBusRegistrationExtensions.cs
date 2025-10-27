@@ -75,6 +75,8 @@ public static class CoreBusRegistrationExtensions
         RegisterTriggerHandlers(busRegistrationConfigurator);
 
         busRegistrationConfigurator.AddConsumer<MetricsCollectionEventHandler>();
+        busRegistrationConfigurator.AddConsumer<LogEntryEventHandler>();
+        busRegistrationConfigurator.AddConsumer<LogEntryCommandHandler>();
 
         return busRegistrationConfigurator;
     }

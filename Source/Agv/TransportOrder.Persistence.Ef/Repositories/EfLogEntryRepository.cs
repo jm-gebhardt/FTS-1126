@@ -31,12 +31,19 @@ public class EfLogEntryRepository : ILogEntryRepository
     /// <inheritdoc cref="ILogEntryRepository"/>>
     public async Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> variables)
     {
+        Dictionary<string, string> vars = variables.ToDictionary(
+            v => v.Key,
+            v => v.Value?.ToString() ?? string.Empty
+        );
+
+        return await AddAsync(logCategory, logCode, logLevel, agvCorrelationId, actionGroupCorrelationId, stationId, timestamp, vars);
+    }
+
+    private async Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, string> variables)
+    {
         var logEntry = new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId)
         {
-            Variables = variables.ToDictionary(
-                v => v.Key,
-                v => v.Value?.ToString() ?? string.Empty
-            )
+            Variables = variables
         };
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();

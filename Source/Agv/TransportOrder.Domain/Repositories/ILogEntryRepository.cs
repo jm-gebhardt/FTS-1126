@@ -23,7 +23,7 @@ public interface ILogEntryRepository
     /// <param name="variables">The additional variables provided.</param>
     /// <returns>True, of the entry has been added.</returns>
     Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> variables);
-
+    
     /// <summary>
     /// Get filtered log entries.
     /// </summary>

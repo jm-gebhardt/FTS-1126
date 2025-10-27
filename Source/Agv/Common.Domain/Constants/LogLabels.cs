@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Constants;
+﻿namespace Gebhardt.Acc.Common.Domain.Constants;
 
 /// <summary>
 /// Provides log labels
@@ -25,5 +25,9 @@ public static class LogLabels
     public const string MaintenanceType = "MaintenanceType";
     public const string MaintenanceComment = "MaintenanceComment";
     public const string MaintenanceExecutionDate = "MaintenanceExecutionDate";
+    public const string ActionId = "ActionId";
+    public const string OriginalActionId = "OriginalActionId";
+    public const string StationName = "StationName";
+    public const string OriginalActionType = "OriginalActionType";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

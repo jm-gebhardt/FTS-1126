@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Constants;
+﻿namespace Gebhardt.Acc.Common.Domain.Constants;
 
 /// <summary>
 /// Provides static log codes 
@@ -48,6 +48,12 @@ public static class LogCodes
     public const int AgvRemoveFromZone = 327;
     public const int AgvRemoveFromNode = 328;
     public const int AgvOperatorInteraction = 329;
+    public const int AgvSentActionStarted = 330;
+    public const int AgvSentActionCompleted = 331;
+    public const int AgvSentActionCanceled = 332;
+    public const int AgvSentActionCancelFailed = 333;
+    public const int AgvSentActionUpdated = 334;
+    public const int AgvSentActionFailed = 335;
 
     // Order
     public const int OrderCreated = 100;
@@ -68,7 +74,13 @@ public static class LogCodes
     public const int OrderQueued = 115;
     public const int OrderTargetSet = 116;
     public const int OrderOperatorInteraction = 117;
-
+    public const int AgvSentActionStartedForOrder = 118;
+    public const int AgvSentActionCompletedForOrder = 119;
+    public const int AgvSentActionCanceledForOrder = 120;
+    public const int AgvSentActionCancelFailedForOrder = 121;
+    public const int AgvSentActionUpdatedForOrder = 122;
+    public const int AgvSentActionFailedForOrder = 123;
+    
     //Station
     public const int StationStateChanged = 400;
     public const int StationAgvDropping = 401;
