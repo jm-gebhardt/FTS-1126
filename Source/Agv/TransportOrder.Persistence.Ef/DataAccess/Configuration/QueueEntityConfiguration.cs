@@ -22,6 +22,8 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
         builder.Ignore(e => e.Tail);
         builder.Ignore(e => e.Agvs);
 
+        builder.Property(q => q.ConsideredAgvs).HasJsonConversion();
+
         builder.OwnsMany(q => q.Nodes, nodeBuilder =>
         {
             nodeBuilder.WithOwner().HasForeignKey("QueueId");

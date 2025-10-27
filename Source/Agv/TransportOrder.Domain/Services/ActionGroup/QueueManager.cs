@@ -156,6 +156,9 @@ public class QueueManager(
             logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
             return (null, null);
         }
+
+        queue.ConsideredAgvs.Remove(agvCorrelationId);
+
         if (await queueRepository.UpdateQueueAsync(queue))
         {
             logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
@@ -179,6 +182,7 @@ public class QueueManager(
             return (null, null);
         }
         queue.RemoveAgv(agvCorrelationId);
+        queue.ConsideredAgvs.Remove(agvCorrelationId);
         await queueRepository.UpdateQueueAsync(queue);
         logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName}", agvCorrelationId, queue.Name);
         return (new Dictionary<Guid, Guid>(), queue.AgvFillQuantity);

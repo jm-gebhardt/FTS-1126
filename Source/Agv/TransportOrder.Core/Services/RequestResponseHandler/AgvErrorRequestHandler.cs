@@ -69,7 +69,7 @@ public class AgvErrorRequestHandler :
 
         if (hasQueueBlockingError)
         {
-            await _bus.Publish(new RemoveAgvFromQueue(agvCorrelationId));
+            await _bus.Publish(new RemoveAgvFromQueue(agvCorrelationId, true));
         }
 
         await _bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));

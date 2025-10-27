@@ -15,6 +15,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Queue;
 
@@ -64,10 +65,28 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
     public QueueCommandHandlerTestFixture WithQueue(TransportOrder.Domain.Models.Queue.Queue queue)
     {
         _queueRepository.Setup(x => x.GetQueueByName(It.IsAny<string>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueueById(It.IsAny<Guid>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueues()).ReturnsAsync([queue]);
         foreach (var queueNode in queue.Nodes)
         {
             var graphNode = Mapper.Map<GraphNode>(queueNode.Node);
             _agvDb.AddNode(graphNode);
+        }
+        return this;
+    }
+
+    public QueueCommandHandlerTestFixture WithQueues(List<TransportOrder.Domain.Models.Queue.Queue> queues)
+    {
+        _queueRepository.Setup(x => x.GetQueues()).ReturnsAsync(queues);
+        foreach (var queue in queues)
+        {
+            _queueRepository.Setup(x => x.GetQueueByName(queue.Name)).ReturnsAsync(queue);
+            _queueRepository.Setup(x => x.GetQueueById(queue.Id)).ReturnsAsync(queue);
+            foreach (var queueNode in queue.Nodes)
+            {
+                var graphNode = Mapper.Map<GraphNode>(queueNode.Node);
+                _agvDb.AddNode(graphNode);
+            }
         }
         return this;
     }
@@ -121,5 +140,10 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
     {
         _actionGroupRepository.Setup(x => x.GetNotStartedActionGroupsToTargetsForAgv(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync((Guid _, ICollection<Guid> targets) => { return actionGroups.Where(a => a.GetTargets().Intersect(targets).Count() != 0).ToList(); });
         return this;
+    }
+
+    public void ShouldHaveUpdatedQueue(Guid queueId)
+    {
+        Should.NotThrow(() => _queueRepository.Verify(qr => qr.UpdateQueueAsync(It.Is<TransportOrder.Domain.Models.Queue.Queue>(q => q.Id == queueId))));
     }
 }

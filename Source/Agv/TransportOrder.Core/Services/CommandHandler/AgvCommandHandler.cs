@@ -34,6 +34,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Utilities;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -1821,7 +1822,22 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         bool removed = false;
-        await _queueSemaphoreProvider.ExecuteLockedAsync(async () => { removed = await TryEscapeQueue(context, agv, Guid.Empty); });
+        await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            if (context.Message.AlsoRemoveFromConsideration)
+            {
+                List<Queue> queues = (await _queueRepository.GetQueues()).Where(q => q.ConsideredAgvs.Contains(agv.CorrelationId)).ToList();
+
+                foreach (var queue in queues)
+                {
+                    queue.ConsideredAgvs.Remove(agv.CorrelationId);
+                }
+
+                await Task.WhenAll(queues.Select(_queueRepository.UpdateQueueAsync));
+            }
+
+            removed = await TryEscapeQueue(context, agv, Guid.Empty);
+        });
 
         if (!removed)
         {

@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 
@@ -20,7 +21,7 @@ public class QueueCommandHandlerTest
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue);
 
-        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, 0);
+        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(),0);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueue>();
@@ -48,7 +49,7 @@ public class QueueCommandHandlerTest
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue);
 
-        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, 0);
+        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), 0);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueue>();
@@ -65,7 +66,7 @@ public class QueueCommandHandlerTest
             .WithQueue(queue)
             .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value);
 
-        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, 0);
+        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), 0);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueue>();
@@ -103,7 +104,7 @@ public class QueueCommandHandlerTest
             .WithQueue(queue)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value);
 
-        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
@@ -121,7 +122,7 @@ public class QueueCommandHandlerTest
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter]);
 
-        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
@@ -154,7 +155,7 @@ public class QueueCommandHandlerTest
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([]);
 
-        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(command);
 
         List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
@@ -184,7 +185,7 @@ public class QueueCommandHandlerTest
             .WithQueue(queue)
             .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value);
 
-        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value);
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
@@ -260,6 +261,76 @@ public class QueueCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
     }
 
+    [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_AgvPastQueueHead_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+
+        var agv = Guid.NewGuid();
+        var agvAtQueueHead = queue.Head!.OccupiedAgv!.Value;
+
+        queue.ConsideredAgvs.Push(agv);
+        queue.ConsideredAgvs.Push(agvAtQueueHead);
+
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueue(queue)
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, agv, "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateQueue_AgvPastQueueHead_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+
+        var agv = Guid.NewGuid();
+
+        queue.ConsideredAgvs.Add(agv);
+
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueue(queue)
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, agv, 1);
+        await fixture.PublishMessageAsync<EvacuateQueue, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_EvacuateQueueHead_AgvPastQueueHead_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+
+        var agv = Guid.NewGuid();
+        var agvAtQueueHead = queue.Head!.OccupiedAgv!.Value;
+
+        queue.ConsideredAgvs.Push(agv);
+        queue.ConsideredAgvs.Push(agvAtQueueHead);
+
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueue(queue)
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, agv);
+        await fixture.PublishMessageAsync<EvacuateQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+    
     [TestMethod]
     public async Task Consume_EvacuateOrAssignQueueHead_HeadNodeReserved_NoOrderToAssign_PublishesQueueActionGroup()
     {
@@ -349,5 +420,41 @@ public class QueueCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AddAgvToQueueConsideration_ValidData_AddsToQueueConsideration()
+    {
+        var queue = QueueGenerator.GenerateQueueWithCapacity();
+
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueue(queue);
+
+        var command = new AddAgvToQueueConsideration(Guid.NewGuid(), queue.Id);
+        await fixture.PublishMessageAsync(command);
+
+        await fixture.ShouldHaveConsumedAsync<AddAgvToQueueConsideration>();
+
+        fixture.ShouldHaveUpdatedQueue(queue.Id);
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueueConsideration_ValidData_RemovesFromQueueConsideration()
+    {
+        var queue1 = QueueGenerator.GenerateQueueWithCapacity();
+        var queue2 = QueueGenerator.GenerateQueueWithCapacity();
+
+        var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
+            .WithQueues([queue1, queue2]);
+
+        var command = new RemoveAgvFromQueueConsideration(Guid.NewGuid());
+        await fixture.PublishMessageAsync(command);
+
+        await fixture.ShouldHaveConsumedAsync<RemoveAgvFromQueueConsideration>();
+
+        foreach (var queue in (TransportOrder.Domain.Models.Queue.Queue[])[queue1, queue2])
+        {
+            fixture.ShouldHaveUpdatedQueue(queue.Id);
+        }
     }
 }

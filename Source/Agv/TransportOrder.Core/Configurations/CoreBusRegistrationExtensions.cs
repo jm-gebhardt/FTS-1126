@@ -184,6 +184,7 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
 
         busRegistrationConfigurator.AddConsumer<StationEventHandler>();
+        busRegistrationConfigurator.AddConsumer<QueueEventHandler>();
 
         busRegistrationConfigurator.AddConsumer<StationCommandHandler>(c =>
         {

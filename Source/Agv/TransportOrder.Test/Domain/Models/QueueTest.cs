@@ -91,7 +91,7 @@ public class QueueTest
 
         queue.TryEnterQueue();
         queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
-
+        queue.ConsideredAgvs.ShouldContain(agv);
         targetNode.ShouldBe(tail.NodeId);
         queue.Tail!.Position.ShouldBe(tail.Position + 1);
         queue.Nodes.Single(n => n.NodeId == targetNode).ReservedAgv.ShouldBe(agv);
@@ -101,8 +101,9 @@ public class QueueTest
     public void TryEnqueue_QueueIsFull_ReturnsEntryNode()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-
-        queue.TryEnqueue(Guid.NewGuid(), out Guid? targetNode).ShouldBeTrue();
+        var agv = Guid.NewGuid();
+        queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
+        queue.ConsideredAgvs.ShouldContain(agv);
         targetNode.ShouldBe(queue.EntryNode);
     }
 
@@ -110,8 +111,10 @@ public class QueueTest
     public void TryEnqueue_AgvFillQuantityIsZero_ReturnsFalse()
     {
         var queue = QueueGenerator.GenerateEmptyQueue(size: 0);
+        var agv = Guid.NewGuid();
 
-        queue.TryEnqueue(Guid.NewGuid(), out Guid? targetNode).ShouldBeFalse();
+        queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeFalse();
+        queue.ConsideredAgvs.ShouldNotContain(agv);
         targetNode.ShouldBe(null);
     }
 
@@ -128,6 +131,7 @@ public class QueueTest
 
         queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
 
+        queue.ConsideredAgvs.ShouldContain(agv);
         targetNode.ShouldBe(tail.NodeId);
         queue.AllAgvsEntered.ShouldBeTrue();
         queue.Tail.ShouldBeNull();
@@ -146,6 +150,7 @@ public class QueueTest
         queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
 
         targetNode.ShouldBe(tail.NodeId);
+        queue.ConsideredAgvs.ShouldContain(agv);
         queue.IsFull.ShouldBeFalse();
         queue.Tail!.Position.ShouldBe(tail.Position + 1);
         queue.Nodes.Single(n => n.NodeId == targetNode).ReservedAgv.ShouldBe(agv);
@@ -354,8 +359,10 @@ public class QueueTest
 
         var queue = QueueGenerator.GenerateEmptyQueue();
         queue.TryEnterQueue();
-        queue.TryEnqueue(agv, out Guid? target);
 
+        queue.TryEnqueue(agv, out Guid? target).ShouldBeTrue();
+
+        queue.ConsideredAgvs.ShouldContain(agv);
         queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBe(agv);
 
         queue.ReachNode(target!.Value, agv);
@@ -370,8 +377,9 @@ public class QueueTest
 
         var queue = QueueGenerator.GenerateEmptyQueue();
         queue.TryEnterQueue();
-        queue.TryEnqueue(agv, out Guid? target);
+        queue.TryEnqueue(agv, out Guid? target).ShouldBeTrue();
 
+        queue.ConsideredAgvs.ShouldContain(agv);
         queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBe(agv);
 
         queue.ReachNode("unknown".ToGuid(), agv);
@@ -391,9 +399,12 @@ public class QueueTest
         // agv reaches the queue entry node first
         queue.TryEnqueue(agv, out Guid? downstreamNode);
         queue.Nodes.Single(n => n.NodeId == downstreamNode).ReservedAgv.ShouldBe(agv);
+        queue.ConsideredAgvs.ShouldContain(agv);
+
         // than agvThatDidNotReachNodeYet reaches the queue entry node
         queue.TryEnqueue(agvThatDidNotReachNodeYet, out Guid? upstreamNode);
         queue.Nodes.Single(n => n.NodeId == upstreamNode).ReservedAgv.ShouldBe(agvThatDidNotReachNodeYet);
+        queue.ConsideredAgvs.ShouldContain(agvThatDidNotReachNodeYet);
 
         // agv reaches the queue head
         queue.ReachNode(downstreamNode!.Value, agv);

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
@@ -81,6 +82,12 @@ public class Queue
     /// The agvs in the queue, ordered from entry node to head.
     /// </summary>
     public List<Guid> Agvs => Nodes.OrderByDescending(n => n.Position).Where(n => n.GetCurrentAgv() != null).Select(n => n.GetCurrentAgv()!.Value).ToList();
+
+    /// <summary>
+    /// The agv ids that need to be considered for ordering in this queue. Includes non-queueing agvs.
+    /// The higher the index the farther through the queue the agv is.
+    /// </summary>
+    public RandomAccessStack<Guid> ConsideredAgvs = new();
 
     /// <inheritdoc cref="Queue"/>>
     public Queue(string name)
@@ -177,6 +184,9 @@ public class Queue
             targetNode = null;
             return false;
         }
+
+        ConsideredAgvs.Push(agvCorrelationId);
+
         if (AllAgvsEntered && !IsEnqueued(agvCorrelationId))
         {
             targetNode = EntryNode!.Value;

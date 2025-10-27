@@ -157,7 +157,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
 
     public HostOrderConsumerTestFixture<TConsumer> WithNextPickOrder(HostOrder? hostOrder)
     {
-        HostOrderRepositoryMock.Setup(x => x.GetNextPickForSources(It.IsAny<ICollection<string>>())).ReturnsAsync(hostOrder);
+        HostOrderRepositoryMock.Setup(x => x.GetNextPickForSources(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync(hostOrder);
         return this;
     }
 

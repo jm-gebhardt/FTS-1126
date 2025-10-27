@@ -61,6 +61,8 @@ public static class QueueGenerator
             var graphNode = node.state.NodeId.ToGraphNode();
             queueNode.Node = mapper.Map<EfNode>(graphNode);
         }
+        queue.Nodes.OrderBy(n => n.Position).Where(n => n.OccupiedAgv != null).Select(n => n.OccupiedAgv!.Value).ToList().ForEach(queue.ConsideredAgvs.Add);
+
         return queue;
     }
 }

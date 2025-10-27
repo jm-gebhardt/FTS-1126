@@ -55,7 +55,7 @@ public class DoppelspielTriggerPointEventHandlerTestFixture : MassTransitConsume
 
     public DoppelspielTriggerPointEventHandlerTestFixture WithNextPickOrder(HostOrder? order)
     {
-        _hostOrderRepository.Setup(x => x.GetNextPickForSources(It.IsAny<ICollection<string>>())).ReturnsAsync(order);
+        _hostOrderRepository.Setup(x => x.GetNextPickForSources(It.IsAny<ICollection<string>>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync(order);
         return this;
     }
 

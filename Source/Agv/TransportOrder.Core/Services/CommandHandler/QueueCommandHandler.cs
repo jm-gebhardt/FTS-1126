@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using JetBrains.Annotations;
 using MassTransit;
@@ -34,7 +35,9 @@ public class QueueCommandHandler(
     IConsumer<GetQueueFillQuantities>,
     IConsumer<EvacuateQueue>,
     IConsumer<EvacuateQueueHead>,
-    IConsumer<EvacuateOrAssignQueueHead>
+    IConsumer<EvacuateOrAssignQueueHead>,
+    IConsumer<RemoveAgvFromQueueConsideration>,
+    IConsumer<AddAgvToQueueConsideration>
 {
     /// <summary>
     /// Handles the <see cref="AddQueue"/> command.
@@ -73,7 +76,7 @@ public class QueueCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<EvacuateQueue> context)
     {
-        (string queueName, var evacuationTargetName, int waitingTime) = context.Message;
+        (string queueName, var evacuationTargetName, var triggeringAgv, int waitingTime) = context.Message;
         var evacuationTarget = await agvDb.Graphs.TryGetNodeByIdAsync(evacuationTargetName);
         
         await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
@@ -93,6 +96,12 @@ public class QueueCommandHandler(
                 ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(queue.EntryNode!.Value);
                 List<Guid> queueingAgvs = queueActionGroups.Where(a => a.AssignedAgv.HasValue).Select(a => a.AssignedAgv!.Value).ToList();
                 agvs.AddRange(queueingAgvs);
+            }
+
+            if (!agvs.Any(a => queue.ConsideredAgvs.IsBefore(triggeringAgv, a)))
+            {
+                logger.LogInformation("Agv {TriggeringAgv} triggering evacuation is already past all agvs in the queue; not evacuating", triggeringAgv);
+                return;
             }
 
             foreach (var agv in agvs.Distinct().ToList())
@@ -137,7 +146,7 @@ public class QueueCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<EvacuateQueueHead> context)
     {
-        (string queueName, var evacuationTargetId) = context.Message;
+        (string queueName, var evacuationTargetId, var triggeringAgv) = context.Message;
         var evacuationTarget = await agvDb.Graphs.GetNodeAsync(evacuationTargetId);
         await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -156,6 +165,13 @@ public class QueueCommandHandler(
                 logger.LogInformation("No agv at head of queue {Queue}", queue.Name);
                 return;
             }
+
+            if (queue.ConsideredAgvs.IsBefore(agv.Value, triggeringAgv))
+            {
+                logger.LogInformation("Agv {TriggeringAgv} triggering evacuation is already past queue head {QueueHeadAgv}; not evacuating", triggeringAgv, agv.Value);
+                return;
+            }
+
             ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTargetId);
             if (queueActionGroups.Any(q => q.AssignedAgv == agv))
             {
@@ -197,18 +213,24 @@ public class QueueCommandHandler(
                 return;
             }
             var queueHeadNode = queue.Nodes.MinBy(n => n.Position);
-            Guid? agv = queueHeadNode?.GetCurrentAgv();
-            if (agv == null)
+            Guid? agvAtQueueHead = queueHeadNode?.GetCurrentAgv();
+            if (agvAtQueueHead == null)
             {
                 logger.LogInformation("No agv at head of queue {Queue}", queue.Name);
                 return;
             }
 
+            if (queue.ConsideredAgvs.IsBefore(agvAtQueueHead.Value, triggeringAgv))
+            {
+                logger.LogInformation("Agv {TriggeringAgv} triggering evacuation is already past queue head {QueueHeadAgv}; not evacuating", triggeringAgv, agvAtQueueHead.Value);
+                return;
+            }
+
             // Agv is already about to get evacuated, assignment to order may be too late
             ICollection<Domain.Models.ActionGroup.ActionGroup> queueActionGroups = await actionGroupRepository.GetCurrentActionGroupsToTarget(evacuationTargetId);
-            if (queueActionGroups.Any(q => q.AssignedAgv == agv))
+            if (queueActionGroups.Any(q => q.AssignedAgv == agvAtQueueHead))
             {
-                logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists, not evacuating or assigning", agv);
+                logger.LogInformation("Evacuation moves for agv {AgvCorrelationId} already exists, not evacuating or assigning", agvAtQueueHead);
                 return;
             }
 
@@ -217,14 +239,14 @@ public class QueueCommandHandler(
                 // If the agv reserved for the queue head has already been assigned to a pick at station, do not evacuate or try to assign to another one,
                 // it will run the other one, once reaching the queue head
                 ICollection<Domain.Models.ActionGroup.ActionGroup> picksAtStation = await actionGroupRepository.GetCurrentActionGroupsToTarget(stationName.ToGuid());
-                if (picksAtStation.Any(p => p.AssignedAgv == agv))
+                if (picksAtStation.Any(p => p.AssignedAgv == agvAtQueueHead))
                 {
-                    logger.LogInformation("Agv {AgvCorrelationId} at queue head already assigned to pick at {Station}, not evacuating or assigning", agv, stationName);
+                    logger.LogInformation("Agv {AgvCorrelationId} at queue head already assigned to pick at {Station}, not evacuating or assigning", agvAtQueueHead, stationName);
                     return;
                 }
             }
 
-            if (await TryAssignHeadToOrder(context, triggeringAgv, agv, stationName))
+            if (await TryAssignHeadToOrder(context, triggeringAgv, agvAtQueueHead, stationName, queue))
             {
                 return;
             }
@@ -232,10 +254,10 @@ public class QueueCommandHandler(
             logger.LogInformation("Evacuating head of queue {Queue}", queueName);
             
             List<Guid> queueTargets = queue.NonEntryNodes.Except([queueHeadNode?.NodeId ?? Guid.Empty]).ToList();
-            ICollection<Domain.Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.Value, queueTargets);
+            ICollection<Domain.Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agvAtQueueHead.Value, queueTargets);
             await Task.WhenAll(queueInternalMoves.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag.CorrelationId))));
 
-            logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTargetId, agv);
+            logger.LogInformation("Queuing move action to evacuation node {Node} for agv {Agv}", evacuationTargetId, agvAtQueueHead);
             var actionGroupId = Guid.NewGuid();
             await QueueNewActionGroup(context,
                 [
@@ -245,19 +267,19 @@ public class QueueCommandHandler(
                         actionGroupId)
                 ],
                 Queue.EvacuationOrderId,
-                agv.Value,
+                agvAtQueueHead.Value,
                 actionGroupId);
         });
     }
 
-    private async Task<bool> TryAssignHeadToOrder(ConsumeContext<EvacuateOrAssignQueueHead> context, Guid triggeringAgv, [DisallowNull] Guid? agv, string stationName)
+    private async Task<bool> TryAssignHeadToOrder(ConsumeContext<EvacuateOrAssignQueueHead> context, Guid triggeringAgv, [DisallowNull] Guid? agv, string stationName, Queue queue)
     {
         var targetStation = await agvDb.Graphs.GetNodeAsync(stationName.ToGuid());
         bool headRunsOrder = false;
         try
         {
             IRequestClient<TryAssignDelayedOrderToAgv>? requestClient = context.CreateRequestClient<TryAssignDelayedOrderToAgv>(bus);
-            Response<AssignedDelayedOrder> response = await requestClient.GetResponse<AssignedDelayedOrder>(new TryAssignDelayedOrderToAgv(triggeringAgv, agv.GetValueOrDefault(), targetStation));
+            Response<AssignedDelayedOrder> response = await requestClient.GetResponse<AssignedDelayedOrder>(new TryAssignDelayedOrderToAgv(triggeringAgv, agv.GetValueOrDefault(), targetStation, queue.ConsideredAgvs.After(agv.GetValueOrDefault()).ToList()));
             headRunsOrder = response.Message.CorrelationId != null;
             if (!headRunsOrder)
             {
@@ -269,5 +291,33 @@ public class QueueCommandHandler(
             logger.LogWarning("Did not get response to {RequestName} request: {Exception}", nameof(TryAssignDelayedOrderToAgv), ex);
         }
         return headRunsOrder;
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<RemoveAgvFromQueueConsideration> context)
+    {
+        await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            ICollection<Queue> queues = await queueRepository.GetQueues();
+
+            foreach (var queue in queues)
+            {
+                queue.ConsideredAgvs.Remove(context.Message.CorrelationId);
+            }
+            await Task.WhenAll(queues.Select(queueRepository.UpdateQueueAsync));
+        });
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AddAgvToQueueConsideration> context)
+    {
+        await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            var queue = await queueRepository.GetQueueById(context.Message.QueueId);
+
+            queue.ConsideredAgvs.Push(context.Message.CorrelationId);
+
+            await queueRepository.UpdateQueueAsync(queue);
+        });
     }
 }

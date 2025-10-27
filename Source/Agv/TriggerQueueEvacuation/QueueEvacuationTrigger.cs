@@ -73,7 +73,7 @@ public class QueueEvacuationTrigger(IBus bus, ILogger<QueueEvacuationTrigger> lo
         string queueName = GetQueueName(parameters);
         var evacuationNode = GetEvacuationNode(parameters).ToGuid();
         logger.LogInformation("Trigger evacuation of queue {QueueName} to node {EvacuationNode} for agv {AgvCorrelationId}", queueName, evacuationNode, agvStatus.CorrelationId);
-        await bus.Publish(new EvacuateQueue(queueName, evacuationNode));
+        await bus.Publish(new EvacuateQueue(queueName, evacuationNode, agvStatus.CorrelationId));
     }
 
     private bool ShouldEvacuate(Dictionary<string, ConfigurationParameter> parameters)

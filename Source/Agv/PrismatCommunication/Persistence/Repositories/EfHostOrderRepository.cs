@@ -77,14 +77,17 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
-    public async Task<HostOrder?> GetNextPickForSources(ICollection<string> sources)
+    public async Task<HostOrder?> GetNextPickForSources(ICollection<string> sources, ICollection<Guid>? agvsToIgnore = null)
     {
+        agvsToIgnore ??= [];
+
         return await _context.Set<HostOrder>().Where(
                 h => !h.IsQueued &&
                      h.CanceledDate == null &&
                      h.FinishedDate == null &&
                      h.StartedDate == null &&
-                     h.FailedDate == null &&
+                     h.FailedDate == null && 
+                     !(h.AssignedAgv == null || agvsToIgnore.Contains(h.AssignedAgv.Value)) &&
                      h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
             .OrderBy(h => h.CreatedDate)
             .FirstOrDefaultAsync();

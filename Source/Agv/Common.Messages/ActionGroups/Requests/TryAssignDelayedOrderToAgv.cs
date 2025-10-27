@@ -9,4 +9,5 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 /// <param name="CorrelationId">The correlation id of the agv, that triggered the delay of the order.</param>
 /// <param name="AssignableAgv">The correlation id of the agv to be assigned to the order.</param>
 /// <param name="PickStation">The pick station of the delayed order.</param>
-public record TryAssignDelayedOrderToAgv(Guid CorrelationId, Guid AssignableAgv, GraphNode PickStation) : CorrelatedBy<Guid>;
+/// <param name="AgvsAhead">All the agvs ahead of the assignable agv.</param>
+public record TryAssignDelayedOrderToAgv(Guid CorrelationId, Guid AssignableAgv, GraphNode PickStation, ICollection<Guid>? AgvsAhead = null) : CorrelatedBy<Guid>;

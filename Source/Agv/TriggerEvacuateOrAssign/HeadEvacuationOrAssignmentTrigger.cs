@@ -89,7 +89,7 @@ public class HeadEvacuationOrAssignmentTrigger(IBus bus, ILogger<HeadEvacuationO
         } 
        
         logger.LogInformation("Trigger evacuation of head of queue {QueueName} to node {EvacuationNode} for agv {AgvCorrelationId}", queueName, evacuationNode, agvStatus.CorrelationId);
-        await bus.Publish(new EvacuateQueueHead(queueName, evacuationNode));
+        await bus.Publish(new EvacuateQueueHead(queueName, evacuationNode, agvStatus.CorrelationId));
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
