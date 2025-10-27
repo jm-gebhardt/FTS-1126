@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -38,4 +39,10 @@ public record FilteredAgvAction
 
     /// <inheritdoc cref="AgvAction.IsSkipped"/>
     public bool ShouldSkip { get; init; }
+
+    /// <inheritdoc cref="AgvAction.Nodes"/>
+    public GraphNode[] Nodes { get; init; } = null!;
+
+    /// <inheritdoc cref="AgvAction.InfoToAgv"/>
+    public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; init; }
 }

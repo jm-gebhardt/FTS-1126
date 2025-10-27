@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -50,4 +51,10 @@ public record FilteredActionGroup
 
     /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
     public string? HandlingUnit { get; init; }
+
+    /// <inheritdoc cref="ActionGroup.Reasons"/>
+    public List<Reason> Reasons { get; init; } = null!;
+
+    /// <inheritdoc cref="ActionGroup.DoNotPause"/>
+    public bool DoNotPause { get; init; }
 }

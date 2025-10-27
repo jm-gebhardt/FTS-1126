@@ -31,9 +31,14 @@ public record FilteredActionDto
     public FilteredActionTargetDto? Target { get; init; }
 
     /// <summary>
+    /// The node id of the target
+    /// </summary>
+    public string TargetNodeId { get; init; } = null!;
+
+    /// <summary>
     /// The node type of the target.
     /// </summary>
-    public AgvGraph.NodeType TargetNodeType = AgvGraph.NodeType.WayPoint;
+    public AgvGraph.NodeType TargetNodeType { get; init; } = AgvGraph.NodeType.WayPoint;
 
     /// <inheritdoc cref="AgvAction.CreatedDate"/>
     [SwaggerFilterableProperty]
@@ -50,4 +55,13 @@ public record FilteredActionDto
     /// <inheritdoc cref="AgvAction.PausedDate"/>
     [SwaggerFilterableProperty]
     public DateTime? PausedDate { get; init; }
+
+    /// <inheritdoc cref="AgvAction.Nodes"/>
+    public string[] Nodes { get; init; } = null!;
+
+    /// <inheritdoc cref="AgvAction.InfoToAgv"/>
+    public Dictionary<InfoToAgvKey, string>? InfoToAgv {get; init; }
+
+    /// <inheritdoc cref="AgvAction.IsSkipped"/>
+    public bool IsSkipped { get; set; }
 }

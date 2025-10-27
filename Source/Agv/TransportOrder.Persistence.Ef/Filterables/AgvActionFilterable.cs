@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Filter.FilterableParser;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
@@ -49,4 +50,12 @@ public class AgvActionFilterable : AgvAction, IFilterable<AgvAction, AgvActionFi
     /// <inheritdoc cref="AgvAction.ShouldSkip"/>
     [FilterProperty]
     public new bool ShouldSkip { get; init; }
+
+    /// <inheritdoc cref="AgvAction.ShouldSkip"/>
+    [HasConversion]
+    public new GraphNode[] Nodes { get; init; } = null!;
+
+    /// <inheritdoc cref="AgvAction.InfoToAgv"/>
+    [HasConversion]
+    public new Dictionary<InfoToAgvKey, string>? InfoToAgv { get; init; }
 }

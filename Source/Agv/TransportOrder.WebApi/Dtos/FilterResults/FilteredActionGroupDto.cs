@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Filter.Api.Swagger;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Filter.Api.Swagger;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
 
@@ -63,4 +64,17 @@ public record FilteredActionGroupDto
     /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
     [SwaggerFilterableProperty]
     public string? HandlingUnit { get; init; }
+
+    /// <inheritdoc cref="ActionGroup.Reasons"/>
+    [SwaggerFilterableProperty]
+    public List<Reason> Reasons { get; init; } = null!;
+
+    /// <inheritdoc cref="ActionGroup.DoNotPause"/>
+    [SwaggerFilterableProperty]
+    public bool DoNotPause { get; init; }
+
+    /// <summary>
+    /// The date/time that the action group is estimated to be finished.
+    /// </summary>
+    public DateTime EstimatedCompletionDate { get; set; }
 }

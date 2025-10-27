@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Filter.FilterableParser;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using JetBrains.Annotations;
@@ -74,5 +75,13 @@ public class ActionGroupFilterable : ActionGroup, IFilterable<ActionGroup, Actio
 
     /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
     [FilterProperty]
-    public new string? HandlingUnit { get; init; } 
+    public new string? HandlingUnit { get; init; }
+
+    /// <inheritdoc cref="ActionGroup.Reasons"/>
+    [HasConversion]
+    public new List<Reason> Reasons { get; init; } = [];
+    
+    /// <inheritdoc cref="ActionGroup.DoNotPause"/>
+    [FilterProperty]
+    public new bool DoNotPause {get; init; }
 }

@@ -19,11 +19,20 @@ public class FilteredProfile : Profile
     /// </summary>
     public FilteredProfile()
     {
-        CreateMap<FilteredActionGroup, FilteredActionGroupDto>();
+        CreateMap<FilteredActionGroup, FilteredActionGroupDto>()
+            .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration));
         CreateMap<FilteredAgvAction, FilteredActionDto>()
-            .ForMember(m => m.TargetNodeType, opt => opt.MapFrom(src => src.Target.Node == null ? AgvGraph.NodeType.WayPoint : src.ActionType.ToNodeType()));
+            .ForMember(p => p.IsSkipped, p => p.MapFrom(src => src.ShouldSkip))
+            .ForMember(m => m.TargetNodeType, opt => opt.MapFrom(src => src.Target.Node == null ? AgvGraph.NodeType.WayPoint : src.ActionType.ToNodeType()))
+            .ForMember(m => m.TargetNodeId, opt =>
+            {
+                opt.MapFrom(s => s.Target.Node!.Name);
+                opt.Condition(s => s.Target.Node != null);
+            });
         CreateMap<FilteredAgv, FilteredAgvDto>(MemberList.None)
             .IncludeMembers(s => s.AgvStatus);
+
+        CreateMap<GraphNode, string>().ConvertUsing(g => g.Name);
 
         CreateMap<AgvStatus, FilteredAgvDto>(MemberList.None)
             .ForMember(nameof(FilteredAgvDto.IsDisturbed), opt => opt.MapFrom(src => src.Disturbed))

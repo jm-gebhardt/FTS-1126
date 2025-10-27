@@ -24,7 +24,7 @@ public class Reason
 
     /// <inheritdoc cref="Reason"/>>
     [UsedImplicitly]
-    private Reason()
+    protected Reason()
     {
         Template = null!;
         Parameters = null!;
