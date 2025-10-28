@@ -3,7 +3,9 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
+using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
@@ -15,6 +17,7 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using CancelHostOrder = Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder.CancelHostOrder;
 
 namespace Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 
@@ -47,7 +50,8 @@ public class HostOrderCommandHandler(
     IConsumer<TriggerDoppelspielPartnerQueueing>,
     IConsumer<TryAssignDelayedOrderToAgv>,
     IConsumer<ConsiderForDoppelspiel>,
-    IConsumer<QueueUnmatchedDoppelspielPicks>
+    IConsumer<QueueUnmatchedDoppelspielPicks>,
+    IConsumer<RetractHostOrder>
 
 {
     /// <summary>
@@ -597,6 +601,38 @@ public class HostOrderCommandHandler(
         await hostOrderRepository.SaveAsync();
     }
 
+    /// <inheritdoc cref="HostOrderCommandHandler"/>>
+    public async Task Consume(ConsumeContext<RetractHostOrder> context)
+    {
+        try
+        {
+            var hostOrder = await hostOrderRepository.GetByIdAsync(context.Message.CorrelationId);
+            if (hostOrder.IsShortCircuitOrder(configuration))
+            {
+                logger.LogInformation("Not Retracting short loop order {OrderCorrelationId}", hostOrder.CorrelationId);
+                await context.RespondAsync(new Failed());
+                return;
+            }
+            if (hostOrder.Pick!.IsRegisteredForDoppelspiel && hostOrder.Pick?.DoppelspielPartner != null)
+            {
+                logger.LogInformation("Not Retracting order {OrderCorrelationId}, pick was queued for Doppelspiel", hostOrder.CorrelationId);
+                await context.RespondAsync(new Failed());
+                return;
+            }
+            hostOrder.IsQueued = false;
+            hostOrder.RegisterDoppelspiel(ActionType.Pick);
+            await hostOrderRepository.UpdateAsync(hostOrder);
+            logger.LogInformation("Retracted order {OrderCorrelationId} and registered pick for Doppelspiel", hostOrder.CorrelationId);
+            await context.RespondAsync(new Success());
+        }
+        catch (InvalidOperationException)
+        {
+            // Do not respond, in case there are multiple host systems to ensure there is only one response, by the host system
+            // that knows the order.
+            logger.LogInformation("Not Retracting short loop order {OrderCorrelationId}, order not found", context.Message.CorrelationId);
+        }
+    }
+    
     private string[] GetAllTargets(string target)
     {
         return configuration.GetDoppelspielDropTargetsForPick(configuration.DoppelspielPickTargets[target].First());

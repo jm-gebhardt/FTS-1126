@@ -1309,4 +1309,25 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.GetRunningChargeActionGroups()).ShouldBeEquivalentTo(new List<ActionGroup> { chargeActionGroupWithStartedCharge });
     }
+
+    [TestMethod]
+    public async Task GetNextPickAtNodeAsync_ValidData_ReturnsNextPickAtNode()
+    {
+        const string node = "destination";
+        var notQueuedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId:"1", source: node, isQueued: false);
+        var startedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "2", source: node, isQueued: true, startedDate:DateTime.UtcNow);
+        var pickAtNodeWithEstimatedDuration = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "3", source: node, isQueued: true, estimatedDuration: TimeSpan.FromSeconds(10));
+        var dropAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", destination: node, isQueued: true);
+        var manualPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "5", source: node, isQueued: true);
+        manualPickAtNode.IsManual = true;
+        var nextPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "6", source: node, isQueued: true);
+        var followingPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "7", source: node, isQueued: true, createdDate: DateTime.UtcNow.AddMinutes(1));
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                notQueuedPickAtNode, startedPickAtNode, pickAtNodeWithEstimatedDuration, dropAtNode, manualPickAtNode, nextPickAtNode, followingPickAtNode
+            ]).BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextPickAtNodeAsync(node.ToGuid()))?.CorrelationId.ShouldBe(nextPickAtNode.CorrelationId);
+    }
 }

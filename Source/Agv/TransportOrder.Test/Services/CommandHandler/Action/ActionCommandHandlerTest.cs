@@ -35,7 +35,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 public class ActionCommandHandlerTest
 {
     private const string ChargeNodeName = "Charge-1";
-    private static readonly GraphNode _chargeNode = new(ChargeNodeName.ToGuid(), ChargeNodeName){Type = AgvGraph.NodeType.Charge};
+    private static readonly GraphNode _chargeNode = new(ChargeNodeName.ToGuid(), ChargeNodeName) { Type = AgvGraph.NodeType.Charge };
     private const string ParkNodeName = "Park-1";
     private static readonly GraphNode _parkNode = ParkNodeName.ToGraphNode();
     private const string StationNodeName = "Station-1";
@@ -413,6 +413,158 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_QueuedActionToDropTarget_EmptyQueueNoReadyAgvs_PublishesTryRetractActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string destination = "destination";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, destination: destination);
+        var actionGroupToRetract = AgvActionGenerator.GeneratePickDropActionGroup(source: destination, isQueued: true);
+        var emptyQueue = QueueGenerator.GenerateEmptyQueue();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true)
+            .WithNextPickAtNode(actionGroupToRetract)
+            .WithRoute(emptyQueue.NonEntryNodes)
+            .WithQueuesOnRoute([emptyQueue]);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<TryRetractActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_ResetActionToDropTarget_PublishesTryRetractActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string destination = "destination";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, destination: destination);
+        var actionGroupToRetract = AgvActionGenerator.GeneratePickDropActionGroup(source: destination, isQueued: true, estimatedDuration: TimeSpan.Zero);
+        var emptyQueue = QueueGenerator.GenerateEmptyQueue();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true)
+            .WithNextPickAtNode(actionGroupToRetract)
+            .WithRoute(emptyQueue.NonEntryNodes)
+            .WithQueuesOnRoute([emptyQueue]);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<TryRetractActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_QueuedActionToDropTarget_NoQueueNoReadyAgvs_PublishesTryRetractActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string destination = "destination";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, destination: destination);
+        var actionGroupToRetract = AgvActionGenerator.GeneratePickDropActionGroup(source: destination, isQueued: true);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true)
+            .WithNextPickAtNode(actionGroupToRetract)
+            .WithRoute([Guid.NewGuid()])
+            .WithQueuesOnRoute([]);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<TryRetractActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_NoActionToDropTarget_DoesNotPublishTryRetractActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string destination = "destination";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, destination: destination);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true)
+            .WithNextPickAtNode(null)
+            .WithRoute([Guid.NewGuid()])
+            .WithQueuesOnRoute([]);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<TryRetractActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_InCompleteDrop_DoesNotPublishTryRetractActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(assignedAgv: agv.CorrelationId);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<TryRetractActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_QueuedActionToDropTarget_ReadyAgvs_DoesNotPublishTryRetractActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string destination = "destination";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, destination: destination);
+        var actionGroupToRetract = AgvActionGenerator.GeneratePickDropActionGroup(source: destination, isQueued: true);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true)
+            .WithNextPickAtNode(actionGroupToRetract)
+            .WithRoute([Guid.NewGuid()])
+            .WithQueuesOnRoute([])
+            .WithReadyAgvs([AgvGenerator.GenerateIdleAgv(2)]);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<TryRetractActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_PickAction_QueuedActionToDropTarget_NonEmptyQueue_DoesNotPublishTryRetractActionGroup()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string destination = "destination";
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, destination: destination);
+        var actionGroupToRetract = AgvActionGenerator.GeneratePickDropActionGroup(source: destination, isQueued: true);
+        var queue = QueueGenerator.GenerateFullQueue();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup, hasUnfinishedAction: true)
+            .WithNextPickAtNode(actionGroupToRetract)
+            .WithRoute(queue.NonEntryNodes)
+            .WithQueuesOnRoute([queue]);
+
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, actionGroup.CorrelationId);
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<TryRetractActionGroup>();
+    }
+
+    [TestMethod]
     public async Task Consume_CompleteActionOfActionGroup_NotPickAction_DoesNotPublishPickActionCompleted()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
@@ -523,7 +675,8 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .WithHasCargo(true)
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithCurrentActionGroupsToTarget([]);
         var command = new CompleteActionOfActionGroup(actionGroup.Actions.First().CorrelationId, actionGroup.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
@@ -543,7 +696,8 @@ public class ActionCommandHandlerTest
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .WithHasCargo(true)
-            .AddActionGroup(actionGroup);
+            .AddActionGroup(actionGroup)
+            .WithCurrentActionGroupsToTarget([]);
         var command = new CompleteActionOfActionGroup(actionGroup.Actions.First().CorrelationId, actionGroup.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
@@ -1790,7 +1944,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
-        
+
         var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
         updateActionCommand.Action.CorrelationId.ShouldBe(moveAction.CorrelationId);
         updateActionCommand.Action.InfoToAgv!.GetDockFront().ShouldBe(moveDockFront);
@@ -2518,5 +2672,76 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<ForceQueueActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupQueued>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+    }
+
+    [TestMethod]
+    public async Task TryRetractActionGroup_ValidData_PublishesActionGroupChanged()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithHostOrderRetracted(true)
+            .WithMultipleRequiredActionGroups([actionGroup, actionGroup]);
+
+        await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        actionGroup.IsQueued.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task TryRetractActionGroup_StartedAfterRequest_DoesNotPublishActionGroupChanged()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
+        var startedActionGroup = new ActionGroup(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.Actions, actionGroup.Creator) { StartedDate = DateTime.UtcNow };
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithHostOrderRetracted(true)
+            .WithMultipleRequiredActionGroups([actionGroup, startedActionGroup]);
+
+        await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        actionGroup.IsQueued.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task TryRetractActionGroup_NotQueued_DoesNotPublishActionGroupChanged()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithHostOrderRetracted(true)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        actionGroup.IsQueued.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task TryRetractActionGroup_Started_DoesNotPublishActionGroupChanged()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true, startedDate: DateTime.UtcNow, assignedAgv: Guid.NewGuid());
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithHostOrderRetracted(true)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        actionGroup.IsQueued.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task TryRetractActionGroup_HostOrderNotRetracted_DoesNotPublishActionGroupChanged()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithHostOrderRetracted(false)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        actionGroup.IsQueued.ShouldBeTrue();
     }
 }

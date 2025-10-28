@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
@@ -14,6 +15,7 @@ using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 using Gebhardt.Acc.PrismatCommunication.Simulation;
 using JetBrains.Annotations;
 using MassTransit;
+using CancelHostOrder = Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder.CancelHostOrder;
 
 namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 
@@ -36,6 +38,7 @@ public static class BusRegistrationExtension
             partitioner.PartitionMessageById<CancelInvalidHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<AbortHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<ConsiderForDoppelspiel, HostOrderCommandHandler>(c);
+            partitioner.PartitionMessageById<RetractHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<ResetDoppelspielPartner, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<TriggerDoppelspielPartnerQueueing, HostOrderCommandHandler>(c);
             c.Message<TryQueueDoppelspielPartner>(x => x.UsePartitioner(partitioner, p => p.Message.DroppingHostOrderCorrelationId));

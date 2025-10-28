@@ -181,6 +181,15 @@ public class ActionGroup
     }
 
     /// <summary>
+    /// Retract the action group.
+    /// </summary>
+    public void Retract()
+    {
+        IsQueued = false;
+        AssignedAgv = null;
+    }
+
+    /// <summary>
     /// Updates the state of the ActionGroup based on the state of its actions.
     /// </summary>
     public void UpdateActionGroupState()

@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -237,6 +238,7 @@ public static class CoreBusRegistrationExtensions
 
     private static void RegisterCoreActionGroupHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
     {
+        busRegistrationConfigurator.AddRequestClient<RetractHostOrder>();
         busRegistrationConfigurator.AddConsumer<ActionEventHandler>();
         busRegistrationConfigurator.AddConsumer<ActionCommandHandler>(c =>
         {

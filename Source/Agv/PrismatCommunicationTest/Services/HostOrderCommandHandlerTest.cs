@@ -3,7 +3,9 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
+using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
@@ -234,7 +236,7 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_OrderWithUnknownPickTarget_NoDropOrdersEligibleForDoppelspiel_QueueActionGroup(int input)
     {
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>(enteredAgvs:1)
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>(enteredAgvs: 1)
             .WithDropOrderEligibleForDoppelSpiel(null)
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
@@ -1046,5 +1048,63 @@ public class HostOrderCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<QueueUnmatchedDoppelspielPicks>();
 
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RetractHostOrder_ShortLoopOrder_RespondsFailed()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder());
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder]);
+
+        await fixture.PublishMessageAsync(new RetractHostOrder(hostOrder.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<Failed>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RetractHostOrder_UnknownHostOrder_DoesNotRespond()
+    {
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([]);
+
+        await fixture.PublishMessageAsync(new RetractHostOrder(Guid.NewGuid()));
+
+        await fixture.ShouldNotHavePublishedAsync<Failed>();
+        await fixture.ShouldNotHavePublishedAsync<Success>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RetractHostOrder_DoppelspielOrder_RespondsFailed()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        hostOrder.IsQueued = true;
+        hostOrder.RegisterDoppelspiel(ActionType.Pick);
+        hostOrder.SetDoppelspielpartner(Guid.NewGuid(), ActionType.Pick);
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder]);
+
+        await fixture.PublishMessageAsync(new RetractHostOrder(hostOrder.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<Failed>();
+        hostOrder.IsQueued.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_RetractHostOrder_ValidData_RespondsSuccess()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        hostOrder.IsQueued = true;
+
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder]);
+
+        await fixture.PublishMessageAsync(new RetractHostOrder(hostOrder.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<Success>();
+        hostOrder.IsQueued.ShouldBeFalse();
+        hostOrder.Actions.First(a => a.ActionType == ActionType.Pick).IsRegisteredForDoppelspiel.ShouldBeTrue();
     }
 }

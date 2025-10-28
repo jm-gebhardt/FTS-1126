@@ -80,7 +80,8 @@ public static class LogCodes
     public const int AgvSentActionCancelFailedForOrder = 121;
     public const int AgvSentActionUpdatedForOrder = 122;
     public const int AgvSentActionFailedForOrder = 123;
-    
+    public const int OrderRetracted = 124;
+
     //Station
     public const int StationStateChanged = 400;
     public const int StationAgvDropping = 401;

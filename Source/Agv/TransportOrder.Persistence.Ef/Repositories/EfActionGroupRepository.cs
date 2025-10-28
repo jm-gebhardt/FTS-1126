@@ -779,4 +779,17 @@ public class EfActionGroupRepository : IActionGroupRepository
                                               && ag.Actions.All(a => targets.Contains(a.Target.Node != null ? a.Target.Node.Id : Guid.Empty)))
             .ToListAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetNextPickAtNodeAsync(Guid nodeId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .AsNoTracking();
+        return await actionGroups.Where(ag =>
+                ag.StartedDate == null && ag.State == ActionGroupState.Created && (ag.EstimatedDuration == null || ag.EstimatedDuration == TimeSpan.Zero) && ag.IsQueued && !ag.IsManual &&
+                ag.Actions.Any(a => a.ActionType == ActionType.Pick && a.Target.Node!.Id == nodeId && a.StartedDate == null))
+            .OrderBy(ac => ac.CreatedDate)
+            .FirstOrDefaultAsync();
+    }
 }

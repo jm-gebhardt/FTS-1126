@@ -4,7 +4,10 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -33,6 +36,7 @@ public class ActionCommandHelper
     private readonly IBus _bus;
     private readonly IAgvDb _agvDb;
     private readonly ILoggingService _loggingService;
+    private readonly IQueueManager _queueManager;
 
     /// <inheritdoc cref="ActionCommandHelper"/>>
     public ActionCommandHelper(ILogger<ActionCommandHelper> logger,
@@ -42,7 +46,8 @@ public class ActionCommandHelper
         IStationRepository stationRepository,
         ILoggingService loggingService,
         IBus bus,
-        IMapper mapper)
+        IMapper mapper,
+        IQueueManager queueManager)
     {
         _logger = logger;
         _loggingService = loggingService;
@@ -51,6 +56,7 @@ public class ActionCommandHelper
         _actionGroupRepository = actionGroupRepository;
         _stationRepository = stationRepository;
         _bus = bus;
+        _queueManager = queueManager;
     }
 
     /// <summary>
@@ -61,7 +67,7 @@ public class ActionCommandHelper
     /// <param name="ignoreLocked">Ignore if the assigned agv is locked.</param>
     /// <param name="ignoreError">Ignore if the assigned agv has an error.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    public async Task<bool> SelectNodesForAgvAction(AgvAction action, Domain.Models.Agv.Agv assignedAgv, bool ignoreLocked, bool ignoreError, CancellationToken cancellationToken)
+    public async Task<bool> SelectNodesForAgvAction(AgvAction action, Agv assignedAgv, bool ignoreLocked, bool ignoreError, CancellationToken cancellationToken)
     {
         if (!assignedAgv.TryTransitionToBusy(ignoreLocked: ignoreLocked, ignoreError: ignoreError))
         {
@@ -120,7 +126,7 @@ public class ActionCommandHelper
     /// <param name="action">The action.</param>
     /// <param name="actionGroup">The action group.</param>
     /// <returns></returns>
-    public async Task LogStationUpdate(Domain.Models.Agv.Agv agv, AgvAction action, ActionGroup actionGroup)
+    public async Task LogStationUpdate(Agv agv, AgvAction action, ActionGroup actionGroup)
     {
         if (action.Target.Node == null)
         {
@@ -199,7 +205,7 @@ public class ActionCommandHelper
     /// <param name="assignedAgv">The assigned agv.</param>
     /// <param name="actionGroup">The action group.</param>
     /// <returns></returns>
-    public async Task<bool> CheckAgvActionCanBeStarted(IPublishEndpoint context, AgvAction action, Domain.Models.Agv.Agv assignedAgv, ActionGroup actionGroup)
+    public async Task<bool> CheckAgvActionCanBeStarted(IPublishEndpoint context, AgvAction action, Agv assignedAgv, ActionGroup actionGroup)
     {
         if (actionGroup.State == ActionGroupState.Paused)
         {
@@ -279,7 +285,7 @@ public class ActionCommandHelper
     /// </summary>
     /// <param name="agv">The agv.</param>
     /// <returns>The manual action.</returns>
-    public async Task<AgvAction?> GetManualAction(Domain.Models.Agv.Agv agv)
+    public async Task<AgvAction?> GetManualAction(Agv agv)
     {
         List<ActionType>? allowedActionTypes = null;
         if (agv.CanStartManualPickDropAction)
@@ -352,7 +358,7 @@ public class ActionCommandHelper
     /// <param name="action">The current action.</param>
     /// <param name="agv">The current agv.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task TryQueueDoppelspielPartner(ConsumeContext<CompleteActionOfActionGroup> context, ActionGroup actionGroup, AgvAction action, Domain.Models.Agv.Agv agv, CancellationToken cancellationToken)
+    public async Task TryQueueDoppelspielPartner(ConsumeContext<CompleteActionOfActionGroup> context, ActionGroup actionGroup, AgvAction action, Agv agv, CancellationToken cancellationToken)
     {
         if (actionGroup.IsManual)
         {
@@ -379,6 +385,40 @@ public class ActionCommandHelper
         catch (Exception)
         {
             // ignored for simulation mode
+        }
+    }
+
+    /// <summary>
+    /// Try to retract a queued order that is picking at the drop target of the given action group.
+    /// </summary>
+    /// <param name="context">The context.</param>
+    /// <param name="actionGroup">The action group.</param>
+    /// <param name="agv">The current agv.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns></returns>
+    public async Task TryRetractActionGroup(ConsumeContext<CompleteActionOfActionGroup> context, ActionGroup actionGroup, Agv agv, CancellationToken cancellationToken)
+    {
+        var drop = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
+        if (drop.IsIncomplete)
+        {
+            return;
+        }
+        var dropTarget = drop.Target.Node!;
+        var pickAtDropTarget = await _actionGroupRepository.GetNextPickAtNodeAsync(dropTarget.Id);
+        if (pickAtDropTarget == null)
+        {
+            return;
+        }
+        var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId);
+        var routeToDropTarget = await _routeService.GetRouteAsync(agv, dropTarget.Id, null, agvData, cancellationToken);
+        ICollection<Queue> queuesOnRoute = await _queueManager.GetQueuesOnRoute(routeToDropTarget.Nodes.Select(n => n.Id).ToList());
+        if (queuesOnRoute.All(q => q.AgvFillQuantity == 0) || queuesOnRoute.Count == 0)
+        {
+            ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+            if (!readyAgvs.Except([agv]).Any())
+            {
+                await context.Publish(new TryRetractActionGroup(pickAtDropTarget.CorrelationId), cancellationToken);
+            }
         }
     }
 }

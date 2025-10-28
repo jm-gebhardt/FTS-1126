@@ -158,4 +158,18 @@ public class EfQueueRepositoryTest
 
         (await fixture.Repository.GetBlockedQueueNodes()).Single().ShouldBe(entryNode);
     }
+
+    [TestMethod]
+    public async Task GetQueuesOnRoute_ValidData_ReturnsQueues()
+    {
+        var queueOnRoute = QueueGenerator.GenerateEmptyQueue();
+        var queueNotOnRoute = QueueGenerator.GenerateEmptyQueue();
+
+        var fixture = new EfQueueRepositoryTestFixture();
+        await fixture.AddRangeAsync(queueNotOnRoute, queueOnRoute);
+
+        ICollection<Queue> queues = await fixture.Repository.GetQueuesOnRoute(queueOnRoute.NonEntryNodes);
+        queues.Count.ShouldBe(1);
+        queues.First().Id.ShouldBe(queueOnRoute.Id);
+    }
 }

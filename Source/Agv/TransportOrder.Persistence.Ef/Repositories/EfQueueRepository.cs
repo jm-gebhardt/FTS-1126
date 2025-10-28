@@ -152,4 +152,13 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
         return (await context.Set<Queue>()
             .AsSplitQuery().ToListAsync()).SingleOrDefault(q => q.Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId)));
     }
+
+    /// <inheritdoc cref="IQueueRepository"/>>
+    public async Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes)
+    {
+       await using var context = await dbContextFactory.CreateDbContextAsync();
+       return await context.Set<Queue>()
+            .Where(q => q.Nodes.Any(n => nodes.Contains(n.NodeId)))
+            .ToListAsync();
+    }
 }

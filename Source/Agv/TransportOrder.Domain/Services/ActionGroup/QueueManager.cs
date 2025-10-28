@@ -298,4 +298,10 @@ public class QueueManager(
         IReadOnlyList<Models.ActionGroup.ActionGroup> createdAndStartedActionGroups = await actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
         return createdAndStartedActionGroups.Where(a => string.Equals(a.OrderId, Queue.EvacuationOrderId)).Select(a => a.CorrelationId).ToList();
     }
+
+    /// <inheritdoc />
+    public Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes)
+    {
+        return queueRepository.GetQueuesOnRoute(nodes);
+    }
 }

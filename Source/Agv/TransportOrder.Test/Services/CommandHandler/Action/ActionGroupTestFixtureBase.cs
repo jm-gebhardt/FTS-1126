@@ -42,7 +42,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IQueueManager> _queueManager = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
-
+    
     protected Mock<IRouteService> RouteService { get; } = new();
 
     public Mock<IActionGroupRepository> ActionGroupRepository { get; } = new();
@@ -213,7 +213,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
             _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(null as ActionGroup);
             ActionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(null as ActionGroup);
             ActionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync([]);
-            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync((ActionGroup?) null);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync((ActionGroup?)null);
         }
         ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
         ActionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
@@ -226,11 +226,43 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         }
         else
         {
-            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>())).ReturnsAsync((ActionGroup?) null);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>())).ReturnsAsync((ActionGroup?)null);
         }
 
         WithNode(actionGroup.Actions.Select(a => a.Target.Node).ToArray());
 
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithCurrentActionGroupsToTarget(ICollection<ActionGroup> actionGroups)
+    {
+        ActionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithNextPickAtNode(ActionGroup? actionGroup)
+    {
+        ActionGroupRepository.Setup(x => x.GetNextPickAtNodeAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithReadyAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)
+    {
+        _agvDb.Setup(x => x.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ReturnsAsync(agvs);
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithRoute(ICollection<Guid> nodes)
+    {
+        RouteService.Setup(r => r.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Route(12, nodes.Select(n => new GraphNode(n, "name")).ToArray(), []));
+
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithQueuesOnRoute(ICollection<TransportOrder.Domain.Models.Queue.Queue> queues)
+    {
+        _queueManager.Setup(x => x.GetQueuesOnRoute(It.IsAny<ICollection<Guid>>())).ReturnsAsync(queues);
         return this;
     }
 

@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 
@@ -82,4 +83,11 @@ public interface IQueueManager
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <returns></returns>
     Task<ICollection<Guid>> GetQueueEvacuationMoves(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Get all queues on the route given by its nodes.
+    /// </summary>
+    /// <param name="nodes">The route nodes.</param>
+    /// <returns>Collection of queues.</returns>
+    Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes);
 }

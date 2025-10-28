@@ -349,4 +349,11 @@ public interface IActionGroupRepository
     /// <param name="targets">The targets to check.</param>
     /// <returns></returns>
     Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<Guid> targets);
+
+    /// <summary>
+    /// Get the next automatic action group picking at given node.
+    /// </summary>
+    /// <param name="nodeId">The id of the node.</param>
+    /// <returns>Action group, if available</returns>
+    Task<ActionGroup?> GetNextPickAtNodeAsync(Guid nodeId);
 }

@@ -88,4 +88,11 @@ public interface IQueueRepository
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <returns>Queue, if agv is in any.</returns>
     Task<Queue?> GetQueueForAgv(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Get all queues on the route given by its nodes.
+    /// </summary>
+    /// <param name="nodes">The route nodes.</param>
+    /// <returns>Collection of queues.</returns>
+    Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes);
 }

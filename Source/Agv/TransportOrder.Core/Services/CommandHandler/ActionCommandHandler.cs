@@ -7,6 +7,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -61,7 +62,8 @@ public class ActionCommandHandler :
     IConsumer<TryUpdateIdleAction>,
     IConsumer<ReassignActionGroup>,
     IConsumer<CreateActionGroup>,
-    IConsumer<ForceQueueActionGroup>
+    IConsumer<ForceQueueActionGroup>,
+    IConsumer<TryRetractActionGroup>
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
@@ -79,6 +81,7 @@ public class ActionCommandHandler :
     private readonly TimeProvider _timeProvider;
     private readonly IQueueManager _queueManager;
     private readonly ILoggingService _loggingService;
+    private readonly IRequestClient<RetractHostOrder> _retractOrderClient;
 
     private const string QueuingOrderId = "Queuing";
 
@@ -99,8 +102,8 @@ public class ActionCommandHandler :
         ActionCommandHelper actionCommandHelper,
         IPublishEndpoint publishEndpoint,
         TimeProvider timeProvider,
-        ILoggingService loggingService
-    )
+        ILoggingService loggingService,
+        IRequestClient<RetractHostOrder> retractHostOrderClient)
     {
         _actionCommandHelper = actionCommandHelper;
         _publishEndpoint = publishEndpoint;
@@ -118,6 +121,7 @@ public class ActionCommandHandler :
         _queueManager = queueManager;
         _mapper = mapper;
         _bus = bus;
+        _retractOrderClient = retractHostOrderClient;
     }
 
     /// <summary>
@@ -763,6 +767,7 @@ public class ActionCommandHandler :
         if (action.ActionType == ActionType.Pick)
         {
             await context.Publish(new PickActionCompleted(actionGroup.CorrelationId, action.CorrelationId, action.CompletedDate.GetValueOrDefault()), cancellationToken);
+            await _actionCommandHelper.TryRetractActionGroup(context, actionGroup, agv, cancellationToken);
         }
 
         if (action.ActionType == ActionType.Drop)
@@ -1473,5 +1478,55 @@ public class ActionCommandHandler :
 
         await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), context.CancellationToken);
         await context.Publish(new ActionGroupQueued(actionGroupMessageContent, actionGroup.CorrelationId, actionGroup.AssignedAgv), context.CancellationToken);
+    }
+
+    /// <inheritdoc cref="ActionCommandHandler"/>>
+    public async Task Consume(ConsumeContext<TryRetractActionGroup> context)
+    {
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
+        if (!actionGroup.IsQueued)
+        {
+            _logger.LogWarning("Can not retract action group {ActionGroupCorrelationId}, it is not queued", actionGroup.CorrelationId);
+            return;
+        }
+        if (actionGroup.StartedDate != null)
+        {
+            _logger.LogWarning("Can not retract action group {ActionGroupCorrelationId}, it is has already been started", actionGroup.CorrelationId);
+            return;
+        }
+
+        try
+        {
+            Response<Success, Failed> response = await _retractOrderClient.GetResponse<Success, Failed>(new RetractHostOrder(actionGroup.CorrelationId));
+            if (response.Is<Failed>(out Response<Failed>? _))
+            {
+                _logger.LogWarning("Can not retract action group {ActionGroupCorrelationId}, host order retraction failed", actionGroup.CorrelationId);
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            _logger.LogWarning("Can not retract action group {ActionGroupCorrelationId}, host order retraction request did not succeed", actionGroup.CorrelationId);
+            return;
+        }
+
+        // Lock semaphore only for updating action group to not block all action group selection during retraction request
+        await _actionManagerSemaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            // Check again if action group has been started in the meantime 
+            actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
+            if (actionGroup.StartedDate != null )
+            {
+                _logger.LogWarning("Can not retract action group {ActionGroupCorrelationId}, it is has already been started", actionGroup.CorrelationId);
+                return;
+            }
+            actionGroup.Retract();
+            await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
+            var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
+            await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), context.CancellationToken);
+            await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderRetracted, actionGroupMessageContent.AssignedAgv.GetValueOrDefault(),
+                actionGroupMessageContent.CorrelationId, "Order Retracted", $"Order {actionGroupMessageContent.OrderId} has been retracted",
+                new Dictionary<string, object?> { { LogLabels.OrderId, actionGroupMessageContent.OrderId } });
+        });
     }
 }
