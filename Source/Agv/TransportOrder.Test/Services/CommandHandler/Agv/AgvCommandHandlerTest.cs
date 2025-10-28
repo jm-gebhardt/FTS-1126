@@ -988,6 +988,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .WithAgvsToMove(null)
+            .WithQueueInternalMoves([])
             .WithActionGroup(actionGroup);
 
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });

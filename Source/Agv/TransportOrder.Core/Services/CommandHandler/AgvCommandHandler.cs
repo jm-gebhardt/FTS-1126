@@ -1229,13 +1229,13 @@ public class AgvCommandHandler :
         var agvCorrelationId = agv.CorrelationId;
         Guid? agvLastNodeId = agv.AgvStatus?.LastNodeId;
 
+        List<Guid> actionGroupsToAbort = (await _queueManager.GetQueueInternalActionGroups(agv)).ToList();
         (Dictionary<Guid, Guid>? agvsToMove, int? queueSize) = await _queueManager.TryEscapeQueue(agvCorrelationId, agvLastNodeId);
         if (agvsToMove == null)
         {
             return false;
         }
 
-        List<Guid> actionGroupsToAbort = (await _queueManager.GetQueueInternalActionGroups(agv)).ToList();
         ICollection<Guid> queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId);
         actionGroupsToAbort.AddRange(queueEvacuationMoves);
         await Task.WhenAll(actionGroupsToAbort.Where(a => a != currentActionGroup).Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
@@ -1644,6 +1644,8 @@ public class AgvCommandHandler :
             {
                 chargingAgv.IsQueueing = true;
                 await _agvDb.Agvs.UpdateAgvAsync(chargingAgv);
+                nonChargingAgv.IsQueueing = false;
+                await _agvDb.Agvs.UpdateAgvAsync(nonChargingAgv);
             }
         });
 
@@ -1697,6 +1699,7 @@ public class AgvCommandHandler :
 
     private async Task<bool> TrySwapAgvsInQueue(IPublishEndpoint context, Agv queuingAgv, Agv agvToQueue)
     {
+        ICollection<Guid> actionGroupsToAbort = await _queueManager.GetQueueInternalActionGroups(queuingAgv);
         (Dictionary<Guid, Guid>? agvsToMove, Guid? queueEntryNodeId, bool swapped) = await _queueManager.TrySwapAgv(queuingAgv, agvToQueue);
         if (!swapped || queueEntryNodeId == null)
         {
@@ -1710,7 +1713,6 @@ public class AgvCommandHandler :
             return true;
         }
 
-        ICollection<Guid> actionGroupsToAbort = await _queueManager.GetQueueInternalActionGroups(queuingAgv);
         await Task.WhenAll(actionGroupsToAbort.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
 
         foreach (var (agvToMoveId, nodeId) in agvsToMove)

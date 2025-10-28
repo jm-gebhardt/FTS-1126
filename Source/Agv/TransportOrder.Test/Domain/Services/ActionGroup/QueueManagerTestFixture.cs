@@ -81,6 +81,7 @@ public class QueueManagerTestFixture : FixtureBase
     public QueueManagerTestFixture WithActionGroups(ICollection<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups.ToList());
+        _actionGroupRepository.Setup(x => x.GetNotStartedActionGroupsToTargetsForAgv(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync(actionGroups.Where(x => x.OrderId.Equals("Queuing")).ToList());
         return this;
     }
 

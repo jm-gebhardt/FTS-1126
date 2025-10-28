@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -71,7 +72,7 @@ public class Queue
     /// <summary>
     /// True, if the queue is full.
     /// </summary>
-    public bool IsFull => AgvFillQuantity == Nodes.Count;
+    public bool IsFull => AgvFillQuantity >= Nodes.Count;
 
     /// <summary>
     /// True if all agvs reached the queue.
@@ -113,7 +114,7 @@ public class Queue
 
     private void IncrementAgvFillAmount()
     {
-        AgvFillQuantity = Math.Min(AgvFillQuantity + 1, Nodes.Count);
+        AgvFillQuantity += 1;
     }
 
     private void DecreaseAgvFillQuantity()
@@ -225,7 +226,7 @@ public class Queue
         var agv = node.OccupiedAgv!.Value;
         ShiftDown(ref agvsToMove, head);
         node.RemoveAgv(agv);
-        AgvFillQuantity = Math.Max(0, AgvFillQuantity - 1);
+        DecreaseAgvFillQuantity();
         return agv;
     }
 
@@ -293,7 +294,7 @@ public class Queue
         {
             reservedNode.RemoveAgv(agvCorrelationId);
         }
-        AgvFillQuantity = Math.Max(0, AgvFillQuantity - 1);
+        DecreaseAgvFillQuantity();
         return node.NodeId;
     }
 
@@ -348,6 +349,13 @@ public class Queue
         var node = Nodes.SingleOrDefault(n => n.AgvIsAssigned(agvCorrelationId));
         node?.Free(agvCorrelationId); // Agv might already be dequeued.
 
-        AgvFillQuantity = Math.Max(0, AgvFillQuantity - 1);
+        DecreaseAgvFillQuantity();
+    }
+    
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        string jsonString = JsonSerializer.Serialize(this) ;
+        return jsonString.Replace("\"", "");
     }
 }

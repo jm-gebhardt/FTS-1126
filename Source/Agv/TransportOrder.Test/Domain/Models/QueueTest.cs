@@ -454,4 +454,14 @@ public class QueueTest
         queue.IsFull.ShouldBeTrue();
         queue.Agvs.ShouldNotContain(agv);
     }
+    
+    [TestMethod]
+    public void QueueToString_ValidData_DoesNotContainDoubleQuote()
+    {
+        var queue = new Queue("a queue");
+        queue.AddNode(_nodeId, 0);
+        string testQueue = queue.ToString();
+        testQueue.ShouldNotBeNull();
+        testQueue.ShouldNotContain("\"");
+    }
 }

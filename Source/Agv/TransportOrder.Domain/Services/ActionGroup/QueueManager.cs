@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
@@ -29,11 +28,11 @@ public class QueueManager(
             Guid? entryNode = queue?.TryEnterQueue();
             if (entryNode == null || queue == null)
             {
-                logger.LogWarning("No queue available for entering agv {AgvCorrelationId} to queue {@Queue}", agv.CorrelationId, JsonSerializer.Serialize(queue));
+                logger.LogWarning("No queue available for entering agv {AgvCorrelationId} to queue {@Queue}", agv.CorrelationId, queue == null ? "null" : queue.Name); 
                 return null;
             }
             await queueRepository.UpdateQueueAsync(queue);
-            logger.LogInformation("Queue {QueueName} selected for entering agv {AgvCorrelationId} for  {@Queue}", queue.Name, agv.CorrelationId, JsonSerializer.Serialize(queue));
+            logger.LogInformation("Queue {QueueName} selected for entering agv {AgvCorrelationId} for  {@Queue}", queue.Name, agv.CorrelationId, queue);
             return entryNode;
         });
     }
@@ -60,11 +59,11 @@ public class QueueManager(
         Guid? entryNode = queue.TryEnterQueue();
         if (entryNode != null)
         {
-            logger.LogInformation("Queue {QueueName} selected for queueing agv {AgvCorrelationId} for {@Queue}", queue.Name, agvOutside.CorrelationId, JsonSerializer.Serialize(queue));
+            logger.LogInformation("Queue {QueueName} selected for queueing agv {AgvCorrelationId} for {@Queue}", queue.Name, agvOutside.CorrelationId, queue);
             await queueRepository.UpdateQueueAsync(queue);
             return (null, entryNode, true);
         }
-        logger.LogWarning("No entry node available for queue {QueueName} for queueing agv {AgvCorrelationId} for {@Queue}", queue.Name, agvOutside.CorrelationId, JsonSerializer.Serialize(queue));
+        logger.LogWarning("No entry node available for queue {QueueName} for queueing agv {AgvCorrelationId} for {@Queue}", queue.Name, agvOutside.CorrelationId, queue);
         return (null, null, false);
     }
 
@@ -78,16 +77,16 @@ public class QueueManager(
         }
         if (queue.IsEnqueued(agvCorrelationId))
         {
-            logger.LogWarning("Agv {AgvCorrelation} has already been enqueued to queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
+            logger.LogWarning("Agv {AgvCorrelation} has already been enqueued to queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
             return null;
         }
         if (queue.TryEnqueue(agvCorrelationId, out Guid? target))
         {
-            logger.LogInformation("Enqueuing agv {AgvCorrelationId} to node {TargetNode} of queue {QueueName} for {@Queue}", agvCorrelationId, target, queue.Name, JsonSerializer.Serialize(queue));
+            logger.LogInformation("Enqueuing agv {AgvCorrelationId} to node {TargetNode} of queue {QueueName} for {@Queue}", agvCorrelationId, target, queue.Name, queue);
             await queueRepository.UpdateQueueAsync(queue);
             return target.Value;
         }
-        logger.LogWarning("Could not enqueue agv {AgvCorrelation} to queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
+        logger.LogWarning("Could not enqueue agv {AgvCorrelation} to queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
         return null;
     }
 
@@ -131,7 +130,7 @@ public class QueueManager(
         }
         if (!queue.IsAgvAtQueueHead(agvCorrelationId))
         {
-            logger.LogWarning("Could not dequeue agv from queue {QueueName}, agv {AgvCorrelationId} is not at head position, but at {AgvLastNodeId}, {AgvAtHead} is at assigned to head for {@Queue}", queue.Name, agvCorrelationId, agvLastNodeId, queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv(), JsonSerializer.Serialize(queue));
+            logger.LogWarning("Could not dequeue agv from queue {QueueName}, agv {AgvCorrelationId} is not at head position, but at {AgvLastNodeId}, {AgvAtHead} is at assigned to head for {@Queue}", queue.Name, agvCorrelationId, agvLastNodeId, queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv(), queue);
             return null;
         }
 
@@ -153,7 +152,7 @@ public class QueueManager(
         Guid? node = queue.TryEscapeQueue(agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove);
         if (node == null)
         {
-            logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
+            logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
             return (null, null);
         }
 
@@ -161,15 +160,22 @@ public class QueueManager(
 
         if (await queueRepository.UpdateQueueAsync(queue))
         {
-            logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
+            logger.LogInformation("Agv {AgvCorrelationId} escaped from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
             return (agvsToMove, queue.AgvFillQuantity);
         }
-        logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
+        logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
         return (null, null);
     }
 
     private async Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeFromQueueEntryNode(Guid agvCorrelationId, Guid? agvLastNodeId)
     {
+        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        if(!agv.IsQueueing)
+        {
+            logger.LogInformation("Agv {AgvCorrelationId} could not escape queue entry node, agv is not queueing ", agvCorrelationId);
+            return (null, null);
+        }
+
         if (agvLastNodeId == null)
         {
             logger.LogDebug("Agv {AgvCorrelationId} could not escape queue, no last node id {AgvLastNodeId} of agv ", agvCorrelationId, agvLastNodeId);
@@ -204,10 +210,10 @@ public class QueueManager(
             await queueRepository.UpdateQueueAsync(queue);
             if (queue.IsAgvAtQueueHead(agv.CorrelationId))
             {
-                logger.LogInformation("Agv {AgvCorrelationId} reached queue head {Head} for {@Queue}", agv.CorrelationId, nodeId, JsonSerializer.Serialize(queue));
+                logger.LogInformation("Agv {AgvCorrelationId} reached queue head {Head} for {@Queue}", agv.CorrelationId, nodeId, queue);
                 return;
             }
-            logger.LogInformation("Agv {AgvCorrelationId} could not reach queue head {Head}, agv does not occupy head {NodeId}, {AgvAtQueueHead} is assigned to head for {@Queue}", agv.CorrelationId, nodeId, queue.Head?.NodeId, queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv(), JsonSerializer.Serialize(queue));
+            logger.LogInformation("Agv {AgvCorrelationId} could not reach queue head {Head}, agv does not occupy head {NodeId}, {AgvAtQueueHead} is assigned to head for {@Queue}", agv.CorrelationId, nodeId, queue.Head?.NodeId, queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv(), queue);
         });
         return queue != null && queue.IsAgvAtQueueHead(agv.CorrelationId);
     }
@@ -260,7 +266,7 @@ public class QueueManager(
             queue.RemoveAgv(agvCorrelationId);
             await queueRepository.UpdateQueueAsync(queue);
             removed = true;
-            logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, JsonSerializer.Serialize(queue));
+            logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
         });
         return removed;
     }
