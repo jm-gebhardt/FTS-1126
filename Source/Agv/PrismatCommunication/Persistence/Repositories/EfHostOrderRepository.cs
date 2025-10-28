@@ -87,7 +87,7 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
                      h.FinishedDate == null &&
                      h.StartedDate == null &&
                      h.FailedDate == null && 
-                     !(h.AssignedAgv == null || agvsToIgnore.Contains(h.AssignedAgv.Value)) &&
+                     (h.AssignedAgv == null || !agvsToIgnore.Contains(h.AssignedAgv.Value)) &&
                      h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
             .OrderBy(h => h.CreatedDate)
             .FirstOrDefaultAsync();
