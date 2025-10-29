@@ -42,9 +42,10 @@ public class StationEventHandlerTestFixture : MassTransitConsumerTestFixture<Sta
         _targetStationRepository.Verify(x => x.UpdateAsync(It.IsAny<ShortLoopWeTargetStation>()), times);
     }
 
-    public StationEventHandlerTestFixture WithStation(Station? station)
+    public StationEventHandlerTestFixture WithStation(Station station)
     {
-        _stationRepository.Setup(x => x.GetStationByNode(It.IsAny<Guid>())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStationByNodeId(station.NodeId)).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStationById(station.Id)).ReturnsAsync(station);
         return this;
     }
 

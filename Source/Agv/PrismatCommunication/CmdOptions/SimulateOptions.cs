@@ -14,19 +14,26 @@ public sealed class SimulateOptions
     /// </summary>
     [UsedImplicitly]
     [Option('s', "speed", HelpText = "Speed factor of the simulation", Default = 1, Required = true)]
-    public int Speed { get; init; }
+    public int Speed { get; set; }
 
     /// <summary>
-    /// Flag to simulate only orders in the apl loop.
+    /// Flag to not simulate orders in the apl loop.
     /// </summary>
     [UsedImplicitly]
-    [Option('a', "aplLoopOnly", HelpText = "Only simulate orders for APL loop (PS0?->AP1L, APL1 -PS0?)", Default = false, Required = false)]
-    public bool AplLoopOnly { get; init; }
+    [Option('p', "noAplLoopOrders", HelpText = "If set, the system won't simulate orders for APL loop (PS0?->AP1L, APL1 -PS0?)", Default = false, Required = false)]
+    public bool NoAplLoopOrders { get; set; }
+
+    /// <summary>
+    /// Flag to not simulate orders in the akl loop.
+    /// </summary>
+    [UsedImplicitly]
+    [Option('k', "noAklLoopOrders", HelpText = "If set, the system won't simulate orders for AKL loop (PS0?->AP0?, AP? -PS0?)", Default = false, Required = false)]
+    public bool NoAklLoopOrders { get; set; }
 
     /// <summary>
     /// This is required for 'dotnet ef migrations' to work
     /// </summary>
     [UsedImplicitly]
     [Option("applicationName", HelpText = "Ignore property only used by dotnet tools")]
-    public string? ApplicationName { get; init; }
+    public string? ApplicationName { get; set; }
 }

@@ -34,7 +34,7 @@ try
 
     var host = GebhardtStartup.CreateHostBuilder(args)
         .AddMassTransit(initialLogger, simulationOptions)
-        .AddPrismatCommunication(simulationOptions)
+        .AddPrismatCommunication(simulationOptions, initialLogger)
         .ConfigureWebHost(h =>
             h.UseKestrel()
                 .Configure(app =>

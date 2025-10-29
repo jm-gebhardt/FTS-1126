@@ -5,10 +5,10 @@ namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 /// <summary>
 /// Provides a command to remove the station from the station occupancy.
 /// </summary>
-/// <param name="StationId">The station Id.</param>
+/// <param name="NodeId">The node Id of the station.</param>
 /// <param name="AgvCorrelationId">The correlation id of the agv.</param>
-public record FreeStationOccupancy(Guid StationId, Guid AgvCorrelationId) : CorrelatedBy<Guid>
+public record FreeStationOccupancy(Guid NodeId, Guid AgvCorrelationId) : CorrelatedBy<Guid>
 {
     /// <inheritdoc cref="CorrelatedBy{Key}"/>>
-    public Guid CorrelationId => StationId;
+    public Guid CorrelationId => NodeId;
 }

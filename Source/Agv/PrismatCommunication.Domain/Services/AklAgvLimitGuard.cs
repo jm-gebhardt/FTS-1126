@@ -60,7 +60,7 @@ public sealed class AklAgvLimitGuard : IAklAgvLimitGuard
             return false;
         }
 
-        _logger.LogDebug("HostOrder {CorrelationId} is within AKL AGV limit for target {Target}", hostOrder.CorrelationId, hostOrder.Target);
+        _logger.LogInformation("HostOrder {CorrelationId} is within AKL AGV limit for target {Target}", hostOrder.CorrelationId, hostOrder.Target);
         return true;
     }
 }

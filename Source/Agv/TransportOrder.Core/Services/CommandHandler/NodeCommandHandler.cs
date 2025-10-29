@@ -249,8 +249,30 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
+        var nodeId = context.Message.NodeId;
+        var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
+        if (nodeState == null)
+        {
+            logger.LogWarning("Could not retrieve node state for station with Node {NodeId}", nodeId);
+            return;
+        }
+
+        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
+        {
+            logger.LogWarning("Could not free node {NodeId}, node is locked", nodeId);
+        }
+
+        await PublishNodeStateChange(context, nodeId);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="UnblockStation"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<UnblockStation> context)
+    {
         var stationId = context.Message.StationId;
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(stationId);
+        var station = await stationRepository.GetStation(stationId);
+        var nodeState = station.NodeLock;
         if (nodeState == null)
         {
             logger.LogWarning("Could not retrieve node state for station {StationName}", stationId);
@@ -259,31 +281,10 @@ public class NodeCommandHandler(
 
         if (!await nodeStateRepository.FreeNodeAsync(stationId))
         {
-            logger.LogWarning("Could not free node {NodeId}, node is locked", stationId);
+            logger.LogWarning("Could not unblock node {NodeId}, node is locked", stationId);
         }
 
         await PublishNodeStateChange(context, stationId);
-    }
-
-    /// <summary>
-    /// Handles the <see cref="UnblockStation"/> command.
-    /// </summary>
-    public async Task Consume(ConsumeContext<UnblockStation> context)
-    {
-        var stationName = context.Message.Id;
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(stationName);
-        if (nodeState == null)
-        {
-            logger.LogWarning("Could not retrieve node state for station {StationName}", stationName);
-            return;
-        }
-
-        if (!await nodeStateRepository.FreeNodeAsync(stationName))
-        {
-            logger.LogWarning("Could not unblock node {NodeId}, node is locked", stationName);
-        }
-
-        await PublishNodeStateChange(context, stationName);
     }
 
     /// <summary>

@@ -17,7 +17,7 @@ public class EfStationRepository(PrismatCommunicationDbContext context) : EfRepo
         List<Station> existingStations = await _context.Set<Station>().Where(s => s.GroupId == groupId).ToListAsync();
         List<string> removedStationSources = existingStations.Select(s => s.Source).Except(stations.Select(s => s.Source)).ToList();
         List<string> newStationSources = stations.Select(s => s.Source).Except(existingStations.Select(s => s.Source)).ToList();
-        List<Station> updatedStations = stations.Where(s => s.Equals(existingStations.SingleOrDefault(e => e.Source == s.Source))).ToList();
+        List<Station> updatedStations = stations.Where(s => existingStations.SingleOrDefault(e => e.Source == s.Source) != null).ToList();
         bool stationsUpdated = removedStationSources.Count > 0 || newStationSources.Count > 0 || updatedStations.Count > 0;
         if (!stationsUpdated)
         {
@@ -38,7 +38,14 @@ public class EfStationRepository(PrismatCommunicationDbContext context) : EfRepo
 
         if (updatedStations.Count > 0)
         {
-            _context.UpdateRange(updatedStations);
+            foreach (var incoming in stations)
+            {
+                var tracked = existingStations.SingleOrDefault(e => e.Source == incoming.Source);
+                if (tracked != null)
+                {
+                    _context.Entry(tracked).CurrentValues.SetValues(incoming);
+                }
+            }
         }
 
         await _context.SaveChangesAsync();
@@ -50,10 +57,16 @@ public class EfStationRepository(PrismatCommunicationDbContext context) : EfRepo
         return await _context.Set<Station>().SingleOrDefaultAsync(s => s.AgvCorrelationId == agvCorrelationId);
     }
 
-    /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<Station?> GetStationByNode(Guid nodeId)
+    /// <inheritdoc />
+    public Task<Station?> GetStationById(Guid stationId)
     {
-        return await _context.Set<Station>().SingleOrDefaultAsync(s => s.Id == nodeId);
+        return _context.Set<Station>().SingleOrDefaultAsync(s => s.Id == stationId);
+    }
+
+    /// <inheritdoc cref="IStationRepository"/>>
+    public Task<Station?> GetStationByNodeId(Guid nodeId)
+    {
+        return _context.Set<Station>().SingleOrDefaultAsync(s => s.NodeId == nodeId);
     }
 
     /// <inheritdoc cref="IStationRepository"/>>

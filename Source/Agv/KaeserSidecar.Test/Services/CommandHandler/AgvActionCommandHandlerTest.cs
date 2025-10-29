@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Messages;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
@@ -31,7 +32,7 @@ public class AgvActionCommandHandlerTest
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
         await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
         var freeStation = await fixture.GetFirstPublishedMessageAsync<FreeStationOccupancy>();
-        freeStation.StationId.ShouldBe(stationId.ToGuid());
+        freeStation.NodeId.ShouldBe(stationId.ToGuid());
         await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
         fixture.VerifyActionDequeued(actionGroup.Actions[0].CorrelationId, Times.Never());
     }
@@ -320,15 +321,34 @@ public class AgvActionCommandHandlerTest
     public async Task Consume_ActionAborted_TargetIsOccupancyLimited_PublishesFreeStation()
     {
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "somewhere else");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, source: station);
         var action = actionGroup.Actions.First();
         var actionGroupMessage = AgvActionGenerator.ConvertToMessage(actionGroup);
         var abortedAction = actionGroupMessage.Actions.First();
         var fixture = new AgvActionCommandHandlerTestFixture()
-            .WithActionGroup(actionGroup);
+            .WithActionGroup(actionGroup)
+            .WithAgv(agv);
 
         await fixture.PublishMessageAsync(new ActionAborted(action.CorrelationId, abortedAction));
         await fixture.ShouldHavePublishedAsync<FreeStationOccupancy>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionAborted_AgvIsOnTarget_DoesNotPublishesFreeStation()
+    {
+        const string targetNode = "on that node";
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: targetNode);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, source: targetNode);
+        var action = actionGroup.Actions.First();
+        var actionGroupMessage = AgvActionGenerator.ConvertToMessage(actionGroup);
+        var abortedAction = actionGroupMessage.Actions.First();
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithActionGroup(actionGroup)
+            .WithAgv(agv);
+
+        await fixture.PublishMessageAsync(new ActionAborted(action.CorrelationId, abortedAction));
+        await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
     }
 
     [TestMethod]

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -15,9 +16,14 @@ public class Station
     public Guid Id { get; init; }
 
     /// <summary>
-    /// The node in the graph.
+    /// The node id in the graph.
     /// </summary>
-    public string? Node { get; set; }
+    public Guid NodeId { get; private set; }
+
+    /// <summary>
+    /// The node name in the graph.
+    /// </summary>
+    public string NodeName { get; private set; }
 
     /// <summary>
     /// The prismat code used to identify the source.
@@ -45,10 +51,12 @@ public class Station
     public int Occupancy { get; private set; }
 
     /// <inheritdoc cref="Station"/>>
-    public Station(Guid id, string node, string source, string target, Guid groupId, int occupancy, Guid? agvCorrelationId)
+    [JsonConstructor]
+    public Station(Guid id, Guid nodeId, string nodeName, string source, string target, Guid groupId, int occupancy, Guid? agvCorrelationId)
     {
         Id = id;
-        Node = node;
+        NodeId = nodeId;
+        NodeName = nodeName;
         Source = source;
         Target = target;
         GroupId = groupId;
@@ -57,19 +65,13 @@ public class Station
     }
 
     /// <inheritdoc cref="Station"/>>
-    public Station(string source, string target)
+    public Station(string source, string target, Guid nodeId, string nodeName)
     {
         Id = source.ToGuid();
         Source = source;
         Target = target;
-    }
-
-    /// <inheritdoc cref="Station"/>>
-    public Station()
-    {
-        Source = string.Empty;
-        Target = string.Empty;
-        Id = Source.ToGuid();
+        NodeId = nodeId;
+        NodeName = nodeName;
     }
 
     /// <summary>
@@ -84,10 +86,12 @@ public class Station
     /// <summary>
     /// Localize the station.
     /// </summary>
-    /// <param name="node"></param>
-    public void Localize(string node)
+    /// <param name="nodeId">The node id.</param>
+    /// <param name="nodeName">The node name.</param>
+    public void Localize(Guid nodeId, string nodeName)
     {
-        Node = node;
+        NodeId = nodeId;
+        NodeName = nodeName;
     }
 
     /// <summary>

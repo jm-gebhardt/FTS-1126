@@ -53,10 +53,14 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     public NodeCommandHandlerTestFixture WithStation(string nodeName)
     {
         var station = new TransportOrder.Domain.Models.Station.Station(nodeName, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>());
-        var id = station.Id;
-        _stationRepository.Setup(x => x.GetStation(id)).ReturnsAsync(station);
-        _stationRepository.Setup(x => x.GetStation(nodeName.ToGuid())).ReturnsAsync(station);
-        return this;
+        return WithStation(station);
+    }
+
+    public NodeCommandHandlerTestFixture WithStation(TransportOrder.Domain.Models.Station.Station station)
+    {
+        _stationRepository.Setup(x => x.GetStation(station.Id)).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStation(station.Name.ToGuid())).ReturnsAsync(station);
+        return WithNodeState(station.NodeLock);
     }
 
     public NodeCommandHandlerTestFixture WithAnyStation()

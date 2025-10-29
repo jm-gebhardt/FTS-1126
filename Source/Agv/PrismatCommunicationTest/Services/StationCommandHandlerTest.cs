@@ -16,7 +16,7 @@ public class StationCommandHandlerTest
     {
         using var fixture = new StationCommandHandlerTestFixture();
 
-        await fixture.TestHarness.Bus.Publish(new AddOrUpdateStationGroup([new Station("source", "target")], Guid.NewGuid()));
+        await fixture.TestHarness.Bus.Publish(new AddOrUpdateStationGroup([new Station("source", "target", Guid.NewGuid(), "station")], Guid.NewGuid()));
 
         await fixture.ShouldHaveConsumedAsync<AddOrUpdateStationGroup>();
 
@@ -26,7 +26,7 @@ public class StationCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveAgvFromStation_ValidData_PublishesAgvLeftStation()
     {
-        var station = new Station("source", "target") {Node = "node"};
+        var station = new Station("source", "target", Guid.NewGuid(), "node");
         station.AddAgv(Guid.NewGuid());
         station.Occupancy.ShouldBe(1);
         using var fixture = new StationCommandHandlerTestFixture()
@@ -43,7 +43,7 @@ public class StationCommandHandlerTest
     public async Task Consume_RemoveAgvFromStation_StationNotOccupiedByThisAgv_DoesNotPublishAgvLeftStation()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var occupiedStation = new Station("source2", "target3") {Node = "station"};
+        var occupiedStation = new Station("source2", "target3", Guid.NewGuid(), "station");
         occupiedStation.AddAgv(Guid.NewGuid());
 
         using var fixture = new StationCommandHandlerTestFixture()
@@ -58,7 +58,7 @@ public class StationCommandHandlerTest
     [TestMethod]
     public async Task Consume_AddAgvToStation_ValidData_OccupiesStation()
     {
-        var station = new Station("source", "target") {Node = "node"};
+        var station = new Station("source", "target", Guid.NewGuid(), "node");
         station.Occupancy.ShouldBe(0);
         var agv = Guid.NewGuid();
         using var fixture = new StationCommandHandlerTestFixture()
@@ -74,7 +74,7 @@ public class StationCommandHandlerTest
     [TestMethod]
     public async Task Consume_AddAgvToStation_UnknownStation_DoesNotOccupiesStation()
     {
-        var station = new Station("source", "target") {Node = "node"};
+        var station = new Station("source", "target", Guid.NewGuid(), "node");
         station.Occupancy.ShouldBe(0);
         var agv = Guid.NewGuid();
         using var fixture = new StationCommandHandlerTestFixture();

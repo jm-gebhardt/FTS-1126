@@ -32,7 +32,7 @@ TargetLiftHeight:
   "2330": 1.5
   "2410": 1.0
   "2430": 1.5
-UseAklAgvLimit: false
+UseAklAgvLimit: true
 OrderValidationErrors:
     1000: "Quell-Station nicht bekannt"
     2000: "Ziel-Station nicht bekannt"

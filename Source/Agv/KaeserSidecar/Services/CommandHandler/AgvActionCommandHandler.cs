@@ -241,18 +241,19 @@ public class AgvActionCommandHandler(
             await targetSelector.Dequeue(action.CorrelationId);
         }
         var actionGroup = await transportOrderDb.ActionGroups.GetActionGroupAsync(action.ParentId);
-        Guid? agv = actionGroup?.AssignedAgv;
+        Guid? agvCorrelationId = actionGroup?.AssignedAgv;
 
-        if (agv == null)
+        if (agvCorrelationId == null)
         {
             logger.LogWarning("Could not find action {ActionCorrelationId} or group {ActionGroupCorrelationId} or no AGV assigned to handle action aborted", action.CorrelationId, action.ParentId);
             return;
         }
-        if (configuration.IsOccupancyLimitedNode(targetNode.Name))
+        var agv = await transportOrderDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
+        if (configuration.IsOccupancyLimitedNode(targetNode.Name) && agv.AgvStatus?.LastNodeId != targetNode.Id)
         {
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it",
                 nameof(ActionAborted), action.CorrelationId, action.CorrelationId, targetNode.Name);
-            await context.Publish(new FreeStationOccupancy(targetNode.Id, (Guid) agv));
+            await context.Publish(new FreeStationOccupancy(targetNode.Id, (Guid) agvCorrelationId));
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Queue;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
@@ -65,7 +66,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public HostOrderConsumerTestFixture(int? enteredAgvs=null)
+    public HostOrderConsumerTestFixture(int? enteredAgvs = null)
     {
         _quantity = enteredAgvs;
         _stationRepository.Setup(x => x.GetStationGroup(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(() => _stationGroup);
@@ -91,7 +92,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
     {
         if (isWithinLimit)
         {
-            var station = new Station();
+            var station = new Station("source", "target", "source".ToGuid(), "source");
             station.AddAgv(Guid.NewGuid());
             _stationGroup = new StationGroup([station]);
         }
@@ -161,7 +162,7 @@ public class HostOrderConsumerTestFixture<TConsumer> : MassTransitConsumerTestFi
         return this;
     }
 
-    public void VerifyHostOrderAdded(bool canRunDoppelspiel=true,Times times = default)
+    public void VerifyHostOrderAdded(bool canRunDoppelspiel = true, Times times = default)
     {
         HostOrderRepositoryMock.Verify(x => x.Add(It.Is<HostOrder>(ho => ho.CanRunDoppelspiel == canRunDoppelspiel)), times);
     }

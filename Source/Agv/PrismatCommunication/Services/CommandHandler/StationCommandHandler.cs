@@ -42,11 +42,11 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         var station = await stationRepository.GetByIdAsync(stationId);
         if (station.AgvCorrelationId != agvCorrelationId)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station: {Station}, but {StationAgvCorrelationId} does", agvCorrelationId, station.Node, station.AgvCorrelationId);
+            logger.LogWarning("AGV {AgvCorrelationId} does not occupy station: {Station}, but {StationAgvCorrelationId} does", agvCorrelationId, station.NodeName, station.AgvCorrelationId);
             return;
         }
 
-        logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station.Node);
+        logger.LogInformation("Removing agv {Agv} from station {Station}", agvCorrelationId, station.NodeName);
         station.RemoveAgv();
 
         await stationRepository.SaveAsync();
@@ -62,7 +62,7 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
         var (stationId, agvCorrelationId) = context.Message;
 
         var station = await stationRepository.GetByIdAsync(stationId);
-        logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station.Node);
+        logger.LogInformation("Adding agv {Agv} to station {Station}", agvCorrelationId, station.NodeName);
         station.AddAgv(agvCorrelationId);
         await stationRepository.SaveAsync();
     }

@@ -256,7 +256,7 @@ public class NodeCommandHandlerTest
             .WithNodeStates([unusedNodeState, usedNodeState])
             .WithAnyStation()
             .WithQueue(null);
-        
+
         fixture.TimeProvider.SetNow(now);
 
         await fixture.PublishMessageAsync(new UpdateNodeOccupancy(AgvSerialNumber.ToGuid(), "old".ToGuid(), "new".ToGuid()));
@@ -362,12 +362,12 @@ public class NodeCommandHandlerTest
     [TestMethod]
     public async Task Consume_UnblockStation_StationNotReservedOrOccupied_FreeNodeNotCalled()
     {
-        const string nodeName = "APL1";
+        var stationId = "APL1".ToGuid();
         var fixture = new NodeCommandHandlerTestFixture()
             .WithNodeState(null)
             .WithAnyStation();
 
-        await fixture.PublishMessageAsync(new UnblockStation(nodeName.ToGuid()));
+        await fixture.PublishMessageAsync(new UnblockStation(stationId));
 
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
@@ -378,11 +378,15 @@ public class NodeCommandHandlerTest
     {
         var agv = Guid.NewGuid();
         var node = "PS01".ToGraphNode();
+        var station = new TransportOrder.Domain.Models.Station.Station()
+        {
+            Id = "APL1".ToGuid(),
+            NodeLock = new NodeLock(node, NodeLockState.Occupied, false, agv, DateTime.UtcNow)
+        };
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(new NodeLock(node, NodeLockState.Occupied, false, agv, DateTime.UtcNow))
-            .WithAnyStation();
+            .WithStation(station);
 
-        await fixture.PublishMessageAsync(new UnblockStation(node.Id));
+        await fixture.PublishMessageAsync(new UnblockStation(station.Id));
 
         fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();

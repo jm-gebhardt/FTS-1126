@@ -54,11 +54,11 @@ public class StationEventHandler(
     public async Task Consume(ConsumeContext<StationUnlocked> context)
     {
         string unlockedStation = context.Message.StationNode.Name;
-        
+
         await targetStationRepository.UnlockStation(unlockedStation);
-        
+
         var shortLoopTarget = await targetStationRepository.GetTargetStation();
-        
+
         if (unlockedStation == shortLoopTarget.Primary && shortLoopTarget.Current != shortLoopTarget.Primary)
         {
             shortLoopTarget.Reset();
@@ -84,9 +84,9 @@ public class StationEventHandler(
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var station = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
-        if (station?.Id != context.Message.StationId)
+        if (station?.NodeId != context.Message.NodeId)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} is not occupying station {StationId}, but {OccupiedStation}", agvCorrelationId, context.Message.StationId, station?.Node ?? "none");
+            logger.LogWarning("AGV {AgvCorrelationId} is not occupying station {StationId}, but {OccupiedStation}", agvCorrelationId, context.Message.NodeId, station?.NodeName ?? "none");
             return;
         }
 
@@ -98,19 +98,19 @@ public class StationEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<UnblockStation> context)
     {
-        var stationData = context.Message;
+        var stationId = context.Message.StationId;
 
-        var station = await stationRepository.GetStationByNode(stationData.Id);
+        var station = await stationRepository.GetStationById(stationId);
 
         if (station == null)
         {
-            logger.LogWarning("Cannot unblock station {StationId}; No station with that Id exists", stationData.Id);
+            logger.LogWarning("Cannot unblock station {StationId}; No station with that Id exists", stationId);
             return;
         }
 
         if (station.AgvCorrelationId == null)
         {
-            logger.LogWarning("Cannot unblock station {StationId}; It is not blocked", stationData.Id);
+            logger.LogWarning("Cannot unblock station {StationId}; It is not blocked", stationId);
             return;
         }
 
@@ -125,18 +125,18 @@ public class StationEventHandler(
         var (node, agvCorrelationId) = context.Message;
         var occupiedStation = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
 
-        if (occupiedStation != null && occupiedStation.Id == node.Id)
+        if (occupiedStation != null && occupiedStation.NodeId == node.Id)
         {
             logger.LogWarning("Agv {AgvCorrelationId} already occupies station {NodeName}", agvCorrelationId, node.Name);
             return;
         }
         if (occupiedStation != null)
         {
-            logger.LogWarning("Agv {AgvCorrelationId} still occupies another station {Station}, removing it before occupying {NodeId}", agvCorrelationId, occupiedStation.Node, node.Name);
+            logger.LogWarning("Agv {AgvCorrelationId} still occupies another station {Station}, removing it before occupying {NodeId}", agvCorrelationId, occupiedStation.NodeName, node.Name);
             await context.Publish(new RemoveAgvFromStation(occupiedStation.Id, agvCorrelationId));
         }
 
-        var station = await stationRepository.GetStationByNode(node.Id);
+        var station = await stationRepository.GetStationByNodeId(node.Id);
         if (station != null)
         {
             await context.Publish(new AddAgvToStation(station.Id, agvCorrelationId));

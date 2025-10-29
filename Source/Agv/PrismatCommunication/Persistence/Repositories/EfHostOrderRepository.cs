@@ -34,14 +34,13 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     /// <inheritdoc cref="IHostOrderRepository"/>
     public async Task<Guid?> GetNextDropOrderEligibleForDoppelspiel(string[] dropTargets)
     {
-        var order = await _context.Set<HostOrder>().Where(
-                h => h.CanRunDoppelspiel
-                     && h.CanceledDate == null
-                     && h.FinishedDate == null
-                     && h.IsQueued
-                     && h.Actions.Any(a => a.ActionType == ActionType.Drop && dropTargets.Contains(a.Node))
-                     && !h.Actions.Any(a => a.ActionType == ActionType.Drop && a.IsRegisteredForDoppelspiel)
-                     && h.Actions.Any(a  => a.ActionType == ActionType.Pick && a.FinishedDate != null))
+        var order = await _context.Set<HostOrder>().Where(h => h.CanRunDoppelspiel
+                                                               && h.CanceledDate == null
+                                                               && h.FinishedDate == null
+                                                               && h.IsQueued
+                                                               && h.Actions.Any(a => a.ActionType == ActionType.Drop && dropTargets.Contains(a.Node))
+                                                               && !h.Actions.Any(a => a.ActionType == ActionType.Drop && a.IsRegisteredForDoppelspiel)
+                                                               && h.Actions.Any(a => a.ActionType == ActionType.Pick && a.FinishedDate != null))
             .OrderBy(o => o.StartedDate)
             .ThenBy(o => o.ConsideredForDoppelspielDate).FirstOrDefaultAsync();
         return order?.CorrelationId;
@@ -50,29 +49,28 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     /// <inheritdoc cref="IHostOrderRepository"/>
     public async Task<HostOrder?> GetNextHostOrderForStationGroup(ICollection<string> sources, ICollection<string> targets)
     {
-        return await _context.Set<HostOrder>().Where(
-                h => !h.IsQueued &&
-                     h.CanceledDate == null &&
-                     h.FinishedDate == null &&
-                     h.StartedDate == null &&
-                     h.FailedDate == null &&
-                     (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node)) ||
-                      h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node))))
+        return await _context.Set<HostOrder>().Where(h => !h.IsQueued &&
+                                                          h.CanceledDate == null &&
+                                                          h.FinishedDate == null &&
+                                                          h.StartedDate == null &&
+                                                          h.FailedDate == null &&
+                                                          (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node)) ||
+                                                           h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node))))
             .OrderBy(h => h.CreatedDate).FirstOrDefaultAsync();
     }
 
     /// <inheritdoc cref="IHostOrderRepository"/>
     public async Task<bool> HasHostOrdersForStationGroup(ICollection<string> sources, ICollection<string> targets, Guid? agvCorrelationId)
     {
-       return await _context.Set<HostOrder>().Where(
-            h => h.IsQueued &&
-                 h.CanceledDate == null &&
-                 h.FinishedDate == null &&
-                 h.FailedDate == null &&
-                 (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.FinishedDate == null) ||
-                  h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.FinishedDate == null)) &&
-                 (h.AssignedAgv == null || h.AssignedAgv != agvCorrelationId)
-                 )
+        return await _context.Set<HostOrder>().Where(h =>
+                h.IsQueued &&
+                h.CanceledDate == null &&
+                h.FinishedDate == null &&
+                h.FailedDate == null &&
+                (h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.FinishedDate == null) ||
+                 h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.FinishedDate == null)) &&
+                (h.AssignedAgv == null || h.AssignedAgv != agvCorrelationId)
+            )
             .AnyAsync();
     }
 
@@ -81,14 +79,13 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     {
         agvsToIgnore ??= [];
 
-        return await _context.Set<HostOrder>().Where(
-                h => !h.IsQueued &&
-                     h.CanceledDate == null &&
-                     h.FinishedDate == null &&
-                     h.StartedDate == null &&
-                     h.FailedDate == null && 
-                     (h.AssignedAgv == null || !agvsToIgnore.Contains(h.AssignedAgv.Value)) &&
-                     h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
+        return await _context.Set<HostOrder>().Where(h => !h.IsQueued &&
+                                                          h.CanceledDate == null &&
+                                                          h.FinishedDate == null &&
+                                                          h.StartedDate == null &&
+                                                          h.FailedDate == null &&
+                                                          (h.AssignedAgv == null || !agvsToIgnore.Contains(h.AssignedAgv.Value)) &&
+                                                          h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node)))
             .OrderBy(h => h.CreatedDate)
             .FirstOrDefaultAsync();
     }
@@ -96,23 +93,21 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     /// <inheritdoc cref="IHostOrderRepository"/>
     public async Task<HostOrder?> GetNextUnmatchedDoppelspielPick(ICollection<string> sources, ICollection<string> targets, Guid? correlationId)
     {
-        List<HostOrder> pickOrders = await _context.Set<HostOrder>().Where(
-                h => !h.IsQueued &&
-                     h.CanceledDate == null &&
-                     h.FinishedDate == null &&
-                     h.StartedDate == null &&
-                     h.FailedDate == null &&
-                     h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.IsRegisteredForDoppelspiel && a.DoppelspielPartner == null))
+        List<HostOrder> pickOrders = await _context.Set<HostOrder>().Where(h => !h.IsQueued &&
+                                                                                h.CanceledDate == null &&
+                                                                                h.FinishedDate == null &&
+                                                                                h.StartedDate == null &&
+                                                                                h.FailedDate == null &&
+                                                                                h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.IsRegisteredForDoppelspiel && a.DoppelspielPartner == null))
             .OrderBy(h => h.CreatedDate).ToListAsync();
 
-        int drops = await _context.Set<HostOrder>().Where(
-                h =>
-                    h.CanRunDoppelspiel &&
-                    h.CorrelationId != correlationId &&
-                     h.CanceledDate == null &&
-                     h.FinishedDate == null &&
-                     h.FailedDate == null &&
-                     h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.DoppelspielPartner == null))
+        int drops = await _context.Set<HostOrder>().Where(h =>
+                h.CanRunDoppelspiel &&
+                h.CorrelationId != correlationId &&
+                h.CanceledDate == null &&
+                h.FinishedDate == null &&
+                h.FailedDate == null &&
+                h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node) && a.DoppelspielPartner == null))
             .OrderBy(h => h.ConsideredForDoppelspielDate).CountAsync();
 
         if (pickOrders.Count <= drops)
@@ -127,14 +122,13 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     /// <inheritdoc cref="IHostOrderRepository"/>
     public async Task<HostOrder?> GetNextUnmatchedDoppelspielDrop(ICollection<string> sources, ICollection<string> targets, Guid? correlationId)
     {
-         int pickCount = await _context.Set<HostOrder>().Where(
-                h => !h.IsQueued &&
-                     h.CorrelationId != correlationId &&
-                     h.CanceledDate == null &&
-                     h.FinishedDate == null &&
-                     h.StartedDate == null &&
-                     h.FailedDate == null &&
-                     h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.IsRegisteredForDoppelspiel && a.DoppelspielPartner == null))
+        int pickCount = await _context.Set<HostOrder>().Where(h => !h.IsQueued &&
+                                                                   h.CorrelationId != correlationId &&
+                                                                   h.CanceledDate == null &&
+                                                                   h.FinishedDate == null &&
+                                                                   h.StartedDate == null &&
+                                                                   h.FailedDate == null &&
+                                                                   h.Actions.Any(a => a.ActionType == ActionType.Pick && sources.Contains(a.Node) && a.IsRegisteredForDoppelspiel && a.DoppelspielPartner == null))
             .OrderBy(h => h.CreatedDate).CountAsync();
 
         List<HostOrder> dropOrders = await _context.Set<HostOrder>().Where(h =>

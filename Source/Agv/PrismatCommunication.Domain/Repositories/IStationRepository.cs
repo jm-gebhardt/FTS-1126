@@ -23,11 +23,18 @@ public interface IStationRepository : IRepository<Station>
     Task<Station?> GetStationByOccupyingAgv(Guid agvCorrelationId);
 
     /// <summary>
+    /// Get a station by its id.
+    /// </summary>
+    /// <param name="stationId">The id of the station.</param>
+    /// <returns>A station, if any.</returns>
+    Task<Station?> GetStationById(Guid stationId);
+
+    /// <summary>
     /// Get a station by its node id.
     /// </summary>
     /// <param name="nodeId">The node id of the station.</param>
     /// <returns>A station, if any.</returns>
-    Task<Station?> GetStationByNode(Guid nodeId);
+    Task<Station?> GetStationByNodeId(Guid nodeId);
 
     /// <summary>
     /// Get station group by source and target.

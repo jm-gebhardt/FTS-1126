@@ -935,7 +935,8 @@ public class HostOrderCommandHandlerTest
         var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrders([hostOrder])
-            .WithNextPickOrder(nextPickOrder);
+            .WithNextPickOrder(nextPickOrder)
+            .WithinAklAgvLimit(true);
 
         var command = new TriggerDoppelspielPartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
         await fixture.PublishMessageAsync(command);
@@ -946,6 +947,26 @@ public class HostOrderCommandHandlerTest
         var queueActionGroup = fixture.TestHarness.Published.Select<QueueActionGroup>().First().Context.Message;
         queueActionGroup.ActionGroup.Actions.Count.ShouldBe(2);
         queueActionGroup.ActionGroup.AssignedAgv.ShouldBe(command.AssignedAgv);
+    }
+
+    [TestMethod]
+    public async Task Consume_TriggerDoppelspielPartnerQueueing_NextPickAvailableButAklLimitExceeded_DoesNotPublishesQueueHostOrder()
+    {
+        var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
+        hostOrder.Start(DateTime.UtcNow, Guid.NewGuid());
+        hostOrder.RegisterDoppelspiel(ActionType.Drop);
+        var nextPickOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownPickTargetOrder());
+        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+            .WithHostOrders([hostOrder])
+            .WithNextPickOrder(nextPickOrder)
+            .WithinAklAgvLimit(false);
+
+        var command = new TriggerDoppelspielPartnerQueueing(hostOrder.CorrelationId, hostOrder.AssignedAgv!.Value, "node".ToGraphNode());
+        await fixture.PublishMessageAsync(command);
+
+        await fixture.ShouldHavePublishedAsync<DoppelspielPartnerQueued>();
+        fixture.TestHarness.Published.Select<DoppelspielPartnerQueued>().First().Context.Message.CorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 
     [TestMethod]

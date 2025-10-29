@@ -474,6 +474,7 @@ public class HostOrderCommandHandler(
     {
         var (orderId, agvCorrelationId, pickNode) = context.Message;
         var hostOrder = await hostOrderRepository.GetByIdAsync(orderId);
+
         if (hostOrder.HasQueuedDoppelspielpartner) // has already queued its Doppelspielpartner
         {
             logger.LogInformation("Order {OrderCorrelationId} has already queued DoppelspielPartner", hostOrder.CorrelationId);
@@ -492,6 +493,13 @@ public class HostOrderCommandHandler(
         if (pickingHostOrder == null)
         {
             logger.LogInformation("Order {OrderCorrelationId} has no next Doppelspiel pick", hostOrder.CorrelationId);
+            await context.RespondAsync(new DoppelspielPartnerQueued(null));
+            return;
+        }
+
+        if (!await aklAgvLimitGuard.IsWithinAklAgvLimitAsync(pickingHostOrder))
+        {
+            logger.LogInformation("Order {OrderCorrelationId} Doppelspiel pick {PickOrderCorrelationId} is not statrted because of AKL station limitation", hostOrder.CorrelationId, pickingHostOrder.CorrelationId);
             await context.RespondAsync(new DoppelspielPartnerQueued(null));
             return;
         }

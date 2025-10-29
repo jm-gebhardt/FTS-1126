@@ -166,8 +166,8 @@ public class KaeserGraphConfiguration
     public Dictionary<string, ICollection<Station>> StationGroups { get; private set; } =
         new()
         {
-            { "AP01-AP02", [new Station("2130", "2110"), new Station("2230", "2210")] },
-            { "AP03-AP04", [new Station("2330", "2310"), new Station("2430", "2410")] }
+            { "AP01-AP02", [new Station("2130", "2110", "AP01".ToGuid(), "AP01"), new Station("2230", "2210", "AP02".ToGuid(), "AP02")] },
+            { "AP03-AP04", [new Station("2330", "2310", "AP03".ToGuid(), "AP03"), new Station("2430", "2410", "AP04".ToGuid(), "AP04")] }
         };
 
     /// <summary>
@@ -396,12 +396,12 @@ public class KaeserGraphConfiguration
                     if (existingStation != null)
                     {
                         existingStation.AssignToGroup(groupId);
-                        existingStation.Localize(StationMapping[station.Source]);
+                        existingStation.Localize(StationMapping[station.Source].ToGuid(), StationMapping[station.Source]);
                         continue;
                     }
 
                     station.AssignToGroup(groupId);
-                    station.Localize(StationMapping[station.Source]);
+                    station.Localize(StationMapping[station.Source].ToGuid(), StationMapping[station.Source]);
                     StationGroups[groupName].Add(station);
                 }
                 continue;
@@ -409,7 +409,7 @@ public class KaeserGraphConfiguration
             foreach (var station in stations)
             {
                 station.AssignToGroup(groupId);
-                station.Localize(StationMapping[station.Source]);
+                station.Localize(StationMapping[station.Source].ToGuid(), StationMapping[station.Source]);
             }
             StationGroups[groupName] = stations;
         }
@@ -423,9 +423,9 @@ public class KaeserGraphConfiguration
             foreach (var station in stations)
             {
                 station.AssignToGroup(groupId);
-                if (station.Node == null)
+                if (station.NodeId == Guid.Empty)
                 {
-                    station.Localize(StationMapping[station.Source]);
+                    station.Localize(StationMapping[station.Source].ToGuid(), StationMapping[station.Source]);
                 }
             }
         }

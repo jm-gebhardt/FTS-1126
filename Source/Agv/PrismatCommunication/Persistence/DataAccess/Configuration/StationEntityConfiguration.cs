@@ -15,7 +15,8 @@ public class StationEntityConfiguration:IEntityTypeConfiguration<Station>
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Node).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.NodeId);
+        builder.Property(e => e.NodeName).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.Source).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.GroupId);

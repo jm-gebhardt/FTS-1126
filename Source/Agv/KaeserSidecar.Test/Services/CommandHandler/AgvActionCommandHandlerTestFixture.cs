@@ -6,6 +6,7 @@ using Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -69,6 +70,13 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
                 }
                 throw new Exception();
             });
+        return this;
+    }
+
+    public AgvActionCommandHandlerTestFixture WithAgv(Agv agv)
+    {
+        _transportOrderDb.Setup(x => x.Agvs.GetAgvAsync(agv.CorrelationId))
+            .ReturnsAsync((Guid _) => agv);
         return this;
     }
 

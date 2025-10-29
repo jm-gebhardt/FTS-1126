@@ -70,7 +70,8 @@ public static class HostBuilderExtension
     /// </summary>
     /// <param name="hostBuilder">This <see cref="IHostBuilder"/>.</param>
     /// <param name="simulateOptions">The <see cref="SimulateOptions"/> if in simulation mode.</param>
-    public static IHostBuilder AddPrismatCommunication(this IHostBuilder hostBuilder, SimulateOptions? simulateOptions)
+    /// <param name="logger">Logger instance</param>
+    public static IHostBuilder AddPrismatCommunication(this IHostBuilder hostBuilder, SimulateOptions? simulateOptions, ILogger logger)
     {
         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
@@ -128,17 +129,17 @@ public static class HostBuilderExtension
             services.AddSingleton<IHostCommunicator, SimulationHostCommunicator>();
             services.AddSingleton(_ => simulateOptions);
 
-            services.AddHostOrderCreator<LongLoopSimulator>();
-            switch (simulateOptions.AplLoopOnly)
+            if (!simulateOptions.NoAplLoopOrders)
             {
-                case false:
-                    services.AddHostOrderCreator<ShortLoopSimulator>()
-                        .AddHostOrderCreator<InputLoopSimulator>();
-                    break;
-
-                case true:
-                    services.AddHostOrderCreator<LongLoopInputSimulator>();
-                    break;
+                logger.LogInformation("Simulation configuration: Creating APL loop orders");
+                services.AddHostOrderCreator<LongLoopSimulator>()
+                    .AddHostOrderCreator<LongLoopInputSimulator>();
+            }
+            if (!simulateOptions.NoAklLoopOrders)
+            {
+                logger.LogInformation("Simulation configuration: Creating AKL loop orders");
+                services.AddHostOrderCreator<ShortLoopSimulator>()
+                    .AddHostOrderCreator<InputLoopSimulator>();
             }
         });
         return hostBuilder;
