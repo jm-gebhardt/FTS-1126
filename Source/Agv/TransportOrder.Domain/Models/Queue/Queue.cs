@@ -306,7 +306,7 @@ public class Queue
     public void TrySwapAgv(Guid queueingAgv, out Dictionary<Guid, Guid> agvsToMove)
     {
         agvsToMove = new Dictionary<Guid, Guid>();
-        var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == queueingAgv);
+        var node = Nodes.SingleOrDefault(n => n.GetCurrentAgv() == queueingAgv);
         if (node == null)
         {
             return;

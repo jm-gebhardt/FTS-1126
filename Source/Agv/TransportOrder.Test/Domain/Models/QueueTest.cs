@@ -454,7 +454,24 @@ public class QueueTest
         queue.IsFull.ShouldBeTrue();
         queue.Agvs.ShouldNotContain(agv);
     }
-    
+
+    [DataRow(NodeLockState.Occupied, NodeLockState.Free, NodeLockState.Free)]
+    [DataRow(NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free)]
+    [TestMethod]
+    public void TrySwapAgv_AgvReservedOrOccupied_FillQuantityUnchanged(params NodeLockState[] lockStates)
+    {
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: lockStates);
+        queue.AgvFillQuantity.ShouldBe(1);
+        var node = queue.Nodes.Single(n => n.Position == 0);
+        var agv = Guid.Parse(node.GetCurrentAgv()!.Value.ToString());
+
+        queue.TrySwapAgv(agv, out Dictionary<Guid, Guid> agvsToMove);
+
+        agvsToMove.ShouldBeEmpty();
+        queue.AgvFillQuantity.ShouldBe(1);
+        queue.Agvs.ShouldNotContain(agv);
+    }
+
     [TestMethod]
     public void QueueToString_ValidData_DoesNotContainDoubleQuote()
     {
