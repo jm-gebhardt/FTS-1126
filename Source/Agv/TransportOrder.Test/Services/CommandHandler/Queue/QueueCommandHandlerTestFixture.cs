@@ -142,6 +142,12 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
         return this;
     }
 
+    public QueueCommandHandlerTestFixture WithNextPicksAtTarget(ICollection<ActionGroup> actionGroups)
+    {
+        _actionGroupRepository.Setup(x => x.GetNextPicksAtTarget(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync(actionGroups);
+        return this;
+    }
+
     public void ShouldHaveUpdatedQueue(Guid queueId)
     {
         Should.NotThrow(() => _queueRepository.Verify(qr => qr.UpdateQueueAsync(It.Is<TransportOrder.Domain.Models.Queue.Queue>(q => q.Id == queueId))));

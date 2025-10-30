@@ -217,6 +217,7 @@ public class QueueCommandHandlerTest
             .WithQueue(queue)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter])
+            .WithNextPicksAtTarget([])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
@@ -247,10 +248,12 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateFullQueue();
         var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.Node?.Name);
         var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
+        var nextPickOfAgvAhead = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter])
+            .WithNextPicksAtTarget([nextPickOfAgvAhead])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
@@ -259,6 +262,7 @@ public class QueueCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+        fixture.GetPublishedMessages<TryAssignDelayedOrderToAgv>().First().OrdersToIgnore?.First().ShouldBe(nextPickOfAgvAhead.CorrelationId);
     }
 
     [TestMethod]
@@ -339,6 +343,7 @@ public class QueueCommandHandlerTest
             .WithQueue(queue)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([])
+            .WithNextPicksAtTarget([])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");

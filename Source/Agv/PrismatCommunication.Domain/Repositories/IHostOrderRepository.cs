@@ -56,9 +56,9 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// Get the next order for the given source SAPs.
     /// </summary>
     /// <param name="sources">The source SAPs.</param>
-    /// <param name="agvsToIgnore">The agvs whose orders should not be touched.</param>
+    /// <param name="ordersToIgnore">The orders that should not be considered.</param>
     /// <returns>A host order, if there is any.</returns>
-    Task<HostOrder?> GetNextPickForSources(ICollection<string> sources, ICollection<Guid>? agvsToIgnore = null);
+    Task<HostOrder?> GetNextPickForSources(ICollection<string> sources, ICollection<Guid>? ordersToIgnore = null);
 
     /// <summary>
     /// Get the next pick order that was registered for Doppelspiel, but has no matching partner.

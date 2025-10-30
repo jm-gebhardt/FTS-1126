@@ -564,7 +564,7 @@ public class HostOrderCommandHandler(
             await context.RespondAsync(new AssignedDelayedOrder(null));
             return;
         }
-        var pickingHostOrder = await hostOrderRepository.GetNextPickForSources(sources, context.Message.AgvsAhead);
+        var pickingHostOrder = await hostOrderRepository.GetNextPickForSources(sources, context.Message.OrdersToIgnore);
         if (pickingHostOrder == null)
         {
             logger.LogInformation("{Message}: No delayed pick for agv {AgvCorrelationId} running host order {OrderCorrelationId} ", nameof(TryAssignDelayedOrderToAgv), context.Message.CorrelationId, droppingHostOrder.CorrelationId);

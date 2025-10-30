@@ -176,21 +176,16 @@ public class HostOrderRepositoryTest
     }
     
     [TestMethod]
-    public async Task GetNextPickForSources_AllAgvsIgnored_ReturnsNoOrder()
+    public async Task GetNextPickForSources_AllOrdersIgnored_ReturnsNoOrder()
     {
         var createdDate = DateTime.UtcNow;
-        List<Guid> ignoredAgv = [Guid.NewGuid(), Guid.NewGuid()];
         var pickAtSource1 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(), createdDate: createdDate);
         var pickAtSource2 = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(), createdDate: createdDate);
-        var assignedAgv = typeof(HostOrder).GetProperty(nameof(HostOrder.AssignedAgv));
-
-        assignedAgv!.SetValue(pickAtSource1, ignoredAgv[0], null);
-        assignedAgv.SetValue(pickAtSource2, ignoredAgv[1], null);
 
         var fixture = new HostOrderRepositoryTestFixture();
         fixture.Repository.AddRange(pickAtSource1, pickAtSource2);
         await fixture.Repository.SaveAsync();
-        (await fixture.Repository.GetNextPickForSources([pickAtSource1.Source], ignoredAgv)).ShouldBeNull();
+        (await fixture.Repository.GetNextPickForSources([pickAtSource1.Source], [pickAtSource1.CorrelationId, pickAtSource2.CorrelationId])).ShouldBeNull();
         (await fixture.Repository.GetNextPickForSources([pickAtSource1.Source])).ShouldNotBeNull();
     }
 

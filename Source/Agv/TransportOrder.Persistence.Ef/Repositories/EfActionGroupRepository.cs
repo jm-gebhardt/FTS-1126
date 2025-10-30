@@ -731,6 +731,21 @@ public class EfActionGroupRepository : IActionGroupRepository
             .ToListAsync();
     }
 
+    /// <inheritdoc/>
+    public async Task<ICollection<ActionGroup>> GetNextPicksAtTarget(Guid targetId, ICollection<Guid> assignedAgvs)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+            .AsNoTracking();
+        return await actionGroups.Where(ag =>
+                !ag.IsQueued &&
+                ag.State == ActionGroupState.Created &&
+                ag.AssignedAgv != null &&
+                assignedAgvs.Contains(ag.AssignedAgv.Value) &&
+                ag.Actions.Any(a => a.ActionType == ActionType.Pick && a.Target.Node!.Id == targetId))
+            .ToListAsync();
+    }
+
     private async Task<IReadOnlyList<ActionGroup>> GetAgvActionGroupsInState(Guid agvCorrelationId, List<ActionGroupState> actionGroupStates)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

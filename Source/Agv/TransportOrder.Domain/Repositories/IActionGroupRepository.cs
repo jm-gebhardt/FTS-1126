@@ -356,4 +356,12 @@ public interface IActionGroupRepository
     /// <param name="nodeId">The id of the node.</param>
     /// <returns>Action group, if available</returns>
     Task<ActionGroup?> GetNextPickAtNodeAsync(Guid nodeId);
+
+    /// <summary>
+    /// Get unstarted orders that pick at the given target node and are assigned to one of the given agvs.
+    /// </summary>
+    /// <param name="targetId">The id of the target node.</param>
+    /// <param name="assignedAgvs">A collection of agv correlation id.</param>
+    /// <returns>A collection of action groups.</returns>
+    Task<ICollection<ActionGroup>> GetNextPicksAtTarget(Guid targetId, ICollection<Guid> assignedAgvs);
 }

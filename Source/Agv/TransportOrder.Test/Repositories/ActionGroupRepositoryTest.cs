@@ -839,7 +839,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_SourceNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndTarget()
     {
-        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
+        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double)d).ToList();
         List<ActionGroup> actionGroups = durations[..^1]
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
@@ -865,7 +865,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_TargetNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndSource()
     {
-        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
+        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double)d).ToList();
         List<ActionGroup> actionGroups = durations[..^1]
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
@@ -891,7 +891,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_SourceAndTargetGiven_ReturnsActionDurationsOfGroupsMatchingStateSourceAndTarget()
     {
-        List<double> durations = Enumerable.Range(1, 2).ToList().Select(d => (double) d).ToList();
+        List<double> durations = Enumerable.Range(1, 2).ToList().Select(d => (double)d).ToList();
         List<ActionGroup> actionGroups = durations
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
@@ -1314,8 +1314,8 @@ public class ActionGroupRepositoryTest
     public async Task GetNextPickAtNodeAsync_ValidData_ReturnsNextPickAtNode()
     {
         const string node = "destination";
-        var notQueuedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId:"1", source: node, isQueued: false);
-        var startedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "2", source: node, isQueued: true, startedDate:DateTime.UtcNow);
+        var notQueuedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "1", source: node, isQueued: false);
+        var startedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "2", source: node, isQueued: true, startedDate: DateTime.UtcNow);
         var pickAtNodeWithEstimatedDuration = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "3", source: node, isQueued: true, estimatedDuration: TimeSpan.FromSeconds(10));
         var dropAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", destination: node, isQueued: true);
         var manualPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "5", source: node, isQueued: true);
@@ -1329,5 +1329,26 @@ public class ActionGroupRepositoryTest
             ]).BuildAsync();
 
         (await fixture.ActionGroupRepository.GetNextPickAtNodeAsync(node.ToGuid()))?.CorrelationId.ShouldBe(nextPickAtNode.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextPicksAtTargetAsync_ValidData_ReturnsNextPickAtNode()
+    {
+        const string node = "destination";
+        var agv = Guid.NewGuid();
+        var queuedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "1", source: node, isQueued: true);
+        var startedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "2", source: node, isQueued: true, startedDate: DateTime.UtcNow);
+        var dropAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", destination: node, isQueued: false);
+        var nextPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "6", source: node, isQueued: false, assignedAgv:agv);
+        var nextPickAtNodeForDifferentAgv = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", source: node, isQueued: false, assignedAgv: Guid.NewGuid());
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                queuedPickAtNode, startedPickAtNode, dropAtNode, nextPickAtNode, nextPickAtNodeForDifferentAgv
+            ]).BuildAsync();
+
+        ICollection<ActionGroup> nextPicks = await fixture.ActionGroupRepository.GetNextPicksAtTarget(node.ToGuid(), [agv]);
+        nextPicks.Count.ShouldBe(1);  
+        nextPicks.First().CorrelationId.ShouldBe(nextPickAtNode.CorrelationId);
     }
 }

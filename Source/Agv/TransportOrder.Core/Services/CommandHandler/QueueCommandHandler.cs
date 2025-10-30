@@ -278,10 +278,12 @@ public class QueueCommandHandler(
         bool headRunsOrder = false;
         try
         {
+            List<Guid> agvsBeforeHead = queue.ConsideredAgvs.After(agv.GetValueOrDefault()).ToList();
+            ICollection<Domain.Models.ActionGroup.ActionGroup> actionGroupsAssignedToAgvsAhead = await actionGroupRepository.GetNextPicksAtTarget(targetStation.Id, agvsBeforeHead);
             IRequestClient<TryAssignDelayedOrderToAgv>? requestClient = context.CreateRequestClient<TryAssignDelayedOrderToAgv>(bus);
-            Response<AssignedDelayedOrder> response = await requestClient.GetResponse<AssignedDelayedOrder>(new TryAssignDelayedOrderToAgv(triggeringAgv, agv.GetValueOrDefault(), targetStation, queue.ConsideredAgvs.After(agv.GetValueOrDefault()).ToList()));
+            Response<AssignedDelayedOrder> response = await requestClient.GetResponse<AssignedDelayedOrder>(new TryAssignDelayedOrderToAgv(triggeringAgv, agv.GetValueOrDefault(), targetStation, actionGroupsAssignedToAgvsAhead.Select(a => a.CorrelationId).ToList()));
             headRunsOrder = response.Message.CorrelationId != null;
-            if (!headRunsOrder)
+            if (headRunsOrder)
             {
                 logger.LogInformation("Queue head {AgvCorrelationId} will run order {ActionGroupCorrelationId}, not evacuating it.", agv, response.Message.CorrelationId);
             }
