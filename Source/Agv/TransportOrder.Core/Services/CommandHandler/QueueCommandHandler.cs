@@ -50,8 +50,8 @@ public class QueueCommandHandler(
         var queue = new Queue(name);
         foreach (var node in queueNodes)
         {
-            queue.AddNode(node.NodeId, node.Position);
-            logger.LogInformation("Adding node {NodeId} to queue {QueueName} at position {QueuePosition}", name, node.NodeId, node.Position);
+            queue.AddNode(node.Node.Id, node.Position);
+            logger.LogInformation("Adding node {NodeId} to queue {QueueName} at position {QueuePosition}", name, node.Node.Name, node.Position);
         }
 
         await queueRepository.AddQueue(queue);

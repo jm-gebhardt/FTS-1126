@@ -1,9 +1,9 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Queue;
-using Gebhardt.Acc.Provisioning.Models;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Queue = Gebhardt.Acc.Provisioning.Models.Queue;
 
 namespace Gebhardt.Acc.Provisioning.Services;
 
@@ -26,7 +26,7 @@ public class QueueSeeder : JsonSeeder<Queue>
     /// <inheritdoc />
     protected override async Task<object> GetMessageAsync(Queue data)
     {
-        var addQueue = new AddQueue(data.Name, data.Nodes.Select(n => new Common.Messages.Queue.QueueNode(n.NodeId.ToGuid(), n.Position)).ToList());
+        var addQueue = new AddQueue(data.Name, data.Nodes.Select(n => new QueueNode(n.NodeId.ToBaseNode(), n.Position, null, null)).ToList());
         return await Task.FromResult(addQueue);
     }
 }

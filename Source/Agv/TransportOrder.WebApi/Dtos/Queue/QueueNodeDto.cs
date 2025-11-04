@@ -12,19 +12,22 @@ public record QueueNodeDto
     /// <summary>
     /// The node id.
     /// </summary>
-    public string NodeId { get; init; } = string.Empty;
+    public string NodeId { get; set; } = string.Empty;
 
     /// <summary>
     /// The position of the node in the queue.
     /// </summary>
     public int Position { get; init; }
 
-    /// <inheritdoc cref="QueueNodeDto"/>>
-    public QueueNodeDto(string nodeId, int position)
-    {
-        NodeId = nodeId;
-        Position = position;
-    }
+    /// <summary>
+    /// The agv the node is reserved for.
+    /// </summary>
+    public Guid? ReservedAgv { get; private set; }
+
+    /// <summary>
+    /// The agv that occupies the queue node.
+    /// </summary>
+    public Guid? OccupiedAgv { get; private set; }
 
     /// <inheritdoc cref="QueueNodeDto"/>>
     [JsonConstructor]

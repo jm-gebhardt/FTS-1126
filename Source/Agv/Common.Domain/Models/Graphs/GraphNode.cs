@@ -8,23 +8,8 @@ namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 /// <summary>
 /// Model for a node in the graph, it has X/Y/Z coordinates and a type.
 /// </summary>
-public class GraphNode : IEquatable<GraphNode>
+public class GraphNode : BaseNode, IEquatable<GraphNode>
 {
-    /// <summary>
-    /// The unique Id of the node.
-    /// </summary>
-    public Guid Id { get; init; }
-
-    /// <summary>
-    /// The Name of the node.
-    /// </summary>
-    public string Name
-    {
-        get;
-        [UsedImplicitly]
-        init;
-    } = null!;
-
     /// <summary>
     /// The time (UTC) when this node was created.
     /// </summary>
@@ -104,10 +89,8 @@ public class GraphNode : IEquatable<GraphNode>
     }
 
     /// <inheritdoc cref="GraphNode"/>
-    public GraphNode(Guid id, string name)
+    public GraphNode(Guid id, string name) : base(id, name)
     {
-        Id = id;
-        Name = name;
     }
 
     /// <inheritdoc cref="GraphNode"/>>

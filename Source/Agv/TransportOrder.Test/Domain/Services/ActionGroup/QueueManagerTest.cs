@@ -36,6 +36,7 @@ public class QueueManagerTest
 
         (await fixture.QueueManager.TryEnterQueue(agv)).ShouldBe(entryNode);
         fixture.VerifyQueueWasUpdated();
+        fixture.VerifyQueueChangedWasPublished(false);
         queue.AgvFillQuantity.ShouldBe(1);
     }
 
@@ -124,6 +125,7 @@ public class QueueManagerTest
 
         (await fixture.QueueManager.TryDequeueAgv(agv, null)).ShouldBeNull();
         fixture.VerifyQueueWasUpdated(false);
+        fixture.VerifyQueueChangedWasPublished(false);
     }
 
     [TestMethod]
@@ -147,6 +149,7 @@ public class QueueManagerTest
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(head.NodeId);
         fixture.VerifyQueueWasUpdated();
+        fixture.VerifyQueueChangedWasPublished();
         queue.AgvFillQuantity.ShouldBe(queueSize - 1);
     }
 
@@ -192,6 +195,7 @@ public class QueueManagerTest
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(nodeToEscape.NodeId);
         fixture.VerifyQueueWasUpdated();
+        fixture.VerifyQueueChangedWasPublished();
         queueSizeAfterEscaping.ShouldBe(queueSize - 1);
         nodeToEscape.ReservedAgv.ShouldBe(agvToMove);
     }
@@ -214,6 +218,7 @@ public class QueueManagerTest
 
         agvsToMove.ShouldBeEmpty();
         fixture.VerifyQueueWasUpdated();
+        fixture.VerifyQueueChangedWasPublished(false);
         queueSizeAfterEscaping.ShouldBe(queueSize - 1);
     }
 
@@ -323,6 +328,7 @@ public class QueueManagerTest
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(node.NodeId);
         fixture.VerifyQueueWasUpdated();
+        fixture.VerifyQueueChangedWasPublished();
         node.ReservedAgv.ShouldBe(agvToMove);
         queue.Agvs.ShouldNotContain(agv);
         swapped.ShouldBeTrue();

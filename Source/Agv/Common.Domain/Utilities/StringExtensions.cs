@@ -37,4 +37,11 @@ public static class StringExtensions
     /// <param name="nodeName">The name of the node to convert.</param>
     /// <returns>A <see cref="GraphNode"/> instance initialized with the specified name and Id from <see cref="ToGuid"/>.</returns>
     public static GraphNode ToGraphNode(this string nodeName) => new(nodeName.ToGuid(), nodeName);
+
+    /// <summary>
+    /// Converts a string to a <see cref="BaseNode"/> object.
+    /// </summary>
+    /// <param name="nodeName">The name of the node to convert.</param>
+    /// <returns>A <see cref="BaseNode"/> instance initialized with the specified name and Id from <see cref="ToGuid"/>.</returns>
+    public static BaseNode ToBaseNode(this string nodeName) => new(nodeName.ToGuid(), nodeName);
 }

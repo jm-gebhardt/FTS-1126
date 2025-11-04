@@ -53,11 +53,12 @@ public class QueueRequestHandlerTest
     public async Task TryAddQueue_ValidData_RespondsGotQueue()
     {
         var queue = new TransportOrder.Domain.Models.Queue.Queue("a queue");
-        queue.AddNode("node name".ToGuid(), 0);
+        var node = "node name".ToBaseNode();
+        queue.AddNode(node.Id, 0);
         QueueRequestHandlerTestFixture<TryAddQueue> fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
             .WithQueue(queue)
             .Build();
-        Response<GotQueue> response = await fixture.GetResponseAsync<GotQueue>(new TryAddQueue(queue.Name, queue.Nodes.Select(n => new QueueNode(n.NodeId, n.Position)).ToList()));
+        Response<GotQueue> response = await fixture.GetResponseAsync<GotQueue>(new TryAddQueue(queue.Name, queue.Nodes.Select(n => new QueueNode(node, n.Position, null, null)).ToList()));
 
         response.Message.Queue.ShouldBeEquivalentTo(queue);
     }
@@ -69,7 +70,7 @@ public class QueueRequestHandlerTest
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<QueueNodeExistsException>(async () =>
-            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node 1".ToGuid(), 0), new QueueNode("node 2".ToGuid(), 0)])));
+            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node 1".ToBaseNode(), 0, null, null), new QueueNode("node 2".ToGraphNode(), 0, null, null)])));
     }
 
     [TestMethod]
@@ -79,6 +80,6 @@ public class QueueRequestHandlerTest
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<QueueNodeExistsException>(async () =>
-            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node id".ToGuid(), 0), new QueueNode("node id".ToGuid(), 1)])));
+            await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node id".ToBaseNode(), 0, null, null), new QueueNode("node id".ToGraphNode(), 1, null, null)])));
     }
 }

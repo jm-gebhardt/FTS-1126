@@ -51,7 +51,7 @@ public record AgvPositionFilterable : AgvPosition, IFilterable<AgvPosition, AgvP
 [PublicAPI]
 public class GraphNodeFilterable : GraphNode, IFilterable<GraphNode, GraphNodeFilterable>
 {
-    /// <inheritdoc cref="GraphNode.Name"/>
+    /// <inheritdoc cref="BaseNode.Name"/>
     [FilterProperty]
     public new string Name { get; init; } = "";
 }

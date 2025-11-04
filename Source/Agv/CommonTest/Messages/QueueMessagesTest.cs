@@ -11,7 +11,7 @@ public class QueueMessagesTest
     public void AddQueue_ValidData_MessageSerialized()
     {
         var fixture = new MessageSerialisationTestFixture();
-        var addQueue = new AddQueue("queueName", [new QueueNode("nodeId".ToGuid(), 0)]);
+        var addQueue = new AddQueue("queueName", [new QueueNode("nodeId".ToBaseNode(), 0, null, null)]);
 
         fixture.ValidateSerialization(addQueue);
     }

@@ -19,6 +19,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.System;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
@@ -66,6 +67,7 @@ public static class WebHostBuilderExtensions
             services.AddTransient<ISystemPublisher, SystemPublisher>();
             services.AddTransient<IMapPublisher, MapPublisher>();
             services.AddTransient<IRestrictedAreaPublisher, RestrictedAreaPublisher>();
+            services.AddTransient<IQueuePublisher, QueuePublisher>();
 
             services.AddTransient<IMessageFilter<AgvBatteryStatusDto>, AgvBatteryStatusChangedFilter>();
             services.AddTransient<IMessageFilter<AgvPositionStatusDto>, AgvPositionStatusChangedFilter>();
@@ -85,6 +87,7 @@ public static class WebHostBuilderExtensions
             services.AddHub<MapHub>();
             services.AddHub<TriggerHub>();
             services.AddHub<RestrictedAreaHub>();
+            services.AddHub<QueueHub>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
 
@@ -161,7 +164,7 @@ public static class WebHostBuilderExtensions
                 options.AddFilterExamples();
 
                 options.CustomSchemaIds(Swagger.CustomSchemaSelector.RemoveDtoSuffix);
-                
+
                 options.AddFilterSwaggerExtensions();
                 var securityScheme = new OpenApiSecurityScheme
                 {
@@ -253,6 +256,7 @@ public static class WebHostBuilderExtensions
             endpoints.MapHub<MapHub>(MapHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<RestrictedAreaHub>(RestrictedAreaHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
+            endpoints.MapHub<QueueHub>(QueueHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
         });
 
         app.UseSwagger(c =>

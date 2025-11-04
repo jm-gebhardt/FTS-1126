@@ -3,10 +3,8 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
-using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -15,6 +13,10 @@ using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Extensions;
+using Gebhardt.Acc.TransportOrder.Core.Services;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Queue;
+using MassTransit;
+using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
@@ -28,6 +30,7 @@ public class QueueManagerTestFixture : FixtureBase
     private readonly Mock<ILogger<QueueManager>> _logger = new();
     private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
+    private readonly Mock<IPublishEndpoint> _publishEndpoint = new();
     public readonly QueueManager QueueManager;
 
     public QueueManagerTestFixture()
@@ -40,6 +43,7 @@ public class QueueManagerTestFixture : FixtureBase
             s.AddTransient(_ => _graphRepository.Object);
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _actionGroupRepository.Object);
+            s.AddTransient(_ => _publishEndpoint.Object);
             s.AddTransient<ISemaphoreProvider<IQueueingSemaphore>>(_ => _semaphore);
             s.AddTransient(_ => _logger.Object);
             s.AddTransient<QueueManager>();
@@ -103,6 +107,13 @@ public class QueueManagerTestFixture : FixtureBase
     public void VerifyQueueWasUpdated(bool updated = true)
     {
         _queueRepository.Verify(x => x.UpdateQueueAsync(It.IsAny<Queue>()), updated ? Times.Once() : Times.Never());
+    }
+
+    public void VerifyQueueChangedWasPublished(bool updated = true)
+    {
+        _publishEndpoint.Verify(x =>
+                x.Publish(It.IsAny<QueueChanged>(), It.IsAny<CancellationToken>()),
+            updated ? Times.Once() : Times.Never());
     }
 
     public void VerifyAgvWasUpdated(bool updated = true)

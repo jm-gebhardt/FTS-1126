@@ -6,6 +6,7 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
+        <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoMapper" />
         <PackageReference Include="MassTransit.Prometheus" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" />

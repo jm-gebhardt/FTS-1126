@@ -39,6 +39,9 @@ public class QueueNode
     /// </summary>
     public Guid? ReservedAgv { get; private set; }
 
+    /// <summary>Indicates whether the reserved AGV has changed.</summary>
+    public bool ReservedAgvChanged { get; private set; }
+
     /// <summary>
     /// The time the node was last reserved.
     /// </summary>
@@ -48,6 +51,9 @@ public class QueueNode
     /// The agv that occupies the queue node.
     /// </summary>
     public Guid? OccupiedAgv { get; private set; }
+
+    /// <summary>Indicates if the occupancy state of the AGV has changed.</summary>
+    public bool OccupiedAgvChanged { get; private set; }
 
     /// <summary>
     /// The time the node was last occupied.
@@ -67,21 +73,18 @@ public class QueueNode
         Position = position;
     }
 
-    /// <inheritdoc cref="QueueNode"/>>
-    public QueueNode(Guid nodeId, int position, EfNode node)
-    {
-        NodeId = nodeId;
-        Position = position;
-        Node = node;
-    }
-
     /// <summary>
     /// Reserve a queue node for an agv.
     /// </summary>
     /// <param name="agvCorrelationId">The agv to reserve the queue node for.</param>
     public void Reserve(Guid agvCorrelationId)
     {
+        if (ReservedAgv == agvCorrelationId)
+        {
+            return;
+        }
         ReservedAgv = agvCorrelationId;
+        ReservedAgvChanged = true;
         LastReservedDate = DateTime.UtcNow;
     }
 
@@ -91,11 +94,16 @@ public class QueueNode
     /// <param name="agvCorrelationId"></param>
     public void Occupy(Guid agvCorrelationId)
     {
-        OccupiedAgv = agvCorrelationId;
-        LastOccupiedDate = DateTime.UtcNow;
+        if (OccupiedAgv != agvCorrelationId)
+        {
+            OccupiedAgv = agvCorrelationId;
+            OccupiedAgvChanged = true;
+            LastOccupiedDate = DateTime.UtcNow;
+        }
         if (ReservedAgv == OccupiedAgv)
         {
             ReservedAgv = null;
+            ReservedAgvChanged = true;
             LastReservedDate = null;
         }
     }
@@ -111,6 +119,7 @@ public class QueueNode
             return;
         }
         OccupiedAgv = null;
+        OccupiedAgvChanged = true;
         LastOccupiedDate = null;
     }
 
@@ -123,11 +132,13 @@ public class QueueNode
         if (ReservedAgv == agvCorrelationId)
         {
             ReservedAgv = null;
+            ReservedAgvChanged = true;
             LastReservedDate = null;
         }
         if (OccupiedAgv == agvCorrelationId)
         {
             OccupiedAgv = null;
+            OccupiedAgvChanged = true;
             LastOccupiedDate = null;
         }
     }
@@ -157,5 +168,12 @@ public class QueueNode
             return OccupiedAgv;
         }
         return ReservedAgv;
+    }
+
+    /// <summary>Resets the changed state flags for the node.</summary>
+    public void ClearChangedFlags()
+    {
+        ReservedAgvChanged = false;
+        OccupiedAgvChanged = false;
     }
 }

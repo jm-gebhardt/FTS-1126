@@ -135,6 +135,7 @@ public class QueueTest
         targetNode.ShouldBe(tail.NodeId);
         queue.AllAgvsEntered.ShouldBeTrue();
         queue.Tail.ShouldBeNull();
+        queue.QueueReservationChanged.ShouldBeTrue();
     }
 
     [DataRow(NodeLockState.Occupied, NodeLockState.Free, NodeLockState.Free)]

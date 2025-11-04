@@ -105,7 +105,8 @@ public class EfQueueRepositoryTest
         await fixture.AddRangeAsync(queue);
 
         var agv = queue.Nodes.First(n => n.GetCurrentAgv() != null).GetCurrentAgv()!.Value;
-        (await fixture.Repository.GetQueueForAgv(agv)).ShouldBeEquivalentTo(queue);
+        var fromDb = await fixture.Repository.GetQueueForAgv(agv);
+        fromDb.ShouldBeEquivalentTo(queue);
     }
 
     [TestMethod]

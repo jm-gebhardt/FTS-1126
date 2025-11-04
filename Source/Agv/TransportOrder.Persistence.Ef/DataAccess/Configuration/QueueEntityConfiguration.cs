@@ -23,6 +23,7 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
         builder.Ignore(e => e.Agvs);
 
         builder.Property(q => q.ConsideredAgvs).HasJsonConversion();
+        builder.Ignore(e => e.QueueReservationChanged);
 
         builder.OwnsMany(q => q.Nodes, nodeBuilder =>
         {
@@ -31,9 +32,11 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
             nodeBuilder.Property(n => n.NodeId).IsRequired().HasMaxLength(DbStringLimits.NodeId);
             nodeBuilder.Property(n => n.Position).IsRequired();
             nodeBuilder.Property(n => n.OccupiedAgv);
+            nodeBuilder.Ignore(n => n.OccupiedAgvChanged);
             nodeBuilder.Property(n => n.LastOccupiedDate);
             nodeBuilder.Property(n => n.LastReservedDate);
             nodeBuilder.Property(n => n.ReservedAgv);
+            nodeBuilder.Ignore(n => n.ReservedAgvChanged);
 
             nodeBuilder.HasOne(n => n.Node)
                 .WithMany()

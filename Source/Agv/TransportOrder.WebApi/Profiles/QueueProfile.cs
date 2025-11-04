@@ -12,17 +12,22 @@ public class QueueProfile : WebApiProfile
     /// <inheritdoc cref="QueueProfile"/>>
     public QueueProfile()
     {
+        CreateMap<Common.Messages.Queue.Queue, QueueDto>()
+            .ForMember(d => d.Id, opt => opt.MapFrom(s => s.CorrelationId))
+            .ForMember(d => d.Nodes, opt => opt.MapFrom(s => s.QueueNodes));
+
+        CreateMap<Common.Messages.Queue.QueueNode, QueueNodeDto>()
+            .ForMember(d => d.NodeId, opt => opt.MapFrom(s => s.Node.Name));
+
         CreateMap<QueueNode, QueueNodeDto>()
             .ConstructUsing(_ => new QueueNodeDto())
-            .ForMember(d => d.NodeId, opt => opt.MapFrom(s => s.Node != null ? s.Node.Name : string.Empty))
+            .ForMember(d => d.NodeId, opt => opt.MapFrom(s => s.Node!.Name))
             .ForSourceMember(s => s.Node, opt => opt.DoNotValidate())
             .ForSourceMember(s => s.LastReservedDate, opt => opt.DoNotValidate())
-            .ForSourceMember(s => s.LastOccupiedDate, opt => opt.DoNotValidate())
-            .ForSourceMember(s => s.ReservedAgv, opt => opt.DoNotValidate())
-            .ForSourceMember(s => s.OccupiedAgv, opt => opt.DoNotValidate());
-       
+            .ForSourceMember(s => s.LastOccupiedDate, opt => opt.DoNotValidate());
+
         CreateMap<QueueNodeDto, Common.Messages.Queue.QueueNode>()
-            .ForCtorParam(nameof(Common.Messages.Queue.QueueNode.NodeId), opt => opt.MapFrom(s => s.NodeId.ToGuid()));
+            .ForCtorParam(nameof(Common.Messages.Queue.QueueNode.Node), opt => opt.MapFrom(s => s.NodeId.ToBaseNode()));
         CreateMap<List<QueueNodeDto>, List<Common.Messages.Queue.QueueNode>>().ConvertUsing((src, _, context) => { return src.Select((dto, _) => context.Mapper.Map<Common.Messages.Queue.QueueNode>(dto)).ToList(); });
         CreateMap<Queue, QueueDto>()
             .ForSourceMember(s => s.Head, opt => opt.DoNotValidate())

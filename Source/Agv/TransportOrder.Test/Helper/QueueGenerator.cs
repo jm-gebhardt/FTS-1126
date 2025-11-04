@@ -63,6 +63,7 @@ public static class QueueGenerator
         }
         queue.Nodes.OrderBy(n => n.Position).Where(n => n.OccupiedAgv != null).Select(n => n.OccupiedAgv!.Value).ToList().ForEach(queue.ConsideredAgvs.Add);
 
+        queue.ClearChangedFlag();
         return queue;
     }
 }

@@ -14,7 +14,7 @@ public class Queue
     /// <summary>
     /// The order id use for evacuation-
     /// </summary>
-    public static string EvacuationOrderId = "Queue Evacuation Move";
+    public const string EvacuationOrderId = "Queue Evacuation Move";
 
     /// <summary>
     /// The nodes corresponding to the queue.
@@ -89,6 +89,18 @@ public class Queue
     /// The higher the index the farther through the queue the agv is.
     /// </summary>
     public RandomAccessStack<Guid> ConsideredAgvs = new();
+
+    /// <summary>Indicates if any node in the queue has experienced a change in its reserved or occupied AGV state.</summary>
+    public bool QueueReservationChanged => Nodes.Any(n => n.OccupiedAgvChanged || n.ReservedAgvChanged);
+
+    /// <summary>Clears the changed flags on all nodes within the queue.</summary>
+    public void ClearChangedFlag()
+    {
+        foreach (var node in Nodes)
+        {
+            node.ClearChangedFlags();
+        }
+    }
 
     /// <inheritdoc cref="Queue"/>>
     public Queue(string name)
@@ -351,11 +363,11 @@ public class Queue
 
         DecreaseAgvFillQuantity();
     }
-    
+
     /// <inheritdoc />
     public override string ToString()
     {
-        string jsonString = JsonSerializer.Serialize(this) ;
+        string jsonString = JsonSerializer.Serialize(this);
         return jsonString.Replace("\"", "");
     }
 }

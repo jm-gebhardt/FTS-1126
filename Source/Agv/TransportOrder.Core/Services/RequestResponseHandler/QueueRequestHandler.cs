@@ -1,19 +1,19 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using JetBrains.Annotations;
 using MassTransit;
+using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 using QueueNode = Gebhardt.Acc.Common.Messages.Queue.QueueNode;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
 /// <summary>
-/// Handles <see cref="Queue"/> related requests.
+/// Handles <see cref="Domain.Models.Queue.Queue"/> related requests.
 /// </summary>
 [UsedImplicitly]
-public class QueueRequestHandler(IQueueRepository queueRepository, IBus bus):
+public class QueueRequestHandler(IQueueRepository queueRepository, IBus bus) :
     IConsumer<GetQueues>,
     IConsumer<GetQueue>,
     IConsumer<TryAddQueue>,
@@ -55,7 +55,7 @@ public class QueueRequestHandler(IQueueRepository queueRepository, IBus bus):
         // Mimic adding queue nodes to check consistency (position and node id usage)
         foreach (var node in queueNodes)
         {
-            queue.AddNode(node.NodeId, node.Position);
+            queue.AddNode(node.Node.Id, node.Position);
         }
     }
 
