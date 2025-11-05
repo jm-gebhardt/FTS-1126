@@ -90,4 +90,11 @@ public interface IQueueManager
     /// <param name="nodes">The route nodes.</param>
     /// <returns>Collection of queues.</returns>
     Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes);
+
+    /// <summary>
+    /// True, if the given agv is still located in a queue.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the queue.</param>
+    /// <returns></returns>
+    Task<bool> IsAgvInQueue(Guid agvCorrelationId);
 }

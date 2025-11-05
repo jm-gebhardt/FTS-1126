@@ -62,6 +62,7 @@ public class QueueManagerTestFixture : FixtureBase
 
     public QueueManagerTestFixture WithQueues(ICollection<Queue> queues)
     {
+        _queueRepository.Setup(x => x.GetQueues()).ReturnsAsync(queues);
         _queueRepository.Setup(x => x.GetOccupiedQueues()).ReturnsAsync(queues);
         _queueRepository.Setup(x => x.GetQueuesWithCapacity()).ReturnsAsync(queues);
         var queue = queues.FirstOrDefault();

@@ -165,14 +165,15 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateAgvStatus_AgvWasOffline_SetOnline()
+    public async Task Consume_UpdateAgvStatus_AgvWasOffline_IsInQueue_SetOnline()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithHasOnlineAgvs()
             .WithZones([])
             .WithCurrentStartedOrCreatedActionGroups([])
-            .WithGraphExists(true);
+            .WithGraphExists(true)
+            .WithAgvIsInQueue(true);
         agv.GoOffline();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
         agv.AgvStatus!.UpdateLastNodeId(Guid.Empty);
@@ -180,6 +181,31 @@ public class AgvCommandHandlerTest
         agv.IsOnline.ShouldBeTrue();
         await fixture.ShouldHavePublishedAsync<AgvWentOnline>();
         await fixture.ShouldHavePublishedAsync<CheckAgvLoad>();
+        await fixture.ShouldNotHavePublishedAsync<ResolveSystemAgvError>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_AgvWasOffline_NotQueue_SetOnlinePublishesResolveSystemAgvError()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithHasOnlineAgvs()
+            .WithZones([])
+            .WithCurrentStartedOrCreatedActionGroups([])
+            .WithGraphExists(true)
+            .WithAgvIsInQueue(false)
+            .WithHasCargoStates(false)
+            .WithActionGroups([])
+            .AddAgvs([agv])
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)]);
+       
+        agv.GoOffline();
+        agv.AgvStatus!.UpdateLastNodeId(Guid.Empty);
+        await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
+        agv.IsOnline.ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvWentOnline>();
+        await fixture.ShouldHavePublishedAsync<CheckAgvLoad>();
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
     }
 
     [TestMethod]
@@ -945,6 +971,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)
+            .WithActiveErrors([])
             .WithActionGroup(actionGroup)
             .WithEvacuationMoves([Guid.NewGuid()])
             .WithNode(queueHead);
@@ -955,6 +982,34 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareAgvForStartingAction_WasQueuingAtQueueHead_QueueBlockingError_ResolveSystemAgvError()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
+        var agvInQueue = AgvGenerator.GenerateRawAgv(Guid.NewGuid(), "serial number");
+        agvInQueue.IsQueueing = true;
+
+        var queueHead = "a queue head".ToGraphNode();
+        var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, queueHead.Id } };
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv, agvInQueue])
+            .WithActiveErrors([new QueueBlockingError(agvInQueue.CorrelationId, DateTime.UtcNow)])
+            .WithAgvsToMove(agvsToMove)
+            .WithActionGroup(actionGroup)
+            .WithEvacuationMoves([Guid.NewGuid()])
+            .WithAgvIsInQueue(false)
+            .WithNode(queueHead);
+
+        await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
+        await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
     }
 
     [TestMethod]
@@ -1057,6 +1112,35 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<CreateQueueingActionGroup>();
         await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
+        agv.IsQueueing.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_QueueBlockingError_ResolveSystemAgvError()
+    {
+        var agvsToMove = new Dictionary<Guid, Guid>();
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
+        agv.IsQueueing = true;
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsToMove(agvsToMove, 0)
+            .WithActionGroup(actionGroup)
+            .WithIsOnAQueueNode(true)
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([])
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
+            .WithAgvIsInQueue(false);
+
+        await fixture.PublishMessageAsync(new PrepareAgvForStartingAction(actionGroup.Actions.First(), agv.CorrelationId));
+
+        await fixture.ShouldHavePublishedAsync<AgvPreparedForStartingAction>();
+        await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<TryReactivateParkingAgvs>();
+        await fixture.ShouldHavePublishedAsync<QueueBecameEmpty>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
         agv.IsQueueing.ShouldBeFalse();
     }
 
@@ -2028,7 +2112,7 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_RemoveAgvFromQueue_EscapeQueue_PublishesUpdateErrorStatus()
+    public async Task Consume_RemoveAgvFromQueue_EscapeQueue_PublishesResolveSystemAgvError()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agv.IsQueueing = true;
@@ -2046,14 +2130,13 @@ public class AgvCommandHandlerTest
             .WithEvacuationMoves([])
             .WithNode(queueHead);
 
-        var update = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateSystemAgvErrors>(new RemoveAgvFromQueue(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
 
-        update.ErrorsToAdd.ShouldBeEmpty();
-        update.ErrorsToResolve.Single().ShouldBeOfType<QueueBlockingError>();
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
     }
 
     [TestMethod]
-    public async Task Consume_RemoveAgvFromQueue_RemovedFromQueueEntryNode_PublishesUpdateSystemAgvErrors()
+    public async Task Consume_RemoveAgvFromQueue_RemovedFromQueueEntryNode_PublishesResolveSystemAgvError()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
         agv.IsQueueing = true;
@@ -2065,10 +2148,9 @@ public class AgvCommandHandlerTest
             .WithQueueInternalMoves([])
             .WithEvacuationMoves([]);
 
-        var update = await fixture.PublishAndGetFirstMessageAsync<RemoveAgvFromQueue, UpdateSystemAgvErrors>(new RemoveAgvFromQueue(agv.CorrelationId));
+        await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
 
-        update.ErrorsToAdd.ShouldBeEmpty();
-        update.ErrorsToResolve.Single().ShouldBeOfType<QueueBlockingError>();
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
     }
 
     [TestMethod]
@@ -2085,7 +2167,7 @@ public class AgvCommandHandlerTest
 
         await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
 
-        await fixture.ShouldNotHavePublishedAsync<UpdateSystemAgvErrors>();
+        await fixture.ShouldNotHavePublishedAsync<ResolveSystemAgvError>();
     }
 
     [TestMethod]

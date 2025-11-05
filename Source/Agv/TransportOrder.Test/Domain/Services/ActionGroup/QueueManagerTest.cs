@@ -400,4 +400,65 @@ public class QueueManagerTest
 
         (await fixture.QueueManager.GetQueueInternalActionGroups(agv)).Single().ShouldBe(queueActionGroup.CorrelationId);
     }
+
+    [DataRow(NodeLockState.Occupied)]
+    [DataRow(NodeLockState.Reserved)]
+    [TestMethod]
+    public async Task IsAgvInQueue_ReservedForOrOccupiesNode_ReturnsTrue(NodeLockState queueNodeState)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
+        var queue = QueueGenerator.GenerateQueueWithAgvs(
+            agvStates:
+            [
+                (agv.CorrelationId, queueNodeState)
+            ]
+        );
+        var fixture = new QueueManagerTestFixture().WithQueue(queue);
+
+        (await fixture.QueueManager.IsAgvInQueue(agv.CorrelationId)).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task IsAgvInQueue_MarkedForQueueing_ReturnsTrue()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
+        var fixture = new QueueManagerTestFixture()
+            .WithQueue(null)
+            .WithAgv(agv);
+
+        (await fixture.QueueManager.IsAgvInQueue(agv.CorrelationId)).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task IsAgvInQueue_HasStartedOrRunningQueueMoves_ReturnsTrue()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: false);
+
+        var queueMove = new AgvAction() { ActionType = ActionType.Move, ParentId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), Target = new ActionTarget(queue.Nodes.Last().Node!.Name.ToGraphNode()) };
+        var queueActionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup { CorrelationId = queueMove.ParentId, AssignedAgv = agv.CorrelationId, Actions = [queueMove], OrderId = "Queuing" };
+
+        var fixture = new QueueManagerTestFixture()
+            .WithActionGroups([queueActionGroup])
+            .WithQueue(queue)
+            .WithAgv(agv)
+            .WithQueues([queue]);
+
+        (await fixture.QueueManager.IsAgvInQueue(agv.CorrelationId)).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task IsAgvInQueue_NotInQueue_ReturnsFalse()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: false);
+
+        var fixture = new QueueManagerTestFixture()
+            .WithActionGroups([])
+            .WithQueue(queue)
+            .WithAgv(agv)
+            .WithQueues([queue]);
+
+        (await fixture.QueueManager.IsAgvInQueue(agv.CorrelationId)).ShouldBeFalse();
+    }
 }

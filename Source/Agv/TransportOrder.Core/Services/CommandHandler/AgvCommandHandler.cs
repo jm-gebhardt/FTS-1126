@@ -88,7 +88,8 @@ public class AgvCommandHandler :
     IConsumer<SwitchChargingAgvs>,
     IConsumer<CheckAgvLoad>,
     IConsumer<RemoveAgvFromQueue>,
-    IConsumer<RemoveAgvFromZones>
+    IConsumer<RemoveAgvFromZones>,
+    IConsumer<TryRemoveQueueBlocking>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -439,6 +440,7 @@ public class AgvCommandHandler :
         {
             agv.SetOnline();
             await PrepareNodes(context, agvStatus, agv);
+            await TryRemoveQueueBlocking(context, agv.CorrelationId);
             await context.Publish(new CheckAgvLoad(agv.CorrelationId));
         }
         bool wasReady = agv.IsReady;
@@ -1123,6 +1125,7 @@ public class AgvCommandHandler :
                     _logger.LogError("{Command}: Could not update agv {AgvCorrelationId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId);
                     return;
                 }
+                await TryRemoveQueueBlocking(context, agv.CorrelationId);
                 _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
                 await PublishStateChange(context, agv, context.CancellationToken);
                 await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
@@ -1141,6 +1144,7 @@ public class AgvCommandHandler :
             await TryDequeueAgv(context, agv, actionGroup.CorrelationId);
             _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
             await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
+            await TryRemoveQueueBlocking(context, agv.CorrelationId);
         });
     }
 
@@ -1541,6 +1545,23 @@ public class AgvCommandHandler :
         }
     }
 
+    private async Task TryRemoveQueueBlocking(IPublishEndpoint context, Guid agvCorrelationId)
+    {
+        if (await _queueManager.IsAgvInQueue(agvCorrelationId))
+        {
+            return;
+        }
+
+        IReadOnlyList<AgvError> errors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        var queueBlockingError = errors.ToList().FirstOrDefault(e => e.IsQueueBlockingError());
+        if (queueBlockingError == null)
+        {
+            return;
+        }
+        _logger.LogInformation("Agv {AgvCorrelationId} not in queue anymore, resolving queue blocking warning", agvCorrelationId);
+        await context.Publish(new ResolveSystemAgvError(agvCorrelationId, [queueBlockingError]));
+    }
+
     private async Task PrepareNodes(IPublishEndpoint context, AgvStatus agvStatus, Agv agv)
     {
         _logger.LogInformation("Preparing nodes for AGV {AgvCorrelationId}. Last node id of AGV is {LastNodeId}", agv.CorrelationId, agvStatus.LastNodeId);
@@ -1868,14 +1889,10 @@ public class AgvCommandHandler :
             return;
         }
 
-        updatedErrors.Remove(blockingError);
-        var position = _agvDb.Positions.GetPosition(agvCorrelationId);
-        await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
+        await context.Publish(new ResolveSystemAgvError(agvCorrelationId, [blockingError]));
     }
 
-    /// <summary>
-    /// Handles the agv <see cref="RemoveAgvFromZones"/> command.
-    /// </summary>
+    /// <inheritdoc cref="AgvCommandHandler"/>>
     public async Task Consume(ConsumeContext<RemoveAgvFromZones> context)
     {
         (var agvCorrelationId, ICollection<string> removedZones) = context.Message;
@@ -1898,5 +1915,11 @@ public class AgvCommandHandler :
         {
             await UpdateOfflineErrors(context, agv, handleResourceErrors: false);
         }
+    }
+
+    /// <inheritdoc cref="AgvCommandHandler"/>>
+    public async Task Consume(ConsumeContext<TryRemoveQueueBlocking> context)
+    {
+        await TryRemoveQueueBlocking(context, context.Message.CorrelationId);
     }
 }

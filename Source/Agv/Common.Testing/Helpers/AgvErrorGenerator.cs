@@ -17,7 +17,8 @@ public static class AgvErrorGenerator
         ErrorCategory errorCategory = ErrorCategory.General,
         AgvPosition? position = null,
         ErrorFlag errorFlag = ErrorFlag.Agv,
-        AgvErrorSource errorSource = AgvErrorSource.Agv
+        AgvErrorSource errorSource = AgvErrorSource.Agv,
+        string? description = null
     )
     {
         var errors = new List<AgvError>();
@@ -26,7 +27,7 @@ public static class AgvErrorGenerator
             errors.Add(new AgvError(
                 agvCorrelationId,
                 $"error title#{i}",
-                $"error description#{i}",
+                description ?? $"error description#{i}",
                 errorCode,
                 errorLevel,
                 $"error type#{i}",

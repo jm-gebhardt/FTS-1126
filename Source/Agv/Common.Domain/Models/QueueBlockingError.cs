@@ -8,8 +8,9 @@ public record QueueBlockingError : AgvError
 {
     /// <inheritdoc cref="QueueBlockingError"/>>
     public QueueBlockingError(Guid correlationId, DateTime received) : base(correlationId,
-        "Agv blocking queue",
-        "Agv manually removed from queue or went offline in queue. Solve queue resource blocking if agv is not in or heading towards queue anymore, otherwise only remove error.",
+        "Agv blockiert eine Warteschlange",
+        "Das Fahrzeug wurde manuell aus der Warteschlange weg bewegt oder ist in der Warteschlange offline gegangen. " +
+        "Wenn das Fahrzeug nicht mehr in der Warteschlange steht und sich auch gerade nicht dort hin bewegt, setzen Sie die Belegungen zurück. Andernfalls setzen Sie nur die Warnung zurück.",
         "FTS-5353",
         ErrorLevel.Warning,
         "Queue blocking error",

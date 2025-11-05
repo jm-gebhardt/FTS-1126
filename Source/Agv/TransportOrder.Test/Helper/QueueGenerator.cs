@@ -31,6 +31,27 @@ public static class QueueGenerator
         return GenerateQueue(name, nodeStates: nodeLocks);
     }
 
+    public static Queue GenerateQueueWithAgvs(
+        string name = "queue",
+        ICollection<(Guid agvId, NodeLockState state)>? agvStates = null)
+    {
+        var nodeLocks = new List<NodeLock>();
+
+        if (agvStates != null)
+        {
+            foreach (var (agvId, state) in agvStates)
+            {
+                nodeLocks.Add(new NodeLock(
+                    Guid.NewGuid().ToGraphNode(),
+                    state,
+                    false,
+                    agvId,
+                    DateTime.UtcNow));
+            }
+        }
+        return GenerateQueue(name, nodeStates: nodeLocks, size: nodeLocks.Count);
+    }
+
     private static Queue GenerateQueue(string name = "a queue", ICollection<NodeLock>? nodeStates = null, int? size = null)
     {
         if (nodeStates != null && size == null)

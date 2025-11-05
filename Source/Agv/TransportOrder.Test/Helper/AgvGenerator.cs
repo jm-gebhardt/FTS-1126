@@ -12,9 +12,15 @@ public static class AgvGenerator
         return agv;
     }
 
-    public static Agv GenerateIdleAgv(int index = 0, string? lastNodeName = "node", int batteryCharge = 100, bool hasError = false, AgvMode? mode = null, ICollection<string>? zoneIds = null)
+    public static Agv GenerateIdleAgv(int index = 0,
+        string? lastNodeName = "node",
+        int batteryCharge = 100,
+        bool hasError = false,
+        AgvMode? mode = null,
+        ICollection<string>? zoneIds = null,
+        bool isQueuing = false)
     {
-        var agv = GenerateAgv(AgvState.Idle, index, lastNodeName, batteryCharge: batteryCharge, hasError: hasError, mode: mode, zoneIds: zoneIds);
+        var agv = GenerateAgv(AgvState.Idle, index, lastNodeName, batteryCharge: batteryCharge, hasError: hasError, mode: mode, zoneIds: zoneIds, isQueueing: isQueuing);
         return agv;
     }
 
@@ -61,7 +67,9 @@ public static class AgvGenerator
         string orderId = "orderId",
         bool hasError = false,
         AgvMode? mode = null,
-        ICollection<string>? zoneIds = null)
+        ICollection<string>? zoneIds = null,
+        bool isQueueing = false)
+
     {
         string agvSerialNumber = GetAgvSerialNumber(index);
         var correlationId = agvSerialNumber.ToGuid();
@@ -82,7 +90,8 @@ public static class AgvGenerator
         var agv = new Agv(correlationId, Guid.NewGuid(), agvSerialNumber, agvStatus)
         {
             HasError = hasError,
-            Mode = mode ?? new AgvMode(ModeType.Normal, correlationId)
+            Mode = mode ?? new AgvMode(ModeType.Normal, correlationId),
+            IsQueueing = isQueueing
         };
         agv.SetOnline();
         return SetAgvState(agvState, agv);

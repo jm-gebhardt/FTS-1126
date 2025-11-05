@@ -426,4 +426,10 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         _queueManager.Setup(x => x.RemoveAgvFromQueueEntry(It.IsAny<Guid>(), It.IsAny<Guid?>())).ReturnsAsync(removed);
         return this;
     }
+
+    public AgvCommandHandlerTestFixture WithAgvIsInQueue(bool isInQueue)
+    {
+        _queueManager.Setup(x => x.IsAgvInQueue(It.IsAny<Guid>())).ReturnsAsync(isInQueue);
+        return this;
+    }
 }

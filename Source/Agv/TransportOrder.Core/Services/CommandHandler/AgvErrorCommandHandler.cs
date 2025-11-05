@@ -108,6 +108,11 @@ public class AgvErrorCommandHandler :
             position ??= _agvDb.Positions.GetPosition(correlationId).AgvPosition;
             await publishEndpoint.Publish(new AgvErrorReceived(error, position, agv.SerialNumber));
         }
+
+        if (resolvedErrors.Any(e => e.IsPushedManually()))
+        {
+            await publishEndpoint.Publish(new TryRemoveQueueBlocking(agv.CorrelationId));
+        }
     }
 
     /// <inheritdoc />

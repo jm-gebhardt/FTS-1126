@@ -53,4 +53,20 @@ public class AgvErrorCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvErrorChanged>();
         await fixture.ShouldHavePublishedAsync<AgvErrorReceived>();
     }
+
+    [TestMethod]
+    public async Task Consume_UpdateSystemAgvErrors_JoyStickWarningResolved_TryRemoveQueueBlockingPublished()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        List<AgvError> errors = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, description: AgvError.JoystickMode).Errors;
+        var fixture = new AgvErrorCommandHandlerTestFixture()
+            .WithActiveAgvErrors([errors[0]])
+            .WithAgv(agv);
+
+        await fixture.PublishMessageAsync(new UpdateSystemAgvErrors(Guid.NewGuid(), [],[errors[0]], new AgvPosition(true, 1, 1, 1, 0)));
+        var errorChanged = await fixture.GetFirstPublishedMessageAsync<AgvErrorChanged>();
+        errorChanged.Errors.Count.ShouldBe(1);
+
+        await fixture.ShouldHavePublishedAsync<TryRemoveQueueBlocking>();
+    }
 }

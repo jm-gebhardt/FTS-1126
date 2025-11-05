@@ -8,7 +8,11 @@ namespace Gebhardt.Acc.Common.Domain.Models;
 /// </summary>
 public record AgvError : CorrelatedBy<Guid>
 {
-    private const string JoystickMode = "Joystick ist aktiv";
+    /// <summary>
+    /// Content  of a warning that the joystick mode is active.
+    /// </summary>
+    public const string JoystickMode = "Joystick ist aktiv";
+
     private const string PushMode = "Schiebemodus";
 
     /// <summary>

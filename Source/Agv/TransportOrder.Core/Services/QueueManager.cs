@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -325,5 +326,28 @@ public class QueueManager(
     public Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes)
     {
         return queueRepository.GetQueuesOnRoute(nodes);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsAgvInQueue(Guid agvCorrelationId)
+    {
+        var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
+        // AGV is reserved for or occupies queue node
+        if (queue != null && queue.Agvs.Contains(agvCorrelationId))
+        {
+            return true;
+        }
+        // AGV is marked as queueing (independent of queue moves, as they may have been aborted)
+        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        if (agv.IsQueueing)
+        {
+            return true;
+        }
+        // AGV has running or created queue moves
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> currentActionGroups = await actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        ICollection<Queue> queues = await queueRepository.GetQueues();
+        IEnumerable<Guid> queueNodes = queues.SelectMany(q => q.Nodes.Where(n => n.Node != null).Select(n => n.Node!.Id)).ToList();
+        return currentActionGroups.Where(ag => ag.Actions.Count == 1 && !ag.IsManual)
+            .Any(a => a.Actions.Single().ActionType == ActionType.Move && a.Actions.Single().Target.Node != null && queueNodes.Contains(a.Actions.Single().Target.Node!.Id));
     }
 }
