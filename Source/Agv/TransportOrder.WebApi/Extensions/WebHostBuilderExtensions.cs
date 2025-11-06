@@ -27,8 +27,10 @@ using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +49,16 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 public static class WebHostBuilderExtensions
 {
     private const string AccessToken = "access_token";
+    
+    /// <summary>
+    /// Health Endpoint name 
+    /// </summary>
+    private const string HealthEndpoint = "/health";
+    
+    /// <summary>
+    /// Extended health endpoint name with detailed information
+    /// </summary>
+    private const string HealthDetailedEndpoint = "/healthz";
 
     /// <summary>
     /// Configured the WebHostBuilder to use the TransportOrderWebApi <paramref name="webHostBuilder" />
@@ -257,6 +269,16 @@ public static class WebHostBuilderExtensions
             endpoints.MapHub<TriggerHub>(TriggerHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<RestrictedAreaHub>(RestrictedAreaHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<QueueHub>(QueueHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
+
+            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
+            {
+                Predicate = _ => true
+            });
+            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
         });
 
         app.UseSwagger(c =>

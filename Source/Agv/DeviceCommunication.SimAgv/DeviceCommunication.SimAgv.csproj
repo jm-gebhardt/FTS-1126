@@ -4,6 +4,7 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj"/>
     <ItemGroup>
+        <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
         <PackageReference Include="AutoMapper"/>
         <PackageReference Include="CommandLineParser"/>
         <PackageReference Include="MassTransit.Prometheus"/>

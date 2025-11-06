@@ -100,6 +100,8 @@ try
                             configurator.AddConsumer<SetSimulationSpeedConsumer>();
                         }, rabbitMqConfiguration: (_, cfg) => { cfg.UsePublishMessageScheduler(); });
                     services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
+                    
+                    services.AddHealthChecks();
                 }).ConfigureWebHost(host =>
                 {
                     host.UseKestrel()

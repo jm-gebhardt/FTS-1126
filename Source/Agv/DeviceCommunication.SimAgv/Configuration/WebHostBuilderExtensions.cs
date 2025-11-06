@@ -5,7 +5,9 @@ using System.Xml.XPath;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Controllers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Swagger;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
@@ -18,6 +20,16 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Configuration;
 /// </summary>
 public static class WebHostBuilderExtension
 {
+    /// <summary>
+    /// Health Endpoint name 
+    /// </summary>
+    private const string HealthEndpoint = "/health";
+    
+    /// <summary>
+    /// Extended health endpoint name with detailed information
+    /// </summary>
+    private const string HealthDetailedEndpoint = "/healthz";
+    
     /// <summary>
     /// Add web api.
     /// </summary>
@@ -112,7 +124,19 @@ public static class WebHostBuilderExtension
         app.UseAuthentication(); // verify user
         app.UseAuthorization(); // use security tokens
 
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
+            {
+                Predicate = _ => true
+            });
+            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+        });
         app.UseSwagger(c =>
         {
             c.PreSerializeFilters.Add((swaggerDoc, request) =>

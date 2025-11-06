@@ -127,6 +127,9 @@ public static class HostBuilderExtension
             // we need to register it also here (next to the AddConsumer), because the GridPositionPersistedForwarder needs to resolve it via DI
             services.AddScoped<GridPositionAttachedHandlerBase<AgvErrorReceived>, AgvErrorEventHandler>();
             services.AddScoped<GridPositionAttachedHandlerBase<AgvWifiMetricsReceived>, WifiMetricsEventHandler>();
+            
+            services.AddHealthChecks()
+                .AddDbContextCheck<StatisticsDbContext>();
 
             RegisterFilters(services);
         });

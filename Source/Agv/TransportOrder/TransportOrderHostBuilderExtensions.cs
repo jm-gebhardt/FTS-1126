@@ -90,6 +90,9 @@ public static class TransportOrderHostBuilderExtensions
                 m.UseCompatibilityLevel(120); // avoid using OPENJSON in translated sql. In EF9 : use m.TranslateParameterizedCollectionsToConstants() instead
             }).LogTo(Console.WriteLine, LogLevel.Information);
         });
+
+        services.AddHealthChecks()
+            .AddDbContextCheck<TransportOrderDbContext>();
     }
 
     private static void RegisterMapServices(IServiceCollection services)

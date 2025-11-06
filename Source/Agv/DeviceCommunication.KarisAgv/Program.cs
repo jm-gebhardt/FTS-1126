@@ -19,8 +19,11 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.States;
+using HealthChecks.UI.Client;
 using MassTransit;
 using MassTransit.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +37,8 @@ var initialLogger = InitialLogger.Create<Program>();
 
 try
 {
+    const string healthEndpoint = "/health";
+    const string healthDetailedEndpoint = "/healthz";
     var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
         .ConfigureServices((context, services) =>
         {
@@ -134,11 +139,28 @@ try
                     var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
                     configurator.AddSerializer(serializerFactory, false);
                 });
-        }).ConfigureWebHost(host =>
+        })
+        .ConfigureWebHost(host =>
         {
             host.UseKestrel()
-                .Configure(app => { app.UseMetricServer(); });
-        });
+                .Configure(app =>
+                {
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapHealthChecks(healthEndpoint, new HealthCheckOptions()
+                        {
+                            Predicate = _ => true
+                        });
+                        endpoints.MapHealthChecks(healthDetailedEndpoint, new HealthCheckOptions()
+                        {
+                            Predicate = _ => true,
+                            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                        });
+                    });
+                    app.UseMetricServer();
+                });
+        }); 
 
     hostBuilder.ConfigureServices((_, services) =>
     {

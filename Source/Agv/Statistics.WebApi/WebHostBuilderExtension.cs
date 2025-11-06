@@ -6,8 +6,10 @@ using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.Statistics.WebApi.Controllers;
 using Gebhardt.Acc.Statistics.WebApi.Middleware;
 using Gebhardt.Acc.Statistics.WebApi.Swagger;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -22,6 +24,16 @@ namespace Gebhardt.Acc.Statistics.WebApi;
 /// </summary>
 public static class WebHostBuilderExtension
 {
+    /// <summary>
+    /// Health Endpoint name 
+    /// </summary>
+    private const string HealthEndpoint = "/health";
+    
+    /// <summary>
+    /// Extended health endpoint name with detailed information
+    /// </summary>
+    private const string HealthDetailedEndpoint = "/healthz";
+    
     /// <summary>
     /// Add web api.
     /// </summary>
@@ -133,7 +145,19 @@ public static class WebHostBuilderExtension
         app.UseAuthentication(); // verify user
         app.UseAuthorization(); // use security tokens
 
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
+            {
+                Predicate = _ => true
+            });
+            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+        });
         app.UseSwagger(c =>
         {
             c.PreSerializeFilters.Add((swaggerDoc, request) =>
