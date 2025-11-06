@@ -163,6 +163,7 @@ public class NodeCommandHandler(
                 {
                     await nodeStateRepository.FreeNodeAsync(node.NodeId);
                     await PublishNodeStateChange(context, node.NodeId);
+                    await context.Publish(new FreeStationOccupancy(node.NodeId, agvCorrelationId));
                 }));
             }
         }

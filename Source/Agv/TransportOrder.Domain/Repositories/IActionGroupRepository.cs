@@ -289,6 +289,13 @@ public interface IActionGroupRepository
     Task<AgvAction?> GetLastCompletedActionAsync(Guid agvCorrelationId);
 
     /// <summary>
+    /// Gets the last aborted pick or drop action of an AGV.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <returns>The last aborted pick or drop action.</returns>
+    Task<AgvAction?> GetLastAbortedPickDropActionAsync(Guid agvCorrelationId);
+
+    /// <summary>
     /// Returns boolean specifying that an AGV already has a charging group in created state.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>

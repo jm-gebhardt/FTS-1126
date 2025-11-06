@@ -1351,4 +1351,27 @@ public class ActionGroupRepositoryTest
         nextPicks.Count.ShouldBe(1);  
         nextPicks.First().CorrelationId.ShouldBe(nextPickAtNode.CorrelationId);
     }
+
+    [TestMethod]
+    public async Task GetLastAbortedPickDropActionAsync_ValidData_ReturnsAbortedAction()
+    {
+        var agv = Guid.NewGuid();
+        var canceledActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "6", assignedAgv: agv, pickActionState: ActionState.Canceled);
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "1", assignedAgv: agv, pickActionState: ActionState.Created);
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "2", assignedAgv: agv, pickActionState: ActionState.Completed);
+        var startedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "3", assignedAgv: agv, pickActionState: ActionState.Started);
+        var abortedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", assignedAgv: agv, pickActionState: ActionState.Aborted);
+        var abortedActionGroupDifferentAgv = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "5", assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Aborted);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                canceledActionGroup, createdActionGroup, completedActionGroup, startedActionGroup, abortedActionGroup, abortedActionGroupDifferentAgv
+            ]).BuildAsync();
+
+        var retrievedAction = await fixture.ActionGroupRepository.GetLastAbortedPickDropActionAsync(agv);
+
+        retrievedAction.ShouldNotBeNull();
+        retrievedAction.ParentId.ShouldBe(abortedActionGroup.CorrelationId);
+        retrievedAction.ActionType.ShouldBe(ActionType.Pick);
+    }
 }

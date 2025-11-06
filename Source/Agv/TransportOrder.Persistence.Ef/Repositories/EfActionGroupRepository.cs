@@ -645,6 +645,23 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
+    public async Task<AgvAction?> GetLastAbortedPickDropActionAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var actionGroup = await queryable
+            .Include(ag => ag.Actions)
+            .AsNoTracking()
+            .Where(ag => ag.AssignedAgv == agvCorrelationId && ag.Actions.Any(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop))
+            .OrderByDescending(ag => ag.StartedDate)
+            .ThenByDescending(ag => ag.CompletedDate)
+            .FirstOrDefaultAsync(ag => ag.Actions.Any(a => a.State == ActionState.Aborted));
+
+        var action = actionGroup?.Actions.OrderByDescending(a => a.CompletedDate).FirstOrDefault(a => a.CompletedDate != null);
+        return action;
+    }
+
+    /// <inheritdoc/>
     public async Task<bool> HasCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();

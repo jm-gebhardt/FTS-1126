@@ -55,6 +55,14 @@ public class AgvActionCommandHandler(
         if (startNode != null && startNode.Id != nodes.FirstOrDefault()?.Id)
         {
             logger.LogWarning("Target node of last completed action and first node of started action for AGV {AgvCorrelationId} differ. Last {LastTargetNode} Started {StartNode}", agvCorrelationId, startNode, nodes.FirstOrDefault());
+            var lastAbortedAction = await transportOrderDb.ActionGroups.GetLastAbortedPickDropActionAsync(agvCorrelationId);
+            if (lastAbortedAction != null &&
+                lastAbortedAction.CompletedDate > lastFinishedAction?.CompletedDate &&
+                lastAbortedAction.Target.Node?.Id == nodes.FirstOrDefault()?.Id)
+            {
+                startNode = nodes.FirstOrDefault();
+                logger.LogWarning("Cannot determine start of action {ActionCorrelationId} from last action target. Last completed action {CompletedActionCorrelationId} older than last aborted action {AbortedActionCorrelationId}. Trying to get via node list: first node is {NodeName}", action.CorrelationId, lastFinishedAction.CorrelationId, lastAbortedAction.CorrelationId, startNode?.Name);
+            }
         }
         if (startNode == null)
         {

@@ -266,10 +266,12 @@ public class NodeCommandHandlerTest
         if (shouldHaveBeenFreed)
         {
             await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
+            await fixture.ShouldHavePublishedAsync<FreeStationOccupancy>();
         }
         else
         {
             await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+            await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
         }
 
         fixture.NodeStateRepository.Verify(r => r.FreeNodeAsync(unusedNodeState.NodeId), shouldHaveBeenFreed ? Times.Once : Times.Never);

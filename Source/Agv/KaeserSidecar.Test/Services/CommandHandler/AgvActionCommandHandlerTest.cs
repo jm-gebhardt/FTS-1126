@@ -38,6 +38,34 @@ public class AgvActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_StartActionCommand_OldLastCompletedAction_LastActionWasAbortedOnStation_PublishesFreeStation()
+    {
+        string stationId = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        actionGroup.Actions.First().Nodes = [stationId.ToGraphNode()];
+        var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
+        var agv = actionGroup.AssignedAgv!.Value;
+        var abortedDate = DateTime.UtcNow.AddMinutes(2);
+        var completedActionGroup = AgvActionGenerator.GenerateChargeActionGroup("charger2", assignedAgv: agv, completedDate: abortedDate.AddMinutes(-5), actionStateCharge: ActionState.Completed);
+        var abortedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, source: stationId, pickActionState: ActionState.Aborted, completedDate: abortedDate);
+       
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithActionGroup(actionGroup)
+            .WithLastAbortedAction(abortedActionGroup.Actions.Single(a => a.State == ActionState.Aborted))
+            .WithLastCompletedAction(completedActionGroup.Actions.Last());
+
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
+        var freeStation = await fixture.GetFirstPublishedMessageAsync<FreeStationOccupancy>();
+        freeStation.NodeId.ShouldBe(stationId.ToGuid());
+        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
+        fixture.VerifyActionDequeued(actionGroup.Actions[0].CorrelationId, Times.Never());
+    }
+
+    [TestMethod]
     public async Task Consume_StartActionCommand_ShortLoopPickAgvAlreadyAtStation_PublishesAgvStartedPick()
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);

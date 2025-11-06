@@ -73,6 +73,18 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
         return this;
     }
 
+    public AgvActionCommandHandlerTestFixture WithLastCompletedAction(AgvAction? action)
+    {
+        _transportOrderDb.Setup(x => x.ActionGroups.GetLastCompletedActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
+        return this;
+    }
+
+    public AgvActionCommandHandlerTestFixture WithLastAbortedAction(AgvAction? action)
+    {
+        _transportOrderDb.Setup(x => x.ActionGroups.GetLastAbortedPickDropActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
+        return this;
+    }
+
     public AgvActionCommandHandlerTestFixture WithAgv(Agv agv)
     {
         _transportOrderDb.Setup(x => x.Agvs.GetAgvAsync(agv.CorrelationId))
