@@ -1034,6 +1034,18 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CreateActionGroup_ActionGroupExists_DoesNotPublishActionGroupCreated()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+       
+        await fixture.PublishMessageAsync(new CreateActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup)));
+
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+    }
+
+    [TestMethod]
     public async Task Consume_QueueActionGroup_InvalidActionGroup_DoNotThrowException_SavesInvalidActionGroupAndPublishesActionGroupCreatedAndActionGroupInvalid()
     {
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()

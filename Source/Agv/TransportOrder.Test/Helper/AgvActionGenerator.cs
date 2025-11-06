@@ -284,6 +284,7 @@ public static class AgvActionGenerator
         DateTime? startedDate = null,
         TimeSpan? duration = null,
         bool hasPriority = false,
+        bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null
     )
     {
@@ -333,6 +334,10 @@ public static class AgvActionGenerator
         {
             actionGroup.GetType().GetProperty(nameof(ActionGroup.CompletedDate))!.SetValue(actionGroup, completedDate);
         }
+        if (isQueued)
+        {
+            actionGroup.Queue();
+        }
         actionGroup.UpdateActionGroupState();
         return actionGroup;
     }
@@ -349,6 +354,7 @@ public static class AgvActionGenerator
         DateTime? startedDate = null,
         TimeSpan? duration = null,
         bool hasPriority = false,
+        bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null
     )
     {
@@ -386,6 +392,10 @@ public static class AgvActionGenerator
             EstimatedDuration = duration,
             HasPriority = hasPriority
         };
+        if (isQueued)
+        {
+            actionGroup.Queue();
+        }
         actionGroup.UpdateActionGroupState();
         if (createdDate != default)
         {

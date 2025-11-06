@@ -696,7 +696,14 @@ public class ActionCommandHandler :
         var actionGroupMessageContent = context.Message.ActionGroup;
         var cancellationToken = context.CancellationToken;
 
-        var actionGroup = _mapper.Map<Domain.Models.ActionGroup.ActionGroup>(actionGroupMessageContent);
+        var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionGroupMessageContent.CorrelationId);
+        if (actionGroup != null)
+        {
+            _logger.LogWarning("Action group {ActionGroupCorrelationId} already exists, not creating it again", actionGroupMessageContent.CorrelationId);
+            return;
+        }
+
+        actionGroup = _mapper.Map<Domain.Models.ActionGroup.ActionGroup>(actionGroupMessageContent);
 
         actionGroup = await ValidDateActionGroup(actionGroup, false);
 
