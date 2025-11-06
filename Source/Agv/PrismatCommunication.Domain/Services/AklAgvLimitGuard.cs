@@ -39,7 +39,7 @@ public sealed class AklAgvLimitGuard : IAklAgvLimitGuard
         var systemStatus = await _systemStatusRepository.GetStatus();
         if (systemStatus is not { UseAklAgvLimit: true })
         {
-            _logger.LogDebug("HostOrder {CorrelationId} is within AKL AGV limit because system status does not use AKL AGV limit", hostOrder.CorrelationId);
+            _logger.LogInformation("HostOrder {CorrelationId} is within AKL AGV limit because system status does not use AKL AGV limit", hostOrder.CorrelationId);
             return true;
         }
 
@@ -51,12 +51,12 @@ public sealed class AklAgvLimitGuard : IAklAgvLimitGuard
         }
         if (stationGroup.IsOccupied)
         {
-            _logger.LogDebug("HostOrder {CorrelationId} is not within AKL AGV limit because station group of target {Target} is occupied", hostOrder.CorrelationId, hostOrder.Target);
+            _logger.LogWarning("HostOrder {CorrelationId} is not within AKL AGV limit because station group of target {Target} is occupied", hostOrder.CorrelationId, hostOrder.Target);
             return false;
         }
         if (await _hostOrderRepository.HasHostOrdersForStationGroup(stationGroup.Sources, stationGroup.Targets, hostOrder.AssignedAgv))
         {
-            _logger.LogDebug("HostOrder {CorrelationId} is not within AKL AGV limit because there are current host orders for station group of target {Target}", hostOrder.CorrelationId, hostOrder.Target);
+            _logger.LogWarning("HostOrder {CorrelationId} is not within AKL AGV limit because there are current host orders for station group of target {Target}", hostOrder.CorrelationId, hostOrder.Target);
             return false;
         }
 

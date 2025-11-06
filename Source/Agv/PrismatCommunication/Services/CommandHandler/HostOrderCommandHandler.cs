@@ -499,7 +499,7 @@ public class HostOrderCommandHandler(
 
         if (!await aklAgvLimitGuard.IsWithinAklAgvLimitAsync(pickingHostOrder))
         {
-            logger.LogInformation("Order {OrderCorrelationId} Doppelspiel pick {PickOrderCorrelationId} is not statrted because of AKL station limitation", hostOrder.CorrelationId, pickingHostOrder.CorrelationId);
+            logger.LogInformation("Order {OrderCorrelationId} Doppelspiel pick {PickOrderCorrelationId} is not started because of AKL station limitation", hostOrder.CorrelationId, pickingHostOrder.CorrelationId);
             await context.RespondAsync(new DoppelspielPartnerQueued(null));
             return;
         }
