@@ -8,7 +8,13 @@ namespace Gebhardt.Acc.PrismatCommunication.Simulation;
 
 /// <inheritdoc />
 [UsedImplicitly]
-public class InputLoopSimulator(IBus bus, ILogger<SimulatorBase> logger, SimulateOptions simOptions, KaeserGraphConfiguration kaeserGraphConfiguration, bool includeAplTargets = true) : SimulatorBase(bus, logger, kaeserGraphConfiguration)
+public class InputLoopSimulator(
+    IBus bus,
+    ILogger<SimulatorBase> logger,
+    SimulateOptions simOptions,
+    KaeserGraphConfiguration kaeserGraphConfiguration,
+    bool includeAplTargets = true)
+    : SimulatorBase(bus, logger, kaeserGraphConfiguration)
 {
     /// <inheritdoc />
     protected override List<Tuple<List<string>, List<string>>> SourceDestinationPools

@@ -5,6 +5,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.System;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.System.Monitoring;
 using Microsoft.AspNetCore.Authorization;
@@ -23,6 +24,7 @@ public class SystemController(
     IRequestClient<GetFactoryTimeZone> getFactoryTimeClient,
     IRequestClient<UpdateFactoryTimeZone> updateFactoryTimeClient,
     IRequestClient<UpdateHostOrderGeneration> updateHostOrderGenerationClient,
+    IRequestClient<RequestHostOrderGeneration> requestHostOrderGenerationClient,
     IRequestClient<GetCertificateExpirations> getCertificateExpirationClient
 ) : Controller
 {
@@ -92,12 +94,28 @@ public class SystemController(
     /// <param name="isEnabled">Indicates whether HostOrder generation should be enabled or disabled.</param>
     /// <response code="204">No Content</response>
     [HttpPut]
-    [Route("/simulation/hostOrderGeneration")]
+    [Route("/system/hostOrderGeneration")]
     public async Task<IActionResult> UpdateHostOrderGeneration([FromQuery] bool isEnabled)
     {
         var command = new UpdateHostOrderGeneration(isEnabled);
         await updateHostOrderGenerationClient.GetResponse<Success>(command);
         return NoContent();
+    }
+
+    /// <summary>
+    /// Creates host orders based on the specified parameters.
+    /// </summary>
+    /// <param name="source">Origin of the orders (host definition).</param>
+    /// <param name="destination">Target of the orders (host definition).</param>
+    /// <param name="count">Number of orders to create.</param>
+    /// <returns>A list of created order Ids.</returns>
+    [HttpPost]
+    [Route("/system/hostOrders")]
+    public async Task<ActionResult<List<string>>> CreateHostOrders([FromQuery] string source, [FromQuery] string destination, [FromQuery] int count)
+    {
+        var command = new RequestHostOrderGeneration(Guid.NewGuid(), source, destination, count);
+        Response<HostOrderGenerationResponse> response = await requestHostOrderGenerationClient.GetResponse<HostOrderGenerationResponse>(command);
+        return Ok(response.Message.OrderIds);
     }
 
     /// <summary>

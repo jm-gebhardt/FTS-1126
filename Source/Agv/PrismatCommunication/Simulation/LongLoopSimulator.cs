@@ -8,7 +8,8 @@ namespace Gebhardt.Acc.PrismatCommunication.Simulation;
 
 /// <inheritdoc />
 [UsedImplicitly]
-public class LongLoopSimulator(IBus bus, ILogger<SimulatorBase> logger, SimulateOptions simOptions, KaeserGraphConfiguration kaeserGraphConfiguration) : SimulatorBase(bus, logger, kaeserGraphConfiguration)
+public class LongLoopSimulator(IBus bus, ILogger<SimulatorBase> logger, SimulateOptions simOptions, KaeserGraphConfiguration kaeserGraphConfiguration)
+    : SimulatorBase(bus, logger, kaeserGraphConfiguration)
 {
     /// <inheritdoc />
     protected override List<Tuple<List<string>, List<string>>> SourceDestinationPools { get; } = [new(["9060"], ["1060"]), new(["9060"], ["1050"])];

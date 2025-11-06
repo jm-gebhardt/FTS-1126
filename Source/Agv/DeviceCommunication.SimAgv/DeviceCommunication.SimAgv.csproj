@@ -27,7 +27,6 @@
         <ProjectReference Include="..\Common.WebApi\Common.WebApi.csproj"/>
         <ProjectReference Include="..\Common\Common.csproj"/>
         <ProjectReference Include="..\DeviceCommunication.Common\DeviceCommunication.Common.csproj"/>
-        <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj"/>
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Properties\"/>

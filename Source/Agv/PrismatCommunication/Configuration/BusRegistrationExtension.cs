@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Messages.Stations.Requests;
+using Gebhardt.Acc.Common.Messages.System;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
@@ -75,6 +76,7 @@ public static class BusRegistrationExtension
         cfg.AddRequestClient<GetTriggerMapping>();
         cfg.AddRequestClient<GetQueueFillQuantities>();
         cfg.AddRequestClient<GetLockedStations>();
+        cfg.AddRequestClient<RequestHostOrderGeneration>();
 
         if (isSimulationMode)
         {

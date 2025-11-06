@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Simulation;
+﻿namespace Gebhardt.Acc.Common.Messages.Simulation;
 
 /// <summary>
 /// Message indicating a command to update the simulation speed.

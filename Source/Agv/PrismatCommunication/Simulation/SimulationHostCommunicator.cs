@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Simulation;
 /// <summary>
 /// Mimics host communication in the simulation mode.
 /// </summary>
-public class SimulationHostCommunicator(ILogger<SimulationHostCommunicator> logger): IHostCommunicator
+public class SimulationHostCommunicator(ILogger<SimulationHostCommunicator> logger) : IHostCommunicator
 {
     /// <inheritdoc cref="IHostCommunicator"/>>
     public async Task ReportOrderCompletion(string hu, string orderId, string destination)
