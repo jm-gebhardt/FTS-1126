@@ -44,6 +44,7 @@ try
         {
             services.AddSingleton<IConfigurationReader, InstantActionsConfigurationFileReader>();
             services.AddHostedService<InitialCacheProvider>();
+            services.AddRouting();
 
             void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
             {
