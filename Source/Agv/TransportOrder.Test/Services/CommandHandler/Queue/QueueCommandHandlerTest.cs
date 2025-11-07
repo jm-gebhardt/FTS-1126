@@ -19,10 +19,15 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateQueue_AllAgvsEntered_PublishesQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-        var fixture = new QueueCommandHandlerTestFixture()
-            .WithQueue(queue);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
 
-        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(),0);
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithCurrentAction(triggeringAction);
+
+        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), 0);
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<EvacuateQueue>();
@@ -46,11 +51,34 @@ public class QueueCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_EvacuateQueue_TriggerAgvNotPassesQueue_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), "trigger".ToGraphNode(), "target".ToGraphNode()];
+
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithCurrentAction(triggeringAction);
+
+        var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), 0);
+        await fixture.PublishMessageAsync<EvacuateQueue, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
     public async Task Consume_EvacuateQueue_EmptyQueue_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateEmptyQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
+
         var fixture = new QueueCommandHandlerTestFixture()
-            .WithQueue(queue);
+            .WithQueue(queue)
+            .WithCurrentAction(triggeringAction);
 
         var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), 0);
         await fixture.TestHarness.Bus.Publish(command);
@@ -65,8 +93,12 @@ public class QueueCommandHandlerTest
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Free, NodeLockState.Reserved, NodeLockState.Occupied]);
         string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: Guid.NewGuid());
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateQueue(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), 0);
@@ -107,8 +139,12 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateQueueHead_EmptyQueue_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateEmptyQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
@@ -122,10 +158,14 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateQueueHead_ValidData_PublishesQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.Node?.Name);
         var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter]);
 
@@ -156,11 +196,37 @@ public class QueueCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_EvacuateQueueHead_TriggeringAgvNotPassesQueue_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), "trigger".ToGraphNode(), "target".ToGraphNode()];
+
+        var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.Node?.Name);
+        var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
+            .WithQueueInternalMoves([moveToHead, moveToCenter]);
+
+        var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
+        await fixture.PublishMessageAsync<EvacuateQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
     public async Task Consume_EvacuateQueueHead_HeadNodeReserved_PublishesQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([]);
 
@@ -188,12 +254,16 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateQueueHead_PreviousMoveAction_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         Guid? agv = queue.Head?.GetCurrentAgv();
         string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
 
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
@@ -207,8 +277,12 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateOrAssignQueueHead_EmptyQueue_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateEmptyQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value);
 
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
@@ -222,12 +296,16 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateOrAssignQueueHead_NoOrderToAssign_PublishesQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.Node?.Name);
         var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter])
+            .WithCurrentAction(triggeringAction)
             .WithNextPicksAtTarget([])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -259,6 +337,9 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateOrAssignQueueHead_OrderToAssign_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var moveToHead = AgvActionGenerator.GenerateMoveActionGroup(queue.Head?.Node?.Name);
         var moveToCenter = AgvActionGenerator.GenerateMoveActionGroup(queue.Nodes.Single(n => n.Position == 1).Node!.Name);
         var nextPickOfAgvAhead = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget();
@@ -266,6 +347,7 @@ public class QueueCommandHandlerTest
             .WithQueue(queue)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([moveToHead, moveToCenter])
+            .WithCurrentAction(triggeringAction)
             .WithNextPicksAtTarget([nextPickOfAgvAhead])
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -282,7 +364,9 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateOrAssignQueueHead_AgvPastQueueHead_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var agv = Guid.NewGuid();
         var agvAtQueueHead = queue.Head!.OccupiedAgv!.Value;
 
@@ -291,6 +375,7 @@ public class QueueCommandHandlerTest
 
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -306,13 +391,16 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateQueue_AgvPastQueueHead_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var agv = Guid.NewGuid();
 
         queue.ConsideredAgvs.Add(agv);
 
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -328,7 +416,9 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateQueueHead_AgvPastQueueHead_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
-
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var agv = Guid.NewGuid();
         var agvAtQueueHead = queue.Head!.OccupiedAgv!.Value;
 
@@ -337,6 +427,7 @@ public class QueueCommandHandlerTest
 
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -347,13 +438,17 @@ public class QueueCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
     }
-    
+
     [TestMethod]
     public async Task Consume_EvacuateOrAssignQueueHead_HeadNodeReserved_NoOrderToAssign_PublishesQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithQueueInternalMoves([])
             .WithNextPicksAtTarget([])
@@ -381,15 +476,42 @@ public class QueueCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_EvacuateOrAssignQueueHead_TriggerAgvNotPassesQueue_DoesNotPublishQueueActionGroup()
+    {
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Reserved, NodeLockState.Free, NodeLockState.Free]);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), "trigger".ToGraphNode(), "target".ToGraphNode()];
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
+            .WithActionGroups([], [], "APL1".ToGuid(), queue.EntryNode!.Value)
+            .WithQueueInternalMoves([])
+            .WithNextPicksAtTarget([])
+            .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
+
+        var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
+        await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<CancelOrAbortActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<TryAssignDelayedOrderToAgv>();
+    }
+
+    [TestMethod]
     public async Task Consume_EvacuateOrAssignQueueHead_PreviousEvacuation_NoOrderToAssign_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         Guid? agv = queue.Head?.GetCurrentAgv();
         string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
 
         var fixture = new QueueCommandHandlerTestFixture()
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -405,12 +527,16 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateOrAssignQueueHead_PreviousEvacuation_OrderToAssign_DoesNotPublishQueueActionGroup()
     {
         var queue = QueueGenerator.GenerateFullQueue();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         Guid? agv = queue.Head?.GetCurrentAgv();
         string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
 
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([], [queueActionGroup], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 
@@ -426,11 +552,15 @@ public class QueueCommandHandlerTest
     public async Task Consume_EvacuateOrAssignQueueHead_PreviousOrderToAssign_DoesNotPublishTryAssignDelayedOrderToAgv()
     {
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Free, NodeLockState.Free, NodeLockState.Reserved]);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
+        var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
         Guid? agv = queue.Head?.GetCurrentAgv();
-        var previousActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, destination:"APL1");
+        var previousActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, destination: "APL1");
 
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())
             .WithQueue(queue)
+            .WithCurrentAction(triggeringAction)
             .WithActionGroups([previousActionGroup], [], "APL1".ToGuid(), queue.EntryNode!.Value)
             .WithNode(new GraphNode("APL1".ToGuid(), "APL1"));
 

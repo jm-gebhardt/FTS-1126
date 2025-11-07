@@ -85,6 +85,13 @@ public class QueueCommandHandler(
             logger.LogInformation("Evacuating queue {Queue} to node {Node}", queueName, evacuationTargetName);
             var queue = await queueRepository.GetQueueByName(queueName);
 
+            var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(triggeringAgv);
+            if (currentAction == null || !currentAction.Nodes.Select(n => n.Id).Intersect(queue.Nodes.Select(qn => qn.NodeId)).Any())
+            {
+                logger.LogInformation("Current action {ActionCorrelationId} of agv {AgvCorrelationId} does not pass queue, not evacuating queue {Queue}", currentAction?.CorrelationId, triggeringAgv, queue.Name);
+                return;
+            }
+
             if (queue.AgvFillQuantity == 0)
             {
                 logger.LogInformation("Not evacuating empty queue {Queue}", queue.Name);
@@ -161,6 +168,13 @@ public class QueueCommandHandler(
                 logger.LogInformation("Not evacuating empty queue {Queue}", queue.Name);
                 return;
             }
+            var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(triggeringAgv);
+            if (currentAction == null || !currentAction.Nodes.Select(n => n.Id).Intersect(queue.Nodes.Select(qn => qn.NodeId)).Any())
+            {
+                logger.LogInformation("Current action {ActionCorrelationId} of agv {AgvCorrelationId} does not pass queue, not evacuating queue {Queue}", currentAction?.CorrelationId, triggeringAgv, queue.Name);
+                return;
+            }
+
             var queueHeadNode = queue.Nodes.MinBy(n => n.Position);
             Guid? agv = queueHeadNode?.GetCurrentAgv();
             if (agv == null)
@@ -210,6 +224,12 @@ public class QueueCommandHandler(
         {
             var queue = await queueRepository.GetQueueByName(queueName);
 
+            var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(triggeringAgv);
+            if (currentAction == null || !currentAction.Nodes.Select(n => n.Id).Intersect(queue.Nodes.Select(qn => qn.NodeId)).Any())
+            {
+                logger.LogInformation("Current action {ActionCorrelationId} of agv {AgvCorrelationId} does not pass queue, not evacuating queue {Queue}", currentAction?.CorrelationId, triggeringAgv, queue.Name);
+                return;
+            }
             if (queue.AgvFillQuantity == 0)
             {
                 logger.LogInformation("Not evacuating empty queue {Queue}", queue.Name);

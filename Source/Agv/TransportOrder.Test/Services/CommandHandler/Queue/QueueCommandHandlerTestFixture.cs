@@ -136,6 +136,12 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
         return this;
     }
 
+    public QueueCommandHandlerTestFixture WithCurrentAction(AgvAction action)
+    {
+        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
+        return this;
+    }
+
     public QueueCommandHandlerTestFixture WithQueueInternalMoves(ICollection<ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetNotStartedActionGroupsToTargetsForAgv(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync((Guid _, ICollection<Guid> targets) => { return actionGroups.Where(a => a.GetTargets().Intersect(targets).Count() != 0).ToList(); });
