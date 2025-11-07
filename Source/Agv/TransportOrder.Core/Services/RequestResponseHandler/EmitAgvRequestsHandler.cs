@@ -30,7 +30,7 @@ public class EmitAgvRequestsHandler(ILogger<EmitAgvRequestsHandler> logger, IAgv
         var correlationId = context.Message.CorrelationId;
         string user = context.Message.User;
         var agv = await agvDb.Agvs.GetAgvAsync(correlationId);
-        await bus.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvGraph(agv.CorrelationId, agv.SerialNumber));
+        await bus.Publish(new RefreshAgvInformation(agv.CorrelationId, RefreshType.Graph));
         await loggingService.LogAgv(logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvGraphRequested} });
 
         await context.RespondAsync(new RequestAgvGraphResult(agv.CorrelationId));
@@ -45,7 +45,7 @@ public class EmitAgvRequestsHandler(ILogger<EmitAgvRequestsHandler> logger, IAgv
         var agvCorrelationId = context.Message.CorrelationId;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        await bus.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvData(agv.CorrelationId, agv.SerialNumber));
+        await bus.Publish(new RefreshAgvInformation(agv.CorrelationId, RefreshType.Data));
         await loggingService.LogAgv(logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.AgvDataRequested} });
 
         await context.RespondAsync(new RequestedAgvData(agv.CorrelationId));
@@ -60,7 +60,7 @@ public class EmitAgvRequestsHandler(ILogger<EmitAgvRequestsHandler> logger, IAgv
         var agvCorrelationId = context.Message.CorrelationId;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        await bus.Publish(new Common.Messages.AgvManagement.Commands.RequestAgvZones(agv.CorrelationId, agv.SerialNumber));
+        await bus.Publish(new RefreshAgvInformation(agv.CorrelationId, RefreshType.Zones));
         await loggingService.LogAgv(logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, context.Message.User }, { LogLabels.Operation, LogCodes.AgvZonesRequested } });
 
         await context.RespondAsync(new Success());

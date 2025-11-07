@@ -89,7 +89,8 @@ public class AgvCommandHandler :
     IConsumer<CheckAgvLoad>,
     IConsumer<RemoveAgvFromQueue>,
     IConsumer<RemoveAgvFromZones>,
-    IConsumer<TryRemoveQueueBlocking>
+    IConsumer<TryRemoveQueueBlocking>,
+    IConsumer<RefreshAgvInformation>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -457,10 +458,12 @@ public class AgvCommandHandler :
         }
 
         // Only request AgvGraph if a global Graph exists
+        bool graphRequested = false;
         if (agv.ShouldRequestGraph())
         {
             if (await _agvDb.Graphs.ExistsAsync())
             {
+                graphRequested = true;
                 await PublishGraphRequestAsync(context, agv);
             }
             else
@@ -468,15 +471,18 @@ public class AgvCommandHandler :
                 await context.Publish(new GraphMissing(agv.CorrelationId));
             }
         }
-
+        bool dataRequested = false;
         if (agv.ShouldRequestData())
         {
             await PublishDataRequestAsync(context, agv);
+            dataRequested = true;
         }
 
+        bool zonesRequested = false;
         if (!agv.ZonesExist && agv.ShouldRequestZones())
         {
             await PublishZonesRequestAsync(context, agv);
+            zonesRequested = true;
         }
 
         if (agv.IsOnline != wasOnline)
@@ -499,8 +505,11 @@ public class AgvCommandHandler :
             await context.Publish(new AgvStationsChanged(agv.CorrelationId, agvStatus.StationIds!));
         }
 
-        if (stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged || operatingDataChanged
-            || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic)
+        bool shouldUpdate = stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged || operatingDataChanged
+                            || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic 
+                            || graphRequested || dataRequested || zonesRequested;
+
+        if (shouldUpdate)
         {
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {
@@ -1397,21 +1406,21 @@ public class AgvCommandHandler :
 
     private async Task PublishGraphRequestAsync(IPublishEndpoint context, Agv agv)
     {
-        _logger.LogDebug("Requesting graph for agv {AgvCorrelationId}", agv.CorrelationId);
+        _logger.LogInformation("Requesting graph for agv {AgvCorrelationId}", agv.CorrelationId);
         await context.Publish(new RequestAgvGraph(agv.CorrelationId, agv.SerialNumber));
         agv.AgvGraphRequestedLastTime = DateTime.UtcNow;
     }
 
     private async Task PublishDataRequestAsync(IPublishEndpoint context, Agv agv)
     {
-        _logger.LogDebug("Requesting data for agv {AgvCorrelationId}", agv.CorrelationId);
+        _logger.LogInformation("Requesting data for agv {AgvCorrelationId}", agv.CorrelationId);
         await context.Publish(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
         agv.AgvDataRequestedLastTime = DateTime.UtcNow;
     }
 
     private async Task PublishZonesRequestAsync(IPublishEndpoint context, Agv agv)
     {
-        _logger.LogDebug("Requesting zones for agv {AgvCorrelationId}", agv.CorrelationId);
+        _logger.LogInformation("Requesting zones for agv {AgvCorrelationId}", agv.CorrelationId);
         await context.Publish(new RequestAgvZones(agv.CorrelationId, agv.SerialNumber));
         agv.AgvZonesRequestedLastTime = DateTime.UtcNow;
     }
@@ -1437,9 +1446,8 @@ public class AgvCommandHandler :
         }
 
         agv.TransitionToDiscovered(graphExists);
-        agv.AgvDataRequestedLastTime = DateTime.UtcNow;
-        await _agvDb.Agvs.AddAgvAsync(agv);
         await PublishDataRequestAsync(context, agv);
+        await _agvDb.Agvs.AddAgvAsync(agv);
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
         await context.Publish(new AgvDiscovered(agvMessageContent));
@@ -1893,7 +1901,7 @@ public class AgvCommandHandler :
         await context.Publish(new ResolveSystemAgvError(agvCorrelationId, [blockingError]));
     }
 
-    /// <inheritdoc cref="AgvCommandHandler"/>>
+    /// <inheritdoc cref="AgvCommandHandler"/>
     public async Task Consume(ConsumeContext<RemoveAgvFromZones> context)
     {
         (var agvCorrelationId, ICollection<string> removedZones) = context.Message;
@@ -1918,9 +1926,40 @@ public class AgvCommandHandler :
         }
     }
 
-    /// <inheritdoc cref="AgvCommandHandler"/>>
+    /// <inheritdoc cref="AgvCommandHandler"/>
     public async Task Consume(ConsumeContext<TryRemoveQueueBlocking> context)
     {
         await TryRemoveQueueBlocking(context, context.Message.CorrelationId);
+    }
+
+    /// <inheritdoc cref="AgvCommandHandler"/>
+    public async Task Consume(ConsumeContext<RefreshAgvInformation> context)
+    {
+        var (agvCorrelationId, refreshType) = context.Message;
+
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+
+        switch (refreshType)
+        {
+            case RefreshType.Zones:
+                await PublishZonesRequestAsync(context, agv);
+                break;
+
+            case RefreshType.Data:
+                await PublishDataRequestAsync(context, agv);
+                break;
+
+            case RefreshType.Graph:
+                await PublishGraphRequestAsync(context, agv);
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        {
+            _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
+        }
     }
 }

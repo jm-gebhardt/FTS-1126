@@ -198,7 +198,7 @@ public class AgvCommandHandlerTest
             .WithActionGroups([])
             .AddAgvs([agv])
             .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)]);
-       
+
         agv.GoOffline();
         agv.AgvStatus!.UpdateLastNodeId(Guid.Empty);
         await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, _mapper.Map<AgvStatus>(agv.AgvStatus!)));
@@ -675,15 +675,16 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateAgvStatus_ShouldRequestData_PublishesRequestAgvData()
     {
-        var fixture = new AgvCommandHandlerTestFixture()
-            .WithCurrentStartedOrCreatedActionGroups([])
-            .WithGraphExists(true);
         var agv = AgvGenerator.GenerateRawAgv();
         agv.DataExist = false;
         agv.AgvDataRequestedLastTime = null;
         agv.AgvStatus = new TransportOrder.Domain.Models.Agv.AgvStatus();
-
-        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithCurrentStartedOrCreatedActionGroups([])
+            .WithGraphExists(true)
+            .WithHasCargoStates(false)
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithActionGroups([]);
 
         var newAgvStatus = new AgvStatus(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, 48, agv.AgvStatus!.Charging ? 20 : -10, 20, agv.AgvStatus!.Disturbed);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
@@ -2181,5 +2182,50 @@ public class AgvCommandHandlerTest
 
         agv.AgvStatus?.ZoneIds.ShouldBeEmpty();
         fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_RefreshAgvInformation_Zones_PublishesRequestAgvZones()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.AgvZonesRequestedLastTime.ShouldBeNull();
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new RefreshAgvInformation(agv.CorrelationId, RefreshType.Zones));
+
+        await fixture.ShouldHavePublishedAsync<RequestAgvZones>();
+        agv.AgvZonesRequestedLastTime.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_RefreshAgvInformation_Data_PublishesRequestAgvData()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.AgvDataRequestedLastTime.ShouldBeNull();
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new RefreshAgvInformation(agv.CorrelationId, RefreshType.Data));
+
+        await fixture.ShouldHavePublishedAsync<RequestAgvData>();
+        agv.AgvDataRequestedLastTime.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_RefreshAgvInformation_Graph_PublishesRequestAgvGraph()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.AgvGraphRequestedLastTime.ShouldBeNull();
+            
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new RefreshAgvInformation(agv.CorrelationId, RefreshType.Graph));
+
+        await fixture.ShouldHavePublishedAsync<RequestAgvGraph>();
+        agv.AgvGraphRequestedLastTime.ShouldNotBeNull();
     }
 }
