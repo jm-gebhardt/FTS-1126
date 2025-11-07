@@ -67,13 +67,12 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
                     await context.Publish(new TryQueueNextAklPick(pickTarget, hostOrder.AssignedAgv.Value));
                 }
             }
+            await context.Publish(new FinishPick(correlationId, actionCorrelationId, timestamp));
         }
         catch (InvalidOperationException)
         {
             logger.LogDebug("Order {CorrelationId} not created by prismat", correlationId);
         }
-
-        await context.Publish(new FinishPick(correlationId, actionCorrelationId, timestamp));
     }
 
     /// <summary>

@@ -123,6 +123,21 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
+    public async Task PickActionCompleted_OrderNotCreatedByHost_DoesNotPublishFinishPick()
+    {
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
+        order.Start(DateTime.UtcNow, Guid.NewGuid());
+        HostOrderConsumerTestFixture<ActionGroupEventHandler> fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
+            .WithHostOrders([]);
+
+        var pickActionCompleted = new PickActionCompleted(order.CorrelationId, order.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, DateTime.UtcNow);
+
+       await fixture.PublishMessageAsync(pickActionCompleted);
+
+       await fixture.ShouldNotHavePublishedAsync<FinishPick>();
+    }
+
+    [TestMethod]
     public async Task DroppingAgvPassedDoppelspielTriggerPoint_ValidData_PublishesTryQueueDoppelspielPartner()
     {
         var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action".ToGraphNode(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true, "pickNode".ToGraphNode());
