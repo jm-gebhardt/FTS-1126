@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -26,6 +27,7 @@ public class ActionGroupsControllerTest
                 null,
                 ActionGroupState.Created,
                 ActionGroupCreator.TransportOrder,
+                Priority.Default,
                 "hu",
                 [
                     new AgvActionReadModel(Guid.NewGuid(),
@@ -44,7 +46,7 @@ public class ActionGroupsControllerTest
                         null,
                         0L,
                         false)
-                ], false, false, true, [], false)
+                ], false, true, false, [], false)
         };
         var fixture = new ActionGroupsControllerTestFixture()
             .WithActionGroups(actionGroups)

@@ -189,7 +189,6 @@ public class ActionGroupController : Controller
             agvCorrelationId,
             additionalPickInfo,
             additionalDropInfo,
-            false,
             ActionGroupCreator.TransportOrderWebApi, email));
         return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
     }

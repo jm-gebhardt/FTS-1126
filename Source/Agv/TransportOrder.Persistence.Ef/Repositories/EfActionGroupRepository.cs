@@ -39,7 +39,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         await context.AddAsync(actionGroup);
         return await context.SaveChangesAsync() > 0;
     }
-    
+
     /// <inheritdoc />
     public async Task<bool> AddOrUpdateAsync(ActionGroup actionGroup)
     {
@@ -105,7 +105,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             actionGroups = actionGroups.Where(ag => ag.Actions.Any(a => allowedActionTypes.Contains(a.ActionType)));
         }
 
-        actionGroups = actionGroups.OrderByProperty(nameof(SortBy.CreatedDate), isDescending: false).ThenByDescending(g => g.HasPriority);
+        actionGroups = actionGroups.OrderByProperty(nameof(SortBy.CreatedDate), isDescending: false).ThenByDescending(g => g.Priority);
         return actionGroups.FirstOrDefault();
     }
 
@@ -188,7 +188,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         List<ActionGroup> actionGroupsAsync = await actionGroups
             .AsNoTracking()
             .OrderByProperty(sortBy.ToString(), isDescending: sortDescending)
-            .ThenByDescending(g => g.HasPriority)
+            .ThenByDescending(g => g.Priority)
             .Take(maxItems)
             .ToListWithNoLockAsync();
         return actionGroupsAsync;
@@ -305,7 +305,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return (await context.Set<ActionGroup>()
-                .Where(a => a.State == ActionGroupState.Started && !a.IsManual && !a.HasPriority).ToListAsync())
+                .Where(a => a.State == ActionGroupState.Started && !a.IsManual && a.Priority != Priority.QueueEvacuation && a.Priority != Priority.Queueing).ToListAsync())
             .Where(a => !a.IsMovingCargo).ToList();
     }
 
@@ -455,8 +455,8 @@ public class EfActionGroupRepository : IActionGroupRepository
                 actionGroup.State == ActionGroupState.Created && actionGroup.IsQueued
                                                               && (actionGroup.AssignedAgv == null || actionGroup.AssignedAgv == agvCorrelationId)
             )
-            .OrderBy(g => g.CreatedDate)
-            .ThenByDescending(g => g.IsManual)
+            .OrderByDescending(g => g.Priority)
+            .ThenBy(g => g.CreatedDate)
             .AsNoTracking()
             .ToListWithNoLockAsync();
 
@@ -510,17 +510,6 @@ public class EfActionGroupRepository : IActionGroupRepository
              (a.State == ActionGroupState.Created || (a.State == ActionGroupState.Started && a.Actions.Any(aa => aa.State == ActionState.Created)))) ||
             (a.AssignedAgv == null && a.State == ActionGroupState.Created && a.IsQueued)
         );
-    }
-
-    /// <inheritdoc />
-    public async Task<bool> AgvHasPriorityActionGroups(Guid agvCorrelationId)
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
-
-        return await actionGroups.AnyAsync(a =>
-            a.AssignedAgv == agvCorrelationId && a.State == ActionGroupState.Created && a.HasPriority && a.IsQueued);
     }
 
     /// <inheritdoc />
@@ -589,28 +578,6 @@ public class EfActionGroupRepository : IActionGroupRepository
             .OrderByDescending(a => a.CompletedDate)
             .FirstOrDefaultAsync();
         return action is { IsMoveToCoordinate: true };
-    }
-
-    /// <inheritdoc/>
-    public async Task<ActionGroup?> GetCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId)
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        // Actions are auto-included
-        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
-            .AsNoTracking();
-
-        // The SQL created is less than optimal. If this becomes problematic, 
-        // may want to create a stored procedure and call that instead.
-        return await actionGroups.Where(ag =>
-                ag.AssignedAgv == agvCorrelationId
-                && ag.State == ActionGroupState.Created
-                && ag.IsQueued
-                && ag.Actions.Any(a =>
-                    a.ActionType == ActionType.Charge
-                    && a.State == ActionState.Created))
-            .OrderByDescending(ag => ag.CreatedDate)
-            .FirstOrDefaultAsync();
     }
 
     /// <inheritdoc/>
@@ -730,7 +697,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking();
 
-        return (await actionGroups.Where(a => a.HasPriority && a.IsQueued &&
+        return (await actionGroups.Where(a => a.Priority > Priority.Default && a.Priority != Priority.Charging && a.IsQueued &&
                                               a.AssignedAgv != null && agvs.Contains(a.AssignedAgv!.Value) &&
                                               (a.State == ActionGroupState.Started || a.State == ActionGroupState.Created))
             .ToListAsync()).Select(a => a.AssignedAgv!.Value).ToList();

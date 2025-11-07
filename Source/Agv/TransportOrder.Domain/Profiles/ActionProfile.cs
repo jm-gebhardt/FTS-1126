@@ -13,6 +13,7 @@ public class ActionProfile : Profile
     {
         CreateMap<ActionGroup, Models.ActionGroup.ActionGroup>()
             .ForMember(a => a.DoNotPause, a => a.Ignore())
+            .ForMember(a => a.ShouldEscapeQueue, a => a.Ignore())
             .ReverseMap();
         CreateMap<Models.ActionGroup.AgvAction, AgvAction>()
             .ForMember(p => p.IsSkipped, p => p.MapFrom(src => src.ShouldSkip))

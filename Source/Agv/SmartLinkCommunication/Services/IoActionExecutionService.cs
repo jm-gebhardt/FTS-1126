@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.SmartLinkCommunication.Models;
@@ -31,6 +32,8 @@ public class IoActionExecutionService : IIoActionExecutionService
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Simulation,
+            Priority.Default,
+            false,
             DateTime.UtcNow);
         await _bus.Publish(new QueueActionGroup(actionGroup, true));
     }

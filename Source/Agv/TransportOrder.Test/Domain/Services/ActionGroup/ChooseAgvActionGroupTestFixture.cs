@@ -74,7 +74,7 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
     public new ChooseAgvActionGroupTestFixture<TChooser> Build()
     {
         base.Build();
-        Service = (TChooser) Provider.GetRequiredService<IChooseAgvActionGroupService>();
+        Service = (TChooser)Provider.GetRequiredService<IChooseAgvActionGroupService>();
         return this;
     }
 
@@ -118,12 +118,6 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
     public ChooseAgvActionGroupTestFixture<TChooser> WithLockedNodes(List<string> lockedNodeIds)
     {
         LockedNodes.AddRange(lockedNodeIds.Select(n => n.ToGuid()));
-        return this;
-    }
-
-    public ChooseAgvActionGroupTestFixture<TChooser> GetCreatedChargingActionGroupForAgvAsync(TransportOrder.Domain.Models.ActionGroup.ActionGroup chargingActionGroup)
-    {
-        AgvActionRepository.Setup(x => x.GetCreatedChargingActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(chargingActionGroup);
         return this;
     }
 

@@ -12,68 +12,62 @@ public record ActionGroup : CorrelatedBy<Guid>
 {
     /// <inheritdoc />
     /// Parenting ID
-    [UsedImplicitly]
     public Guid CorrelationId { get; init; }
 
     /// <summary>
     /// A unique ID of the order that clamps all the corresponding actions
     /// </summary>
-    [UsedImplicitly]
     public string OrderId { get; init; }
 
     /// <summary>
     /// Assigned AGV that will execute the ActionGroup
     /// </summary>
-    [UsedImplicitly]
     public Guid? AssignedAgv { get; set; }
 
     /// <summary>
     /// Date the action was created (UTC)
     /// </summary>
-    [UsedImplicitly]
     public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
 
     /// <summary>
     /// Date the action has been started (UTC)
     /// </summary>
-    [UsedImplicitly]
     public DateTime? StartedDate { get; set; }
 
     /// <summary>
     /// Date the action has been completed (UTC)
     /// </summary>
-    [UsedImplicitly]
     public DateTime? CompletedDate { get; set; }
 
     /// <summary>
     /// The estimated duration of the whole ActionGroup based on the estimated duration of the actions.
     /// </summary>
-    [UsedImplicitly]
     public TimeSpan? EstimatedDuration { get; set; }
 
     /// <summary>
     /// State of the ActionGroup
     /// </summary>
-    [UsedImplicitly]
     public ActionGroupState State { get; set; } = ActionGroupState.Created;
 
     /// <summary>
     /// List of actions
     /// </summary>
-    [UsedImplicitly]
     public ICollection<AgvAction> Actions { get; init; }
 
     /// <summary>
     /// If true, then this ActionGroup was created manually, not by the system
     /// </summary>
-    [UsedImplicitly]
     public bool IsManual { get; set; }
 
     /// <summary>
-    /// If true, then this ActionGroup has priority over others (starts immediately).
+    /// The priority of the action group.
     /// </summary>
-    [UsedImplicitly]
-    public bool HasPriority { get; set; }
+    public Priority Priority { get; init; }
+
+    /// <summary>
+    /// If true, then this ActionGroup allows to trigger escaping from the queue
+    /// </summary>
+    public bool ShouldEscapeQueue { get; init; }
 
     /// <summary>
     /// Whether this action group is only relevant in the current system context.
@@ -86,19 +80,16 @@ public record ActionGroup : CorrelatedBy<Guid>
     /// <summary>
     /// The creator of the <see cref="ActionGroup"/>.
     /// </summary>
-    [UsedImplicitly]
     public ActionGroupCreator Creator { get; set; }
 
     /// <summary>
     /// Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled.
     /// </summary>
-    [UsedImplicitly]
     public List<Reason> Reasons { get; set; } = new();
 
     /// <summary>
     /// The handling unit corresponding to this ActionGroup.
     /// </summary>
-    [UsedImplicitly]
     public string? HandlingUnit { get; set; }
 
     /// <summary>
@@ -107,16 +98,17 @@ public record ActionGroup : CorrelatedBy<Guid>
     public bool IsQueued { get; set; }
 
     /// <inheritdoc cref="ActionGroup"/>
-    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false, bool isQueued = false, bool doNotPause = false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, Priority priority = Priority.Default, bool shouldEscapeQueue = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool isQueued = false, bool doNotPause = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
-        HasPriority = hasPriority;
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
         Actions = actions;
         Creator = creator;
         IsQueued = isQueued;
         DoNotPause = doNotPause;
+        Priority = priority;
+        ShouldEscapeQueue = shouldEscapeQueue;
     }
 
     /// <summary>

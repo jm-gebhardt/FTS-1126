@@ -226,13 +226,6 @@ public interface IActionGroupRepository
     Task<bool> AgvHasPendingActions(Guid agvCorrelationId);
 
     /// <summary>
-    /// Checks if the agv has any assigned action groups that have priority.
-    /// </summary>
-    /// <param name="agvCorrelationId">The correlation id.</param>
-    [UsedImplicitly]
-    Task<bool> AgvHasPriorityActionGroups(Guid agvCorrelationId);
-
-    /// <summary>
     /// Gets the agv assigned to the group of the given action.
     /// </summary>
     /// <param name="actionCorrelationId">CorrelationId of the action.</param>
@@ -265,13 +258,6 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     Task<bool> IsLastCompletedActionMoveToCoordinate(Guid agvCorrelationId);
-
-    /// <summary>
-    /// Gets an action group responsible for charging an AGV that is assigned and in the created state.
-    /// </summary>
-    /// <param name="agvCorrelationId"></param>
-    /// <returns>Assigned ActionGroup</returns>
-    Task<ActionGroup?> GetCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Gets the DockFront value of the last completed action of an agv.

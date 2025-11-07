@@ -7,6 +7,7 @@ using Gebhardt.Acc.TransportOrder.Test.Extensions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -150,7 +151,7 @@ public class ActionGroupTest
 
         actionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
+        ((DateTime)actionGroup.CompletedDate).ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -611,8 +612,7 @@ public class ActionGroupTest
     [TestMethod]
     public void SetDockFrontOfAction_ManualPickDropActionGroup_ExternalValue_DockFrontSetToExternalValueNodeDockingDirectionIgnored(bool? previous, DockingDirection? nodeDockingDirection, bool externalValue)
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isManual: true);
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.SetDockFrontValue(externalValue);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
@@ -1005,7 +1005,7 @@ public class ActionGroupTest
     public void SetDockFrontOfAction_QueueActionGroup_DockFrontSet(bool startIsStation, bool? previous, bool move)
     {
         var queueAction = AgvActionGenerator.GenerateParkAction();
-        var actionGroup = new ActionGroup(queueAction.ParentId, "") { Actions = [queueAction], HasPriority = true };
+        var actionGroup = new ActionGroup(queueAction.ParentId, "") { Actions = [queueAction], Priority = Priority.Queueing };
 
         actionGroup.SetDockFrontOfAction(queueAction.CorrelationId, previous, DockingDirection.Both, startIsStation);
         queueAction.InfoToAgv.ShouldNotBeNull();
@@ -1312,6 +1312,8 @@ public class ActionGroupTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.TransportOrderWebApi,
+            Priority.Default,
+            true,
             true,
             DateTime.UtcNow,
             agv);
@@ -1341,6 +1343,8 @@ public class ActionGroupTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.TransportOrderWebApi,
+            Priority.Default,
+            true,
             true,
             DateTime.UtcNow,
             agv);
@@ -1372,6 +1376,8 @@ public class ActionGroupTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.TransportOrderWebApi,
+            Priority.Default,
+            true,
             true,
             DateTime.UtcNow,
             agv);

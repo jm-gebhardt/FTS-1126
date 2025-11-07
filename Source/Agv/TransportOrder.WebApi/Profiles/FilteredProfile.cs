@@ -20,7 +20,9 @@ public class FilteredProfile : Profile
     public FilteredProfile()
     {
         CreateMap<FilteredActionGroup, FilteredActionGroupDto>()
-            .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration));
+            .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration))
+            .ForSourceMember(g => g.ShouldEscapeQueue, opt => opt.DoNotValidate())
+            .ForSourceMember(g => g.Priority, opt => opt.DoNotValidate());
         CreateMap<FilteredAgvAction, FilteredActionDto>()
             .ForMember(p => p.IsSkipped, p => p.MapFrom(src => src.ShouldSkip))
             .ForMember(m => m.TargetNodeType, opt => opt.MapFrom(src => src.Target.Node == null ? AgvGraph.NodeType.WayPoint : src.ActionType.ToNodeType()))

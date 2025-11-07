@@ -427,7 +427,7 @@ public class ActionCommandHandler :
             actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, parkNode, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder,
-            hasPriority: false,
+            priority: Priority.Default,
             isQueued: true,
             doNotPause: true
         );
@@ -470,7 +470,7 @@ public class ActionCommandHandler :
             actions: new List<AgvAction> { new(Guid.NewGuid(), ActionType.Move, queueNode, groupCorrelationId) },
             assignedAgv: agv.CorrelationId,
             creator: ActionGroupCreator.TransportOrder,
-            hasPriority: true,
+            priority: Priority.Queueing,
             isQueued: true,
             doNotPause: true
         );
@@ -587,8 +587,9 @@ public class ActionCommandHandler :
                 },
                 assignedAgv: agv.CorrelationId,
                 creator: initiator,
+                priority: Priority.Charging,
+                shouldEscapeQueue: true,
                 isManual: triggeredByWebApi,
-                hasPriority: triggeredByWebApi,
                 isQueued: true,
                 doNotPause: !triggeredByWebApi
             );
@@ -847,7 +848,7 @@ public class ActionCommandHandler :
             await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, all actions completed."));
             return;
         }
-        var agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
+        var agv = await _agvDb.Agvs.GetAgvAsync((Guid)actionGroup.AssignedAgv!);
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason(), _timeProvider.GetUtcNow());
 
         if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && agv.IsQueueing)
@@ -1316,7 +1317,7 @@ public class ActionCommandHandler :
             //Create tuples of AGV and route costs to action group.
             //Skip agvs that are on the target or on the first edge to the next waypoint,
             //as it could already be moving away and running a detour to the target.
-            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) agvs.Zip(agvsData).ToList(), targetNode.Id, true);
+            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNode.Id, true);
             if (closestAgvRoute.agv == null)
             {
                 _logger.LogInformation("Reactivate all parking agvs and agvs at queue heads");
@@ -1352,7 +1353,6 @@ public class ActionCommandHandler :
             actionGroup.AssignedAgv = closestAgvRoute.agv;
             bool? previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(closestAgvRoute.agv.Value, actionGroup.CorrelationId);
             actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges, _timeProvider.GetUtcNow());
-            actionGroup.HasPriority = true;
             actionGroup.SetDockFrontOfAction(actionToStart.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
 
             // Get route costs
@@ -1415,8 +1415,11 @@ public class ActionCommandHandler :
 
             actionGroup.ResetActionGroup(_timeProvider.GetUtcNow());
             actionGroup.Queue();
-            actionGroup.HasPriority = true;
-
+            if (actionGroup.Priority == Priority.Default)
+            {
+                actionGroup.Priority = Priority.Resume;
+            }
+           
             var agvToAssign = context.Message.AssignedAgv != null ? await _agvDb.Agvs.GetAgvAsync(context.Message.AssignedAgv.Value) : null;
             if (agvToAssign == null)
             {
@@ -1425,7 +1428,7 @@ public class ActionCommandHandler :
 
                 List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
 
-                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.Node!.Id);
+                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.Node!.Id);
 
                 if (closestAgvRoute.agv == null)
                 {
@@ -1522,7 +1525,7 @@ public class ActionCommandHandler :
         {
             // Check again if action group has been started in the meantime 
             actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
-            if (actionGroup.StartedDate != null )
+            if (actionGroup.StartedDate != null)
             {
                 _logger.LogWarning("Can not retract action group {ActionGroupCorrelationId}, it is has already been started", actionGroup.CorrelationId);
                 return;

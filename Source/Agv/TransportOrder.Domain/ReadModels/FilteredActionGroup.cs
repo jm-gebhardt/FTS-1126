@@ -46,9 +46,6 @@ public record FilteredActionGroup
     /// <inheritdoc cref="ActionGroup.EstimatedDuration"/>
     public TimeSpan? EstimatedDuration { get; init; }
 
-    /// <inheritdoc cref="ActionGroup.HasPriority"/>
-    public bool HasPriority { get; init; }
-
     /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
     public string? HandlingUnit { get; init; }
 
@@ -57,4 +54,10 @@ public record FilteredActionGroup
 
     /// <inheritdoc cref="ActionGroup.DoNotPause"/>
     public bool DoNotPause { get; init; }
+
+    /// <inheritdoc cref="ActionGroup.ShouldEscapeQueue"/>
+    public bool ShouldEscapeQueue { get; init; }
+
+    /// <inheritdoc cref="ActionGroup.Priority"/>
+    public Priority Priority { get; init; }
 }

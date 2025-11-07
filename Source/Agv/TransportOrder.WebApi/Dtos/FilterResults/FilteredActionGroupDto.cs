@@ -57,10 +57,6 @@ public record FilteredActionGroupDto
     [SwaggerFilterableProperty]
     public TimeSpan? EstimatedDuration { get; init; }
 
-    /// <inheritdoc cref="ActionGroup.HasPriority"/>
-    [SwaggerFilterableProperty]
-    public bool HasPriority { get; init; }
-
     /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
     [SwaggerFilterableProperty]
     public string? HandlingUnit { get; init; }

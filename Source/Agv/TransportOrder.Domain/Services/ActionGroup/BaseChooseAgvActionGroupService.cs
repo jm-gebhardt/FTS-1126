@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -49,10 +48,11 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
 
     /// <summary>
     /// Returns the first ActionGroup that satisfies these conditions:
-    /// <para>- Is a charging action group (with no locked charging station).</para>
-    /// <para>- Is a manual action group</para>
+    /// <para>- Is action group assigned to the agv with the highest <see cref="Priority"/>, that is not an automatic pick drop action group.</para>
     /// <para>- Is there an action group with a locked action target node then skip this action group.</para>
+    /// <para>- Is there an automatic action group that passes queue nodes then skip this action group.</para>
     /// <para>- Is an action group assigned to the agv selected based on the policy implementing chooser.</para>
+    /// <para>- Is an action group with a <see cref="Priority"/> higher than the default selected based on the policy implementing chooser.</para>
     /// <para>- Is an action group selected based on the policy implementing chooser.</para>
     /// </summary>
     /// <param name="agv">The agv.</param>
@@ -68,63 +68,38 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             _logger.LogDebug("Locked nodes: {Ids}", string.Join(",", lockedNodeIds));
         }
 
-        var chargingActionGroup = await _actionGroupRepository.GetCreatedChargingActionGroupForAgvAsync(agv.CorrelationId);
-        if (chargingActionGroup != null)
-        {
-            if (chargingActionGroup.IsManual || lockedNodeIds is { Count: 0 } ||
-                (lockedNodeIds is { Count: > 0 } && !chargingActionGroup.Actions.Any(a => lockedNodeIds.Any(ln => ln == a.Target.Node?.Id))))
-            {
-                _logger.LogDebug("ShortestRouteChooser.GetNotStartedActionGroupAsync: Found charging action group {ActionGroupCorrelationId} for AGV: {AgvCorrelationId}", chargingActionGroup.CorrelationId, agv.CorrelationId);
-                return chargingActionGroup;
-            }
-            if (lockedNodeIds is { Count: > 0 })
-            {
-                await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderWithLockedStation, agv.CorrelationId,
-                    chargingActionGroup.CorrelationId, "Order Contains Locked Station",
-                    $"Order {chargingActionGroup.OrderId} contains locked station.",
-                    new Dictionary<string, object?> { { LogLabels.OrderId, chargingActionGroup.OrderId } });
-            }
-        }
-
         IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
 
-        var priorityActionGroup = notStartedActionGroups.FirstOrDefault(g => g.HasPriority);
-        var manualActionGroup = notStartedActionGroups.OrderByDescending(g => g.HasPriority).FirstOrDefault(g => g.IsManual);
-        var chosenActionGroup = manualActionGroup;
-        if (priorityActionGroup != null && string.Equals(Queue.EvacuationOrderId, manualActionGroup?.OrderId))
+        //1) Action group assigned to the agv with the highest priority, that is not an automatic pick drop action group (e.g. charging, manual, queueing, queue evacuation)
+        var nextActionGroup = notStartedActionGroups.FirstOrDefault(a => a.AssignedAgv == agv.CorrelationId && (a.IsManual || !a.IsMovingCargo));
+        if (nextActionGroup != null)
         {
-            // Let agv drive to queue head first, if there is an evacuation move
-            chosenActionGroup = priorityActionGroup;
-        }
-        if (chosenActionGroup != null)
-        {
-            if (lockedNodeIds is { Count: > 0 } && chosenActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.Node!.Id)))
+            if (lockedNodeIds is { Count: > 0 } && nextActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.Node!.Id)))
             {
-                await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderWithLockedStation, agv.CorrelationId, chosenActionGroup.CorrelationId, "Order Contains Locked Station",
-                    $"Order {chosenActionGroup.OrderId} contains locked station.",
-                    new Dictionary<string, object?> { { LogLabels.OrderId, chosenActionGroup.OrderId } });
+                await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderWithLockedStation, agv.CorrelationId, nextActionGroup.CorrelationId, "Order Contains Locked Station",
+                    $"Order {nextActionGroup.OrderId} contains locked station.",
+                    new Dictionary<string, object?> { { LogLabels.OrderId, nextActionGroup.OrderId } });
             }
-            // If there is a manual or priority action group, return this action group. The list of actionGroups is already ordered by the CreationDate, so the first is fine 
-            return chosenActionGroup;
-        }
 
-        // Filter these action group which have actions with locked target.
-        IReadOnlyList<Models.ActionGroup.ActionGroup> filteredNextActionGroups = lockedNodeIds is { Count: > 0 } ? notStartedActionGroups.Where(g => g.Actions.All(a => lockedNodeIds.All(ln => ln != a.Target.Node?.Id))).ToList() : notStartedActionGroups;
-
-        List<Models.ActionGroup.ActionGroup> priorityActionGroups = filteredNextActionGroups.Where(a => a.HasPriority).ToList();
-        Models.ActionGroup.ActionGroup? nextActionGroup;
-        if (priorityActionGroups.Count > 0)
-        {
-            nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, priorityActionGroups, []);
-            if (nextActionGroup != null)
+            if (nextActionGroup.IsManual || lockedNodeIds is { Count: 0 } ||
+                (lockedNodeIds is { Count: > 0 } && !nextActionGroup.Actions.Any(a => lockedNodeIds.Any(ln => ln == a.Target.Node?.Id))))
             {
+                _logger.LogInformation("Selected next assigned action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId);
                 return nextActionGroup;
             }
         }
 
+        if (agv.IsQueueing)
+        {
+            _logger.LogWarning("Prevent selecting next pick drop action group for queueing agv {AgvCorrelationId}", agv.CorrelationId);
+            return null;
+        }
+
+        // Filter action group which have actions with locked target.
+        IReadOnlyList<Models.ActionGroup.ActionGroup> filteredNextActionGroups = lockedNodeIds is { Count: > 0 } ? notStartedActionGroups.Where(g => g.Actions.All(a => lockedNodeIds.All(ln => ln != a.Target.Node?.Id))).ToList() : notStartedActionGroups;
+
         //Get nodes that are not allowed to be on the route from the current AGV
         //To be specific: Nodes that part of a queue and route would lead through a queue
-
         ICollection<Guid> nodesToAvoid = await GetNodesToAvoid(agv.AgvStatus?.LastNodeId);
 
         //If e.g., lastNodeId from AGV was not correct, we check if AGV is at queue head
@@ -139,24 +114,33 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             }
         }
 
-        List<Models.ActionGroup.ActionGroup> nextActionGroups = filteredNextActionGroups.Except(priorityActionGroups).ToList();
-
-        List<Models.ActionGroup.ActionGroup> nextActionGroupsForAgv = nextActionGroups.Where(a => a.AssignedAgv == agv.CorrelationId).ToList();
-        if (agv.IsQueueing)
+        //2) Action group assigned to the agv with the highest priority (e.g. Doppelspiel, re-assigned action groups, resumed action groups)
+        List<Models.ActionGroup.ActionGroup> assignedActionGroups = filteredNextActionGroups.Where(a => a.AssignedAgv == agv.CorrelationId).ToList();
+        if (assignedActionGroups.Count > 0)
         {
-            _logger.LogWarning("Prevent selecting next pick drop action group for queueing agv {AgvCorrelationId}", agv.CorrelationId);
-            return null;
-        }
-
-        if (nextActionGroupsForAgv.Count > 0)
-        {
-            nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroupsForAgv, []);
+            nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, assignedActionGroups, nodesToAvoid);
             if (nextActionGroup != null)
             {
+                _logger.LogInformation("Selected next priority action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId} with nodes to avoid: {AvoidNodes}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId, string.Join(":", nodesToAvoid));
                 return nextActionGroup;
             }
         }
-        nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroups.Except(nextActionGroupsForAgv).ToList(), nodesToAvoid);
+
+        //3) Unassigned action groups with non-default priority
+        List<Models.ActionGroup.ActionGroup> priorityActionGroups = filteredNextActionGroups.Except(assignedActionGroups).Where(a => a.Priority > Priority.Default).ToList();
+        if (priorityActionGroups.Count > 0)
+        {
+            nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, priorityActionGroups, nodesToAvoid);
+            if (nextActionGroup != null)
+            {
+                _logger.LogInformation("Selected next priority action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId} with nodes to avoid: {AvoidNodes}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId, string.Join(":", nodesToAvoid));
+                return nextActionGroup;
+            }
+        }
+
+        //4) Any other action group
+        List<Models.ActionGroup.ActionGroup> nextActionGroups = filteredNextActionGroups.Except(priorityActionGroups).ToList();
+        nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroups.ToList(), nodesToAvoid);
         if (nextActionGroup != null)
         {
             _logger.LogInformation("Selected next action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId} with nodes to avoid: {AvoidNodes}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId, string.Join(":", nodesToAvoid));

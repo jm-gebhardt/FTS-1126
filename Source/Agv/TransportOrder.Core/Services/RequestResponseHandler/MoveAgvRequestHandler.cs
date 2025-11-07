@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using System.Globalization;
 using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Microsoft.Extensions.Logging;
 
@@ -146,7 +147,7 @@ public class MoveAgvRequestHandler :
             ], $"Manual {nameof(ActionType.Charge)}",
             agvCorrelationId,
             ActionGroupCreator.TransportOrderWebApi,
-            actionGroupId);
+            actionGroupId, priority: Priority.Charging);
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
 
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
@@ -207,7 +208,7 @@ public class MoveAgvRequestHandler :
         await PublishNodeStateChange(targetNode.Id);
     }
 
-    private async Task QueueNewActionGroup(ConsumeContext context, ICollection<AgvAction> actions, string orderId, Guid agvCorrelationId, ActionGroupCreator creator, Guid actionGroupId)
+    private async Task QueueNewActionGroup(ConsumeContext context, ICollection<AgvAction> actions, string orderId, Guid agvCorrelationId, ActionGroupCreator creator, Guid actionGroupId, Priority priority = Priority.Manual)
     {
         var actionGroup = new ActionGroup(
             actionGroupId,
@@ -215,6 +216,8 @@ public class MoveAgvRequestHandler :
             actions,
             assignedAgv: agvCorrelationId,
             isManual: true,
+            priority: priority,
+            shouldEscapeQueue: true,
             creator: creator
         );
         IRequestClient<QueueActionGroup>? requestClient = context.CreateRequestClient<QueueActionGroup>(_bus);

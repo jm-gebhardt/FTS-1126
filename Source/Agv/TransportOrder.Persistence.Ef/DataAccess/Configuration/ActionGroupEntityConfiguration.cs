@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -19,6 +20,8 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.IsIncomplete);
         builder.Ignore(e => e.Duration);
         builder.Ignore(e => e.IsQueueingOrder);
+        builder.Property(e => e.ShouldEscapeQueue);
+        builder.Property(e => e.Priority).HasConversion<int>().HasDefaultValue(Priority.Default);
         builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);
         builder.HasIndex(g => g.AssignedAgv);
         builder.Property(e => e.IsQueued);

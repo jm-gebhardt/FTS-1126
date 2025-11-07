@@ -69,9 +69,9 @@ public class ActionGroupFilterable : ActionGroup, IFilterable<ActionGroup, Actio
     [FilterProperty]
     public new TimeSpan? EstimatedDuration { get; init; }
 
-    /// <inheritdoc cref="ActionGroup.HasPriority"/>
+    /// <inheritdoc cref="ActionGroup.Priority"/>
     [FilterProperty]
-    public new bool HasPriority { get; init; }
+    public new Priority Priority { get; init; }
 
     /// <inheritdoc cref="ActionGroup.HandlingUnit"/>
     [FilterProperty]

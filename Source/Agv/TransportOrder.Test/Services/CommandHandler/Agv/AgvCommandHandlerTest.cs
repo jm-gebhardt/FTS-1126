@@ -1065,8 +1065,7 @@ public class AgvCommandHandlerTest
         agvInQueue.IsQueueing = true;
         var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, "queue node".ToGuid() } };
 
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isManual: true, priority: Priority.Manual);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv, agvInQueue])
             .WithAgvsToMove(agvsToMove)

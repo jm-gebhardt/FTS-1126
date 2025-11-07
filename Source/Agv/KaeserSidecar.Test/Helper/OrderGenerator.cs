@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using JetBrains.Annotations;
+using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Helper;

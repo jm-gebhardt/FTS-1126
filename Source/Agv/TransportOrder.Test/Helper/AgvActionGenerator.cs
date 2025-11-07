@@ -36,8 +36,9 @@ public static class AgvActionGenerator
                 moveAction,
                 chargeAction
             },
-            ActionGroupCreator.TransportOrder)
+            ActionGroupCreator.TransportOrder, Priority.Charging)
         {
+            ShouldEscapeQueue = true,
             AssignedAgv = assignedAgv,
             CreatedDate = createdDate ?? DateTime.UtcNow
         };
@@ -95,7 +96,7 @@ public static class AgvActionGenerator
             parkAction.Nodes = [targetNodeName.ToGraphNode()];
         }
         parkAction.UpdateActionState(actionState, DateTimeOffset.Now);
-        var actionGroup = new ActionGroup(groupId, string.Empty, [parkAction], ActionGroupCreator.TransportOrder, doNotPause: doNotPause) { AssignedAgv = assignedAgv };
+        var actionGroup = new ActionGroup(groupId, string.Empty, [parkAction], ActionGroupCreator.TransportOrder, doNotPause: doNotPause) { AssignedAgv = assignedAgv, Priority = Priority.Default };
         actionGroup.UpdateActionGroupState();
         if (completedDate != null)
         {
@@ -136,12 +137,13 @@ public static class AgvActionGenerator
         DateTime? completedDate = null,
         DateTime? startedDate = null,
         TimeSpan? estimatedDuration = null,
-        bool hasPriority = false,
+        Priority priority = Priority.Default,
         bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null,
         Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null,
         string orderId = "orderId",
-        string? handlingUnit = null
+        string? handlingUnit = null,
+        bool isManual = false
     )
     {
         var groupId = Guid.NewGuid();
@@ -175,8 +177,10 @@ public static class AgvActionGenerator
         {
             AssignedAgv = assignedAgv,
             EstimatedDuration = estimatedDuration,
-            HasPriority = hasPriority,
-            HandlingUnit = handlingUnit
+            Priority = priority,
+            HandlingUnit = handlingUnit,
+            IsManual = isManual,
+            ShouldEscapeQueue = isManual
         };
         if (isQueued)
         {
@@ -210,7 +214,6 @@ public static class AgvActionGenerator
         DateTime? completedDate = null,
         DateTime? startedDate = null,
         TimeSpan? duration = null,
-        bool hasPriority = false,
         bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null,
         Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null,
@@ -249,7 +252,7 @@ public static class AgvActionGenerator
         {
             AssignedAgv = assignedAgv,
             EstimatedDuration = duration,
-            HasPriority = hasPriority
+            Priority = Priority.Default
         };
         if (isQueued)
         {
@@ -283,7 +286,6 @@ public static class AgvActionGenerator
         DateTime? completedDate = null,
         DateTime? startedDate = null,
         TimeSpan? duration = null,
-        bool hasPriority = false,
         bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null
     )
@@ -319,7 +321,7 @@ public static class AgvActionGenerator
         {
             AssignedAgv = assignedAgv,
             EstimatedDuration = duration,
-            HasPriority = hasPriority
+            Priority = Priority.Default
         };
 
         if (createdDate != default)
@@ -353,7 +355,6 @@ public static class AgvActionGenerator
         DateTime? completedDate = null,
         DateTime? startedDate = null,
         TimeSpan? duration = null,
-        bool hasPriority = false,
         bool isQueued = true,
         Dictionary<InfoToAgvKey, string>? infoToAgv = null
     )
@@ -390,7 +391,7 @@ public static class AgvActionGenerator
         {
             AssignedAgv = assignedAgv,
             EstimatedDuration = duration,
-            HasPriority = hasPriority
+            Priority = Priority.Default
         };
         if (isQueued)
         {
@@ -412,7 +413,7 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
-    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null, TimeSpan? duration = null, DateTime? createdDate = null, string orderId = "move", bool hasPriority = true)
+    public static ActionGroup GenerateMoveActionGroup(string? targetNodeId = null, bool isManual = false, Guid? assignedAgv = null, TimeSpan? duration = null, DateTime? createdDate = null, string orderId = "move", Priority priority = Priority.Default)
     {
         var groupId = Guid.NewGuid();
         var moveAction = new AgvAction(Guid.NewGuid(), ActionType.Move, targetNodeId != null ? targetNodeId.ToGraphNode() : AgvGraphGenerator.Waypoint1, groupId);
@@ -428,10 +429,11 @@ public static class AgvActionGenerator
                 moveAction
             },
             isManual: isManual,
-            hasPriority: hasPriority,
+            priority: priority,
             creator: ActionGroupCreator.TransportOrderWebApi,
             assignedAgv: assignedAgv)
         {
+            ShouldEscapeQueue = isManual,
             EstimatedDuration = duration,
             CreatedDate = createdDate ?? DateTime.UtcNow
         };
@@ -458,7 +460,7 @@ public static class AgvActionGenerator
             Nodes = []
         };
         moveAction.UpdateActionState(moveActionState, DateTimeOffset.Now);
-        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, hasPriority: true, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration };
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, priority: Priority.Manual, creator: ActionGroupCreator.TransportOrderWebApi, assignedAgv: assignedAgv) { EstimatedDuration = duration, ShouldEscapeQueue = true };
         actionGroup.UpdateActionGroupState();
 
         if (completedDate != null)
@@ -473,11 +475,11 @@ public static class AgvActionGenerator
     }
 
     [UsedImplicitly]
-    public static ActionGroup GenerateActionGroup(IList<AgvAction> actions, ActionGroupState actionGroupState = ActionGroupState.Created, string orderId = "", Guid? correlationId = null)
+    public static ActionGroup GenerateActionGroup(IList<AgvAction> actions, ActionGroupState actionGroupState = ActionGroupState.Created, string orderId = "", Guid? correlationId = null, Priority priority = Priority.Default)
     {
         var groupId = correlationId ?? actions.Select(a => a.ParentId).FirstOrDefault(Guid.NewGuid());
 
-        var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms);
+        var actionGroup = new ActionGroup(groupId, orderId, actions, ActionGroupCreator.Wms) { Priority = priority };
 
         return SetActionGroupToState(actionGroup, actionGroupState);
     }

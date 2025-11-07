@@ -35,7 +35,8 @@ public class PrometheusMetricCollectionServiceTest
             string.Empty,
             actions: new List<TransportOrder.Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, AgvGraphGenerator.Prk1Node, actionGroupCorrelationId) },
             assignedAgv: agvId,
-            creator: ActionGroupCreator.TransportOrder
+            creator: ActionGroupCreator.TransportOrder,
+            priority: Priority.Default
         );
         actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
 
@@ -153,7 +154,7 @@ public class PrometheusMetricCollectionServiceTest
     }
 
     [TestMethod]
-    public async Task CollectOrderCompletionMetrics_AbortedOrder_MetricsUpdated( )
+    public async Task CollectOrderCompletionMetrics_AbortedOrder_MetricsUpdated()
     {
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateDefaultGraph();
@@ -325,7 +326,7 @@ public class PrometheusMetricCollectionServiceTest
     [TestMethod]
     public async Task CollectStationOrderCompletionMetrics_WithStation_CountersUpdated(ActionType actionType, int dropCount, int pickCount, int chargeCount)
     {
-        var station = new Station{Id = Guid.NewGuid()};
+        var station = new Station { Id = Guid.NewGuid() };
         var fixture = new PrometheusMetricCollectionServiceTestFixture()
             .WithStation(station);
 

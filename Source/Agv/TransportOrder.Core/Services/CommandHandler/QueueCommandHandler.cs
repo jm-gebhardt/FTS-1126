@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -78,7 +79,7 @@ public class QueueCommandHandler(
     {
         (string queueName, var evacuationTargetName, var triggeringAgv, int waitingTime) = context.Message;
         var evacuationTarget = await agvDb.Graphs.TryGetNodeByIdAsync(evacuationTargetName);
-        
+
         await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             logger.LogInformation("Evacuating queue {Queue} to node {Node}", queueName, evacuationTargetName);
@@ -134,8 +135,10 @@ public class QueueCommandHandler(
             orderId,
             actions,
             assignedAgv: agvCorrelationId,
-            isManual: true, // ensure agv escapes the queue
+            isManual: false,
+            shouldEscapeQueue: true,
             creator: ActionGroupCreator.TransportOrder,
+            priority: Priority.QueueEvacuation,
             doNotPause: true
         );
         await context.Publish(new QueueActionGroup(actionGroup, false));
@@ -235,7 +238,7 @@ public class QueueCommandHandler(
             }
 
             if (queueHeadNode?.OccupiedAgv == null) // if the head is only reserved, not occupied
-            {  
+            {
                 // If the agv reserved for the queue head has already been assigned to a pick at station, do not evacuate or try to assign to another one,
                 // it will run the other one, once reaching the queue head
                 ICollection<Domain.Models.ActionGroup.ActionGroup> picksAtStation = await actionGroupRepository.GetCurrentActionGroupsToTarget(stationName.ToGuid());
@@ -252,7 +255,7 @@ public class QueueCommandHandler(
             }
 
             logger.LogInformation("Evacuating head of queue {Queue}", queueName);
-            
+
             List<Guid> queueTargets = queue.NonEntryNodes.Except([queueHeadNode?.NodeId ?? Guid.Empty]).ToList();
             ICollection<Domain.Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agvAtQueueHead.Value, queueTargets);
             await Task.WhenAll(queueInternalMoves.Select(ag => context.Publish(new CancelOrAbortActionGroup(ag.CorrelationId))));

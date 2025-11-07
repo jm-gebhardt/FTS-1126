@@ -44,7 +44,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return context;
     }
-    
+
     /// <inheritdoc />
     public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
     {
@@ -74,7 +74,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         if (assignedAgvIds != null)
         {
-            query = query.Where(g => g.AssignedAgv != null && assignedAgvIds.Contains((Guid) g.AssignedAgv));
+            query = query.Where(g => g.AssignedAgv != null && assignedAgvIds.Contains((Guid)g.AssignedAgv));
         }
 
         query = query.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.IsManual);
@@ -103,6 +103,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             g.EstimatedDuration,
             g.State,
             g.Creator,
+            g.Priority,
             g.HandlingUnit,
             g.Actions.Select(a =>
             {
@@ -151,8 +152,8 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     a.AdditionalInfo);
             }).Distinct().ToList(),
             g.IsManual,
-            g.HasPriority,
             g.IsQueued,
+            g.ShouldEscapeQueue,
             g.Reasons,
             g.DoNotPause
         )).ToList();
@@ -165,7 +166,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     {
         await using var context = await CreateDbContextAsync();
         List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
-            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid) g.AssignedAgv) && (g.State == ActionGroupState.Started || g.State == ActionGroupState.Paused))
+            .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv) && (g.State == ActionGroupState.Started || g.State == ActionGroupState.Paused))
             .OrderByDescending(g => g.StartedDate)
             .ToListAsync();
 
@@ -194,11 +195,12 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
                     actionGroup.EstimatedDuration,
                     actionGroup.State,
                     actionGroup.Creator,
+                    actionGroup.Priority,
                     actionGroup.HandlingUnit,
                     GetAgvActionReadModel(actionGroup, graphNodes),
                     actionGroup.IsManual,
-                    actionGroup.HasPriority,
                     actionGroup.IsQueued,
+                    actionGroup.ShouldEscapeQueue,
                     actionGroup.Reasons,
                     actionGroup.DoNotPause
                 );
@@ -251,11 +253,12 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.EstimatedDuration,
             actionGroup.State,
             actionGroup.Creator,
+            actionGroup.Priority,
             actionGroup.HandlingUnit,
             GetAgvActionReadModel(actionGroup, graphNodes),
             actionGroup.IsManual,
-            actionGroup.HasPriority,
             actionGroup.IsQueued,
+            actionGroup.ShouldEscapeQueue,
             actionGroup.Reasons,
             actionGroup.DoNotPause
         );
@@ -290,11 +293,12 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.EstimatedDuration,
             actionGroup.State,
             actionGroup.Creator,
+            actionGroup.Priority,
             actionGroup.HandlingUnit,
             GetAgvActionReadModel(actionGroup, graphNodes),
             actionGroup.IsManual,
-            actionGroup.HasPriority,
             actionGroup.IsQueued,
+            actionGroup.ShouldEscapeQueue,
             actionGroup.Reasons,
             actionGroup.DoNotPause
         );
@@ -327,11 +331,12 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             actionGroup.EstimatedDuration,
             actionGroup.State,
             actionGroup.Creator,
+            actionGroup.Priority,
             actionGroup.HandlingUnit,
             GetAgvActionReadModel(actionGroup, graphNodes),
             actionGroup.IsManual,
-            actionGroup.HasPriority,
             actionGroup.IsQueued,
+            actionGroup.ShouldEscapeQueue,
             actionGroup.Reasons,
             actionGroup.DoNotPause
         );

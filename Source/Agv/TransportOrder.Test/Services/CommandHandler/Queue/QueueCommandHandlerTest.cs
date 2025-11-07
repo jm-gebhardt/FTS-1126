@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -35,7 +36,9 @@ public class QueueCommandHandlerTest
             Guid? agv = node.GetCurrentAgv();
             var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
             message.ShouldNotBeNull();
-            message.ActionGroup.IsManual.ShouldBeTrue();
+            message.ActionGroup.IsManual.ShouldBeFalse();
+            message.ActionGroup.ShouldEscapeQueue.ShouldBeTrue();
+            message.ActionGroup.Priority.ShouldBe(Priority.QueueEvacuation);
             message.ActionGroup.Actions.Count.ShouldBe(1);
             var targetNode = message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node;
             targetNode!.Id.ShouldBe(command.EvacuationTargetNodeId);
@@ -84,14 +87,18 @@ public class QueueCommandHandlerTest
             }
             var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
             message.ShouldNotBeNull();
-            message.ActionGroup.IsManual.ShouldBeTrue();
+            message.ActionGroup.IsManual.ShouldBeFalse();
+            message.ActionGroup.ShouldEscapeQueue.ShouldBeTrue();
+            message.ActionGroup.Priority.ShouldBe(Priority.QueueEvacuation);
             message.ActionGroup.Actions.Count.ShouldBe(1);
             message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetNodeId);
         }
 
         var messageForAgvOnTheWayForQueueing = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == queueActionGroup.AssignedAgv);
         messageForAgvOnTheWayForQueueing.ShouldNotBeNull();
-        messageForAgvOnTheWayForQueueing.ActionGroup.IsManual.ShouldBeTrue();
+        messageForAgvOnTheWayForQueueing.ActionGroup.IsManual.ShouldBeFalse();
+        messageForAgvOnTheWayForQueueing.ActionGroup.ShouldEscapeQueue.ShouldBeTrue();
+        messageForAgvOnTheWayForQueueing.ActionGroup.Priority.ShouldBe(Priority.QueueEvacuation);
         messageForAgvOnTheWayForQueueing.ActionGroup.Actions.Count.ShouldBe(1);
         messageForAgvOnTheWayForQueueing.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetNodeId);
     }
@@ -136,7 +143,9 @@ public class QueueCommandHandlerTest
         Guid? agv = queue.Head.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
-        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.IsManual.ShouldBeFalse();
+        message.ActionGroup.ShouldEscapeQueue.ShouldBeTrue();
+        message.ActionGroup.Priority.ShouldBe(Priority.QueueEvacuation);
         message.ActionGroup.Actions.Count.ShouldBe(1);
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
 
@@ -166,7 +175,9 @@ public class QueueCommandHandlerTest
         Guid? agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
-        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.IsManual.ShouldBeFalse();
+        message.ActionGroup.ShouldEscapeQueue.ShouldBeTrue();
+        message.ActionGroup.Priority.ShouldBe(Priority.QueueEvacuation);
         message.ActionGroup.Actions.Count.ShouldBe(1);
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
 
@@ -231,7 +242,9 @@ public class QueueCommandHandlerTest
         Guid? agv = queue.Head.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
-        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.IsManual.ShouldBeFalse();
+        message.ActionGroup.ShouldEscapeQueue.ShouldBeTrue();
+        message.ActionGroup.Priority.ShouldBe(Priority.QueueEvacuation);
         message.ActionGroup.Actions.Count.ShouldBe(1);
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
 
@@ -357,7 +370,9 @@ public class QueueCommandHandlerTest
         Guid? agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
-        message.ActionGroup.IsManual.ShouldBeTrue();
+        message.ActionGroup.IsManual.ShouldBeFalse();
+        message.ActionGroup.ShouldEscapeQueue.ShouldBeTrue();
+        message.ActionGroup.Priority.ShouldBe(Priority.QueueEvacuation);
         message.ActionGroup.Actions.Count.ShouldBe(1);
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
 

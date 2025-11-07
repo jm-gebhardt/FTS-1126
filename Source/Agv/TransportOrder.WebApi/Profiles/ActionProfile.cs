@@ -18,7 +18,7 @@ public class ActionProfile : WebApiProfile
     {
         CreateMap<ActionGroupReadModel, ActionGroupDto>()
             .ForMember(g => g.EstimatedCompletionDate, opt => opt.MapFrom(g => g.StartedDate + g.EstimatedDuration))
-            .ForSourceMember(g => g.HasPriority, opt => opt.DoNotValidate());
+            .ForSourceMember(g => g.Priority, opt => opt.DoNotValidate());
 
         CreateMap<AgvActionReadModel, AgvActionDto>()
             .ConstructUsing(_ => new AgvActionDto())

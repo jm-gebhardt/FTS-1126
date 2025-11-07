@@ -195,8 +195,7 @@ public class ActionCommandHandlerTest
     public async Task Consume_StartActionOfActionGroup_ManualPickDropAction_AgvIsInUserMode_PublishedStartingActionForAgvFailed()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.UserMode));
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isManual: true);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
@@ -1615,9 +1614,8 @@ public class ActionCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "A node");
         agv.HasError = true;
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: null);
-        actionGroup.IsManual = true;
-        actionGroup.AssignedAgv = agv.CorrelationId;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isManual: true);
+       
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup, hasUnfinishedAction: false, isManual: true)
@@ -2053,6 +2051,8 @@ public class ActionCommandHandlerTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.TransportOrderWebApi,
+            Priority.Default,
+            false,
             true,
             DateTime.UtcNow,
             agv.CorrelationId);
@@ -2349,7 +2349,7 @@ public class ActionCommandHandlerTest
         saveActionGroupAbortionCommand.CorrelationId.ShouldBe(chargingActionGroup.CorrelationId);
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromCharging);
         saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(chargingActionGroup.Actions.First(a => a.ActionType == ActionType.Charge).CorrelationId);
-        pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.Priority.ShouldBe(Priority.Default);
     }
 
     [TestMethod]
@@ -2388,7 +2388,7 @@ public class ActionCommandHandlerTest
         saveActionGroupAbortionCommand.CorrelationId.ShouldBe(parkingActionGroup.CorrelationId);
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromParking);
         saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First(a => a.ActionType == ActionType.Move).CorrelationId);
-        pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.Priority.ShouldBe(Priority.Default);
     }
 
     [TestMethod]
@@ -2486,8 +2486,7 @@ public class ActionCommandHandlerTest
         saveActionGroupAbortionCommand.CorrelationId.ShouldBe(parkingActionGroup.CorrelationId);
         saveActionGroupAbortionCommand.AbortReason.ShouldBe(AbortReason.ReactivatedFromParking);
         saveActionGroupAbortionCommand.AbortedActionId.ShouldBe(parkingActionGroup.Actions.First(a => a.ActionType == ActionType.Move).CorrelationId);
-        pickDropActionGroup.HasPriority.ShouldBeTrue();
-        //TODO: see if it works after GetStartNodeIsStation fix
+        pickDropActionGroup.Priority.ShouldBe(Priority.Default);
         pickDropActionGroup.Actions.Single(a => a.Sequence == 0).InfoToAgv?.GetDockFront().ShouldBe(!previousDockFront); // start of move is station 
     }
 
@@ -2614,7 +2613,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
         pickDropActionGroup.AssignedAgv.ShouldBeNull();
         pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
-        pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.Priority.ShouldBe(Priority.Resume);
     }
 
     [TestMethod]
@@ -2640,7 +2639,7 @@ public class ActionCommandHandlerTest
 
         pickDropActionGroup.AssignedAgv.ShouldBe(readyAgv.CorrelationId);
         pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
-        pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.Priority.ShouldBe(Priority.Resume);
         pickDropActionGroup.IsManual.ShouldBeTrue();
     }
 
@@ -2666,7 +2665,7 @@ public class ActionCommandHandlerTest
 
         pickDropActionGroup.AssignedAgv.ShouldBe(readyAgv.CorrelationId);
         pickDropActionGroup.Actions.Where(a => !a.ShouldSkip).All(a => a.State == ActionState.Created).ShouldBeTrue();
-        pickDropActionGroup.HasPriority.ShouldBeTrue();
+        pickDropActionGroup.Priority.ShouldBe(Priority.Resume);
         pickDropActionGroup.IsManual.ShouldBeTrue();
     }
 

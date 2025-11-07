@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
@@ -111,6 +112,8 @@ public class ActionGroupRepositoryTest
             actionGroup.OrderId,
             actionGroup.Actions.Where(a => a.ActionType != ActionType.Move).ToList(),
             actionGroup.Creator,
+            Priority.Default,
+            false,
             true,
             actionGroup.CreatedDate,
             Guid.NewGuid());
@@ -917,8 +920,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetNextManualActionGroupForAgvAsync_NoAllowedActionTypesOneManualActionGroup_ReturnsManualActionGroup()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), isManual: true);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
@@ -931,10 +933,8 @@ public class ActionGroupRepositoryTest
     public async Task GetNextManualActionGroupForAgvAsync_MultipleManualActionGroups_ReturnsFirstCreatedManualActionGroup()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var firstCreatedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, createdDate: DateTime.UtcNow);
-        firstCreatedActionGroup.IsManual = true;
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, createdDate: firstCreatedActionGroup.CreatedDate.AddSeconds(10));
-        actionGroup.IsManual = true;
+        var firstCreatedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, createdDate: DateTime.UtcNow, isManual: true);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, createdDate: firstCreatedActionGroup.CreatedDate.AddSeconds(10), isManual: true);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups([actionGroup, firstCreatedActionGroup])
@@ -959,10 +959,8 @@ public class ActionGroupRepositoryTest
     public async Task GetNextManualActionGroupForAgvAsync_NoManualActionGroupsInStateCreated_ReturnsNull()
     {
         var agv = Guid.NewGuid();
-        var startedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, startedDate: DateTime.UtcNow, pickActionState: ActionState.Started);
-        startedActionGroup.IsManual = true;
-        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, completedDate: DateTime.UtcNow, pickActionState: ActionState.Completed, dropActionState: ActionState.Completed);
-        completedActionGroup.IsManual = true;
+        var startedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, startedDate: DateTime.UtcNow, pickActionState: ActionState.Started, isManual: true);
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, completedDate: DateTime.UtcNow, pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, isManual: true);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(startedActionGroup)
@@ -975,8 +973,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetNextManualActionGroupForAgvAsync_NoManualActionGroupsForAgv_ReturnsNull()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), isManual: true);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
@@ -988,8 +985,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetNextManualActionGroupForAgvAsync_NoManualActionGroupsWithAllowedActionTypes_ReturnsNull()
     {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), isManual: true);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroup(actionGroup)
@@ -1170,8 +1166,6 @@ public class ActionGroupRepositoryTest
 
         var runningManualChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started);
         runningManualChargeActionGroup.IsManual = true;
-        var runningPriorityChargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionStateMove: ActionState.Started);
-        runningPriorityChargeActionGroup.HasPriority = true;
 
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
 
@@ -1179,7 +1173,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([
                 runningParkingActionGroup, completedParkingActionGroup, createdParkingActionGroup,
                 runningChargeActionGroup, completedChargeActionGroup, createdChargeActionGroup,
-                runningManualChargeActionGroup, runningPriorityChargeActionGroup, pickDropActionGroup
+                runningManualChargeActionGroup, pickDropActionGroup
             ]).BuildAsync();
 
         List<ActionGroup> runningActions = (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ToList();
@@ -1240,7 +1234,7 @@ public class ActionGroupRepositoryTest
         var agvWithoutActionGroup = Guid.NewGuid();
 
         var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: pickActionState, assignedAgv: agvWithPriorityGroup);
-        priorityActionGroup.HasPriority = true;
+        priorityActionGroup.Priority = Priority.Resume;
         var nonPriorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: pickActionState, assignedAgv: agvWithNonPriorityGroup);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1262,7 +1256,7 @@ public class ActionGroupRepositoryTest
         var agvWithoutActionGroup = Guid.NewGuid();
 
         var priorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: actionState, dropActionState: actionState, assignedAgv: agvWithPriorityGroup);
-        priorityActionGroup.HasPriority = true;
+        priorityActionGroup.Priority = Priority.Resume;
         var nonPriorityActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Created, assignedAgv: agvWithNonPriorityGroup);
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1318,8 +1312,7 @@ public class ActionGroupRepositoryTest
         var startedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "2", source: node, isQueued: true, startedDate: DateTime.UtcNow);
         var pickAtNodeWithEstimatedDuration = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "3", source: node, isQueued: true, estimatedDuration: TimeSpan.FromSeconds(10));
         var dropAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", destination: node, isQueued: true);
-        var manualPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "5", source: node, isQueued: true);
-        manualPickAtNode.IsManual = true;
+        var manualPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "5", source: node, isQueued: true, isManual: true);
         var nextPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "6", source: node, isQueued: true);
         var followingPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "7", source: node, isQueued: true, createdDate: DateTime.UtcNow.AddMinutes(1));
 
@@ -1339,7 +1332,7 @@ public class ActionGroupRepositoryTest
         var queuedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "1", source: node, isQueued: true);
         var startedPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "2", source: node, isQueued: true, startedDate: DateTime.UtcNow);
         var dropAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", destination: node, isQueued: false);
-        var nextPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "6", source: node, isQueued: false, assignedAgv:agv);
+        var nextPickAtNode = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "6", source: node, isQueued: false, assignedAgv: agv);
         var nextPickAtNodeForDifferentAgv = AgvActionGenerator.GeneratePickDropActionGroup(orderId: "4", source: node, isQueued: false, assignedAgv: Guid.NewGuid());
 
         var fixture = await new ActionGroupRepositoryTestFixture()
@@ -1348,7 +1341,7 @@ public class ActionGroupRepositoryTest
             ]).BuildAsync();
 
         ICollection<ActionGroup> nextPicks = await fixture.ActionGroupRepository.GetNextPicksAtTarget(node.ToGuid(), [agv]);
-        nextPicks.Count.ShouldBe(1);  
+        nextPicks.Count.ShouldBe(1);
         nextPicks.First().CorrelationId.ShouldBe(nextPickAtNode.CorrelationId);
     }
 

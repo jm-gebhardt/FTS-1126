@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -347,6 +348,8 @@ public class HostOrder
                 Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node].ToGraphNode(), CorrelationId, a.InfoToAgv) { Sequence = 2 }).First()
             ],
             ActionGroupCreator.Wms,
+            Priority.Default,
+            false,
             CreatedDate,
             assignedAgv) { HandlingUnit = Hu };
     }
@@ -369,6 +372,8 @@ public class HostOrder
                 Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, targetNode: null, CorrelationId, a.InfoToAgv) { Sequence = 2 }).First()
             ],
             ActionGroupCreator.Wms,
+            Priority.Default,
+            false,
             CreatedDate) { AssignedAgv = assignedAgv, HandlingUnit = Hu };
     }
 
@@ -390,6 +395,8 @@ public class HostOrder
                 Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node].ToGraphNode(), CorrelationId, a.InfoToAgv) { Sequence = 1 }).First()
             ],
             ActionGroupCreator.Wms,
+            Priority.Default,
+            false,
             CreatedDate) { AssignedAgv = agv, HandlingUnit = Hu };
     }
 

@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -14,6 +15,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -41,9 +43,9 @@ public class CreateActionGroupRequestHandler :
         IBus bus,
         IAgvDb agvDb,
         IMapper mapper,
-        ILogger<CreateActionGroupRequestHandler> logger, 
+        ILogger<CreateActionGroupRequestHandler> logger,
         ILoggingService loggingService
-        )
+    )
     {
         _retrievalService = retrievalService;
         _actionGroupRepository = actionGroupRepository;
@@ -60,9 +62,9 @@ public class CreateActionGroupRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (var sourceNode, var targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, var creator, string user) = await ValidateMessageContent(context.Message);
+        (var sourceNode, var targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, var creator, string user) = await ValidateMessageContent(context.Message);
 
-        var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, infoPick, infoDrop, hasPriority, creator);
+        var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, infoPick, infoDrop, creator);
         actionGroup.Queue();
         await _actionGroupRepository.AddAsync(actionGroup);
 
@@ -80,10 +82,10 @@ public class CreateActionGroupRequestHandler :
     }
 
     private async Task<(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId,
-            string? infoPick, string? infoDrop, bool hasPriority, ActionGroupCreator creator, string user)>
+            string? infoPick, string? infoDrop, ActionGroupCreator creator, string user)>
         ValidateMessageContent(CreatePickDropActionGroup createPickDropActionGroup)
     {
-        (Guid? sourceNodeId, Guid? targetNodeId, _, _, _, Guid? agvCorrelationId, _, _, _, _, _) = createPickDropActionGroup;
+        (Guid? sourceNodeId, Guid? targetNodeId, _, _, _, Guid? agvCorrelationId, _, _, _, _) = createPickDropActionGroup;
 
         // validate agv existence 
         if (agvCorrelationId != null)
@@ -119,7 +121,7 @@ public class CreateActionGroupRequestHandler :
 
         return (sourceNode, targetNode, createPickDropActionGroup.DockFrontPick, createPickDropActionGroup.DockFrontDrop,
             createPickDropActionGroup.HandlingUnit, agvCorrelationId, createPickDropActionGroup.AdditionalPickInfo,
-            createPickDropActionGroup.AdditionalDropInfo, createPickDropActionGroup.HasPriority, createPickDropActionGroup.Creator, createPickDropActionGroup.User);
+            createPickDropActionGroup.AdditionalDropInfo, createPickDropActionGroup.Creator, createPickDropActionGroup.User);
     }
 
     private async Task<(GraphNode? sourceNode, GraphNode? targetNode)> TryGetSourceAndTargetNode(Guid? sourceNodeId, Guid? targetNodeId, Guid? agvCorrelationId)
@@ -148,7 +150,7 @@ public class CreateActionGroupRequestHandler :
         return (sourceNodeId != null ? nodes.SelectById(sourceNodeId.Value) : null, targetNodeId != null ? nodes.SelectById(targetNodeId.Value) : null);
     }
 
-    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, bool hasPriority, ActionGroupCreator creator)
+    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, ActionGroupCreator creator)
     {
         var correlationId = Guid.NewGuid();
 
@@ -187,8 +189,9 @@ public class CreateActionGroupRequestHandler :
             actions: actions,
             creator: creator,
             assignedAgv: agvCorrelationId,
+            priority: Priority.Manual,
             isManual: creator == ActionGroupCreator.TransportOrderWebApi,
-            hasPriority: hasPriority
+            shouldEscapeQueue: true
         ) { HandlingUnit = handlingUnit };
 
         var validationResult = await _actionGroupValidationService.ValidateAsync(actionGroup);

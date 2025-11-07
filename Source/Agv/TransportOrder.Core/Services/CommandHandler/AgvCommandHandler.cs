@@ -1111,7 +1111,7 @@ public class AgvCommandHandler :
 
         _logger.LogInformation("Agv with CorrelationId {AgvCorrelationId} was set to busy for action {Action} of group {ActionGroupCorrelationId}, IsQueueing: {IsQueueing}",
             agv.CorrelationId, action.CorrelationId, actionGroup.CorrelationId, agv.IsQueueing);
-        if (actionGroup.Actions.Any(a => a.ActionType == ActionType.Charge) || actionGroup.IsManual)
+        if (actionGroup.ShouldEscapeQueue)
         {
             await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
             {
@@ -1696,7 +1696,8 @@ public class AgvCommandHandler :
                 actions: new List<Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, fallbackSwitchPosition, groupCorrelationId) },
                 assignedAgv: chargingAgv.CorrelationId,
                 creator: ActionGroupCreator.TransportOrder,
-                hasPriority: true,
+                priority: Priority.Queueing,
+                shouldEscapeQueue: false,
                 isQueued: true
             );
             await context.Publish(new QueueActionGroup(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));

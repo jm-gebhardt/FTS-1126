@@ -1,4 +1,5 @@
 ﻿using FluentValidation.TestHelper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -35,9 +36,7 @@ public class ActionGroupValidatorTest
     public async Task ValidateAsync_ManualPickDropSameTarget_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: "sourceTarget", destination: "sourceTarget");
-
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: "sourceTarget", destination: "sourceTarget", isManual: true);
 
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -141,31 +140,10 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
-    public async Task ValidateAsync_WhenIsManualIsTrueAndActionsCountIsMoreThanOne_Fails()
-    {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(hasPriority: true);
-        actionGroup.IsManual = true;
-
-        var fixture = new ActionGroupValidatorTestFixture()
-            .WithAgv(agv)
-            .WithRoute(agv, actionGroup)
-            .WithAgvCanHandleRoute(agv, actionGroup)
-            .WithNodesExisting(actionGroup)
-            .Build();
-
-        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
-
-        validationResult.ShouldHaveValidationErrorFor(x => x.Actions).WithErrorMessage("Manual action must have exactly one action");
-    }
-
-    [TestMethod]
     public async Task ValidateAsync_WhenIsManualIsTrueAndNoAssignedAgv_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup();
-        actionGroup.IsManual = true;
-        actionGroup.AssignedAgv = null;
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual: true, assignedAgv: null);
 
         var fixture = new ActionGroupValidatorTestFixture()
             .WithAgv(agv)
@@ -413,6 +391,8 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Simulation,
+            Priority.Default,
+            false,
             false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()
@@ -449,6 +429,8 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Simulation,
+            Priority.Default,
+            false,
             false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()
@@ -485,6 +467,8 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Simulation,
+            Priority.Default,
+            false,
             false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()
@@ -519,6 +503,8 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.TransportOrderWebApi,
+            Priority.Default,
+            false,
             false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()
@@ -553,6 +539,8 @@ public class ActionGroupValidatorTest
             orderId.ToString(),
             testActions,
             ActionGroupCreator.Wms,
+            Priority.Default,
+            false,
             false,
             DateTime.UtcNow);
         var fixture = new ActionGroupValidatorTestFixture()

@@ -412,8 +412,7 @@ public class AgvEventHandlerTest
         var mode = new AgvMode(ModeType.Normal);
         mode.PrepareSwitch(ModeType.Maintenance, cancelManualActions: cancelManualActions);
         var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isManual: true);
         var fixture = new AgvEventHandlerTestFixture()
             .WithActionGroups([actionGroup])
             .WithAgv(agv);
@@ -428,8 +427,7 @@ public class AgvEventHandlerTest
         var mode = new AgvMode(ModeType.Normal);
         mode.PrepareSwitch(ModeType.Maintenance, cancelManualActions: false);
         var agv = AgvGenerator.GenerateIdleAgv(mode: mode);
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        actionGroup.IsManual = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isManual: true);
         var fixture = new AgvEventHandlerTestFixture()
             .WithActionGroups([actionGroup])
             .WithAgv(agv);

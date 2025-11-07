@@ -82,7 +82,7 @@ public class ActionGroup
     /// <summary>
     /// True, if the action group is a queueing order.
     /// </summary>
-    public bool IsQueueingOrder => HasPriority && !IsManual && Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1;
+    public bool IsQueueingOrder => Priority == Priority.Queueing && !IsManual && Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1;
 
     /// <summary>
     /// True if any of the actions is incomplete, i.e. its target is undefined.
@@ -94,6 +94,16 @@ public class ActionGroup
     /// True, if the action group is queued.
     /// </summary>
     public bool IsQueued { get; private set; }
+
+    /// <summary>
+    /// The priority of the action group.
+    /// </summary>
+    public Priority Priority { get; set; }
+
+    /// <summary>
+    /// If true, then this ActionGroup allows to trigger escaping from the queue
+    /// </summary>
+    public bool ShouldEscapeQueue { get; init; }
 
     /// <summary>
     /// List of actions (ordered by sequence).
@@ -120,11 +130,6 @@ public class ActionGroup
     public TimeSpan? EstimatedDuration { get; set; }
 
     /// <summary>
-    /// If true, then this ActionGroup has priority over others (starts immediately).
-    /// </summary>
-    public bool HasPriority { get; set; }
-
-    /// <summary>
     /// The handling unit corresponding to this ActionGroup.
     /// </summary>
     public string? HandlingUnit { get; init; }
@@ -141,16 +146,17 @@ public class ActionGroup
     public List<Reason> Reasons { get; set; } = new();
 
     /// <inheritdoc cref="ActionGroup"/>
-    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, bool isQueued = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool hasPriority = false, bool doNotPause = false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, Priority priority = Priority.Default, bool shouldEscapeQueue = false, bool isQueued = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool doNotPause = false) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
         IsQueued = isQueued;
-        HasPriority = hasPriority;
+        Priority = priority;
         CreatedDate = createdDate.GetValueOrDefault(DateTime.UtcNow);
         Actions = actions.ToList();
         Creator = creator;
         DoNotPause = doNotPause;
+        ShouldEscapeQueue = shouldEscapeQueue;
     }
 
     /// <summary>
@@ -338,7 +344,10 @@ public class ActionGroup
         if (Reasons.IsNullOrEmpty())
         {
             UpdateActionState(action.CorrelationId, ActionState.Created, now);
-            HasPriority = true;
+            if (Priority == Priority.Default)
+            {
+                Priority = Priority.Resume;
+            }
         }
     }
 
@@ -436,7 +445,7 @@ public class ActionGroup
         bool isMove = Actions.All(a => a.ActionType == ActionType.Move) && Actions.Count == 1;
         if (isMove)
         {
-            noTurning = (HasPriority && !startIsStation) || (IsManual && !startIsStation);
+            noTurning = (Priority == Priority.QueueEvacuation && !startIsStation) || (Priority == Priority.Queueing && !startIsStation) || (IsManual && !startIsStation);
             action.SetDockFront(false, dockFrontPreviousActionGroup, nodeDockingDirection, noTurning);
             return;
         }
@@ -488,7 +497,7 @@ public class ActionGroup
             action.SetLiftHeight(dropLiftHeight);
         }
 
-        double? liftHeight = ((double?[]) [pickLiftHeight, dropLiftHeight]).FirstOrDefault(l => l != null);
+        double? liftHeight = ((double?[])[pickLiftHeight, dropLiftHeight]).FirstOrDefault(l => l != null);
         action.SetLiftHeight(liftHeight);
     }
 
@@ -602,7 +611,7 @@ public class ActionGroup
             action.StartedDate = startDate.UtcDateTime;
             if (actionDuration != null)
             {
-                action.CompletedDate = startDate.AddSeconds((double) actionDuration).UtcDateTime;
+                action.CompletedDate = startDate.AddSeconds((double)actionDuration).UtcDateTime;
                 startDate = action.CompletedDate.Value.AddSeconds(idleTimeBetweenActions.GetValueOrDefault(0));
             }
         }
