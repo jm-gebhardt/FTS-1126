@@ -22,6 +22,7 @@
         <PackageReference Include="MSTest.TestAdapter" />
         <PackageReference Include="MSTest.TestFramework" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="KubernetesClient" />
     </ItemGroup>
 
     <ItemGroup>

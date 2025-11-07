@@ -13,6 +13,7 @@
         <PackageReference Include="MassTransit.EntityFrameworkCore" />
         <PackageReference Include="MassTransit" />
         <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="KubernetesClient" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
         <PackageReference Include="Swashbuckle.AspNetCore" />
