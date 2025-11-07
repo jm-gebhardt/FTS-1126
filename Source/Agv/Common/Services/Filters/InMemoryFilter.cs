@@ -39,14 +39,14 @@ public abstract class InMemoryFilter<T> : IMessageFilter<T> where T : class, IMe
     public virtual TimeSpan MaxInterval => _configuration.MaxInterval;
 
     /// <inheritdoc cref="InMemoryFilter{T}"/>
-    /// <param name="semaphoreProvider"></param>
-    /// <param name="currentData"></param>
-    /// <param name="configuration">You can specify a configuration for the Min/MaxInterval. If not set a default instance of <see cref="FilterConfiguration"/> will be used.</param>
-    protected InMemoryFilter(ISemaphoreProvider semaphoreProvider, T? currentData = null, FilterConfiguration? configuration = null)
+    /// <param name="semaphoreProvider">The semaphore provider.</param>
+    /// <param name="configuration">You can specify a configuration for the Min/MaxInterval.</param>
+    /// <param name="currentData">Optional you can set current data directly.</param>
+    protected InMemoryFilter(ISemaphoreProvider semaphoreProvider, FilterConfiguration configuration, T? currentData = null)
     {
         _semaphoreProvider = semaphoreProvider;
         _previousData = currentData;
-        _configuration = configuration ?? new FilterConfiguration();
+        _configuration = configuration;
     }
 
     /// <summary>

@@ -1,9 +1,10 @@
 ﻿using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.Common.Services.Filters.Configurations;
 
 namespace Gebhardt.Acc.CommonTest.Services.Filters;
 
-internal class TestInMemoryFilter(bool shouldPublishBasedOnReturnValue) : InMemoryFilter<Message>(new SemaphoreProvider())
+internal class TestInMemoryFilter(bool shouldPublishBasedOnReturnValue) : InMemoryFilter<Message>(new SemaphoreProvider(), new TestFilterConfiguration())
 {
     public override TimeSpan MinInterval { get; } = TimeSpan.MinValue;
 
@@ -20,3 +21,5 @@ internal class TestInMemoryFilter(bool shouldPublishBasedOnReturnValue) : InMemo
         return shouldPublishBasedOnReturnValue;
     }
 }
+
+internal record TestFilterConfiguration : FilterConfiguration;

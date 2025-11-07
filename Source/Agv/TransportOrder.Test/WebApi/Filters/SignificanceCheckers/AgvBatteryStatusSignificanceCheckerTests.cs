@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
+﻿using Gebhardt.Acc.Common.Services.Significance;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 using Shouldly;
 
@@ -10,7 +11,7 @@ public class AgvBatteryStatusSignificanceCheckerTests
     [TestMethod]
     public void HasSignificantChanges_WhenEqualObjects_ReturnsFalse()
     {
-        var checker = new AgvBatteryStatusSignificanceChecker();
+        var checker = new AgvBatteryStatusSignificanceChecker(new AgvBatteryConfiguration(0.3, 0.2, 0.5, 0.5));
         var oldStatus = new AgvBatteryStatusDto();
         var newStatus = new AgvBatteryStatusDto();
 
@@ -20,7 +21,7 @@ public class AgvBatteryStatusSignificanceCheckerTests
     [TestMethod]
     public void HasSignificantChanges_WhenBatteryChargeDoesNotChangeSignificantly_ReturnsFalse()
     {
-        var checker = new AgvBatteryStatusSignificanceChecker();
+        var checker = new AgvBatteryStatusSignificanceChecker(new AgvBatteryConfiguration(0.3, 0.2, 0.5, 0.5));
         var oldStatus = new AgvBatteryStatusDto
         {
             CorrelationId = Guid.Parse("14f7f5cd-efe9-5550-fce2-a60b86db78dc"),
@@ -60,9 +61,9 @@ public class AgvBatteryStatusSignificanceCheckerTests
     [TestMethod]
     public void HasSignificantChanges_WhenBatteryChargeChanges_ReturnsTrue()
     {
-        var checker = new AgvBatteryStatusSignificanceChecker();
-        var oldStatus = new AgvBatteryStatusDto {BatteryCharge = 0.5};
-        var newStatus = new AgvBatteryStatusDto {BatteryCharge = 0.2};
+        var checker = new AgvBatteryStatusSignificanceChecker(new AgvBatteryConfiguration(0.3, 0.2, 0.5, 0.5));
+        var oldStatus = new AgvBatteryStatusDto { BatteryCharge = 0.5 };
+        var newStatus = new AgvBatteryStatusDto { BatteryCharge = 0.2 };
 
         checker.HasSignificantChanges(oldStatus, newStatus).ShouldBeTrue();
     }
@@ -70,9 +71,9 @@ public class AgvBatteryStatusSignificanceCheckerTests
     [TestMethod]
     public void HasSignificantChanges_WhenOnlyMessageCreatedDateChanges_ReturnsFalse()
     {
-        var checker = new AgvBatteryStatusSignificanceChecker();
-        var oldStatus = new AgvBatteryStatusDto {MessageCreatedDate = DateTime.Now};
-        var newStatus = new AgvBatteryStatusDto {MessageCreatedDate = DateTime.Now.AddSeconds(10)};
+        var checker = new AgvBatteryStatusSignificanceChecker(new AgvBatteryConfiguration(0.3, 0.2, 0.5, 0.5));
+        var oldStatus = new AgvBatteryStatusDto { MessageCreatedDate = DateTime.Now };
+        var newStatus = new AgvBatteryStatusDto { MessageCreatedDate = DateTime.Now.AddSeconds(10) };
 
         checker.HasSignificantChanges(oldStatus, newStatus).ShouldBeFalse();
     }

@@ -1,5 +1,6 @@
-using Gebhardt.Acc.Common.Services;
+﻿using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
@@ -7,18 +8,17 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 /// <summary>
 /// Filter by significant changes in the position.
 /// </summary>
-public class AgvPositionStatusChangedFilter : InMemoryFilter<AgvPositionStatusDto>
+public class AgvPositionStatusDtoFilter : InMemoryFilter<AgvPositionStatusDto>
 {
     private readonly ISignificanceChecker<AgvPositionDto> _significanceChecker;
 
     /// <inheritdoc />
-    public override TimeSpan MaxInterval => TimeSpan.FromSeconds(5);
-
-    /// <inheritdoc />
-    public AgvPositionStatusChangedFilter(
+    public AgvPositionStatusDtoFilter(
         ISignificanceChecker<AgvPositionDto> significanceChecker,
-        ISemaphoreProvider<AgvPositionStatusChangedFilter> semaphoreProvider
-    ) : base(semaphoreProvider)
+        ISemaphoreProvider semaphoreProvider,
+        AgvPositionStatusDto currentData,
+        AgvPositionConfiguration agvPositionConfiguration
+    ) : base(semaphoreProvider, agvPositionConfiguration, currentData)
     {
         _significanceChecker = significanceChecker;
     }

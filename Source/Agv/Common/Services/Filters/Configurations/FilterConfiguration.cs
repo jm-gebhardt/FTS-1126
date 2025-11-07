@@ -3,7 +3,7 @@
 /// <summary>
 /// Provides Min/MaxInterval configuration for filters.
 /// </summary>
-public record FilterConfiguration
+public abstract record FilterConfiguration
 {
     /// <summary>
     /// Specifies the minimum elapsed time that should be considered before a new object is eligible for processing, regardless of whether it meets the usual criteria for significance or difference.

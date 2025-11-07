@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.Common.Services.Filters;
 /// <summary>
 /// In-memory filter for <see cref="AgvWifiMetricsReceived"/> messages that keeps track of previously seen messages.
 /// </summary>
-public class AgvWifiMetricsReceivedInMemoryFilter(
+public class AgvWifiMetricsReceivedKeyedFilter(
     ISemaphoreProvider<IAgvWifiMetricsReceivedSemaphoreProvider> semaphoreProvider,
     IConcurrentDictionaryProvider<IMessageFilter<AgvWifiMetricsReceived>> concurrentDictionaryProvider,
     ISignificanceChecker<WifiMetrics> significanceChecker,

@@ -14,7 +14,7 @@ namespace Gebhardt.Acc.Common.Services.Filters;
 /// <param name="significanceChecker"></param>
 /// <param name="guidSemaphoreProvider"></param>
 /// <param name="configuration"></param>
-public class AgvPositionReceivedInMemoryFilter(
+public class AgvPositionReceivedKeyedFilter(
     ISemaphoreProvider<IAgvPositionsReceivedSemaphoreProvider> semaphoreProvider,
     IConcurrentDictionaryProvider<IMessageFilter<AgvPositionReceived>> concurrentDictionaryProvider,
     ISignificanceChecker<AgvPosition> significanceChecker,

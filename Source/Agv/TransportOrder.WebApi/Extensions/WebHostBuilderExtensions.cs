@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Filter.Api;
@@ -81,15 +82,17 @@ public static class WebHostBuilderExtensions
             services.AddTransient<IRestrictedAreaPublisher, RestrictedAreaPublisher>();
             services.AddTransient<IQueuePublisher, QueuePublisher>();
 
-            services.AddTransient<IMessageFilter<AgvBatteryStatusDto>, AgvBatteryStatusChangedFilter>();
-            services.AddTransient<IMessageFilter<AgvPositionStatusDto>, AgvPositionStatusChangedFilter>();
+            services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+            services.AddSingleton(typeof(IConcurrentDictionaryProvider<>), typeof(ConcurrentDictionaryProvider<>));
+            services.AddSingleton(typeof(IKeyedSemaphoreProvider<>), typeof(KeyedSemaphoreProvider<>));
 
-            services.AddSingleton<ISemaphoreProvider<AgvBatteryStatusChangedFilter>, SemaphoreProvider<AgvBatteryStatusChangedFilter>>();
-            services.AddSingleton<ISemaphoreProvider<AgvPositionStatusChangedFilter>, SemaphoreProvider<AgvPositionStatusChangedFilter>>();
-
+            services.AddTransient<IMessageFilter<AgvBatteryStatusDto>, AgvBatteryStatusKeyedFilter>();
             services.AddSingleton<ISignificanceChecker<AgvBatteryStatusDto>, AgvBatteryStatusSignificanceChecker>();
+            services.AddSingleton(new AgvBatteryConfiguration(0.3, 0.2, 0.5, 0.5) { MinInterval = TimeSpan.FromSeconds(2), MaxInterval = TimeSpan.FromMinutes(5) });
+
+            services.AddTransient<IMessageFilter<AgvPositionStatusDto>, AgvPositionStatusKeyedFilter>();
             services.AddSingleton<ISignificanceChecker<AgvPositionDto>, AgvPositionSignificanceChecker>();
-            services.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
+            services.AddSingleton(new AgvPositionConfiguration(0.05, Mathematics.ConvertToRadians(5), 1000) { MinInterval = TimeSpan.FromMilliseconds(250), MaxInterval = TimeSpan.FromSeconds(10) });
 
             services.AddSingleton(typeof(IHubBroadcaster<,>), typeof(HubBroadcaster<,>));
 

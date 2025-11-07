@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Microsoft.Extensions.Logging;
@@ -21,14 +22,17 @@ public class AgvBatteryStatusTestFixture
 
     public AgvBatteryStatusTestFixture WithHasSignificantChanges(bool result)
     {
-        _significanceCheckerMock.Setup(x => x.HasSignificantChanges(It.IsAny<AgvBatteryStatusDto>(), It.IsAny<AgvBatteryStatusDto>()))
+        _significanceCheckerMock.Setup(x => x.HasSignificantChanges(It.IsAny<AgvBatteryStatusDto>(),
+                It.IsAny<AgvBatteryStatusDto>()))
             .Returns(result);
         return this;
     }
 
     private AgvBatteryStatusTestFixture WithCurrentData(AgvBatteryStatusDto data)
     {
-        Filter = new AgvBatteryStatusChangedFilter(_significanceCheckerMock.Object, new SemaphoreProvider<AgvBatteryStatusChangedFilter>(new Mock<ILogger<SemaphoreProvider<AgvBatteryStatusChangedFilter>>>().Object), data);
+        Filter = new AgvBatteryStatusChangedFilter(_significanceCheckerMock.Object,
+            new SemaphoreProvider<AgvBatteryStatusChangedFilter>(new Mock<ILogger<SemaphoreProvider<AgvBatteryStatusChangedFilter>>>().Object),
+            new AgvBatteryConfiguration(0.3, 0.2, 0.5, 0.5), data);
         return this;
     }
 

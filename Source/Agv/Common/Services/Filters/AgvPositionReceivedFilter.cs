@@ -17,7 +17,7 @@ public class AgvPositionReceivedFilter : InMemoryFilter<AgvPositionReceived>
         ISemaphoreProvider semaphoreProvider,
         AgvPositionReceived currentData,
         AgvPositionConfiguration configuration
-    ) : base(semaphoreProvider, currentData, configuration)
+    ) : base(semaphoreProvider, configuration, currentData)
     {
         _significanceChecker = significanceChecker;
     }

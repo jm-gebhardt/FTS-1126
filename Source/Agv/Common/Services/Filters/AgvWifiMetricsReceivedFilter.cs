@@ -17,7 +17,7 @@ public class AgvWifiMetricsReceivedFilter : InMemoryFilter<AgvWifiMetricsReceive
         ISemaphoreProvider semaphoreProvider,
         AgvWifiMetricsReceived currentData,
         WifiConfiguration configuration
-    ) : base(semaphoreProvider, currentData, configuration)
+    ) : base(semaphoreProvider, configuration, currentData)
     {
         _significanceChecker = significanceChecker;
     }

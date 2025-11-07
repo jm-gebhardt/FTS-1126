@@ -9,8 +9,6 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
 /// </summary>
 public class AgvPositionSignificanceChecker : ReflectionSignificanceChecker<AgvPositionDto>
 {
-    //private const double PositionThreshold = 0.005;
-    //private const double DeviationRangeThreshold = 0.001;
     private readonly AgvPositionConfiguration _agvPositionConfiguration;
 
     /// <inheritdoc />
