@@ -1,4 +1,4 @@
- #r "nuget: Sarif.Sdk, 4.5.4"
+ #r "nuget: Sarif.Sdk, 4.6.0"
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis.Sarif;
