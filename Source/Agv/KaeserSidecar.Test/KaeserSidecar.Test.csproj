@@ -26,6 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
       <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
       <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
       <ProjectReference Include="..\KaeserSidecar.Messages\KaeserSidecar.Messages.csproj" />

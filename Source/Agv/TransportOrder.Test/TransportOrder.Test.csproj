@@ -39,6 +39,7 @@
         <ProjectReference Include="..\TransportOrder.WebApi\TransportOrder.WebApi.csproj" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
       <Folder Include="Services\CommandHandler\Trigger\" />
       <Folder Include="Services\RequestHandler\RestrictedArea\" />
       <Folder Include="WebApi\Controllers\Zone\" />
