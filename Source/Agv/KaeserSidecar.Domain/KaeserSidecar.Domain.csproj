@@ -8,6 +8,7 @@
         <PackageReference Include="JetBrains.Annotations" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
       <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
       <ProjectReference Include="..\PrismatCommunication\PrismatCommunication.csproj" />
       <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />

@@ -20,6 +20,7 @@
         <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
         <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\PrismatCommunication.Messages\PrismatCommunication.Messages.csproj" />

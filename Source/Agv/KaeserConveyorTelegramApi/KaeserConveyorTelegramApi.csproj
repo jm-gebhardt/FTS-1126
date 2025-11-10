@@ -6,6 +6,7 @@
         <PackageReference Include="JetBrains.Annotations" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
         <ProjectReference Include="..\KaeserSidecar.Domain\KaeserSidecar.Domain.csproj" />
       <ProjectReference Include="..\KaeserSidecar.Messages\KaeserSidecar.Messages.csproj" />
     </ItemGroup>
