@@ -267,6 +267,7 @@ public static class CoreBusRegistrationExtensions
             );
             actionPartitioner.PartitionMessageById<CreateChargingActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<AbortActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<HandleActionFailure, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResetActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CreateActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<QueueActionGroup, ActionCommandHandler>(c);

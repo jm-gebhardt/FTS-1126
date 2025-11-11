@@ -52,7 +52,8 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     private readonly Mock<IActionGroupDurationEstimationService> _actionGroupDurationEstimationService = new();
     private readonly Mock<IQueueManager> _queueManager = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
-
+    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    
     public ActionGroupControllerTestFixture()
     {
         _agvDb.SetupNodeFallbacks();
@@ -66,6 +67,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _stationRepository.Object);
             sc.AddTransient(_ => _actionGroupDurationEstimationService.Object);
             sc.AddTransient(_ => _routeService.Object);
+            sc.AddTransient(_ => _nodeStateRepository.Object);
             sc.AddTransient(_ => _chooseAgvActionGroupService.Object);
             sc.AddTransient(_ => _maintenanceService.Object);
             sc.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _semaphoreProvider);

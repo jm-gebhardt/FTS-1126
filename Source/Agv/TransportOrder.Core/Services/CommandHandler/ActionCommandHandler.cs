@@ -63,7 +63,8 @@ public class ActionCommandHandler :
     IConsumer<ReassignActionGroup>,
     IConsumer<CreateActionGroup>,
     IConsumer<ForceQueueActionGroup>,
-    IConsumer<TryRetractActionGroup>
+    IConsumer<TryRetractActionGroup>,
+    IConsumer<HandleActionFailure>
 {
     private readonly ILogger<ActionCommandHandler> _logger;
     private readonly IRouteService _routeService;
@@ -82,6 +83,7 @@ public class ActionCommandHandler :
     private readonly IQueueManager _queueManager;
     private readonly ILoggingService _loggingService;
     private readonly IRequestClient<RetractHostOrder> _retractOrderClient;
+    private readonly INodeStateRepository _nodeStateRepository;
 
     private const string QueuingOrderId = "Queuing";
 
@@ -103,7 +105,8 @@ public class ActionCommandHandler :
         IPublishEndpoint publishEndpoint,
         TimeProvider timeProvider,
         ILoggingService loggingService,
-        IRequestClient<RetractHostOrder> retractHostOrderClient)
+        IRequestClient<RetractHostOrder> retractHostOrderClient,
+        INodeStateRepository nodeStateRepository)
     {
         _actionCommandHelper = actionCommandHelper;
         _publishEndpoint = publishEndpoint;
@@ -122,6 +125,7 @@ public class ActionCommandHandler :
         _mapper = mapper;
         _bus = bus;
         _retractOrderClient = retractHostOrderClient;
+        _nodeStateRepository = nodeStateRepository;
     }
 
     /// <summary>
@@ -1100,7 +1104,7 @@ public class ActionCommandHandler :
             // Update the previous move action to directly finish the job and skip the following action
             actionToUpdate = previousAction!;
         }
-        shouldUpdateAction &= actionToUpdate.State == ActionState.Started;
+        shouldUpdateAction &= actionToUpdate.State is ActionState.Started or ActionState.Failed;
 
         Agv? agv = null;
         Route? route = null;
@@ -1538,5 +1542,46 @@ public class ActionCommandHandler :
                 actionGroupMessageContent.CorrelationId, "Order Retracted", $"Order {actionGroupMessageContent.OrderId} has been retracted",
                 new Dictionary<string, object?> { { LogLabels.OrderId, actionGroupMessageContent.OrderId } });
         });
+    }
+
+    /// <inheritdoc cref="ActionCommandHandler"/>>
+    public async Task Consume(ConsumeContext<HandleActionFailure> context)
+    {
+        var (actionGroupCorrelationId, actionCorrelationId) = context.Message;
+
+        var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
+        var failedAction = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == actionCorrelationId);
+        if (failedAction == null)
+        {
+            _logger.LogInformation("Could not handle action failure, action {ActionCorrelationId} not found in action group {ActionGroupCorrelationId}", actionCorrelationId, actionGroupCorrelationId);
+            return;
+        }
+        bool targetIsLocked = false;
+        if (failedAction.Target.Node != null)
+        {
+            targetIsLocked = (await _nodeStateRepository.GetNodeStateAsync(failedAction.Target.Node.Id))?.IsLocked ?? false;
+        }
+        
+        string reason = actionGroup.Fail(failedAction.CorrelationId, targetIsLocked);
+        await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
+        var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);
+        await context.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), context.CancellationToken);
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderFailed, actionGroupMessageContent.AssignedAgv.GetValueOrDefault(),
+            actionGroupMessageContent.CorrelationId, "Order Failed", $"Order {actionGroupMessageContent.OrderId} has failed",
+            new Dictionary<string, object?>
+            {
+                {
+                    LogLabels.OrderId, actionGroupMessageContent.OrderId
+                },
+                {
+                    LogLabels.ActionId, failedAction.CorrelationId
+                },
+                {
+                    LogLabels.Reason, reason
+                },
+                {
+                    LogLabels.ReasonDescription, reason
+                }
+            });
     }
 }

@@ -339,4 +339,16 @@ public class ActionEventHandlerTest
         await fixture.ShouldHaveConsumedAsync<ActionGroupQueued>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
+
+    [TestMethod]
+    public async Task Consume_ActionFailed_ValidData_PublishesHandleActionFailure()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new ActionFailed(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv.GetValueOrDefault()));
+
+        await fixture.ShouldHavePublishedAsync<HandleActionFailure>();
+    }
 }

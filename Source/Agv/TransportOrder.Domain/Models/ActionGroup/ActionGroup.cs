@@ -238,7 +238,6 @@ public class ActionGroup
                 CompletedDate ??= Actions.Where(a => a.CompletedDate != null).MaxBy(a => a.CompletedDate)?.CompletedDate ?? now;
                 break;
 
-            case ActionGroupState.Failed:
             case ActionGroupState.Canceled:
             case ActionGroupState.Invalid:
                 CompletedDate = now;
@@ -381,6 +380,37 @@ public class ActionGroup
     public void SetActionFailed(Guid actionId, DateTimeOffset now)
     {
         UpdateActionState(actionId, ActionState.Failed, now);
+    } 
+
+    /// <summary>
+    /// Fail and diagnose reason.
+    /// </summary>
+    /// <param name="actionId">The correlation id of the action to fail.</param>
+    /// <param name="targetIsLocked">True, if the target station is locked.</param>
+    public string Fail(Guid actionId, bool targetIsLocked)
+    {
+        var action = Actions.Single(a => a.CorrelationId == actionId);
+        var targetNode = action.Target.Node;
+        SetActionFailed(actionId, DateTimeOffset.UtcNow);
+        if (targetNode != null)
+        {
+            if (targetIsLocked)
+            {
+                Reasons.Add(FailReason.LockedStation.ToReason()!);
+                return Constants.Reasons.ActionFailedLocked;
+            }
+
+            switch (action.ActionType)
+            {
+                case ActionType.Pick when !targetNode.IsPickStation():
+                case ActionType.Drop when !targetNode.IsDropStation():
+                case ActionType.Charge when !targetNode.IsCharger():
+                    Reasons.Add(FailReason.WrongStation.ToReason()!);
+                    return Constants.Reasons.ActionFailedWrongTargetType;
+            }
+        }
+        Reasons.Add(FailReason.None.ToReason()!);
+        return Constants.Reasons.ActionFailedForUnknownReason;
     }
 
     /// <summary>
@@ -520,6 +550,16 @@ public class ActionGroup
         {
             action.Nodes = route.Nodes;
             action.Edges = route.Edges;
+        }
+        var failReason = Reasons.FirstOrDefault(r => string.Equals(r.Template,
+                                                         Constants.Reasons.ActionFailedWrongTargetType) ||
+                                                     string.Equals(r.Template,
+                                                         Constants.Reasons.ActionFailedLocked));
+        if (action.State == ActionState.Failed && failReason != null)
+        {
+            action.State = ActionState.Started;
+            State = ActionGroupState.Started;
+            Reasons.Remove(failReason);
         }
     }
 

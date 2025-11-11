@@ -277,7 +277,6 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
                 CompletedDate = now.UtcDateTime;
                 break;
 
-            case ActionState.Failed:
             case ActionState.Aborted:
             case ActionState.Canceled:
             case ActionState.Invalid:

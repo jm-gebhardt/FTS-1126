@@ -1,16 +1,18 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Routing.Models;
 using Gebhardt.Acc.TransportOrder.Test.Extensions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 using System.Globalization;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.TransportOrder.Routing.Models;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 using DateTime = System.DateTime;
 
@@ -116,16 +118,14 @@ public class ActionGroupTest
     }
 
     [TestMethod]
-    public void UpdateActionGroupState_WhenOneActionFailedOrCanceled_ActionGroupFailsOrIsCanceled()
+    public void UpdateActionGroupState_WhenOneActionFailed_ActionGroupFail()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        var now = DateTimeOffset.Now;
 
         actionGroup.SetActionFailed(actionGroup.Actions.First().CorrelationId, DateTimeOffset.Now);
 
         actionGroup.State.ShouldBe(ActionGroupState.Failed);
-        actionGroup.CompletedDate.ShouldNotBeNull();
-        actionGroup.CompletedDate.Value.ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
+        actionGroup.CompletedDate.ShouldBeNull();
     }
 
     [TestMethod]
@@ -291,6 +291,41 @@ public class ActionGroupTest
         action.Target.Node.ShouldNotBeNull();
         action.Target.Node.Id.ShouldBe(targetNode.Id);
         action.IsIncomplete.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void SetTargetForAction_FailedActionTargetIsLocked_TargetResetStateStarted()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var action = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        var targetNode = "target".ToGraphNode();
+        actionGroup.Fail(action.CorrelationId, true);
+
+        actionGroup.SetTargetForAction(action.CorrelationId, targetNode);
+
+        action.Target.Node.ShouldNotBeNull();
+        action.Target.Node.Id.ShouldBe(targetNode.Id);
+        action.State.ShouldBe(ActionState.Started);
+        actionGroup.State.ShouldBe(ActionGroupState.Started);
+    }
+
+    [TestMethod]
+    public void SetTargetForAction_FailedActionWrongTargetType_TargetResetStateStarted()
+    {
+        var targetNode = new GraphNode(Guid.NewGuid(), "name") { Type = AgvGraph.NodeType.Charge };
+        var groupId = Guid.NewGuid();
+        var action = new AgvAction { CorrelationId = Guid.NewGuid(), ActionType = ActionType.Drop, State = ActionState.Started, ParentId = groupId, Target = new ActionTarget(targetNode) };
+        var actionGroup = new ActionGroup { CorrelationId = groupId, State = ActionGroupState.Started, Actions = [action] };
+
+        actionGroup.Fail(action.CorrelationId, false);
+        targetNode = "target".ToGraphNode();
+        
+        actionGroup.SetTargetForAction(action.CorrelationId, targetNode);
+
+        action.Target.Node.ShouldNotBeNull();
+        action.Target.Node.Id.ShouldBe(targetNode.Id);
+        action.State.ShouldBe(ActionState.Started);
+        actionGroup.State.ShouldBe(ActionGroupState.Started);
     }
 
     [TestMethod]
@@ -1096,7 +1131,7 @@ public class ActionGroupTest
     public void GetNextNotSkippedAction_MultipleSkippedActions_NextAction()
     {
         var agId = "actionGroup".ToGuid();
-        List<TransportOrder.Domain.Models.ActionGroup.AgvAction> actions =
+        List<AgvAction> actions =
         [
             AgvActionGenerator.GenerateAction(agId, "node"),
             AgvActionGenerator.GenerateAction(agId, "node", ActionType.Move, 1),
@@ -1253,7 +1288,7 @@ public class ActionGroupTest
     public void CheckLoadStateMatches_OnlyPickOrDrop_ReturnsExpectedValue(bool hasCargo, ActionType actionType, ActionState actionState, bool expected)
     {
         var agv = Guid.NewGuid();
-        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction() { CorrelationId = Guid.NewGuid(), ParentId = Guid.NewGuid(), State = actionState, ActionType = actionType };
+        var action = new AgvAction() { CorrelationId = Guid.NewGuid(), ParentId = Guid.NewGuid(), State = actionState, ActionType = actionType };
         var actionGroup = new ActionGroup() { CorrelationId = action.ParentId, Actions = [action], AssignedAgv = agv };
 
         actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
@@ -1299,7 +1334,7 @@ public class ActionGroupTest
     {
         var agv = Guid.NewGuid();
         var orderId = Guid.NewGuid();
-        var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
+        var testActions = new List<AgvAction>
         {
             new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
@@ -1330,7 +1365,7 @@ public class ActionGroupTest
     {
         var agv = Guid.NewGuid();
         var orderId = Guid.NewGuid();
-        var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
+        var testActions = new List<AgvAction>
         {
             new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
@@ -1363,7 +1398,7 @@ public class ActionGroupTest
     {
         var agv = Guid.NewGuid();
         var orderId = Guid.NewGuid();
-        var testActions = new List<TransportOrder.Domain.Models.ActionGroup.AgvAction>
+        var testActions = new List<AgvAction>
         {
             new(Guid.NewGuid(), actionType, "node".ToGraphNode(), orderId)
             {
@@ -1386,5 +1421,60 @@ public class ActionGroupTest
         actionGroup.CompleteAction(actionGroup.Actions.Single().CorrelationId, DateTimeOffset.Now);
 
         actionGroup.CheckLoadStateMatches(hasCargo, agv).ShouldBe(expected);
+    }
+
+    [TestMethod]
+    public void Fail_TargetStationIsLocked_ReturnsActionFailedLocked()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
+        var action = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        action.State.ShouldBe(ActionState.Started);
+
+        actionGroup.Fail(action.CorrelationId, true).ShouldBe(Reasons.ActionFailedLocked);
+
+        actionGroup.State.ShouldBe(ActionGroupState.Failed);
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.Reasons.First().ShouldBeEquivalentTo(FailReason.LockedStation.ToReason()!);
+        action.State.ShouldBe(ActionState.Failed);
+        action.CompletedDate.ShouldBeNull();
+    }
+
+    [DataRow(ActionType.Drop, AgvGraph.NodeType.Charge)]
+    [DataRow(ActionType.Drop, AgvGraph.NodeType.Park)]
+    [DataRow(ActionType.Drop, AgvGraph.NodeType.Pick)]
+    [DataRow(ActionType.Pick, AgvGraph.NodeType.Charge)]
+    [DataRow(ActionType.Pick, AgvGraph.NodeType.Park)]
+    [DataRow(ActionType.Pick, AgvGraph.NodeType.Drop)]
+    [TestMethod]
+    public void Fail_WrongStationType_ReturnsActionFailedWrongTargetType(ActionType actionType, AgvGraph.NodeType targetNodeType)
+    {
+        var targetNode = new GraphNode(Guid.NewGuid(), "name") { Type = targetNodeType };
+        var groupId = Guid.NewGuid();
+        var action = new AgvAction() { CorrelationId = Guid.NewGuid(), ActionType = actionType, State = ActionState.Started, ParentId = groupId, Target = new ActionTarget(targetNode) };
+        var actionGroup = new ActionGroup() { CorrelationId = groupId, State = ActionGroupState.Started, Actions = [action] };
+
+        actionGroup.Fail(action.CorrelationId, false).ShouldBe(Reasons.ActionFailedWrongTargetType);
+
+        actionGroup.State.ShouldBe(ActionGroupState.Failed);
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.Reasons.First().ShouldBeEquivalentTo(FailReason.WrongStation.ToReason()!);
+        action.State.ShouldBe(ActionState.Failed);
+        action.CompletedDate.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void Fail_TargetStationIsNotLocked_TargetTypeCorrect_ReturnsActionFailedForUnknownReason()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Started);
+        var action = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        action.State.ShouldBe(ActionState.Started);
+
+        actionGroup.Fail(action.CorrelationId, false).ShouldBe(Reasons.ActionFailedForUnknownReason);
+
+        actionGroup.State.ShouldBe(ActionGroupState.Failed);
+        actionGroup.CompletedDate.ShouldBeNull();
+        actionGroup.Reasons.First().ShouldBeEquivalentTo(FailReason.None.ToReason()!);
+        action.State.ShouldBe(ActionState.Failed);
+        action.CompletedDate.ShouldBeNull();
     }
 }

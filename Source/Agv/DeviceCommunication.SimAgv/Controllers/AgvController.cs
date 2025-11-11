@@ -48,7 +48,7 @@ public class AgvController : Controller
         }
         return Ok(new ErrorGeneratedDto(error));
     }
-    
+
     /// <summary>
     /// Endpoint to randomly generate a warning for the specified agv.
     /// </summary>
@@ -89,6 +89,28 @@ public class AgvController : Controller
         catch (SagaException ex)
         {
             _logger.LogWarning("Could not find agv {CorrelationId} in {Handler}, {Exception}", correlationId, nameof(SimulateCharge), ex);
+            return NotFound();
+        }
+        return Ok();
+    }
+
+    /// <summary>
+    /// Endpoint to let the current action of the specified agv fail instead of complete.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">No agv with this correlation id exists.</response>
+    [HttpPatch]
+    [Route("failure")]
+    public async Task<ActionResult> LetActionFail(Guid correlationId)
+    {
+        try
+        {
+            await _bus.Publish(new SimulateActionFailure(correlationId));
+        }
+        catch (SagaException ex)
+        {
+            _logger.LogWarning("Could not find agv {CorrelationId} in {Handler}, {Exception}", correlationId, nameof(LetActionFail), ex);
             return NotFound();
         }
         return Ok();

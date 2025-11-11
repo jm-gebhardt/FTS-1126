@@ -91,6 +91,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     public bool GraphExists { get; set; }
 
     /// <summary>
+    /// True, if the action should fail instead of complete.
+    /// </summary>
+    public bool ShouldFail { get; set; }
+
+    /// <summary>
     /// Gets the time of the last state transition.
     /// </summary>
     public DateTimeOffset TimeOfStateTransition { get; set; }

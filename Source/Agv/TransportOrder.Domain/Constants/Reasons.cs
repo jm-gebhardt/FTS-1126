@@ -43,5 +43,9 @@ public static class Reasons
     public const string ActionGroupCanceledByExternal = "ActionGroup was canceled by an external system";
     public const string ActionGroupMustHaveTargetOrSource = "ActionGroup must have a source or target";
 
+    public const string ActionFailedForUnknownReason = "Action failed for unknown reason";
+    public const string ActionFailedWrongTargetType = "Action target station has wrong type";
+    public const string ActionFailedLocked = "Action target station is locked";
+
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

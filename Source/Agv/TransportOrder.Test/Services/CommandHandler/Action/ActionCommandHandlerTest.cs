@@ -2755,4 +2755,40 @@ public class ActionCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
         actionGroup.IsQueued.ShouldBeTrue();
     }
+
+    [TestMethod]
+    public async Task Consume_HandleActionFailure_ValidData_PublishesActionGroupChanged()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionState.Started);
+        var failedAction = actionGroup.Actions.First();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup)
+            .WithNodeState(NodeLockGenerator.GenerateNodeLock(isLocked: true));
+
+        var command = new HandleActionFailure(actionGroup.CorrelationId, failedAction.CorrelationId);
+
+        await fixture.PublishMessageAsync(command);
+
+        await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+
+        actionGroup.State.ShouldBe(ActionGroupState.Failed);
+        failedAction.State.ShouldBe(ActionState.Failed);
+    }
+
+    [TestMethod]
+    public async Task Consume_HandleActionFailure_UnknownAction_DoesNotPublishActionGroupChanged()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionState.Started);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddActionGroup(actionGroup)
+            .WithNodeState(NodeLockGenerator.GenerateNodeLock(isLocked: true));
+
+        var command = new HandleActionFailure(actionGroup.CorrelationId, "unknown".ToGuid());
+
+        await fixture.PublishMessageAsync(command);
+
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+
+        actionGroup.State.ShouldNotBe(ActionGroupState.Failed);
+    }
 }

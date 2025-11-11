@@ -121,6 +121,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     public Event<SimulateAgvError> SimulateAgvErrorEvent { get; private set; } = null!;
 
     /// <summary>
+    /// SimulateActionFailure was received
+    /// </summary>
+    public Event<SimulateActionFailure> SimulateActionFailureEvent { get; private set; } = null!;
+
+    /// <summary>
     /// ResetAgvErrors was received
     /// </summary>
     public Event<ResetAgvErrors> ResetAgvErrorsEvent { get; private set; } = null!;
@@ -212,6 +217,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         DuringAny(RemoveAgvFromZoneHandler());
         DuringAny(SimulateChargingHandler());
         DuringAny(SetSimulationSpeedHandler());
+        DuringAny(SimulateActionFailureHandler());
 
         WhenEnterAny(UpdateTimeOfStateTransition);
 
@@ -532,6 +538,13 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .ThenAsync(PublishAgvError);
     }
 
+    private EventActivityBinder<SimulatedAgvSaga, SimulateActionFailure> SimulateActionFailureHandler()
+    {
+        return When(SimulateActionFailureEvent)
+            .Then(c => _logger.LogInformation("{MessageType} / {CorrelationId} received", nameof(SimulateAgvError), c.Saga.CorrelationId))
+            .Then(c => { c.Saga.ShouldFail = true; });
+    }
+
     private EventActivityBinder<SimulatedAgvSaga, ResetAgvErrors> ResetAgvErrorsHandler()
     {
         return When(ResetAgvErrorsEvent)
@@ -750,7 +763,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 await WaitForCargoHandlingAsync(context);
                 await context.Publish(new AgvLoadStatusReceived(agvCorrelationId, cargos));
             }
-
+            if (context.Saga.ShouldFail)
+            {
+                _logger.LogInformation("SerialNumber {AgvId} ({CorrelationId}). {ActionType} action with action CorrelationId {ActionCorrelationId} for action group id should fail: {OrderId}",
+                    context.Saga.SerialNumber, context.Saga.CorrelationId, context.Saga.Action!.ActionType, context.Saga.Action.CorrelationId, context.Saga.Action.ParentId);
+                await context.Publish(new ActionFailed(action.CorrelationId, agvCorrelationId));
+                context.Saga.ShouldFail = false;
+                return;
+            }
             await context.Publish(new ActionCompleted(action.CorrelationId, agvCorrelationId));
         }
 

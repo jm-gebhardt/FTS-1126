@@ -29,7 +29,8 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     IConsumer<AutomaticActionWithdrawn>,
     IConsumer<ActionGroupResumed>,
     IConsumer<ActionGroupCreated>,
-    IConsumer<ActionGroupQueued>
+    IConsumer<ActionGroupQueued>,
+    IConsumer<ActionFailed>
 {
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionCompleted> context)
@@ -205,5 +206,13 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         }
 
         await context.Publish(new TryReactivateParkingAgvs());
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<ActionFailed> context)
+    {
+        var actionCorrelationId = context.Message.CorrelationId;
+        var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
+        await context.Publish(new HandleActionFailure(actionGroup.CorrelationId, actionCorrelationId));
     }
 }

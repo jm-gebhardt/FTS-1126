@@ -10,6 +10,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -42,6 +43,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IQueueManager> _queueManager = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
     
     protected Mock<IRouteService> RouteService { get; } = new();
 
@@ -71,6 +73,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _stationRepository.Object);
+        collection.AddTransient(_ => _nodeStateRepository.Object);
         collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
@@ -318,6 +321,12 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public ActionGroupTestFixtureBase<T> WithNode(params GraphNode?[] nodes)
     {
         _agvDb.AddNode(nodes);
+        return this;
+    }
+
+    public ActionGroupTestFixtureBase<T> WithNodeState(NodeLock? nodeLock )
+    {
+        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeLock);
         return this;
     }
 
