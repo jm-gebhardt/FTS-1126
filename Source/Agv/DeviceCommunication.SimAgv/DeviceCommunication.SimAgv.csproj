@@ -33,6 +33,7 @@
         <Folder Include="Properties\"/>
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="Quartz"/>
         <Content Include="Resources\BackgroundImages\Charge Park_1.16_-11_-21.png">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>

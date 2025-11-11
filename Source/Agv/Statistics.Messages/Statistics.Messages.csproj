@@ -11,6 +11,8 @@
         <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="Quartz"/>
+      <PackageReference Include="Quartz.Extensions.DependencyInjection" />
         <ProjectReference Include="..\Statistics.Domain\Statistics.Domain.csproj" />
     </ItemGroup>
 </Project>

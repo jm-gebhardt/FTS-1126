@@ -57,6 +57,8 @@
         </Content>
     </ItemGroup>
     <ItemGroup>
+      <PackageReference Include="Quartz"/>
+      <PackageReference Include="Quartz.Extensions.DependencyInjection"/>
       <Folder Include="Migrations\" />
     </ItemGroup>
 </Project>
