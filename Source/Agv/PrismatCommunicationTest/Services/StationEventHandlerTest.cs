@@ -105,7 +105,7 @@ public class StationEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consumer_OccupyStation_ValidData_PublishesAddAgvToStation()
+    public async Task Consumer_ReserveStation_ValidData_PublishesAddAgvToStation()
     {
         var station = new Station("source", "target", "node".ToGuid(), "node");
         var agv = Guid.NewGuid();
@@ -113,14 +113,14 @@ public class StationEventHandlerTest
             .WithStation(station)
             .WithOccupiedStation(null);
 
-        await fixture.PublishMessageAsync(new OccupyStation(station.NodeName.ToGraphNode(), agv));
+        await fixture.PublishMessageAsync(new ReserveStation(station.NodeName.ToGraphNode(), agv));
 
         await fixture.ShouldHavePublishedAsync<AddAgvToStation>();
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();
     }
 
     [TestMethod]
-    public async Task Consumer_OccupyStation_AgvOccupiesDifferentStation_PublishesRemoveAgvFromStation()
+    public async Task Consumer_ReserveStation_AgvOccupiesDifferentStation_PublishesRemoveAgvFromStation()
     {
         var station = new Station("source", "target", "node".ToGuid(), "node");
         var occupiedStation = new Station("source", "target", "different node".ToGuid(), "different node");
@@ -129,14 +129,14 @@ public class StationEventHandlerTest
             .WithStation(station)
             .WithOccupiedStation(occupiedStation);
 
-        await fixture.PublishMessageAsync(new OccupyStation(station.NodeName.ToGraphNode(), agv));
+        await fixture.PublishMessageAsync(new ReserveStation(station.NodeName.ToGraphNode(), agv));
 
         await fixture.ShouldHavePublishedAsync<AddAgvToStation>();
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromStation>();
     }
 
     [TestMethod]
-    public async Task Consumer_OccupyStation_AgvAlreadyOccupiesStation_DoesNotPublishAddAgvToStation()
+    public async Task Consumer_ReserveStation_AgvAlreadyOccupiesStation_DoesNotPublishAddAgvToStation()
     {
         var station = new Station("source", "target", "source".ToGuid(), "source");
         var agv = Guid.NewGuid();
@@ -144,7 +144,7 @@ public class StationEventHandlerTest
             .WithStation(station)
             .WithOccupiedStation(station);
 
-        await fixture.PublishMessageAsync(new OccupyStation(station.NodeName.ToGraphNode(), agv));
+        await fixture.PublishMessageAsync(new ReserveStation(station.NodeName.ToGraphNode(), agv));
 
         await fixture.ShouldNotHavePublishedAsync<AddAgvToStation>();
         await fixture.ShouldNotHavePublishedAsync<RemoveAgvFromStation>();

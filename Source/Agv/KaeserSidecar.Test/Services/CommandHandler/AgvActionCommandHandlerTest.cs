@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.KaeserSidecar.Messages;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Moq;
@@ -27,6 +28,30 @@ public class AgvActionCommandHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
+            .WithActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
+        await fixture.ShouldNotHavePublishedAsync<AgvStartedPick>();
+        var freeStation = await fixture.GetFirstPublishedMessageAsync<FreeStationOccupancy>();
+        freeStation.NodeId.ShouldBe(stationId.ToGuid());
+        await fixture.ShouldNotHavePublishedAsync<OccupyStation>();
+        fixture.VerifyActionDequeued(actionGroup.Actions[0].CorrelationId, Times.Never());
+    }
+
+    [TestMethod]
+    public async Task Consume_StartActionCommand_DropAtAkl_PublishesOccupyStation()
+    {
+        string stationId = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
+        actionGroup.Actions.First().Nodes = [stationId.ToGraphNode()];
+        var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
+        var agv = actionGroup.AssignedAgv!.Value;
+        var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
+        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
+        var prismatStation = new Station(orderDetails.Source, orderDetails.Destination, stationId.ToGuid(), stationId);
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithHostOrder(order)
+            .WithPrismatStation(prismatStation)
             .WithActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new StartActionCommand(agv, agv.ToString(), actionGroupMessageContent.Actions.First()));
@@ -212,12 +237,15 @@ public class AgvActionCommandHandlerTest
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
+        var prismatStation = new Station(orderDetails.Source, orderDetails.Destination, station.ToGuid(), station);
+        
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
         actionGroup.Actions.First().Nodes = [station.ToGraphNode()];
         actionGroup.IsManual = true;
 
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
+            .WithPrismatStation(prismatStation)
             .WithActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Single(a => a.Target.Node?.Name == station).CorrelationId, DateTime.UtcNow));
@@ -330,9 +358,25 @@ public class AgvActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionGroupCompleted_ManualMove_TargetIsOccupancyLimited_PublishesOccupyStation()
+    public async Task Consume_ActionGroupCompleted_ManualPickDropAction_TargetIsOccupancyLimited_PublishesOccupyStation()
     {
         string station = OrderGenerator.KaeserConfiguration.ConveyorStationMapping.Keys.First();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
+        actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId, DateTimeOffset.Now);
+        actionGroup.IsManual = true;
+        var actionGroupMessageContent = AgvActionGenerator.ConvertToMessage(actionGroup);
+        var fixture = new AgvActionCommandHandlerTestFixture()
+            .WithActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new ActionGroupCompleted(actionGroupMessageContent, actionGroup.CorrelationId, DateTime.UtcNow));
+        await fixture.ShouldHaveConsumedAsync<ActionGroupCompleted>();
+        await fixture.ShouldHavePublishedAsync<OccupyStation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCompleted_ManualMove_TargetIsAklStation_PublishesOccupyStation()
+    {
+        const string station = "5";
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
         actionGroup.CompleteAction(actionGroup.Actions.First().CorrelationId, DateTimeOffset.Now);
         actionGroup.IsManual = true;

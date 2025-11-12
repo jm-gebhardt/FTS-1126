@@ -4,6 +4,7 @@ using Gebhardt.Acc.KaeserSidecar.Domain.Services;
 using Gebhardt.Acc.KaeserSidecar.Services.BackgroundServices;
 using Gebhardt.Acc.KaeserSidecar.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -16,6 +17,7 @@ namespace Gebhardt.Acc.KaeserSidecar.Test.Services.CommandHandler;
 public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvActionCommandHandler>
 {
     private readonly Mock<IPrismatCommunicationHostOrderRepository> _hostOrderRepository = new();
+    private readonly Mock<IPrismatCommunicationStationRepository> _prismatStationRepository = new();
     private readonly Mock<ITransportOrderDb> _transportOrderDb = new();
     private readonly Mock<IConveyorCommunicator> _communicator = new();
     private readonly Mock<ITargetSelector> _targetSelectorMock = new();
@@ -27,6 +29,7 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
         collection.AddSingleton(_ => OrderGenerator.KaeserConfiguration);
         collection.AddTransient(_ => _transportOrderDb.Object);
         collection.AddSingleton(_ => _hostOrderRepository.Object);
+        collection.AddSingleton(_ => _prismatStationRepository.Object);
         collection.AddSingleton(_ => _communicator.Object);
         collection.AddTransient(_ => _targetSelectorMock.Object);
         return this;
@@ -47,6 +50,12 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
     public AgvActionCommandHandlerTestFixture WithHostOrder(HostOrder order)
     {
         _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
+        return this;
+    }
+
+    public AgvActionCommandHandlerTestFixture WithPrismatStation(Station station)
+    {
+        _prismatStationRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(station);
         return this;
     }
 

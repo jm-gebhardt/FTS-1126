@@ -24,6 +24,7 @@ public class AgvActionCommandHandler(
     KaeserGraphConfiguration configuration,
     IConveyorCommunicator conveyorCommunicator,
     IPrismatCommunicationHostOrderRepository hostOrderRepository,
+    IPrismatCommunicationStationRepository prismatStationRepository,
     ITargetSelector targetSelector) :
     IConsumer<StartActionCommand>,
     IConsumer<PickActionCompleted>,
@@ -88,6 +89,17 @@ public class AgvActionCommandHandler(
                 return;
             }
         }
+        if (action.Target.Node != null && action.ActionType == ActionType.Drop)
+        {
+            var prismatStation = await prismatStationRepository.GetStationByNodeId(action.Target.Node.Id);
+            if (prismatStation != null)
+            {
+                // Reserve AKL station for drop action
+                logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, reserve target station {TargetStation}",
+                    nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, startNode.Name, action.Target.Node.Name );
+                await context.Publish(new ReserveStation(action.Target.Node, agvCorrelationId));
+            }
+        }
         if (configuration.IsOccupancyLimitedNode(startNode.Name))
         {
             // free station only in case the start node is limited by agv occupancy.
@@ -142,9 +154,10 @@ public class AgvActionCommandHandler(
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
 
         var targetNode = action.Target.Node;
-        if (!configuration.ConveyorStationMapping.TryGetValue(action.Target.Node!.Name, out string? _) || actionGroup.IsManual)
-        {
+        if (actionGroup.IsManual || (!configuration.ConveyorStationMapping.TryGetValue(action.Target.Node!.Name, out string? _) && !configuration.IsOccupancyLimitedNode(action.Target.Node.Name)))
+        {  
             // Only publish for non-WE stations for automatic action groups, as WE stations are occupied already during target selection
+            // Only publish for non-AKL stations, as these are reserved/occupied during start action of drop to AKL
             // For manual actions publish also for WE stations
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} action {ActionId} for action group {ActionGroupCorrelationId}, occupying station {Station}",
                 nameof(HandleActionCompletion), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, targetNode?.Name);
@@ -224,12 +237,10 @@ public class AgvActionCommandHandler(
         }
 
         var station = action.Target.Node;
-        if (station == null || (configuration.ConveyorStationMapping.TryGetValue(station.Name, out string? _) && !actionGroup.IsManual))
-        {
-            // If the station is a conveyor station, we have  already occupied it during the target selection
-            return;
-        }
-        if (configuration.IsOccupancyLimitedNode(station.Name))
+        
+        // For manual orders with target conveyor (PS0x stations) or 
+        // manual orders with drop action to AKL station (AP0x stations)
+        if (station != null && (configuration.ConveyorStationMapping.TryGetValue(station.Name, out string? _) || configuration.IsDropAklStation(station.Name)))
         {
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}, occupying station {Station}",
                 nameof(ActionGroupCompleted), agvCorrelationId, action.ActionType, action.CorrelationId, actionGroup.CorrelationId, station);
@@ -260,7 +271,7 @@ public class AgvActionCommandHandler(
         if (configuration.IsOccupancyLimitedNode(targetNode.Name) && agv.AgvStatus?.LastNodeId != targetNode.Id)
         {
             logger.LogInformation("{Message}: Agv {AgvCorrelationId} aborted action {ActionCorrelationId} which was assigned to station {Station}, so try to free it",
-                nameof(ActionAborted), action.CorrelationId, action.CorrelationId, targetNode.Name);
+                nameof(ActionAborted), agv.CorrelationId, action.CorrelationId, targetNode.Name);
             await context.Publish(new FreeStationOccupancy(targetNode.Id, (Guid) agvCorrelationId));
         }
     }

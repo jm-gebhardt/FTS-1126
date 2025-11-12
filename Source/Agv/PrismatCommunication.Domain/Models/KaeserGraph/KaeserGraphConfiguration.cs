@@ -573,4 +573,20 @@ public class KaeserGraphConfiguration
         }
         return [];
     }
+
+    /// <summary>
+    /// Checks if station is an AKL station for drops
+    /// </summary>
+    /// <param name="stationName"></param>
+    /// <returns></returns>
+    public bool IsDropAklStation(string stationName)
+    {
+        // Get all StationMapping keys that map to the given nodeId
+        IEnumerable<string> stationKeysForNode = StationMapping
+            .Where(kvp => kvp.Value == stationName)
+            .Select(kvp => kvp.Key);
+
+        // Check if any of those keys exist as key in AklDoppelspielPickTargets
+        return stationKeysForNode.Any(key =>
+            AklDoppelspielPickTargets.ContainsKey(key));    }
 }

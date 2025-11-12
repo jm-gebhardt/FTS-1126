@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
@@ -26,7 +27,7 @@ public class StationEventHandler(
     IConsumer<AgvLeftStation>,
     IConsumer<FreeStationOccupancy>,
     IConsumer<UnblockStation>,
-    IConsumer<OccupyStation>
+    IConsumer<ReserveStation>
 {
     /// <summary>
     /// Handles the <see cref="StationLocked"/> event.
@@ -116,11 +117,11 @@ public class StationEventHandler(
 
         await context.Publish(new RemoveAgvFromStation(station.Id, station.AgvCorrelationId.Value));
     }
-
+    
     /// <summary>
-    /// Handles the <see cref="OccupyStation"/> message.
+    /// Handles the <see cref="ReserveStation"/> message.
     /// </summary>
-    public async Task Consume(ConsumeContext<OccupyStation> context)
+    public async Task Consume(ConsumeContext<ReserveStation> context)
     {
         var (node, agvCorrelationId) = context.Message;
         var occupiedStation = await stationRepository.GetStationByOccupyingAgv(agvCorrelationId);
@@ -140,6 +141,7 @@ public class StationEventHandler(
         if (station != null)
         {
             await context.Publish(new AddAgvToStation(station.Id, agvCorrelationId));
+            await context.Publish(new StationReserved(node.Id, agvCorrelationId));
             return;
         }
         logger.LogDebug("Station {NodeId} not found, cannot occupy", node.Name);
