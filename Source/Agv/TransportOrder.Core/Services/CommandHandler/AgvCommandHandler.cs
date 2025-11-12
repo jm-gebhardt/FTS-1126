@@ -506,7 +506,7 @@ public class AgvCommandHandler :
         }
 
         bool shouldUpdate = stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged || operatingDataChanged
-                            || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic 
+                            || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic
                             || graphRequested || dataRequested || zonesRequested;
 
         if (shouldUpdate)
@@ -654,7 +654,7 @@ public class AgvCommandHandler :
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         if (await _agvDb.Agvs.HasOnlineAgvs())
         {
-            await context.Publish(new AgvWentOnline(Guid.NewGuid()));
+            await context.Publish(new AgvWentOnline(correlationId));
         }
     }
 
