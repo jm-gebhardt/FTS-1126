@@ -18,7 +18,7 @@ public class StringExtensionsTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(InputStrings), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(InputStrings))]
     public void ToGuid_ShouldRemainTheSameParsedGuid_WhenParsingTheInputStringMultipleTimes(string inputString)
     {
         var guid = inputString.ToGuid();

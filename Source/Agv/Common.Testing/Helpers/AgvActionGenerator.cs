@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Testing.Helpers;
 
+[PublicAPI]
 public static class AgvActionGenerator
 {
     private static GraphNode[] GetNodes(string startNodeId, string targetNodeId, int numberOfNodes, IEnumerable<GraphNode>? availableNodes = null)

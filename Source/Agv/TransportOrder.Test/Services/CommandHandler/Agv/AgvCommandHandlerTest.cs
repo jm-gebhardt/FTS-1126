@@ -35,6 +35,7 @@ using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Agv;
 
 [TestClass]
+[DoNotParallelize]
 public class AgvCommandHandlerTest
 {
     private readonly IMapper _mapper = AgvCommandHandlerTestFixture.GetMapper();

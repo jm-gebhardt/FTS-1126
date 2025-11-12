@@ -36,6 +36,7 @@ public class TargetSelector(
     /// <summary>
     /// The time to wait between two target selection attempts.
     /// </summary>
+    [PublicAPI]
     public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
 
     /// <inheritdoc cref="BackgroundService"/>>

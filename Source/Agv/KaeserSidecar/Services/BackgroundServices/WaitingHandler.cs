@@ -6,6 +6,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.KaeserSidecar.Domain;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,7 @@ public class WaitingHandler(
     /// <summary>
     /// The time to wait between two handling attempts.
     /// </summary>
-    public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
+    [PublicAPI] public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
 
     private readonly HashSet<Guid> _lastEvaluatedActions = new();
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();

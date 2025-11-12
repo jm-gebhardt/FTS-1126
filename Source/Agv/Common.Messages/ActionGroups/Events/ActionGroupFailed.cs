@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.HostOrder.Events;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -10,4 +11,5 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 /// <param name="CorrelationId">The correlationId of the action group.</param>
 /// <param name="ErrorCode">The error code of the failure.</param>
 /// <param name="MessageCreatedDate">The time the action group failed.</param>
+[PublicAPI]
 public record ActionGroupFailed(ActionGroup ActionGroup, Guid CorrelationId, HostOrderHandlingFailedErrorCode ErrorCode, DateTime MessageCreatedDate) : CorrelatedBy<Guid>, IActionGroupEvent, IMessageCreatedDate;

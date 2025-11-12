@@ -32,6 +32,7 @@ using ValidationResult = FluentValidation.Results.ValidationResult;
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 
 [TestClass]
+[DoNotParallelize]
 public class ActionCommandHandlerTest
 {
     private const string ChargeNodeName = "Charge-1";

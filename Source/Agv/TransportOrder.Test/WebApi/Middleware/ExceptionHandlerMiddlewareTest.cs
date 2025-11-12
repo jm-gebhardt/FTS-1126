@@ -16,7 +16,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Middleware;
 [TestClass]
 public class ExceptionHandlerMiddlewareTest
 {
-    [DynamicData(nameof(GetExceptionTestData), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetExceptionTestData))]
     [TestMethod]
     public async Task Invoke_Exception_ReturnsExpectedStatusCode(Func<Exception> exceptionFunc, HttpStatusCode expectedStatusCode)
     {

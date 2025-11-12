@@ -1,10 +1,11 @@
-﻿using System.Numerics;
-using Gebhardt.Acc.Common.Dictionaries;
+﻿using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using JetBrains.Annotations;
+using System.Numerics;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -34,6 +35,7 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="targetNodes">The target nodes.</param>
     /// <returns>The deviation in seconds.</returns>
+    [PublicAPI]
     public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, Guid[] targetNodes)
     {
         string key = GetKey(agvCorrelationId, targetNodes);

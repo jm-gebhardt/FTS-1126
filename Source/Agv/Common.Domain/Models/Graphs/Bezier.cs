@@ -1,10 +1,12 @@
-﻿using System.Numerics;
+﻿using JetBrains.Annotations;
+using System.Numerics;
 
 namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// Contains helper functions for Bezier curves.
 /// </summary>
+[PublicAPI]
 public class Bezier
 {
     /// <summary>

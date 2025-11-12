@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 
@@ -38,6 +39,7 @@ public static class AgvActionExtension
     /// <param name="recordType">The record type of the order.</param>
     /// <param name="agvSerialNumber">The serial number of the agv.</param>
     /// <returns>The order as used in the mqtt message to the agv.</returns>
+    [PublicAPI]
     public static MqttOrder ConvertToMoveToCoordinateOrder(this AgvAction action, string orderId, OrderRecordType recordType, string agvSerialNumber)
     {
         if (!action.IsMoveToCoordinate)
@@ -69,6 +71,7 @@ public static class AgvActionExtension
     /// <param name="nodes">The route nodes.</param>
     /// <param name="edges">The route edges.</param>
     /// <returns> The order as used in the mqtt message to the agv.</returns>
+    [PublicAPI]
     public static MqttOrder ConvertToMoveToStationsOrder(this AgvAction action, string orderId, OrderRecordType recordType, string agvSerialNumber, List<object> nodes, List<object> edges)
     {
         if (action.IsMoveToCoordinate)

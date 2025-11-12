@@ -487,7 +487,7 @@ public class ActionGroupRequestHandlerTest
     public static IEnumerable<object[]> AllNodeTypes() => Enum.GetValues(typeof(AgvGraph.NodeType)).Cast<AgvGraph.NodeType>().Select(v => new object[] { v });
 
     [TestMethod]
-    [DynamicData(nameof(AllNodeTypes), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(AllNodeTypes))]
     public async Task Consume_TriggerSetTarget_ForPickActionWrongTargetNodeType_ThrowsInvalidNodeTypeException(AgvGraph.NodeType nodeType)
     {
         if (nodeType is AgvGraph.NodeType.Pick or AgvGraph.NodeType.PickDrop)
@@ -512,7 +512,7 @@ public class ActionGroupRequestHandlerTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(AllNodeTypes), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(AllNodeTypes))]
     public async Task Consume_TriggerSetTarget_ForDropActionWrongTargetNodeType_ThrowsInvalidNodeTypeException(AgvGraph.NodeType nodeType)
     {
         if (nodeType is AgvGraph.NodeType.Drop or AgvGraph.NodeType.PickDrop)

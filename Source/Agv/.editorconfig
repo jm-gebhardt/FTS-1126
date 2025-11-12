@@ -10,3 +10,9 @@ generated_code = true
 
 [{*.vue,*.ts,*.scss,*.css,*.js,*.cjs,*.json,*.html}]
 indent_size = 2
+
+# Suppress unused warnings in test files
+[**/*Test*/**/*.cs]
+resharper_unused_member_global_highlighting = none
+resharper_class_never_instantiated_global_highlighting = none
+resharper_unused_type_global_highlighting = none

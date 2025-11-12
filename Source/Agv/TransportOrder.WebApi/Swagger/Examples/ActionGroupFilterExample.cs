@@ -21,6 +21,7 @@ public class ActionGroupFilterExample : IOperationFilter
     /// <summary>
     /// The example dto that will be attached by this operation filter.
     /// </summary>
+    [PublicAPI]
     public static readonly FilterDto ExampleDto = new CombinationFilterDto(
         [
             new CombinationFilterDto([

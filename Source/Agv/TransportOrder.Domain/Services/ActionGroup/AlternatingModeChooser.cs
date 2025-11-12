@@ -3,6 +3,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -15,6 +16,7 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
     /// <summary>
     /// Selection mode is fastest route.
     /// </summary>
+    [PublicAPI]
     public bool FastestRouteMode;
 
     /// <inheritdoc cref="AlternatingModeChooser"/>>

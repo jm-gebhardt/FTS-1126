@@ -18,7 +18,7 @@ public class RoutingPlausibilityCheckerTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(NoneIsActionType), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(NoneIsActionType))]
     public void IsPlausible_ReturnsTrue_WhenNoneIsOfActionType(GraphNode source, GraphNode destination)
     {
         bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
@@ -26,7 +26,7 @@ public class RoutingPlausibilityCheckerTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(SourcesGoesToDestination), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(SourcesGoesToDestination))]
     public void IsPlausible_ReturnsTrue_WhenSourceGoesToDestination(GraphNode source, GraphNode destination)
     {
         bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
@@ -34,8 +34,8 @@ public class RoutingPlausibilityCheckerTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(SourcesGoesNotToDestination), DynamicDataSourceType.Method)]
-    [DynamicData(nameof(NoSourcesGoesToDestination), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(SourcesGoesNotToDestination))]
+    [DynamicData(nameof(NoSourcesGoesToDestination))]
     public void IsPlausible_ReturnsFalse_WhenSourceGoesNotToDestination(GraphNode source, GraphNode destination)
     {
         bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);
@@ -43,7 +43,7 @@ public class RoutingPlausibilityCheckerTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(OnlyOneIsActionType), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(OnlyOneIsActionType))]
     public void IsPlausible_ReturnsFalse_WhenSourceGoesToDestination(GraphNode source, GraphNode destination)
     {
         bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);

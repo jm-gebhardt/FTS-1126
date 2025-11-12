@@ -15,6 +15,7 @@ public class RelatedMapAgvValueResolver : IValueResolver<Map, MapDto, object>
     /// <summary>
     /// The constant name for the AgvMapRelation mapping
     /// </summary>
+    [PublicAPI]
     public const string AgvMapRelationsName = "agvMapRelations";
 
     /// <summary>

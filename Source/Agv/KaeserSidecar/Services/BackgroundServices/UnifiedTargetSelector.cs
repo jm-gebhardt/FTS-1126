@@ -22,7 +22,7 @@ public class UnifiedTargetSelector(
     /// <summary>
     /// The time to wait between two target selection attempts.
     /// </summary>
-    public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
+    [PublicAPI] public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
 
     /// <inheritdoc cref="BackgroundService"/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

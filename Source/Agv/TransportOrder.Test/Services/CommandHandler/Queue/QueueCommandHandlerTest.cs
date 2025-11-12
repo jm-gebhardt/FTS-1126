@@ -13,6 +13,7 @@ using Shouldly;
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Queue;
 
 [TestClass]
+[DoNotParallelize]
 public class QueueCommandHandlerTest
 {
     [TestMethod]

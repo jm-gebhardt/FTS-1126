@@ -126,7 +126,7 @@ public sealed class MqttStatusSignificanceCheckerTests
     /// Ensure that a newly added property in MqttState automatically makes the test fail
     /// </summary>
     [TestMethod]
-    [DynamicData(nameof(GetPublicProperties), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(GetPublicProperties))]
     public void HasSignificantChanges_ReturnsTrue_WhenSinglePropertyChanges(PropertyInfo property)
     {
         var original = CreateBaselineState();

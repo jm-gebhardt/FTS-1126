@@ -10,6 +10,7 @@ using Shouldly;
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Queue;
 
 [TestClass]
+[DoNotParallelize]
 public class QueueRequestHandlerTest
 {
     [TestMethod]

@@ -18,7 +18,7 @@ public class NoCheckPlausibilityCheckerTest
     }
 
     [TestMethod]
-    [DynamicData(nameof(AllNodeToNodes), DynamicDataSourceType.Method)]
+    [DynamicData(nameof(AllNodeToNodes))]
     public void IsPlausible_ReturnsTrue_WhereAnyParameter(GraphNode source, GraphNode destination)
     {
         bool isPlausible = _routingPlausibilityChecker.IsPlausible(source, destination);

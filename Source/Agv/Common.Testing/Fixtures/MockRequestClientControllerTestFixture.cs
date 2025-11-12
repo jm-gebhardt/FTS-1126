@@ -38,6 +38,7 @@ public abstract class MockRequestClientControllerTestFixture<TController> : Fixt
         return this;
     }
 
+    [PublicAPI]
     protected Mock<IRequestClient<TRequest>> AddRequestClient<TRequest, TResponse>(Func<TResponse> response)
         where TRequest : class
         where TResponse : class

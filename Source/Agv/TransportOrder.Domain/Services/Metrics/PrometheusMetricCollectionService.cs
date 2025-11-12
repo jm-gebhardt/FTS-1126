@@ -3,12 +3,14 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using JetBrains.Annotations;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 
 /// <inheritdoc cref="IMetricCollectionService"/>>
+[PublicAPI]
 public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupRepository actionGroupRepository, IStationRepository stationRepository) : IMetricCollectionService
 {
     /// <inheritdoc cref="IMetricCollectionService"/>>

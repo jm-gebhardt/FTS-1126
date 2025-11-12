@@ -18,6 +18,7 @@ using Shouldly;
 namespace Gebhardt.Acc.PrismatCommunicationTest.Services;
 
 [TestClass]
+[DoNotParallelize]
 public class HostOrderCommandHandlerTest
 {
     [TestMethod]
