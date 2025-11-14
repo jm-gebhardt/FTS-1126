@@ -366,7 +366,7 @@ public class QueueTest
         queue.ConsideredAgvs.ShouldContain(agv);
         queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBe(agv);
 
-        queue.ReachNode(target!.Value, agv);
+        queue.ReachNode(target.Value, agv);
         queue.Nodes.Single(n => n.NodeId == target).OccupiedAgv.ShouldBe(agv);
         queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBeNull();
     }
