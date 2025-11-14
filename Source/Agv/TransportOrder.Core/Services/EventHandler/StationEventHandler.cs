@@ -31,7 +31,8 @@ public class StationEventHandler(IAgvDb agvDb) :
         {
             return;
         }
-        await context.Publish(new TryReactivateChargingAgv(agvs.First().CorrelationId));
+        IOrderedEnumerable<Agv> agvsOrderedByBatteryCharge = agvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge);
+        await context.Publish(new TryReactivateChargingAgv(agvsOrderedByBatteryCharge.First().CorrelationId));
     }
 
     /// <summary>

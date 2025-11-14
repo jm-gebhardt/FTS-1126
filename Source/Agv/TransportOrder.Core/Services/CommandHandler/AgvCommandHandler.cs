@@ -1279,8 +1279,8 @@ public class AgvCommandHandler :
     {
         ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
         ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
-
-        foreach (var agv in agvsAtQueueHeads.Union(readyAgvs.Select(a => a.CorrelationId)))
+        IOrderedEnumerable<Agv> readyAgvsOrderedByBatteryCharge = readyAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge);
+        foreach (var agv in agvsAtQueueHeads.Union(readyAgvsOrderedByBatteryCharge.Select(a => a.CorrelationId)))
         {
             await context.Publish(new AgvBecameIdle(agv));
         }
