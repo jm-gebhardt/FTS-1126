@@ -82,7 +82,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
             .NotEmpty()
             .WithReason(Reasons.ActionsMustBeSet);
 
-        When(p => p.IsManual, () =>
+        When(p => p.IsManual && !p.IsMovingCargo, () =>
         {
             RuleFor(p => p.AssignedAgv)
                 .NotNull()

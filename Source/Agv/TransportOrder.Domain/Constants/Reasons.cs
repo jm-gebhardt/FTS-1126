@@ -24,9 +24,9 @@ public static class Reasons
     public const string LockedStation = "A target station is locked";
     public const string AgvInUserMode = "AGV in user mode";
     public const string AgvInLockMode = "AGV in lock mode";
-    public const string AgvInMaintenanceMode = "AGV in maintenance mode";
-
-    public const string ManualActionMustHaveAgvAssigned = "Manual action must have an Agv assigned";
+    public const string AgvInMaintenanceMode = "AGV in maintenance mode";   
+    
+    public const string ManualActionMustHaveAgvAssigned = "Manual action must have an Agv assigned if it's no pick/drop action";
 
     public const string AgvDoesNotExist = "Agv with correlation id \"{0}\" does not exist";
 

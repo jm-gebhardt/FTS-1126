@@ -140,7 +140,7 @@ public class ActionGroupValidatorTest
     }
 
     [TestMethod]
-    public async Task ValidateAsync_WhenIsManualIsTrueAndNoAssignedAgv_Fails()
+    public async Task ValidateAsync_WhenIsManualMoveIsTrueAndNoAssignedAgv_Fails()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(isManual: true, assignedAgv: null);
@@ -154,7 +154,25 @@ public class ActionGroupValidatorTest
 
         TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
 
-        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Manual action must have an Agv assigned");
+        validationResult.ShouldHaveValidationErrorFor(x => x.AssignedAgv).WithErrorMessage("Manual action must have an Agv assigned if it's no pick/drop action");
+    }
+
+    [TestMethod]
+    public async Task ValidateAsync_WhenIsManualPickDropIsTrueAndNoAssignedAgv_Passes()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isManual: true, assignedAgv: null);
+
+        var fixture = new ActionGroupValidatorTestFixture()
+            .WithAgv(agv)
+            .WithRoute(agv, actionGroup)
+            .WithAgvCanHandleRoute(agv, actionGroup)
+            .WithNodesExisting(actionGroup)
+            .Build();
+
+        TestValidationResult<ActionGroup> validationResult = await fixture.ActionGroupValidator.TestValidateAsync(actionGroup);
+
+        validationResult.ShouldNotHaveAnyValidationErrors();
     }
 
     [TestMethod]
