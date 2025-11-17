@@ -1,8 +1,10 @@
-﻿using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
+﻿using Gebhardt.Acc.Common;
+using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="ITransportOrderDb"/>>
+[CanBeCaptiveDependency]
 public class TransportOrderDb: ITransportOrderDb
 {
     /// <inheritdoc cref="ITransportOrderDb"/>>

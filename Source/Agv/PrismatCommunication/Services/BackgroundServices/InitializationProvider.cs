@@ -10,6 +10,7 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -21,12 +22,10 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
 [UsedImplicitly]
 public class InitializationProvider(
     KaeserGraphConfiguration configuration,
-    IShortLoopWeTargetStationRepository targetStationRepository,
     ILogger<InitializationProvider> logger,
-    IRequestClient<AddOrUpdateStationGroup> stationGroupRequestClient,
-    IRequestClient<GetTriggerMapping> triggerRequestClient,
-    IRequestClient<GetLockedStations> lockedStationsRequestClient,
-    IBus bus
+    IBus bus,
+    IServiceProvider serviceProvider,
+    IClientFactory clientFactory
 ) : BackgroundService
 {
     private readonly TimeSpan _configLoadingWaitTime = TimeSpan.FromSeconds(5);
@@ -44,7 +43,10 @@ public class InitializationProvider(
             await Task.Delay(_configLoadingWaitTime);
         }
         logger.LogInformation("Configuration is loaded, got {Count} stationGroups", configuration.StationGroups.Count);
-        foreach (var (stationGroup, stations) in configuration.StationGroups)
+
+        IRequestClient<AddOrUpdateStationGroup> stationGroupRequestClient = clientFactory.CreateRequestClient<AddOrUpdateStationGroup>();
+        
+        foreach ((string stationGroup, ICollection<Station> stations) in configuration.StationGroups)
         {
             await stationGroupRequestClient.GetResponse<Success>(new AddOrUpdateStationGroup(stations, stationGroup.ToGuid()));
         }
@@ -57,6 +59,12 @@ public class InitializationProvider(
 
     private async Task InitializeShortLoopTargetStation()
     {
+        using var scope = serviceProvider.CreateScope();
+
+        var targetStationRepository = scope.ServiceProvider.GetRequiredService<IShortLoopWeTargetStationRepository>();
+
+        IRequestClient<GetLockedStations> lockedStationsRequestClient = clientFactory.CreateRequestClient<GetLockedStations>();
+
         logger.LogInformation("Initializing short loop WE target station");
         try
         {
@@ -100,6 +108,8 @@ public class InitializationProvider(
         logger.LogInformation("Initializing trigger mapping");
         try
         {
+            IRequestClient<GetTriggerMapping> triggerRequestClient = clientFactory.CreateRequestClient<GetTriggerMapping>();
+
             Response<GotTriggerMapping> response = await triggerRequestClient.GetResponse<GotTriggerMapping>(new GetTriggerMapping());
             foreach (var localization in response.Message.TriggerLocalizations)
             {

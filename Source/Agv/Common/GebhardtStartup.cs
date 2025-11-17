@@ -42,6 +42,11 @@ public static class GebhardtStartup
                 host.UseKestrel()
                     .Configure(app => { app.UseMetricServer(); });
             })
+            .UseDefaultServiceProvider((_, o) =>
+            {
+                o.ValidateOnBuild = true;
+                o.ValidateScopes = true;
+            })
             .ConfigureLogging(conf =>
             {
                 // Use json output when running in Docker

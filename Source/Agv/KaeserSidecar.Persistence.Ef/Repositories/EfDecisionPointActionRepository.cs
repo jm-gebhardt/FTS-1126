@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.KaeserSidecar.Persistence.Ef.DataAccess;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.KaeserSidecar.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IDecisionPointActionRepository"/>>
+[CanBeCaptiveDependency]
 public class EfDecisionPointActionRepository(IDbContextFactory<KaeserSidecarDbContext> contextFactory) :
     EfRepository<DecisionPointAction, KaeserSidecarDbContext, IDbContextFactory<KaeserSidecarDbContext>>(contextFactory), IDecisionPointActionRepository
 {

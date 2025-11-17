@@ -3,6 +3,7 @@ using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -13,23 +14,26 @@ namespace Gebhardt.Acc.Statistics.Services.BackgroundServices;
 /// </summary>
 public class InitialGridProvider : BackgroundService
 {
-    private readonly IRequestClient<AddGrid> _addGridClient;
     private readonly ILogger<InitialGridProvider> _logger;
-    private readonly IStatisticsDb _db;
+    private readonly IServiceProvider _serviceProvider;
+
     private const int ExecutionDelayMs = 1000;
 
     /// <inheritdoc cref="InitialGridProvider"/>>
-    public InitialGridProvider(IRequestClient<AddGrid> addGridClient, IStatisticsDb db, ILogger<InitialGridProvider> logger)
+    public InitialGridProvider(ILogger<InitialGridProvider> logger, IServiceProvider serviceProvider)
     {
-        _addGridClient = addGridClient;
         _logger = logger;
-        _db = db;
+        _serviceProvider = serviceProvider;
     }
 
     private async Task<bool> CreateGridAsync(CancellationToken stoppingToken)
     {
         const int step = 1;
-        await _addGridClient.GetResponse<Success>(new AddGrid($"{step}x{step}", step, step), stoppingToken);
+
+        // Create scope to get the scoped IRequestClient
+        await using var scope = _serviceProvider.CreateAsyncScope();
+        var addGridClient = scope.ServiceProvider.GetRequiredService<IRequestClient<AddGrid>>();
+        await addGridClient.GetResponse<Success>(new AddGrid($"{step}x{step}", step, step), stoppingToken);
         return true;
     }
 
@@ -38,12 +42,19 @@ public class InitialGridProvider : BackgroundService
     {
         _logger.LogInformation("InitialGridProvider started");
         bool gridCreated = false;
-        ICollection<Grid> grids = await _db.Grids.GetAll();
-        if (grids.Count != 0)
+
+        await using (var scope = _serviceProvider.CreateAsyncScope())
         {
-            // A grid was created previously.
-            gridCreated = true;
+            var db = scope.ServiceProvider.GetRequiredService<IStatisticsDb>();
+
+            ICollection<Grid> grids = await db.Grids.GetAll();
+            if (grids.Count != 0)
+            {
+                // A grid was created previously.
+                gridCreated = true;
+            }
         }
+
         while (!gridCreated && !stoppingToken.IsCancellationRequested)
         {
             try

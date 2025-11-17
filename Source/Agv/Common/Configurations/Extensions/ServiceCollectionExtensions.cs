@@ -28,7 +28,14 @@ public static class ServiceCollectionExtensions
     )
     {
         // Enable serialization/deserialization of enum values as string.
-        SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+        if (!SystemTextJsonMessageSerializer.Options.Converters.IsReadOnly)
+        {
+            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+        }
+        else
+        {
+            Console.WriteLine($"Warning: Could not add {nameof(JsonStringEnumConverter)} during MassTransit service configuration.");
+        }
 
         string sectionName = ConfigurationTypeManager.Instance.GetSectionName<MassTransitConfiguration>();
         var massTransitConfig = config.GetRequiredSection(sectionName).Get<MassTransitConfiguration>();

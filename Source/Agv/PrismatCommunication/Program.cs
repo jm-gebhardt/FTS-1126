@@ -1,16 +1,12 @@
 ﻿using CommandLine;
-using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
 using Gebhardt.Acc.PrismatCommunication.Configuration;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Prometheus;
 
 var initialLogger = InitialLogger.Create<Program>();
 
@@ -32,19 +28,7 @@ try
         return 1;
     }
 
-    var host = GebhardtStartup.CreateHostBuilder(args)
-        .AddMassTransit(initialLogger, simulationOptions)
-        .AddPrismatCommunication(simulationOptions, initialLogger)
-        .ConfigureWebHost(h =>
-            h.UseKestrel()
-                .Configure(app =>
-                {
-                    app.UseMetricServer();
-                    if (simulationOptions != null)
-                    {
-                        app.UseDeveloperExceptionPage();
-                    }
-                }))
+    var host = PrismatCommunicationHostBuilder.CreateHostBuilder(args, simulationOptions, initialLogger)
         .Build();
 
     using (var scope = host.Services.CreateScope())

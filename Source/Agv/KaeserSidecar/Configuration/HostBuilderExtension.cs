@@ -75,9 +75,6 @@ public static class HostBuilderExtension
             services.AddSingleton<IWaitingHandler>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
 
             services.AddHostedService<InitializationProvider>();
-            // Add prismat communication db connection
-            services.AddDbContext<PrismatCommunicationDbContext>(o =>
-                o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
             services.AddTransient<IPrismatCommunicationShortLoopWeTargetStationRepository, PrismatCommunicationShortLoopWeTargetStationRepository>();
             services.AddTransient<IPrismatCommunicationHostOrderRepository, PrismatCommunicationHostOrderRepository>();
             services.AddTransient<IHostOrderRepository>(sp => sp.GetRequiredService<IPrismatCommunicationHostOrderRepository>());

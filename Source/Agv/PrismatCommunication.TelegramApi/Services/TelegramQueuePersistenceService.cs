@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.Telegram;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
@@ -14,15 +15,15 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
 {
     private readonly ILogger<TelegramQueuePersistenceService> _logger;
     private readonly ObservableConcurrentQueue<PrismatTelegram> _telegramQueue;
-    private readonly ITelegramRepository _telegramRepository;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ConcurrentQueue<Telegram> _telegramsToDelete = new();
 
     /// <inheritdoc cref="TelegramQueuePersistenceService"/>>
-    public TelegramQueuePersistenceService(ObservableConcurrentQueue<PrismatTelegram> telegramQueue, ITelegramRepository telegramRepository, ILogger<TelegramQueuePersistenceService> logger)
+    public TelegramQueuePersistenceService(ObservableConcurrentQueue<PrismatTelegram> telegramQueue, IServiceProvider serviceProvider, ILogger<TelegramQueuePersistenceService> logger)
     {
         _logger = logger;
         _telegramQueue = telegramQueue;
-        _telegramRepository = telegramRepository;
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -30,7 +31,11 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
     /// </summary>
     public async Task ReloadQueue()
     {
-        ICollection<Telegram> telegrams = await _telegramRepository.GetAll();
+        using var scope = _serviceProvider.CreateScope();
+
+        var telegramRepository = scope.ServiceProvider.GetRequiredService<ITelegramRepository>();
+
+        ICollection<Telegram> telegrams = await telegramRepository.GetAll();
         foreach (var telegram in telegrams.OrderBy(t => t.QueuedDate))
         {
             var prismatTelegram = telegram.ToPrismatTelegram();
@@ -56,14 +61,18 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
 
     private async Task StoreTelegram(string message, PrismatTelegram telegram)
     {
+        using var scope = _serviceProvider.CreateScope();
+
+        var telegramRepository = scope.ServiceProvider.GetRequiredService<ITelegramRepository>();
+
         var storedTelegram = new Telegram(message, telegram.Func);
         try
         {
-            await _telegramRepository.GetByIdAsync(storedTelegram.Id);
+            await telegramRepository.GetByIdAsync(storedTelegram.Id);
         }
         catch (InvalidOperationException)
         {
-            await _telegramRepository.AddAsync(storedTelegram);
+            await telegramRepository.AddAsync(storedTelegram);
         }
     }
 
@@ -86,13 +95,17 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
 
     private async Task DeleteTelegram()
     {
+        using var scope = _serviceProvider.CreateScope();
+
+        var telegramRepository = scope.ServiceProvider.GetRequiredService<ITelegramRepository>();
+
         if (_telegramsToDelete.TryDequeue(out var storedTelegram))
         {
             try
             {
                 _logger.LogDebug("Try deleting telegram {Telegram}", storedTelegram.Id);
-                storedTelegram = await _telegramRepository.GetByIdAsync(storedTelegram.Id);
-                await _telegramRepository.RemoveAsync(storedTelegram);
+                storedTelegram = await telegramRepository.GetByIdAsync(storedTelegram.Id);
+                await telegramRepository.RemoveAsync(storedTelegram);
             }
             catch (InvalidOperationException)
             {

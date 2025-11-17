@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -10,8 +11,8 @@ namespace Gebhardt.Acc.Statistics.Services.BackgroundServices;
 /// </summary>
 public class Housekeeping : BackgroundService, IJob
 {
-    private readonly IHouseKeepingRepository _houseKeepingRepository;
     private readonly ISchedulerFactory _schedulerFactory;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<Housekeeping> _logger;
 
     private static readonly JobKey _quartzJobKey = new(QuartzJob, QuartzGroup);
@@ -20,11 +21,11 @@ public class Housekeeping : BackgroundService, IJob
     private const string QuartzJob = "HousekeepingJob";
 
     /// <inheritdoc cref="Housekeeping"/>
-    public Housekeeping(IHouseKeepingRepository houseKeepingRepository, ISchedulerFactory schedulerFactory, ILogger<Housekeeping> logger)
+    public Housekeeping(ISchedulerFactory schedulerFactory, ILogger<Housekeeping> logger, IServiceProvider serviceProvider)
     {
-        _houseKeepingRepository = houseKeepingRepository;
         _schedulerFactory = schedulerFactory;
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
 
     ///<inheritdoc />
@@ -49,7 +50,9 @@ public class Housekeeping : BackgroundService, IJob
     /// <inheritdoc/>
     public async Task Execute(IJobExecutionContext _)
     {
-        _logger.LogInformation("Starting compression of statistics"); 
-        await _houseKeepingRepository.CompressStatistics();
+        _logger.LogInformation("Starting compression of statistics");
+        using var scope = _serviceProvider.CreateScope();
+        var houseKeepingRepository = scope.ServiceProvider.GetRequiredService<IHouseKeepingRepository>();
+        await houseKeepingRepository.CompressStatistics();
     }
 }
