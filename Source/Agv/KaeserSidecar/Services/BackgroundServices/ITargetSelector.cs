@@ -6,10 +6,10 @@
 public interface ITargetSelector
 {
     /// <summary>
-    /// Set a new station count
+    /// Set new considered stations.
     /// </summary>
-    /// <param name="stationCount">Number of considered stations.</param>
-    void SetStationCount(int stationCount);
+    /// <param name="consideredStations">Considered stations.</param>
+    void SetStationCount(ICollection<Guid> consideredStations);
 
     /// <summary>
     /// Enqueue an agv.

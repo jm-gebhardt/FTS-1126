@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.KaeserSidecar.Domain.Constants;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,7 +14,7 @@ public class DecisionPointActionEntityConfiguration : IEntityTypeConfiguration<D
         builder.HasKey(e => e.CorrelationId);
         builder.Property(e => e.CorrelationId);
         builder.Property(e => e.AgvCorrelationId);
-        builder.Property(e => e.StationCount).HasDefaultValue(TargetSelection.DefaultStationCount);
+        builder.Property(e => e.ConsideredStations).HasJsonConversion();
         builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.EntryTime);
     }

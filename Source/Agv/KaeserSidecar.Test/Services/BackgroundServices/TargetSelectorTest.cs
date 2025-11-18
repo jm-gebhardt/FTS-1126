@@ -192,7 +192,7 @@ public class TargetSelectorTest
     {
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .WithStationCount(1)
+            .WithConsideredStations(["1".ToGuid()])
             .AddDropActionGroup()
             .AddPickActionGroup();
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
@@ -232,7 +232,7 @@ public class TargetSelectorTest
         var dropAgv = Guid.NewGuid();
         var originalAgvOnStation = Guid.NewGuid();
         var fixture = new TargetSelectorTestFixture()
-            .WithStationCount(1)
+            .WithConsideredStations(["1".ToGuid()])
             .WithOccupancies(occupiedCountAndAgv: (1, originalAgvOnStation))
             .AddDropActionGroup(dropAgv)
             .AddPickActionGroup()
@@ -268,7 +268,7 @@ public class TargetSelectorTest
 
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now, 2))
+            .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now, ["1".ToGuid(), "2".ToGuid()]))
             .AddActionGroup(actionGroup)
             .WithStationHasPalletJam(null);
 
@@ -284,7 +284,7 @@ public class TargetSelectorTest
     [TestMethod]
     public async Task ExecuteAsync_CompletedActionInRepository_NotUsedForTargetSelection()
     {
-        var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now, 2);
+        var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now, ["1".ToGuid(), "2".ToGuid()]);
         decisionPointAction.SetTarget("finished".ToGuid());
         var fixture = new TargetSelectorTestFixture()
             .WithDefaultOccupancies()

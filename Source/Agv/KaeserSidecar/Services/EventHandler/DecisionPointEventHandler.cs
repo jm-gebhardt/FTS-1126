@@ -24,7 +24,7 @@ public class DecisionPointEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<AgvPassedDecisionPoint1> context)
     {
-        (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _, int consideredStations, bool useJamState) = context.Message;
+        (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _, ICollection<Guid> consideredStations, bool useJamState) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) || actionGroup.Actions.All(a => a.Target.Node != null))
         {
             logger.LogWarning("Skip target selection: Agv {AgvCorrelationId} passed decision point without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);

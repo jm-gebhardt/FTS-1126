@@ -30,7 +30,7 @@ public class DecisionPointEventHandlerTestFixture : MassTransitConsumerTestFixtu
     {
         Build();
         _targetSelectorMock.Setup(x => x.Enqueue(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
-        _targetSelectorMock.Setup(x => x.SetStationCount(It.IsAny<int>())).Verifiable();
+        _targetSelectorMock.Setup(x => x.SetStationCount(It.IsAny<ICollection<Guid>>())).Verifiable();
     }
 
     public void VerifyActionEnqueued(Guid action, Guid agv, Times times)
@@ -43,7 +43,7 @@ public class DecisionPointEventHandlerTestFixture : MassTransitConsumerTestFixtu
         _targetSelectorMock.Verify(x => x.Enqueue(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
     }
 
-    public void VerifyStationCountSet(int consideredStations, Times times)
+    public void VerifyStationCountSet(ICollection<Guid> consideredStations, Times times)
     {
         _targetSelectorMock.Verify(x => x.SetStationCount(consideredStations), times);
     }

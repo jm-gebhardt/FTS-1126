@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
-using Gebhardt.Acc.KaeserSidecar.Domain.Constants;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -30,7 +29,7 @@ public class PriorityAwareTargetSelector(
 {
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
     private readonly List<Guid> _lastEvaluatedActions = [];
-    private int _consideredStations = TargetSelection.DefaultStationCount;
+    private ICollection<Guid> _consideredStations = configuration.ConveyorStationMapping.Keys.Order().Take(2).Select(s => s.ToGuid()).ToList();
     private bool _useJamState;
 
     /// <summary>
@@ -89,12 +88,12 @@ public class PriorityAwareTargetSelector(
 
     private Guid? GetNextActionToProcess()
     {
-        if (_consideredStations == 1 && !_actionsToSelectTarget.IsEmpty)
+        if (_consideredStations.Count == 1 && !_actionsToSelectTarget.IsEmpty)
         {
             return _actionsToSelectTarget.MinBy(a => a.Value).Key;
         }
 
-        if (_consideredStations > 1)
+        if (_consideredStations.Count > 1)
         {
             var lastEvaluatedSet = new HashSet<Guid>(_lastEvaluatedActions);
             return _actionsToSelectTarget
@@ -107,14 +106,13 @@ public class PriorityAwareTargetSelector(
         return null;
     }
 
-    private async Task<Guid?> SelectTarget(int consideredStations, Guid actionId, Func<Guid, bool> shouldSkipStation)
+    private async Task<Guid?> SelectTarget(ICollection<Guid> consideredStations, Guid actionId, Func<Guid, bool> shouldSkipStation)
     {
         StationOccupancy? selectedTarget = null;
         ICollection<StationOccupancy> occupancies = await stationRepository.GetStationOccupancy();
-        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByIdsAsync(
-            configuration.ConveyorStationMapping.Keys.Select(k => k.ToGuid()).ToList());
+        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByIdsAsync(consideredStations.ToList());
 
-        ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
+        ICollection<StationOccupancy> availableStations = GetAvailableStations(occupancies, stations);
 
         foreach (var occupancy in availableStations)
         {
@@ -171,13 +169,12 @@ public class PriorityAwareTargetSelector(
         return jamState.HasPalletJam;
     }
 
-    private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies,
+    private ICollection<StationOccupancy> GetAvailableStations(ICollection<StationOccupancy> unorderedOccupancies,
         ICollection<TransportOrder.Domain.Models.Station.Station> stations)
     {
         IOrderedEnumerable<KeyValuePair<string, string>> orderedConveyorStations = configuration.ConveyorStationMapping.OrderBy(m => m.Value);
         ICollection<StationOccupancy> orderedOccupancies = [];
-
-        foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Take(consideredStations))
+        foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Where(o => stations.Select(s => s.Name).ToList().Contains(o.Key)))
         {
             var occupancy = unorderedOccupancies.SingleOrDefault(o => o.StationId == conveyorStationMapping.Key.ToGuid()) ??
                             new StationOccupancy(conveyorStationMapping.Key.ToGuid(), 0, null);
@@ -191,9 +188,9 @@ public class PriorityAwareTargetSelector(
     }
 
     /// <inheritdoc cref="ITargetSelector"/>>
-    public void SetStationCount(int stationCount)
+    public void SetStationCount(ICollection<Guid> stations)
     {
-        _consideredStations = stationCount;
+        _consideredStations = stations;
     }
 
     /// <inheritdoc cref="ITargetSelector"/>>
@@ -252,7 +249,7 @@ public class PriorityAwareTargetSelector(
 
         if (decisionPointActions.Count > 0)
         {
-            _consideredStations = decisionPointActions.MaxBy(a => a.EntryTime)?.StationCount ?? TargetSelection.DefaultStationCount;
+            _consideredStations = decisionPointActions.MaxBy(a => a.EntryTime)?.ConsideredStations ?? configuration.ConveyorStationMapping.Keys.Order().Take(2).Select(s => s.ToGuid()).ToList();
         }
 
         foreach (var action in decisionPointActions)
@@ -275,9 +272,8 @@ public class PriorityAwareTargetSelector(
     private async Task<ICollection<StationOccupancy>> GetAvailableStationsForCoordination()
     {
         ICollection<StationOccupancy> occupancies = await stationRepository.GetStationOccupancy();
-        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByIdsAsync(
-            configuration.ConveyorStationMapping.Keys.Select(k => k.ToGuid()).ToList());
-        return GetAvailableStations(_consideredStations, occupancies, stations);
+        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByIdsAsync(_consideredStations.ToList());
+        return GetAvailableStations(occupancies, stations);
     }
 
     /// <summary>

@@ -26,27 +26,27 @@ public class DecisionPointAction
     public DateTime EntryTime { get; init; }
 
     /// <summary>
-    /// Station count at action entry.
+    /// Considered stations at action entry.
     /// </summary>
-    public int StationCount { get; init; }
+    public ICollection<Guid> ConsideredStations { get; init; }
 
     /// <inheritdoc cref="DecisionPointAction"/>>
-    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, Guid? targetStationId, DateTime entryTime, int stationCount)
+    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, Guid? targetStationId, DateTime entryTime, ICollection<Guid> consideredStations)
     {
         CorrelationId = correlationId;
         AgvCorrelationId = agvCorrelationId;
         Target = targetStationId;
         EntryTime = entryTime;
-        StationCount = stationCount;
+        ConsideredStations = consideredStations;
     }
 
     /// <inheritdoc cref="DecisionPointAction"/>>
-    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, DateTime entryTime, int stationCount)
+    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, DateTime entryTime, ICollection<Guid> consideredStations)
     {
         CorrelationId = correlationId;
         AgvCorrelationId = agvCorrelationId;
         EntryTime = entryTime;
-        StationCount = stationCount;
+        ConsideredStations = consideredStations;
     }
 
     /// <summary>

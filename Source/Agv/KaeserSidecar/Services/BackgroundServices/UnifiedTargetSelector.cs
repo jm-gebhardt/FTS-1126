@@ -160,9 +160,9 @@ public class UnifiedTargetSelector(
 
     #region ITargetSelector Implementation
     /// <inheritdoc cref="ITargetSelector"/>
-    public void SetStationCount(int stationCount)
+    public void SetStationCount(ICollection<Guid> stations)
     {
-        dp1TargetSelector.SetStationCount(stationCount);
+        dp1TargetSelector.SetStationCount(stations);
     }
 
     /// <inheritdoc cref="ITargetSelector"/>

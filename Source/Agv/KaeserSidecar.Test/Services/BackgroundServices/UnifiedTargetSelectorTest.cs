@@ -131,7 +131,7 @@ public class UnifiedTargetSelectorTest
     {
         var fixture = new UnifiedTargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .WithStationCount(1)
+            .WithConsideredStations(["1".ToGuid()])
             .AddDropActionGroup()
             .AddPickActionGroup();
         var moveAction = fixture.ActionGroups[0].Actions.Single(a => a.ActionType == ActionType.Move);
@@ -176,7 +176,7 @@ public class UnifiedTargetSelectorTest
 
         var fixture = new UnifiedTargetSelectorTestFixture()
             .WithDefaultOccupancies()
-            .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now, 2))
+            .WithDecisionPointAction(new DecisionPointAction(moveAction.CorrelationId, agv, DateTime.Now, ["1".ToGuid(), "2".ToGuid()]))
             .AddActionGroup(actionGroup)
             .WithStationHasPalletJam(null);
 
@@ -192,7 +192,7 @@ public class UnifiedTargetSelectorTest
     [TestMethod]
     public async Task ExecuteAsync_Dp1CompletedActionInRepository_NotUsedForTargetSelection()
     {
-        var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now, 2);
+        var decisionPointAction = new DecisionPointAction(Guid.NewGuid(), Guid.NewGuid(), DateTime.Now, ["1".ToGuid(), "2".ToGuid()]);
         decisionPointAction.SetTarget("finished".ToGuid());
         var fixture = new UnifiedTargetSelectorTestFixture()
             .WithDefaultOccupancies()
@@ -507,7 +507,7 @@ public class UnifiedTargetSelectorTest
         var fixture = new UnifiedTargetSelectorTestFixture()
             .WithDefaultOccupancies()
             .WithShortLoopTarget(UnifiedTargetSelectorTestFixture.StationNames[0])
-            .WithStationCount(1)
+            .WithConsideredStations(["1".ToGuid()])
             .AddDropActionGroup(dp1Agv1)
             .AddDropActionGroup(dp1Agv2)
             .AddDropActionGroup(dp1Agv3)

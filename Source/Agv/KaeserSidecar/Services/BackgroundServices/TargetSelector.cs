@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.KaeserSidecar.Domain;
-using Gebhardt.Acc.KaeserSidecar.Domain.Constants;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Gebhardt.Acc.KaeserSidecar.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
@@ -30,7 +29,7 @@ public class TargetSelector(
 {
     private readonly List<Guid> _lastEvaluatedActions = [];
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
-    private int _consideredStations = TargetSelection.DefaultStationCount;
+    private ICollection<Guid> _consideredStations = configuration.ConveyorStationMapping.Keys.Order().Take(2).Select(s => s.ToGuid()).ToList();
     private bool _useJamState;
 
     /// <summary>
@@ -71,11 +70,11 @@ public class TargetSelector(
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             Guid? action = null;
-            if (_consideredStations == 1 && !_actionsToSelectTarget.IsEmpty)
+            if (_consideredStations.Count == 1 && !_actionsToSelectTarget.IsEmpty)
             {
                 action = _actionsToSelectTarget.MinBy(a => a.Value).Key; // take the one that entered first
             }
-            if (_consideredStations > 1)
+            if (_consideredStations.Count > 1)
             {
                 var lastEvaluatedSet = new HashSet<Guid>(_lastEvaluatedActions);
                 action = _actionsToSelectTarget
@@ -114,20 +113,20 @@ public class TargetSelector(
     }
 
     /// <inheritdoc cref="TargetSelector"/>>
-    public void SetStationCount(int stationCount)
+    public void SetStationCount(ICollection<Guid> stations)
     {
-        _consideredStations = stationCount;
+        _consideredStations = stations;
     }
 
-    private async Task<Guid?> SelectTarget(int consideredStations)
+    private async Task<Guid?> SelectTarget(ICollection<Guid> consideredStations)
     {
         StationOccupancy? selectedTarget = null;
         ICollection<StationOccupancy> occupancies = await stationRepository.GetStationOccupancy();
-        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByIdsAsync(configuration.ConveyorStationMapping.Keys.Select(k => k.ToGuid()).ToList());
+        ICollection<TransportOrder.Domain.Models.Station.Station> stations = await transportOrderDb.Stations.GetStationsByIdsAsync(consideredStations.ToList());
 
         //Try to take the station that is not occupied, is not locked, and was not chosen last (to compensate for the delay between setting target and starting action)
         // If jam state is used, the station is only considered available without a jam
-        ICollection<StationOccupancy> availableStations = GetAvailableStations(consideredStations, occupancies, stations);
+        ICollection<StationOccupancy> availableStations = GetAvailableStations(occupancies, stations);
         foreach (var occupancy in availableStations)
         {
             if (!occupancy.IsEmpty)
@@ -158,13 +157,13 @@ public class TargetSelector(
         return jamState.HasPalletJam;
     }
 
-    private ICollection<StationOccupancy> GetAvailableStations(int consideredStations, ICollection<StationOccupancy> unorderedOccupancies, ICollection<TransportOrder.Domain.Models.Station.Station> stations)
+    private ICollection<StationOccupancy> GetAvailableStations(ICollection<StationOccupancy> unorderedOccupancies, ICollection<TransportOrder.Domain.Models.Station.Station> stations)
     {
         // By agreement conveyor stations are named "PS01", "PS02", "PS03", thus ordering by conveyor station
         // name ensures priority of PS01 over PS02 and PS03
         IOrderedEnumerable<KeyValuePair<string, string>> orderedConveyorStations = configuration.ConveyorStationMapping.OrderBy(m => m.Value);
         ICollection<StationOccupancy> orderedOccupancies = [];
-        foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Take(consideredStations))
+        foreach (KeyValuePair<string, string> conveyorStationMapping in orderedConveyorStations.Where(o => stations.Select(s => s.Name).ToList().Contains(o.Key)))
         {
             var occupancy = unorderedOccupancies.SingleOrDefault(o => o.StationId == conveyorStationMapping.Key.ToGuid()) ??
                             new StationOccupancy(conveyorStationMapping.Key.ToGuid(), 0, null);
@@ -239,7 +238,7 @@ public class TargetSelector(
 
         if (decisionPointActions.Count > 0)
         {
-            _consideredStations = decisionPointActions.MaxBy(a => a.EntryTime)?.StationCount ?? TargetSelection.DefaultStationCount;
+            _consideredStations = decisionPointActions.MaxBy(a => a.EntryTime)?.ConsideredStations ?? configuration.ConveyorStationMapping.Keys.Order().Take(2).Select(s => s.ToGuid()).ToList();
         }
 
         foreach (var action in decisionPointActions)
