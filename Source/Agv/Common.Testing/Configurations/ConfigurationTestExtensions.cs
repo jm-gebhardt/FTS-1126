@@ -35,7 +35,7 @@ public static class ConfigurationTestExtensions
                 .Select(p => p.ParameterType)
                 .SelectMany(p => serviceCollection.Where(s => s.ServiceType.IsAssignableTo(p)))
                 .Where(s => s.Lifetime != ServiceLifetime.Singleton)
-                .Where(s => 
+                .Where(s =>
                     (s.ImplementationType != null || s is { IsKeyedService: true, KeyedImplementationType: not null }) &&
                     !(Attribute.IsDefined((s.ImplementationType ?? s.KeyedImplementationType)!, typeof(CanBeCaptiveDependency)) && s.Lifetime == ServiceLifetime.Transient))
                 .Distinct()

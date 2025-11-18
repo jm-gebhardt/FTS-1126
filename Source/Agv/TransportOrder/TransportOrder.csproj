@@ -13,7 +13,6 @@
         </PackageReference>
         <PackageReference Include="MassTransit" />
         <PackageReference Include="MassTransit.RabbitMQ" />
-        <PackageReference Include="System.Text.Json" />
         <PackageReference Include="KubernetesClient" />
     </ItemGroup>
     <ItemGroup>

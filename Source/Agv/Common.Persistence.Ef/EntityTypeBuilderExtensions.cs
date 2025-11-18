@@ -59,7 +59,7 @@ public static class EntityTypeBuilderExtensions
         var converter = new ValueConverter<T, string>
         (
             v => JsonSerializer.Serialize(v, options),
-            v => JsonSerializer.Deserialize<T>(v, options)!
+            v => string.IsNullOrWhiteSpace(v) ? null! : JsonSerializer.Deserialize<T>(v, options)!
         );
 
         var comparer = new ValueComparer<T>
@@ -70,7 +70,6 @@ public static class EntityTypeBuilderExtensions
         );
 
         propertyBuilder.HasConversion(converter);
-        propertyBuilder.Metadata.SetValueConverter(converter);
         propertyBuilder.Metadata.SetValueComparer(comparer);
 
         return propertyBuilder;

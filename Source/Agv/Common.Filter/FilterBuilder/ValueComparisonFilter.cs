@@ -31,7 +31,7 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
         {
             if (!accessors.TryGetValue(Name, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
             {
-                throw new FilterExecutionException($"No accessor for {Name} in {nameof(ValueComparisonFilter<TContent>)}");
+                throw new FilterExecutionException($"No accessor for {Name} in {nameof(ValueComparisonFilter<>)}");
             }
 
             bool noAccessor = Name == string.Empty;

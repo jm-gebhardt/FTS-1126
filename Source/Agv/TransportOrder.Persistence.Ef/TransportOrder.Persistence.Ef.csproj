@@ -13,7 +13,6 @@
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-        <PackageReference Include="System.Text.Json" />
         <PackageReference Include="Microsoft.Data.SqlClient" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
             <PrivateAssets>all</PrivateAssets>

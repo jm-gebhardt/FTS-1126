@@ -37,8 +37,10 @@ public class EfGraphRepository(
     public async Task<ICollection<MqttNode>> GetMqttNodes(string[] graphNodeIds)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
+        // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
+        IEnumerable<string> nodeIds = graphNodeIds;
         return await context.Set<MqttNode>()
-            .Where(n => graphNodeIds.Contains(n.NodeId))
+            .Where(n => nodeIds.Contains(n.NodeId))
             .AsNoTracking()
             .ToListAsync();
     }
@@ -58,8 +60,10 @@ public class EfGraphRepository(
     public async Task<ICollection<MqttEdge>> GetMqttEdges(Guid[] graphEdgeIds)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
+        // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
+        IEnumerable<Guid> edgeIds = graphEdgeIds;
         List<MqttEdgeMapping> edges = await context.Set<MqttEdgeMapping>()
-            .Where(e => graphEdgeIds.Contains(e.InternalEdge))
+            .Where(e => edgeIds.Contains(e.InternalEdge))
             .AsNoTracking()
             .ToListAsync();
         return mapper.Map<ICollection<MqttEdge>>(edges);

@@ -30,6 +30,6 @@ public static class OrderSelectionMode
     /// </summary>
     public static string GetModeFromConfiguration(IConfiguration configuration)
     {
-        return configuration.GetSection("ORDERSELECTION").GetValue("MODE", FastestRoute)?.ToUpper() ?? FastestRoute;
+        return configuration.GetSection("ORDERSELECTION").GetValue("MODE", FastestRoute).ToUpper();
     }
 }

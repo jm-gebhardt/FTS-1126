@@ -34,11 +34,13 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     /// <inheritdoc cref="IHostOrderRepository"/>
     public async Task<Guid?> GetNextDropOrderEligibleForDoppelspiel(string[] dropTargets)
     {
+        // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
+        IEnumerable<string> targets = dropTargets;
         var order = await _context.Set<HostOrder>().Where(h => h.CanRunDoppelspiel
                                                                && h.CanceledDate == null
                                                                && h.FinishedDate == null
                                                                && h.IsQueued
-                                                               && h.Actions.Any(a => a.ActionType == ActionType.Drop && dropTargets.Contains(a.Node))
+                                                               && h.Actions.Any(a => a.ActionType == ActionType.Drop && targets.Contains(a.Node))
                                                                && !h.Actions.Any(a => a.ActionType == ActionType.Drop && a.IsRegisteredForDoppelspiel)
                                                                && h.Actions.Any(a => a.ActionType == ActionType.Pick && a.FinishedDate != null))
             .OrderBy(o => o.StartedDate)

@@ -11,9 +11,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 /// </summary>
 public class Agv : IAgv
 {
-    private AgvState _currentState;
-    private bool _isLocked;
-
     /// <inheritdoc />
     public Guid CorrelationId { get; init; }
 
@@ -51,16 +48,16 @@ public class Agv : IAgv
     /// </summary>
     public AgvState CurrentAgvState
     {
-        get => _currentState;
+        get;
         private set
         {
-            bool hasChanged = value != _currentState;
+            bool hasChanged = value != field;
 
             if (hasChanged)
             {
-                PreviousAgvState = _currentState;
+                PreviousAgvState = field;
                 TimeOfStateTransition = DateTime.UtcNow;
-                _currentState = value;
+                field = value;
             }
         }
     }
@@ -146,12 +143,11 @@ public class Agv : IAgv
         get => Mode.Type == ModeType.Locked;
         private set
         {
-            bool hasChanged = value != _isLocked;
+            bool hasChanged = value != IsLocked;
 
             if (hasChanged)
             {
                 TimeOfLockStateChanged = DateTime.UtcNow;
-                _isLocked = Mode.Type == ModeType.Locked;
             }
         }
     }
@@ -292,10 +288,10 @@ public class Agv : IAgv
         SerialNumber = serialNumber;
         Name = agvName ?? serialNumber;
         AgvStatus = agvStatus;
-        IsLocked = isLocked;
         NeedsMaintenance = false;
         CurrentAgvState = AgvState.Initial;
         Mode = new AgvMode(ModeType.Normal, CorrelationId);
+        IsLocked = isLocked;
     }
 
     /// <summary>

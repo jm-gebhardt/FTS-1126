@@ -29,7 +29,7 @@ public static class WebHostBuilderExtension
     /// Extended health endpoint name with detailed information
     /// </summary>
     private const string HealthDetailedEndpoint = "/healthz";
-    
+
     /// <summary>
     /// Add web api.
     /// </summary>
@@ -47,53 +47,53 @@ public static class WebHostBuilderExtension
                 .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
             var config = context.Configuration.GetSection("KEYCLOAK");
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
-                {
-                    o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
-                    o.RequireHttpsMetadata = false;
-                    o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
-                    o.TokenValidationParameters.ValidateIssuer = false;
-                    o.TokenValidationParameters.ValidateAudience = false;
-                    o.TokenValidationParameters.ValidateIssuerSigningKey = false;
-                    o.TokenValidationParameters.SignatureValidator =
-                        (token, _) =>
-                        {
-                            var jwt = new JsonWebToken(token);
-                            return jwt;
-                        };
-                });
-            services.AddSwaggerGen(options =>
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
             {
-                options.SwaggerDoc(new RestApiGroup());
-                options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
-                options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
-                options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
-                options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
-                options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
-                var securityScheme = new OpenApiSecurityScheme
-                {
-                    In = ParameterLocation.Header,
-                    Description = "Please enter a valid token",
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    BearerFormat = "JWT",
-                    Scheme = JwtBearerDefaults.AuthenticationScheme
-                };
-                options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
+                o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
+                o.RequireHttpsMetadata = false;
+                o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
+                o.TokenValidationParameters.ValidateIssuer = false;
+                o.TokenValidationParameters.ValidateAudience = false;
+                o.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                o.TokenValidationParameters.SignatureValidator =
+                    (token, _) =>
                     {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
-                        },
-                        new string[] { }
-                    }
-                });
-                options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
-                IncludeXmlComments(options);
+                        var jwt = new JsonWebToken(token);
+                        return jwt;
+                    };
             });
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc(new RestApiGroup());
+            options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
+            options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
+            options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
+            options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
+            options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
+            var securityScheme = new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter a valid token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = JwtBearerDefaults.AuthenticationScheme
+            };
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
+                    },
+                    new string[] { }
+                }
+            });
+            options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
+            IncludeXmlComments(options);
+        });
         });
         return webHostBuilder;
     }

@@ -5,7 +5,6 @@
 /// </summary>
 public class IoStateTracker : IDisposable, IAsyncDisposable
 {
-    private bool _currentState;
     private TimeSpan? _timerDuration;
 
     /// <summary>
@@ -18,12 +17,12 @@ public class IoStateTracker : IDisposable, IAsyncDisposable
     /// </summary>
     public bool CurrentState
     {
-        get => _currentState;
+        get;
         set
         {
-            if (_currentState != value)
+            if (field != value)
             {
-                _currentState = value;
+                field = value;
                 ResetTimer();
             }
         }

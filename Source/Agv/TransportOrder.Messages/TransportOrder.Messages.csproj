@@ -10,7 +10,6 @@
         <PackageReference Include="MassTransit" />
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="MassTransit.RabbitMQ" />
-        <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />

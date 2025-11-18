@@ -22,7 +22,6 @@
         </PackageReference>
         <PackageReference Include="Shouldly" />
         <PackageReference Include="Newtonsoft.Json" />
-        <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />

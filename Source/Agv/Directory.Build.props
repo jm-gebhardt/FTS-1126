@@ -1,0 +1,14 @@
+<Project>
+  <ItemGroup>
+    <!--
+      Suppress specific NuGet vulnerability warnings for packages that are not actually used in .NET 10:
+
+      System.Net.Http 4.3.0 and System.Text.RegularExpressions 4.3.0 have known vulnerabilities but are
+      transitive dependencies from MassTransit 8.5.5 (locked for licensing reasons). In .NET 10, these
+      old packages are NOT loaded at runtime - the framework provides these APIs directly, making the
+      vulnerabilities inapplicable.
+    -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-7jgj-8wvc-jh57" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-cmhx-cq75-c4mj" />
+  </ItemGroup>
+</Project>

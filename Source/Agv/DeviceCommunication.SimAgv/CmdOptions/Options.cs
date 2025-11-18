@@ -145,16 +145,14 @@ public sealed class Options
     [Option('r', "gridrows", HelpText = "Number of grid rows of simulated map [3..[", Default = 3, SetName = GridGraphSet)]
     public int GridRows
     {
-        get => _gridRows;
+        get;
         init
         {
             if (value < 3)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "Number of grid rows need to be greater or equal to 3.");
             }
-            _gridRows = value;
+            field = value;
         }
     }
-
-    private readonly int _gridRows;
 }

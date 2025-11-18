@@ -92,8 +92,8 @@ internal static class FilterExpressionBuilder
     /// <typeparam name="TProperty">The type of the property.</typeparam>
     public static Expression<Func<TInstance?, TProperty?>> CreateCoalescingStructAccessor<TInstance, TProperty>(string propertyName) where TInstance : struct where TProperty : struct
     {
-        Expression<Func<TInstance?, bool>> nullcheck = CreatePropertyAccess<TInstance?, bool>(nameof(Nullable<TInstance>.HasValue));
-        Expression<Func<TInstance?, TInstance>> valueAccess = CreatePropertyAccess<TInstance?, TInstance>(nameof(Nullable<TInstance>.Value));
+        Expression<Func<TInstance?, bool>> nullcheck = CreatePropertyAccess<TInstance?, bool>(nameof(Nullable<>.HasValue));
+        Expression<Func<TInstance?, TInstance>> valueAccess = CreatePropertyAccess<TInstance?, TInstance>(nameof(Nullable<>.Value));
         Expression<Func<TInstance, TProperty?>> propAccess = CreatePropertyAccessWithCast<TInstance, TProperty?>(propertyName);
 
         Expression<Func<TInstance?, TProperty?>> composed = ExpressionHelper.Compose(valueAccess, propAccess);
@@ -209,7 +209,7 @@ internal static class FilterExpressionBuilder
 
         var collectionConst = Expression.Constant(collection, typeof(ICollection<TProperty>));
 
-        var methodInfo = typeof(ICollection<TProperty>).GetMethod(nameof(ICollection<TProperty>.Contains), [typeof(TProperty)]) ?? throw new FilterBuilderException($"Collection {collection} contains no definition of contains");
+        var methodInfo = typeof(ICollection<TProperty>).GetMethod(nameof(ICollection<>.Contains), [typeof(TProperty)]) ?? throw new FilterBuilderException($"Collection {collection} contains no definition of contains");
 
         var call = Expression.Call(collectionConst, methodInfo, param);
 

@@ -43,7 +43,12 @@ public abstract class DesignTimeDbContextFactory<TDbContext> : IDesignTimeDbCont
             services.AddDbContextFactory<TDbContext>(o =>
             {
                 o.UseSqlServer(ctx.Configuration.GetConnectionString(_connectionStringKey),
-                    m => { m.MigrationsHistoryTable(_migrationTableName); });
+                    m =>
+                    {
+                        m.MigrationsHistoryTable(_migrationTableName);
+                        // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                        m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                    });
             });
             services.AddMediator();
         });

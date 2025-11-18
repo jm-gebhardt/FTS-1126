@@ -10,7 +10,6 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json"  />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-        <PackageReference Include="System.Text.Json"  />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />

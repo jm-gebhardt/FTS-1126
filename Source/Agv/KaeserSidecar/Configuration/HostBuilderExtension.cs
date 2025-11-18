@@ -34,99 +34,105 @@ namespace Gebhardt.Acc.KaeserSidecar.Configuration;
 public static class HostBuilderExtension
 {
     /// <summary>
-    /// Add MassTransit configuration.
+    /// Extension block for <see cref="IHostBuilder"/>.
     /// </summary>
-    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
+    extension(IHostBuilder hostBuilder)
     {
-        hostBuilder.ConfigureServices((context, services) =>
+        /// <summary>
+        /// Add MassTransit configuration.
+        /// </summary>
+        public IHostBuilder AddMassTransit(ILogger initialLogger)
         {
-            try
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                services.AddSingleton(TimeProvider.System);
-                //Configure masstransit
-                services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(); });
-            }
-            catch (InvalidOperationException e)
-            {
-                initialLogger.LogError(e, "MassTransit could not be started");
-                throw;
-            }
-        });
-
-        return hostBuilder;
-    }
-
-    /// <summary>
-    /// Add service specific configurations
-    /// </summary>
-    public static IHostBuilder AddKaeserSidecar(this IHostBuilder hostBuilder, SimulateOptions? simulateOptions)
-    {
-        ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-        hostBuilder.ConfigureServices((context, services) =>
-        {
-            services.AddConfigurationTypeManager();
-            services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
-            
-            services.AddSingleton<PriorityAwareTargetSelector>();
-            services.AddSingleton<PriorityAwareWaitingHandler>();
-            services.AddSingleton<UnifiedTargetSelector>();
-            services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
-            services.AddSingleton<ITargetSelector>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
-            services.AddSingleton<IWaitingHandler>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
-
-            services.AddHostedService<InitializationProvider>();
-            services.AddTransient<IPrismatCommunicationShortLoopWeTargetStationRepository, PrismatCommunicationShortLoopWeTargetStationRepository>();
-            services.AddTransient<IPrismatCommunicationHostOrderRepository, PrismatCommunicationHostOrderRepository>();
-            services.AddTransient<IHostOrderRepository>(sp => sp.GetRequiredService<IPrismatCommunicationHostOrderRepository>());
-            services.AddTransient<IPrismatCommunicationStationRepository, PrismatCommunicationStationRepository>();
-            services.AddTransient<PrismatCommunication.Domain.Repositories.IStationRepository>(sp => sp.GetRequiredService<IPrismatCommunicationStationRepository>());
-            services.AddTransient<IPrismatCommunicationSystemStatusRepository, PrismatCommunicationSystemStatusRepository>();
-            services.AddTransient<ISystemStatusRepository>(sp => sp.GetRequiredService<IPrismatCommunicationSystemStatusRepository>());
-
-            services.AddTransient<IAklAgvLimitGuard, AklAgvLimitGuard>();
-            services.AddTransient<ITransportOrderDb, TransportOrderDb>();
-            services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
-            services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();
-            services.AddTransient<IJamStateRepository, EfJamStateRepository>();
-            services.AddTransient<IDecisionPointActionRepository, EfDecisionPointActionRepository>();
-            services.AddTransient<IWaitingPointActionRepository, EfWaitingPointActionRepository>();
-            services.AddTransient<ITransportOrderStationRepository, TransportOrderStationRepository>();
-            services.AddTransient<ITransportOrderAgvSettingsProvider, TransportOrderAgvSettingsProvider>();
-            services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
-            // Add transport order db connection
-            services.AddDbContextFactory<TransportOrderDbContext>(builder =>
-            {
-                string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
-
-                builder.UseSqlServer(connectionString);
-            });
-
-            services.AddDbContextFactory<KaeserSidecarDbContext>(builder =>
-            {
-                string? connectionString = context.Configuration.GetConnectionString(KaeserSidecarDbContext.ConfigSectionName);
-                builder.UseSqlServer(connectionString, m =>
+                try
                 {
-                    m.MigrationsHistoryTable(IDbContext<KaeserSidecarDbContext>.MigrationTableName);
-                    m.UseCompatibilityLevel(120); // EF9 compatibility level
-                });
+                    services.AddSingleton(TimeProvider.System);
+                    //Configure masstransit
+                    services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(); });
+                }
+                catch (InvalidOperationException e)
+                {
+                    initialLogger.LogError(e, "MassTransit could not be started");
+                    throw;
+                }
             });
-            services.AddDbContextFactory<PrismatCommunicationDbContext>(o =>
-                o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
-            
-            services.AddTransient<IAgvSettingsService, AgvSettingsService>();
-            services.AddSingleton<IStationRepository, EfStationRepository>();
-            services.AddSingleton<IOrderRepository, EfOrderRepository>();
-            services.TryAddKaeserGraphConfiguration(simulateOptions != null);
-            if (simulateOptions != null)
+
+            return hostBuilder;
+        }
+
+        /// <summary>
+        /// Add service specific configurations
+        /// </summary>
+        public IHostBuilder AddKaeserSidecar(SimulateOptions? simulateOptions)
+        {
+            ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                services.AddSingleton<IConveyorCommunicator, SimulationConveyorCommunicator>();
-            }
-            else
-            {
-                services.AddConveyorApi(context.Configuration);
-                services.AddSingleton<IConveyorCommunicator, TelegramConveyorCommunicator>();
-            }
-        });
-        return hostBuilder;
+                services.AddConfigurationTypeManager();
+                services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+
+                services.AddSingleton<PriorityAwareTargetSelector>();
+                services.AddSingleton<PriorityAwareWaitingHandler>();
+                services.AddSingleton<UnifiedTargetSelector>();
+                services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
+                services.AddSingleton<ITargetSelector>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
+                services.AddSingleton<IWaitingHandler>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
+
+                services.AddHostedService<InitializationProvider>();
+                services.AddTransient<IPrismatCommunicationShortLoopWeTargetStationRepository, PrismatCommunicationShortLoopWeTargetStationRepository>();
+                services.AddTransient<IPrismatCommunicationHostOrderRepository, PrismatCommunicationHostOrderRepository>();
+                services.AddTransient<IHostOrderRepository>(sp => sp.GetRequiredService<IPrismatCommunicationHostOrderRepository>());
+                services.AddTransient<IPrismatCommunicationStationRepository, PrismatCommunicationStationRepository>();
+                services.AddTransient<PrismatCommunication.Domain.Repositories.IStationRepository>(sp => sp.GetRequiredService<IPrismatCommunicationStationRepository>());
+                services.AddTransient<IPrismatCommunicationSystemStatusRepository, PrismatCommunicationSystemStatusRepository>();
+                services.AddTransient<ISystemStatusRepository>(sp => sp.GetRequiredService<IPrismatCommunicationSystemStatusRepository>());
+
+                services.AddTransient<IAklAgvLimitGuard, AklAgvLimitGuard>();
+                services.AddTransient<ITransportOrderDb, TransportOrderDb>();
+                services.AddTransient<ITransportOrderActionGroupRepository, TransportOrderActionGroupRepository>();
+                services.AddTransient<ITransportOrderAgvRepository, TransportOrderAgvRepository>();
+                services.AddTransient<IJamStateRepository, EfJamStateRepository>();
+                services.AddTransient<IDecisionPointActionRepository, EfDecisionPointActionRepository>();
+                services.AddTransient<IWaitingPointActionRepository, EfWaitingPointActionRepository>();
+                services.AddTransient<ITransportOrderStationRepository, TransportOrderStationRepository>();
+                services.AddTransient<ITransportOrderAgvSettingsProvider, TransportOrderAgvSettingsProvider>();
+                services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
+                // Add transport order db connection
+                services.AddDbContextFactory<TransportOrderDbContext>(builder =>
+                {
+                    string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
+
+                    builder.UseSqlServer(connectionString);
+                });
+
+                services.AddDbContextFactory<KaeserSidecarDbContext>(builder =>
+                {
+                    string? connectionString = context.Configuration.GetConnectionString(KaeserSidecarDbContext.ConfigSectionName);
+                    builder.UseSqlServer(connectionString, m =>
+                    {
+                        m.MigrationsHistoryTable(IDbContext<KaeserSidecarDbContext>.MigrationTableName);
+                        m.UseCompatibilityLevel(120); // EF9 compatibility level
+                    });
+                });
+                services.AddDbContextFactory<PrismatCommunicationDbContext>(o =>
+                    o.UseSqlServer(context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName)));
+
+                services.AddTransient<IAgvSettingsService, AgvSettingsService>();
+                services.AddSingleton<IStationRepository, EfStationRepository>();
+                services.AddSingleton<IOrderRepository, EfOrderRepository>();
+                services.TryAddKaeserGraphConfiguration(simulateOptions != null);
+                if (simulateOptions != null)
+                {
+                    services.AddSingleton<IConveyorCommunicator, SimulationConveyorCommunicator>();
+                }
+                else
+                {
+                    services.AddConveyorApi(context.Configuration);
+                    services.AddSingleton<IConveyorCommunicator, TelegramConveyorCommunicator>();
+                }
+            });
+            return hostBuilder;
+        }
     }
 }

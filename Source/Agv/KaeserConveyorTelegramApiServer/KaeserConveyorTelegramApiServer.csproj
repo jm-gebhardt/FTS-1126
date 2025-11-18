@@ -6,7 +6,6 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="System.Text.Json"/>
         <PackageReference Include="JetBrains.Annotations" />
     </ItemGroup>
     <ItemGroup>

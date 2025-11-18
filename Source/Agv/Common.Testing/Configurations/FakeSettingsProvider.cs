@@ -28,19 +28,22 @@ public class FakeSettingsProvider<TSettings> : ISettingsProvider<TSettings> wher
 
 public static class FakeSettingsProviderExtensions
 {
-    [PublicAPI]
-    public static IServiceCollection AddFakeSettings<TSettings>(this IServiceCollection services, TSettings? settings)
-        where TSettings : class, ISettings<TSettings>
+    extension(IServiceCollection services)
     {
-        services.AddSingleton<ISettingsProvider<TSettings>>(new FakeSettingsProvider<TSettings>(settings));
-        return services;
-    }
+        [PublicAPI]
+        public IServiceCollection AddFakeSettings<TSettings>(TSettings? settings)
+            where TSettings : class, ISettings<TSettings>
+        {
+            services.AddSingleton<ISettingsProvider<TSettings>>(new FakeSettingsProvider<TSettings>(settings));
+            return services;
+        }
 
-    [PublicAPI]
-    public static IServiceCollection AddFakeSettings<TSettings>(this IServiceCollection services, Func<TSettings?> settingsFunc)
-        where TSettings : class, ISettings<TSettings>
-    {
-        services.AddSingleton<ISettingsProvider<TSettings>>(new FakeSettingsProvider<TSettings>(settingsFunc));
-        return services;
+        [PublicAPI]
+        public IServiceCollection AddFakeSettings<TSettings>(Func<TSettings?> settingsFunc)
+            where TSettings : class, ISettings<TSettings>
+        {
+            services.AddSingleton<ISettingsProvider<TSettings>>(new FakeSettingsProvider<TSettings>(settingsFunc));
+            return services;
+        }
     }
 }

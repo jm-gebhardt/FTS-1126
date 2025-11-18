@@ -14,8 +14,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 /// </summary>
 public class ActionGroup
 {
-    private readonly IReadOnlyList<AgvAction> _actions = new List<AgvAction>();
-
     /// <summary>
     /// The parenting id.
     /// </summary>
@@ -110,9 +108,9 @@ public class ActionGroup
     /// </summary>
     public IReadOnlyList<AgvAction> Actions
     {
-        get => _actions.OrderBy(a => a.Sequence).ToList();
-        init => _actions = value;
-    }
+        get => field.OrderBy(a => a.Sequence).ToList();
+        init;
+    } = new List<AgvAction>();
 
     /// <summary>
     /// If true, then this ActionGroup was created manually, not by the system.

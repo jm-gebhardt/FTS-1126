@@ -21,7 +21,6 @@
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
         <PackageReference Include="Swashbuckle.AspNetCore.Filters"/>
-        <PackageReference Include="System.Text.Json"/>
         <PackageReference Include="YamlDotNet"/>
     </ItemGroup>
     <ItemGroup>

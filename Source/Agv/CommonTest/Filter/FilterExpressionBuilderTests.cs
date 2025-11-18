@@ -19,7 +19,7 @@ public class FilterExpressionBuilderTests
         const int testValue = 10;
         var valueHolder = new TestValueHolder<int>(testValue);
 
-        Expression<Func<TestValueHolder<int>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<int>, int>(compareTo, nameof(TestValueHolder<int>.Value));
+        Expression<Func<TestValueHolder<int>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<int>, int>(compareTo, nameof(TestValueHolder<>.Value));
 
         Func<TestValueHolder<int>, int> compiled = expression.Compile();
 
@@ -36,7 +36,7 @@ public class FilterExpressionBuilderTests
         const string testValue = "10";
         var valueHolder = new TestValueHolder<string>(testValue);
 
-        Expression<Func<TestValueHolder<string>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<string>, string>(compareTo, nameof(TestValueHolder<string>.Value));
+        Expression<Func<TestValueHolder<string>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<string>, string>(compareTo, nameof(TestValueHolder<>.Value));
 
         Func<TestValueHolder<string>, int> compiled = expression.Compile();
 
@@ -55,7 +55,7 @@ public class FilterExpressionBuilderTests
         var compareToValue = new RefType(compareTo);
         var valueHolder = new TestValueHolder<RefType>(testValue);
 
-        Expression<Func<TestValueHolder<RefType>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<RefType>, RefType>(compareToValue, nameof(TestValueHolder<RefType>.Value));
+        Expression<Func<TestValueHolder<RefType>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<RefType>, RefType>(compareToValue, nameof(TestValueHolder<>.Value));
 
         Func<TestValueHolder<RefType>, int> compiled = expression.Compile();
 
@@ -288,7 +288,7 @@ public class FilterExpressionBuilderTests
     {
         TestValueHolder<TestValueHolder<int>>? nullableValue = null;
 
-        Expression<Func<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>(nameof(TestValueHolder<TestValueHolder<int>>.Value));
+        Expression<Func<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>(nameof(TestValueHolder<>.Value));
 
         Should.Throw<NullReferenceException>(() => accessor.Compile()(nullableValue));
 

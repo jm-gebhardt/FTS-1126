@@ -9,7 +9,6 @@
         <PackageReference Include="MassTransit" />
         <PackageReference Include="MassTransit.RabbitMQ"  />
         <PackageReference Include="Microsoft.Data.SqlClient" />
-        <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />

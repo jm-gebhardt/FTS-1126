@@ -5,8 +5,6 @@ namespace Gebhardt.Acc.Provisioning.Configuration;
 /// </summary>
 public class ConfigOptions
 {
-    private readonly string? _basePath;
-
     /// <summary>
     /// The name of the section in the appsettings.json file.
     /// </summary>
@@ -17,7 +15,7 @@ public class ConfigOptions
     /// </summary>
     public string BasePath
     {
-        get => _basePath ?? throw new InvalidOperationException($"{nameof(BasePath)} not set");
-        init => _basePath = value;
+        get => field ?? throw new InvalidOperationException($"{nameof(BasePath)} not set");
+        init;
     }
 }

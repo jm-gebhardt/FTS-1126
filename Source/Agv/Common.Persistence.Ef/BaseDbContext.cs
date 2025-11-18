@@ -35,6 +35,17 @@ public abstract class BaseDbContext<TContext> : DbContext
         });
     }
 
+    /// <inheritdoc />
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // EF Core 10: Avoid OPENJSON in SQL by translating parameterized collections to constants
+        // This prevents dynamic SQL generation and improves query plan reuse
+        // See: https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-10.0/breaking-changes#openjson
+        modelBuilder.Model.SetMaxIdentifierLength(128);
+    }
+
     /// <summary>
     /// Removes all migrations from the database and inserts a new initial migration.
     /// If there is no migration table at all, it will do nothing.

@@ -76,7 +76,9 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
             return await restrictedAreas.ToListAsync();
         }
 
-        List<RestrictedArea> foundRestrictedAreas = await restrictedAreas.Where(r => ids.Contains(r.Id)).ToListAsync();
+        // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
+        IEnumerable<Guid> areaIds = ids;
+        List<RestrictedArea> foundRestrictedAreas = await restrictedAreas.Where(r => areaIds.Contains(r.Id)).ToListAsync();
         List<Guid> notFoundRestrictedAreas = ids.Except(foundRestrictedAreas.Select(r => r.Id).ToList()).ToList();
         if (notFoundRestrictedAreas.Count > 0)
         {

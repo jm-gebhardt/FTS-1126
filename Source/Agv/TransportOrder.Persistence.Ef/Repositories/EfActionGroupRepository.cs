@@ -551,11 +551,13 @@ public class EfActionGroupRepository : IActionGroupRepository
             // There is no median db operation and client side median calculations can be memory intense for large numbers
             // of action groups.
             DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+            // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
+            IEnumerable<Guid> nodeIds = targetNodes;
 
             return actionGroups.Where(ag =>
                     ag.StartedDate.HasValue && ag.CompletedDate.HasValue && ag.EstimatedDuration.HasValue &&
                     ag.AssignedAgv == agvCorrelationId &&
-                    ag.Actions.All(a => targetNodes.Contains(a.Target.Node!.Id)))
+                    ag.Actions.All(a => nodeIds.Contains(a.Target.Node!.Id)))
                 .Average(ag => (ag.CompletedDate!.Value - ag.StartedDate!.Value - ag.EstimatedDuration!.Value).TotalSeconds);
         }
         catch (InvalidOperationException)

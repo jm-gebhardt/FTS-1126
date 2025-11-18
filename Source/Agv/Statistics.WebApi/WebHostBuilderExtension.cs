@@ -25,15 +25,15 @@ namespace Gebhardt.Acc.Statistics.WebApi;
 public static class WebHostBuilderExtension
 {
     /// <summary>
-    /// Health Endpoint name 
+    /// Health Endpoint name
     /// </summary>
     private const string HealthEndpoint = "/health";
-    
+
     /// <summary>
     /// Extended health endpoint name with detailed information
     /// </summary>
     private const string HealthDetailedEndpoint = "/healthz";
-    
+
     /// <summary>
     /// Add web api.
     /// </summary>

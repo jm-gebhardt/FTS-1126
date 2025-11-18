@@ -12,87 +12,91 @@ public static class InfoToAgvExtensions
     private const double RotationValue = 1d;
 
     /// <summary>
-    /// Check if value for CargoRotation in InfoToAgv requests rotation.
+    /// Extension block for <see cref="Dictionary{InfoToAgvKey, String}"/>.
     /// </summary>
-    /// <param name="infoToAgv">Information passed to the agv.</param>
-    /// <returns>True if the agv needs to rotate.</returns>
-    public static bool NeedsRotation(this Dictionary<InfoToAgvKey, string> infoToAgv)
+    extension(Dictionary<InfoToAgvKey, string> infoToAgv)
     {
-        infoToAgv.TryGetValue(InfoToAgvKey.CargoRotation, out string? rotationValue);
-
-        if (string.IsNullOrEmpty(rotationValue))
+        /// <summary>
+        /// Check if value for CargoRotation in InfoToAgv requests rotation.
+        /// </summary>
+        /// <returns>True if the agv needs to rotate.</returns>
+        public bool NeedsRotation()
         {
+            infoToAgv.TryGetValue(InfoToAgvKey.CargoRotation, out string? rotationValue);
+
+            if (string.IsNullOrEmpty(rotationValue))
+            {
+                return false;
+            }
+
+            double parsedRotationValue = double.Parse(rotationValue, CultureInfo.InvariantCulture);
+
+            if (Math.Abs(parsedRotationValue - RotationValue) < Mathematics.DoubleComparator)
+            {
+                return true;
+            }
+
+            if (Math.Abs(parsedRotationValue) > RotationValue + Mathematics.DoubleComparator)
+            {
+                throw new ArgumentOutOfRangeException(nameof(InfoToAgvKey.CargoRotation), $"Value {parsedRotationValue} out of range.");
+            }
+
             return false;
         }
 
-        double parsedRotationValue = double.Parse(rotationValue, CultureInfo.InvariantCulture);
-
-        if (Math.Abs(parsedRotationValue - RotationValue) < Mathematics.DoubleComparator)
+        /// <summary>
+        /// Returns lift height value in [m] from InfoToAgv dictionary, if available.
+        /// </summary>
+        /// <returns></returns>
+        public double? GetLiftHeight()
         {
-            return true;
-        }
+            double? liftHeight = null;
 
-        if (Math.Abs(parsedRotationValue) > RotationValue + Mathematics.DoubleComparator)
-        {
-            throw new ArgumentOutOfRangeException(nameof(InfoToAgvKey.CargoRotation), $"Value {parsedRotationValue} out of range.");
-        }
+            infoToAgv.TryGetValue(InfoToAgvKey.LiftHeight, out string? liftHeightValue);
 
-        return false;
-    }
-
-    /// <summary>
-    /// Returns lift height value in [m] from InfoToAgv dictionary, if available.
-    /// </summary>
-    /// <param name="infoToAgv"></param>
-    /// <returns></returns>
-    public static double? GetLiftHeight(this Dictionary<InfoToAgvKey, string> infoToAgv)
-    {
-        double? liftHeight = null;
-
-        infoToAgv.TryGetValue(InfoToAgvKey.LiftHeight, out string? liftHeightValue);
-
-        if (!string.IsNullOrEmpty(liftHeightValue))
-        {
-            if (double.TryParse(liftHeightValue, CultureInfo.InvariantCulture, out double parsedLiftHeight))
+            if (!string.IsNullOrEmpty(liftHeightValue))
             {
-                liftHeight = parsedLiftHeight;
+                if (double.TryParse(liftHeightValue, CultureInfo.InvariantCulture, out double parsedLiftHeight))
+                {
+                    liftHeight = parsedLiftHeight;
+                }
             }
+
+            return liftHeight;
         }
 
-        return liftHeight;
-    }
-
-    /// <summary>
-    /// Returns dock front (bool) from the InfoToAgv dictionary.
-    /// </summary>
-    public static bool GetDockFront(this Dictionary<InfoToAgvKey, string> infoToAgv)
-    {
-        bool dockFront = true;
-        infoToAgv.TryGetValue(InfoToAgvKey.DockFront, out string? dockFrontValue);
-        if (!string.IsNullOrEmpty(dockFrontValue))
+        /// <summary>
+        /// Returns dock front (bool) from the InfoToAgv dictionary.
+        /// </summary>
+        public bool GetDockFront()
         {
-            if (bool.TryParse(dockFrontValue, out bool parsedDockFront))
+            bool dockFront = true;
+            infoToAgv.TryGetValue(InfoToAgvKey.DockFront, out string? dockFrontValue);
+            if (!string.IsNullOrEmpty(dockFrontValue))
             {
-                dockFront = parsedDockFront;
+                if (bool.TryParse(dockFrontValue, out bool parsedDockFront))
+                {
+                    dockFront = parsedDockFront;
+                }
             }
+            return dockFront;
         }
-        return dockFront;
-    }
 
-    /// <summary>
-    /// Returns force dropping backwards flag (bool) from the InfoToAgv dictionary.
-    /// </summary>
-    public static bool GetForceDroppingBackwards(this Dictionary<InfoToAgvKey, string> infoToAgv)
-    {
-        bool forceDroppingBackWards = false;
-        infoToAgv.TryGetValue(InfoToAgvKey.ForceDroppingBackwards, out string? forceDroppingBackWardsValue);
-        if (!string.IsNullOrEmpty(forceDroppingBackWardsValue))
+        /// <summary>
+        /// Returns force dropping backwards flag (bool) from the InfoToAgv dictionary.
+        /// </summary>
+        public bool GetForceDroppingBackwards()
         {
-            if (bool.TryParse(forceDroppingBackWardsValue, out bool parsedDockFront))
+            bool forceDroppingBackWards = false;
+            infoToAgv.TryGetValue(InfoToAgvKey.ForceDroppingBackwards, out string? forceDroppingBackWardsValue);
+            if (!string.IsNullOrEmpty(forceDroppingBackWardsValue))
             {
-                forceDroppingBackWards = parsedDockFront;
+                if (bool.TryParse(forceDroppingBackWardsValue, out bool parsedDockFront))
+                {
+                    forceDroppingBackWards = parsedDockFront;
+                }
             }
+            return forceDroppingBackWards;
         }
-        return forceDroppingBackWards;
     }
 }

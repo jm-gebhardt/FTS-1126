@@ -25,7 +25,7 @@ public class TriggerServiceConfiguration
     /// <param name="configuration">The configuration section.</param>
     public void UpdateFromConfigurationSection(IConfigurationSection configuration)
     {
-        TriggerFolder = configuration.GetValue("FOLDER", "triggers")!;
+        TriggerFolder = configuration.GetValue("FOLDER", "triggers");
         TriggerReloadIntervalMs = configuration.GetValue("RELOAD_INTERVAL_MS", -1);
     }
 }

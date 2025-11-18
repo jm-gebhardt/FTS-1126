@@ -66,7 +66,7 @@ public abstract class HeatmapRepositoryBase<TEntity>(StatisticsDbContext context
         var xAccess = Expression.Convert(Expression.PropertyOrField(basePropAccess, "XIndex"), typeof(float));
         var yAccess = Expression.Convert(Expression.PropertyOrField(basePropAccess, "YIndex"), typeof(float));
 
-        var addMethod = typeof(List<float>).GetMethod(nameof(List<float>.Add))!;
+        var addMethod = typeof(List<float>).GetMethod(nameof(List<>.Add))!;
 
         var listInit = Expression.ListInit(
             Expression.New(typeof(List<float>)),

@@ -6,9 +6,9 @@
 
 
 ARG PROJECT
+ARG DOTNET_VERSION=10.0
 
-
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build-env
 ARG PROJECT
 ENV PROJECT=$PROJECT
 WORKDIR c:\\app
@@ -24,7 +24,7 @@ RUN dotnet publish -c Release -o out --no-restore %PROJECT%\\%PROJECT%.csproj
 
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}
 ARG PROJECT
 ENV PROJECT=$PROJECT
 WORKDIR c:\\app

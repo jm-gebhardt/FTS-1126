@@ -16,7 +16,6 @@
        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
-       <PackageReference Include="System.Text.Json" />
    </ItemGroup>
    <ItemGroup>
        <PackageReference Include="JetBrains.Annotations" />

@@ -28,7 +28,7 @@ public class AutoSeedToDatabaseTests
 
         var configurationType = typeManager.ConfigurationTypes.First(config => config.Name == configurationTypeName);
         configurationType.Name.ShouldBe(configurationTypeName);
-        foreach (var property in configurationType.Properties.Where(p => !p.Key.Contains($":{nameof(ISettings<AutoSeedToDatabaseTests>.SectionName)}")))
+        foreach (var property in configurationType.Properties.Where(p => !p.Key.Contains($":{nameof(ISettings<>.SectionName)}")))
         {
             property.AutoSeedToDatabase.ShouldBe(expectedAutoSeedToDatabase);
         }

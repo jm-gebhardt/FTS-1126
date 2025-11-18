@@ -34,9 +34,14 @@ public static class HostBuilderExtension
     private static readonly TimeSpan _busStartTimeout = TimeSpan.FromSeconds(45);
 
     /// <summary>
-    /// Add MassTransit configuration.
+    /// Extension block for <see cref="IHostBuilder"/>.
     /// </summary>
-    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger, SimulateOptions? simulateOptions = null)
+    extension(IHostBuilder hostBuilder)
+    {
+        /// <summary>
+        /// Add MassTransit configuration.
+        /// </summary>
+        public IHostBuilder AddMassTransit(ILogger initialLogger, SimulateOptions? simulateOptions = null)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
@@ -65,13 +70,12 @@ public static class HostBuilderExtension
         return hostBuilder;
     }
 
-    /// <summary>
-    /// Add service specific configurations.
-    /// </summary>
-    /// <param name="hostBuilder">This <see cref="IHostBuilder"/>.</param>
-    /// <param name="simulateOptions">The <see cref="SimulateOptions"/> if in simulation mode.</param>
-    /// <param name="logger">Logger instance</param>
-    public static IHostBuilder AddPrismatCommunication(this IHostBuilder hostBuilder, SimulateOptions? simulateOptions, ILogger logger)
+        /// <summary>
+        /// Add service specific configurations.
+        /// </summary>
+        /// <param name="simulateOptions">The <see cref="SimulateOptions"/> if in simulation mode.</param>
+        /// <param name="logger">Logger instance</param>
+        public IHostBuilder AddPrismatCommunication(SimulateOptions? simulateOptions, ILogger logger)
     {
         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
@@ -85,7 +89,8 @@ public static class HostBuilderExtension
                 builder.UseSqlServer(connectionString, m =>
                 {
                     m.MigrationsHistoryTable(IDbContext<PrismatCommunicationDbContext>.MigrationTableName);
-                    m.UseCompatibilityLevel(120); // EF9 compatibility level
+                    // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                    m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
                 });
             }
 
@@ -143,14 +148,20 @@ public static class HostBuilderExtension
         });
         return hostBuilder;
     }
+    }
 
-    private static IServiceCollection AddHostOrderCreator<T>(this IServiceCollection services)
-        where T : class, IHostOrderCreator
+    /// <summary>
+    /// Extension block for <see cref="IServiceCollection"/>.
+    /// </summary>
+    extension<T>(IServiceCollection services) where T : class, IHostOrderCreator
     {
-        services.AddHostedService<PollingBackgroundService<T>>();
-        services.AddSingleton<T>();
-        services.AddSingleton<IHostOrderCreator, T>(sp => sp.GetRequiredService<T>());
+        private IServiceCollection AddHostOrderCreator()
+        {
+            services.AddHostedService<PollingBackgroundService<T>>();
+            services.AddSingleton<T>();
+            services.AddSingleton<IHostOrderCreator, T>(sp => sp.GetRequiredService<T>());
 
-        return services;
+            return services;
+        }
     }
 }

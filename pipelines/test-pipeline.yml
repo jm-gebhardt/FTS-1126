@@ -33,10 +33,10 @@ stages:
       - script: git config --system core.longpaths true
       - checkout: self
       - task: UseDotNet@2
-        displayName: 'Install .NET 8 SDK'
+        displayName: 'Install .NET 10 SDK'
         inputs:
           packageType: 'sdk'
-          version: '8.0.x'
+          version: '10.0.x'
           performMultiLevelLookup: true
       - task: DotNetCoreCLI@2
         displayName: 'Restoring based on NuGetBackupFeed.config'
@@ -56,9 +56,8 @@ stages:
           dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
           dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
           dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2025.3.0.1
-          dotnet tool install --global dotnet-script
           dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
-          dotnet script  $(ResharperDirectory)/check-suggestions.csx
+          dotnet run $(ResharperDirectory)/check-suggestions.cs
           # Check logs.txt
           $logContent = Get-Content ./resharper-logs.txt
           if ($logContent -ne $null -and $logContent.Length -gt 0) {
@@ -78,10 +77,10 @@ stages:
       vmImage: ubuntu-latest
     steps:
       - task: UseDotNet@2
-        displayName: 'Install .NET 8 SDK'
+        displayName: 'Install .NET 10 SDK'
         inputs:
           packageType: 'sdk'
-          version: '8.0.x'
+          version: '10.0.x'
           performMultiLevelLookup: true
       - task: DotNetCoreCLI@2
         displayName: 'Restoring based on NuGetBackupFeed.config'
@@ -122,7 +121,7 @@ stages:
         inputs:
           codeCoverageTool: 'Cobertura'
           summaryFileLocation: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml'
-      - task: BuildQualityChecks@9
+      - task: BuildQualityChecks@10
         displayName: 'Check build quality'
         inputs:
           checkCoverage: true

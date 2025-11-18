@@ -11,8 +11,6 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 [PublicAPI]
 public record ActionGroupDto : DatedMessage
 {
-    private IList<AgvActionDto> _actions = new List<AgvActionDto>();
-
     /// <summary>
     /// The correlationId of action group.
     /// </summary>
@@ -82,14 +80,14 @@ public record ActionGroupDto : DatedMessage
     /// </summary>
     public IList<AgvActionDto> Actions
     {
-        get => _actions;
+        get;
         init
         {
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             // can be null because of AutoMapper
-            _actions = value?.OrderBy(a => a.Sequence).ToList() ?? new List<AgvActionDto>();
+            field = value?.OrderBy(a => a.Sequence).ToList() ?? new List<AgvActionDto>();
         }
-    }
+    } = new List<AgvActionDto>();
 
     /// <summary>
     /// Gets if the action group was created manually ( i.e. not by the system).

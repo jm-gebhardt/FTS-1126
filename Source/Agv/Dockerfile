@@ -6,7 +6,7 @@
 #        DOTNET_VERSION      .NET version (e.g. 8.0)
 
 ARG PROJECT
-ARG DOTNET_VERSION=8.0
+ARG DOTNET_VERSION=10.0
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build-env
 ARG PROJECT

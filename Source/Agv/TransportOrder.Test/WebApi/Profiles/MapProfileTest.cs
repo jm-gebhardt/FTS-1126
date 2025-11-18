@@ -61,7 +61,8 @@ public class MapProfileTest
         dtoMap.Resolution.ShouldBe(mapMessageContent.BackgroundInfo.Resolution);
         dtoMap.XOffset.ShouldBe(mapMessageContent.BackgroundInfo.XOffset);
         dtoMap.YOffset.ShouldBe(mapMessageContent.BackgroundInfo.YOffset);
-        dtoMap.RelatedAgvs.ShouldAllBe(p => agvMapRelation.Any(kvp => kvp.Key.Equals(dtoMap.CorrelationId) && kvp.Value.Contains(p)));
+        // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
+        dtoMap.RelatedAgvs.ShouldAllBe(p => agvMapRelation.Any(kvp => kvp.Key.Equals(dtoMap.CorrelationId) && ((IEnumerable<Guid>)kvp.Value).Contains(p)));
         dtoMap.IsCustom.ShouldBeTrue();
     }
 

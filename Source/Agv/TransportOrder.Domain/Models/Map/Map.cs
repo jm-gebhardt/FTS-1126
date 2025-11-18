@@ -8,9 +8,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 /// </summary>
 public record Map
 {
-    private MapBackground? _baseBackground;
-    private MapBackground? _customBackground;
-
     /// <summary>
     /// The correlation id o the map.
     /// </summary>
@@ -37,13 +34,13 @@ public record Map
     /// </summary>
     public MapBackground? BaseBackground
     {
-        get => _baseBackground;
+        get;
         set
         {
-            _baseBackground = value;
-            if (_baseBackground != null)
+            field = value;
+            if (field != null)
             {
-                _baseBackground.IsCustom = false;
+                field.IsCustom = false;
             }
         }
     }
@@ -59,13 +56,13 @@ public record Map
     /// </summary>
     public MapBackground? CustomBackground
     {
-        get => _customBackground;
+        get;
         set
         {
-            _customBackground = value;
-            if (_customBackground != null)
+            field = value;
+            if (field != null)
             {
-                _customBackground.IsCustom = true;
+                field.IsCustom = true;
             }
         }
     }

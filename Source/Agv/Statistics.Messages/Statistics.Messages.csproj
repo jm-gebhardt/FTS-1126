@@ -8,7 +8,6 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="MassTransit.Quartz" />
         <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices"/>
-        <PackageReference Include="System.Text.Json" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Quartz"/>

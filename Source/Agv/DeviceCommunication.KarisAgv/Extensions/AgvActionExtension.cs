@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
@@ -13,143 +13,144 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 public static class AgvActionExtension
 {
     /// <summary>
-    /// Convert the action to <see cref="MqttOrder"/>.
+    /// Extension block for <see cref="AgvAction"/>.
     /// </summary>
-    /// <param name="action">The action.</param>
-    /// <param name="orderId">The id of the order.</param>
-    /// <param name="recordType">The record type of the order.</param>
-    /// <param name="agvSerialNumber">The serial number of the agv.</param>
-    /// <param name="nodes">The route nodes.</param>
-    /// <param name="edges">The route edges.</param>
-    /// <returns> The order as used in the mqtt message to the agv.</returns>
-    public static MqttOrder ConvertToOrder(this AgvAction action, string orderId, OrderRecordType recordType, string agvSerialNumber, List<object> nodes, List<object> edges)
+    extension(AgvAction action)
     {
-        if (action.IsMoveToCoordinate)
+        /// <summary>
+        /// Convert the action to <see cref="MqttOrder"/>.
+        /// </summary>
+        /// <param name="orderId">The id of the order.</param>
+        /// <param name="recordType">The record type of the order.</param>
+        /// <param name="agvSerialNumber">The serial number of the agv.</param>
+        /// <param name="nodes">The route nodes.</param>
+        /// <param name="edges">The route edges.</param>
+        /// <returns> The order as used in the mqtt message to the agv.</returns>
+        public MqttOrder ConvertToOrder(string orderId, OrderRecordType recordType, string agvSerialNumber, List<object> nodes, List<object> edges)
         {
-            return action.ConvertToMoveToCoordinateOrder(orderId, recordType, agvSerialNumber);
-        }
-        return action.ConvertToMoveToStationsOrder(orderId, recordType, agvSerialNumber, nodes, edges);
-    }
-
-    /// <summary>
-    /// Convert the action to <see cref="MqttOrder"/> with coordinates.
-    /// </summary>
-    /// <param name="action">The action.</param>
-    /// <param name="orderId">The id of the order.</param>
-    /// <param name="recordType">The record type of the order.</param>
-    /// <param name="agvSerialNumber">The serial number of the agv.</param>
-    /// <returns>The order as used in the mqtt message to the agv.</returns>
-    [PublicAPI]
-    public static MqttOrder ConvertToMoveToCoordinateOrder(this AgvAction action, string orderId, OrderRecordType recordType, string agvSerialNumber)
-    {
-        if (!action.IsMoveToCoordinate)
-        {
-            throw new InvalidOperationException($"Can't handle action target {action.Target} for move to coordinate");
-        }
-        return new MqttOrder(action.CorrelationId.ToString())
-        {
-            SerialNumber = agvSerialNumber,
-            OrderType = OrderType.Move,
-            OrderId = orderId,
-            RecordType = recordType,
-            Coordinates = new Coordinates
+            if (action.IsMoveToCoordinate)
             {
-                ToTheta = (float) Mathematics.ConvertToRadians(90.0f) - action.Target.Position!.Theta, // Convert to KARIS coordination system
-                ToX = action.Target.Position!.X,
-                ToY = action.Target.Position!.Y * -1 // Convert to KARIS coordination system
+                return action.ConvertToMoveToCoordinateOrder(orderId, recordType, agvSerialNumber);
             }
-        };
-    }
-
-    /// <summary>
-    /// Convert the action to <see cref="MqttOrder"/> with stations.
-    /// </summary>
-    /// <param name="action">The action.</param>
-    /// <param name="orderId">The id of the order.</param>
-    /// <param name="recordType">The record type of the order.</param>
-    /// <param name="agvSerialNumber">The serial number of the agv.</param>
-    /// <param name="nodes">The route nodes.</param>
-    /// <param name="edges">The route edges.</param>
-    /// <returns> The order as used in the mqtt message to the agv.</returns>
-    [PublicAPI]
-    public static MqttOrder ConvertToMoveToStationsOrder(this AgvAction action, string orderId, OrderRecordType recordType, string agvSerialNumber, List<object> nodes, List<object> edges)
-    {
-        if (action.IsMoveToCoordinate)
-        {
-            throw new InvalidOperationException($"Can't handle action target {action.Target} for move to station");
+            return action.ConvertToMoveToStationsOrder(orderId, recordType, agvSerialNumber, nodes, edges);
         }
-        var orderType = action.ActionType.ToOrderType();
 
-        return new MqttOrder(action.CorrelationId.ToString())
+        /// <summary>
+        /// Convert the action to <see cref="MqttOrder"/> with coordinates.
+        /// </summary>
+        /// <param name="orderId">The id of the order.</param>
+        /// <param name="recordType">The record type of the order.</param>
+        /// <param name="agvSerialNumber">The serial number of the agv.</param>
+        /// <returns>The order as used in the mqtt message to the agv.</returns>
+        [PublicAPI]
+        public MqttOrder ConvertToMoveToCoordinateOrder(string orderId, OrderRecordType recordType, string agvSerialNumber)
         {
-            SerialNumber = agvSerialNumber,
-            OrderType = orderType,
-            OrderId = orderId,
-            RecordType = recordType,
-            Stations = new Stations
+            if (!action.IsMoveToCoordinate)
             {
-                FromStation = action.GetSourceStation(),
-                ToStation = action.GetDestinationStation()
-            },
-            Route = new Route()
-            {
-                Edges = edges,
-                Nodes = nodes
+                throw new InvalidOperationException($"Can't handle action target {action.Target} for move to coordinate");
             }
-        };
-    }
-
-    /// <summary>
-    /// Get the source station information from the action.
-    /// </summary>
-    /// <param name="action">The action.</param>
-    /// <returns><see cref="StationInfo"/> for the source of the action.</returns>
-    public static StationInfo? GetSourceStation(this AgvAction action)
-    {
-        if (action.IsMoveToCoordinate)
-        {
-            throw new InvalidOperationException($"Can't handle action target {action.Target} for deriving source");
-        }
-        bool dockFront = action.InfoToAgv?.GetDockFront() ?? false;
-        double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
-        if (action.ActionType == ActionType.Pick)
-        {
-            return new StationInfo
+            return new MqttOrder(action.CorrelationId.ToString())
             {
-                Id = action.Target.Node!.Name,
-                DockFront = dockFront,
-                LiftHeight = liftHeight
+                SerialNumber = agvSerialNumber,
+                OrderType = OrderType.Move,
+                OrderId = orderId,
+                RecordType = recordType,
+                Coordinates = new Coordinates
+                {
+                    ToTheta = (float) Mathematics.ConvertToRadians(90.0f) - action.Target.Position!.Theta, // Convert to KARIS coordination system
+                    ToX = action.Target.Position!.X,
+                    ToY = action.Target.Position!.Y * -1 // Convert to KARIS coordination system
+                }
             };
         }
-        return null;
-    }
 
-    /// <summary>
-    /// Get the destination station information from the action.
-    /// </summary>
-    /// <param name="action">The action.</param>
-    /// <returns><see cref="StationInfo"/> for the destination of the action.</returns>
-    public static StationInfo? GetDestinationStation(this AgvAction action)
-    {
-        if (action.IsMoveToCoordinate)
+        /// <summary>
+        /// Convert the action to <see cref="MqttOrder"/> with stations.
+        /// </summary>
+        /// <param name="orderId">The id of the order.</param>
+        /// <param name="recordType">The record type of the order.</param>
+        /// <param name="agvSerialNumber">The serial number of the agv.</param>
+        /// <param name="nodes">The route nodes.</param>
+        /// <param name="edges">The route edges.</param>
+        /// <returns> The order as used in the mqtt message to the agv.</returns>
+        [PublicAPI]
+        public MqttOrder ConvertToMoveToStationsOrder(string orderId, OrderRecordType recordType, string agvSerialNumber, List<object> nodes, List<object> edges)
         {
-            throw new InvalidOperationException($"Can't handle action target {action.Target} for deriving destination");
+            if (action.IsMoveToCoordinate)
+            {
+                throw new InvalidOperationException($"Can't handle action target {action.Target} for move to station");
+            }
+            var orderType = action.ActionType.ToOrderType();
+
+            return new MqttOrder(action.CorrelationId.ToString())
+            {
+                SerialNumber = agvSerialNumber,
+                OrderType = orderType,
+                OrderId = orderId,
+                RecordType = recordType,
+                Stations = new Stations
+                {
+                    FromStation = action.GetSourceStation(),
+                    ToStation = action.GetDestinationStation()
+                },
+                Route = new Route()
+                {
+                    Edges = edges,
+                    Nodes = nodes
+                }
+            };
         }
-        bool dockFront = action.InfoToAgv?.GetDockFront() ?? false;
-        double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
-        string targetNodeId = action.Target.Node!.Name;
-        if (action.ActionType == ActionType.Pick)
+
+        /// <summary>
+        /// Get the source station information from the action.
+        /// </summary>
+        /// <returns><see cref="StationInfo"/> for the source of the action.</returns>
+        public StationInfo? GetSourceStation()
         {
+            if (action.IsMoveToCoordinate)
+            {
+                throw new InvalidOperationException($"Can't handle action target {action.Target} for deriving source");
+            }
+            bool dockFront = action.InfoToAgv?.GetDockFront() ?? false;
+            double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
+            if (action.ActionType == ActionType.Pick)
+            {
+                return new StationInfo
+                {
+                    Id = action.Target.Node!.Name,
+                    DockFront = dockFront,
+                    LiftHeight = liftHeight
+                };
+            }
             return null;
         }
 
-        var destinationToSend = action.ActionType switch
+        /// <summary>
+        /// Get the destination station information from the action.
+        /// </summary>
+        /// <returns><see cref="StationInfo"/> for the destination of the action.</returns>
+        public StationInfo? GetDestinationStation()
         {
-            ActionType.Drop => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
-            ActionType.Move => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
-            ActionType.Charge => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
-            _ => throw new InvalidOperationException($"Can't handle {action.ActionType} yet")
-        };
-        return destinationToSend;
+            if (action.IsMoveToCoordinate)
+            {
+                throw new InvalidOperationException($"Can't handle action target {action.Target} for deriving destination");
+            }
+            bool dockFront = action.InfoToAgv?.GetDockFront() ?? false;
+            double? liftHeight = action.InfoToAgv?.GetLiftHeight() ?? null;
+            string targetNodeId = action.Target.Node!.Name;
+            if (action.ActionType == ActionType.Pick)
+            {
+                return null;
+            }
+
+            var destinationToSend = action.ActionType switch
+            {
+                ActionType.Drop => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
+                ActionType.Move => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
+                ActionType.Charge => new StationInfo { Id = targetNodeId, LiftHeight = liftHeight, DockFront = dockFront },
+                _ => throw new InvalidOperationException($"Can't handle {action.ActionType} yet")
+            };
+            return destinationToSend;
+        }
     }
 }

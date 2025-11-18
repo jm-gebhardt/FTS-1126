@@ -5,19 +5,22 @@ namespace Gebhardt.Acc.Common.Testing.Extensions;
 
 public static class ReceivedMessageListExtensions
 {
-    public static async Task<T> GetFirstConsumedMessageAsync<T>(this IReceivedMessageList received) where T : class
+    extension(IReceivedMessageList received)
     {
-        IReceivedMessage<T> first = await received.SelectAsync<T>().First();
-        return first.Context.Message;
-    }
+        public async Task<T> GetFirstConsumedMessageAsync<T>() where T : class
+        {
+            IReceivedMessage<T> first = await received.SelectAsync<T>().First();
+            return first.Context.Message;
+        }
 
-    public static async Task ShouldHaveConsumedAsync<T>(this IReceivedMessageList received) where T : class
-    {
-        (await received.Any<T>()).ShouldBeTrue();
-    }
+        public async Task ShouldHaveConsumedAsync<T>() where T : class
+        {
+            (await received.Any<T>()).ShouldBeTrue();
+        }
 
-    public static async Task ShouldNotHaveConsumedAsync<T>(this IReceivedMessageList received) where T : class
-    {
-        (await received.Any<T>()).ShouldBeFalse();
+        public async Task ShouldNotHaveConsumedAsync<T>() where T : class
+        {
+            (await received.Any<T>()).ShouldBeFalse();
+        }
     }
 }

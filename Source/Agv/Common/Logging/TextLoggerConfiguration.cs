@@ -37,15 +37,15 @@ public record TextLoggerConfiguration : SettingsBase<TextLoggerConfiguration>
     /// <summary>
     /// Padding parameter for the log message's string
     /// </summary>
-    public int PadRight { get; init; } = 60;
+    public int PadRight { get; } = 60;
 
     /// <summary>
     /// Padding parameter for the log message's eventId
     /// </summary>
-    public int EventIdPaddingRight { get; init; } = 27;
+    public int EventIdPaddingRight { get; } = 27;
 
     /// <summary>
     /// Default path of the text log folder
     /// </summary>
-    public string LogFolderPath { get; init; } = @".\LOG\";
+    public string LogFolderPath { get; } = @".\LOG\";
 }

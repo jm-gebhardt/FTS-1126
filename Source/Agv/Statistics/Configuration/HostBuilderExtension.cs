@@ -49,10 +49,33 @@ public static class HostBuilderExtension
         });
     }
 
+    private static void RegisterFilters(IServiceCollection services)
+    {
+        // Agv position
+        services.AddSingleton(new AgvPositionConfiguration(0, 0, 0) { MinInterval = TimeSpan.FromSeconds(5), MaxInterval = TimeSpan.FromSeconds(5) });
+        services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
+        services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedKeyedFilter>();
+        // Wi-Fi metrics
+        services.AddSingleton(new WifiConfiguration(3, 10, 3) { MinInterval = TimeSpan.Zero, MaxInterval = TimeSpan.MaxValue });
+        services.AddSingleton<ISignificanceChecker<WifiMetrics>, WifiMetricsSignificanceChecker>();
+        services.AddTransient<IMessageFilter<AgvWifiMetricsReceived>, AgvWifiMetricsReceivedKeyedFilter>();
+
+        // generic
+        services.AddSingleton(typeof(IConcurrentDictionaryProvider<>), typeof(ConcurrentDictionaryProvider<>));
+        services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+        services.AddSingleton(typeof(IKeyedSemaphoreProvider<>), typeof(KeyedSemaphoreProvider<>));
+        services.AddSingleton(typeof(IKeyedSemaphoreDictionaryProvider<>), typeof(KeyedSemaphoreDictionaryProvider<>));
+    }
+
     /// <summary>
-    /// Add MassTransit configuration.
+    /// Extension block for <see cref="IHostBuilder"/>.
     /// </summary>
-    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
+    extension(IHostBuilder hostBuilder)
+    {
+        /// <summary>
+        /// Add MassTransit configuration.
+        /// </summary>
+        public IHostBuilder AddMassTransit(ILogger initialLogger)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
@@ -97,10 +120,10 @@ public static class HostBuilderExtension
         return hostBuilder;
     }
 
-    /// <summary>
-    /// Add service specific configurations.
-    /// </summary>
-    public static IHostBuilder AddStatistics(this IHostBuilder hostBuilder)
+        /// <summary>
+        /// Add service specific configurations.
+        /// </summary>
+        public IHostBuilder AddStatistics()
     {
         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
@@ -109,7 +132,13 @@ public static class HostBuilderExtension
             services.AddConfigurationTypeManager();
             services.AddDbContext<StatisticsDbContext>(o =>
                 o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
-                    m => m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName).EnableRetryOnFailure()));
+                    m =>
+                    {
+                        m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName);
+                        m.EnableRetryOnFailure();
+                        // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                        m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                    }));
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();
             services.AddTransient<IMapRepository, EfMapRepository>();
             services.AddTransient<IHouseKeepingRepository, EfHousekeepingRepository>();
@@ -135,22 +164,5 @@ public static class HostBuilderExtension
         });
         return hostBuilder;
     }
-
-    private static void RegisterFilters(IServiceCollection services)
-    {
-        // Agv position
-        services.AddSingleton(new AgvPositionConfiguration(0, 0, 0) { MinInterval = TimeSpan.FromSeconds(5), MaxInterval = TimeSpan.FromSeconds(5) });
-        services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
-        services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedKeyedFilter>();
-        // Wi-Fi metrics
-        services.AddSingleton(new WifiConfiguration(3, 10, 3) { MinInterval = TimeSpan.Zero, MaxInterval = TimeSpan.MaxValue });
-        services.AddSingleton<ISignificanceChecker<WifiMetrics>, WifiMetricsSignificanceChecker>();
-        services.AddTransient<IMessageFilter<AgvWifiMetricsReceived>, AgvWifiMetricsReceivedKeyedFilter>();
-
-        // generic
-        services.AddSingleton(typeof(IConcurrentDictionaryProvider<>), typeof(ConcurrentDictionaryProvider<>));
-        services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
-        services.AddSingleton(typeof(IKeyedSemaphoreProvider<>), typeof(KeyedSemaphoreProvider<>));
-        services.AddSingleton(typeof(IKeyedSemaphoreDictionaryProvider<>), typeof(KeyedSemaphoreDictionaryProvider<>));
     }
 }

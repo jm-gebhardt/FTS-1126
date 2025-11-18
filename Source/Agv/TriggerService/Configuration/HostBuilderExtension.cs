@@ -23,9 +23,14 @@ public static class HostBuilderExtension
     private const string TriggerConfigSection = "TRIGGER";
 
     /// <summary>
-    /// Add MassTransit configuration.
+    /// Extension block for <see cref="IHostBuilder"/>.
     /// </summary>
-    public static IHostBuilder AddMassTransit(this IHostBuilder hostBuilder, ILogger initialLogger)
+    extension(IHostBuilder hostBuilder)
+    {
+        /// <summary>
+        /// Add MassTransit configuration.
+        /// </summary>
+        public IHostBuilder AddMassTransit(ILogger initialLogger)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
@@ -48,10 +53,10 @@ public static class HostBuilderExtension
         return hostBuilder;
     }
 
-    /// <summary>
-    /// Add service specific configurations.
-    /// </summary>
-    public static IHostBuilder AddTriggerService(this IHostBuilder hostBuilder, ILogger initialLogger)
+        /// <summary>
+        /// Add service specific configurations.
+        /// </summary>
+        public IHostBuilder AddTriggerService(ILogger initialLogger)
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
@@ -71,12 +76,19 @@ public static class HostBuilderExtension
         });
         return hostBuilder;
     }
+    }
 
-    private static TriggerServiceConfiguration AddTriggerServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>
+    /// Extension block for <see cref="IServiceCollection"/>.
+    /// </summary>
+    extension(IServiceCollection services)
     {
-        var triggerServiceConfiguration = new TriggerServiceConfiguration();
-        triggerServiceConfiguration.UpdateFromConfigurationSection(configuration.GetRequiredSection(TriggerConfigSection));
-        services.AddSingleton(triggerServiceConfiguration);
-        return triggerServiceConfiguration;
+        private TriggerServiceConfiguration AddTriggerServiceConfiguration(IConfiguration configuration)
+        {
+            var triggerServiceConfiguration = new TriggerServiceConfiguration();
+            triggerServiceConfiguration.UpdateFromConfigurationSection(configuration.GetRequiredSection(TriggerConfigSection));
+            services.AddSingleton(triggerServiceConfiguration);
+            return triggerServiceConfiguration;
+        }
     }
 }

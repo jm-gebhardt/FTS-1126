@@ -87,7 +87,8 @@ public static class TransportOrderHostBuilderExtensions
             builder.UseSqlServer(connectionString, m =>
             {
                 m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
-                m.UseCompatibilityLevel(120); // avoid using OPENJSON in translated sql. In EF9 : use m.TranslateParameterizedCollectionsToConstants() instead
+                // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
             }).LogTo(Console.WriteLine, LogLevel.Information);
         });
 

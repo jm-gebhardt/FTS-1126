@@ -144,7 +144,10 @@ public class CreateActionGroupRequestHandler :
         else
         {
             // get source and target from the graph of the given agv
-            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => new[] { sourceNodeId, targetNodeId }.Contains(node.Id))).ToList();
+            // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
+            Guid?[] nodeIdArray = [sourceNodeId, targetNodeId];
+            IEnumerable<Guid?> nodeIdsToFetch = nodeIdArray;
+            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => nodeIdsToFetch.Contains(node.Id))).ToList();
         }
 
         return (sourceNodeId != null ? nodes.SelectById(sourceNodeId.Value) : null, targetNodeId != null ? nodes.SelectById(targetNodeId.Value) : null);

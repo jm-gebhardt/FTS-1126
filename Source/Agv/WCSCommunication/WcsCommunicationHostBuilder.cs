@@ -55,7 +55,11 @@ public static class WcsCommunicationHostBuilder
                     services.AddDbContextFactory<WcsHostDbContext>(builder =>
                     {
                         string? connectionString = context.Configuration.GetConnectionString(WcsHostDbContext.ConfigSectionName);
-                        builder.UseSqlServer(connectionString);
+                        builder.UseSqlServer(connectionString, m =>
+                        {
+                            // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                            m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                        });
                     });
                     services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
                     services.AddSingleton<WcsOrderHandler>();
@@ -82,7 +86,12 @@ public static class WcsCommunicationHostBuilder
             services.AddDbContext<WcsCommunicationDbContext>(builder =>
             {
                 string? connectionString = context.Configuration.GetConnectionString(WcsCommunicationDbContext.ConfigSectionName);
-                builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(WcsCommunicationDbContext.MigrationTableName); });
+                builder.UseSqlServer(connectionString, m =>
+                {
+                    m.MigrationsHistoryTable(WcsCommunicationDbContext.MigrationTableName);
+                    // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                    m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                });
             });
             services.AddTransient<IHostOrderRepository, HostOrderRepository>();
             services.ConfigureServicesMassTransit(context.Configuration, x =>
