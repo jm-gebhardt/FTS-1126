@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Provisioning.Configuration;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Provisioning.Configuration;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,12 +24,12 @@ public class NodesPropertiesSeeder: ISeeder
         ILogger<NodePropertiesSeeder> nodePropertiesLogger,
         IBus bus)
     {
-        Name = "Nodes seeder";
         _configOptions = configOptions;
         _logger = logger;
         _nodePropertiesLogger = nodePropertiesLogger;
         _bus = bus;
         _nodeFolder = GetPath();
+        Name = $"Nodes seeder for {_nodeFolder.Length} nodes properties";
     }
 
     private string GetPath()
@@ -53,6 +54,9 @@ public class NodesPropertiesSeeder: ISeeder
     /// <inheritdoc />
     public async Task SeedAsync()
     {
-        await new NodePropertiesSeeder(_bus, _nodeFolder, _nodePropertiesLogger, _fileName).SeedAsync();
+        if (!_fileName.IsNullOrEmpty())
+        {
+            await new NodePropertiesSeeder(_bus, _nodeFolder, _nodePropertiesLogger, _fileName).SeedAsync();
+        }
     }
 }
