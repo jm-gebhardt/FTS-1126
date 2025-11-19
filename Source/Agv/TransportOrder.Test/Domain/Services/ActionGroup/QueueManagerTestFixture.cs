@@ -80,6 +80,7 @@ public class QueueManagerTestFixture : FixtureBase
     public QueueManagerTestFixture WithQueue(Queue? queue)
     {
         _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueueByIdIfExisting(It.IsAny<Guid>())).ReturnsAsync((Guid? id) => queue != null && queue.Id == id ? queue : null);
         return this;
     }
 

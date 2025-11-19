@@ -45,6 +45,7 @@ public class ExceptionHandlerMiddlewareTest
         yield return [() => new AgvsNotFoundException(new List<Guid>()), HttpStatusCode.BadRequest];
         yield return [() => new ActionNotAllowedInModeException(Guid.Empty, null!), HttpStatusCode.BadRequest];
         yield return [() => new PositionIsInRestrictedAreaException(0, 0), HttpStatusCode.BadRequest];
+        yield return [() => new AgvNotInQueueException(Guid.Empty, null), HttpStatusCode.BadRequest];
 
         // Conflict
         yield return [() => new ChargeStationNotAvailableException(null!), HttpStatusCode.Conflict];

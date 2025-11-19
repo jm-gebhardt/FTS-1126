@@ -244,6 +244,16 @@ public class QueueTest
     }
 
     [TestMethod]
+    public void TryEscapeQueue_AgvInOtherQueue_ReturnsNull()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        var escapedNode = queue.Nodes.OrderBy(n => n.Position).Skip(1).First();
+
+        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out Dictionary<Guid, Guid> agvsToMove, Guid.NewGuid()).ShouldBeNull();
+        agvsToMove.ShouldBeEmpty();
+    }
+
+    [TestMethod]
     public void TryEscapeQueue_AgvInMiddleOfQueueEscaping_ReturnsNodeIdMovedAgvs()
     {
         var queue = QueueGenerator.GenerateFullQueue();

@@ -286,11 +286,21 @@ public class Queue
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv that escapes.</param>
     /// <param name="agvsToMove">The Output: agvs to move one position down</param>
+    /// <param name="queueNodeId">The node Id of the queue from which you want to remove the agv from.</param>
     /// <returns>Node at which the queue was escaped.</returns>
-    public Guid? TryEscapeQueue(Guid agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove)
+    public Guid? TryEscapeQueue(Guid agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove, Guid? queueNodeId = null)
     {
         agvsToMove = new Dictionary<Guid, Guid>();
-        var node = Nodes.SingleOrDefault(n => n.OccupiedAgv == agvCorrelationId);
+        QueueNode? node;
+        if (queueNodeId != null)
+        {
+            node = Nodes.SingleOrDefault(n => n.NodeId == queueNodeId);
+            if (node == null || !node.AgvIsAssigned(agvCorrelationId))
+            {
+                return null;
+            }
+        }
+        node = Nodes.SingleOrDefault(n => n.OccupiedAgv == agvCorrelationId);
         if (node == null)
         {
             node = Nodes.OrderBy(n => n.Position).FirstOrDefault(n => n.ReservedAgv == agvCorrelationId);

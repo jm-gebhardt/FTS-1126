@@ -120,20 +120,20 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithAgvsToMove(Dictionary<Guid, Guid>? agvsToMove, int? queueSize = null, string? nodeName = null, bool swapped = false)
     {
         _queueManager.Setup(x => x.TryDequeueAgv(It.IsAny<Guid>(), It.IsAny<Guid?>())).ReturnsAsync(agvsToMove);
-        _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>(), It.IsAny<Guid?>())).ReturnsAsync((agvsToMove, queueSize));
+        _queueManager.Setup(x => x.TryEscapeQueue(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>())).ReturnsAsync((agvsToMove, queueSize));
         _queueManager.Setup(x => x.TrySwapAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync((agvsToMove, nodeName?.ToGuid(), swapped));
         return this;
     }
 
     public AgvCommandHandlerTestFixture WithQueueInternalMoves(ICollection<Guid> actionGroups)
     {
-        _queueManager.Setup(x => x.GetQueueInternalActionGroups(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(actionGroups);
+        _queueManager.Setup(x => x.GetQueueInternalActionGroups(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid?>())).ReturnsAsync(actionGroups);
         return this;
     }
 
     public AgvCommandHandlerTestFixture WithEvacuationMoves(ICollection<Guid> actionGroups)
     {
-        _queueManager.Setup(x => x.GetQueueEvacuationMoves(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
+        _queueManager.Setup(x => x.GetQueueEvacuationMoves(It.IsAny<Guid>(), It.IsAny<Guid?>())).ReturnsAsync(actionGroups);
         return this;
     }
 

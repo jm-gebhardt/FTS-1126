@@ -1,9 +1,13 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 using QueueNode = Gebhardt.Acc.Common.Messages.Queue.QueueNode;
 
@@ -13,33 +17,28 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Handles <see cref="Domain.Models.Queue.Queue"/> related requests.
 /// </summary>
 [UsedImplicitly]
-public class QueueRequestHandler(IQueueRepository queueRepository, IBus bus) :
+public class QueueRequestHandler(IQueueRepository queueRepository, IQueueManager queueManager, IBus bus, ILogger<QueueRequestHandler> logger) :
     IConsumer<GetQueues>,
     IConsumer<GetQueue>,
     IConsumer<TryAddQueue>,
-    IConsumer<DeleteQueue>
+    IConsumer<DeleteQueue>,
+    IConsumer<RemoveAgvFromQueue>
 {
-    /// <summary>
-    /// Handles the <see cref="GetQueues"/> request.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetQueues> context)
     {
         ICollection<Queue> queues = await queueRepository.GetQueues();
         await context.RespondAsync(new GotQueues(queues));
     }
 
-    /// <summary>
-    /// Handles the <see cref="GetQueue"/> request.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetQueue> context)
     {
         var queue = await queueRepository.GetQueueById(context.Message.Id);
         await context.RespondAsync(new GotQueue(queue));
     }
 
-    /// <summary>
-    /// Handles the <see cref="TryAddQueue"/> request.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<TryAddQueue> context)
     {
         (string name, ICollection<QueueNode> queueNodes) = context.Message;
@@ -59,12 +58,27 @@ public class QueueRequestHandler(IQueueRepository queueRepository, IBus bus) :
         }
     }
 
-    /// <summary>
-    /// Handles the <see cref="DeleteQueue"/> request.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<DeleteQueue> context)
     {
         await queueRepository.RemoveQueue(context.Message.Id);
+        await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<RemoveAgvFromQueue> context)
+    {
+        var message = context.Message;
+        logger.LogInformation("Removing agv {AgvCorrelationId} from queue. QueueId: {QueueId}, QueueNodeId: {QueueNodeId}",
+            message.CorrelationId, message.QueueId, message.QueueNodeId);
+
+        if (!await queueManager.IsAgvInQueue(message.CorrelationId))
+        {
+            throw new AgvNotInQueueException(message.CorrelationId, message.QueueId);
+        }
+
+        await bus.Publish(message);
+
         await context.RespondAsync(new Success());
     }
 }

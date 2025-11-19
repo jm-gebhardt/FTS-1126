@@ -27,13 +27,19 @@ public interface IQueueManager
     /// Try to dequeue an agv.
     /// </summary>
     /// <returns>Object containing the agvs that need to move to the next queue node.</returns>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="agvLastNodeId">The last node id of the agv.</param>
     Task<Dictionary<Guid, Guid>?> TryDequeueAgv(Guid agvCorrelationId, Guid? agvLastNodeId);
 
     /// <summary>
     /// Try to escape the queue.
     /// </summary>
     /// <returns>Object containing the agvs that need to move to the next queue node.</returns>
-    Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, Guid? agvLastNodeId);
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="agvLastNodeId">The last node id of the agv.</param>
+    /// <param name="queueNodeId">The queue node from which to remove the agv.</param>
+    /// <param name="queueId">If set, only from this queue it is removed.</param>
+    Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, Guid? agvLastNodeId, Guid? queueId = null, Guid? queueNodeId = null);
 
     /// <summary>
     /// True, if the agv is on a queue node.
@@ -64,6 +70,15 @@ public interface IQueueManager
     Task<bool> RemoveAgvFromQueueEntry(Guid agvCorrelationId, Guid? targetNodeId);
 
     /// <summary>
+    /// Remove an agv from its queue.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="queueNodeId">The queue node from which to remove the agv.</param>
+    /// <param name="queueId">If set, only from this queue it is removed.</param>
+    /// <returns>True, if the agv was removed from the queue.</returns>
+    Task<bool> RemoveAgvFromQueue(Guid agvCorrelationId, Guid? queueNodeId, Guid? queueId = null);
+
+    /// <summary>
     /// Tries to find the best queue for an agv by also respecting the possibility of swapping out another agv and updates the queue if necessary.
     /// </summary>
     /// <param name="agvInside">The agv already in the queue.</param>
@@ -74,15 +89,17 @@ public interface IQueueManager
     /// Gets all the action groups that are internal to the queue that the agv might be in.
     /// </summary>
     /// <param name="agv">The agv to check.</param>
+    /// <param name="queueId">If set, only this queue is considered.</param>
     /// <returns>A collection of action group ids.</returns>
-    Task<ICollection<Guid>> GetQueueInternalActionGroups(Agv agv);
+    Task<ICollection<Guid>> GetQueueInternalActionGroups(Agv agv, Guid? queueId = null);
 
     /// <summary>
     /// Get all action group correlation ids for queue evacuation moves of this agv.
     /// </summary>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
+    /// <param name="queueId">If set, only this queue is considered.</param>
     /// <returns></returns>
-    Task<ICollection<Guid>> GetQueueEvacuationMoves(Guid agvCorrelationId);
+    Task<ICollection<Guid>> GetQueueEvacuationMoves(Guid agvCorrelationId, Guid? queueId = null);
 
     /// <summary>
     /// Get all queues on the route given by its nodes.

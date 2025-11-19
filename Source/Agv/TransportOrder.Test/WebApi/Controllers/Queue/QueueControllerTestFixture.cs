@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -31,10 +32,32 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
             s.AddTransient<ILoggingService, LoggingService>();
             s.AddTransient(_ => new Mock<IBus>().Object);
         });
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<Dictionary<string, object?>>()))
+            .ReturnsAsync((Categories logCategory,
+                int logCode,
+                string logLevel,
+                Guid? agvCorrelationId,
+                Guid? actionGroupCorrelationId,
+                Guid? stationId,
+                DateTime timestamp,
+                Dictionary<string, object?> _) => new LogEntry(logCode,
+                logCategory,
+                logLevel,
+                timestamp,
+                agvCorrelationId,
+                stationId,
+                actionGroupCorrelationId));
         AddRequestClient<DeleteQueue, Success>(() => new Success());
         AddRequestClient<GetQueue, GotQueue>(() => new GotQueue(_queue));
         AddRequestClient<TryAddQueue, GotQueue>(() => new GotQueue(_queue));
+        AddRequestClient<RemoveAgvFromQueue, Success>(() => new Success());
     }
 
     public new QueueControllerTestFixture Build()

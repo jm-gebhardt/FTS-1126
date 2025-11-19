@@ -515,6 +515,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetQueue>();
         configurator.AddRequestClient<TryAddQueue>();
         configurator.AddRequestClient<DeleteQueue>();
+        configurator.AddRequestClient<RemoveAgvFromQueue>();
     }
 
     private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)

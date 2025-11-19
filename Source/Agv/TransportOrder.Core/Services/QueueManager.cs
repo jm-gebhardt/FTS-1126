@@ -12,6 +12,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Queue;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services;
 
@@ -164,15 +165,20 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, Guid? agvLastNodeId)
+    public async Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeQueue(Guid agvCorrelationId, Guid? agvLastNodeId, Guid? queueId = null, Guid? queueNodeId = null)
     {
         var queue = await queueRepository.GetQueueForAgv(agvCorrelationId);
         if (queue == null)
         {
             logger.LogDebug("Agv {AgvCorrelationId} not enqueued, checking for escaping from queue entry node", agvCorrelationId);
-            return await TryEscapeFromQueueEntryNode(agvCorrelationId, agvLastNodeId);
+            return await TryEscapeFromQueueEntryNode(agvCorrelationId, agvLastNodeId, queueId, queueNodeId);
         }
-        Guid? node = queue.TryEscapeQueue(agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove);
+        if (queueId != null && queue.Id != queueId)
+        {
+            logger.LogInformation("Agv {AgvCorrelationId} could not escape queue, agv is queueing on different queue {CurrentQueueId} than requested {RequestedQueueId}", agvCorrelationId, queue.Id, queueId);
+            return (null, null);
+        }
+        Guid? node = queue.TryEscapeQueue(agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove, queueNodeId);
         if (node == null)
         {
             logger.LogWarning("Could not escape agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
@@ -190,7 +196,7 @@ public class QueueManager(
         return (null, null);
     }
 
-    private async Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeFromQueueEntryNode(Guid agvCorrelationId, Guid? agvLastNodeId)
+    private async Task<(Dictionary<Guid, Guid>? agvsToMove, int? queueSize)> TryEscapeFromQueueEntryNode(Guid agvCorrelationId, Guid? agvLastNodeId, Guid? queueId = null, Guid? queueNodeId = null)
     {
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         if (!agv.IsQueueing)
@@ -208,6 +214,16 @@ public class QueueManager(
         if (queue == null)
         {
             logger.LogDebug("Agv {AgvCorrelationId} could not escape queue, no queue for last node id {AgvLastNodeId} of agv found", agvCorrelationId, agvLastNodeId);
+            return (null, null);
+        }
+        if (queueId != null && queue.Id != queueId)
+        {
+            logger.LogInformation("Agv {AgvCorrelationId} could not escape queue entry node, agv is queueing on different queue {CurrentQueueId} than requested {RequestedQueueId}", agvCorrelationId, queue.Id, queueId);
+            return (null, null);
+        }
+        if (queueNodeId != null && queueNodeId != queue.EntryNode)
+        {
+            logger.LogInformation("Agv {AgvCorrelationId} could not escape queue entry node, requested queue node {RequestedQueueNodeId} is not the entry node {EntryNodeId} of queue {QueueName}", agvCorrelationId, queueNodeId, queue.EntryNode, queue.Name);
             return (null, null);
         }
         queue.RemoveAgv(agvCorrelationId);
@@ -294,8 +310,57 @@ public class QueueManager(
         return removed;
     }
 
+    /// <inheritdoc cref="IQueueManager"/>
+    public async Task<bool> RemoveAgvFromQueue(Guid agvCorrelationId, Guid? queueNodeId, Guid? queueId)
+    {
+        bool removed = false;
+        await semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            Queue? queue = null;
+            if (queueId != null)
+            {
+                queue = await queueRepository.GetQueueByIdIfExisting(queueId);
+                if (queue == null)
+                {
+                    logger.LogInformation("Agv {AgvCorrelationId} could not be removed from queue, no queue found for requested queue id {RequestedQueueId}", agvCorrelationId, queueId);
+                    return;
+                }
+
+                if (!queue.IsEnqueued(agvCorrelationId))
+                {
+                    logger.LogInformation("Agv {AgvCorrelationId} could not be removed from queue, agv is not enqueued in queue {QueueName}", agvCorrelationId, queue.Name);
+                    return;
+                }
+            }
+
+            if (queueNodeId != null)
+            {
+                queue ??= await queueRepository.GetQueueByQueueNodeId(queueNodeId.Value);
+                var queueNode = queue?.Nodes.FirstOrDefault(n => n.NodeId == queueNodeId);
+                if (queueNode == null)
+                {
+                    logger.LogInformation("Agv {AgvCorrelationId} could not be removed from queue, no queue node found for requested queue node id {RequestedQueueNodeId} in queue {QueueName}", agvCorrelationId, queueNodeId, queue?.Name);
+                    return;
+                }
+            }
+
+            queue ??= await queueRepository.GetQueueForAgv(agvCorrelationId);
+            if (queue == null)
+            {
+                logger.LogInformation("Agv {AgvCorrelationId} could not be removed from queue, no queue for agv found", agvCorrelationId);
+                return;
+            }
+
+            queue.RemoveAgv(agvCorrelationId);
+            await UpdateQueueAsync(queue);
+            removed = true;
+            logger.LogInformation("Removing agv {AgvCorrelationId} from queue {QueueName} for {@Queue}", agvCorrelationId, queue.Name, queue);
+        });
+        return removed;
+    }
+
     /// <inheritdoc />
-    public async Task<ICollection<Guid>> GetQueueInternalActionGroups(Agv agv)
+    public async Task<ICollection<Guid>> GetQueueInternalActionGroups(Agv agv, Guid? queueId = null)
     {
         if (!agv.IsQueueing)
         {
@@ -310,16 +375,41 @@ public class QueueManager(
             return [];
         }
 
-        ICollection<Domain.Models.ActionGroup.ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.CorrelationId, queue.NonEntryNodes);
+        if (queueId != null && queue.Id != queueId)
+        {
+            logger.LogInformation("Agv {AgvCorrelationId} is queueing on different queue {CurrentQueueId} than requested {RequestedQueueId}, no internal action groups available", agv.CorrelationId, queue.Id, queueId);
+            return [];
+        }
+
+        ICollection<ActionGroup> queueInternalMoves = await actionGroupRepository.GetNotStartedActionGroupsToTargetsForAgv(agv.CorrelationId, queue.NonEntryNodes);
         logger.LogInformation("Agv {AgvCorrelationId} has {Count} internal action groups for queue {QueueName} for {@Queue}", agv.CorrelationId, queueInternalMoves.Count, queue.Name, queue);
         return queueInternalMoves.Select(ag => ag.CorrelationId).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Guid>> GetQueueEvacuationMoves(Guid agvCorrelationId)
+    public async Task<ICollection<Guid>> GetQueueEvacuationMoves(Guid agvCorrelationId, Guid? queueId = null)
     {
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> createdAndStartedActionGroups = await actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
-        return createdAndStartedActionGroups.Where(a => string.Equals(a.OrderId, Queue.EvacuationOrderId)).Select(a => a.CorrelationId).ToList();
+        List<ActionGroup> queueEvacuationMoves = (await actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId))
+            .Where(a => string.Equals(a.OrderId, Queue.EvacuationOrderId)).ToList();
+
+        if (queueId != null)
+        {
+            var queue = await queueRepository.GetQueueByIdIfExisting(queueId);
+            if (queue == null)
+            {
+                logger.LogInformation("Agv {AgvCorrelationId} has no evacuation moves, no queue found for requested queue id {RequestedQueueId}", agvCorrelationId, queueId);
+                return [];
+            }
+            queueEvacuationMoves = queueEvacuationMoves
+                .Where(a => a.Actions.Count == 1 &&
+                            a.Actions.Single().ActionType == ActionType.Move &&
+                            a.Actions.Single().Target.Node != null &&
+                            queue.Nodes.Any(qn => qn.NodeId == a.Actions.Single().Nodes.FirstOrDefault()?.Id))
+                .ToList();
+            logger.LogInformation("Agv {AgvCorrelationId} has {Count} evacuation moves for queue {QueueName}", agvCorrelationId, queueEvacuationMoves.Count, queue.Name);
+        }
+
+        return queueEvacuationMoves.Select(a => a.CorrelationId).ToList();
     }
 
     /// <inheritdoc />
@@ -344,7 +434,7 @@ public class QueueManager(
             return true;
         }
         // AGV has running or created queue moves
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> currentActionGroups = await actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        IReadOnlyList<ActionGroup> currentActionGroups = await actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
         ICollection<Queue> queues = await queueRepository.GetQueues();
         IEnumerable<Guid> queueNodes = queues.SelectMany(q => q.Nodes.Where(n => n.Node != null).Select(n => n.Node!.Id)).ToList();
         return currentActionGroups.Where(ag => ag.Actions.Count == 1 && !ag.IsManual)

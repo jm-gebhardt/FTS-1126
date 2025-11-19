@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using MassTransit;
 using Shouldly;
@@ -82,5 +83,19 @@ public class QueueRequestHandlerTest
 
         await MediatorShould.ThrowRequestExceptionAsync<QueueNodeExistsException>(async () =>
             await fixture.GetResponseAsync<GotQueue>(new TryAddQueue("queue name", [new QueueNode("node id".ToBaseNode(), 0, null, null), new QueueNode("node id".ToGraphNode(), 1, null, null)])));
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueue_ShouldPublishRemoveAgvFromQueue()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        QueueRequestHandlerTestFixture<RemoveAgvFromQueue> fixture = new QueueRequestHandlerTestFixture<RemoveAgvFromQueue>()
+            .WithAgvIsInQueue(agvCorrelationId)
+            .Build();
+
+        await fixture.GetResponseAsync<Success>(new RemoveAgvFromQueue(agvCorrelationId));
+        var message = await fixture.GetFirstPublishedMessageAsync<RemoveAgvFromQueue>();
+        message.CorrelationId.ShouldBe(agvCorrelationId);
+        message.AlsoRemoveFromConsideration.ShouldBeFalse();
     }
 }

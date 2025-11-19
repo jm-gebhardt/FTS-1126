@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -236,8 +236,7 @@ public class QueueManagerTest
     [TestMethod]
     public async Task TryReachQueueNode_AgvIsNotAtHead_AgvNotUpdatedQueueUpdated()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
         var queue = QueueGenerator.GenerateFullQueue(nodes: 2);
         queue.Nodes.OrderBy(n => n.Position).Last().Reserve(agv.CorrelationId);
 
@@ -253,8 +252,7 @@ public class QueueManagerTest
     [TestMethod]
     public async Task TryReachQueueNode_ValidData_AgvUpdated()
     {
-        var agv = AgvGenerator.GenerateIdleAgv();
-        agv.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
         var queue = QueueGenerator.GenerateFullQueue(nodes: 2);
         queue.Nodes.OrderBy(n => n.Position).First().Occupy(agv.CorrelationId);
 
@@ -380,18 +378,49 @@ public class QueueManagerTest
     }
 
     [TestMethod]
+    public async Task GetQueueEvacuationMoves_SpecificNonExistentQueueRequested_ReturnsEmpty()
+    {
+        var agv = Guid.NewGuid();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv);
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+        var evacuationMove = new AgvAction { ActionType = ActionType.Move, ParentId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), Target = new ActionTarget("evacuation node".ToGraphNode()) };
+        var evacuationActionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup { CorrelationId = evacuationMove.ParentId, AssignedAgv = agv, Actions = [evacuationMove], OrderId = Queue.EvacuationOrderId };
+
+        var fixture = new QueueManagerTestFixture()
+            .WithActionGroups([pickDropActionGroup, chargeActionGroup, evacuationActionGroup]);
+
+        (await fixture.QueueManager.GetQueueEvacuationMoves(agv, Guid.NewGuid())).ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetQueueEvacuationMoves_SpecificQueueRequested_ReturnsEvacuationMoves()
+    {
+        var agv = Guid.NewGuid();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv);
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+        var queue = QueueGenerator.GenerateEmptyQueue();
+        var evacuationNode = "evacuation node".ToGraphNode();
+        var evacuationMove = new AgvAction { ActionType = ActionType.Move, ParentId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), Target = new ActionTarget(evacuationNode), Nodes = [queue.Nodes.First().NodeId.ToGraphNode(), evacuationNode] };
+        var evacuationActionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup { CorrelationId = evacuationMove.ParentId, AssignedAgv = agv, Actions = [evacuationMove], OrderId = Queue.EvacuationOrderId };
+
+        var fixture = new QueueManagerTestFixture()
+            .WithQueue(queue)
+            .WithActionGroups([pickDropActionGroup, chargeActionGroup, evacuationActionGroup]);
+
+        ICollection<Guid> evaucationMoves = await fixture.QueueManager.GetQueueEvacuationMoves(agv, queue.Id);
+        evaucationMoves.Single().ShouldBe(evacuationActionGroup.CorrelationId);
+    }
+
+    [TestMethod]
     public async Task GetQueueInternalActionGroups_ValidData_ReturnsCorrelations()
     {
         var agvCorrelationId = Guid.NewGuid();
-        var agv = new Agv(agvCorrelationId, Guid.NewGuid(), "")
-        {
-            IsQueueing = true
-        };
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Occupied, NodeLockState.Reserved], size: 2);
 
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId);
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agvCorrelationId);
-        var queueMove = new AgvAction() { ActionType = ActionType.Move, ParentId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), Target = new ActionTarget("queue node".ToGraphNode()) };
+        var queueMove = new AgvAction { ActionType = ActionType.Move, ParentId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), Target = new ActionTarget("queue node".ToGraphNode()) };
         var queueActionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup { CorrelationId = queueMove.ParentId, AssignedAgv = agvCorrelationId, Actions = [queueMove], OrderId = "Queuing" };
 
         var fixture = new QueueManagerTestFixture()
@@ -399,6 +428,25 @@ public class QueueManagerTest
             .WithQueue(queue);
 
         (await fixture.QueueManager.GetQueueInternalActionGroups(agv)).Single().ShouldBe(queueActionGroup.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetQueueInternalActionGroups_NonExistentQueue_ReturnsEmpty()
+    {
+        var agvCorrelationId = Guid.NewGuid();
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
+        var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: [NodeLockState.Occupied, NodeLockState.Reserved], size: 2);
+
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId);
+        var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agvCorrelationId);
+        var queueMove = new AgvAction { ActionType = ActionType.Move, ParentId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), Target = new ActionTarget("queue node".ToGraphNode()) };
+        var queueActionGroup = new TransportOrder.Domain.Models.ActionGroup.ActionGroup { CorrelationId = queueMove.ParentId, AssignedAgv = agvCorrelationId, Actions = [queueMove], OrderId = "Queuing" };
+
+        var fixture = new QueueManagerTestFixture()
+            .WithActionGroups([pickDropActionGroup, chargeActionGroup, queueActionGroup])
+            .WithQueue(queue);
+
+        (await fixture.QueueManager.GetQueueInternalActionGroups(agv, Guid.NewGuid())).ShouldBeEmpty();
     }
 
     [DataRow(NodeLockState.Occupied)]
@@ -460,5 +508,53 @@ public class QueueManagerTest
             .WithQueues([queue]);
 
         (await fixture.QueueManager.IsAgvInQueue(agv.CorrelationId)).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task RemoveAgvFromQueue_MatchingQueueId_RemovesAgvAndReturnsTrue()
+    {
+        var agvId = Guid.NewGuid();
+        var queue = QueueGenerator.GenerateQueueWithCapacity(size: 5);
+        queue.Nodes.First().Occupy(agvId);
+
+        var fixture = new QueueManagerTestFixture()
+            .WithQueue(queue);
+
+        bool result = await fixture.QueueManager.RemoveAgvFromQueue(agvId, null, queue.Id);
+
+        result.ShouldBeTrue();
+        queue.IsEnqueued(agvId).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task RemoveAgvFromQueue_MismatchingQueueId_DoesNotRemoveAndReturnsFalse()
+    {
+        var agvId = Guid.NewGuid();
+        var queue = QueueGenerator.GenerateQueueWithCapacity(size: 5);
+        queue.Nodes.First().Occupy(agvId);
+
+        var fixture = new QueueManagerTestFixture()
+            .WithQueue(queue);
+
+        bool result = await fixture.QueueManager.RemoveAgvFromQueue(agvId, null, Guid.NewGuid());
+
+        result.ShouldBeFalse();
+        queue.IsEnqueued(agvId).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task RemoveAgvFromQueue_MismatchingQueueNodeId_DoesNotRemoveAndReturnsFalse()
+    {
+        var agvId = Guid.NewGuid();
+        var queue = QueueGenerator.GenerateQueueWithCapacity(size: 5);
+        queue.Nodes.First().Occupy(agvId);
+
+        var fixture = new QueueManagerTestFixture()
+            .WithQueue(queue);
+
+        bool result = await fixture.QueueManager.RemoveAgvFromQueue(agvId, Guid.NewGuid(), queue.Id);
+
+        result.ShouldBeFalse();
+        queue.IsEnqueued(agvId).ShouldBeTrue();
     }
 }

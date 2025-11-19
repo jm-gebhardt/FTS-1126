@@ -44,6 +44,13 @@ public interface IQueueRepository
     /// Get a single queue by its id.
     /// </summary>
     /// <param name="id">The id of the queue.</param>
+    /// <returns>The queue if found.</returns>
+    Task<Queue?> GetQueueByIdIfExisting(Guid? id);
+
+    /// <summary>
+    /// Get a single queue by its id.
+    /// </summary>
+    /// <param name="id">The id of the queue.</param>
     /// <returns>The queue.</returns>
     /// <exception cref="QueueNotFoundException">When no queue with the given id exists.</exception>
     Task<Queue> GetQueueById(Guid id);
@@ -88,6 +95,13 @@ public interface IQueueRepository
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <returns>Queue, if agv is in any.</returns>
     Task<Queue?> GetQueueForAgv(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Get the queue by one of its queue nodes.
+    /// </summary>
+    /// <param name="queueNodeId">The Id of the queue node.</param>
+    /// <returns>The queue, if existing.</returns>
+    Task<Queue?> GetQueueByQueueNodeId(Guid queueNodeId);
 
     /// <summary>
     /// Get all queues on the route given by its nodes.

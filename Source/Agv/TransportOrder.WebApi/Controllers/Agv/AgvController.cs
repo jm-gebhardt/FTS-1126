@@ -857,7 +857,6 @@ public class AgvController : Controller
     /// <param name="zoneId">The id of the zone.</param>
     /// <response code="200">Ok</response>
     /// <response code="401">Unauthorized</response>
-    /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlation id not found.</response>
     /// <response code="409">Agv is not in the provided zone or all agvs are offline.</response>
     [HttpPatch]

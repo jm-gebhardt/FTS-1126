@@ -62,12 +62,23 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<Queue> GetQueueById(Guid id)
+    public async Task<Queue?> GetQueueByIdIfExisting(Guid? id)
     {
+        if (id == null)
+        {
+            return null;
+        }
+
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        var queue = await context.Set<Queue>()
+        return await context.Set<Queue>()
             .AsSplitQuery()
             .Where(q => q.Id == id).SingleOrDefaultAsync();
+    }
+
+    /// <inheritdoc cref="IQueueRepository"/>>
+    public async Task<Queue> GetQueueById(Guid id)
+    {
+        var queue = await GetQueueByIdIfExisting(id);
         return queue ?? throw new QueueNotFoundException(id);
     }
 
@@ -153,11 +164,21 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
             .AsSplitQuery().ToListAsync()).SingleOrDefault(q => q.Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId)));
     }
 
+    /// <inheritdoc />
+    public async Task<Queue?> GetQueueByQueueNodeId(Guid queueNodeId)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        return await context.Set<Queue>()
+            .AsSplitQuery()
+            .Where(q => q.Nodes.Any(n => n.NodeId == queueNodeId))
+            .SingleOrDefaultAsync();
+    }
+
     /// <inheritdoc cref="IQueueRepository"/>>
     public async Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes)
     {
-       await using var context = await dbContextFactory.CreateDbContextAsync();
-       return await context.Set<Queue>()
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        return await context.Set<Queue>()
             .Where(q => q.Nodes.Any(n => nodes.Contains(n.NodeId)))
             .ToListAsync();
     }

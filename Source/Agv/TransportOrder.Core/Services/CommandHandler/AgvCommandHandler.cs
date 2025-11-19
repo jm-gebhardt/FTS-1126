@@ -1237,19 +1237,19 @@ public class AgvCommandHandler :
         });
     }
 
-    private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Agv agv, Guid currentActionGroup)
+    private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Agv agv, Guid currentActionGroup, Guid? queueId = null, Guid? queueNodeId = null)
     {
         var agvCorrelationId = agv.CorrelationId;
         Guid? agvLastNodeId = agv.AgvStatus?.LastNodeId;
 
-        List<Guid> actionGroupsToAbort = (await _queueManager.GetQueueInternalActionGroups(agv)).ToList();
-        (Dictionary<Guid, Guid>? agvsToMove, int? queueSize) = await _queueManager.TryEscapeQueue(agvCorrelationId, agvLastNodeId);
+        List<Guid> actionGroupsToAbort = (await _queueManager.GetQueueInternalActionGroups(agv, queueId)).ToList();
+        (Dictionary<Guid, Guid>? agvsToMove, int? queueSize) = await _queueManager.TryEscapeQueue(agvCorrelationId, agvLastNodeId, queueId, queueNodeId);
         if (agvsToMove == null)
         {
             return false;
         }
 
-        ICollection<Guid> queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId);
+        ICollection<Guid> queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId, queueId);
         actionGroupsToAbort.AddRange(queueEvacuationMoves);
         await Task.WhenAll(actionGroupsToAbort.Where(a => a != currentActionGroup).Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
         if (queueSize == 0)
@@ -1849,16 +1849,18 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<RemoveAgvFromQueue> context)
     {
-        var agvCorrelationId = context.Message.CorrelationId;
+        var message = context.Message;
+        var agvCorrelationId = message.CorrelationId;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         bool removed = false;
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            if (context.Message.AlsoRemoveFromConsideration)
+            if (message.AlsoRemoveFromConsideration)
             {
-                List<Queue> queues = (await _queueRepository.GetQueues()).Where(q => q.ConsideredAgvs.Contains(agv.CorrelationId)).ToList();
+                List<Queue> queues = (await _queueRepository.GetQueues()).Where(q => q.ConsideredAgvs.Contains(agv.CorrelationId) &&
+                                                                                     (message.QueueId == null || message.QueueId == q.Id)).ToList();
 
                 foreach (var queue in queues)
                 {
@@ -1868,12 +1870,12 @@ public class AgvCommandHandler :
                 await Task.WhenAll(queues.Select(_queueRepository.UpdateQueueAsync));
             }
 
-            removed = await TryEscapeQueue(context, agv, Guid.Empty);
+            removed = await TryEscapeQueue(context, agv, Guid.Empty, message.QueueId, message.QueueNodeId);
         });
 
         if (!removed)
         {
-            removed = await _queueManager.RemoveAgvFromQueueEntry(agvCorrelationId, null);
+            removed = await _queueManager.RemoveAgvFromQueue(agvCorrelationId, message.QueueNodeId, message.QueueId);
         }
 
         if (!removed)

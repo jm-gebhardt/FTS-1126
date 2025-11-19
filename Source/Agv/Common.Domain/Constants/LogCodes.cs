@@ -54,6 +54,7 @@ public static class LogCodes
     public const int AgvSentActionCancelFailed = 333;
     public const int AgvSentActionUpdated = 334;
     public const int AgvSentActionFailed = 335;
+    public const int AgvRemoveFromQueue = 336;
 
     // Order
     public const int OrderCreated = 100;

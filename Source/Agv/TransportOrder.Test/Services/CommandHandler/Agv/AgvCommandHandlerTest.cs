@@ -834,8 +834,7 @@ public class AgvCommandHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: []);
-        agv.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [], isQueuing: true);
         agv.SetOnline();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
@@ -1059,8 +1058,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_NotQueueing_ChargeAction_DoesNotPublishCreateQueueingActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "a node");
-        agv.IsQueueing = false;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "a node", isQueuing: false);
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
@@ -1081,10 +1079,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ManualPickDropAction_CreateQueueingActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
-        agv.IsQueueing = true;
-        var agvInQueue = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
-        agvInQueue.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node", isQueuing: true);
+        var agvInQueue = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node", isQueuing: true);
         var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, "queue node".ToGuid() } };
 
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isManual: true, priority: Priority.Manual);
@@ -1110,10 +1106,8 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_CreateQueueingActionGroup()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
-        agv.IsQueueing = true;
-        var agvInQueue = AgvGenerator.GenerateIdleAgv();
-        agvInQueue.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node", isQueuing: true);
+        var agvInQueue = AgvGenerator.GenerateIdleAgv(isQueuing: true);
         var agvsToMove = new Dictionary<Guid, Guid> { { agvInQueue.CorrelationId, "queue node".ToGuid() } };
 
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
@@ -1140,8 +1134,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_QueueBlockingError_ResolveSystemAgvError()
     {
         var agvsToMove = new Dictionary<Guid, Guid>();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
-        agv.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node", isQueuing: true);
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
@@ -1169,8 +1162,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_PrepareAgvForStartingAction_IsQueuing_ChargeAction_NoOtherAgvsInQueue_QueueBecameEmpty()
     {
         var agvsToMove = new Dictionary<Guid, Guid>();
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
-        agv.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node", isQueuing: true);
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
@@ -1854,8 +1846,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_SwitchChargingAgvs_AgvIsInQueue_PublishesChargingNodeSelectedForAgv_CreateQueueingActionGroup()
     {
         var queueingCriticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1);
-        var agvToMove = AgvGenerator.GenerateIdleAgv(2);
-        agvToMove.IsQueueing = true;
+        var agvToMove = AgvGenerator.GenerateIdleAgv(2, isQueuing: true);
         var chargingAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: 80);
         const string queueEntryNode = "node";
         var queueNode = "queue node".ToGraphNode();
@@ -2153,8 +2144,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveAgvFromQueue_EscapeQueue_PublishesResolveSystemAgvError()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
-        agv.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node", isQueuing: true);
         var agvInQueue = AgvGenerator.GenerateRawAgv(Guid.NewGuid(), "serial number");
         agvInQueue.IsQueueing = true;
 
@@ -2177,8 +2167,7 @@ public class AgvCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveAgvFromQueue_RemovedFromQueueEntryNode_PublishesResolveSystemAgvError()
     {
-        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node");
-        agv.IsQueueing = true;
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "queue node", isQueuing: true);
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .WithAgvsToMove(new Dictionary<Guid, Guid>())
@@ -2205,6 +2194,78 @@ public class AgvCommandHandlerTest
             .WithEvacuationMoves([]);
 
         await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ResolveSystemAgvError>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueue_WithMatchingQueueId_RemovesAndResolves()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
+
+        var queue = new TransportOrder.Domain.Models.Queue.Queue("queue");
+        queue.AddNode(Guid.NewGuid(), 0);
+        queue.Nodes.Single().Reserve(agv.CorrelationId);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithQueue(queue)
+            .WithAgvsToMove(new Dictionary<Guid, Guid>())
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([])
+            .WithAgvsAtQueueHead([])
+            .WithAgvRemovedFromQueueEntry(false)
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)]);
+
+        await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId) { QueueId = queue.Id });
+
+        await fixture.ShouldHavePublishedAsync<ResolveSystemAgvError>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueue_WithMismatchingQueueId_DoesNotRemove()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
+
+        var queue = new TransportOrder.Domain.Models.Queue.Queue("queue");
+        queue.AddNode(Guid.NewGuid(), 0);
+        queue.Nodes.Single().Reserve(agv.CorrelationId);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithQueue(queue)
+            .WithAgvsToMove(null)
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([])
+            .WithAgvsAtQueueHead([])
+            .WithAgvRemovedFromQueueEntry(false)
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)]);
+
+        await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId) { QueueId = Guid.NewGuid() });
+
+        await fixture.ShouldNotHavePublishedAsync<ResolveSystemAgvError>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgvFromQueue_WithMismatchingQueueNodeId_DoesNotRemove()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(isQueuing: true);
+
+        var queue = new TransportOrder.Domain.Models.Queue.Queue("queue");
+        queue.AddNode(Guid.NewGuid(), 0);
+        queue.Nodes.Single().Reserve(agv.CorrelationId);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithQueue(queue)
+            .WithAgvsToMove(null)
+            .WithQueueInternalMoves([])
+            .WithEvacuationMoves([])
+            .WithAgvsAtQueueHead([])
+            .WithAgvRemovedFromQueueEntry(false)
+            .WithActiveErrors([new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)]);
+
+        await fixture.PublishMessageAsync(new RemoveAgvFromQueue(agv.CorrelationId) { QueueNodeId = Guid.NewGuid() });
 
         await fixture.ShouldNotHavePublishedAsync<ResolveSystemAgvError>();
     }
@@ -2258,7 +2319,7 @@ public class AgvCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.AgvGraphRequestedLastTime.ShouldBeNull();
-            
+
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv]);
 
