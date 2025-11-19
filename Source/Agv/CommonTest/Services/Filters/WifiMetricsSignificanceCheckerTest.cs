@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Shouldly;
 
-namespace Gebhardt.Acc.Common.Testing.Services.Filters;
+namespace Gebhardt.Acc.CommonTest.Services.Filters;
 
 [TestClass]
 public class WifiMetricsSignificanceCheckerTest
