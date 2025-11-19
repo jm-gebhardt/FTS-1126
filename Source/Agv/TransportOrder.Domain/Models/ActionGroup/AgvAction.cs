@@ -111,7 +111,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// True if the action is complete, i.e. its target is not defined.
     /// </summary>
-    public bool IsIncomplete => Target.Node?.Id == null;
+    public bool IsIncomplete => Target.Node?.Id == null && Target.Position == null;
 
     /// <summary>
     /// True, if Dockfront has been set externally.

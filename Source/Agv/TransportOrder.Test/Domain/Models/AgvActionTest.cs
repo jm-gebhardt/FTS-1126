@@ -195,4 +195,26 @@ public class AgvActionTest
         };
         action.GetSap().ShouldBeNull();
     }
+
+    [TestMethod]
+    public void IsIncomplete_MoveToCoordinate_ReturnsFalse()
+    {
+        var actionGroup = AgvActionGenerator.GenerateMoveToCoordinateActionGroup();
+        actionGroup.Actions.Count.ShouldBe(1);
+        actionGroup.Actions.First().IsIncomplete.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void IsIncomplete_MoveToNode_ReturnsFalse()
+    {
+        var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), "target");
+        action.IsIncomplete.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void IsIncomplete_NoTarget_ReturnsTrue()
+    {
+        var action = new TransportOrder.Domain.Models.ActionGroup.AgvAction(Guid.NewGuid(), ActionType.Drop, new ActionTarget(null), Guid.NewGuid());
+        action.IsIncomplete.ShouldBeTrue();
+    }
 }
