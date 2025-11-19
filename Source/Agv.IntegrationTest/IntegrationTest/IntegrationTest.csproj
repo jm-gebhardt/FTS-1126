@@ -13,7 +13,7 @@
     </PropertyGroup>
     <Target Name="GenerateApiControllerV1" BeforeTargets="CoreCompile" Outputs="$(MSBuildProjectFullPath).AlwaysRun">
         <Message Text="Generating C# controller code via NSwag" Importance="high" />
-        <Exec Command="$(NSwagExe_net80) run $(OpenApiConfigLocation) /variables:Configuration=$(Configuration)">
+        <Exec Command="$(NSwagExe_Net100) run $(OpenApiConfigLocation) /variables:Configuration=$(Configuration)">
             <Output TaskParameter="ExitCode" PropertyName="NSwagExitCode" />
             <Output TaskParameter="ConsoleOutput" PropertyName="NSwagOutput" />
         </Exec>
@@ -38,7 +38,5 @@
       <PackageReference Include="Polly" Version="8.6.3" />
       <PackageReference Include="MSTest" Version="3.10.3" />
       <PackageReference Include="Shouldly" Version="4.3.0" />
-      <PackageReference Include="System.Formats.Asn1" Version="8.0.2" />
-      <PackageReference Include="System.Text.Json" Version="8.0.6" />
     </ItemGroup>
 </Project>
