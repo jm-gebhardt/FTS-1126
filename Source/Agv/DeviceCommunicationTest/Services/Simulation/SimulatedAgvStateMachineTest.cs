@@ -165,7 +165,7 @@ public class SimulatedAgvStateMachineTest
     }
 
     [TestMethod]
-    public async Task When_StartActionCommand_ActionStarted_IsPublished_And_ActionCompleted_Is_Published()
+    public async Task When_StartActionCommand_ActionStartedByAgv_IsPublished_And_ActionCompletedByAgv_Is_Published()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         ICollection<GraphNode> nodes = graph.Nodes;
@@ -180,7 +180,7 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        var actionStarted = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStarted>(
+        var actionStarted = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
             new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
 
         var actionId = action.CorrelationId;
@@ -210,8 +210,8 @@ public class SimulatedAgvStateMachineTest
                 s.LastNodeId.ShouldBe(destination.Id);
             });
 
-        await fixture.ShouldHavePublishedAsync<ActionCompleted>();
-        var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<ActionCompletedByAgv>();
+        var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
         actionCompleted.CorrelationId.ShouldBe(actionId);
 
         // Last position message received should be the position of the last node
@@ -222,7 +222,7 @@ public class SimulatedAgvStateMachineTest
     }
 
     [TestMethod]
-    public async Task When_UpdateActionCommand_ActionUpdated_IsPublished_And_ActionCompleted_Is_Published()
+    public async Task When_UpdateActionCommand_ActionUpdatedByAgv_IsPublished_And_ActionCompletedByAgv_Is_Published()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
 
@@ -256,14 +256,14 @@ public class SimulatedAgvStateMachineTest
             };
 
             // Start move action 
-            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStarted>(
+            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
                 new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
 
             //wait until saga is updated
             await fixture.WaitUntil(agvSaga, s => s.AgvStatus.Busy, s => s.AgvStatus.Busy.ShouldBeTrue());
 
             // Update move action to drop action with new target
-            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdated>(
+            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdatedByAgv>(
                 new UpdateActionCommand(correlationId, agvSaga.SerialNumber, updatedMoveAction));
             actionUpdated.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
 
@@ -289,8 +289,8 @@ public class SimulatedAgvStateMachineTest
                     s.LastNodeId.ShouldBe(updatedMoveAction.Target.Node?.Id);
                 }, timeoutInMs: 10000);
 
-            await fixture.ShouldHavePublishedAsync<ActionCompleted>();
-            var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompleted>();
+            await fixture.ShouldHavePublishedAsync<ActionCompletedByAgv>();
+            var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
             actionCompleted.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
 
             // Last position message received should be the position of the last node
@@ -302,7 +302,7 @@ public class SimulatedAgvStateMachineTest
     }
 
     [TestMethod]
-    public async Task When_UpdateActionCommand_ActionAlreadyFinished_IsPublished_And_ActionCompleted_Is_Published()
+    public async Task When_UpdateActionCommand_ActionAlreadyFinished_IsPublished_And_ActionCompletedByAgv_Is_Published()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
 
@@ -336,13 +336,13 @@ public class SimulatedAgvStateMachineTest
             };
 
             // Start move action 
-            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStarted>(
+            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
                 new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
 
-            await fixture.GetFirstPublishedMessageAsync<ActionCompleted>();
+            await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
 
             // Update move action to drop action with new target
-            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdated>(
+            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdatedByAgv>(
                 new UpdateActionCommand(correlationId, agvSaga.SerialNumber, updatedMoveAction));
             actionUpdated.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
 
@@ -403,7 +403,7 @@ public class SimulatedAgvStateMachineTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionCanceledEvent()
+    public async Task Consume_ActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionAbortedByAgv()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         var action = AgvActionGenerator.GenerateAction(startNodeId: graph.Nodes.First().Name, targetNodeId: graph.Nodes.Skip(1).First().Name);
@@ -420,14 +420,14 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
 
-        await fixture.ShouldHavePublishedAsync<ActionCanceled>();
+        await fixture.ShouldHavePublishedAsync<ActionAbortedByAgv>();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         agvSaga.LastActionAborted.ShouldBeTrue();
     }
 
     [TestMethod]
-    public async Task Consume_ChargeActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionCanceledEvent()
+    public async Task Consume_ChargeActionAborted_InStatusBusyMoving_TransitionsToIdlePublishesActionAbortedByAgv()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
         var action = AgvActionGenerator.GenerateChargeAction(startNodeId: graph.Nodes.First().Name, targetNodeId: graph.Nodes.Skip(1).First().Name);
@@ -444,7 +444,7 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
 
-        await fixture.ShouldHavePublishedAsync<ActionCanceled>();
+        await fixture.ShouldHavePublishedAsync<ActionAbortedByAgv>();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         agvSaga.LastActionAborted.ShouldBeTrue();
@@ -467,7 +467,7 @@ public class SimulatedAgvStateMachineTest
             .Build();
 
         await fixture.PublishMessageAsync(new ActionAborted(correlationId, action));
-        await fixture.ShouldHavePublishedAsync<ActionCanceled>();
+        await fixture.ShouldHavePublishedAsync<ActionAbortedByAgv>();
         agvSaga.ActionStartDate.ShouldBeNull();
         agvSaga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         agvSaga.LastActionAborted.ShouldBeTrue();

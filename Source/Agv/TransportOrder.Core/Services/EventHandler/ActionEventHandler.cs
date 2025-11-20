@@ -19,21 +19,21 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// </summary>
 [UsedImplicitly]
 public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IAgvDb agvDb, ILogger<ActionEventHandler> logger) :
-    IConsumer<ActionCompleted>,
+    IConsumer<ActionCompletedByAgv>,
     IConsumer<StartingActionForAgvFailed>,
     IConsumer<NonChargingActionCompleted>,
     IConsumer<NodesSelectedForAction>,
-    IConsumer<ActionAbortionCompleted>,
-    IConsumer<ActionCanceled>,
+    IConsumer<ActionAbortionCompletedByAgv>,
+    IConsumer<ActionAbortedByAgv>,
     IConsumer<ActionDurationEstimated>,
     IConsumer<AutomaticActionWithdrawn>,
     IConsumer<ActionGroupResumed>,
     IConsumer<ActionGroupCreated>,
     IConsumer<ActionGroupQueued>,
-    IConsumer<ActionFailed>
+    IConsumer<ActionFailedByAgv>
 {
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<ActionCompleted> context)
+    public async Task Consume(ConsumeContext<ActionCompletedByAgv> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
@@ -93,7 +93,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     }
 
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<ActionAbortionCompleted> context)
+    public async Task Consume(ConsumeContext<ActionAbortionCompletedByAgv> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
         Guid? assignedAgv = await actionGroupRepository.GetAgvAssignedToAction(actionCorrelationId);
@@ -111,7 +111,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     }
 
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<ActionCanceled> context)
+    public async Task Consume(ConsumeContext<ActionAbortedByAgv> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
@@ -209,7 +209,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     }
 
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<ActionFailed> context)
+    public async Task Consume(ConsumeContext<ActionFailedByAgv> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);

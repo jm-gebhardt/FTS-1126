@@ -52,40 +52,40 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
         switch (message.OrderEventType)
         {
             case OrderEventType.Started:
-                await context.Publish(new ActionStarted(actionId, agvCorrelationId));
+                await context.Publish(new ActionStartedByAgv(actionId, agvCorrelationId));
                 logCode = LogCodes.AgvSentActionStarted;
                 orderLogCode = LogCodes.AgvSentActionStartedForOrder;
                 break;
 
             case OrderEventType.Completed:
-                await context.Publish(new ActionCompleted(actionId, agvCorrelationId));
+                await context.Publish(new ActionCompletedByAgv(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 logCode = LogCodes.AgvSentActionCompleted;
                 orderLogCode = LogCodes.AgvSentActionCompletedForOrder;
                 break;
 
             case OrderEventType.Canceled:
-                await context.Publish(new ActionCanceled(actionId, agvCorrelationId));
+                await context.Publish(new ActionAbortedByAgv(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
-                logCode = LogCodes.AgvSentActionCanceled;
-                orderLogCode = LogCodes.AgvSentActionCanceledForOrder;
+                logCode = LogCodes.AgvSentActionAborted;
+                orderLogCode = LogCodes.AgvSentActionAbortedForOrder;
                 break;
 
             case OrderEventType.CancelFailed:
-                await context.Publish(new ActionCancelFailed(actionId, agvCorrelationId));
-                logCode = LogCodes.AgvSentActionCancelFailed;
-                orderLogCode = LogCodes.AgvSentActionCancelFailedForOrder;
+                await context.Publish(new ActionAbortionFailedByAgv(actionId, agvCorrelationId));
+                logCode = LogCodes.AgvSentActionAbortionFailed;
+                orderLogCode = LogCodes.AgvSentActionAbortionFailedForOrder;
                 break;
 
             case OrderEventType.Failed:
-                await context.Publish(new ActionFailed(actionId, agvCorrelationId));
+                await context.Publish(new ActionFailedByAgv(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
                 logCode = LogCodes.AgvSentActionFailed;
                 orderLogCode = LogCodes.AgvSentActionFailedForOrder;
                 break;
 
             case OrderEventType.Updated:
-                await context.Publish(new ActionUpdated(actionId, agvCorrelationId));
+                await context.Publish(new ActionUpdatedByAgv(actionId, agvCorrelationId));
                 logCode = LogCodes.AgvSentActionUpdated;
                 orderLogCode = LogCodes.AgvSentActionUpdatedForOrder;
                 break;

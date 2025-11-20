@@ -74,17 +74,17 @@ public static class DeviceCommunicationHostBuilder
                 services.AddSingleton<ISignificanceChecker<MqttState>, MqttStatusSignificanceChecker>();
                 services.AddSingleton<UnTimedInMemoryFilter<MqttState>>();
 
-                services.AddSingleton<ISignificanceChecker<ActionCompleted>, ActionEventSignificanceChecker<ActionCompleted>>();
-                services.AddSingleton<UnTimedInMemoryFilter<ActionCompleted>>();
+                services.AddSingleton<ISignificanceChecker<ActionCompletedByAgv>, ActionEventSignificanceChecker<ActionCompletedByAgv>>();
+                services.AddSingleton<UnTimedInMemoryFilter<ActionCompletedByAgv>>();
 
-                services.AddSingleton<ISignificanceChecker<ActionCanceled>, ActionEventSignificanceChecker<ActionCanceled>>();
-                services.AddSingleton<UnTimedInMemoryFilter<ActionCanceled>>();
+                services.AddSingleton<ISignificanceChecker<ActionAbortedByAgv>, ActionEventSignificanceChecker<ActionAbortedByAgv>>();
+                services.AddSingleton<UnTimedInMemoryFilter<ActionAbortedByAgv>>();
 
-                services.AddSingleton<ISignificanceChecker<ActionStarted>, AgvActionSignificanceChecker<ActionStarted>>();
-                services.AddSingleton<UnTimedInMemoryFilter<ActionStarted>>();
+                services.AddSingleton<ISignificanceChecker<ActionStartedByAgv>, AgvActionSignificanceChecker<ActionStartedByAgv>>();
+                services.AddSingleton<UnTimedInMemoryFilter<ActionStartedByAgv>>();
 
-                services.AddSingleton<ISignificanceChecker<ActionUpdated>, AgvActionSignificanceChecker<ActionUpdated>>();
-                services.AddSingleton<UnTimedInMemoryFilter<ActionUpdated>>();
+                services.AddSingleton<ISignificanceChecker<ActionUpdatedByAgv>, AgvActionSignificanceChecker<ActionUpdatedByAgv>>();
+                services.AddSingleton<UnTimedInMemoryFilter<ActionUpdatedByAgv>>();
 
                 services.AddSingleton<ISignificanceChecker<AgvSetToPushOrJoystickMode>, PushModeSignificanceChecker<AgvSetToPushOrJoystickMode>>();
                 services.AddSingleton<UnTimedInMemoryFilter<AgvSetToPushOrJoystickMode>>();

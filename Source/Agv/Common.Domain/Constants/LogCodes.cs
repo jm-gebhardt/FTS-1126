@@ -50,8 +50,8 @@ public static class LogCodes
     public const int AgvOperatorInteraction = 329;
     public const int AgvSentActionStarted = 330;
     public const int AgvSentActionCompleted = 331;
-    public const int AgvSentActionCanceled = 332;
-    public const int AgvSentActionCancelFailed = 333;
+    public const int AgvSentActionAborted = 332;
+    public const int AgvSentActionAbortionFailed = 333;
     public const int AgvSentActionUpdated = 334;
     public const int AgvSentActionFailed = 335;
     public const int AgvRemoveFromQueue = 336;
@@ -77,8 +77,8 @@ public static class LogCodes
     public const int OrderOperatorInteraction = 117;
     public const int AgvSentActionStartedForOrder = 118;
     public const int AgvSentActionCompletedForOrder = 119;
-    public const int AgvSentActionCanceledForOrder = 120;
-    public const int AgvSentActionCancelFailedForOrder = 121;
+    public const int AgvSentActionAbortedForOrder = 120;
+    public const int AgvSentActionAbortionFailedForOrder = 121;
     public const int AgvSentActionUpdatedForOrder = 122;
     public const int AgvSentActionFailedForOrder = 123;
     public const int OrderRetracted = 124;

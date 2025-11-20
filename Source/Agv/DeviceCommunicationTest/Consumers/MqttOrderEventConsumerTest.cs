@@ -24,7 +24,7 @@ public class MqttOrderEventConsumerTest
         var msg = MqttOrderEventGenerator.CreateMqttOrderEvent(OrderEventType.Started);
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionStarted>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionStartedByAgv>();
         action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
@@ -37,7 +37,7 @@ public class MqttOrderEventConsumerTest
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: false);
-        var action = await published.GetFirstPublishedMessageAsync<ActionStarted>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionStartedByAgv>();
         action.CorrelationId.ShouldBe(internalId);
     }
 
@@ -48,7 +48,7 @@ public class MqttOrderEventConsumerTest
         var fixture = new OrderEventConsumerFixture();
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionCompleted>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
         action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
@@ -61,7 +61,7 @@ public class MqttOrderEventConsumerTest
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionCompleted>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
         action.CorrelationId.ShouldBe(internalId);
     }
 
@@ -72,7 +72,7 @@ public class MqttOrderEventConsumerTest
         var fixture = new OrderEventConsumerFixture();
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionCanceled>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionAbortedByAgv>();
         action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
@@ -85,7 +85,7 @@ public class MqttOrderEventConsumerTest
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionCanceled>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionAbortedByAgv>();
         action.CorrelationId.ShouldBe(internalId);
     }
 
@@ -96,7 +96,7 @@ public class MqttOrderEventConsumerTest
         var fixture = new OrderEventConsumerFixture();
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionCancelFailed>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionAbortionFailedByAgv>();
         action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
@@ -109,7 +109,7 @@ public class MqttOrderEventConsumerTest
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: false);
-        var action = await published.GetFirstPublishedMessageAsync<ActionCancelFailed>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionAbortionFailedByAgv>();
         action.CorrelationId.ShouldBe(internalId);
     }
 
@@ -120,7 +120,7 @@ public class MqttOrderEventConsumerTest
         var fixture = new OrderEventConsumerFixture();
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionFailed>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionFailedByAgv>();
         action.CorrelationId.ShouldBe(msg.OrderId.ToGuid());
     }
 
@@ -133,7 +133,7 @@ public class MqttOrderEventConsumerTest
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(msg.OrderId.ToGuid(), internalId);
 
         var published = await fixture.PublishAndConsumeAsync(msg, shouldMappingBeNull: true);
-        var action = await published.GetFirstPublishedMessageAsync<ActionFailed>();
+        var action = await published.GetFirstPublishedMessageAsync<ActionFailedByAgv>();
         action.CorrelationId.ShouldBe(internalId);
     }
 }

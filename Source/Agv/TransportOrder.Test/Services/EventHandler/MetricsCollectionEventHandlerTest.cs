@@ -18,22 +18,22 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 public class MetricsCollectionEventHandlerTest
 {
     [TestMethod]
-    public async Task Consume_ActionCanceled_NoAssignedAgv_DoesNotCollectStationOrderCompletionMetrics()
+    public async Task Consume_ActionAbortedByAgv_NoAssignedAgv_DoesNotCollectStationOrderCompletionMetrics()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var fixture = new MetricsCollectionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
         fixture.VerifyStationOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]
-    public async Task Consume_ActionCanceled_ReassignedToDifferentAgv_DoesNotCollectStationOrderCompletionMetrics()
+    public async Task Consume_ActionAbortedByAgv_ReassignedToDifferentAgv_DoesNotCollectStationOrderCompletionMetrics()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         var fixture = new MetricsCollectionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
         fixture.VerifyStationOrderCompletionMetricsCollected(Times.Never());
     }
 
@@ -41,22 +41,22 @@ public class MetricsCollectionEventHandlerTest
     [DataRow(ActionState.Completed)]
     [DataRow(ActionState.Canceled)]
     [TestMethod]
-    public async Task Consume_ActionCanceled_ActionInWrongState_DoesNotCollectStationOrderCompletionMetrics(ActionState state)
+    public async Task Consume_ActionAbortedByAgv_ActionInWrongState_DoesNotCollectStationOrderCompletionMetrics(ActionState state)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: state);
         var fixture = new MetricsCollectionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
         fixture.VerifyStationOrderCompletionMetricsCollected(Times.Never());
     }
 
     [TestMethod]
-    public async Task Consume_ActionCanceled_ChargeActionAborted_CollectsStationOrderCompletionMetrics()
+    public async Task Consume_ActionAbortedByAgv_ChargeActionAborted_CollectsStationOrderCompletionMetrics()
     {
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: Guid.NewGuid(), actionStateCharge: ActionState.Aborted);
         var fixture = new MetricsCollectionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.Last().CorrelationId, actionGroup.AssignedAgv!.Value));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.Last().CorrelationId, actionGroup.AssignedAgv!.Value));
         fixture.VerifyStationOrderCompletionMetricsCollected(Times.Once());
     }
 

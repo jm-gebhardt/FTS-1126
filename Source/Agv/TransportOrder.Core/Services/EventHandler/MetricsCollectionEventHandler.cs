@@ -20,7 +20,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// </summary>
 [UsedImplicitly]
 public class MetricsCollectionEventHandler(IMetricCollectionService metricCollectionService, IActionGroupRepository actionGroupRepository, IMapper mapper) :
-    IConsumer<ActionCanceled>,
+    IConsumer<ActionAbortedByAgv>,
     IConsumer<PickActionCompleted>,
     IConsumer<DropActionCompleted>,
     IConsumer<ChargeActionCompleted>,
@@ -32,9 +32,9 @@ public class MetricsCollectionEventHandler(IMetricCollectionService metricCollec
     IConsumer<JamStateChanged>
 {
     /// <summary>
-    /// Handles the <see cref="ActionCanceled"/> event.
+    /// Handles the <see cref="ActionAbortedByAgv"/> event.
     /// </summary>
-    public async Task Consume(ConsumeContext<ActionCanceled> context)
+    public async Task Consume(ConsumeContext<ActionAbortedByAgv> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);

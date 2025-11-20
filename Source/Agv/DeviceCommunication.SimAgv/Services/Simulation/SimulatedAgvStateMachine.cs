@@ -319,7 +319,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 }
             })
             .TransitionTo(BusyMoving)
-            .Publish(c => new ActionStarted(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
+            .Publish(c => new ActionStartedByAgv(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
             .ThenAsync(PublishStatusAsync)
             .Schedule(FinishActionSchedule,
                 c => new ScheduleFinishAction(c.Saga.CorrelationId),
@@ -350,7 +350,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                         c.Message.Action.ActionType, c.Message.Action.CorrelationId, c.Message.Action.Target.Node!.Name, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
                 }
             })
-            .Publish(c => new ActionUpdated(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
+            .Publish(c => new ActionUpdatedByAgv(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
             .ThenAsync(PublishStatusAsync)
             .Schedule(FinishActionSchedule,
                 c => new ScheduleFinishAction(c.Saga.CorrelationId),
@@ -381,7 +381,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                         c.Message.Action.ActionType, c.Message.Action.CorrelationId, c.Message.Action.Target.Node!.Name, c.Message.Action.ParentId, c.Saga.ActionFinishDate);
                 }
             })
-            .Publish(c => new ActionUpdated(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
+            .Publish(c => new ActionUpdatedByAgv(c.Saga.Action!.CorrelationId, c.Saga.CorrelationId))
             .ThenAsync(PublishStatusAsync)
             .Schedule(FinishActionSchedule,
                 c => new ScheduleFinishAction(c.Saga.CorrelationId),
@@ -767,11 +767,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             {
                 _logger.LogInformation("SerialNumber {AgvId} ({CorrelationId}). {ActionType} action with action CorrelationId {ActionCorrelationId} for action group id should fail: {OrderId}",
                     context.Saga.SerialNumber, context.Saga.CorrelationId, context.Saga.Action!.ActionType, context.Saga.Action.CorrelationId, context.Saga.Action.ParentId);
-                await context.Publish(new ActionFailed(action.CorrelationId, agvCorrelationId));
+                await context.Publish(new ActionFailedByAgv(action.CorrelationId, agvCorrelationId));
                 context.Saga.ShouldFail = false;
                 return;
             }
-            await context.Publish(new ActionCompleted(action.CorrelationId, agvCorrelationId));
+            await context.Publish(new ActionCompletedByAgv(action.CorrelationId, agvCorrelationId));
         }
 
         // update position last time before the ActionStart time is gone
@@ -804,7 +804,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         {
             _logger.LogInformation("Agv {AgvId} / {CorrelationId} aborted action {ActionType} for {OrderId}",
                 context.Saga.SerialNumber, context.Saga.CorrelationId, action.ActionType, action.ParentId);
-            await context.Publish(new ActionCanceled(action.CorrelationId, context.Saga.CorrelationId));
+            await context.Publish(new ActionAbortedByAgv(action.CorrelationId, context.Saga.CorrelationId));
         }
 
         context.Saga.AbortAction();

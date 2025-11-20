@@ -15,21 +15,20 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 public class ActionEventHandlerTest
 {
     [TestMethod]
-    public async Task Consume_ActionCompletedEvent_ValidData_PublishesCompleteActionOfActionGroup()
+    public async Task Consume_ActionCompletedByAgv_ValidData_PublishesCompleteActionOfActionGroup()
     {
         var agv = Guid.NewGuid();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        var actionCompletedEvent = new ActionCompleted(actionGroup.Actions.First().CorrelationId, agv);
-        await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
+        var actionCompletedEvent = new ActionCompletedByAgv(actionGroup.Actions.First().CorrelationId, agv);
+        await fixture.PublishMessageAsync(actionCompletedEvent);
 
-        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldHavePublishedAsync<CompleteActionOfActionGroup>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionCompletedEvent_ActionAborted_DoesNotPublishCompleteActionOfActionGroup()
+    public async Task Consume_ActionCompletedByAgv_ActionAborted_DoesNotPublishCompleteActionOfActionGroup()
     {
         var agv = Guid.NewGuid();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
@@ -37,15 +36,14 @@ public class ActionEventHandlerTest
         actionGroup.AbortAction(action.CorrelationId, [], DateTimeOffset.Now);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        var actionCompletedEvent = new ActionCompleted(action.CorrelationId, agv);
-        await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
+        var actionCompletedEvent = new ActionCompletedByAgv(action.CorrelationId, agv);
+        await fixture.PublishMessageAsync(actionCompletedEvent);
 
-        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionCompletedEvent_ActionCompleted_DoesNotPublishCompleteActionOfActionGroup()
+    public async Task Consume_ActionCompletedByAgv_ActionCompleted_DoesNotPublishCompleteActionOfActionGroup()
     {
         var agv = Guid.NewGuid();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
@@ -53,10 +51,9 @@ public class ActionEventHandlerTest
         actionGroup.CompleteAction(action.CorrelationId, DateTimeOffset.Now);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        var actionCompletedEvent = new ActionCompleted(action.CorrelationId, agv);
-        await fixture.TestHarness.Bus.Publish(actionCompletedEvent);
+        var actionCompletedEvent = new ActionCompletedByAgv(action.CorrelationId, agv);
+        await fixture.PublishMessageAsync(actionCompletedEvent);
 
-        await fixture.ShouldHaveConsumedAsync<ActionCompleted>();
         await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
     }
 
@@ -65,9 +62,8 @@ public class ActionEventHandlerTest
     {
         var fixture = new ActionEventHandlerTestFixture();
         var startingActionForAgvFailed = new StartingActionForAgvFailed(Guid.NewGuid());
-        await fixture.TestHarness.Bus.Publish(startingActionForAgvFailed);
+        await fixture.PublishMessageAsync(startingActionForAgvFailed);
 
-        await fixture.ShouldHaveConsumedAsync<StartingActionForAgvFailed>();
         (await fixture.TestHarness.Published.Any<HandleAgvActionStartFailure>(f =>
             f.Context.Message == new HandleAgvActionStartFailure(startingActionForAgvFailed.CorrelationId))).ShouldBeTrue();
     }
@@ -77,9 +73,8 @@ public class ActionEventHandlerTest
     {
         var fixture = new ActionEventHandlerTestFixture();
         var nonChargingActionCompleted = new NonChargingActionCompleted(Guid.NewGuid());
-        await fixture.TestHarness.Bus.Publish(nonChargingActionCompleted);
+        await fixture.PublishMessageAsync(nonChargingActionCompleted);
 
-        await fixture.ShouldHaveConsumedAsync<NonChargingActionCompleted>();
         (await fixture.TestHarness.Published.Any<HandleActionCompletion>(f =>
             f.Context.Message == new HandleActionCompletion(nonChargingActionCompleted.CorrelationId))).ShouldBeTrue();
     }
@@ -143,75 +138,72 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionAbortionCompleted_ValidData_PublishesHandleActionCompletion()
+    public async Task Consume_ActionAbortionCompletedByAgv_ValidData_PublishesHandleActionCompletion()
     {
         var agvId = Guid.NewGuid();
         var fixture = new ActionEventHandlerTestFixture()
             .AddAssignedAgv(agvId);
-        await fixture.TestHarness.Bus.Publish(new ActionAbortionCompleted(Guid.NewGuid(), agvId));
-        await fixture.ShouldHaveConsumedAsync<ActionAbortionCompleted>();
+        await fixture.PublishMessageAsync(new ActionAbortionCompletedByAgv(Guid.NewGuid(), agvId));
         await fixture.ShouldHavePublishedAsync<HandleActionCompletion>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionAbortionCompleted_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
+    public async Task Consume_ActionAbortionCompletedByAgv_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
     {
         var fixture = new ActionEventHandlerTestFixture()
             .AddAssignedAgv(null);
-        await fixture.TestHarness.Bus.Publish(new ActionAbortionCompleted(Guid.NewGuid(), Guid.NewGuid()));
-        await fixture.ShouldHaveConsumedAsync<ActionAbortionCompleted>();
+        await fixture.PublishMessageAsync(new ActionAbortionCompletedByAgv(Guid.NewGuid(), Guid.NewGuid()));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionAbortionCompleted_ActionGroupReassigned_DoesNotPublishHandleActionCompletion()
+    public async Task Consume_ActionAbortionCompletedByAgv_ActionGroupReassigned_DoesNotPublishHandleActionCompletion()
     {
         var fixture = new ActionEventHandlerTestFixture()
             .AddAssignedAgv(Guid.NewGuid());
-        await fixture.TestHarness.Bus.Publish(new ActionAbortionCompleted(Guid.NewGuid(), Guid.NewGuid()));
-        await fixture.ShouldHaveConsumedAsync<ActionAbortionCompleted>();
+        await fixture.PublishMessageAsync(new ActionAbortionCompletedByAgv(Guid.NewGuid(), Guid.NewGuid()));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionCanceled_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
+    public async Task Consume_ActionAbortedByAgv_NoAssignedAgv_DoesNotPublishHandleActionCompletion()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionCanceled_ReassignedToDifferentAgv_DoesNotPublishHandleActionCompletion()
+    public async Task Consume_ActionAbortedByAgv_ReassignedToDifferentAgv_DoesNotPublishHandleActionCompletion()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.First().CorrelationId, Guid.NewGuid()));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 
     [TestMethod]
-    public async Task Consume_ActionCanceled_WhenActionAborted_PublishesHandleActionAbort()
+    public async Task Consume_ActionAbortedByAgv_WhenActionAborted_PublishesHandleActionAbort()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Aborted);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
         await fixture.ShouldHavePublishedAsync<HandleActionAbortion>();
     }
 
     [DataRow(ActionState.Completed)]
     [DataRow(ActionState.Canceled)]
     [TestMethod]
-    public async Task Consume_ActionCanceled_ActionNotStarted_DoesNotPublishHandleActionCompletion(ActionState state)
+    public async Task Consume_ActionAbortedByAgv_ActionNotStarted_DoesNotPublishHandleActionCompletion(ActionState state)
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: state);
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
-        await fixture.PublishMessageAsync(new ActionCanceled(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
+        await fixture.PublishMessageAsync(new ActionAbortedByAgv(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv!.Value));
         await fixture.ShouldNotHavePublishedAsync<HandleActionCompletion>();
     }
 
@@ -341,13 +333,13 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionFailed_ValidData_PublishesHandleActionFailure()
+    public async Task Consume_ActionFailedByAgv_ValidData_PublishesHandleActionFailure()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         var fixture = new ActionEventHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
-        await fixture.PublishMessageAsync(new ActionFailed(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv.GetValueOrDefault()));
+        await fixture.PublishMessageAsync(new ActionFailedByAgv(actionGroup.Actions.First().CorrelationId, actionGroup.AssignedAgv.GetValueOrDefault()));
 
         await fixture.ShouldHavePublishedAsync<HandleActionFailure>();
     }
