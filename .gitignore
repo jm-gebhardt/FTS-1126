@@ -10,6 +10,7 @@ packages
 *.user
 *.userosscache
 *.sln.docstates
+*.claude
 /Source/CustomerRelease
 
 # User-specific files

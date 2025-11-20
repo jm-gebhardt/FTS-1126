@@ -21,6 +21,7 @@
     <PackageVersion Include="MassTransit.Quartz" Version="[8.5.5]" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="[8.5.5]" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
@@ -45,6 +46,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
     <PackageVersion Include="SignalRSwaggerGen" Version="4.8.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Filters" Version="9.0.0" />
@@ -55,9 +57,20 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.0.2" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.0.2" />
+    <PackageVersion Include="MSTest" Version="4.0.2" />
     <PackageVersion Include="moq" Version="4.20.72" />
     <PackageVersion Include="ILogger.Moq" Version="2.0.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <!-- Packages specific to Resharper scripts -->
+    <PackageVersion Include="Sarif.Sdk" Version="4.6.0" />
+    <!-- Packages specific to IntegrationTest -->
+    <PackageVersion Include="IdentityModel" Version="7.0.0" />
+    <PackageVersion Include="NSwag.Annotations" Version="14.6.0" />
+    <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.6.0" />
+    <PackageVersion Include="NSwag.MSBuild" Version="14.6.0" />
+    <PackageVersion Include="MQTTnet" Version="4.3.7.1207" />
+    <PackageVersion Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
+    <PackageVersion Include="Polly" Version="8.6.3" />
   </ItemGroup>
 </Project>
