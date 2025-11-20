@@ -39,18 +39,30 @@ public class PollingBackgroundServiceTest
     [TestMethod]
     public async Task Service_start_and_stopped()
     {
-        var service = new PollingBackgroundService<PollableTest>(Mock.Of<ILogger<PollingBackgroundService<PollableTest>>>(), new PollableTest());
-        var token = new CancellationTokenSource();
+        var service = new PollingBackgroundService<PollableTest>(
+            Mock.Of<ILogger<PollingBackgroundService<PollableTest>>>(),
+            new PollableTest());
 
-        token.CancelAfter(1000); // Set timeout to avoid deadlock in while  
-        await service.StartAsync(token.Token);
-        // wait for service startup
-        while (service.Pollable.Counter == 0 && !token.IsCancellationRequested)
+        var startCts = new CancellationTokenSource();
+
+        // Start the service
+        await service.StartAsync(startCts.Token);
+
+        // Wait for the service to poll at least once (with reasonable timeout)
+        var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (service.Pollable.Counter == 0 && !timeoutCts.Token.IsCancellationRequested)
         {
+            await Task.Delay(50, timeoutCts.Token).ConfigureAwait(false); // Small delay to avoid tight spin
         }
-        token.IsCancellationRequested.ShouldBeFalse(); // Ensure that the request was not canceled using CancelAfter()
 
-        // Stop gracefully to test that token.IsCancellationRequested is recognized 
-        await service.StopAsync(token.Token);
+        // Verify the service successfully polled before timeout
+        service.Pollable.Counter.ShouldBeGreaterThan(0, "Service should have polled at least once");
+
+        // Stop the service gracefully with a fresh cancellation token
+        var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        await service.StopAsync(stopCts.Token);
+
+        // Verify graceful shutdown completed without cancellation
+        stopCts.Token.IsCancellationRequested.ShouldBeFalse("Service should stop gracefully");
     }
 }
