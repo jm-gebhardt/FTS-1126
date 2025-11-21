@@ -34,7 +34,7 @@ steps:
     condition: not(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - bash: |
-      dotnet tool install --global dotnet-affected
+      dotnet tool install --global dotnet-affected --version 6.1.0
     displayName: Install dotnet-affected tool
 
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
@@ -98,6 +98,7 @@ steps:
         inputs:
           command: 'build'
           Dockerfile: $(SourceDirectory)/Dockerfile
+          buildContext: 'Source'
           repository: 'gebhardt/fleet-management/${{projectName}}'
           arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
           tags: |

@@ -34,4 +34,4 @@ ARG PROJECT
 ENV PROJECT=$PROJECT
 WORKDIR c:\\app
 COPY --from=build-env /app/out ./
-CMD dotnet /app/Gebhardt.Acc.%PROJECT%.dll
+CMD ["cmd", "/C", "dotnet c:\\app\\Gebhardt.Acc.%PROJECT%.dll"]

@@ -5,7 +5,7 @@ steps:
       command: 'test'
       projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
       publishTestResults: true
-      arguments: '--configuration $(BuildConfiguration) --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
+      arguments: '--configuration $(Build.Configuration) --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
   - task: CopyFiles@2
     displayName: 'Copy coverage report'
     inputs:

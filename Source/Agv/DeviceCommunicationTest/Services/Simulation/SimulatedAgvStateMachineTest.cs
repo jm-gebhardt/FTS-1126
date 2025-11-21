@@ -355,6 +355,9 @@ public class SimulatedAgvStateMachineTest
             (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<UpdateActionCommand>()).ShouldBeTrue();
+
+            // Wait for action completed event to be published
+            await fixture.ShouldHavePublishedAsync<ActionCompletedByAgv>();
         }
     }
 

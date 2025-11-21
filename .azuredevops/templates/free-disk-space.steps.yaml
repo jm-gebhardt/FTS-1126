@@ -1,0 +1,32 @@
+steps:
+  - bash: |
+      echo "Disk space before cleanup:"
+      df -h /
+
+      echo "Removing unnecessary tools to free disk space..."
+
+      # Remove Android SDK
+      sudo rm -rf /usr/local/lib/android
+
+      # Remove .NET SDKs except the ones we need (keep 9 and 10)
+      sudo rm -rf /usr/share/dotnet/sdk/6.*
+      sudo rm -rf /usr/share/dotnet/sdk/7.*
+      sudo rm -rf /usr/share/dotnet/sdk/8.*
+
+      # Remove CodeQL (if not used)
+      sudo rm -rf /opt/hostedtoolcache/CodeQL
+
+      # Remove large tool caches
+      sudo rm -rf /opt/hostedtoolcache/go
+      sudo rm -rf /opt/hostedtoolcache/Ruby
+      sudo rm -rf /opt/hostedtoolcache/node
+
+      # Clean apt cache
+      sudo apt-get clean
+
+      # Clean Docker cache
+      docker system prune -af --volumes || true
+
+      echo "Disk space after cleanup:"
+      df -h /
+    displayName: 'Free disk space'
