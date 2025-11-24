@@ -13,6 +13,7 @@ using System.ComponentModel.DataAnnotations;
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using DeleteQueue = Gebhardt.Acc.TransportOrder.Messages.Requests.Queue.DeleteQueue;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.Queue;
@@ -72,6 +73,7 @@ public class QueueController : Controller
     /// <param name="nodes">The queue nodes.</param>
     /// <response code="200">Ok</response>
     /// <response code="400">Queue node position or id duplicated in the nodes list.</response>
+    [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
     [HttpPatch]
     [Route("/queue/")]
     public async Task<ActionResult<QueueDto>> AddQueue([FromQuery] [Required] string name, [FromBody] [Required] List<QueueNodeDto> nodes)
@@ -89,6 +91,7 @@ public class QueueController : Controller
     /// <param name="id">The id of the queue.</param>
     /// <response code="200">Ok</response>
     /// <response code="404">Queue with given id not found.</response>
+    [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
     [HttpDelete]
     [Route("/queue/{id:guid}")]
     public async Task<ActionResult> DeleteRestrictedArea([FromRoute] Guid id)
@@ -107,6 +110,7 @@ public class QueueController : Controller
     /// <response code="200">Ok</response>
     /// <response code="400">Bad Request. E.g. AGV is not in any queue.</response>
     /// <response code="404">Queue with given id not found.</response>
+    [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
     [HttpPost]
     [Route("/queue/{queueId:guid}/node/{nodeId}/removeAgv")]
     public async Task<ActionResult> ClearQueueNode([FromRoute] Guid queueId, [FromRoute] string nodeId, [FromBody] RemoveAgvFromQueueNodeDto body)

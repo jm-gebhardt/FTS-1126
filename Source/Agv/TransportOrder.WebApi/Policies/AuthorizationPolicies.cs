@@ -32,6 +32,11 @@ public static class AuthorizationPolicies
     /// </summary>
     public const string NodePropertiesUpdate = "NodePropertiesUpdate";
 
+    /// <summary>
+    /// Policy name for allowing full access to restricted area endpoints.
+    /// </summary>
+    public const string QueueFullAccess = "QueueFullAccess";
+
     private static class ClaimTypes
     {
         public const string ResourceAccess = "resource_access";
@@ -39,12 +44,14 @@ public static class AuthorizationPolicies
 
     private record Policy(string PolicyName, string ClaimContent, string ClaimType);
 
-    private static readonly IReadOnlyList<Policy> _policies = [
-        new (TriggersFullAccess, "fm-triggers-full", ClaimTypes.ResourceAccess),
-        new (RestrictedAreasFullAccess, "fm-restrictedAreas-full", ClaimTypes.ResourceAccess),
-        new (MapFullAccess, "fm-map-full", ClaimTypes.ResourceAccess),
-        new (NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess),
-        new (MaintenanceLogFullAccess, "fm-maintenanceLogs-full", ClaimTypes.ResourceAccess)
+    private static readonly IReadOnlyList<Policy> _policies =
+    [
+        new(TriggersFullAccess, "fm-triggers-full", ClaimTypes.ResourceAccess),
+        new(RestrictedAreasFullAccess, "fm-restrictedAreas-full", ClaimTypes.ResourceAccess),
+        new(MapFullAccess, "fm-map-full", ClaimTypes.ResourceAccess),
+        new(NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess),
+        new(MaintenanceLogFullAccess, "fm-maintenanceLogs-full", ClaimTypes.ResourceAccess),
+        new(QueueFullAccess, "fm-queues-full", ClaimTypes.ResourceAccess)
     ];
 
     private static void AddNewPolicy(this AuthorizationOptions options, Policy newPolicy)
