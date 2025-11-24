@@ -10,7 +10,7 @@
     <!-- VERSION LOCKED: Do not update without thorough testing -->
     <PackageVersion Include="AutoMapper" Version="[14.0.0]" />
     <PackageVersion Include="AutoMapper.Extensions" Version="2.1.0" />
-    <PackageVersion Include="Azure.Identity" Version="1.17.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.17.1" />
     <PackageVersion Include="FluentValidation" Version="12.1.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
     <!-- VERSION LOCKED at v8.5.5: Do not update to v9+ (commercial license required). Stay on v8.x (open source) -->
@@ -66,11 +66,10 @@
     <PackageVersion Include="Sarif.Sdk" Version="4.6.0" />
     <!-- Packages specific to IntegrationTest -->
     <PackageVersion Include="IdentityModel" Version="7.0.0" />
-    <PackageVersion Include="NSwag.Annotations" Version="14.6.0" />
-    <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.6.0" />
-    <PackageVersion Include="NSwag.MSBuild" Version="14.6.0" />
-    <PackageVersion Include="MQTTnet" Version="4.3.7.1207" />
-    <PackageVersion Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
-    <PackageVersion Include="Polly" Version="8.6.3" />
+    <PackageVersion Include="NSwag.Annotations" Version="14.6.2" />
+    <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.6.2" />
+    <PackageVersion Include="NSwag.MSBuild" Version="14.6.2" />
+    <PackageVersion Include="MQTTnet" Version="5.0.1.1416" />
+    <PackageVersion Include="Polly" Version="8.6.4" />
   </ItemGroup>
 </Project>

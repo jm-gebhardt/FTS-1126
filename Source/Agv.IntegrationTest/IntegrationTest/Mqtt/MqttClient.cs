@@ -1,8 +1,6 @@
 ﻿using Gebhardt.Acc.IntegrationTest.Extensions;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
-using MQTTnet.Client;
-using MQTTnet.Extensions.ManagedClient;
 using Newtonsoft.Json.Linq;
 
 namespace Gebhardt.Acc.IntegrationTest.Mqtt;
@@ -10,27 +8,20 @@ namespace Gebhardt.Acc.IntegrationTest.Mqtt;
 /// <summary>
 /// The MQTT Client for the integration test.
 /// </summary>
-public class MqttClient
+public class MqttClient : IAsyncDisposable
 {
     private const string Host = "localhost";
-    private readonly IManagedMqttClient _managedMqttClient;
     private readonly IMqttClient _mqttClient;
-
     private readonly string _user;
     private readonly string _password;
     private readonly ILogger _logger;
 
-
-    /// <summary>
-    /// Constructor
-    /// </summary>
     public MqttClient(string user, string password, ILogger logger)
     {
         _user = user;
         _password = password;
         _logger = logger;
-        var factory = new MqttFactory();
-        _managedMqttClient = factory.CreateManagedMqttClient();
+        var factory = new MqttClientFactory();
         _mqttClient = factory.CreateMqttClient();
     }
 
@@ -39,17 +30,20 @@ public class MqttClient
     /// </summary>
     public async Task Start()
     {
-        if (!_managedMqttClient.IsStarted)
-        {
-            await _managedMqttClient.StartAsync(ManagedClientOptions());
-        }
-
         if (!_mqttClient.IsConnected)
         {
-            await _mqttClient.ConnectAsync(ClientOptions());
+            var result = await _mqttClient.ConnectAsync(ClientOptions());
+
+            if (result.ResultCode != MqttClientConnectResultCode.Success)
+            {
+                _logger.LogError("Failed to connect: {ResultCode}, Reason: {ReasonString}",
+                    result.ResultCode, result.ReasonString);
+                throw new InvalidOperationException($"MQTT connection failed: {result.ResultCode}");
+            }
+
+            _logger.LogInformation("Successfully connected to MQTT broker");
         }
     }
-
 
     /// <summary>
     /// Subscribe to given topic.
@@ -59,7 +53,7 @@ public class MqttClient
     /// <param name="filter"></param>
     public void Subscribe(string topic, Func<JObject, Task> callback, Func<JObject, bool> filter)
     {
-        _managedMqttClient.ApplicationMessageReceivedAsync += async msg =>
+        _mqttClient.ApplicationMessageReceivedAsync += async msg =>
         {
             var messageContent = msg.ApplicationMessage.ConvertPayloadToString();
             var jObject = JObject.Parse(messageContent);
@@ -68,11 +62,15 @@ public class MqttClient
                 return;
             }
 
-            _logger.LogInformation("Received message on topic: {Topic}, Message: {Message}", msg.ApplicationMessage.Topic,
-                messageContent);
+            _logger.LogInformation("Received message on topic: {Topic}, Message: {Message}", msg.ApplicationMessage.Topic, messageContent);
             await callback.Invoke(jObject);
         };
-        _managedMqttClient.SubscribeAsync(topic);
+
+        var subscribeOptions = new MqttClientSubscribeOptionsBuilder()
+            .WithTopicFilter(topic)
+            .Build();
+
+        _mqttClient.SubscribeAsync(subscribeOptions);
     }
 
     /// <summary>
@@ -123,10 +121,15 @@ public class MqttClient
             .Build();
     }
 
-    private ManagedMqttClientOptions ManagedClientOptions()
+    public async ValueTask DisposeAsync()
     {
-        return new ManagedMqttClientOptionsBuilder()
-            .WithClientOptions(ClientOptions())
-            .Build();
+        if (_mqttClient.IsConnected)
+        {
+            await _mqttClient.DisconnectAsync(new MqttClientDisconnectOptions());
+            _logger.LogInformation("Disconnected from MQTT broker");
+        }
+
+        _mqttClient.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

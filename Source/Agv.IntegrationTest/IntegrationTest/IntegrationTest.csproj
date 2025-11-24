@@ -34,7 +34,6 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="MQTTnet" />
-      <PackageReference Include="MQTTnet.Extensions.ManagedClient" />
       <PackageReference Include="Polly" />
       <PackageReference Include="MSTest" />
       <PackageReference Include="Shouldly" />
