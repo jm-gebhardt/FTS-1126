@@ -16,6 +16,7 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
 {
     private readonly Random _random = Random.Shared;
     private bool _isSimulationPaused;
+    private const int MaxHu = 99999999;
 
     /// <summary>
     /// List of sources/destinations list of this simulation communicator.
@@ -24,8 +25,6 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
 
     /// <inheritdoc cref="IPollable.PollingInterval"/>
     public abstract int PollingInterval { get; }
-
-    private uint _orderIdCounter;
 
     private string _source = string.Empty;
 
@@ -65,7 +64,7 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger, Kae
 
     private string NextOrderId()
     {
-        return $"{_source}{_orderIdCounter++:D8}";
+        return $"{_source}{_random.Next(MaxHu):D8}";
     }
 
     /// <summary>

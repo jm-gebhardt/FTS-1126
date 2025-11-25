@@ -159,6 +159,7 @@ public class HostOrderCommandHandler(
         {
             hostOrder.Cancel(DateTime.UtcNow);
 
+            logger.LogInformation("Trigger cancellation or abortion of host order {ActionGroupCorrelationId} for HU {Hu}", hostOrder.CorrelationId, hostOrder.Hu);
             await context.Publish(new CancelOrAbortActionGroup(hostOrder.CorrelationId));
 
             await QueueUnmatchedDoppelspielPicks(context, GetAllTargets(hostOrder.Target), hostOrder.CorrelationId);

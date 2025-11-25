@@ -13,7 +13,7 @@ public class InputLoopSimulator(
     ILogger<SimulatorBase> logger,
     SimulateOptions simOptions,
     KaeserGraphConfiguration kaeserGraphConfiguration,
-    bool includeAplTargets = true)
+    bool includeAplTargets = false)
     : SimulatorBase(bus, logger, kaeserGraphConfiguration)
 {
     /// <inheritdoc />
@@ -43,5 +43,5 @@ public class InputLoopSimulator(
     }
 
     /// <inheritdoc />
-    public override int PollingInterval { get; } = 240_000 / simOptions.Speed; // 15/h in ms
+    public override int PollingInterval { get; } = 241_000 / simOptions.Speed; // 15/h in ms
 }

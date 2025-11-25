@@ -85,6 +85,31 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupStarted>();
     }
 
+    [DataRow(ActionState.Canceled)]
+    [DataRow(ActionState.Aborted)]
+    [TestMethod]
+    public async Task Consume_StartActionOfActionGroup_ActionAbortedOrCancelled_PublishesStartingActionForAgvFailed(ActionState state)
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId");
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        var pickAction = actionGroup.Actions.First();
+        pickAction.State = state;
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddRoute(nodes: ["Node1", "Node2"], edges: [Guid.NewGuid()])
+            .AddActionGroup(actionGroup)
+            .WithNode(pickAction.Target.Node!)
+            .WithLastActionDockFront(false);
+
+        var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
+        await fixture.PublishMessageAsync(startAction);
+
+        await fixture.ShouldNotHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
+        await fixture.ShouldHavePublishedAsync<StartingActionForAgvFailed>();
+    }
+
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_AgvInMessageIsNotAssignedAgv_PublishesStartingActionForAgvFailed()
     {

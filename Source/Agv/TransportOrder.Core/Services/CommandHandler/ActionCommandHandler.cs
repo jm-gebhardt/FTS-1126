@@ -338,7 +338,7 @@ public class ActionCommandHandler :
             var manualAction = await _actionCommandHelper.GetManualAction(agv);
             if (manualAction == null)
             {
-                _logger.LogDebug("There is no un-started manual action available for agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
+                _logger.LogInformation("There is no un-started manual action available for agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
                 return;
             }
             if (await _actionCommandHelper.SelectNodesForAgvAction(manualAction, agv, false, true, context.CancellationToken))
@@ -378,7 +378,7 @@ public class ActionCommandHandler :
 
             if (chosenActionGroup == null)
             {
-                _logger.LogDebug("There is no next action available for agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
+                _logger.LogInformation("There is no next action available for agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
                 await context.Publish(new AgvCanStartIdleAction(agv.CorrelationId), cancellationToken);
                 return;
             }

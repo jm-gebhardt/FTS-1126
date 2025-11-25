@@ -224,7 +224,7 @@ public class AgvCommandHandler :
 
         if (await _actionGroupRepository.HasCurrentAssignedActionGroupAsync(agvCorrelationId))
         {
-            _logger.LogDebug("No need for an idle action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
+            _logger.LogInformation("No need for an idle action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
             await context.Publish(new AgvBecameIdle(agvCorrelationId));
             return;
         }
@@ -251,7 +251,7 @@ public class AgvCommandHandler :
     {
         if (agv.IsQueueing || await _queueManager.IsOnAQueueNode(agv.CorrelationId))
         {
-            _logger.LogDebug("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}", agv.CorrelationId);
+            _logger.LogInformation("No need for a queue action because the agv is already in queuing for agvId: {AgvCorrelationId}", agv.CorrelationId);
             return true;
         }
 

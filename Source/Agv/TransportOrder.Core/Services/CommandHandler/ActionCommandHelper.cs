@@ -241,6 +241,13 @@ public class ActionCommandHelper
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
+        var actionToBeStarted = actionGroup.Actions.First(a => a.CorrelationId == action.CorrelationId);
+        if (actionToBeStarted.State is ActionState.Aborted or ActionState.Canceled)
+        {
+            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId}. Action has been aborted or cancelled: {ActionState}", action.CorrelationId, actionGroup.CorrelationId, actionToBeStarted.State);
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
+            return false;
+        }
         if (actionGroup.FirstNotStartedAction == null)
         {
             _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId} there is no action that can be started, {Action}, {ActionInGroup}", action.CorrelationId, actionGroup.CorrelationId, action.ToString(), actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).ToString());

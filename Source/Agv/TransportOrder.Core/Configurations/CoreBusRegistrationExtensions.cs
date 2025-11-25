@@ -282,6 +282,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<SaveActionGroupAbortion, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ResumeActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<CancelOrAbortActionGroup, ActionCommandHandler>(c);
+            actionPartitioner.PartitionMessageById<CancelActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ReassignActionGroup, ActionCommandHandler>(c);
         });
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
