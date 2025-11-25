@@ -14,14 +14,9 @@ public class AgvWifiMetricsEntityConfiguration : IEntityTypeConfiguration<AgvWif
     {
         builder.ToTable("StatisticsAgvWifiMetrics");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.PositionId);
-        builder.HasOne(e => e.Position)
-            .WithMany(p => p.AgvWifiMetrics)
-            .HasForeignKey(e => e.PositionId)
-            .OnDelete(DeleteBehavior.NoAction);
-        builder.Navigation(e => e.Position).AutoInclude();
+        builder.Property(e => e.GridCellId);
         builder.Property(e => e.Ssid).HasMaxLength(StatisticsStringLimits.DefaultMetric);
         builder.Property(e => e.Band).HasMaxLength(StatisticsStringLimits.DefaultMetric);
-        builder.ConfigureAllProperties(except: [nameof(AgvWifiMetrics.Position)]);
+        builder.ConfigureAllProperties(except: [nameof(AgvWifiMetrics.GridCell)]);
     }
 }

@@ -3,7 +3,6 @@ using Gebhardt.Acc.Statistics.Domain.Exceptions;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
-using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -16,13 +15,19 @@ namespace Gebhardt.Acc.Statistics.Test.Fixtures;
 public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixture<TConsumer>
     where TConsumer : class, IConsumer
 {
-    [PublicAPI]
-    public Mock<IStatisticsDb> StatisticsDbMock { get; set; } = new();
+    private readonly Mock<IGridCellRepository> _gridCellRepoMock = new();
+
+    private readonly Mock<IMapGridCellRepository> _mapGridCellRepoMock = new();
+
+    public Mock<IStatisticsDb> StatisticsDbMock { get; } = new();
 
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
         collection.AddTransient(_ => StatisticsDbMock.Object);
+        StatisticsDbMock.SetupGet(x => x.GridCell).Returns(_gridCellRepoMock.Object);
+        StatisticsDbMock.SetupGet(x => x.MapGridCell).Returns(_mapGridCellRepoMock.Object);
+
         StatisticsDbMock.SetupVerifiableMethods();
         return this;
     }
@@ -32,13 +37,14 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
         Build();
         if (inactivityTimeout != null)
         {
-            TestHarness.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
+            TestHarness.TestInactivityTimeout = (TimeSpan) inactivityTimeout;
         }
     }
 
     public MockDbConsumerTestFixture<TConsumer> WithGrids(List<Grid> grids)
     {
         StatisticsDbMock.Setup(x => x.Grids.GetAll()).ReturnsAsync(grids);
+        _gridCellRepoMock.Setup(x => x.GetOrAddGridCellsForCoordinatesAsync(It.IsAny<decimal>(), It.IsAny<decimal>())).ReturnsAsync([]);
         StatisticsDbMock.Setup(x => x.Grids.ThrowIfNotExistAsync(It.IsAny<Guid>()))
             .Callback((Guid gridId) =>
             {
@@ -47,13 +53,13 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
                     throw new GridNotFoundException(gridId);
                 }
             });
-            
+
         return this;
     }
-    
+
     public MockDbConsumerTestFixture<TConsumer> WithMaps(List<Map> maps)
     {
-        StatisticsDbMock.Setup(x => x.Maps.GetMapsForGridAsync(It.IsAny<Guid>())).ReturnsAsync(maps);
+        StatisticsDbMock.Setup(x => x.Maps.GetMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => maps.Single(m => m.MapId == id));
         StatisticsDbMock.Setup(x => x.Maps.ThrowIfNotExistAsync(It.IsAny<Guid>())).Callback((Guid c) =>
         {
             if (maps.All(m => m.MapId != c))
@@ -64,24 +70,13 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
         return this;
     }
 
-    public MockDbConsumerTestFixture<TConsumer> WithGridPositions(List<GridAgvPosition> positions)
+    public MockDbConsumerTestFixture<TConsumer> WithGridCells(List<GridCell> gridCells)
     {
-        StatisticsDbMock.Setup(x => x.GridAgvPositions.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => positions.Single(p => p.PositionId == id));
-        StatisticsDbMock.Setup(x => x.GridAgvPositions.GetPositionAsync(It.IsAny<Guid>(),
-                It.IsAny<int>(),
-                It.IsAny<int>(),
-                It.IsAny<float>(),
-                It.IsAny<string>()))
-            .ReturnsAsync((Guid id,
-                int x,
-                int y,
-                float z,
-                string agv) => positions.Single(p =>
-                p.GridId == id &&
-                p.XIndex == x &&
-                p.YIndex == y &&
-                Math.Abs(p.Z - z) <= float.Epsilon &&
-                p.SerialNumber == agv));
+        StatisticsDbMock.Setup(x => x.GridCell.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => gridCells.Single(p => p.CellId == id));
+        StatisticsDbMock.Setup(x => x.GridCell.GetOrAddGridCellsForCoordinatesAsync(It.IsAny<decimal>(), It.IsAny<decimal>()))
+            .ReturnsAsync((decimal x, decimal y) => gridCells.Where(p =>
+                    p.XMin <= x && p.XMax >= x && p.YMin <= y && p.YMax >= y)
+                .ToList());
         return this;
     }
 
@@ -92,19 +87,33 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
             It.IsAny<Guid>(),
             It.IsAny<DateTime?>(),
             It.IsAny<DateTime?>(),
-            It.IsAny<string[]>())).ReturnsAsync(heatmap);
+            It.IsAny<Guid[]>())).ReturnsAsync(heatmap);
         return this;
     }
-    
+
     public MockDbConsumerTestFixture<TConsumer> WithWifiSignalStrength(ScalarHeatmap heatmap)
     {
         StatisticsDbMock.Setup(x => x.GridAgvWifiMetrics.GetWifiSignalStrengthHeatmapAsync(
-            It.IsAny<Guid>(),
-            It.IsAny<Guid>(),
-            It.IsAny<DateTime?>(),
-            It.IsAny<DateTime?>(),
-            It.IsAny<string[]>()))
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<Guid[]>()))
             .ReturnsAsync(heatmap);
         return this;
+    }
+
+    public void VerifyCellIdsRequested()
+    {
+        _gridCellRepoMock.Verify(x => x.GetOrAddGridCellsForCoordinatesAsync(It.IsAny<decimal>(), It.IsAny<decimal>()), Times.Exactly(1));
+    }
+
+    public void VerifyAgvMapPositionsAdded(int count)
+    {
+        _mapGridCellRepoMock.Verify(x => x.Add(It.IsAny<MapGridCell>()), Times.Exactly(count));
+        if (count > 0)
+        {
+            StatisticsDbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }

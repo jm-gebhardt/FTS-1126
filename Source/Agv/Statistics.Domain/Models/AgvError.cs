@@ -5,20 +5,21 @@ namespace Gebhardt.Acc.Statistics.Domain.Models;
 /// <summary>
 /// Represents and agv error on a grid.
 /// </summary>
-public class AgvError : IPositionedEntity
+public class AgvError : IGridCellAssigned
 {
     /// <summary>
     /// The id of the error.
     /// </summary>
     public Guid ErrorId { get; init; }
 
-    /// <summary>
-    /// The PositionId of the Agv grid position.
-    /// </summary>
-    public Guid PositionId { get; init; }
+    /// <inheritdoc />
+    public Guid AgvCorrelationId { get; }
 
     /// <inheritdoc />
-    public GridAgvPosition? Position { get; init; }
+    public Guid GridCellId { get; set; }
+
+    /// <inheritdoc />
+    public GridCell GridCell { get; init; } = null!;
 
     /// <inheritdoc />
     public DateTime Timestamp { get; init; }
@@ -50,10 +51,11 @@ public class AgvError : IPositionedEntity
     public int ErrorCount { get; init; } = 1;
 
     /// <inheritdoc cref="AgvError"/>>.
-    public AgvError(Guid positionId, DateTime timestamp, ErrorLevel level, string code, string type, ErrorCategory category)
+    public AgvError(Guid gridCellId, Guid agvCorrelationId, DateTime timestamp, ErrorLevel level, string code, string type, ErrorCategory category)
     {
         ErrorId = Guid.NewGuid();
-        PositionId = positionId;
+        AgvCorrelationId = agvCorrelationId;
+        GridCellId = gridCellId;
         Timestamp = timestamp;
         ErrorLevel = level;
         ErrorCode = code;

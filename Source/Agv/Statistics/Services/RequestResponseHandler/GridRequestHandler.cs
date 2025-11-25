@@ -13,7 +13,7 @@ namespace Gebhardt.Acc.Statistics.Services.RequestResponseHandler;
 [UsedImplicitly]
 public class GridRequestHandler :
     IConsumer<GetGrids>,
-    IConsumer<GetPositionFrequencies>,
+    IConsumer<GetStayDurations>,
     IConsumer<GetErrorFrequencies>,
     IConsumer<GetFieldViolationFrequencies>,
     IConsumer<GetWifiSignalStrength>
@@ -41,24 +41,25 @@ public class GridRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetGrids> context)
     {
-        ICollection<Grid> grids = await _db.Grids.GetAll();
+        ICollection<Grid> grids = await _db.Grids.GetGridsAsync();
         await context.RespondAsync(new GotGrids(grids.ToList()));
     }
 
     /// <summary>
-    /// Handles the <see cref="GetPositionFrequencies"/> request.
+    /// Handles the <see cref="GetStayDurations"/> request.
     /// </summary>
-    public async Task Consume(ConsumeContext<GetPositionFrequencies> context)
+    public async Task Consume(ConsumeContext<GetStayDurations> context)
     {
         var gridId = context.Message.GridId;
         var mapId = context.Message.MapId;
         DateTime? fromDate = context.Message.FromDate;
         DateTime? toDate = context.Message.ToDate;
+        Guid[] agvCorrelationIds = context.Message.AgvCorrelationIds;
 
-        var heatmap = await _db.GridAgvPositions.GetPositionFrequency(gridId, mapId, fromDate, toDate);
+        var heatmap = await _db.GridCellStay.GetStayDurations(gridId, mapId, fromDate, toDate, agvCorrelationIds);
         await ValidateHeatmapAsync(heatmap, gridId, mapId);
 
-        await context.RespondAsync(new GotPositionFrequencies(heatmap));
+        await context.RespondAsync(new GotStayDurations(heatmap));
     }
 
     /// <summary>
@@ -73,12 +74,12 @@ public class GridRequestHandler :
             get.MapId,
             get.FromDate,
             get.ToDate,
-            get.AgvSerialNumbers,
+            get.AgvCorrelationIds,
             get.ErrorLevel,
             get.ErrorCode);
         await ValidateHeatmapAsync(heatmap, get.GridId, get.MapId);
 
-        await context.RespondAsync(new GotPositionFrequencies(heatmap));
+        await context.RespondAsync(new GotStayDurations(heatmap));
     }
 
     /// <summary>
@@ -93,10 +94,10 @@ public class GridRequestHandler :
             get.MapId,
             get.FromDate,
             get.ToDate,
-            get.AgvSerialNumbers);
+            get.AgvCorrelationIds);
         await ValidateHeatmapAsync(heatmap, get.GridId, get.MapId);
 
-        await context.RespondAsync(new GotPositionFrequencies(heatmap));
+        await context.RespondAsync(new GotStayDurations(heatmap));
     }
 
     /// <summary>
@@ -111,7 +112,7 @@ public class GridRequestHandler :
             get.MapId,
             get.FromDate,
             get.ToDate,
-            get.AgvSerialNumbers);
+            get.AgvCorrelationIds);
         await ValidateHeatmapAsync(heatmap, get.GridId, get.MapId);
 
         await context.RespondAsync(new GotWifiSignalStrength(heatmap));

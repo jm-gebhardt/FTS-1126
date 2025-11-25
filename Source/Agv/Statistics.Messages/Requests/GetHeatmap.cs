@@ -17,6 +17,6 @@ public record GetHeatmap
     /// <summary>The UTC to Date, only items with a less Timestamp will be considered.</summary>
     public DateTime? ToDate { get; init; }
 
-    /// <summary>The serial numbers of the agvs that were in error state.</summary>
-    public required string[] AgvSerialNumbers { get; init; }
+    /// <summary>The correlation Ids of the agvs to filter for.</summary>
+    public required Guid[] AgvCorrelationIds { get; init; }
 }

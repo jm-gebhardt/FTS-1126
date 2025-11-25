@@ -1,8 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Memory;
-using Gebhardt.Acc.Statistics.Cache;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.Statistics.Extensions;
 
@@ -22,14 +20,7 @@ public static class ScopedCacheRegistrationExtensions
     [PublicAPI]
     public static IServiceCollection AddAgvScopedCache<T>(this IServiceCollection services, int maxItemsPerAgv, bool warnOnOverflow = true) where T : notnull
     {
-        services.AddSingleton(typeof(ICache<string, List<T>>), typeof(Cache<string, List<T>>));
-        services.AddSingleton(typeof(IAgvScopedPositionCache<T>), sp =>
-        {
-            var inner = sp.GetRequiredService<ICache<string, List<T>>>();
-            ILogger<AgvScopedPositionCache<T>>? logger = warnOnOverflow ? sp.GetRequiredService<ILogger<AgvScopedPositionCache<T>>>() : null;
-            return new AgvScopedPositionCache<T>(inner, maxItemsPerAgv, logger, warnOnOverflow);
-        });
-        services.AddSingleton(typeof(IReadOnlyAgvScopedPositionCache<T>), sp => sp.GetRequiredService<IAgvScopedPositionCache<T>>());
+        services.AddSingleton(typeof(ICache<Guid, List<T>>), typeof(Cache<Guid, List<T>>));
         return services;
     }
 }

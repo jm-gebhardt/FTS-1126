@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Statistics.Cache;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Test.Models;
 using Gebhardt.Acc.Statistics.Test.Services.EventHandler;
 using MassTransit;
@@ -10,51 +10,22 @@ namespace Gebhardt.Acc.Statistics.Test.Fixtures;
 
 internal class GridPositionAttachedTestHandlerTestFixture
 {
-    private readonly Mock<IReadOnlyAgvScopedPositionCache<Guid>> _positionCacheMock = new();
-
-    private bool _shouldAct;
-
-    public Mock<IAgvScopedPositionCache<TestMessage>> PendingCacheMock { get; } = new();
-
-    public Mock<IPublishEndpoint> PublishEndpointMock { get; } = new();
+    private readonly Mock<IStatisticsDb> _statisticsDbMock = new();
+    private readonly Mock<IPublishEndpoint> _publishEndpointMock = new();
 
     public TestHandler Handler { get; }
 
     public GridPositionAttachedTestHandlerTestFixture()
     {
-        Handler = new TestHandler(_positionCacheMock.Object, PendingCacheMock.Object, PublishEndpointMock.Object, () => _shouldAct, Mock.Of<ILogger<TestHandler>>());
+        Handler = new TestHandler(_statisticsDbMock.Object, _publishEndpointMock.Object, Mock.Of<ILogger<TestHandler>>());
     }
 
     public static ConsumeContext<TestMessage> CreateContext(TestMessage message)
         => Mock.Of<ConsumeContext<TestMessage>>(x => x.Message == message);
 
-    public GridPositionAttachedTestHandlerTestFixture WithCachedPosition(string serial, AgvPosition pos, DateTime timeStamp, List<Guid> gridIds)
+    public GridPositionAttachedTestHandlerTestFixture WithGridCells(List<GridCell> grids)
     {
-        _positionCacheMock.Setup(x => x.TryGet(serial, pos, timeStamp, out gridIds!)).Returns(true);
-        return this;
-    }
-
-    public GridPositionAttachedTestHandlerTestFixture WithNoCachedPosition()
-    {
-        _positionCacheMock.Setup(x => x.TryGet(It.IsAny<string>(), It.IsAny<AgvPosition>(), It.IsAny<DateTime>(), out It.Ref<List<Guid>?>.IsAny)).Returns(false);
-        return this;
-    }
-
-    public GridPositionAttachedTestHandlerTestFixture WithPendingMessages(string serial, AgvPosition pos, DateTime timeStamp, List<TestMessage> messages)
-    {
-        PendingCacheMock.Setup(x => x.TryRemove(serial, pos, timeStamp, out messages!)).Returns(true);
-        return this;
-    }
-
-    public GridPositionAttachedTestHandlerTestFixture WithNoPendingMessages()
-    {
-        PendingCacheMock.Setup(x => x.TryRemove(It.IsAny<string>(), It.IsAny<AgvPosition>(), It.IsAny<DateTime>(), out It.Ref<List<TestMessage>?>.IsAny)).Returns(false);
-        return this;
-    }
-
-    public GridPositionAttachedTestHandlerTestFixture ShouldAct(bool result)
-    {
-        _shouldAct = result;
+        _statisticsDbMock.Setup(x => x.GridCell.GetOrAddGridCellsForCoordinatesAsync(It.IsAny<decimal>(), It.IsAny<decimal>())).ReturnsAsync(grids);
         return this;
     }
 }

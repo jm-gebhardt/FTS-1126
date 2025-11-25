@@ -23,9 +23,11 @@ public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>, I
 
     public IGridRepository Grids { get; }
 
-    public IGridAgvPositionRepository GridAgvPositions { get; }
+    public IGridCellRepository GridCell { get; }
 
-    public IMapAgvPositionsRepository MapAgvPositions { get; }
+    public IGridCellStayRepository GridCellStay { get; }
+
+    public IMapGridCellRepository MapGridCell { get; }
 
     public IAgvErrorRepository GridAgvErrors { get; }
 
@@ -39,8 +41,9 @@ public class StatisticsDbTestFixture : DbTestFixtureBase<StatisticsDbContext>, I
         _context = ContextFactory.CreateDbContext();
         Maps = new EfMapRepository(_context, new Mock<ILogger<EfMapRepository>>().Object);
         Grids = new EfGridRepository(_context);
-        GridAgvPositions = new EfGridAgvPositionRepository(_context);
-        MapAgvPositions = new EfMapAgvPositionsRepository(_context);
+        GridCell = new EfGridCellRepository(_context);
+        GridCellStay = new EfGridCellStayRepository(_context);
+        MapGridCell = new EfMapGridCellRepository(_context);
         GridAgvErrors = new EfAgvErrorRepository(_context);
         GridAgvFieldViolations = new EfAgvFieldViolationRepository(_context);
         GridAgvWifiMetrics = new EfAgvWifiMetricsRepository(_context);

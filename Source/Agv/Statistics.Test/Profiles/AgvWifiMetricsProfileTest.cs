@@ -11,7 +11,7 @@ public class AgvWifiMetricsProfileTest
     public void Map_ValidData_MapsAllProperties()
     {
         var mapper = MappingHelper.GetMapper(new AgvWifiMetricsProfile());
-        
+
         var wifiMetrics = WifiMetricsGenerator.GenerateWifiMetrics();
         var result = mapper.Map<Domain.Models.AgvWifiMetrics>(wifiMetrics);
         result.ShouldNotBeNull();
@@ -24,7 +24,7 @@ public class AgvWifiMetricsProfileTest
         result.Noise.ShouldBe(wifiMetrics.Noise);
         result.Timestamp.ShouldBe(wifiMetrics.Timestamp);
         result.Id.ShouldNotBe(Guid.Empty);
-        result.PositionId.ShouldBe(Guid.Empty);
-        result.Position.ShouldBeNull();
+        result.GridCellId.ShouldBe(Guid.Empty);
+        result.GridCell.ShouldBeNull();
     }
 }

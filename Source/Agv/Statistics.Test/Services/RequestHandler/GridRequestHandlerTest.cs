@@ -12,87 +12,87 @@ namespace Gebhardt.Acc.Statistics.Test.Services.RequestHandler;
 public class GridRequestHandlerTest
 {
     [TestMethod]
-    public async Task Consume_GetFieldViolationFrequencies_NoFieldViolationsUnknownGrid_DoesNotPublishGotPositionFrequencies()
+    public async Task Consume_GetFieldViolationFrequencies_NoFieldViolationsUnknownGrid_DoesNotPublishGotStayDurations()
     {
-        var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2) };
-        var maps = new List<Map> { new(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95, 1) };
-        var heatMap = new ScalarHeatmap(grids.Single().GridId, maps.Single().MapId, []);
+        var grid = new Grid("a grid", 2, 2);
+        var map = new Map(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95);
+        var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, []);
         MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithFieldViolationOccurence(heatMap)
-            .WithGrids(grids)
-            .WithMaps(maps);
+            .WithGrids([grid])
+            .WithMaps([map]);
 
         await fixture.TestHarness.Bus.Publish(new GetFieldViolationFrequencies
         {
             GridId = "Unknown".ToGuid(),
-            MapId = maps.Single().MapId,
-            AgvSerialNumbers = []
+            MapId = map.MapId,
+            AgvCorrelationIds = []
         });
 
         await fixture.ShouldHaveConsumedAsync<GetFieldViolationFrequencies>();
-        await fixture.ShouldNotHavePublishedAsync<GotPositionFrequencies>();
+        await fixture.ShouldNotHavePublishedAsync<GotStayDurations>();
     }
 
     [TestMethod]
-    public async Task Consume_GetFieldViolationFrequencies_NoFieldViolationsUnknownMap_DoesNotPublishGotPositionFrequencies()
+    public async Task Consume_GetFieldViolationFrequencies_NoFieldViolationsUnknownMap_DoesNotPublishGotStayDurations()
     {
-        var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2) };
-        var maps = new List<Map> { new(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95, 1) };
-        var heatMap = new ScalarHeatmap(grids.Single().GridId, maps.Single().MapId, []);
+        var grid = new Grid("a grid", 2, 2);
+        var map = new Map(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95);
+        var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, []);
         MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithFieldViolationOccurence(heatMap)
-            .WithGrids(grids)
-            .WithMaps(maps);
+            .WithGrids([grid])
+            .WithMaps([map]);
 
         await fixture.TestHarness.Bus.Publish(new GetFieldViolationFrequencies
         {
-            GridId = grids.Single().GridId,
+            GridId = grid.GridId,
             MapId = "Unknown".ToGuid(),
-            AgvSerialNumbers = []
+            AgvCorrelationIds = []
         });
 
         await fixture.ShouldHaveConsumedAsync<GetFieldViolationFrequencies>();
-        await fixture.ShouldNotHavePublishedAsync<GotPositionFrequencies>();
+        await fixture.ShouldNotHavePublishedAsync<GotStayDurations>();
     }
 
     [TestMethod]
-    public async Task Consume_GetFieldViolationFrequencies_ValidData_PublishesGotPositionFrequencies()
+    public async Task Consume_GetFieldViolationFrequencies_ValidData_PublishesGotStayDurations()
     {
-        var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2) };
-        var maps = new List<Map> { new(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95, 1) };
-        var heatMap = new ScalarHeatmap(grids.Single().GridId, maps.Single().MapId, []);
+        var grid = new Grid("a grid", 2, 2);
+        var map = new Map(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95);
+        var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, []);
         MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithFieldViolationOccurence(heatMap)
-            .WithGrids(grids)
-            .WithMaps(maps);
+            .WithGrids([grid])
+            .WithMaps([map]);
 
         await fixture.TestHarness.Bus.Publish(new GetFieldViolationFrequencies
         {
-            GridId = grids.Single().GridId,
-            MapId = maps.Single().MapId,
-            AgvSerialNumbers = []
+            GridId = grid.GridId,
+            MapId = map.MapId,
+            AgvCorrelationIds = []
         });
 
         await fixture.ShouldHaveConsumedAsync<GetFieldViolationFrequencies>();
-        await fixture.ShouldHavePublishedAsync<GotPositionFrequencies>();
+        await fixture.ShouldHavePublishedAsync<GotStayDurations>();
     }
 
     [TestMethod]
-    public async Task Consume_GetWifiSignalStrength_ValidData_PublishesGotPositionFrequencies()
+    public async Task Consume_GetWifiSignalStrength_ValidData_PublishesGotStayDurations()
     {
-        var grids = new List<Grid> { new("a grid", 20, 20, 0, 0, 2, 2) };
-        var maps = new List<Map> { new(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95, 1) };
-        var heatMap = new ScalarHeatmap(grids.Single().GridId, maps.Single().MapId, [[0, 0, -70], [1, 0, -65], [0, 1, -75]]);
+        var grid = new Grid("a grid", 2, 2);
+        var map = new Map(Guid.NewGuid(), Guid.NewGuid(), 65, 27, 70, 95);
+        var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, [[0, 0, -70], [1, 0, -65], [0, 1, -75]]);
         MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithWifiSignalStrength(heatMap)
-            .WithGrids(grids)
-            .WithMaps(maps);
+            .WithGrids([grid])
+            .WithMaps([map]);
 
         await fixture.TestHarness.Bus.Publish(new GetWifiSignalStrength
         {
-            GridId = grids.Single().GridId,
-            MapId = maps.Single().MapId,
-            AgvSerialNumbers = []
+            GridId = grid.GridId,
+            MapId = map.MapId,
+            AgvCorrelationIds = []
         });
 
         await fixture.ShouldHaveConsumedAsync<GetWifiSignalStrength>();

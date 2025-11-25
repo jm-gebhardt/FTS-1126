@@ -6,9 +6,9 @@ namespace Gebhardt.Acc.Statistics.Test.Models;
 
 public class TestMessage : IAgvSerialNumber, IWithAgvPosition, IMessageCreatedDate
 {
-    public string SerialNumber { get; init; } = "AGV123";
+    public string SerialNumber => "AGV123";
 
-    public AgvPosition AgvPosition { get; init; } = new(true, 1, 2, 0, 0);
+    public AgvPosition AgvPosition { get; } = new(true, 1, 2, 0, 0);
 
     public DateTime MessageCreatedDate { get; } = DateTime.UtcNow;
 }

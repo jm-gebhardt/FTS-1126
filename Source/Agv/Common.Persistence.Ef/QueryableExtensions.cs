@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 
@@ -64,14 +64,15 @@ public static class QueryableExtensions
         }
 
         /// <summary>
-        /// Filters a queryable sequence by checking items against a provided string array.
+        /// Filters a queryable sequence by checking items against a provided object array via the given selector.
         /// </summary>
+        /// <typeparam name="TFilterItem">The type of elements in the filter array.</typeparam>
         /// <param name="items">The string array to match against.</param>
         /// <param name="selector">Expression to select the string property for filtering.</param>
         /// <returns>The filtered queryable sequence.</returns>
-        public IQueryable<T> WhereIn(
-            string[]? items,
-            Expression<Func<T, string>> selector)
+        public IQueryable<T> WhereIn<TFilterItem>(
+            TFilterItem[]? items,
+            Expression<Func<T, TFilterItem>> selector)
         {
             if (items?.Length > 0)
             {
@@ -79,7 +80,7 @@ public static class QueryableExtensions
                     Expression.Call(
                         typeof(Enumerable),
                         nameof(Enumerable.Contains),
-                        [typeof(string)],
+                        [typeof(TFilterItem)],
                         Expression.Constant(items),
                         selector.Body
                     ),

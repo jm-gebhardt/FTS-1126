@@ -21,7 +21,7 @@ public static class MediatorRegistrationExtension
         cfg.AddRequestClient<AddGrid>();
         cfg.AddConsumer<GridRequestHandler>();
         cfg.AddRequestClient<GetGrids>();
-        cfg.AddRequestClient<GetPositionFrequencies>();
+        cfg.AddRequestClient<GetStayDurations>();
         cfg.AddRequestClient<GetErrorFrequencies>();
         cfg.AddRequestClient<GetFieldViolationFrequencies>();
         cfg.AddRequestClient<GetWifiSignalStrength>();

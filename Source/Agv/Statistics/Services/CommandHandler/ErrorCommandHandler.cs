@@ -18,18 +18,19 @@ public class ErrorCommandHandler(IStatisticsDb db) : IConsumer<AddError>
     /// </summary>
     public async Task Consume(ConsumeContext<AddError> context)
     {
-        (var agvError, List<Guid> positionIds) = context.Message;
+        (var agvError, List<Guid> gridCellIds) = context.Message;
 
-        foreach (var positionId in positionIds)
+        foreach (var gridCellId in gridCellIds)
         {
             if (agvError.IsFieldViolation())
             {
-                var error = new AgvFieldViolation(positionId, agvError.ErrorReceived);
+                var error = new AgvFieldViolation(agvError.AgvCorrelationId, gridCellId, agvError.ErrorReceived);
                 db.GridAgvFieldViolations.Add(error);
             }
             else
             {
-                var error = new AgvError(positionId,
+                var error = new AgvError(gridCellId,
+                    agvError.AgvCorrelationId,
                     agvError.ErrorReceived,
                     agvError.ErrorLevel,
                     agvError.ErrorCode ?? "",

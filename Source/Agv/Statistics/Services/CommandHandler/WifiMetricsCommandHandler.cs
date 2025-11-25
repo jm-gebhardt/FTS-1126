@@ -16,12 +16,13 @@ public class WifiMetricsCommandHandler(IStatisticsDb db, IMapper mapper) : ICons
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AddWifiMetrics> context)
     {
-        (var wifiMetrics, List<Guid> positionIds) = context.Message;
+        (var agvCorrelationId, var wifiMetrics, List<Guid> gridCellIds) = context.Message;
 
-        foreach (var positionId in positionIds)
+        foreach (var gridCellId in gridCellIds)
         {
             var agvWifiMetrics = mapper.Map<AgvWifiMetrics>(wifiMetrics);
-            agvWifiMetrics.PositionId = positionId;
+            agvWifiMetrics.AgvCorrelationId = agvCorrelationId;
+            agvWifiMetrics.GridCellId = gridCellId;
             db.GridAgvWifiMetrics.Add(agvWifiMetrics);
         }
 

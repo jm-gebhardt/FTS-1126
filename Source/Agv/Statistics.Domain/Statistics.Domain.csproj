@@ -9,4 +9,11 @@
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="Models\GridAgvPosition.cs" />
+      <Compile Remove="Repositories\IGridAgvPositionRepository.cs" />
+      <Compile Remove="Repositories\IMapAgvPositionsRepository.cs" />
+      <Compile Remove="Models\IPositionedEntity.cs" />
+      <Compile Remove="Models\MapAgvPositions.cs" />
+    </ItemGroup>
 </Project>

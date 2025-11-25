@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Statistics.Cache;
+﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Test.Models;
 using MassTransit;
@@ -7,20 +8,16 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.Statistics.Test.Services.EventHandler;
 
 public class TestHandler(
-    IReadOnlyAgvScopedPositionCache<Guid> positionCache,
-    IAgvScopedPositionCache<TestMessage> pendingCache,
+    IStatisticsDb statisticsDb,
     IPublishEndpoint publishEndpoint,
-    Func<bool> shouldAct,
     ILogger<TestHandler> logger
-) : GridPositionAttachedHandlerBase<TestMessage>(positionCache, pendingCache, publishEndpoint, logger)
+) : GridCellAttachedHandlerBase<TestMessage>(statisticsDb, publishEndpoint, logger)
 {
-    public readonly List<(TestMessage, List<Guid>)> HandledMessages = [];
+    public readonly List<(TestMessage, List<GridCell>)> HandledMessages = [];
 
-    protected override Task<bool> ShouldActAsync(TestMessage message) => Task.FromResult(shouldAct());
-
-    protected override Task HandleWithGridIdsAsync(TestMessage message, List<Guid> gridIds)
+    protected override Task HandleAsync(TestMessage message, List<GridCell> gridCells)
     {
-        HandledMessages.Add((message, gridIds));
+        HandledMessages.Add((message, gridCells));
         return Task.CompletedTask;
     }
 }

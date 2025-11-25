@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using AgvError = Gebhardt.Acc.Statistics.Domain.Models.AgvError;
 
@@ -8,7 +7,7 @@ namespace Gebhardt.Acc.Statistics.Domain.Repositories;
 /// <summary>
 /// Provides a repository for agv grid error related queries.
 /// </summary>
-public interface IAgvErrorRepository : IRepository<AgvError>
+public interface IAgvErrorRepository : IHeatmapRepository<AgvError>
 {
     /// <summary>
     /// Get the error occurence heatmap data.
@@ -20,5 +19,5 @@ public interface IAgvErrorRepository : IRepository<AgvError>
     /// <param name="agvSerialNumbers">The serial numbers of the agvs which error shall be included.</param>
     /// <param name="errorLevel">The error level.</param>
     /// <param name="errorCode">The error code.</param>
-    Task<ScalarHeatmap> GetErrorOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers, ErrorLevel errorLevel, string? errorCode);
+    Task<ScalarHeatmap> GetErrorOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[] agvSerialNumbers, ErrorLevel errorLevel, string? errorCode);
 }

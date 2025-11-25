@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Gebhardt.Acc.Common.Domain.Models;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Statistics.Cache;
 
@@ -14,5 +15,6 @@ public interface IReadOnlyAgvScopedPositionCache<T>
     /// <returns>
     /// True if the cache contains elements for the given AGV serial number and position; otherwise, false.
     /// </returns>
+    [PublicAPI]
     bool TryGet(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, [MaybeNullWhen(false)] out List<T> value);
 }

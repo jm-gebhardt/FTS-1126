@@ -10,9 +10,9 @@ namespace Gebhardt.Acc.Statistics.Domain.Repositories;
 public interface IMapRepository : IRepository<Map>
 {
     /// <summary>
-    /// Get all maps for a given grid.
+    /// Get map for a given grid if existing.
     /// </summary>
-    Task<ICollection<Map>> GetMapsForGridAsync(Guid gridId);
+    Task<Map?> GetMapAsync(Guid mapId);
 
     /// <summary>
     /// Throw <see cref="MapNotFoundException"/> if the map does not exist.

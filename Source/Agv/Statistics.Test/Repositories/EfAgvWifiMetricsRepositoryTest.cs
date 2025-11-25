@@ -10,16 +10,16 @@ public class EfAgvWifiMetricsRepositoryTest
 {
     private Grid _grid = null!;
     private Map _map = null!;
-    private GridAgvPosition _position = null!;
-    private MapAgvPositions _mapPosition = null!;
+    private GridCell _gridCell = null!;
+    private MapGridCell _mapGridCell = null!;
 
     [TestInitialize]
     public void Setup()
     {
-        _grid = new Grid("1x1", 12, 12, 1, 1, 1, 1);
-        _map = new Map(Guid.NewGuid(), _grid.GridId, 1, 1, 2, 2, 1);
-        _position = new GridAgvPosition(_grid.GridId, "agv", 1, 1, 1, 1, 1, DateTime.UtcNow, _grid);
-        _mapPosition = new MapAgvPositions(_map.MapId, _map, _position.PositionId, _position);
+        _grid = new Grid("1x1", 1, 1);
+        _map = new Map(Guid.NewGuid(), _grid.GridId, 1, 1, 2, 2);
+        _gridCell = new GridCell(1, 1, 1m, 2m, 1m, 2m, _grid);
+        _mapGridCell = new MapGridCell(_map, _gridCell);
     }
 
     [TestMethod]
@@ -29,10 +29,10 @@ public class EfAgvWifiMetricsRepositoryTest
 
         fixture.Grids.Add(_grid);
         fixture.Maps.Add(_map);
-        fixture.GridAgvPositions.Add(_position);
-        fixture.MapAgvPositions.Add(_mapPosition);
+        fixture.GridCell.Add(_gridCell);
+        fixture.MapGridCell.Add(_mapGridCell);
 
-        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_position.PositionId, beaconSignalAverage: -42));
+        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_gridCell, beaconSignalAverage: -42));
         await fixture.SaveAsync();
 
         var result = await fixture.GridAgvWifiMetrics.GetWifiSignalStrengthHeatmapAsync(
@@ -40,7 +40,7 @@ public class EfAgvWifiMetricsRepositoryTest
             _map.MapId,
             DateTime.UtcNow.AddMinutes(-1),
             DateTime.UtcNow.AddMinutes(1),
-            [_position.SerialNumber]
+            []
         );
 
         result.Values.ShouldHaveSingleItem();
@@ -57,12 +57,12 @@ public class EfAgvWifiMetricsRepositoryTest
 
         fixture.Grids.Add(_grid);
         fixture.Maps.Add(_map);
-        fixture.GridAgvPositions.Add(_position);
-        fixture.MapAgvPositions.Add(_mapPosition);
+        fixture.GridCell.Add(_gridCell);
+        fixture.MapGridCell.Add(_mapGridCell);
 
-        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_position.PositionId, beaconSignalAverage: -60));
-        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_position.PositionId, beaconSignalAverage: -70));
-        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_position.PositionId, beaconSignalAverage: -80));
+        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_gridCell, beaconSignalAverage: -60));
+        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_gridCell, beaconSignalAverage: -70));
+        fixture.GridAgvWifiMetrics.Add(AgvWifiMetricsGenerator.GenerateWifiMetrics(_gridCell, beaconSignalAverage: -80));
         await fixture.SaveAsync();
 
         var result = await fixture.GridAgvWifiMetrics.GetWifiSignalStrengthHeatmapAsync(
@@ -70,7 +70,7 @@ public class EfAgvWifiMetricsRepositoryTest
             _map.MapId,
             DateTime.UtcNow.AddMinutes(-5),
             DateTime.UtcNow,
-            [_position.SerialNumber]
+            []
         );
 
         result.GridId.ShouldBe(_grid.GridId);

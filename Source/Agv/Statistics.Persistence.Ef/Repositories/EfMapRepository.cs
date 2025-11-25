@@ -12,9 +12,9 @@ namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 public class EfMapRepository(StatisticsDbContext context, ILogger<EfMapRepository> logger) : EfRepository<Map, StatisticsDbContext>(context), IMapRepository
 {
     /// <inheritdoc cref="IMapRepository"/>>
-    public async Task<ICollection<Map>> GetMapsForGridAsync(Guid gridId)
+    public Task<Map?> GetMapAsync(Guid mapId)
     {
-        return await DbSet.Where(m => m.GridId == gridId).ToListAsync();
+        return DbSet.SingleOrDefaultAsync(m => m.MapId == mapId);
     }
 
     /// <inheritdoc cref="IMapRepository"/>>

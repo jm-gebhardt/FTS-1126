@@ -48,7 +48,7 @@ public class InitialGridProvider : BackgroundService
             var db = scope.ServiceProvider.GetRequiredService<IStatisticsDb>();
 
             ICollection<Grid> grids = await db.Grids.GetAll();
-            if (grids.Count != 0)
+            if (grids.Count > 0)
             {
                 // A grid was created previously.
                 gridCreated = true;

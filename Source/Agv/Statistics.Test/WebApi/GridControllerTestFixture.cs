@@ -23,9 +23,9 @@ public class GridControllerTestFixture : MockRequestClientControllerTestFixture<
 
     protected override void SetupController()
     {
-        AddRequestClient<GetPositionFrequencies, GotPositionFrequencies>(() => new GotPositionFrequencies(_heatmap));
-        AddRequestClient<GetErrorFrequencies, GotPositionFrequencies>(() => new GotPositionFrequencies(_heatmap));
-        AddRequestClient<GetFieldViolationFrequencies, GotPositionFrequencies>(() => new GotPositionFrequencies(_heatmap));
+        AddRequestClient<GetStayDurations, GotStayDurations>(() => new GotStayDurations(_heatmap));
+        AddRequestClient<GetErrorFrequencies, GotStayDurations>(() => new GotStayDurations(_heatmap));
+        AddRequestClient<GetFieldViolationFrequencies, GotStayDurations>(() => new GotStayDurations(_heatmap));
         AddRequestClient<GetGrids, GotGrids>(() => _gotGrids);
         _addGridClient = AddRequestClient<AddGrid, Success>(new Success());
         AddRequestClient<GetWifiSignalStrength, GotWifiSignalStrength>(() => new GotWifiSignalStrength(_heatmap));

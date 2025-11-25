@@ -10,9 +10,10 @@ namespace Gebhardt.Acc.Statistics.Domain.Repositories;
 public interface IGridRepository : IRepository<Grid>
 {
     /// <summary>
-    /// Get all grid ids.
+    /// Retrieves all grids.
     /// </summary>
-    Task<ICollection<Guid>> GetAllIdsAsync();
+    /// <returns>A collection of <see cref="Grid"/>.</returns>
+    Task<ICollection<Grid>> GetGridsAsync();
 
     /// <summary>
     /// Throw <see cref="GridNotFoundException"/> if the grid does not exist.

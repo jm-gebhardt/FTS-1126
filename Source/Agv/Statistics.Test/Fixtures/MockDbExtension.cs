@@ -23,8 +23,8 @@ public static class MockDbExtension
             dbMock.Setup(x => x.GridAgvFieldViolations.Add(It.IsAny<AgvFieldViolation>())).Verifiable();
             dbMock.Setup(x => x.GridAgvErrors.Add(It.IsAny<AgvError>())).Verifiable();
             dbMock.Setup(x => x.Maps.Add(It.IsAny<Map>())).Verifiable();
-            dbMock.Setup(x => x.GridAgvPositions.Add(It.IsAny<GridAgvPosition>())).Verifiable();
-            dbMock.Setup(x => x.MapAgvPositions.Add(It.IsAny<MapAgvPositions>())).Verifiable();
+            dbMock.Setup(x => x.GridCell.GetOrAddGridCellsForCoordinatesAsync(It.IsAny<decimal>(), It.IsAny<decimal>())).Verifiable();
+            dbMock.Setup(x => x.MapGridCell.Add(It.IsAny<MapGridCell>())).Verifiable();
             dbMock.Setup(x => x.SaveAsync(It.IsAny<CancellationToken>())).Verifiable();
         }
 
@@ -53,33 +53,6 @@ public static class MockDbExtension
         {
             dbMock.Verify(x => x.GridAgvFieldViolations.Add(It.IsAny<AgvFieldViolation>()), Times.AtLeastOnce);
             dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        /// <summary>
-        /// Verify agv positions were added.
-        /// </summary>
-        /// <param name="count">The number of positions added.</param>
-        /// <param name="verifySave">Whether to verify the save operation was called.</param>
-        public void VerifyAgvPositionsAdded(int count, bool verifySave = true)
-        {
-            dbMock.Verify(x => x.GridAgvPositions.Add(It.IsAny<GridAgvPosition>()), Times.Exactly(count));
-            if (count > 0 && verifySave)
-            {
-                dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
-            }
-        }
-
-        /// <summary>
-        /// Verify map agv positions were added.
-        /// </summary>
-        /// <param name="count">The number of positions added.</param>
-        public void VerifyAgvMapPositionsAdded(int count)
-        {
-            dbMock.Verify(x => x.MapAgvPositions.Add(It.IsAny<MapAgvPositions>()), Times.Exactly(count));
-            if (count > 0)
-            {
-                dbMock.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
-            }
         }
     }
 }

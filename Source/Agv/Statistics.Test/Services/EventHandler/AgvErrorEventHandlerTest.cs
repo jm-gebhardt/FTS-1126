@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Test.Extensions;
@@ -16,15 +17,16 @@ public class AgvErrorEventHandlerTest
     public async Task HandleWithGridIds_PublishesAddError()
     {
         var msg = new AgvErrorReceived(AgvErrorGenerator.GenerateAgvError(), new AgvPosition(true, 1, 1, 0, 0), "agv");
-        var gridIds = new List<Guid> { Guid.NewGuid() };
+        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, new Grid("", 1, 1));
         GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived> fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
 
-        await fixture.Handler.HandleTestMessageDirectly(msg, gridIds);
+        await fixture.Handler.HandleTestMessageDirectly(msg, [gridCell]);
 
         fixture.PublishEndpointMock.Verify(p => p.Publish(
             It.Is<AddError>(x =>
                 x.Error == msg.Error &&
-                x.GridPositionIds.SequenceEqual(gridIds)),
+                x.GridCellIds.Count == 1 &&
+                x.GridCellIds[0] == gridCell.CellId),
             CancellationToken.None), Times.Once);
     }
 }

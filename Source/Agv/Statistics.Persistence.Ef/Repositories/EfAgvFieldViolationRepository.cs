@@ -9,11 +9,12 @@ namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 public class EfAgvFieldViolationRepository(StatisticsDbContext context) : HeatmapRepositoryBase<AgvFieldViolation>(context), IAgvFieldViolationRepository
 {
     /// <inheritdoc cref="IAgvFieldViolationRepository"/>
-    public async Task<ScalarHeatmap> GetFieldViolationOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, string[] agvSerialNumbers)
+    public async Task<ScalarHeatmap> GetFieldViolationOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[] agvSerialNumbers)
     {
         IQueryable<AgvFieldViolation> query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers);
 
-        var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId, g => g.Sum(a => a.ViolationCount));
+        var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId,
+            g => g.Sum(a => a.ViolationCount));
 
         return heatmap;
     }

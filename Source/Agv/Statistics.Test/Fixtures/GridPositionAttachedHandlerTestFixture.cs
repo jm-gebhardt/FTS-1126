@@ -1,6 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.Statistics.Cache;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,19 +12,22 @@ internal class GridPositionAttachedHandlerTestFixture<THandler, TMessage> : Fixt
     where THandler : class
     where TMessage : class, IMessageCreatedDate
 {
-    private readonly Mock<IReadOnlyAgvScopedPositionCache<Guid>> _positionCacheMock = new();
-
-    private readonly Mock<IAgvScopedPositionCache<TMessage>> _pendingCacheMock = new();
     private readonly Mock<ILogger<THandler>> _loggerMock = new();
+    private readonly Mock<IStatisticsDb> _statisticsDbMock = new();
+    private readonly Mock<IGridCellRepository> _gridCellRepositoryMock = new();
 
     public Mock<IPublishEndpoint> PublishEndpointMock { get; } = new();
 
     public THandler Handler => Provider.GetRequiredService<THandler>();
 
+    public GridPositionAttachedHandlerTestFixture()
+    {
+        _statisticsDbMock.Setup(s => s.GridCell).Returns(_gridCellRepositoryMock.Object);
+    }
+
     protected override FixtureBase AddServices(IServiceCollection services)
     {
-        services.AddSingleton(_positionCacheMock.Object);
-        services.AddSingleton(_pendingCacheMock.Object);
+        services.AddSingleton(_statisticsDbMock.Object);
         services.AddSingleton(PublishEndpointMock.Object);
         services.AddSingleton(_loggerMock.Object);
 

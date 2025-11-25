@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.Statistics.Test.Helper;
 public static class AgvWifiMetricsGenerator
 {
     public static AgvWifiMetrics GenerateWifiMetrics(
-        Guid positionId,
+        GridCell gridCell,
         string ssid = "ssid",
         string? band = "2.4GHz",
         int? channel = 1,
@@ -23,7 +23,8 @@ public static class AgvWifiMetricsGenerator
 
         return new AgvWifiMetrics
         {
-            PositionId = positionId,
+            GridCell = gridCell,
+            GridCellId = gridCell.CellId,
             Ssid = ssid,
             Band = band,
             Channel = channel,

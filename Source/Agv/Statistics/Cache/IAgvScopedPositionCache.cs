@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Gebhardt.Acc.Common.Domain.Models;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Statistics.Cache;
 
@@ -13,6 +14,7 @@ public interface IAgvScopedPositionCache<T> : IReadOnlyAgvScopedPositionCache<T>
     /// <param name="agvPosition">The current position of the AGV.</param>
     /// <param name="timeStamp">The timestamp of the AgvPosition.</param>
     /// <param name="item">The item to add.</param>
+    [PublicAPI]
     void AddItem(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, T item);
 
     /// Adds a collection of items to the cache, scoped by a specific AGV serial number and its position.
@@ -21,6 +23,7 @@ public interface IAgvScopedPositionCache<T> : IReadOnlyAgvScopedPositionCache<T>
     /// <param name="agvPosition">The current position of the AGV.</param>
     /// <param name="timeStamp">The timestamp of the AgvPosition.</param>
     /// <param name="items">The items to add.</param>
+    [PublicAPI]
     void AddItem(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, List<T> items);
 
     /// Attempts to remove an entry from the cache based on the provided AGV serial number
@@ -31,5 +34,6 @@ public interface IAgvScopedPositionCache<T> : IReadOnlyAgvScopedPositionCache<T>
     /// <param name="timeStamp">The timestamp of the AgvPosition.</param>
     /// <param name="removed">The list of items removed from the cache, or `null` if no entry is found.</param>
     /// <returns>True if the entry is found and removed; otherwise, false.</returns>
+    [PublicAPI]
     bool TryRemove(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, [MaybeNullWhen(false)] out List<T> removed);
 }

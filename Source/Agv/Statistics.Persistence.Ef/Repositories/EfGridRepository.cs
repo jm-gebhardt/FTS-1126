@@ -10,10 +10,15 @@ namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 /// <inheritdoc cref="IGridRepository"/>>.
 public class EfGridRepository(StatisticsDbContext context) : EfRepository<Grid, StatisticsDbContext>(context), IGridRepository
 {
-    /// <inheritdoc cref="IGridRepository"/>>.
-    public async Task<ICollection<Guid>> GetAllIdsAsync()
+    /// <inheritdoc />
+    public async Task<ICollection<Grid>> GetGridsAsync()
     {
-        return await DbSet.Select(g => g.GridId).ToListAsync();
+        List<Grid> grids = await DbSet
+            .Include(g => g.Maps)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return grids;
     }
 
     /// <inheritdoc cref="IGridRepository"/>>

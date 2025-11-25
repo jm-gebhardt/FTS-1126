@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Domain.Models;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Statistics.Domain.Repositories;
 
@@ -19,14 +20,20 @@ public interface IStatisticsDb : IUnitOfWork
     IGridRepository Grids { get; }
 
     /// <summary>
-    /// The <see cref="GridAgvPosition"/> repository.
+    /// The <see cref="GridCell"/> repository.
     /// </summary>
-    IGridAgvPositionRepository GridAgvPositions { get; }
-    
+    [PublicAPI]
+    IGridCellRepository GridCell { get; }
+
     /// <summary>
-    /// The <see cref="Models.MapAgvPositions"/> repository.
+    /// The <see cref="GridCellStay"/> repository.
     /// </summary>
-    IMapAgvPositionsRepository MapAgvPositions { get; }
+    IGridCellStayRepository GridCellStay { get; }
+
+    /// <summary>
+    /// The <see cref="Models.MapGridCell"/> repository.
+    /// </summary>
+    IMapGridCellRepository MapGridCell { get; }
 
     /// <summary>
     /// The <see cref="AgvError"/> repository.
@@ -37,7 +44,7 @@ public interface IStatisticsDb : IUnitOfWork
     /// The <see cref="AgvFieldViolation"/> repository.
     /// </summary>
     IAgvFieldViolationRepository GridAgvFieldViolations { get; }
-    
+
     /// <summary>
     /// The <see cref="AgvWifiMetrics"/> repository.
     /// </summary>

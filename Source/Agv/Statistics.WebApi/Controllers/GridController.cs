@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Messages.Requests;
@@ -18,7 +19,7 @@ namespace Gebhardt.Acc.Statistics.WebApi.Controllers;
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class GridController : Controller
 {
-    private readonly IRequestClient<GetPositionFrequencies> _getPositionFrequencyClient;
+    private readonly IRequestClient<GetStayDurations> _getStayDurationsClient;
     private readonly IRequestClient<GetErrorFrequencies> _getErrorFrequencyClient;
     private readonly IRequestClient<GetFieldViolationFrequencies> _getFieldViolationFrequencyClient;
     private readonly IRequestClient<GetGrids> _getGridsClient;
@@ -30,7 +31,7 @@ public class GridController : Controller
     public GridController(
         IMapper mapper,
         IRequestClient<GetGrids> getGridsRequestClient,
-        IRequestClient<GetPositionFrequencies> positionFrequencyClient,
+        IRequestClient<GetStayDurations> stayDurationsClient,
         IRequestClient<GetErrorFrequencies> getErrorFrequencyClient,
         IRequestClient<AddGrid> addGridRequestClient,
         IRequestClient<GetFieldViolationFrequencies> getFieldViolationFrequencyClient,
@@ -38,7 +39,7 @@ public class GridController : Controller
     {
         _mapper = mapper;
         _getGridsClient = getGridsRequestClient;
-        _getPositionFrequencyClient = positionFrequencyClient;
+        _getStayDurationsClient = stayDurationsClient;
         _getErrorFrequencyClient = getErrorFrequencyClient;
         _addGridClient = addGridRequestClient;
         _getFieldViolationFrequencyClient = getFieldViolationFrequencyClient;
@@ -63,7 +64,7 @@ public class GridController : Controller
     /// <response code="200">Ok</response>
     [HttpPatch]
     [Route("/grid/add")]
-    public async Task<ActionResult> AddGrid(string name, float xSteps, float ySteps)
+    public async Task<ActionResult> AddGrid(string name, decimal xSteps, decimal ySteps)
     {
         await _addGridClient.GetResponse<Success>(new AddGrid(name, xSteps, ySteps));
         return Ok();
@@ -82,14 +83,14 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/positionFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetPositionFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate)
     {
-        Response<GotPositionFrequencies> response = await _getPositionFrequencyClient.GetResponse<GotPositionFrequencies>(
-            new GetPositionFrequencies
+        Response<GotStayDurations> response = await _getStayDurationsClient.GetResponse<GotStayDurations>(
+            new GetStayDurations
             {
                 GridId = gridId,
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvSerialNumbers = []
+                AgvCorrelationIds = []
             });
         var positionFrequency = _mapper.Map<ScalarHeatmapDto>(response.Message.PositionFrequency);
         return Ok(positionFrequency);
@@ -110,14 +111,14 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/errorFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetErrorFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers, string? errorCode)
     {
-        Response<GotPositionFrequencies> response = await _getErrorFrequencyClient.GetResponse<GotPositionFrequencies>(
+        Response<GotStayDurations> response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
             new GetErrorFrequencies
             {
                 GridId = gridId,
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvSerialNumbers = agvSerialNumbers ?? [],
+                AgvCorrelationIds = agvSerialNumbers.ToGuidArray(),
                 ErrorLevel = ErrorLevel.Fatal,
                 ErrorCode = errorCode
             }
@@ -141,14 +142,14 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/warningFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetWarningFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers, string? errorCode)
     {
-        Response<GotPositionFrequencies> response = await _getErrorFrequencyClient.GetResponse<GotPositionFrequencies>(
+        Response<GotStayDurations> response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
             new GetErrorFrequencies
             {
                 GridId = gridId,
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvSerialNumbers = agvSerialNumbers ?? [],
+                AgvCorrelationIds = agvSerialNumbers.ToGuidArray(),
                 ErrorLevel = ErrorLevel.Warning,
                 ErrorCode = errorCode
             });
@@ -170,14 +171,14 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/safetyFieldViolationFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetFieldViolationFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers)
     {
-        Response<GotPositionFrequencies> response = await _getFieldViolationFrequencyClient.GetResponse<GotPositionFrequencies>(
+        Response<GotStayDurations> response = await _getFieldViolationFrequencyClient.GetResponse<GotStayDurations>(
             new GetFieldViolationFrequencies
             {
                 GridId = gridId,
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvSerialNumbers = agvSerialNumbers ?? []
+                AgvCorrelationIds = agvSerialNumbers.ToGuidArray()
             });
         var positionFrequency = _mapper.Map<ScalarHeatmapDto>(response.Message.PositionFrequency);
         return Ok(positionFrequency);
@@ -204,7 +205,7 @@ public class GridController : Controller
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvSerialNumbers = agvSerialNumbers ?? []
+                AgvCorrelationIds = agvSerialNumbers.ToGuidArray()
             });
         var signalStrength = _mapper.Map<ScalarHeatmapDto>(response.Message.SignalStrength);
         return Ok(signalStrength);

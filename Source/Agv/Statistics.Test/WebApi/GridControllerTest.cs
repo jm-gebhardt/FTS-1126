@@ -12,7 +12,7 @@ public class GridControllerTest
     [TestMethod]
     public async Task GetGrids_ValidData_ReturnsGridDtos()
     {
-        var grids = new List<Grid>() { new("a grid", 1, 1, 1, 1, 1, 1) };
+        var grids = new List<Grid> { new("a grid", 1, 1) { Maps = [new Map(Guid.Empty, Guid.Empty, 0, 0, 0, 0)] } };
         var fixture = new GridControllerTestFixture()
             .WithGrids(grids)
             .Build();

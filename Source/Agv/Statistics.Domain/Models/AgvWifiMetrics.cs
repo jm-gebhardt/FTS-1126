@@ -1,20 +1,21 @@
 ﻿namespace Gebhardt.Acc.Statistics.Domain.Models;
 
 /// Represents the Wi-Fi metrics data for an AGV, including position, signal strength, and quality.
-public class AgvWifiMetrics : IPositionedEntity
+public class AgvWifiMetrics : IGridCellAssigned
 {
     /// <summary>
     /// Unique identifier for the AGV Wi-Fi metrics entity.
     /// </summary>
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    /// <summary>
-    /// The PositionId of the Agv grid position.
-    /// </summary>
-    public Guid PositionId { get; set; }
+    /// <inheritdoc />
+    public Guid AgvCorrelationId { get; set; }
 
     /// <inheritdoc />
-    public GridAgvPosition? Position { get; init; }
+    public Guid GridCellId { get; set; }
+
+    /// <inheritdoc />
+    public GridCell GridCell { get; init; } = null!;
 
     /// <inheritdoc />
     public DateTime Timestamp { get; init; }

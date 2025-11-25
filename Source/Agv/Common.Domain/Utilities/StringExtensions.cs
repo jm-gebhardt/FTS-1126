@@ -47,4 +47,16 @@ public static class StringExtensions
         /// <returns>A <see cref="BaseNode"/> instance initialized with the specified name and Id from <see cref="ToGuid"/>.</returns>
         public BaseNode ToBaseNode() => new(str.ToGuid(), str);
     }
+
+    /// <summary>
+    /// Extension block for string[].
+    /// </summary>
+    extension(string[]? stringArray)
+    {
+        /// <summary>
+        /// Converts an array of strings to an array of GUIDs by using the <see cref="ToGuid"/> method.
+        /// If the input array is null, it treats it as an empty array.
+        /// </summary>
+        public Guid[] ToGuidArray() => (stringArray ?? []).Select(s => s.ToGuid()).ToArray();
+    }
 }

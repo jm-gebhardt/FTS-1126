@@ -26,8 +26,8 @@ public class GridCommandHandler : IConsumer<AddGrid>
     /// </summary>
     public async Task Consume(ConsumeContext<AddGrid> context)
     {
-        (string name, float xStep, float yStep) = context.Message;
-        var grid = new Grid(name, 1, 1, 0, xStep, 0, yStep);
+        (string name, decimal xStep, decimal yStep) = context.Message;
+        var grid = new Grid(name, xStep, yStep);
         _db.Grids.Add(grid);
         await _db.SaveAsync();
         await context.RespondAsync(new Success());

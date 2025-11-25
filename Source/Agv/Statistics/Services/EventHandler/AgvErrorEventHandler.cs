@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.Statistics.Cache;
+using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Messages.Commands;
+using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
@@ -9,24 +11,21 @@ namespace Gebhardt.Acc.Statistics.Services.EventHandler;
 /// <summary>
 /// Handles the reception of AGV error events.
 /// </summary>
-public class AgvErrorEventHandler : GridPositionAttachedHandlerBase<AgvErrorReceived>
+[UsedImplicitly]
+public class AgvErrorEventHandler : GridCellAttachedHandlerBase<AgvErrorReceived>
 {
     /// <inheritdoc />
     public AgvErrorEventHandler(
-        IReadOnlyAgvScopedPositionCache<Guid> positionCache,
-        IAgvScopedPositionCache<AgvErrorReceived> pendingCache,
+        IStatisticsDb statisticsDb,
         IPublishEndpoint publishEndpoint,
         ILogger<AgvErrorEventHandler> logger)
-        : base(positionCache, pendingCache, publishEndpoint, logger)
+        : base(statisticsDb, publishEndpoint, logger)
     {
     }
 
     /// <inheritdoc />
-    protected override Task<bool> ShouldActAsync(AgvErrorReceived message) => Task.FromResult(true);
-
-    /// <inheritdoc />
-    protected override Task HandleWithGridIdsAsync(AgvErrorReceived message, List<Guid> gridIds)
+    protected override Task HandleAsync(AgvErrorReceived message, List<GridCell> gridCells)
     {
-        return PublishEndpoint.Publish(new AddError(message.Error, gridIds));
+        return PublishEndpoint.Publish(new AddError(message.Error, gridCells.Select(g => g.CellId).ToList()));
     }
 }

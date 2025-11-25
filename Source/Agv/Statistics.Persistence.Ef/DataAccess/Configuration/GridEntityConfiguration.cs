@@ -14,8 +14,10 @@ public class GridEntityConfiguration : IEntityTypeConfiguration<Grid>
         builder.ToTable("StatisticsGrid");
         builder.HasKey(g => g.GridId);
         builder.Property(g => g.GridName).HasMaxLength(DbStringLimits.Description);
+        builder.Property(g => g.XStep).HasPrecision(6, 2);
+        builder.Property(g => g.YStep).HasPrecision(6, 2);
         
-        builder.HasMany(g => g.AgvGridPositions)
+        builder.HasMany(g => g.GridCells)
             .WithOne(agp => agp.Grid)
             .HasForeignKey(agp => agp.GridId);
         
@@ -23,6 +25,6 @@ public class GridEntityConfiguration : IEntityTypeConfiguration<Grid>
             .WithOne(agp => agp.Grid)
             .HasForeignKey(agp => agp.GridId);
         
-        builder.ConfigureAllProperties(except: [nameof(Grid.AgvGridPositions), nameof(Grid.Maps), nameof(Grid.GridName)]);
+        builder.ConfigureAllProperties(except: [nameof(Grid.GridCells), nameof(Grid.Maps), nameof(Grid.GridName)]);
     }
 }

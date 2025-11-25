@@ -13,12 +13,8 @@ public class AgvFieldViolationEntityConfiguration : IEntityTypeConfiguration<Agv
     {
         builder.ToTable("StatisticsAgvFieldViolations");
         builder.HasKey(e => e.ViolationId);
-        builder.Property(e => e.PositionId);
-        builder.HasOne(e => e.Position)
-            .WithMany(p => p.AgvFieldViolations)
-            .HasForeignKey(e => e.PositionId)
-            .OnDelete(DeleteBehavior.NoAction); // 
-        builder.Navigation(e => e.Position).AutoInclude();
-        builder.ConfigureAllProperties(except: [nameof(AgvError.Position)]);
+        builder.Property(e => e.GridCellId);
+        builder.Property(e => e.ViolationCount);
+        builder.ConfigureAllProperties(except: [nameof(AgvFieldViolation.GridCell)]);
     }
 }

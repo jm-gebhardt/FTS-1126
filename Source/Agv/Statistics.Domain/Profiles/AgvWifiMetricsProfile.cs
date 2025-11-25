@@ -16,7 +16,8 @@ public class AgvWifiMetricsProfile : Profile
     {
         CreateMap<WifiMetrics, AgvWifiMetrics>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.PositionId, opt => opt.Ignore())
-            .ForMember(dest => dest.Position, opt => opt.Ignore());
+            .ForMember(dest => dest.AgvCorrelationId, opt => opt.Ignore())
+            .ForMember(dest => dest.GridCellId, opt => opt.Ignore())
+            .ForMember(dest => dest.GridCell, opt => opt.Ignore());
     }
 }

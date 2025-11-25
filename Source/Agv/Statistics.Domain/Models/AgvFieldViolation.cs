@@ -5,20 +5,21 @@ namespace Gebhardt.Acc.Statistics.Domain.Models;
 /// <summary>
 /// Represents an agv field violation on a grid.
 /// </summary>
-public class AgvFieldViolation : IPositionedEntity
+public class AgvFieldViolation : IGridCellAssigned
 {
     /// <summary>
     /// The id of the violation.
     /// </summary>
     public Guid ViolationId { get; init; }
 
-    /// <summary>
-    /// The position id of the agv grid position.
-    /// </summary>
-    public Guid PositionId { get; init; }
+    /// <inheritdoc />
+    public Guid AgvCorrelationId { get; }
 
     /// <inheritdoc />
-    public GridAgvPosition? Position { get; init; }
+    public Guid GridCellId { get; set; }
+
+    /// <inheritdoc />
+    public GridCell GridCell { get; init; } = null!;
 
     /// <inheritdoc />
     public DateTime Timestamp { get; init; }
@@ -30,10 +31,11 @@ public class AgvFieldViolation : IPositionedEntity
     public int ViolationCount { get; } = 1;
 
     /// <inheritdoc cref="AgvFieldViolation"/>>.
-    public AgvFieldViolation(Guid positionId, DateTime timestamp)
+    public AgvFieldViolation(Guid agvCorrelationId, Guid gridCellId, DateTime timestamp)
     {
         ViolationId = Guid.NewGuid();
-        PositionId = positionId;
+        AgvCorrelationId = agvCorrelationId;
+        GridCellId = gridCellId;
         Timestamp = timestamp;
     }
 

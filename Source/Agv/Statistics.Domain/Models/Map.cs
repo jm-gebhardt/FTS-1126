@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.Statistics.Domain.Models;
 /// <summary>
 /// Represents a map
 /// </summary>
-public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax, float z)
+public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax)
 {
     /// <summary>
     /// The id of the map.
@@ -38,12 +38,6 @@ public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax
     public int XMax { get; private set; } = xMax;
 
     /// <summary>
-    /// The Z position of the map [m].
-    /// </summary>
-    [UsedImplicitly]
-    public float Z { get; init; }  = z;
-
-    /// <summary>
     /// The Grid object.
     /// </summary>
     public Grid? Grid { get; init; }
@@ -52,7 +46,7 @@ public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax
     /// The list of AgvMapPositions object.
     /// </summary>
     [UsedImplicitly]
-    public ICollection<MapAgvPositions>? MapAgvPositions { get; init; } = new List<MapAgvPositions>();
+    public ICollection<MapGridCell>? MapGridCells { get; init; } = new List<MapGridCell>();
 
     /// <summary>
     /// Update the extent of a map.
@@ -74,12 +68,11 @@ public class Map(Guid mapId, Guid gridId, int xMin, int yMin, int xMax, int yMax
     /// </summary>
     /// <param name="xIndex">Position x index.</param>
     /// <param name="yIndex">Position y index.</param>
-    /// <param name="z">The z position</param>
     /// <returns>boolean</returns>
-    public bool IsPositionWithinMap(int xIndex, int yIndex, float z)
+    public bool IsWithinMap(int xIndex, int yIndex)
     {
         bool isWithin = XMin <= xIndex && xIndex <= XMax &&
-                        YMin <= yIndex && yIndex <= YMax && Math.Abs(Z -z) <= Constants.Grid.ZIdentityPrecision; 
+                        YMin <= yIndex && yIndex <= YMax;
         return isWithin;
     }
 }
