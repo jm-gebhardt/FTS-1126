@@ -69,7 +69,7 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
         Build();
 
         // Setup DecisionPointRepository
-        DecisionPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Verifiable();
+        DecisionPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Callback((Guid id) => { _dp1Actions.RemoveAll(a => a.CorrelationId == id); });
         DecisionPointRepository.Setup(x => x.Add(It.IsAny<DecisionPointAction>())).Callback((DecisionPointAction action) => { _dp1Actions.Add(action); });
         DecisionPointRepository.Setup(x => x.AddAsync(It.IsAny<DecisionPointAction>())).Callback((DecisionPointAction action) => _dp1Actions.Add(action));
         DecisionPointRepository.Setup(x => x.UpdateAsync(It.IsAny<DecisionPointAction>())).Verifiable();
@@ -77,7 +77,7 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
         DecisionPointRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _dp1Actions.Single(a => a.CorrelationId == c));
 
         // Setup WaitingPointRepository
-        WaitingPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Verifiable();
+        WaitingPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Callback((Guid id) => { _slwActions.RemoveAll(a => a.CorrelationId == id); });
         WaitingPointRepository.Setup(x => x.Add(It.IsAny<WaitingPointAction>())).Callback((WaitingPointAction action) => { _slwActions.Add(action); });
         WaitingPointRepository.Setup(x => x.AddAsync(It.IsAny<WaitingPointAction>())).Callback((WaitingPointAction action) => _slwActions.Add(action));
         WaitingPointRepository.Setup(x => x.UpdateAsync(It.IsAny<WaitingPointAction>())).Verifiable();

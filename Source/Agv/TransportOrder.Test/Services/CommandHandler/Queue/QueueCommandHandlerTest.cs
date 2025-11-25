@@ -234,6 +234,9 @@ public class QueueCommandHandlerTest
         var command = new EvacuateQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid());
         await fixture.TestHarness.Bus.Publish(command);
 
+        await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+
         List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(1);
 

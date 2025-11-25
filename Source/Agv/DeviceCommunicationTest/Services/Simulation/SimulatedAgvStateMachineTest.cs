@@ -215,6 +215,7 @@ public class SimulatedAgvStateMachineTest
         actionCompleted.CorrelationId.ShouldBe(actionId);
 
         // Last position message received should be the position of the last node
+        await fixture.ShouldHavePublishedAsync<AgvPositionReceived>();
         var destinationNode = nodes.First(n => n.Name == destination.Name);
         (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.X - destinationNode.X) < 0.01)).ShouldBeTrue();
         (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.Y - destinationNode.Y) < 0.01)).ShouldBeTrue();
@@ -294,6 +295,7 @@ public class SimulatedAgvStateMachineTest
             actionCompleted.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
 
             // Last position message received should be the position of the last node
+            await fixture.ShouldHavePublishedAsync<AgvPositionReceived>();
             var destinationNode = graph.Nodes.First(n => n.Name == updatedMoveAction.Target.Node?.Name);
             (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.X - destinationNode.X) < 0.01)).ShouldBeTrue();
             (await fixture.TestHarness.Published.Any<AgvPositionReceived>(c => Math.Abs(c.Context.Message.AgvPosition.Y - destinationNode.Y) < 0.01)).ShouldBeTrue();

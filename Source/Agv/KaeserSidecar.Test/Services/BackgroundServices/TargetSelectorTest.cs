@@ -168,14 +168,13 @@ public class TargetSelectorTest
         // First run of loop
         await fixture.SelectTargetAsync();
 
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         await fixture.Selector.Dequeue(moveAction.CorrelationId);
 
         var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
         await fixture.Selector.Enqueue(moveActionOfPick.CorrelationId, fixture.ActionGroups[1].AssignedAgv!.Value);
 
-        await fixture.Selector.Dequeue(moveAction.CorrelationId);
-
-        // Second run of loop 
+        // Second run of loop
         await fixture.SelectTargetAsync();
 
         await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
@@ -252,6 +251,7 @@ public class TargetSelectorTest
         await fixture.FreeStation(fixture.Stations[0].Id);
         await fixture.SelectTargetAsync();
 
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(1);
         await fixture.VerifyStationOccupancyAsync(fixture.Stations[0].Id, 1, dropAgv);
         await fixture.ShouldHavePublishedAsync<StationReserved>();

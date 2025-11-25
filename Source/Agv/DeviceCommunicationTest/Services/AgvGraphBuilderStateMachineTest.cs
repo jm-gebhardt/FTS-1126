@@ -124,6 +124,7 @@ public class AgvGraphBuilderStateMachineTest
         requestIdGraph.ShouldNotBe(requestIdList);
 
         // Check if the state machine published AgvGraphReceived finally.
+        await fixture.ShouldHavePublishedAsync<InternalAgvGraphReceived>();
         var publishedData = fixture.TestHarness.Published.Select<InternalAgvGraphReceived>().First().Context.Message;
 
         publishedData.CorrelationId.ShouldBe(correlationId);
@@ -195,6 +196,7 @@ public class AgvGraphBuilderStateMachineTest
         (await fixture.SagaHarness.Consumed.Any<InternalGraphReceived>()).ShouldBeTrue();
 
         // Check if the state machine published AgvGraphReceived finally.
+        await fixture.ShouldHavePublishedAsync<InternalAgvGraphReceived>();
         var publishedData = fixture.TestHarness.Published.Select<InternalAgvGraphReceived>().First().Context.Message;
 
         // Check for invalid usability due to duplicate nodes.

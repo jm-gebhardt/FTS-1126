@@ -48,7 +48,7 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
         });
 
         Build();
-        DecisionPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Verifiable();
+        DecisionPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Callback((Guid id) => { _actions.RemoveAll(a => a.CorrelationId == id); });
         DecisionPointRepository.Setup(x => x.Add(It.IsAny<DecisionPointAction>())).Callback((DecisionPointAction action) => { _actions.Add(action); });
         DecisionPointRepository.Setup(x => x.AddAsync(It.IsAny<DecisionPointAction>())).Callback((DecisionPointAction action) => _actions.Add(action));
         DecisionPointRepository.Setup(x => x.UpdateAsync(It.IsAny<DecisionPointAction>())).Verifiable();

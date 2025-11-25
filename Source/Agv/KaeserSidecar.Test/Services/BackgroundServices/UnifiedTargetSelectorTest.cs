@@ -412,6 +412,7 @@ public class UnifiedTargetSelectorTest
         await fixture.ExecuteAsync();
 
         // Both should get their respective stations since they don't conflict
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(2);
 
         var dp1Target = fixture.TestHarness.Published.Select<SetTargetForAction>()
@@ -454,6 +455,7 @@ public class UnifiedTargetSelectorTest
         await fixture.ExecuteAsync();
 
         // Only SLW should get PS03
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         List<IPublishedMessage<SetTargetForAction>> setTargetMessages = fixture.TestHarness.Published.Select<SetTargetForAction>().ToList();
         setTargetMessages.Count.ShouldBe(1);
 
@@ -485,6 +487,7 @@ public class UnifiedTargetSelectorTest
 
         await fixture.ExecuteAsync();
 
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(2);
 
         var dp1Target = fixture.TestHarness.Published.Select<SetTargetForAction>()
@@ -532,6 +535,7 @@ public class UnifiedTargetSelectorTest
         await fixture.ExecuteAsync();
 
         // DP1-2 entered first, so it should get the station
+        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
         List<IPublishedMessage<SetTargetForAction>> setTargetMessages = fixture.TestHarness.Published.Select<SetTargetForAction>().ToList();
         setTargetMessages.Count.ShouldBe(1);
 

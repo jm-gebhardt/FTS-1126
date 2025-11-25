@@ -61,7 +61,7 @@ public class ActionCommandConsumerTest
 
         await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
         await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
-        await fixture.ShouldHavePublishedAsync<StartActionCommand>();
+        (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();
 
         IPublishedMessage<Fault<StartActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<StartActionCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e => e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
@@ -376,7 +376,7 @@ public class ActionCommandConsumerTest
 
         await fixture.TestHarness.Bus.Publish(new UpdateActionCommand(Guid.Empty, "", action));
         await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-        await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+        (await fixture.TestHarness.Published.Any<Fault<UpdateActionCommand>>()).ShouldBeTrue();
 
         IPublishedMessage<Fault<UpdateActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<UpdateActionCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e =>
