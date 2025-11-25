@@ -11,6 +11,7 @@ updates:
        - "42f4ca0f-010d-6b7d-9420-a358bd5d6ed2" # s.schrader@gebhardt-group.com
        - "c01aac72-8af7-4b1d-8393-c787d77add86" # j.schmidt@ibs-dev.de
     ignore:
+     - dependency-name: "AutoMapper"  # version locked at 14.0.0 in Directory.Packages.props
      - dependency-name: "Microsoft.EntityFrameworkCore*"
        update-types: ["version-update:semver-major"]
      - dependency-name: "Microsoft.Extensions*"
@@ -18,8 +19,7 @@ updates:
      - dependency-name: "System.*"
        update-types: ["version-update:semver-major"]
      - dependency-name: "MassTransit*"
-       update-types: ["version-update:semver-minor"]
-       versions: ["<8.5.0"]  # ensure masstransit does not require .net9
+       update-types: ["version-update:semver-major"]  # block v9+ (commercial license required)
     groups:
       masstransit:
           patterns:
