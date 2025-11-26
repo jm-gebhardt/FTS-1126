@@ -84,6 +84,17 @@ public record Map
     public required ICollection<MapAgv> MapAgvs { get; init; }
 
     /// <summary>
+    /// The identifier of the drawing layer.
+    /// </summary>
+    [UsedImplicitly]
+    public Guid? DrawingLayerId => DrawingLayer?.Id;
+
+    /// <summary>
+    /// Optional drawing layer containing user-drawn vector elements.
+    /// </summary>
+    public MapDrawingLayer? DrawingLayer { get; set; }
+
+    /// <summary>
     /// Internal
     /// </summary>
     private Map()

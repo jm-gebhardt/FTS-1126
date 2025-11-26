@@ -77,4 +77,25 @@ public interface IMapRepository
     /// <param name="nodeId">The node id.</param>
     /// <returns>Correlation id of a map.</returns>
     Task<Guid> GetMapIdForNodeAsync(Guid nodeId);
+
+    /// <summary>
+    /// Gets the drawing layer for a map.
+    /// </summary>
+    /// <param name="mapCorrelationId">The correlation id of the map.</param>
+    /// <returns>The drawing layer if it exists, null otherwise.</returns>
+    Task<MapDrawingLayer?> GetDrawingLayerAsync(Guid mapCorrelationId);
+
+    /// <summary>
+    /// Sets (or overwrites) the drawing layer for a map.
+    /// </summary>
+    /// <param name="mapCorrelationId">The correlation id of the map.</param>
+    /// <param name="drawingLayer">The drawing layer to set.</param>
+    Task SetDrawingLayerAsync(Guid mapCorrelationId, MapDrawingLayer drawingLayer);
+
+    /// <summary>
+    /// Deletes the drawing layer for a map.
+    /// </summary>
+    /// <param name="mapCorrelationId">The correlation id of the map.</param>
+    /// <returns>True if the drawing layer was deleted, false if it didn't exist.</returns>
+    Task<bool> DeleteDrawingLayerAsync(Guid mapCorrelationId);
 }

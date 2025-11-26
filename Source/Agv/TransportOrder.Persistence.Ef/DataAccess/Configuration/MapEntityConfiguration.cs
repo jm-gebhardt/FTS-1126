@@ -29,6 +29,11 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
             .WithOne(ma => ma.Map)
             .HasForeignKey(ma => ma.MapId);
 
-        builder.ConfigureAllProperties(except: [nameof(Map.BaseBackground), nameof(Map.CustomBackground), nameof(Map.Nodes), nameof(Map.Edges), nameof(Map.MapAgvs), nameof(Map.BaseBackgroundId), nameof(Map.CustomBackgroundId)]);
+        builder.HasOne(m => m.DrawingLayer)
+            .WithOne()
+            .HasForeignKey<MapDrawingLayer>(d => d.MapCorrelationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.ConfigureAllProperties(except: [nameof(Map.BaseBackground), nameof(Map.CustomBackground), nameof(Map.Nodes), nameof(Map.Edges), nameof(Map.MapAgvs), nameof(Map.BaseBackgroundId), nameof(Map.CustomBackgroundId), nameof(Map.DrawingLayer), nameof(Map.DrawingLayerId)]);
     }
 }

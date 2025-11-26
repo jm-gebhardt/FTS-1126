@@ -29,6 +29,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Drawing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
@@ -517,6 +518,12 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TryAddQueue>();
         configurator.AddRequestClient<DeleteQueue>();
         configurator.AddRequestClient<RemoveAgvFromQueue>();
+        
+        // Drawing layer handlers
+        configurator.AddConsumer<DrawingLayerRequestHandler>();
+        configurator.AddRequestClient<GetDrawingLayer>();
+        configurator.AddRequestClient<SetDrawingLayer>();
+        configurator.AddRequestClient<DeleteDrawingLayer>();
     }
 
     private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)

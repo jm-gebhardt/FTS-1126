@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Drawing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
@@ -34,6 +35,9 @@ public class MapController : Controller
     private readonly IRequestClient<GetMapNodeStates> _getMapNodeStatesClient;
     private readonly IRequestClient<GetMapStations> _getMapStationsClient;
     private readonly IRequestClient<TrySettingNodeApproachingProperties> _nodeApproachingPropertiesClient;
+    private readonly IRequestClient<GetDrawingLayer> _getDrawingLayerClient;
+    private readonly IRequestClient<SetDrawingLayer> _setDrawingLayerClient;
+    private readonly IRequestClient<DeleteDrawingLayer> _deleteDrawingLayerClient;
     private readonly IMapper _mapper;
     private readonly ILogger<MapController> _logger;
     private readonly ILoggingService _loggingService;
@@ -52,6 +56,9 @@ public class MapController : Controller
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient,
         IRequestClient<GetMapStations> getMapStationsClient,
         IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient,
+        IRequestClient<GetDrawingLayer> getDrawingLayerClient,
+        IRequestClient<SetDrawingLayer> setDrawingLayerClient,
+        IRequestClient<DeleteDrawingLayer> deleteDrawingLayerClient,
         ILoggingService loggingService)
     {
         _mapper = mapper;
@@ -65,6 +72,9 @@ public class MapController : Controller
         _getMapNodeStatesClient = getMapNodeStatesClient;
         _getMapStationsClient = getMapStationsClient;
         _nodeApproachingPropertiesClient = nodeApproachingPropertiesClient;
+        _getDrawingLayerClient = getDrawingLayerClient;
+        _setDrawingLayerClient = setDrawingLayerClient;
+        _deleteDrawingLayerClient = deleteDrawingLayerClient;
         _loggingService = loggingService;
     }
 
@@ -238,5 +248,61 @@ public class MapController : Controller
         await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemNodeApproachingPropertiesUpdated } });
 
         return Ok();
+    }
+
+    /// <summary>
+    /// Get the drawing layer for a map.
+    /// </summary>
+    /// <param name="correlationId">The map correlation id.</param>
+    /// <response code="200">Drawing layer found.</response>
+    /// <response code="204">No drawing layer exists for this map.</response>
+    [HttpGet]
+    [Route("/map/{correlationId:guid}/drawing")]
+    public async Task<ActionResult<DrawingLayerDto>> GetDrawingLayer(Guid correlationId)
+    {
+        Response<GotDrawingLayer> response = await _getDrawingLayerClient.GetResponse<GotDrawingLayer>(new GetDrawingLayer(correlationId));
+
+        if (response.Message.MapCorrelationId == null)
+        {
+            return NoContent();
+        }
+
+        return Ok(new DrawingLayerDto(
+            response.Message.MapCorrelationId.Value,
+            response.Message.Version!.Value,
+            response.Message.ElementsJson!,
+            response.Message.LastModified!.Value
+        ));
+    }
+
+    /// <summary>
+    /// Set (create or update) the drawing layer for a map.
+    /// </summary>
+    /// <param name="correlationId">The map correlation id.</param>
+    /// <param name="dto">The drawing layer data.</param>
+    /// <response code="200">Drawing layer saved successfully.</response>
+    [Authorize(Policy = AuthorizationPolicies.MapFullAccess)]
+    [HttpPut]
+    [Route("/map/{correlationId:guid}/drawing")]
+    public async Task<ActionResult> SetDrawingLayer(Guid correlationId, [FromBody] SetDrawingLayerDto dto)
+    {
+        await _setDrawingLayerClient.GetResponse<Success>(new SetDrawingLayer(correlationId, dto.ElementsJson, dto.Version));
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Delete the drawing layer for a map.
+    /// </summary>
+    /// <param name="correlationId">The map correlation id.</param>
+    /// <response code="204">Drawing layer deleted (or none existed).</response>
+    [Authorize(Policy = AuthorizationPolicies.MapFullAccess)]
+    [HttpDelete]
+    [Route("/map/{correlationId:guid}/drawing")]
+    public async Task<ActionResult> DeleteDrawingLayer(Guid correlationId)
+    {
+        await _deleteDrawingLayerClient.GetResponse<Success>(new DeleteDrawingLayer(correlationId));
+
+        return NoContent();
     }
 }

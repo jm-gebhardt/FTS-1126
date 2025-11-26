@@ -1,0 +1,36 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# IDE and editor files
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.suo
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.azuredevops/
+
+# Documentation
+**/*.md
+!**/README.md
+
+# Test files
+**/*Tests/
+**/*Test/
+**/TestResults/
+
+# NuGet
+**/packages/
+**/*.nupkg
+
+# Other
+**/node_modules/
+**/.DS_Store
+**/Thumbs.db

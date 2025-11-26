@@ -356,4 +356,70 @@ public class EfMapRepository : IMapRepository
             rightOnly.Select(id => rightCollection.First(entry => Equals(id, idProvider(entry))))
         );
     }
+
+    /// <inheritdoc />
+    public async Task<MapDrawingLayer?> GetDrawingLayerAsync(Guid mapCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<MapDrawingLayer>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(d => d.MapCorrelationId == mapCorrelationId);
+    }
+
+    /// <inheritdoc />
+    public async Task SetDrawingLayerAsync(Guid mapCorrelationId, MapDrawingLayer drawingLayer)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var map = await context.Set<Map>()
+            .SingleOrDefaultAsync(m => m.CorrelationId == mapCorrelationId);
+
+        if (map == null)
+        {
+            throw new MapNotFoundException(mapCorrelationId);
+        }
+
+        var existingLayer = await context.Set<MapDrawingLayer>()
+            .SingleOrDefaultAsync(d => d.MapCorrelationId == mapCorrelationId);
+
+        if (existingLayer != null)
+        {
+            existingLayer.ElementsJson = drawingLayer.ElementsJson;
+            existingLayer.Version++;
+            existingLayer.LastModified = DateTime.UtcNow;
+            context.Update(existingLayer);
+        }
+        else
+        {
+            drawingLayer = drawingLayer with { MapCorrelationId = mapCorrelationId };
+            context.Add(drawingLayer);
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteDrawingLayerAsync(Guid mapCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var map = await context.Set<Map>()
+            .SingleOrDefaultAsync(m => m.CorrelationId == mapCorrelationId);
+
+        if (map == null)
+        {
+            throw new MapNotFoundException(mapCorrelationId);
+        }
+
+        var drawingLayer = await context.Set<MapDrawingLayer>()
+            .SingleOrDefaultAsync(d => d.MapCorrelationId == mapCorrelationId);
+
+        if (drawingLayer == null)
+        {
+            return false;
+        }
+
+        context.Remove(drawingLayer);
+        return await context.SaveChangesAsync() > 0;
+    }
 }
