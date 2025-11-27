@@ -270,7 +270,7 @@ public class MapController : Controller
         return Ok(new DrawingLayerDto(
             response.Message.MapCorrelationId.Value,
             response.Message.Version!.Value,
-            response.Message.ElementsJson!,
+            response.Message.Elements ?? [],
             response.Message.LastModified!.Value
         ));
     }
@@ -286,7 +286,7 @@ public class MapController : Controller
     [Route("/map/{correlationId:guid}/drawing")]
     public async Task<ActionResult> SetDrawingLayer(Guid correlationId, [FromBody] SetDrawingLayerDto dto)
     {
-        await _setDrawingLayerClient.GetResponse<Success>(new SetDrawingLayer(correlationId, dto.ElementsJson, dto.Version));
+        await _setDrawingLayerClient.GetResponse<Success>(new SetDrawingLayer(correlationId, dto.Elements, dto.Version));
 
         return Ok();
     }

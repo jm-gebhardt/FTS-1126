@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Drawing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.Map;
@@ -42,6 +43,9 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
         IRequestClient<GetMapStations> getStationsClient = GetRequestClient<GetMapStations>();
         IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
+        IRequestClient<GetDrawingLayer> getDrawingLayerClient = GetRequestClient<GetDrawingLayer>();
+        IRequestClient<SetDrawingLayer> setDrawingLayerClient = GetRequestClient<SetDrawingLayer>();
+        IRequestClient<DeleteDrawingLayer> deleteDrawingLayerClient = GetRequestClient<DeleteDrawingLayer>();
         var loggingService = new LoggingService(_logEntryRepository.Object, TestHarness.Bus, Mapper);
         var controller = new MapController(Mapper,
             new Mock<ILogger<MapController>>().Object,
@@ -54,6 +58,9 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             getMapNodeStatesClient,
             getStationsClient,
             nodeApproachingPropertiesClient,
+            getDrawingLayerClient,
+            setDrawingLayerClient,
+            deleteDrawingLayerClient,
             loggingService
             );
         return controller;

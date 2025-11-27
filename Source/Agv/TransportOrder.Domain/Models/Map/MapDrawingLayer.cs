@@ -1,3 +1,4 @@
+using Gebhardt.Acc.TransportOrder.Domain.Models.Map.Drawing;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
@@ -27,9 +28,10 @@ public record MapDrawingLayer
     public int Version { get; set; } = 1;
 
     /// <summary>
-    /// JSON serialized array of drawing elements (rectangles, circles, lines, text).
+    /// The drawing elements (rectangles, circles, lines, text).
+    /// Stored as a JSON column in the database using EF Core 10 polymorphic JSON support.
     /// </summary>
-    public string ElementsJson { get; set; } = "[]";
+    public IList<DrawingElement> Elements { get; set; } = [];
 
     /// <summary>
     /// Timestamp of the last modification.
@@ -53,10 +55,10 @@ public record MapDrawingLayer
 
     /// <inheritdoc cref="MapDrawingLayer"/>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
-    /// <param name="elementsJson">The JSON serialized drawing elements.</param>
-    public MapDrawingLayer(Guid mapCorrelationId, string elementsJson)
+    /// <param name="elements">The drawing elements.</param>
+    public MapDrawingLayer(Guid mapCorrelationId, IList<DrawingElement> elements)
     {
         MapCorrelationId = mapCorrelationId;
-        ElementsJson = elementsJson;
+        Elements = elements;
     }
 }

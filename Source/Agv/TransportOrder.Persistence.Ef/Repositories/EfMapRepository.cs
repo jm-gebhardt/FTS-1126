@@ -384,7 +384,7 @@ public class EfMapRepository : IMapRepository
 
         if (existingLayer != null)
         {
-            existingLayer.ElementsJson = drawingLayer.ElementsJson;
+            existingLayer.Elements = drawingLayer.Elements;
             existingLayer.Version++;
             existingLayer.LastModified = DateTime.UtcNow;
             context.Update(existingLayer);

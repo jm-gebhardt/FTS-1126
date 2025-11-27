@@ -27,6 +27,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Common.WebApi\Common.WebApi.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
         <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj" />
     </ItemGroup>
     <ItemGroup>

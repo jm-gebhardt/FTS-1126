@@ -496,10 +496,14 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<SetBackground, MapCommandHandler>(c);
             partitioner.PartitionMessageById<DeleteBackground, MapCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateMap, MapCommandHandler>(c);
+            partitioner.PartitionMessageById<SetDrawingLayer, MapCommandHandler>(c);
+            partitioner.PartitionMessageById<DeleteDrawingLayer, MapCommandHandler>(c);
         });
         configurator.AddRequestClient<UpdateMap>();
         configurator.AddRequestClient<SetBackground>();
         configurator.AddRequestClient<DeleteBackground>();
+        configurator.AddRequestClient<SetDrawingLayer>();
+        configurator.AddRequestClient<DeleteDrawingLayer>();
 
         configurator.AddConsumer<StationsRequestHandler>();
         configurator.AddRequestClient<GetMapStations>();
@@ -519,11 +523,9 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<DeleteQueue>();
         configurator.AddRequestClient<RemoveAgvFromQueue>();
         
-        // Drawing layer handlers
+        // Drawing layer handlers (Get is handled by DrawingLayerRequestHandler, Set/Delete by MapCommandHandler with partitioning)
         configurator.AddConsumer<DrawingLayerRequestHandler>();
         configurator.AddRequestClient<GetDrawingLayer>();
-        configurator.AddRequestClient<SetDrawingLayer>();
-        configurator.AddRequestClient<DeleteDrawingLayer>();
     }
 
     private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)

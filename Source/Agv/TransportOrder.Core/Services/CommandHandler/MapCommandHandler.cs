@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Drawing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using JetBrains.Annotations;
 using MassTransit;
@@ -28,7 +29,9 @@ public class MapCommandHandler :
     IConsumer<AgvGraphChanged>,
     IConsumer<UpdateMap>,
     IConsumer<SetBackground>,
-    IConsumer<DeleteBackground>
+    IConsumer<DeleteBackground>,
+    IConsumer<SetDrawingLayer>,
+    IConsumer<DeleteDrawingLayer>
 {
     private readonly IMapRepository _mapRepository;
     private readonly IMapper _mapper;
@@ -166,6 +169,41 @@ public class MapCommandHandler :
         else
         {
             _logger.LogInformation("No custom background to delete for map {CorrelationId}", correlationId);
+        }
+
+        await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<SetDrawingLayer> context)
+    {
+        var message = context.Message;
+        _logger.LogInformation("Setting drawing layer for map {CorrelationId}", message.CorrelationId);
+
+        var drawingLayer = new MapDrawingLayer(message.CorrelationId, message.Elements);
+
+        await _mapRepository.SetDrawingLayerAsync(message.CorrelationId, drawingLayer);
+
+        _logger.LogInformation("Drawing layer set successfully for map {CorrelationId}", message.CorrelationId);
+
+        await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<DeleteDrawingLayer> context)
+    {
+        var correlationId = context.Message.CorrelationId;
+        _logger.LogInformation("Deleting drawing layer for map {CorrelationId}", correlationId);
+
+        var deleted = await _mapRepository.DeleteDrawingLayerAsync(correlationId);
+
+        if (deleted)
+        {
+            _logger.LogInformation("Drawing layer deleted for map {CorrelationId}", correlationId);
+        }
+        else
+        {
+            _logger.LogInformation("No drawing layer to delete for map {CorrelationId}", correlationId);
         }
 
         await context.RespondAsync(new Success());

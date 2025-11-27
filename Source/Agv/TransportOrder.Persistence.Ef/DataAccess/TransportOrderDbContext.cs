@@ -52,5 +52,6 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new ZoneEntityConfiguration());
         modelBuilder.ApplyConfiguration(new MaintenanceLogEntityConfiguration());
         modelBuilder.ApplyConfiguration(new LogEntryEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new MapDrawingLayerEntityConfiguration());
     }
 }

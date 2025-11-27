@@ -1,3 +1,5 @@
+using Gebhardt.Acc.TransportOrder.Domain.Models.Map.Drawing;
+
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Drawing;
 
 /// <summary>
@@ -5,6 +7,6 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Drawing;
 /// </summary>
 /// <param name="MapCorrelationId">The correlation id of the map.</param>
 /// <param name="Version">The version of the drawing layer for optimistic concurrency.</param>
-/// <param name="ElementsJson">JSON serialized array of drawing elements.</param>
+/// <param name="Elements">The drawing elements (rectangles, circles, lines, text).</param>
 /// <param name="LastModified">Timestamp of the last modification.</param>
-public record GotDrawingLayer(Guid? MapCorrelationId, int? Version, string? ElementsJson, DateTime? LastModified);
+public record GotDrawingLayer(Guid? MapCorrelationId, int? Version, IList<DrawingElement>? Elements, DateTime? LastModified);
