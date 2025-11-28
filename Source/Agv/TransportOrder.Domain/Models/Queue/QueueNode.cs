@@ -20,6 +20,11 @@ public class QueueNode
     }
 
     /// <summary>
+    /// The corresponding <see cref="EfNode"/>.
+    /// </summary>
+    public EfNode? Node { get; set; }
+
+    /// <summary>
     /// The position of the node in the queue.
     /// </summary>
     public int Position
@@ -30,16 +35,11 @@ public class QueueNode
     }
 
     /// <summary>
-    /// The corresponding <see cref="EfNode"/>.
-    /// </summary>
-    public EfNode? Node { get; set; }
-
-    /// <summary>
     /// The agv the node is reserved for.
     /// </summary>
     public Guid? ReservedAgv { get; private set; }
 
-    /// <summary>Indicates whether the reserved AGV has changed.</summary>
+    /// <summary>Indicates whether the reserved AGV has changed (for in memory evaluation).</summary>
     public bool ReservedAgvChanged { get; private set; }
 
     /// <summary>
@@ -52,7 +52,7 @@ public class QueueNode
     /// </summary>
     public Guid? OccupiedAgv { get; private set; }
 
-    /// <summary>Indicates if the occupancy state of the AGV has changed.</summary>
+    /// <summary>Indicates if the occupancy state of the AGV has changed (for in memory evaluation).</summary>
     public bool OccupiedAgvChanged { get; private set; }
 
     /// <summary>

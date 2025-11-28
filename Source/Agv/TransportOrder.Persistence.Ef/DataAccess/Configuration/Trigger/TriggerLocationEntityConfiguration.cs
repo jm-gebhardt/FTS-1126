@@ -19,10 +19,19 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
             .HasForeignKey(p => p.LocationId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(e => e.Polygon).AutoInclude();
-        builder.OwnsMany(e => e.ConfigurationParameters, o => { o.ToTable("TriggerLocationConfigurationParameters"); });
+        builder.OwnsMany(e => e.ConfigurationParameters,
+            o =>
+            {
+                // TODO: restrict lenght of: Name, Description, Value, Validation
+                o.ToTable("TriggerLocationConfigurationParameters");
+            });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
+        // TODO: Use proper relation to Map table
         builder.Property(e => e.MapId);
+        // TODO: Use proper relation to Edge table
         builder.Property(e => e.EdgeId);
+
+        // TODO: Use EfNode type and HasOne relation
         builder.OwnsOne<GraphNode>(t => t.Node, n =>
         {
             n.Property(nn => nn.Id);

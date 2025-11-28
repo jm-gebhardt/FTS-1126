@@ -16,6 +16,7 @@ public class TriggerEntityConfiguration : IEntityTypeConfiguration<Trigger>
         builder.OwnsMany<ConfigurationParameter>(e => e.ConfigurationParameters, o =>
         {
             o.ToTable("TriggerServiceConfigurationParameters");
+            // TODO: Restrict length of Description, Value, Validation
             o.Property(c => c.Name).HasMaxLength(DbStringLimits.Description);
         });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();

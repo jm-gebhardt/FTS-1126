@@ -17,9 +17,9 @@ public class Queue
     public const string EvacuationOrderId = "Queue Evacuation Move";
 
     /// <summary>
-    /// The nodes corresponding to the queue.
+    /// The id of the queue.
     /// </summary>
-    public ICollection<QueueNode> Nodes { get; init; } = [];
+    public Guid Id { get; init; }
 
     /// <summary>
     /// The name of the queue.
@@ -27,9 +27,9 @@ public class Queue
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    /// The id of the queue.
+    /// The nodes corresponding to the queue.
     /// </summary>
-    public Guid Id { get; init; }
+    public ICollection<QueueNode> Nodes { get; init; } = [];
 
     private QueueNode? QueueHead => Nodes.MinBy(n => n.Position);
 

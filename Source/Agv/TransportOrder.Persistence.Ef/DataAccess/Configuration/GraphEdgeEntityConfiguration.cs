@@ -26,7 +26,7 @@ public class GraphEdgeEntityConfiguration : IEntityTypeConfiguration<EfEdge>
             .HasForeignKey(e => e.ToNodeId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
-        builder.ConfigureAllProperties(except: new[] { nameof(EfEdge.FromNodeId), nameof(EfEdge.ToNodeId), nameof(EfEdge.Maps), nameof(EfEdge.AgvGraphs) });
+        builder.ConfigureAllProperties(except: [nameof(EfEdge.FromNodeId), nameof(EfEdge.ToNodeId), nameof(EfEdge.Maps), nameof(EfEdge.AgvGraphs)]);
 
         builder.Property(e => e.VariantParameters).HasJsonConversion();
     }

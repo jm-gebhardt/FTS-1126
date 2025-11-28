@@ -17,6 +17,7 @@ public class AgvDataEntityConfiguration : IEntityTypeConfiguration<AgvData>
         builder.ToTable(AgvDataTableName);
         builder.ConfigureAllProperties();
 
+        // TODO: Rename to AgvCorrelationId and add proper relation to Agv table
         builder.HasKey(e => e.CorrelationId);
         builder.Property(e => e.Type).HasMaxLength(MaxLength);
         builder.Property(e => e.SoftwareVersion).HasMaxLength(DbStringLimits.Description);

@@ -7,6 +7,7 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Zo
 /// <inheritdoc />
 public class ZoneEntityConfiguration:IEntityTypeConfiguration<Domain.Models.Zone.Zone>
 {
+    // TODO: Consider renaming to Zone as that's the object and it's misleading. You can't find the domain object by using the table name.
     private const string TableName = "AgvZone";
 
     /// <inheritdoc />

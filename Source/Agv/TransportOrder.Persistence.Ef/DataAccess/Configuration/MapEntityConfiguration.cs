@@ -12,6 +12,7 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
     public void Configure(EntityTypeBuilder<Map> builder)
     {
         builder.HasKey(e => e.CorrelationId);
+        // TODO: Rename to MapName incl. xml docs
         builder.Property(e => e.MapId).HasMaxLength(DbStringLimits.Description);
 
         builder.OwnsOne(m => m.BaseBackground);

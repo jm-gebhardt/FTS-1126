@@ -11,6 +11,7 @@ public class NodeLockEntityConfiguration : IEntityTypeConfiguration<NodeLock>
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<NodeLock> builder)
     {
+        // TODO: Add relation to GraphNode
         builder.HasKey(x => x.NodeId);
         builder.Ignore(x => x.Node);
         builder.ConfigureAllProperties(except: [nameof(NodeLock.Node)]);

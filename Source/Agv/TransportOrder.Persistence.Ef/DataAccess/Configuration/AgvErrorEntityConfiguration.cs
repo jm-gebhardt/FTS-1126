@@ -13,9 +13,12 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
     public void Configure(EntityTypeBuilder<AgvError> builder)
     {
         builder.HasKey(o => o.CorrelationId);
+        // TODO: Can we use Gebhardt.Acc.Common.Persistence.Ef.HasJsonConversion like we are doing everywhere else?
         ValueConversionExtensions.HasJsonConversion(builder.Property(o => o.ErrorReferences));
+        // TODO: Add proper relation to Agv
         builder.Property(o => o.ErrorCode).HasMaxLength(DbStringLimits.Description);
         builder.Property(o => o.ErrorType).HasMaxLength(DbStringLimits.Description);
         builder.Property(o => o.Source).HasConversion<string>().HasMaxLength(DbStringLimits.Enum);
+        // TODO: restrict lenght of ErrorTitle, ErrorDescription
     }
 }

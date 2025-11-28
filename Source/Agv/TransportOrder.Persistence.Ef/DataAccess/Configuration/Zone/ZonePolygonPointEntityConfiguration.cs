@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Zone;
 
-/// <inheritdoc />  
+/// <inheritdoc />
+// TODO: Remove configuration as its not in use
 public class ZonePolygonPointEntityConfiguration: IEntityTypeConfiguration<ZonePolygonPoint>
 {
     private const string TableName = "AgvZonePolygonPoints";

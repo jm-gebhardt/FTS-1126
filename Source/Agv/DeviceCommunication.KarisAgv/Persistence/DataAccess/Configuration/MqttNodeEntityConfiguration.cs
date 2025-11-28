@@ -13,6 +13,7 @@ public class MqttNodeEntityConfiguration: IEntityTypeConfiguration<MqttNode>
     public void Configure(EntityTypeBuilder<MqttNode> builder)
     {
         builder.ToTable(MqttNodeTable);
+        // TODO restrict length 
         builder.HasKey(e => e.NodeId);
         builder.Property(e => e.X);
         builder.Property(e => e.Y);

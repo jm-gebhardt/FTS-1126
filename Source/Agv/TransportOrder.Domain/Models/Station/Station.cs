@@ -59,7 +59,6 @@ public class Station
     /// <summary>
     /// The user that locked the station.
     /// </summary>
-
     public string? LockedBy { get; set; }
 
     /// <summary>

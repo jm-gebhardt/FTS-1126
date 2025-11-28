@@ -11,10 +11,13 @@ public class WaitingPointActionEntityConfiguration : IEntityTypeConfiguration<Wa
     /// <inheritdoc cref="IEntityTypeConfiguration{TEntity}"/>>
     public void Configure(EntityTypeBuilder<WaitingPointAction> builder)
     {
+        // TODO: Add relation to AgvAction and rename to ActionCorrelationId
         builder.HasKey(e => e.CorrelationId);
         builder.Property(e => e.CorrelationId);
+        // TODO: Add relation to Agv
         builder.Property(e => e.AgvCorrelationId);
         builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.CreatedTime);
+        // TODO: add relation to GraphNode (Target)
     }
 }

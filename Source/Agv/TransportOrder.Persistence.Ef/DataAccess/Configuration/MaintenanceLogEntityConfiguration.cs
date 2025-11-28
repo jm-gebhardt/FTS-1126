@@ -15,6 +15,7 @@ public class MaintenanceLogEntityConfiguration: IEntityTypeConfiguration<Mainten
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
+        // TODO: Add proper relation to Agv table
         builder.Property(e => e.AgvCorrelationId);
         builder.Property(e => e.Comment).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.CreationDate);

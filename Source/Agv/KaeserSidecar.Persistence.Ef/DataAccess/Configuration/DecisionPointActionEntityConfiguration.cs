@@ -11,10 +11,15 @@ public class DecisionPointActionEntityConfiguration : IEntityTypeConfiguration<D
     /// <inheritdoc cref="IEntityTypeConfiguration{TEntity}"/>>
     public void Configure(EntityTypeBuilder<DecisionPointAction> builder)
     {
+        // TODO: Set up relation to AgvAction and rename to AgvCorrelationId
         builder.HasKey(e => e.CorrelationId);
         builder.Property(e => e.CorrelationId);
+        // TODO: Add relation to Agv
         builder.Property(e => e.AgvCorrelationId);
         builder.Property(e => e.ConsideredStations).HasJsonConversion();
+
+        // TODO: add relation to GraphNode
+        // TODO: remove HasMaxLength
         builder.Property(e => e.Target).HasMaxLength(DbStringLimits.NodeId);
         builder.Property(e => e.EntryTime);
     }

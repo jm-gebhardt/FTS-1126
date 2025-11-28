@@ -14,6 +14,7 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
         builder.HasKey(q => q.Id);
 
         builder.Property(q => q.Name)
+            // The IsRequired should be useless as the string is non-nullable.
             .IsRequired()
             .HasMaxLength(DbStringLimits.Description);
 
@@ -28,7 +29,9 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
         builder.OwnsMany(q => q.Nodes, nodeBuilder =>
         {
             nodeBuilder.WithOwner().HasForeignKey("QueueId");
+            // TODO: Add proper relation to GraphNode
             nodeBuilder.HasKey(n => n.NodeId);
+            // TODO: IsRequired is not needed as it's not nullable and remove HasMaxLength
             nodeBuilder.Property(n => n.NodeId).IsRequired().HasMaxLength(DbStringLimits.NodeId);
             nodeBuilder.Property(n => n.Position).IsRequired();
             nodeBuilder.Property(n => n.OccupiedAgv);

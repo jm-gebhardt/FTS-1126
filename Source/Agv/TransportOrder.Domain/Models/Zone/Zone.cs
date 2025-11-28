@@ -9,19 +9,20 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 public class Zone : IEquatable<Zone>
 {
     /// <summary>
-    /// The polygon that defines the zone boundaries.
+    /// The correlation id of the zone.
     /// </summary>
-    public ICollection<ZonePolygonPoint> Polygon { get; init; }
+    public Guid CorrelationId { get; init; }
 
     /// <summary>
     /// The id of the zone.
     /// </summary>
+    // TODO: Rename to ZoneName
     public string ZoneId { get; init; }
 
     /// <summary>
-    /// The correlation id of the zone.
+    /// The polygon that defines the zone boundaries.
     /// </summary>
-    public Guid CorrelationId { get; init; }
+    public ICollection<ZonePolygonPoint> Polygon { get; init; }
 
     /// <summary>
     /// The capacity of the zone.

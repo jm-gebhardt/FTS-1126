@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 public record Map
 {
     /// <summary>
-    /// The correlation id o the map.
+    /// The correlation id of the map.
     /// </summary>
     public Guid CorrelationId { get; init; }
 

@@ -13,5 +13,6 @@ public class SettingEntityConfiguration : IEntityTypeConfiguration<Setting>
     {
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Description);
+        // TODO restrict lenght of Value, ValueType
     }
 }

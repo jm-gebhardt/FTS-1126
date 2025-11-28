@@ -14,6 +14,7 @@ public class AgvSettingsGroupEntityConfiguration: IEntityTypeConfiguration<AgvSe
         builder.Property(e => e.GroupType);
         builder.HasOne(e => e.AgvSetting)
             .WithOne()
+            // TODO: Rename AgvGroupId to AgvSettingsGroupId for clarity
             .HasForeignKey<Domain.Models.Settings.AgvSettings>(s => s.AgvGroupId);
         builder.Navigation(s => s.AgvSetting).AutoInclude();
 

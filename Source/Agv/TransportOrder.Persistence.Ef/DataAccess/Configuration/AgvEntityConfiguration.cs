@@ -67,6 +67,7 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
             }
         });
         builder.Navigation(e => e.AgvStatus).AutoInclude();
+        // TODO: Add proper relation to AgvSettings
         builder.Property(e => e.AgvSettingsGroup);
     }
 }

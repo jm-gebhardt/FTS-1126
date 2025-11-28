@@ -41,6 +41,7 @@ public class Agv : IAgv
     /// <summary>
     /// The time span an agv can be offline without assigned nodes or action groups being cleared.
     /// </summary>
+    // TODO: Move to agv settings
     public static TimeSpan OfflineTolerance => TimeSpan.FromMinutes(5);
 
     /// <summary>
