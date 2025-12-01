@@ -671,8 +671,15 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     {
         object? parsed;
 
+        if (!selfReadModel.IsAssignableTo(self))
+        {
+            throw new FilterParserException($"Could not parse property {name} for {root.FullName}: {selfReadModel.FullName} with base {selfReadModel.BaseType?.FullName} is not in the inheritance of {self.FullName}");
+        }
+        ThrowHelper.ThrowIfValueType(self);
+        ThrowHelper.ThrowIfValueType(selfReadModel);
+        
         var parsedType = typeof(ParsedFilterable<,>).MakeGenericType(root, rootReadModel, self, selfReadModel);
-
+        
         if (rootKeyProperty == null || childKeyProperty == null || name == null || isOuterJoin == null)
         {
             parsed = Activator.CreateInstance(parsedType);
