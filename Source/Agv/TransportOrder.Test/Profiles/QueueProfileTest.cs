@@ -1,4 +1,5 @@
 ﻿using AutoFixture;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
@@ -20,7 +21,7 @@ public class QueueProfileTest
             .With(q => q.Nodes, fixture
                 .Build<QueueNode>()
                 .With(n => n.Node, fixture
-                    .Build<EfNode>()
+                    .Build<GraphNode>()
                     .With(n => n.Id)
                     .With(n => n.Name)
                     .OmitAutoProperties()

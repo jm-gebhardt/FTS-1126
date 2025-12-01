@@ -119,7 +119,7 @@ public interface IGraphRepository
     /// Get nodes , but only which are included in the predicate filter.
     /// </summary>
     /// <param name="predicate">Optional Linq predicate. If null, there will be no filtering</param>
-    Task<IEnumerable<GraphNode>> GetNodesAsync(Expression<Func<EfNode, bool>>? predicate = null);
+    Task<IEnumerable<GraphNode>> GetNodesAsync(Expression<Func<GraphNode, bool>>? predicate = null);
 
     /// <summary>
     /// Updates the Graph.

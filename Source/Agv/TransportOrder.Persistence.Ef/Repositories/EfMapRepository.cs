@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Services;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
@@ -265,7 +266,7 @@ public class EfMapRepository : IMapRepository
     private static async Task<bool> CheckGraphSaved(Map map, TransportOrderDbContext context)
     {
         bool nodesSaved = await context
-            .Set<EfNode>()
+            .Set<GraphNode>()
             .Where(node => map.Nodes.Select(n => n.Id).Contains(node.Id))
             .CountAsync() == map.Nodes.Count;
 
@@ -295,20 +296,18 @@ public class EfMapRepository : IMapRepository
 
     private static void UpdateRelations(Map existingMap, Map map, TransportOrderDbContext context)
     {
-        (IEnumerable<EfNode> nodesToRemove, IEnumerable<EfNode> nodesToAdd) = SymmetricDifference(existingMap.Nodes, map.Nodes, n => n.Id);
+        (IEnumerable<GraphNode> nodesToRemove, IEnumerable<GraphNode> nodesToAdd) = SymmetricDifference(existingMap.Nodes, map.Nodes, n => n.Id);
         (IEnumerable<EfEdge> edgesToRemove, IEnumerable<EfEdge> edgesToAdd) = SymmetricDifference(existingMap.Edges, map.Edges, n => n.Id);
         (IEnumerable<MapAgv> agvsToRemove, IEnumerable<MapAgv> agvsToAdd) = SymmetricDifference(existingMap.MapAgvs, map.MapAgvs, ma => ma.AgvId);
 
         foreach (var node in nodesToAdd)
         {
             context.Attach(node);
-            node.Maps.Add(existingMap);
             existingMap.Nodes.Add(node);
         }
 
         foreach (var node in nodesToRemove)
         {
-            node.Maps.Remove(existingMap);
             existingMap.Nodes.Remove(node);
         }
 

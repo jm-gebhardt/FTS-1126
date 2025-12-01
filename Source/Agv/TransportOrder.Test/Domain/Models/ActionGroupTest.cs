@@ -15,6 +15,7 @@ using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.Action
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 using DateTime = System.DateTime;
+using ActionTarget = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionTarget;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 

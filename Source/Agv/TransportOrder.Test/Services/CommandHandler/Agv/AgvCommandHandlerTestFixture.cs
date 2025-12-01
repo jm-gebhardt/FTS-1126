@@ -374,7 +374,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithNodesStates(ICollection<NodeLock> nodeLocks, ICollection<GraphNode> nodes, bool nodeReservationFails = false, string? lastNodeId = null)
     {
         _nodeStateRepositoryMock.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
-        AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Expression<Func<EfNode, bool>>?>())).ReturnsAsync(nodes);
+        AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Expression<Func<GraphNode, bool>>?>())).ReturnsAsync(nodes);
         _nodeStateRepositoryMock.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(nodeReservationFails);
         _nodeStateRepositoryMock.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
         _nodeStateRepositoryMock.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();

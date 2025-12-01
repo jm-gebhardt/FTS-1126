@@ -53,20 +53,21 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             // and remove the owned Common.Domain.GraphNode (which does not have any relation to the actual GraphTable right now)
             a.OwnsOne(e => e.Target, c =>
             {
-                c.OwnsOne<GraphNode>(t => t.Node, n =>
-                {
-                    n.Property(nn => nn.Id);
-                    n.Property(nn => nn.Name).HasMaxLength(DbStringLimits.NodeId);
-                    n.Ignore(nn => nn.TimeStamp);
-                    n.Ignore(nn => nn.Type);
-                    n.Ignore(nn => nn.X);
-                    n.Ignore(nn => nn.Y);
-                    n.Ignore(nn => nn.Z);
-                    n.Ignore(nn => nn.DropLiftHeight);
-                    n.Ignore(nn => nn.PickLiftHeight);
-                    n.Ignore(nn => nn.DockingDirection);
-                    n.Ignore(nn => nn.Theta);
-                });
+                c.HasOne<GraphNode>(t => t.Node);
+                //     , n =>
+                // {
+                //     n.Property(nn => nn.Id);
+                //     n.Property(nn => nn.Name).HasMaxLength(DbStringLimits.NodeId);
+                //     n.Ignore(nn => nn.TimeStamp);
+                //     n.Ignore(nn => nn.Type);
+                //     n.Ignore(nn => nn.X);
+                //     n.Ignore(nn => nn.Y);
+                //     n.Ignore(nn => nn.Z);
+                //     n.Ignore(nn => nn.DropLiftHeight);
+                //     n.Ignore(nn => nn.PickLiftHeight);
+                //     n.Ignore(nn => nn.DockingDirection);
+                //     n.Ignore(nn => nn.Theta);
+                // });
 
                 c.OwnsOne(t => t.Position, p =>
                 {

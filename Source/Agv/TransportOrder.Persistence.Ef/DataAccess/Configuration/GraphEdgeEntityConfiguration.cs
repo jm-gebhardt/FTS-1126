@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +17,12 @@ public class GraphEdgeEntityConfiguration : IEntityTypeConfiguration<EfEdge>
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
 
-        builder.HasOne<EfNode>()
+        builder.HasOne<GraphNode>()
             .WithMany()
             .HasForeignKey(e => e.FromNodeId)
             .OnDelete(DeleteBehavior.ClientCascade);
 
-        builder.HasOne<EfNode>()
+        builder.HasOne<GraphNode>()
             .WithMany()
             .HasForeignKey(e => e.ToNodeId)
             .OnDelete(DeleteBehavior.ClientCascade);

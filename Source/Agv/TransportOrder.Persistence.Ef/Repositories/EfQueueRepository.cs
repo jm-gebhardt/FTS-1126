@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -16,7 +17,7 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
         await using var context = await dbContextFactory.CreateDbContextAsync();
 
         List<Guid> nodeIds = queue.Nodes.Select(n => n.NodeId).ToList();
-        Dictionary<Guid, EfNode> efNodes = await context.Set<EfNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id);
+        Dictionary<Guid, GraphNode> efNodes = await context.Set<GraphNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id);
 
         foreach (var node in queue.Nodes)
         {

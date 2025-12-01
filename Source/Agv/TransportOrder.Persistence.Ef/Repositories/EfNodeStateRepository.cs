@@ -14,21 +14,21 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 /// <summary>
 /// Entity framework implementation of <see cref="INodeStateRepository"/>
 /// </summary>
-public class EfNodeStateRepository : INodeStateRepository
+public class GraphNodeStateRepository : INodeStateRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
     private readonly ISemaphoreProvider<INodeStateDbSemaphore> _semaphoreProvider;
     private readonly IMapper _mapper;
-    private readonly ILogger<EfNodeStateRepository> _logger;
+    private readonly ILogger<GraphNodeStateRepository> _logger;
 
     /// <summary>
     /// 
     /// </summary>
-    public EfNodeStateRepository(
+    public GraphNodeStateRepository(
         IDbContextFactory<TransportOrderDbContext> dbContextFactory,
         ISemaphoreProvider<INodeStateDbSemaphore> semaphoreProvider,
         IMapper mapper,
-        ILogger<EfNodeStateRepository> logger
+        ILogger<GraphNodeStateRepository> logger
     )
     {
         _dbContextFactory = dbContextFactory;
@@ -185,7 +185,7 @@ public class EfNodeStateRepository : INodeStateRepository
 
         var data = await dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .Join(dbContext.Set<EfNode>().AsNoTracking(),
+            .Join(dbContext.Set<GraphNode>().AsNoTracking(),
                 nl => nl.NodeId,
                 n => n.Id,
                 (nl, n) => new { nl, n })
@@ -216,7 +216,7 @@ public class EfNodeStateRepository : INodeStateRepository
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var data = await dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Join(dbContext.Set<GraphNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
             .Where(t => nodes.Contains(t.nl.NodeId) && t.nl.AgvCorrelationId == agvCorrelationId && t.nl.NodeState == NodeLockState.Reserved)
             .Select(t => new { t.nl, t.n })
             .ToListAsync();
@@ -246,7 +246,7 @@ public class EfNodeStateRepository : INodeStateRepository
 
         var data = await dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Join(dbContext.Set<GraphNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
             .Where(t => t.nl.AgvCorrelationId == agvCorrelationId).Select(t => new { t.nl, t.n }).ToListAsync();
         List<NodeLock> nodeLocks = data.Select(x =>
         {
@@ -283,7 +283,7 @@ public class EfNodeStateRepository : INodeStateRepository
         await using var dbContext = _dbContextFactory.CreateDbContext();
         var data = await dbContext.Set<NodeLock>()
             .AsNoTracking()
-            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Join(dbContext.Set<GraphNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
             .Where(t => t.nl.AgvCorrelationId == agvCorrelationId && t.nl.NodeState == nodeLockState)
             .Select(t => new { t.nl, t.n })
             .ToListAsync();
@@ -300,7 +300,7 @@ public class EfNodeStateRepository : INodeStateRepository
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var data = await dbContext.Set<NodeLock>().AsNoTracking()
-            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n }).Where(t => t.nl.NodeId == nodeId)
+            .Join(dbContext.Set<GraphNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n }).Where(t => t.nl.NodeId == nodeId)
             .Select(t => new { t.nl, t.n })
             .ToListAsync();
         var currentLock = data.Select(x =>
@@ -311,7 +311,7 @@ public class EfNodeStateRepository : INodeStateRepository
 
         if (currentLock == null)
         {
-            var node = await dbContext.Set<EfNode>().AsNoTracking().SingleOrDefaultAsync(n => n.Id == nodeId);
+            var node = await dbContext.Set<GraphNode>().AsNoTracking().SingleOrDefaultAsync(n => n.Id == nodeId);
             await dbContext.AddAsync(new NodeLock(_mapper.Map<GraphNode>(node), nodeState, false, agvCorrelationId, DateTime.UtcNow));
             return await dbContext.SaveChangesAsync() > 0;
         }
@@ -331,7 +331,7 @@ public class EfNodeStateRepository : INodeStateRepository
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         var data = await dbContext.Set<NodeLock>().AsNoTracking()
-            .Join(dbContext.Set<EfNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
+            .Join(dbContext.Set<GraphNode>().AsNoTracking(), nl => nl.NodeId, n => n.Id, (nl, n) => new { nl, n })
             .Where(t => t.nl.NodeId == nodeId)
             .Select(t => new { t.nl, t.n })
             .ToListAsync();
@@ -343,7 +343,7 @@ public class EfNodeStateRepository : INodeStateRepository
 
         if (currentLock == null)
         {
-            var node = await dbContext.Set<EfNode>().AsNoTracking().SingleOrDefaultAsync(n => n.Id == nodeId);
+            var node = await dbContext.Set<GraphNode>().AsNoTracking().SingleOrDefaultAsync(n => n.Id == nodeId);
             await dbContext.AddAsync(new NodeLock(_mapper.Map<GraphNode>(node), NodeLockState.Free, isLocked, null, DateTime.UtcNow));
         }
         else if (currentLock.IsLocked != isLocked)

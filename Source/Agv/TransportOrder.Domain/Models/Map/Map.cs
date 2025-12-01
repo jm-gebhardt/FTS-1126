@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
@@ -70,7 +71,7 @@ public record Map
     /// <summary>
     /// The list of nodes in the graph.
     /// </summary>
-    public required ICollection<EfNode> Nodes { get; init; }
+    public required ICollection<GraphNode> Nodes { get; init; }
 
     /// <summary>
     /// The list of edges in the graph.
@@ -98,7 +99,7 @@ public record Map
         MapId = mapId;
         BaseBackground = baseBackground;
         ModificationDate = modificationDate;
-        Nodes = new List<EfNode>();
+        Nodes = new List<GraphNode>();
         Edges = new List<EfEdge>();
         MapAgvs = new List<MapAgv>();
     }

@@ -1,20 +1,21 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
-public class EfNodeRepositoryTestFixture : TransportOrderDbFixture, IDisposable
+public class GraphNodeRepositoryTestFixture : TransportOrderDbFixture, IDisposable
 {
-    public EfNodeRepository Repository { get; }
+    public GraphNodeRepository Repository { get; }
 
-    public EfNodeRepositoryTestFixture()
+    public GraphNodeRepositoryTestFixture()
     {
-        Repository = new EfNodeRepository(ContextFactory, Mapper);
+        Repository = new GraphNodeRepository(ContextFactory, Mapper);
     }
 
     protected override IEnumerable<Profile> GetProfiles()
@@ -33,7 +34,7 @@ public class EfNodeRepositoryTestFixture : TransportOrderDbFixture, IDisposable
     {
         using var context = ContextFactory.CreateDbContext();
 
-        context.Set<EfNode>().AttachRange(map.Nodes);
+        context.Set<GraphNode>().AttachRange(map.Nodes);
         context.Set<EfEdge>().AttachRange(map.Edges);
         context.Set<Map>().Add(map);
         context.SaveChanges();

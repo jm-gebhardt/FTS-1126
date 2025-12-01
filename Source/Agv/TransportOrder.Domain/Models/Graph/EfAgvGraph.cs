@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 
@@ -16,7 +17,7 @@ public record EfAgvGraph
     /// <summary>
     /// The list of nodes in the graph.
     /// </summary>
-    public ICollection<EfNode> Nodes { get; init; }
+    public ICollection<GraphNode> Nodes { get; init; }
 
     /// <summary>
     /// The list of edges in the graph.

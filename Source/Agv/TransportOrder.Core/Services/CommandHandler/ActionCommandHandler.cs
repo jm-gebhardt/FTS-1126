@@ -15,6 +15,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -1118,7 +1119,8 @@ public class ActionCommandHandler :
             bool startNodeIsStation = await GetStartNodeIsStation(actionToUpdate);
             if (actionToUpdate.CorrelationId == targetAction.CorrelationId)
             {
-                actionGroup.SetTargetForAction(actionId, targetNode, route);
+                var targetNodeDomain = _mapper.Map<GraphNode>(targetNode);
+                actionGroup.SetTargetForAction(actionId, targetNodeDomain, route);
             }
             else
             {

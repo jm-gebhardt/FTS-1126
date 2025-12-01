@@ -35,7 +35,7 @@ public class GraphProfileTest
             e => e.Length.ShouldBe(graphEdge.Length));
     }
 
-    private static void VerifyGraphNode(EfNode efNode, GraphNode graphNode)
+    private static void VerifyGraphNode(GraphNode efNode, GraphNode graphNode)
     {
         efNode.ShouldNotBeNull();
         efNode.ShouldSatisfyAllConditions(
@@ -90,12 +90,12 @@ public class GraphProfileTest
     }
 
     [TestMethod]
-    public void Map_WhereGraphNodeIsMappedToEfNode_ShouldMapAllPropertiesCorrectly()
+    public void Map_WhereGraphNodeIsMappedToGraphNode_ShouldMapAllPropertiesCorrectly()
     {
         var graphNode = AgvGraphGenerator.Nodes.First();
         var mapper = GetMapper();
 
-        var efNode = mapper.Map<EfNode>(graphNode);
+        var efNode = mapper.Map<GraphNode>(graphNode);
 
         VerifyGraphNode(efNode, graphNode);
     }

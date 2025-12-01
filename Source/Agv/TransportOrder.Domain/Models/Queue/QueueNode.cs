@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 
@@ -20,9 +21,9 @@ public class QueueNode
     }
 
     /// <summary>
-    /// The corresponding <see cref="EfNode"/>.
+    /// The corresponding <see cref="GraphNode"/>.
     /// </summary>
-    public EfNode? Node { get; set; }
+    public GraphNode? Node { get; set; }
 
     /// <summary>
     /// The position of the node in the queue.

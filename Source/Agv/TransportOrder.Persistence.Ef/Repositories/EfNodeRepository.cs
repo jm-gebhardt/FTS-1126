@@ -11,13 +11,13 @@ using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 /// <inheritdoc/>
-public class EfNodeRepository : INodeRepository
+public class GraphNodeRepository : INodeRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
     private readonly IMapper _mapper;
 
     /// <inheritdoc cref="INodeRepository"/>
-    public EfNodeRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper)
+    public GraphNodeRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IMapper mapper)
     {
         _dbContextFactory = dbContextFactory;
         _mapper = mapper;
@@ -35,7 +35,7 @@ public class EfNodeRepository : INodeRepository
     {
         await using var context = await CreateDbContextAsync();
 
-        List<EfNode> nodes = await context.Set<Map>()
+        List<GraphNode> nodes = await context.Set<Map>()
             .Include(g => g.Nodes)
             .Where(m => m.CorrelationId == mapCorrelationId)
             .SelectMany(x => x.Nodes)

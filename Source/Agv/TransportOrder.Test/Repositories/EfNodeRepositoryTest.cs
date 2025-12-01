@@ -13,14 +13,14 @@ using Shouldly;
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 [TestClass]
-public class EfNodeRepositoryTest
+public class GraphNodeRepositoryTest
 {
     private static Mapper Mapper => MappingHelper.GetMapper(new GraphProfile());
 
     [TestMethod]
     public async Task GetNodeStatesForMapAsync_UnknownMap_ShouldBeEmpty()
     {
-        await using var fixture = new EfNodeRepositoryTestFixture();
+        await using var fixture = new GraphNodeRepositoryTestFixture();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
         List<NodeLock> nodeLocks = agvGraph.Nodes.Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
         fixture.AddGraph(Mapper.Map<EfAgvGraph>(agvGraph));
@@ -33,11 +33,11 @@ public class EfNodeRepositoryTest
     public async Task GetNodeStatesForMapAsync_ValidData_ReturnsNodeLocks()
     {
         var mapCorrelationId = Guid.NewGuid();
-        await using var fixture = new EfNodeRepositoryTestFixture();
+        await using var fixture = new GraphNodeRepositoryTestFixture();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
         List<NodeLock> nodeLocks = agvGraph.Nodes.Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
         fixture.AddGraph(Mapper.Map<EfAgvGraph>(agvGraph));
-        fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<EfNode>>(agvGraph.Nodes)));
+        fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<GraphNode>>(agvGraph.Nodes)));
         fixture.AddNodeLocks(nodeLocks);
 
         List<NodeLock> actualNodeStates = (await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId)).Select(x => x.NodeLock).ToList();
@@ -49,11 +49,11 @@ public class EfNodeRepositoryTest
     public async Task GetNodeStatesForMapAsync_NotAllNodesHaveLockState_ReturnsNodeStatesForAllNodes()
     {
         var mapCorrelationId = Guid.NewGuid();
-        await using var fixture = new EfNodeRepositoryTestFixture();
+        await using var fixture = new GraphNodeRepositoryTestFixture();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
         List<NodeLock> nodeLocks = agvGraph.Nodes.Take(1).Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
         fixture.AddGraph(Mapper.Map<EfAgvGraph>(agvGraph));
-        fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<EfNode>>(agvGraph.Nodes)));
+        fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<GraphNode>>(agvGraph.Nodes)));
         fixture.AddNodeLocks(nodeLocks);
 
         List<Station> stations = agvGraph.Nodes.Take(5).Select(n => new Station(n.Name, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>())).ToList();

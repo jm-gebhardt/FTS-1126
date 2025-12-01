@@ -110,7 +110,7 @@ public class EfStationRepository(
                 (x, nl) => new { x.s, nl }
             )
             .GroupJoin(
-                context.Set<EfNode>().AsNoTracking(),
+                context.Set<GraphNode>().AsNoTracking(),
                 x => x.nl != null ? x.nl.NodeId : (Guid?) null,
                 g => g.Id,
                 (x, graphNodes) => new { x.s, x.nl, graphNodes }
@@ -166,7 +166,7 @@ public class EfStationRepository(
                 (x, nl) => new { x.s, nl }
             )
             .GroupJoin(
-                context.Set<EfNode>().AsNoTracking(),
+                context.Set<GraphNode>().AsNoTracking(),
                 x => x.nl != null ? x.nl.NodeId : (Guid?) null,
                 g => g.Id,
                 (x, graphNodes) => new { x.s, x.nl, graphNodes }

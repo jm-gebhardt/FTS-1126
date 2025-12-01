@@ -41,7 +41,7 @@ public class ActionGroupRetrievalServiceTest
             {
                 foreach (var node in efGraph.Nodes)
                 {
-                    DbSet<EfNode> dbSet = context.Set<EfNode>();
+                    DbSet<GraphNode> dbSet = context.Set<GraphNode>();
                     if (!dbSet.Any(n => n.Name == node.Name))
                     {
                         dbSet.Add(node);

@@ -23,7 +23,7 @@ public class AgvGraphEntityConfiguration : IEntityTypeConfiguration<EfAgvGraph>
             .UsingEntity("AgvGraphEdges");
 
         builder.HasMany(m => m.Nodes)
-            .WithMany(n => n.AgvGraphs)
+            .WithMany()
             .UsingEntity("AgvGraphNodes");
 
         builder.ConfigureAllProperties(except: [nameof(EfAgvGraph.Nodes), nameof(EfAgvGraph.Edges)]);

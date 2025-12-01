@@ -85,10 +85,10 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<Guid> targetNodeIds = actionGroups.SelectMany(g => g.Actions).Where(a => a.Target.Node != null).Select(a => a.Target.Node!.Id).Distinct().ToList();
 
-        Dictionary<Guid, EfNode> graphNodesById = await context.Set<EfNode>()
+        Dictionary<Guid, GraphNode> graphNodesById = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .GroupBy(n => n.Name)
-            // here we expect an EfNode for each Agv, as every Agv has its own graph.
+            // here we expect an GraphNode for each Agv, as every Agv has its own graph.
             // Later once we have a merged graph for the whole system, we want to take the Node out of it
             .Select(group => group.First())
             .ToDictionaryAsync(n => n.Id, n => n);
@@ -172,7 +172,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<Guid> targetNodeIds = actionGroups.SelectMany(g => g.Actions.Where(a => a.Target.Node != null).Select(a => a.Target.Node!.Id)).Distinct().ToList();
 
-        List<EfNode> graphNodes = await context.Set<EfNode>()
+        List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
@@ -209,7 +209,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         return result;
     }
 
-    private static List<AgvActionReadModel> GetAgvActionReadModel(ActionGroup actionGroup, IReadOnlyCollection<EfNode> graphNodes)
+    private static List<AgvActionReadModel> GetAgvActionReadModel(ActionGroup actionGroup, IReadOnlyCollection<GraphNode> graphNodes)
     {
         return actionGroup.Actions.GroupJoin(graphNodes, a => a.Target.Node?.Id, g => g.Id, (action, nodes) => new { action, node = nodes.SingleOrDefault() }).Select(an => new AgvActionReadModel(
             an.action.CorrelationId,
@@ -240,7 +240,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<Guid> targetNodeIds = actionGroup.Actions.Where(a => a.Target.Node != null).Select(a => a.Target.Node!.Id).Distinct().ToList();
 
-        List<EfNode> graphNodes = await context.Set<EfNode>()
+        List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
@@ -280,7 +280,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<Guid> targetNodeIds = actionGroup.Actions.Where(a => a.Target.Node != null).Select(a => a.Target.Node!.Id).Distinct().ToList();
 
-        List<EfNode> graphNodes = await context.Set<EfNode>()
+        List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
@@ -318,7 +318,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<Guid> targetNodeIds = actionGroups.Where(g => g.AssignedAgv == agvCorrelationId).SelectMany(g => g.Actions).Where(a => a.Target.Node != null).Select(a => a.Target.Node!.Id).Distinct().ToList();
 
-        List<EfNode> graphNodes = await context.Set<EfNode>()
+        List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
@@ -348,7 +348,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         await using var context = await CreateDbContextAsync();
 
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
-        IQueryable<EfNode> graphNodes = context.Set<EfNode>();
+        IQueryable<GraphNode> graphNodes = context.Set<GraphNode>();
 
         List<ActionGroup> actionGroupsResult = await actionGroups
             .Where(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started)

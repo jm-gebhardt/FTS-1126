@@ -32,20 +32,21 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
         builder.Property(e => e.EdgeId);
 
         // TODO: Use EfNode type and HasOne relation
-        builder.OwnsOne<GraphNode>(t => t.Node, n =>
-        {
-            n.Property(nn => nn.Id);
-            n.Property(nn => nn.Name).HasMaxLength(DbStringLimits.NodeId);
-            n.Ignore(nn => nn.TimeStamp);
-            n.Ignore(nn => nn.Type);
-            n.Ignore(nn => nn.X);
-            n.Ignore(nn => nn.Y);
-            n.Ignore(nn => nn.Z);
-            n.Ignore(nn => nn.DropLiftHeight);
-            n.Ignore(nn => nn.PickLiftHeight);
-            n.Ignore(nn => nn.DockingDirection);
-            n.Ignore(nn => nn.Theta);
-        });
+        builder.HasOne<GraphNode>(t => t.Node);
+        //     , n =>
+        // {
+        //     n.Property(nn => nn.Id);
+        //     n.Property(nn => nn.Name).HasMaxLength(DbStringLimits.NodeId);
+        //     n.Ignore(nn => nn.TimeStamp);
+        //     n.Ignore(nn => nn.Type);
+        //     n.Ignore(nn => nn.X);
+        //     n.Ignore(nn => nn.Y);
+        //     n.Ignore(nn => nn.Z);
+        //     n.Ignore(nn => nn.DropLiftHeight);
+        //     n.Ignore(nn => nn.PickLiftHeight);
+        //     n.Ignore(nn => nn.DockingDirection);
+        //     n.Ignore(nn => nn.Theta);
+        // });
 
         builder.Property(e => e.Agvs).HasJsonConversion();
     }

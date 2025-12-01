@@ -24,13 +24,7 @@ public class GraphProfile : Profile
             .ForMember(n => n.AgvGraphs, opt => opt.Ignore())
             .ReverseMap()
             ;
-
-        CreateMap<GraphNode, EfNode>()
-            .ForMember(n => n.Maps, opt => opt.Ignore())
-            .ForMember(n => n.AgvGraphs, opt => opt.Ignore())
-            .ReverseMap()
-            ;
-
+        
         CreateMap<GraphNode, MessageContent.GraphNode>()
             .ForMember(n => n.Type, opt => opt.MapFrom(gn => gn.GetPrimaryType()));
         CreateMap<IGraph, Graph>()

@@ -30,7 +30,7 @@ public class EfStationRepositoryTestFixture : TransportOrderDbFixture
         yield return new GraphProfile();
     }
 
-    public async Task AddMap(string mapName, List<Guid> agvs, List<EfNode> nodes)
+    public async Task AddMap(string mapName, List<Guid> agvs, List<GraphNode> nodes)
     {
         var map = MapGenerator.Generate(mapId: mapName,
             nodes: nodes,
@@ -49,7 +49,7 @@ public class EfStationRepositoryTestFixture : TransportOrderDbFixture
 
     private async Task<EfStationRepositoryTestFixture> WithNodeAsync(GraphNode node)
     {
-        var efNode = Mapper.Map<EfNode>(node);
+        var efNode = Mapper.Map<GraphNode>(node);
         await AddAsync(efNode);
         return this;
     }

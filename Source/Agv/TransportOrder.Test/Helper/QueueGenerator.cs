@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Testing.Extensions;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -80,7 +81,7 @@ public static class QueueGenerator
                 queueNode.Occupy(node.state.AgvCorrelationId.Value);
             }
             var graphNode = node.state.NodeId.ToGraphNode();
-            queueNode.Node = mapper.Map<EfNode>(graphNode);
+            queueNode.Node = mapper.Map<GraphNode>(graphNode);
         }
         queue.Nodes.OrderBy(n => n.Position).Where(n => n.OccupiedAgv != null).Select(n => n.OccupiedAgv!.Value).ToList().ForEach(queue.ConsideredAgvs.Add);
 

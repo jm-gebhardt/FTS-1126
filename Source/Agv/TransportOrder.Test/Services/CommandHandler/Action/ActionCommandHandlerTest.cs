@@ -28,6 +28,7 @@ using ReassignActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.Action
 using Route = Gebhardt.Acc.TransportOrder.Routing.Models.Route;
 using SaveActionGroupAbortion = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.SaveActionGroupAbortion;
 using ValidationResult = FluentValidation.Results.ValidationResult;
+using ActionTarget = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionTarget;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 

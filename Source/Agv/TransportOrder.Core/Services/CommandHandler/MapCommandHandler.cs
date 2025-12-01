@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -54,7 +55,7 @@ public class MapCommandHandler :
     {
         byte[] mapValue = Convert.FromBase64String(messageMap.ImageData);
 
-        var efNodes = _mapper.Map<List<EfNode>>(messageMap.Nodes);
+        var efNodes = _mapper.Map<List<GraphNode>>(messageMap.Nodes);
         var efEdges = _mapper.Map<List<EfEdge>>(messageMap.Edges);
 
         ICollection<Guid> agvIds = await _graphRepository.GetAgvIdsRelatedToNodesAsync(messageMap.Nodes);

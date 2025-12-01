@@ -23,7 +23,7 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
             .UsingEntity("MapEdges");
 
         builder.HasMany(m => m.Nodes)
-            .WithMany(n => n.Maps)
+            .WithMany()
             .UsingEntity("MapNodes");
 
         builder.HasMany(m => m.MapAgvs)

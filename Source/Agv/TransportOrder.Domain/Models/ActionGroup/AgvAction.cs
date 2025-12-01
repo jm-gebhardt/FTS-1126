@@ -262,7 +262,8 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     public void SetTarget(GraphNode targetNode)
     {
         // this is needed for EF
-        Target.Node = new GraphNode(targetNode.Id, targetNode.Name);
+        // TODO: check if we still need a new instance
+        Target.Node = targetNode;
     }
 
     private void SetDates(DateTimeOffset now)
