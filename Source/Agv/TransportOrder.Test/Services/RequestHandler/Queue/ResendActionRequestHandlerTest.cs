@@ -21,7 +21,7 @@ public class ResendActionRequestHandlerTest
             .AddActionGroup(actionGroup)
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new ResendAction(agv.CorrelationId));
+        await fixture.GetResponseAsync<Success>(new ResendAction(agv.CorrelationId, "user"));
 
         await fixture.ShouldHavePublishedAsync<Common.Messages.ActionGroups.Commands.ResendAction>();
     }
@@ -35,7 +35,7 @@ public class ResendActionRequestHandlerTest
             .AddActionGroup(null)
             .Build();
 
-        await fixture.GetResponseAsync<ActionNotFound>(new ResendAction(agv.CorrelationId));
+        await fixture.GetResponseAsync<ActionNotFound>(new ResendAction(agv.CorrelationId, "user"));
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ public class ResendActionRequestHandlerTest
             .AddActionGroup(actionGroup)
             .Build();
 
-        await fixture.GetResponseAsync<ActionNotFound>(new ResendAction(agv.CorrelationId));
+        await fixture.GetResponseAsync<ActionNotFound>(new ResendAction(agv.CorrelationId, "user"));
     }
 
     [TestMethod]
@@ -62,6 +62,6 @@ public class ResendActionRequestHandlerTest
             .AddActionGroup(actionGroup)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(fixture.GetResponseAsync<Success>(new ResendAction(agv.CorrelationId)));
+        await MediatorShould.ThrowRequestExceptionAsync<NotInCorrectStateException>(fixture.GetResponseAsync<Success>(new ResendAction(agv.CorrelationId, "user")));
     }
 }

@@ -790,7 +790,6 @@ public class AgvController : Controller
     /// <response code="200">Ok</response>
     /// <response code="204">No Content</response>
     /// <response code="401">Unauthorized</response>
-    /// <response code="401">Unauthorized</response>
     /// <response code="404">AGV with given correlationId not found or instant action of this type not found or given parameter not found.</response>
     /// <returns>The id of the instant action.</returns>
     [HttpPatch]
@@ -811,7 +810,7 @@ public class AgvController : Controller
     }
 
     /// <summary>
-    /// Resend an action to the agv.
+    /// Resend current action to the agv.
     /// </summary>
     /// <param name="correlationId"></param>
     /// <returns></returns>
@@ -819,7 +818,13 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/resendAction")]
     public async Task<ActionResult> ResendAction(Guid correlationId)
     {
-        Response<Success, ActionNotFound> result = await _resendActionClient.GetResponse<Success, ActionNotFound>(new ResendAction(correlationId));
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+
+        Response<Success, ActionNotFound> result = await _resendActionClient.GetResponse<Success, ActionNotFound>(new ResendAction(correlationId, email));
         if (result.Message is ActionNotFound)
         {
             return Conflict();
@@ -834,7 +839,6 @@ public class AgvController : Controller
     /// <param name="correlationId">The agv correlation id.</param>
     /// <param name="ignoreErrorState">If the error state should be ignored when removing resource locks.</param>
     /// <response code="200">Ok</response>
-    /// <response code="401">Unauthorized</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     [HttpPatch]
@@ -878,7 +882,6 @@ public class AgvController : Controller
     /// <param name="correlationId">The correlation id of the agv.</param>
     /// <param name="stationName">The station name.</param>
     /// <response code="200">Ok</response>
-    /// <response code="401">Unauthorized</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Station/Agv with given id not found.</response>
     /// <response code="409">All agvs are offline.</response>
