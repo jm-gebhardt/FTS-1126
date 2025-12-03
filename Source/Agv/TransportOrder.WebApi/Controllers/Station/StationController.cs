@@ -80,6 +80,7 @@ public class StationController : Controller
     /// Unlock station.
     /// </summary>
     /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
     /// <response code="404">Station with given id not found.</response>
     [HttpPatch]
     [Route("/station/{id:Guid}/unlock")]
@@ -100,7 +101,6 @@ public class StationController : Controller
     /// Unblock a station.
     /// </summary>
     /// <response code="200">Ok</response>
-    /// <response code="401">Unauthorized</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Station with given id not found.</response>
     [HttpPatch]

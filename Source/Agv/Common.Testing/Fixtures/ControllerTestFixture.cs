@@ -18,6 +18,8 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
         return Mediator!.CreateRequestClient<TRequest>();
     }
 
+    private readonly List<Claim> _claims = [];
+
     public TController Controller { get; private set; } = null!;
 
     protected abstract TController GetController();
@@ -33,12 +35,13 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
     {
         base.Build();
         var httpContext = HttpContextOverride ?? new DefaultHttpContext();
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Email, "test@example.com")
-        };
 
-        var identity = new ClaimsIdentity(claims, "TestAuthentication");
+        if (_claims.Count == 0)
+        {
+            _claims.Add(new Claim(ClaimTypes.Email, "test@example.com"));
+        }
+
+        var identity = new ClaimsIdentity(_claims, "TestAuthentication");
         var claimsPrincipal = new ClaimsPrincipal(identity);
 
         httpContext.User = claimsPrincipal;
@@ -50,6 +53,12 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
                 new ControllerActionDescriptor()));
 
         return this;
+    }
+
+    public T WithClaim<T>(Claim claim) where T : ControllerTestFixture<TRequest, TRequestHandler, TController>
+    {
+        _claims.Add(claim);
+        return (T)this;
     }
 
     public async Task GetControllerResultAsync<TResponse>(Func<TController, Task<ActionResult>> controllerAction) where TResponse : class

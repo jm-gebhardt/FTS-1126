@@ -71,7 +71,7 @@ public static class Mathematics
     }
 
     /// <summary>
-    /// Calculates the euclidean distance between two <see cref="Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode"/>.
+    /// Calculates the Euclidean distance between two <see cref="Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode"/>.
     /// </summary>
     /// <param name="first">The first node.</param>
     /// <param name="second">The second node.</param>
@@ -84,7 +84,7 @@ public static class Mathematics
     }
 
     /// <summary>
-    /// Calculates the euclidean distance between two <see cref="Vector3"/>.
+    /// Calculates the Euclidean distance between two <see cref="Vector3"/>.
     /// </summary>
     /// <param name="first">The first vector.</param>
     /// <param name="second">The second vector.</param>

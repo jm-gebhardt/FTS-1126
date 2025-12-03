@@ -104,7 +104,7 @@ public enum RecordType
 public enum OrderType
 {
     /// <summary>
-    /// This order is a transport order
+    /// This order is a transport-order
     /// </summary>
     Transport,
 

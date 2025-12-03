@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.LogEntry;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.OwnedResource;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Trigger;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Zone;
@@ -52,5 +53,6 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new ZoneEntityConfiguration());
         modelBuilder.ApplyConfiguration(new MaintenanceLogEntityConfiguration());
         modelBuilder.ApplyConfiguration(new LogEntryEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new OwnedFilterEntityConfiguration());
     }
 }

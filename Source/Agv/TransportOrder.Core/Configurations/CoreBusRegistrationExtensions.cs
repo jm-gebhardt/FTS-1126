@@ -30,6 +30,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.OwnedFilter;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
@@ -59,10 +60,9 @@ public static class CoreBusRegistrationExtensions
     private const int PartitionCount = 16;
 
     /// <summary>
-    /// 
+    /// Adds all the consumers for this project to the bus.
     /// </summary>
-    /// <param name="busRegistrationConfigurator"></param>
-    /// <returns></returns>
+    /// <param name="busRegistrationConfigurator">The configurator</param>
     public static IBusRegistrationConfigurator AddCoreConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
     {
         busRegistrationConfigurator.AddDelayedMessageScheduler();
@@ -315,6 +315,8 @@ public static class CoreBusRegistrationExtensions
         RegisterMediatorRestrictedAreaHandlers(configurator);
 
         RegisterMediatorLogRequestHandlers(configurator);
+
+        RegisterMediatorOwnedResourceHandlers(configurator);
     }
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)
@@ -527,5 +529,14 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TryUpdateRestrictedArea>();
         configurator.AddRequestClient<GetRestrictedArea>();
         configurator.AddRequestClient<GetRestrictedAreas>();
+    }
+
+    private static void RegisterMediatorOwnedResourceHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<OwnedFilterRequestHandler>();
+        configurator.AddRequestClient<GetOwnedFilters>();
+        configurator.AddRequestClient<AddOwnedFilter>();
+        configurator.AddRequestClient<UpdateOwnedFilter>();
+        configurator.AddRequestClient<DeleteOwnedFilter>();
     }
 }

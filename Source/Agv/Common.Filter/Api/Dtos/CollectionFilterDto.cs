@@ -20,6 +20,7 @@ public record CollectionFilterDto : FilterDto
     /// </summary>
     public FilterDto Child { get; }
 
+    // ReSharper disable once GrammarMistakeInComment
     /// <summary>
     /// The fully qualified name of the collection from the root of the read model. Nesting levels separated by ".".
     /// </summary>

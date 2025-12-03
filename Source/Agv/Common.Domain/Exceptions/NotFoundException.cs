@@ -1,7 +1,7 @@
 ﻿namespace Gebhardt.Acc.Common.Domain.Exceptions;
 
 /// <summary>
-/// Represents errors that occur when something is not found, e.g. an object in the e.g. repository
+/// Represents errors that occur when something is not found, e.g. an object in a repository
 /// </summary>
 public abstract class NotFoundException : Exception
 {

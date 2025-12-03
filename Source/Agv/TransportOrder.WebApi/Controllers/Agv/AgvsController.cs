@@ -162,8 +162,8 @@ public class AgvsController : Controller
     public async Task<ActionResult<IEnumerable<AgvDataDto>>> GetAgvsData([FromQuery] ICollection<Guid> correlationIds)
     {
         Response<GotAgvsData> response = await _getAgvDataClient.GetResponse<GotAgvsData>(new GetAgvsData(correlationIds));
-        var graphs = _mapper.Map<List<AgvDataDto>>(response.Message.AgvData);
-        return Ok(graphs);
+        var agvDataDtos = _mapper.Map<List<AgvDataDto>>(response.Message.AgvData);
+        return Ok(agvDataDtos);
     }
 
     /// <summary>
@@ -312,7 +312,6 @@ public class AgvsController : Controller
     /// <param name="updatedSettings">The updated settings.</param>
     /// <response code="400">One or more of given correlation ids is unknown.</response>
     /// <response code="401">Unauthorized</response>
-    /// <response code="401">Unauthorized</response>
     /// <response code="200">Settings updated.</response>
     [HttpPatch]
     [Route("/agvs/settings")]
@@ -333,7 +332,6 @@ public class AgvsController : Controller
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <param name="propertyName">The settings property name to reset to default.</param>
     /// <response code="200">Ok</response>
-    /// <response code="401">Unauthorized</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Agv with given correlationId not found.</response>
     /// <response code="400">Invalid (unknown) agv settings property name.</response>
