@@ -95,3 +95,4 @@ bld/
 # IRS/Kn: Runtime environment (may contain sensitive data), do not publish! Use .env.template for template.
 **/.env
 
+TestResults/

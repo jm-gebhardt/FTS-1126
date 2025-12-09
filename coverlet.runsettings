@@ -4,7 +4,9 @@
     <DataCollectors>
       <DataCollector friendlyName="XPlat code coverage">
         <Configuration>
-           <ExcludeByFile>**/Migrations/**/*.cs</ExcludeByFile>
+          <ExcludeByFile>**/Migrations/**/*.cs</ExcludeByFile>
+          <!-- Exclude test assemblies from coverage measurement -->
+          <Exclude>[*.Test]*,[*.Testing]*,[*TestClient]*</Exclude>
         </Configuration>
       </DataCollector>
     </DataCollectors>
