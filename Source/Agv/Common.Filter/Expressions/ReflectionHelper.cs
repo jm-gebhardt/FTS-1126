@@ -8,8 +8,6 @@ namespace Gebhardt.Acc.Common.Filter.Expressions;
 /// </summary>
 internal static class ReflectionHelper
 {
-    private static readonly NullabilityInfoContext _nullabilityContext = new();
-
     /// <summary>
     /// Extension block for <see cref="MemberInfo"/>.
     /// </summary>
@@ -20,7 +18,9 @@ internal static class ReflectionHelper
         /// </summary>
         public bool MemberMaybeNull()
         {
-            var info = member.GetNullabilityInfo();
+            // NullabilityInfoContext is not thread-safe, create a new instance each time
+            // https://github.com/dotnet/runtime/issues/100254#issuecomment-2019353558
+            var info = member.GetNullabilityInfo(new NullabilityInfoContext());
 
             return info?.ReadState != NullabilityState.NotNull;
         }
@@ -30,18 +30,18 @@ internal static class ReflectionHelper
         /// </summary>
         public bool CollectionMemberMaybeNull()
         {
-            var info = member.GetNullabilityInfo();
+            var info = member.GetNullabilityInfo(new NullabilityInfoContext());
 
             return info?.GenericTypeArguments.FirstOrDefault()?.ReadState != NullabilityState.NotNull;
         }
 
-        private NullabilityInfo? GetNullabilityInfo()
+        private NullabilityInfo? GetNullabilityInfo(NullabilityInfoContext context)
         {
             return member switch
             {
-                PropertyInfo property => _nullabilityContext.Create(property),
-                FieldInfo field => _nullabilityContext.Create(field),
-                EventInfo ev => _nullabilityContext.Create(ev),
+                PropertyInfo property => context.Create(property),
+                FieldInfo field => context.Create(field),
+                EventInfo ev => context.Create(ev),
                 _ => null
             };
         }

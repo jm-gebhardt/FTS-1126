@@ -138,14 +138,17 @@ public class TargetSelectorTestFixture : MassTransitTestFixture
 
     public async Task SelectTargetAsync()
     {
-        var cancellationToken = new CancellationTokenSource();
-        _ = Selector.StartAsync(cancellationToken.Token);
+        using var cancellationToken = new CancellationTokenSource();
+        var selectorTask = Selector.StartAsync(cancellationToken.Token);
         // We have to wait a bit to make sure that we are past the evaluation of cancellation token (happens only once at the beginning of the background task).
         // But we may not wait longer than the WaitingTime, as this might have lead to a second execution of the background loop already.
         // This is no ideal implementation, but a quick one which serves the current implementation to make sure the logic is executed once.
         await Task.Delay(Selector.WaitingTime * 0.9, cancellationToken.Token);
         await cancellationToken.CancelAsync();
+        // StopAsync waits for ExecuteAsync to complete, and awaiting selectorTask ensures
+        // any exceptions are observed and the background work is fully finished
         await Selector.StopAsync(CancellationToken.None);
+        await selectorTask;
     }
 
     public async Task VerifyStationOccupancyAsync(Guid stationId, int count, Guid? agvCorrelationId = null)

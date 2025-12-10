@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,8 +77,8 @@ public class AgvPositionReceivedConsumerTest
                 new AgvPosition(init2, x2, y2, z2, theta2)
             ));
 
-        await fixture.ShouldHavePublishedAsync<AgvPositionReceived>();
-        fixture.ConsumerHarness.Consumed.Select<AgvPositionReceived>().Count().ShouldBe(2);
+        // Wait for both messages to be consumed using async-aware method
+        await fixture.ConsumerHarness.Consumed.ShouldHaveConsumedCountAsync<AgvPositionReceived>(2);
 
         var repository = fixture.Provider.GetRequiredService<IAgvPositionRepository>();
         repository.ShouldNotBeNull();

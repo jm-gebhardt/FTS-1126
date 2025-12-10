@@ -26,6 +26,12 @@ public static class PublishedMessageListExtensions
             (await published.Any<T>()).ShouldBeFalse();
         }
 
+        public async Task ShouldHavePublishedCountAsync<T>(int expectedCount) where T : class
+        {
+            await AsyncElementListExtensions.Take(published.SelectAsync<T>(), expectedCount).ToListAsync();
+            published.Select<T>().Count().ShouldBe(expectedCount);
+        }
+
         public ICollection<T> GetPublishedMessages<T>() where T : class
         {
             return published.Select<T>().Select(m => m.Context.Message).ToList();

@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.KaeserSidecar.Domain.Models;
 using Moq;
@@ -168,7 +169,8 @@ public class TargetSelectorTest
         // First run of loop
         await fixture.SelectTargetAsync();
 
-        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
+        // Wait for first message to be published using async-aware method
+        await fixture.TestHarness.Published.ShouldHavePublishedCountAsync<SetTargetForAction>(1);
         await fixture.Selector.Dequeue(moveAction.CorrelationId);
 
         var moveActionOfPick = fixture.ActionGroups[1].Actions.Single(a => a.ActionType == ActionType.Move);
@@ -177,13 +179,13 @@ public class TargetSelectorTest
         // Second run of loop
         await fixture.SelectTargetAsync();
 
-        await fixture.ShouldHavePublishedAsync<SetTargetForAction>();
-        fixture.TestHarness.Published.Select<SetTargetForAction>().Count().ShouldBe(2);
+        // Wait for both messages to be published using async-aware method
+        await fixture.TestHarness.Published.ShouldHavePublishedCountAsync<SetTargetForAction>(2);
 
         var setTargetForAction = fixture.TestHarness.Published.Select<SetTargetForAction>().First(a => a.Context.Message.ActionId == moveAction.CorrelationId).Context.Message;
         setTargetForAction.ShouldNotBeNull();
         setTargetForAction.TargetNodeId.ShouldBe(fixture.Stations[0].Id);
-        await fixture.ShouldHavePublishedAsync<StationReserved>();
+        await fixture.TestHarness.Published.ShouldHavePublishedCountAsync<StationReserved>(2);
     }
 
     [TestMethod]

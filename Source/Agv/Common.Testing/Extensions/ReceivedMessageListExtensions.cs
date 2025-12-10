@@ -22,5 +22,11 @@ public static class ReceivedMessageListExtensions
         {
             (await received.Any<T>()).ShouldBeFalse();
         }
+
+        public async Task ShouldHaveConsumedCountAsync<T>(int expectedCount) where T : class
+        {
+            await AsyncElementListExtensions.Take(received.SelectAsync<T>(), expectedCount).ToListAsync();
+            received.Select<T>().Count().ShouldBe(expectedCount);
+        }
     }
 }
