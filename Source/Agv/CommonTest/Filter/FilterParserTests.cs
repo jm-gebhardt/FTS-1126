@@ -214,4 +214,283 @@ public class FilterParserBaseTests
         result.Count.ShouldBe(1);
         result.First().Converted.ShouldContainKeyAndValue("a", "b");
     }
+
+    [TestMethod]
+    public async Task InvokeFilterBy_WithOneToManyJoin_RetrievesParentWithChildren()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var parent2 = new TestParentEntity("Parent2");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+        var child2 = new TestChildEntity(parent1.ParentKey, 20);
+        var child3 = new TestChildEntity(parent2.ParentKey, 30);
+
+        fixture.Add(parent1);
+        fixture.Add(parent2);
+        fixture.Add(child1);
+        fixture.Add(child2);
+        fixture.Add(child3);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilterWithPagination(fixture.ContextFactory);
+
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<string>(nameof(TestParentReadModel.Name), ComparisonVariant.Equals, "Parent1")]);
+
+        ICollection<TestParentReadModel> result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
+
+        result.Count.ShouldBe(1);
+        var parent = result.First();
+        parent.Name.ShouldBe("Parent1");
+        parent.Children.Count.ShouldBe(2);
+        parent.Children.Select(c => c.Score).ShouldBe([10, 20], ignoreOrder: true);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterBy_WithOneToManyJoin_RetrievesAllParentsWithTheirChildren()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var parent2 = new TestParentEntity("Parent2");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+        var child2 = new TestChildEntity(parent1.ParentKey, 20);
+        var child3 = new TestChildEntity(parent2.ParentKey, 30);
+
+        fixture.Add(parent1);
+        fixture.Add(parent2);
+        fixture.Add(child1);
+        fixture.Add(child2);
+        fixture.Add(child3);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilter(fixture.ContextFactory);
+
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, []);
+
+        ICollection<TestParentReadModel> result = await filterBy(filter);
+
+        result.Count.ShouldBe(2);
+        var p1 = result.First(p => p.Name == "Parent1");
+        var p2 = result.First(p => p.Name == "Parent2");
+        p1.Children.Count.ShouldBe(2);
+        p2.Children.Count.ShouldBe(1);
+        p2.Children.First().Score.ShouldBe(30);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterBy_WithOneToManyJoin_ParentWithNoChildren()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var parent2 = new TestParentEntity("Parent2");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+
+        fixture.Add(parent1);
+        fixture.Add(parent2);
+        fixture.Add(child1);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilter(fixture.ContextFactory);
+
+        var filter = new CombinationFilter(LogicalCombinationVariant.And, []);
+
+        ICollection<TestParentReadModel> result = await filterBy(filter);
+
+        result.Count.ShouldBe(2);
+        var p1 = result.First(p => p.Name == "Parent1");
+        var p2 = result.First(p => p.Name == "Parent2");
+        p1.Children.Count.ShouldBe(1);
+        p2.Children.Count.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterBy_WithOneToManyJoin_FilterByChildProperty()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var parent2 = new TestParentEntity("Parent2");
+        var parent3 = new TestParentEntity("Parent3");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+        var child2 = new TestChildEntity(parent1.ParentKey, 20);
+        var child3 = new TestChildEntity(parent2.ParentKey, 30);
+        var child4 = new TestChildEntity(parent3.ParentKey, 40);
+
+        fixture.Add(parent1);
+        fixture.Add(parent2);
+        fixture.Add(parent3);
+        fixture.Add(child1);
+        fixture.Add(child2);
+        fixture.Add(child3);
+        fixture.Add(child4);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilter(fixture.ContextFactory);
+
+        // Filter for parents that have at least one child with Score == 20
+        var filter = new CollectionFilter(CollectionAggregateVariant.Any, "Children", 
+            new ValueComparisonFilter<int>("Children.Score", ComparisonVariant.Equals, 20)
+        );
+
+        ICollection<TestParentReadModel> result = await filterBy(filter);
+
+        // Only Parent1 should match because it has a child with Score 20
+        result.Count.ShouldBe(1);
+        result.First().Name.ShouldBe("Parent1");
+        // Parent1 should still have both its children
+        result.First().Children.Count.ShouldBe(2);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterBy_WithOneToManyJoin_FilterByChildPropertyWithOr()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var parent2 = new TestParentEntity("Parent2");
+        var parent3 = new TestParentEntity("Parent3");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+        var child2 = new TestChildEntity(parent2.ParentKey, 30);
+        var child3 = new TestChildEntity(parent3.ParentKey, 40);
+
+        fixture.Add(parent1);
+        fixture.Add(parent2);
+        fixture.Add(parent3);
+        fixture.Add(child1);
+        fixture.Add(child2);
+        fixture.Add(child3);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilter(fixture.ContextFactory);
+
+        // Filter for parents that have at least one child with Score == 10 or Score == 30
+        var filter = new CollectionFilter(CollectionAggregateVariant.Any, "Children", new CombinationFilter(LogicalCombinationVariant.Or, [
+            new ValueComparisonFilter<int>("Children.Score", ComparisonVariant.Equals, 10),
+            new ValueComparisonFilter<int>("Children.Score", ComparisonVariant.Equals, 30)
+        ]));
+
+        ICollection<TestParentReadModel> result = await filterBy(filter);
+
+        // Parent1 (Score 10) and Parent2 (Score 30) should match
+        result.Count.ShouldBe(2);
+        result.Select(p => p.Name).ShouldBe(["Parent1", "Parent2"], ignoreOrder: true);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterByWithProjection_WithOneToManyJoin_FiltersChildrenOnly()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var parent2 = new TestParentEntity("Parent2");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+        var child2 = new TestChildEntity(parent1.ParentKey, 20);
+        var child3 = new TestChildEntity(parent2.ParentKey, 30);
+
+        fixture.Add(parent1);
+        fixture.Add(parent2);
+        fixture.Add(child1);
+        fixture.Add(child2);
+        fixture.Add(child3);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilter(fixture.ContextFactory);
+
+        // Empty parent filter (all parents should be returned)
+        var filter = new CollectionFilter(CollectionAggregateVariant.Where, nameof(TestParentReadModel.Children), new ValueComparisonFilter<int>(nameof(TestParentReadModel.Children)+".Score", ComparisonVariant.Equals, 20));
+
+        ICollection<TestParentReadModel> result = await filterBy(filter);
+
+        // Both parents should be returned
+        result.Count.ShouldBe(2);
+
+        var p1 = result.First(p => p.Name == "Parent1");
+        var p2 = result.First(p => p.Name == "Parent2");
+
+        // Parent1 should only have the child with Score 20
+        p1.Children.Count.ShouldBe(1);
+        p1.Children.First().Score.ShouldBe(20);
+
+        // Parent2 should have no children (none match the projection filter)
+        p2.Children.Count.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterByWithProjection_WithOneToManyJoin_CombinesParentAndProjectionFilters()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var parent2 = new TestParentEntity("Parent2");
+        var parent3 = new TestParentEntity("Parent3");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+        var child2 = new TestChildEntity(parent1.ParentKey, 20);
+        var child3 = new TestChildEntity(parent2.ParentKey, 15);
+        var child4 = new TestChildEntity(parent2.ParentKey, 25);
+        var child5 = new TestChildEntity(parent3.ParentKey, 100);
+
+        fixture.Add(parent1);
+        fixture.Add(parent2);
+        fixture.Add(parent3);
+        fixture.Add(child1);
+        fixture.Add(child2);
+        fixture.Add(child3);
+        fixture.Add(child4);
+        fixture.Add(child5);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilter(fixture.ContextFactory);
+
+        // Parent filter: only parents named Parent1 or Parent2
+        var filter = new CombinationFilter(LogicalCombinationVariant.Or, [
+            new ValueComparisonFilter<string>("Name", ComparisonVariant.Equals, "Parent1"),
+            new ValueComparisonFilter<string>("Name", ComparisonVariant.Equals, "Parent2"),
+            new CollectionFilter(CollectionAggregateVariant.Where, nameof(TestParentReadModel.Children), new ValueComparisonFilter<int>(nameof(TestParentReadModel.Children)+ ".Score", ComparisonVariant.Geq, 15))
+        ]);
+
+        ICollection<TestParentReadModel> result = await filterBy(filter);
+
+        // Only Parent1 and Parent2 should be returned (Parent3 is filtered out by parent filter)
+        result.Count.ShouldBe(2);
+
+        var p1 = result.First(p => p.Name == "Parent1");
+        var p2 = result.First(p => p.Name == "Parent2");
+
+        // Parent1 should only have child with Score 20 (Score 10 filtered out by projection filter)
+        p1.Children.Count.ShouldBe(1);
+        p1.Children.First().Score.ShouldBe(20);
+
+        // Parent2 should have both children (both >= 15)
+        p2.Children.Count.ShouldBe(2);
+        p2.Children.Select(c => c.Score).ShouldBe([15, 25], ignoreOrder: true);
+    }
+
+    [TestMethod]
+    public async Task InvokeFilterByWithProjection_WithOneToManyJoin_MultipleConditionsInProjectionFilter()
+    {
+        var fixture = new FilterExpressionHelperTestFixture();
+
+        var parent1 = new TestParentEntity("Parent1");
+        var child1 = new TestChildEntity(parent1.ParentKey, 10);
+        var child2 = new TestChildEntity(parent1.ParentKey, 20);
+        var child3 = new TestChildEntity(parent1.ParentKey, 30);
+        var child4 = new TestChildEntity(parent1.ParentKey, 15);
+
+        fixture.Add(parent1);
+        fixture.Add(child1);
+        fixture.Add(child2);
+        fixture.Add(child3);
+        fixture.Add(child4);
+
+        var filterBy = FilterableBinder<TestParentEntity, TestParentReadModel>.CreateFilter(fixture.ContextFactory);
+
+        var filter = new CollectionFilter(CollectionAggregateVariant.Where, nameof(TestParentReadModel.Children), new CombinationFilter(LogicalCombinationVariant.Or, [
+            new ValueComparisonFilter<int>(nameof(TestParentReadModel.Children)+".Score", ComparisonVariant.Equals, 10),
+            new ValueComparisonFilter<int>(nameof(TestParentReadModel.Children)+".Score", ComparisonVariant.Equals, 30)
+        ]));
+
+        ICollection<TestParentReadModel> result = await filterBy(filter);
+
+        result.Count.ShouldBe(1);
+        var p1 = result.First();
+
+        // Should only include children with scores 10 and 30
+        p1.Children.Count.ShouldBe(2);
+        p1.Children.Select(c => c.Score).ShouldBe([10, 30], ignoreOrder: true);
+    }
 }

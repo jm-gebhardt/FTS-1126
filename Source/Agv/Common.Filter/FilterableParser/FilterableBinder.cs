@@ -169,7 +169,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
             {
                 _joinLayers.Add(newName);
                 _joinProperties.Add(newName, parsedFilterableSubTree.SubTree);
-            } 
+            }
             else
             {
                 _includeLayers.Add(newName);
@@ -192,7 +192,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
             CreateAccessorMap(parsedFilterableSubTree.SubTree, newName, canStillAccessDomain && parsedFilterableSubTree.DomainAccessorExpression != null);
         }
     }
-
+    
     private static (LambdaExpression, bool) TryMergeAccessors(string accumulatedName, LambdaExpression accessor, Dictionary<string, (LambdaExpression, bool)> accessors, bool accessorMaybeNull = false)
     {
         if (!accessors.TryGetValue(accumulatedName, out var accumulatedInfo) || accumulatedInfo is not { Item1 : {} accumulatedAccessor, Item2: var returnMaybeNull } || !accumulatedAccessor.ReturnType.IsAssignableTo(accessor.Parameters.First().Type))
@@ -273,26 +273,28 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
         {
             try
             {
+                Dictionary<string, IFilter> collectionProjectionFilters = filterBase.SeparateCollectionRestrictions(new Dictionary<string, IFilter>());
+
                 Dictionary<int, IFilter> batches = filterBase.SplitFilter(_totalLayers, _domainPropertyAccessors);
 
                 IQueryable<TDomainObject> query = context.Set<TDomainObject>()
                     .AsNoTracking();
 
-                if (batches.TryGetValue(0, out var baseLevelFilter))
+                if (batches.TryGetValue(0, out var baseLevelFilter) && baseLevelFilter.ToExpressionTree(_domainPropertyAccessors) is {} domainBaseFilterExpression)
                 {
-                    query = query.Where(baseLevelFilter.ToExpressionTree(_domainPropertyAccessors).AsPredicate<TDomainObject>());
+                    query = query.Where(domainBaseFilterExpression.AsPredicate<TDomainObject>());
                 }
 
                 for (int layerIndex = 1; layerIndex < _includeLayers.Count; layerIndex++)
                 {
                     query = query.Include(_includeLayers[layerIndex]);
 
-                    if (!batches.TryGetValue(layerIndex, out var filter))
+                    if (!batches.TryGetValue(layerIndex, out var filter) || filter.ToExpressionTree(_domainPropertyAccessors) is not {} domainLayerFilterExpression)
                     {
                         continue;
                     }
 
-                    query = query.Where(filter.ToExpressionTree(_domainPropertyAccessors).AsPredicate<TDomainObject>());
+                    query = query.Where(domainLayerFilterExpression.AsPredicate<TDomainObject>());
                 }
 
                 if (!TryGetTypeMapping(typeof(TDomainObject), typeof(TFilterable), out var projection))
@@ -302,9 +304,9 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
                 IQueryable<TFilterable> projectedQuery = query.ApplyProjection<TFilterable, TDomainObject>(projection);
 
-                if (batches.TryGetValue(_includeLayers.Count, out var readModelBase))
+                if (batches.TryGetValue(_includeLayers.Count, out var readModelBase) && readModelBase.ToExpressionTree(PropertyAccessors) is {} projectedBaseFilterExpression)
                 {
-                    projectedQuery = projectedQuery.Where(readModelBase.ToExpressionTree(PropertyAccessors).AsPredicate<TFilterable>());
+                    projectedQuery = projectedQuery.Where(projectedBaseFilterExpression.AsPredicate<TFilterable>());
                 }
 
                 for (int layerIndex = _includeLayers.Count + 1; layerIndex < _totalLayers.Count; layerIndex++)
@@ -314,18 +316,52 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
                             QueryableCreator: { } queryableCreator,
                             RootKeyAccessor: { } ownKeyAccessor,
                             OtherKeyAccessor: { } otherKeyAccessor,
-                            MergeExpression: { } mergeExpression,
-                            IsOuterJoin: var isOuterJoin
-                        })
+                            MergeExpression: var mergeExpression,
+                            MergeExpressionBuilder: var mergeExpressionBuilder,
+                            IsOuterJoin: var isOuterJoin,
+                            IsCollectionJoin: var isCollectionJoin
+                        } || (mergeExpression == null && mergeExpressionBuilder == null))
                     {
                         throw new FilterExecutionException($"Could not create join for {_totalLayers[layerIndex]}");
                     }
 
-                    projectedQuery = projectedQuery.ApplyJoin(queryableCreator.Invoke(context), ownKeyAccessor, otherKeyAccessor, mergeExpression, isOuterJoin);
-
-                    if (batches.TryGetValue(layerIndex, out var predicate))
+                    if (isCollectionJoin)
                     {
-                        projectedQuery = projectedQuery.Where(predicate.ToExpressionTree(PropertyAccessors).AsPredicate<TFilterable>());
+                        string collectionLayerName = _totalLayers[layerIndex];
+
+                        // Check if there's a projection filter for this collection
+                        var effectiveMergeExpression = mergeExpression ?? mergeExpressionBuilder!.Invoke(null);
+                        if (collectionProjectionFilters != null && collectionProjectionFilters.TryGetValue(collectionLayerName, out var projectionFilter))
+                        {
+                            // Apply the projection filter to the collection items during the group join
+                            effectiveMergeExpression = mergeExpressionBuilder?.Invoke(projectionFilter.ToExpressionTree(PropertyAccessors));
+
+                            if (effectiveMergeExpression == null)
+                            {
+                                throw new FilterExecutionException($"Could not create merge expression to join {_totalLayers[layerIndex]}");
+                            }
+                        }
+
+                        projectedQuery = projectedQuery.ApplyGroupJoin(queryableCreator.Invoke(context), ownKeyAccessor, otherKeyAccessor, effectiveMergeExpression);
+                    }
+                    else
+                    {
+                        if (mergeExpression == null)
+                        {
+                            throw new FilterExecutionException($"Could not create join for {_totalLayers[layerIndex]}");
+                        }
+
+                        projectedQuery = projectedQuery.ApplyJoin(queryableCreator.Invoke(context), ownKeyAccessor, otherKeyAccessor, mergeExpression, isOuterJoin);
+                    }
+
+                    if (!batches.TryGetValue(layerIndex, out var predicate))
+                    {
+                        continue;
+                    }
+
+                    if (predicate.ToExpressionTree(PropertyAccessors) is { } predicateExpression)
+                    {
+                        projectedQuery = projectedQuery.Where(predicateExpression.AsPredicate<TFilterable>());
                     }
                 }
 
@@ -368,7 +404,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     {
         ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
 
-        return async delegate (IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties) 
+        return async delegate (IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
 
@@ -443,7 +479,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
             }
         };
     }
-    
+
     private static List<Tuple<PropertyInfo, PropertyInfo>> GetShadowingProperties()
     {
         PropertyInfo[] shadowing = typeof(TFilterable).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -519,13 +555,18 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
         public LambdaExpression? MergeExpression { get; }
 
+        public Func<LambdaExpression?, LambdaExpression>? MergeExpressionBuilder { get; }
+
         public bool IsOuterJoin { get; }
+
+        public bool IsCollectionJoin { get; }
 
         public ICollection<string> UnmappedMembers { get; } = new HashSet<string>();
 
-        public ParsedFilterable(string ownKey, string otherKey, string name, bool isOuterJoin) : this(true)
+        public ParsedFilterable(string ownKey, string otherKey, string name, bool isOuterJoin, bool isCollectionJoin = false) : this(true)
         {
             IsOuterJoin = isOuterJoin;
+            IsCollectionJoin = isCollectionJoin;
 
             var ownKeyType = typeof(TFilterable).GetProperty(ownKey)?.PropertyType;
             var otherKeyType = typeof(TF).GetProperty(otherKey)?.PropertyType;
@@ -536,30 +577,49 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
             }
 
             bool ownKeyIsNullable = otherKeyType == Nullable.GetUnderlyingType(ownKeyType) && otherKeyType != ownKeyType;
+            bool otherKeyIsNullable = ownKeyType == Nullable.GetUnderlyingType(otherKeyType) && otherKeyType != ownKeyType;
 
-            if (otherKeyType != ownKeyType && otherKeyType != Nullable.GetUnderlyingType(ownKeyType))
+            if (otherKeyType != ownKeyType && otherKeyType != Nullable.GetUnderlyingType(ownKeyType) && ownKeyType != Nullable.GetUnderlyingType(otherKeyType))
             {
                 return;
             }
 
             RootKeyAccessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TFilterable), ownKeyType, ownKey);
 
-            OtherKeyAccessor = ownKeyIsNullable ? 
-                FilterExpressionBuilder.CreatePropertyAccessWithCast(typeof(T), ownKeyType, otherKey) : 
-                FilterExpressionBuilder.CreatePropertyAccess(typeof(T), otherKeyType, otherKey);
-            
+            if (ownKeyIsNullable)
+            {
+                OtherKeyAccessor = FilterExpressionBuilder.CreatePropertyAccessWithCast(typeof(T), ownKeyType, otherKey);
+            }
+            else if (otherKeyIsNullable)
+            {
+                // When other key is nullable (e.g., LogEntry.ActionGroupCorrelationId is Guid?), cast to non-nullable
+                OtherKeyAccessor = FilterExpressionBuilder.CreatePropertyAccessWithCast(typeof(T), ownKeyType, otherKey);
+            }
+            else
+            {
+                OtherKeyAccessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(T), otherKeyType, otherKey);
+            }
+
             QueryableCreator = context => context.Set<T>().AsNoTracking();
-            
+
             if (!TryGetTypeMapping(typeof(T), typeof(TF), out var memberInitializer))
             {
                 memberInitializer = TypeInitializerExpressionBuilder.CreateMemberInitializerExpression<T, TF>(TypeMappings, MemberMappings, UnmappedMembers);
             }
 
-            if (IsOuterJoin)
+            if (isCollectionJoin)
             {
-                memberInitializer = FilterExpressionBuilder.MakeNullCoalescing(memberInitializer.Parameters.First(), memberInitializer.Body, typeof(TF));
+                MergeExpression = TypeInitializerExpressionBuilder.CreateInitializerWithCollectionMixin<TFilterable, T>(name, memberInitializer, null);
+                MergeExpressionBuilder = predicate => TypeInitializerExpressionBuilder.CreateInitializerWithCollectionMixin<TFilterable, T>(name, memberInitializer, predicate);
             }
-            MergeExpression = TypeInitializerExpressionBuilder.CreateInitializerWithMixin<TFilterable, T>(name, memberInitializer);
+            else
+            {
+                if (IsOuterJoin)
+                {
+                    memberInitializer = FilterExpressionBuilder.MakeNullCoalescing(memberInitializer.Parameters.First(), memberInitializer.Body, typeof(TF));
+                }
+                MergeExpression = TypeInitializerExpressionBuilder.CreateInitializerWithMixin<TFilterable, T>(name, memberInitializer);
+            }
         }
 
         private ParsedFilterable(bool isJoin)
@@ -598,7 +658,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
             {
                 var newBasePropType = newProperty.PropertyType.GetEnumerableContentType() ?? newProperty.PropertyType;
                 var originalBasePropType = originalProp.PropertyType.GetEnumerableContentType() ?? originalProp.PropertyType;
-                
+
                 bool canAccessDomainObject = !isJoin;
 
                 if (!typeof(IFilterable).IsAssignableFrom(newBasePropType))
@@ -619,11 +679,17 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
                         throw new FilterParserException($"Could not parse property {newProperty.Name} for filterable {typeof(TF).FullName}");
                     }
 
-                    subTree = ParsedFilterableFromTypes(typeof(T), typeof(TF), originalDomainModel, newBasePropType, joinProperty.OwnKeyProperty, joinProperty.OtherKeyProperty, newProperty.Name, joinProperty.IsOuterJoin);
+                    // Detect if this is a collection join (either explicitly set or inferred from property type)
+                    bool isCollectionJoin = newProperty.PropertyType.GetEnumerableContentType() != null || newProperty.PropertyType != newBasePropType;
+
+                    subTree = ParsedFilterableFromTypes(typeof(T), typeof(TF), originalDomainModel, newBasePropType, joinProperty.OwnKeyProperty, joinProperty.OtherKeyProperty, newProperty.Name, joinProperty.IsOuterJoin, isCollectionJoin);
 
                     originalBasePropType = originalDomainModel;
 
-                    MemberMappings.Add(joinProperty.OwnKeyProperty, newProperty.Name);
+                    // For one-to-many joins, we need to skip the collection property in projection
+                    // Add a dummy mapping so it's recognized as a "value" in translations and skipped
+                    // For many-to-one joins, the FK property maps to the join property
+                    MemberMappings.Add(!isCollectionJoin ? joinProperty.OwnKeyProperty : $"::skip_{newProperty.Name}", newProperty.Name);
                 }
                 else
                 {
@@ -667,7 +733,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
         }
     }
 
-    private static IParsedFilterable ParsedFilterableFromTypes(Type root, Type rootReadModel, Type self, Type selfReadModel, string? rootKeyProperty = null, string? childKeyProperty = null, string? name = null, bool? isOuterJoin = null)
+    private static IParsedFilterable ParsedFilterableFromTypes(Type root, Type rootReadModel, Type self, Type selfReadModel, string? rootKeyProperty = null, string? childKeyProperty = null, string? name = null, bool? isOuterJoin = null, bool? isCollectionJoin = null)
     {
         object? parsed;
 
@@ -679,7 +745,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
         }
         else
         {
-            parsed = Activator.CreateInstance(parsedType, rootKeyProperty, childKeyProperty, name, isOuterJoin);
+            parsed = Activator.CreateInstance(parsedType, rootKeyProperty, childKeyProperty, name, isOuterJoin, isCollectionJoin ?? false);
         }
 
         if (parsed is IParsedFilterable result)

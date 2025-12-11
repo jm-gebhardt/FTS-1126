@@ -31,5 +31,7 @@ public class FilterableProfile : Profile
         CreateMap<LogEntryFilterable, LogEntry>();
 
         CreateMap<AgvPositionFilterable, FilteredAgvPosition>();
+
+        CreateMap<LogEntryFilterable, FilteredLogEntry>();
     }
 }

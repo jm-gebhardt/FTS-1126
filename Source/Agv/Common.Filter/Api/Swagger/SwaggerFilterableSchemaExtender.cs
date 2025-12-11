@@ -32,7 +32,10 @@ internal class SwaggerFilterableSchemaExtender(
 
         foreach (var property in context.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
-            if (!Attribute.IsDefined(property, typeof(SwaggerFilterableProperty)))
+            bool isFilterable = Attribute.IsDefined(property, typeof(SwaggerFilterableProperty));
+            bool supportsWhereAggregation = Attribute.IsDefined(property, typeof(SwaggerSupportsWhereAggregationFilter));
+
+            if (!isFilterable && !supportsWhereAggregation)
             {
                 continue;
             }
@@ -44,8 +47,17 @@ internal class SwaggerFilterableSchemaExtender(
                 continue;
             }
 
-            propSchema.AddExtension("x-IsFilterableProperty", new OpenApiBoolean(true));
-            propSchema.AddExtension("x-FilterablePropertyName", new OpenApiString(property.Name));
+            if (isFilterable)
+            {
+                propSchema.AddExtension("x-IsFilterableProperty", new OpenApiBoolean(true));
+                propSchema.AddExtension("x-FilterablePropertyName", new OpenApiString(property.Name));
+            }
+
+            if (supportsWhereAggregation)
+            {
+                propSchema.AddExtension("x-SupportsWhereAggregationFilter", new OpenApiBoolean(true));
+                propSchema.AddExtension("x-FilterablePropertyName", new OpenApiString(property.Name));
+            }
         }
     }
 }

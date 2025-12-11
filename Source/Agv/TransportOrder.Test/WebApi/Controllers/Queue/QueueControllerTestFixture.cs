@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -23,6 +25,7 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
     private TransportOrder.Domain.Models.Queue.Queue _queue = null!;
 
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
     protected override void SetupController()
     {
@@ -30,6 +33,7 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
         {
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
+            s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient(_ => new Mock<IBus>().Object);
         });
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(),
@@ -54,6 +58,8 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
                 agvCorrelationId,
                 stationId,
                 actionGroupCorrelationId));
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
         AddRequestClient<DeleteQueue, Success>(() => new Success());
         AddRequestClient<GetQueue, GotQueue>(() => new GotQueue(_queue));
         AddRequestClient<TryAddQueue, GotQueue>(() => new GotQueue(_queue));

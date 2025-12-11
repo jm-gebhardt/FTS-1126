@@ -19,21 +19,38 @@ namespace Gebhardt.Acc.Common.Filter.Api;
 [PublicAPI]
 public static class FilterApiExtensions
 {
-    /// <summary>
-    /// Translates a filter dto to the filter object with respect to the provided read model. <br /><br />
-    /// Write a <see cref="TypeConverter"/> from string for any property type in your read model that:<br />
-    /// 1.) Does not natively contain one and<br />
-    /// 2.) Is not itself also a read model.<br />
-    /// and annotate the respective type with <see cref="TypeConverterAttribute"/> to enable translation.
-    /// </summary>
-    /// <typeparam name="TDomainObject">The domain object.</typeparam>
-    /// <typeparam name="TReadModel">The read model.</typeparam>
-    /// <param name="dto">The dto to translate.</param>
-    public static IFilter Translate<TDomainObject, TReadModel>(this FilterDto dto) where TReadModel : class, TDomainObject, IFilterable<TDomainObject, TReadModel>, new() where TDomainObject : class
+    /// <param name="dto">A filter dto.</param>
+    extension(FilterDto dto)
     {
-        Dictionary<string, (LambdaExpression, bool)> propertyAccessors = FilterableBinder<TDomainObject, TReadModel>.PropertyAccessors;
+        /// <summary>
+        /// Translates a filter dto to the filter object with respect to the provided read model. <para />
+        /// Write a <see cref="TypeConverter"/> from string for any property type in your read model that:<br />
+        /// 1.) Does not natively contain one and<br />
+        /// 2.) Is not itself also a read model.<br />
+        /// and annotate the respective type with <see cref="TypeConverterAttribute"/> to enable this translation.
+        /// </summary>
+        /// <typeparam name="TDomainObject">The domain object.</typeparam>
+        /// <typeparam name="TReadModel">The read model.</typeparam>
+        public IFilter Translate<TDomainObject, TReadModel>() where TReadModel : class, TDomainObject, IFilterable<TDomainObject, TReadModel>, new() where TDomainObject : class
+        {
+            Dictionary<string, (LambdaExpression, bool)> propertyAccessors = FilterableBinder<TDomainObject, TReadModel>.PropertyAccessors;
 
-        return FromDto(dto, propertyAccessors);
+            return FromDto(dto, propertyAccessors);
+        }
+
+        /// <summary>
+        /// Translates this filter dto into an <see cref="OpenApiObject"/>.
+        /// </summary>
+        public OpenApiObject ToOpenApiObject()
+        {
+            return dto switch
+            {
+                CollectionFilterDto coll => ToOpenApiObject(coll),
+                CombinationFilterDto comb => ToOpenApiObject(comb),
+                ValueComparisonFilterDto comp => ToOpenApiObject(comp),
+                _ => throw new FilterDtoParserException(nameof(dto))
+            };
+        }
     }
 
     private static IFilter FromDto(FilterDto? dto, Dictionary<string, (LambdaExpression, bool)> propertyAccessors)
@@ -122,20 +139,6 @@ public static class FilterApiExtensions
         }
 
         return leaf;
-    }
-
-    /// <summary>
-    /// Translates this filter dto into an <see cref="OpenApiObject"/>.
-    /// </summary>
-    public static OpenApiObject ToOpenApiObject(this FilterDto dto)
-    {
-        return dto switch
-        {
-            CollectionFilterDto coll => ToOpenApiObject(coll),
-            CombinationFilterDto comb => ToOpenApiObject(comb),
-            ValueComparisonFilterDto comp => ToOpenApiObject(comp),
-            _ => throw new FilterDtoParserException(nameof(dto))
-        };
     }
 
     private static OpenApiObject ToOpenApiObject(CollectionFilterDto dto)

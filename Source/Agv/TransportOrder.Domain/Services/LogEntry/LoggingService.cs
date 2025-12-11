@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using MassTransit;
@@ -10,7 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 /// <summary>
 /// Wraps logging.
 /// </summary>
-public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IMapper mapper): ILoggingService
+public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IMapper mapper, IActionGroupRepository actionGroupRepository): ILoggingService
 {
     /// <inheritdoc cref="ILoggingService"/>>
     public async Task LogOrder(ILogger logger, LogLevel severity, int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null)
@@ -29,6 +31,12 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 logger.LogOrderWarning(code, agvId, actionGroupId, title, message, additionalLabels);
                 break;
             }
+
+            case LogLevel.Error:
+            {
+                logger.LogOrderError(code, agvId, actionGroupId, title, message, additionalLabels);
+                break;
+            }
         }
         await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
     }
@@ -36,7 +44,26 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
     /// <inheritdoc cref="ILoggingService"/>>
     public async Task LogAgv(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null)
     {
-        var logEntry = await logEntryRepository.AddAsync(Categories.Agv, code, severity.ToString(), agvId, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        // Get current action group
+        Guid? actionGroupCorrelationId = null;
+        
+        if (severity is LogLevel.Warning or LogLevel.Error)
+        {
+            IReadOnlyList<Models.ActionGroup.ActionGroup> actionGroups = await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Started], null, null, 1, agvId, null, Models.ActionGroup.SortBy.StartedDate, false);
+            if (actionGroups.Count > 0)
+            {
+                actionGroupCorrelationId = actionGroups.First().CorrelationId;
+                if (severity is LogLevel.Error)
+                {
+                    await LogOrder(logger, LogLevel.Error, LogCodes.OrderAgvError, agvId, (Guid)actionGroupCorrelationId, "Order AGV Error", $"AGV reports error {errorCode} during execution of order.", new Dictionary<string, object?>());
+                } 
+                else
+                {
+                    await LogOrder(logger, LogLevel.Warning, LogCodes.OrderAgvWarning, agvId, (Guid)actionGroupCorrelationId, "Order AGV Warning", $"AGV reports warning {errorCode} during execution of order.", new Dictionary<string, object?>());
+                }
+            }
+        }
+        var logEntry = await logEntryRepository.AddAsync(Categories.Agv, code, severity.ToString(), agvId, actionGroupCorrelationId, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
         switch (severity)
         {
             case LogLevel.Information:

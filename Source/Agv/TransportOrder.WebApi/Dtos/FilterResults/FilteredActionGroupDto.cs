@@ -73,4 +73,10 @@ public record FilteredActionGroupDto
     /// The date/time that the action group is estimated to be finished.
     /// </summary>
     public DateTime EstimatedCompletionDate { get; set; }
+
+    /// <summary>
+    /// Log entries associated with this action group.
+    /// </summary>
+    [SwaggerSupportsWhereAggregationFilter]
+    public List<FilteredLogEntryDto> LogEntries { get; init; } = [];
 }

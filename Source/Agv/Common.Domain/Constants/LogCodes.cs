@@ -84,6 +84,8 @@ public static class LogCodes
     public const int OrderRetracted = 124;
     public const int OrderFailed = 125;
     public const int OrderActionResent = 126;
+    public const int OrderAgvWarning = 127;
+    public const int OrderAgvError = 128;
 
     //Station
     public const int StationStateChanged = 400;

@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -26,6 +28,7 @@ public class TriggerControllerTestFixture : MockRequestClientControllerTestFixtu
     private GotTrigger _gotTrigger = null!;
     private TriggerLocationAssigned _triggerLocationAssigned = null!;
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
     protected override void SetupController()
     {
@@ -33,9 +36,12 @@ public class TriggerControllerTestFixture : MockRequestClientControllerTestFixtu
         {
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
+            s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient(_ => new Mock<IBus>().Object);
         });
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
         AddRequestClient<GetTrigger, GotTrigger>(() => _gotTrigger);
         AddRequestClient<AssignTriggerToLocation, TriggerLocationAssigned>(() => _triggerLocationAssigned);
         AddRequestClient<TryRemoveTriggerLocation, Success>(() => new Success());

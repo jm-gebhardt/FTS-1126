@@ -50,21 +50,27 @@ public sealed class CollectionFilter : IFilter
     }
 
     /// <inheritdoc />
-    public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
+    public LambdaExpression? ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
     {
         try
         {
-            var childExpression = Child.ToExpressionTree(accessors);
-            if (childExpression == null)
+            if (AggregateVariant is CollectionAggregateVariant.Where)
             {
-                throw new FilterExecutionException($"Could not convert subtree for method {nameof(ToExpressionTree)} to expression tree");
+                return null;
+            }
+
+            var childExpression = Child.ToExpressionTree(accessors);
+
+            if (childExpression is null)
+            {
+                return null;
             }
 
             if (!accessors.TryGetValue(CollectionName, out var accessorInfo) || accessorInfo is not { Item1: { } accessor })
             {
                 throw new FilterExecutionException($"No accessor for {CollectionName} in {nameof(CollectionFilter)}");
             }
-
+            
             var outputType = accessor.ReturnType;
 
             Type collectionBaseType;
@@ -77,7 +83,6 @@ public sealed class CollectionFilter : IFilter
             {
                 collectionBaseType = outputType.GetEnumerableContentType() ?? throw new FilterExecutionException($"Accessor expression tree does not return collection for {nameof(CollectionFilter)}");
             }
-
             return FilterExpressionBuilder.CreateAggregationPredicate(collectionBaseType, childExpression, accessor, AggregateVariant);
         }
         catch (TargetInvocationException ex)
@@ -86,14 +91,41 @@ public sealed class CollectionFilter : IFilter
         }
     }
 
+    /// <inheritdoc />
+    public Dictionary<string, IFilter> SeparateCollectionRestrictions(Dictionary<string, IFilter> accumulator)
+    {
+        if (AggregateVariant is not CollectionAggregateVariant.Where)
+        {
+            return Child.SeparateCollectionRestrictions(accumulator);
+        }
+        if (!accumulator.TryGetValue(CollectionName, out var filter))
+        {
+            accumulator[CollectionName] = Child;
+        }
+        else if (filter is CombinationFilter { CombinationVariantType: LogicalCombinationVariant.And } combFilter)
+        {
+            combFilter.Children.Add(Child);
+        }
+        else
+        {
+            accumulator[CollectionName] = new CombinationFilter(LogicalCombinationVariant.And, [filter, Child]);
+        }
+        return accumulator;
+    }
+
     private bool StopSplitting()
     {
-        return AggregateVariant is CollectionAggregateVariant.Any;
+        return AggregateVariant is not CollectionAggregateVariant.All;
     }
 
     /// <inheritdoc />
     public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? earlyBreaks = null)
     {
+        if (AggregateVariant is CollectionAggregateVariant.Where)
+        {
+            return 0;
+        }
+
         var maxSearch = ^0;
 
         if (earlyBreaks?.Contains(CollectionName) ?? false)

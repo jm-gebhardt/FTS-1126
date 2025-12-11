@@ -28,17 +28,24 @@ public interface IFilter
     public Dictionary<int, IFilter> SplitFilter(List<string> names, Dictionary<string, (LambdaExpression, bool)>? domainAccessors = null);
 
     /// <summary>
-    /// Creates an expression tree from this filter .
+    /// Creates an expression tree from this filter. Returns null if the filter has no impact.
     /// </summary>
     /// <param name="accessors">Mapping of parameter name -> accessor expression &amp; nullability.</param>
     /// <exception cref="FilterExecutionException">If there are structural issues with the filter/accessor combination, i.e. accessors missing, type mismatches or similar.</exception>
-    public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors);
-    
+    public LambdaExpression? ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors);
+
+    /// <summary>
+    /// Separates out the Where variants of the collection filters according to their collections.
+    /// </summary>
+    /// <param name="accumulator">The already accumulated filters.</param>
+    /// <returns>A dictionary containing the collection names as keys pointing to the restrictions that should be applied to them.</returns>
+    public Dictionary<string, IFilter> SeparateCollectionRestrictions(Dictionary<string, IFilter> accumulator);
+
     /// <summary>
     /// Gets the highest index of the name that is a substring of the names in the filter. <br/>
     /// If <paramref name="names"/> contains <see cref="ReadModelFilterLayer"/> then the index search will be restricted to values before it if the name is contained in <paramref name="earlyBreaks"/>.
     /// </summary>
-    /// <param name="names">List og the names to checkt against.</param>
+    /// <param name="names">List of names to check against.</param>
     /// <param name="earlyBreaks">The index search breaks early if the name is found in this collection.</param>
     internal int GetDeepestSubstringIndex(List<string> names, ICollection<string>? earlyBreaks = null);
 }

@@ -20,6 +20,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.IsIncomplete);
         builder.Ignore(e => e.Duration);
         builder.Ignore(e => e.IsQueueingOrder);
+        builder.Ignore(e => e.LogEntries);
         builder.Property(e => e.ShouldEscapeQueue);
         builder.Property(e => e.Priority).HasConversion<int>().HasDefaultValue(Priority.Default);
         builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);

@@ -164,9 +164,19 @@ public abstract class FilterableBinderBase
         LambdaExpression? MergeExpression { get; }
 
         /// <summary>
+        /// Function to create an expression to merge root with a value from this level by incorporating a potential predicate in case of a collection join.
+        /// </summary>
+        Func<LambdaExpression?, LambdaExpression>? MergeExpressionBuilder { get; }
+
+        /// <summary>
         /// Whether the join should be LEFT OUTER or not.
         /// </summary>
         bool IsOuterJoin { get; }
+
+        /// <summary>
+        /// Whether this is a one-to-many (collection) join.
+        /// </summary>
+        bool IsCollectionJoin { get; }
 
         /// <summary>
         /// Collection of members that will not be mapped.

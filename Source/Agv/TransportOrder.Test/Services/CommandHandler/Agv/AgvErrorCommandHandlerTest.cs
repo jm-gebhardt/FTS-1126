@@ -17,7 +17,8 @@ public class AgvErrorCommandHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var fixture = new AgvErrorCommandHandlerTestFixture()
-            .WithAgv(agv);
+            .WithAgv(agv)
+            .WithActionGroups([]);
 
         await fixture.PublishMessageAsync(new UpdateErrorStatus(agv.CorrelationId, new List<AgvError>(), new AgvPosition(true, 1, 1, 1, 0)));
 
@@ -31,7 +32,8 @@ public class AgvErrorCommandHandlerTest
         List<AgvError> errors = AgvErrorGenerator.GenerateAgvErrorStatus(2, agv.CorrelationId).Errors;
         var fixture = new AgvErrorCommandHandlerTestFixture()
             .WithActiveAgvErrors([errors[0]])
-            .WithAgv(agv);
+            .WithAgv(agv)
+            .WithActionGroups([]);
 
         await fixture.PublishMessageAsync(new UpdateSystemAgvErrors(Guid.NewGuid(), [errors[1]], [], new AgvPosition(true, 1, 1, 1, 0)));
         var errorChanged = await fixture.GetFirstPublishedMessageAsync<AgvErrorChanged>();
@@ -46,7 +48,8 @@ public class AgvErrorCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, position: new AgvPosition(true, 1, 1, 1, 0));
         var fixture = new AgvErrorCommandHandlerTestFixture()
-            .WithAgv(agv);
+            .WithAgv(agv)
+            .WithActionGroups([]);
 
         await fixture.TestHarness.Bus.Publish(new UpdateErrorStatus(agv.CorrelationId, errorStatus.Errors, errorStatus.AgvPosition));
         await fixture.ShouldHaveConsumedAsync<UpdateErrorStatus>();
@@ -61,7 +64,8 @@ public class AgvErrorCommandHandlerTest
         List<AgvError> errors = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, description: AgvError.JoystickMode).Errors;
         var fixture = new AgvErrorCommandHandlerTestFixture()
             .WithActiveAgvErrors([errors[0]])
-            .WithAgv(agv);
+            .WithAgv(agv)
+            .WithActionGroups([]);
 
         await fixture.PublishMessageAsync(new UpdateSystemAgvErrors(Guid.NewGuid(), [],[errors[0]], new AgvPosition(true, 1, 1, 1, 0)));
         var errorChanged = await fixture.GetFirstPublishedMessageAsync<AgvErrorChanged>();

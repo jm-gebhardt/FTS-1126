@@ -1,9 +1,11 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
@@ -26,6 +28,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
     public Mock<IParkPointService> ParkPointService { get; } = new();
 
@@ -50,6 +53,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
             s.AddTransient(_ => _restrictedAreaRepository.Object);
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
+            s.AddTransient(_ => _actionGroupRepository.Object);
         });
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
@@ -58,6 +62,8 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
         base.Build();
         return this;
     }

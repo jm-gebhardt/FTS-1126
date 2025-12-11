@@ -213,6 +213,31 @@ public static class LoggingExtension
     }
 
         /// <summary>
+        /// Log messages for orders with error severity.
+        /// </summary>
+        /// <param name="code">The log message code.</param>
+        /// <param name="agvId">The correlation id of the agv.</param>
+        /// <param name="actionGroupId">The action group correlation id.</param>
+        /// <param name="title">The title.</param>
+        /// <param name="message">The message.</param>
+        /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
+        public void LogOrderError(int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null)
+        {
+            var parameters = new Dictionary<string, object?>
+            {
+                { "Timestamp:yyyy-MM-dd HH:mm:ss.fffff", DateTime.UtcNow },
+                { "LogCode", code },
+                { "AgvCorrelationId", agvId },
+                { "ActionGroupCorrelationId", actionGroupId },
+                { "LogCategory", nameof(Categories.Order) },
+                { "Title", title },
+                { "Message", message }
+            };
+            AddLabels(parameters, additionalLabels);
+            WriteLogLine(logger, LogLevel.Error, message, parameters);
+        }
+
+        /// <summary>
         /// Log messages for stations with information severity.
         /// </summary>
         /// <param name="code">The log message code.</param>

@@ -60,4 +60,9 @@ public record FilteredActionGroup
 
     /// <inheritdoc cref="ActionGroup.Priority"/>
     public Priority Priority { get; init; }
+
+    /// <summary>
+    /// Log entries associated with this action group.
+    /// </summary>
+    public ICollection<FilteredLogEntry> LogEntries { get; init; } = [];
 }

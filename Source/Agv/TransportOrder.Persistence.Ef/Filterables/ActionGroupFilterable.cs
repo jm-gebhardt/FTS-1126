@@ -80,8 +80,14 @@ public class ActionGroupFilterable : ActionGroup, IFilterable<ActionGroup, Actio
     /// <inheritdoc cref="ActionGroup.Reasons"/>
     [HasConversion]
     public new List<Reason> Reasons { get; init; } = [];
-    
+
     /// <inheritdoc cref="ActionGroup.DoNotPause"/>
     [FilterProperty]
     public new bool DoNotPause {get; init; }
+
+    /// <summary>
+    /// Log entries associated with this action group.
+    /// </summary>
+    [JoinProperty(nameof(CorrelationId), nameof(LogEntryFilterable.ActionGroupCorrelationId), isOuterJoin: true)]
+    public new ICollection<LogEntryFilterable> LogEntries { get; init; } = [];
 }

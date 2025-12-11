@@ -171,4 +171,53 @@ internal static class QueryableHelper
 
         return queryable.Select(lambda);
     }
+
+    /// <summary>
+    /// Applies a group join (one-to-many) to a queryable.
+    /// </summary>
+    /// <typeparam name="TOut">The type contained in the queryable.</typeparam>
+    /// <param name="queryable">The queryable to apply the group join to.</param>
+    /// <param name="other">The other queryable to join with.</param>
+    /// <param name="keySelector">The selector expression for the key on <typeparamref name="TOut"/>.</param>
+    /// <param name="otherKeySelector">The selector expression for the key on the queryable to join with.</param>
+    /// <param name="combinator">Combinator expression to create a new <typeparamref name="TOut"/> from an element of the collection and a collection of others.</param>
+    public static IQueryable<TOut> ApplyGroupJoin<TOut>(this IQueryable<TOut> queryable, IQueryable other, LambdaExpression keySelector, LambdaExpression otherKeySelector, LambdaExpression combinator)
+    {
+        var otherType = other.GetType().GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryable<>)).GetGenericArguments().First();
+
+        if (keySelector.ReturnType != otherKeySelector.ReturnType && otherKeySelector.ReturnType != Nullable.GetUnderlyingType(keySelector.ReturnType))
+        {
+            throw new FilterExecutionException($"Could not create group join query, type mismatch in key {keySelector.ReturnType} != {otherKeySelector.ReturnType} for entities {typeof(TOut).FullName} join {otherType.FullName}");
+        }
+
+        if (typeof(TOut) != keySelector.Parameters.First().Type)
+        {
+            throw new FilterExecutionException($"Could not create group join query, type mismatch in key selector input {typeof(TOut).FullName} != {keySelector.Parameters.First().Type.FullName} for entities {typeof(TOut).FullName} join {otherType.FullName}");
+        }
+
+        if (otherType != otherKeySelector.Parameters.First().Type)
+        {
+            throw new FilterExecutionException($"Could not create group join query, type mismatch in other key selector input {otherType.FullName} != {otherKeySelector.Parameters.First().Type.FullName} for entities {typeof(TOut).FullName} join {otherType.FullName}");
+        }
+
+        var keyType = keySelector.ReturnType;
+
+        return ApplyGroupJoinInternal(queryable, other, keySelector, otherKeySelector, combinator, otherType, keyType);
+    }
+
+    private static IQueryable<TOut> ApplyGroupJoinInternal<TOut>(IQueryable<TOut> queryable, IQueryable other, LambdaExpression keySelector, LambdaExpression otherKeySelector, LambdaExpression combinator, Type otherType, Type keyType)
+    {
+        var method = GetGenericMethod(nameof(GroupJoinToCollection), [typeof(TOut), otherType, keyType, typeof(TOut)], 5);
+
+        if (method.Invoke(null, [queryable, other, keySelector, otherKeySelector, combinator]) is not IQueryable<TOut> result)
+        {
+            throw new FilterExecutionException($"Could not create group join query for entities {typeof(TOut).FullName} join {otherType.FullName}");
+        }
+        return result;
+    }
+
+    private static IQueryable<TResult> GroupJoinToCollection<TOuter, TInner, TKey, TResult>(IQueryable<TOuter> outerSequence, IEnumerable<TInner> innerSequence, Expression<Func<TOuter, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TOuter, IEnumerable<TInner>, TResult>> resultSelector)
+    {
+        return outerSequence.GroupJoin(innerSequence, outerKeySelector, innerKeySelector, resultSelector);
+    }
 }

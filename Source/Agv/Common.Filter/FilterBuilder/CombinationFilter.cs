@@ -51,15 +51,19 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
     }
 
     /// <inheritdoc />
-    public LambdaExpression ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
+    public LambdaExpression? ToExpressionTree(Dictionary<string, (LambdaExpression, bool)> accessors)
     {
         try 
         {
-            List<LambdaExpression> childExpressions = Children.Select(n => n.ToExpressionTree(accessors)).ToList();
+            List<LambdaExpression> childExpressions = Children.Select(n => n.ToExpressionTree(accessors)).Where(n => n != null).ToList()!;
 
-            if (childExpressions.Count == 1)
+            switch (childExpressions.Count)
             {
-                return childExpressions.First();
+                case 0:
+                    return null;
+
+                case 1:
+                    return childExpressions.First();
             }
 
             accessors.TryGetValue(IFilter.DomainFilterLayer, out var lambda);
@@ -79,6 +83,12 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
         {
             throw ex.GetBaseExceptionKeepingStacktrace();
         }
+    }
+
+    /// <inheritdoc />
+    public Dictionary<string, IFilter> SeparateCollectionRestrictions(Dictionary<string, IFilter> accumulator)
+    {
+        return children.Aggregate(accumulator, (a, c) => c.SeparateCollectionRestrictions(a));
     }
 
     /// <inheritdoc cref="IFilter"/>

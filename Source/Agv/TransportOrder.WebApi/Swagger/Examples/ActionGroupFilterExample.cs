@@ -24,6 +24,12 @@ public class ActionGroupFilterExample : IOperationFilter
     [PublicAPI]
     public static readonly FilterDto ExampleDto = new CombinationFilterDto(
         [
+            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.CurrentCulture)),
+            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.CurrentCulture)),
+            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.CurrentCulture)),
+            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.CurrentCulture)),
+            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.CurrentCulture)),
+            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.CurrentCulture)),
             new CombinationFilterDto([
                 new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString()),
                 new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.AssignedAgv) + IFilter.AccessLevelSeparator + nameof(FilteredAgvDto.CorrelationId), ComparisonVariant.Equals, Guid.NewGuid().ToString()),
@@ -58,7 +64,7 @@ public class ActionGroupFilterExample : IOperationFilter
                 CollectionAggregateVariant.Any
             ),
             new CombinationFilterDto([
-                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.EstimatedDuration), ComparisonVariant.Gt, TimeSpan.MinValue.ToString()),
+                new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.EstimatedDuration), ComparisonVariant.Gt, "0"),
                 new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.EstimatedDuration), ComparisonVariant.Lt, TimeSpan.MaxValue.ToString())
             ], LogicalCombinationVariant.Or),
             new CombinationFilterDto([
@@ -66,12 +72,15 @@ public class ActionGroupFilterExample : IOperationFilter
                 new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Canceled)),
                 new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.State), ComparisonVariant.Equals, nameof(ActionGroupState.Aborted))
             ], LogicalCombinationVariant.Or),
-            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.CurrentCulture)),
-            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CreatedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.CurrentCulture)),
-            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.CurrentCulture)),
-            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.StartedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.CurrentCulture)),
-            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Gt, DateTime.UtcNow.AddHours(1).ToString(CultureInfo.CurrentCulture)),
-            new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.CompletedDate), ComparisonVariant.Lt, DateTime.UtcNow.AddHours(-1).ToString(CultureInfo.CurrentCulture))
+            new CollectionFilterDto(
+                new CombinationFilterDto([
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.LogEntries) + IFilter.AccessLevelSeparator + nameof(FilteredLogEntryDto.LogLevel), ComparisonVariant.Equals, "Error"),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.LogEntries) + IFilter.AccessLevelSeparator + nameof(FilteredLogEntryDto.LogLevel), ComparisonVariant.Equals, "Warning"),
+                    new ValueComparisonFilterDto(nameof(FilteredActionGroupDto.LogEntries) + IFilter.AccessLevelSeparator + nameof(FilteredLogEntryDto.LogCode), ComparisonVariant.Equals, "117")
+                ], LogicalCombinationVariant.Or),
+                nameof(FilteredActionGroupDto.LogEntries),
+           CollectionAggregateVariant.Where
+            )
         ],
         LogicalCombinationVariant.And
     );

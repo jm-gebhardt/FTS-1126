@@ -224,7 +224,7 @@ public class FilterableBinderTests
 
         var result = colFilter.ToExpressionTree(accessors);
 
-        result.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
+        result!.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
     }
 
     [TestMethod]
@@ -247,7 +247,7 @@ public class FilterableBinderTests
 
         var result = colFilter.ToExpressionTree(accessors);
 
-        result.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
+        result!.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
     }
 
     [TestMethod]
@@ -275,7 +275,7 @@ public class FilterableBinderTests
 
         var result = dirFilter.ToExpressionTree(accessors);
 
-        result.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
+        result!.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
     }
 
     [TestMethod]
@@ -300,7 +300,7 @@ public class FilterableBinderTests
 
         var result = dirFilter.ToExpressionTree(accessors);
 
-        result.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
+        result!.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
     }
 
     [TestMethod]
@@ -327,7 +327,7 @@ public class FilterableBinderTests
 
         var result = dirFilter.ToExpressionTree(accessors);
 
-        result.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
+        result!.Compile().DynamicInvoke(new TestValueHolder(10, "A")).ShouldBe(true);
     }
     
     [TestMethod]

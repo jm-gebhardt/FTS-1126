@@ -257,7 +257,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         (var filterDto, int pageNumber, int pageSize, var ordering, ICollection<string> orderProps) = context.Message;
 
         var filter = filterDto.Translate<ActionGroup, ActionGroupFilterable>();
-
+        
         PagedResult<FilteredActionGroup> result = await _retrievalService.Filter(filter, pageNumber, pageSize, ordering, orderProps);
 
         await context.RespondAsync(new GotFilteredActionGroups(result));

@@ -47,5 +47,7 @@ public class FilteredProfile : Profile
         CreateMap<FilteredActionTarget, FilteredActionTargetDto>();
         CreateMap<FilteredGraphNode, FilteredGraphNodeDto>();
         CreateMap<FilteredAgvPosition, FilteredAgvPositionDto>();
+        CreateMap<FilteredLogEntry, FilteredLogEntryDto>();
     }
 }
+

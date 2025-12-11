@@ -144,6 +144,86 @@ public class TestJoinTargetEntityConfiguration : IEntityTypeConfiguration<TestJo
     }
 }
 
+// One-to-many join test entities
+public class TestParentEntity()
+{
+    public Guid ParentKey { get; init; } = Guid.NewGuid();
+
+    public string Name { get; init; } = string.Empty;
+
+    public ICollection<TestChildEntity> Children { get; init; } = [];
+
+    public TestParentEntity(string name) : this()
+    {
+        Name = name;
+    }
+}
+
+public class TestChildEntity()
+{
+    public Guid ChildKey { get; init; } = Guid.NewGuid();
+
+    public Guid ParentId { get; init; }
+
+    public int Score { get; init; }
+
+    public TestChildEntity(Guid parentId, int score) : this()
+    {
+        ParentId = parentId;
+        Score = score;
+    }
+}
+
+public class TestParentReadModel : TestParentEntity, IFilterable<TestParentEntity, TestParentReadModel>
+{
+    [KeyProperty]
+    [UsedImplicitly]
+    public new Guid ParentKey { get; init; } = Guid.NewGuid();
+
+    [FilterProperty]
+    [UsedImplicitly]
+    public new string Name { get; init; } = string.Empty;
+
+    [JoinProperty(nameof(ParentKey), nameof(TestChildEntity.ParentId), isOuterJoin: false)]
+    [UsedImplicitly]
+    public new ICollection<TestChildReadModel> Children { get; init; } = [];
+}
+
+public class TestChildReadModel : TestChildEntity, IFilterable<TestChildEntity, TestChildReadModel>
+{
+    [KeyProperty]
+    [UsedImplicitly]
+    public new Guid ChildKey { get; init; } = Guid.NewGuid();
+
+    [FilterProperty]
+    [UsedImplicitly]
+    public new Guid ParentId { get; init; }
+
+    [FilterProperty]
+    [UsedImplicitly]
+    public new int Score { get; init; }
+}
+
+public class TestParentEntityConfiguration : IEntityTypeConfiguration<TestParentEntity>
+{
+    public void Configure(EntityTypeBuilder<TestParentEntity> builder)
+    {
+        builder.Property(e => e.Name);
+        builder.HasKey(e => e.ParentKey);
+        builder.Ignore(e => e.Children);
+    }
+}
+
+public class TestChildEntityConfiguration : IEntityTypeConfiguration<TestChildEntity>
+{
+    public void Configure(EntityTypeBuilder<TestChildEntity> builder)
+    {
+        builder.Property(e => e.ParentId);
+        builder.Property(e => e.Score);
+        builder.HasKey(e => e.ChildKey);
+    }
+}
+
 public class TestDbEntityConfiguration : IEntityTypeConfiguration<TestDbEntity>
 {
     public void Configure(EntityTypeBuilder<TestDbEntity> builder)
@@ -173,5 +253,7 @@ public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(
         modelBuilder.ApplyConfiguration(new TestCollectionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TestJoinSourceEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TestJoinTargetEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new TestParentEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new TestChildEntityConfiguration());
     }
 }

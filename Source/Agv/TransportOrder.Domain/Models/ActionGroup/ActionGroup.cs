@@ -143,6 +143,11 @@ public class ActionGroup
     [UsedImplicitly]
     public List<Reason> Reasons { get; set; } = new();
 
+    /// <summary>
+    /// Shadow property for log entries. Used by filterables for one-to-many joins.
+    /// </summary>
+    public virtual ICollection<LogEntry.LogEntry>? LogEntries { get; init; }
+
     /// <inheritdoc cref="ActionGroup"/>
     public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, Priority priority = Priority.Default, bool shouldEscapeQueue = false, bool isQueued = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool doNotPause = false) : this(correlationId, orderId)
     {

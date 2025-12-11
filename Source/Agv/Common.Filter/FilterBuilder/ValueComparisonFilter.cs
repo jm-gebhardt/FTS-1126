@@ -56,6 +56,12 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
     }
 
     /// <inheritdoc />
+    public Dictionary<string, IFilter> SeparateCollectionRestrictions(Dictionary<string, IFilter> accumulator)
+    {
+        return accumulator;
+    }
+
+    /// <inheritdoc />
     public int GetDeepestSubstringIndex(List<string> names, ICollection<string>? earlyBreaks = null)
     {
         var maxSearch = ^0;

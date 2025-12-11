@@ -92,19 +92,19 @@ internal static class FilterExpressionBuilder
     /// <typeparam name="TProperty">The type of the property.</typeparam>
     public static Expression<Func<TInstance?, TProperty?>> CreateCoalescingStructAccessor<TInstance, TProperty>(string propertyName) where TInstance : struct where TProperty : struct
     {
-        Expression<Func<TInstance?, bool>> nullcheck = CreatePropertyAccess<TInstance?, bool>(nameof(Nullable<>.HasValue));
+        Expression<Func<TInstance?, bool>> nullCheck = CreatePropertyAccess<TInstance?, bool>(nameof(Nullable<>.HasValue));
         Expression<Func<TInstance?, TInstance>> valueAccess = CreatePropertyAccess<TInstance?, TInstance>(nameof(Nullable<>.Value));
         Expression<Func<TInstance, TProperty?>> propAccess = CreatePropertyAccessWithCast<TInstance, TProperty?>(propertyName);
 
         Expression<Func<TInstance?, TProperty?>> composed = ExpressionHelper.Compose(valueAccess, propAccess);
 
-        var param = nullcheck.Parameters.First();
+        var param = nullCheck.Parameters.First();
 
         var propAccessBody = composed.Body.ReplaceParameter(valueAccess.Parameters.First(), param);
 
         var nullValue = Expression.Constant(null, typeof(TProperty?));
 
-        var condition = Expression.Condition(nullcheck.Body, propAccessBody, nullValue);
+        var condition = Expression.Condition(nullCheck.Body, propAccessBody, nullValue);
 
         return Expression.Lambda<Func<TInstance?, TProperty?>>(condition, false, param);
     }
@@ -343,7 +343,7 @@ internal static class FilterExpressionBuilder
 
         if (isNullableValueType)
         {
-            return CreateNullsafeComparisonPredicate(other, propertyName, variant, accessor);
+            return CreateNullSafeComparisonPredicate(other, propertyName, variant, accessor);
         }
 
         if (isEqualityComparison && !isComparable)
@@ -367,7 +367,7 @@ internal static class FilterExpressionBuilder
     /// <param name="propertyName">The name of the property.</param>
     /// <param name="variant">The variant of the comparison. Any non-equality comparison always returns null if null is one of the operands.</param>
     /// <param name="accessor">Accessor to get to <typeparamref name="TProperty"/> from <typeparamref name="T"/>.</param>
-    private static Expression<Func<T, bool>> CreateNullsafeComparisonPredicate<T, TProperty>(TProperty other, string propertyName, ComparisonVariant variant, Expression<Func<T, TProperty>>? accessor)
+    private static Expression<Func<T, bool>> CreateNullSafeComparisonPredicate<T, TProperty>(TProperty other, string propertyName, ComparisonVariant variant, Expression<Func<T, TProperty>>? accessor)
     {
         if (other == null)
         {
@@ -378,9 +378,9 @@ internal static class FilterExpressionBuilder
         
         var baseType = Nullable.GetUnderlyingType(typeof(TProperty?)) ?? typeof(TProperty);
 
-        Expression<Func<T, bool>> nullcheck = needsAccessor ? ExpressionHelper.Compose(accessor!, CreateNotNullCheck<TProperty?>()) : CreateNotNullCheck<T>();
+        Expression<Func<T, bool>> nullCheck = needsAccessor ? ExpressionHelper.Compose(accessor!, CreateNotNullCheck<TProperty?>()) : CreateNotNullCheck<T>();
 
-        var param = nullcheck.Parameters.First();
+        var param = nullCheck.Parameters.First();
 
         var nonNullAccessor = needsAccessor ?  Expression.Lambda(Expression.Convert(accessor!.Body, baseType), false, accessor.Parameters.First()) : null;
         var compTo = CreateCompareToExpression(typeof(T), baseType, other, propertyName, nonNullAccessor);
@@ -388,13 +388,13 @@ internal static class FilterExpressionBuilder
 
         var compToBody = compTo.Body.ReplaceParameter(compTo.Parameters.First(), param);
 
-        var resultBody = Expression.AndAlso(nullcheck.Body, compToBody);
+        var resultBody = Expression.AndAlso(nullCheck.Body, compToBody);
 
         return Expression.Lambda<Func<T, bool>>(resultBody, false, param);
     }
 
     /// <summary>
-    /// Creates a nullcheck predicate that tests the incoming property on <typeparamref name="T"/> against null equality depending on the variant.
+    /// Creates a null check predicate that tests the incoming property on <typeparamref name="T"/> against null equality depending on the variant.
     /// </summary>
     /// <typeparam name="T">The type that holds the property.</typeparam>
     /// <typeparam name="TProperty">The type of the property.</typeparam>
@@ -412,14 +412,14 @@ internal static class FilterExpressionBuilder
             return NegatePredicate(CreateConstantTruePredicate<T>());
         }
 
-        Expression<Func<TProperty, bool>> nullcheck = CreateNotNullCheck<TProperty>();
+        Expression<Func<TProperty, bool>> nullCheck = CreateNotNullCheck<TProperty>();
 
         if (variant is not ComparisonVariant.Neq)
         {
-            nullcheck = NegatePredicate(nullcheck);
+            nullCheck = NegatePredicate(nullCheck);
         }
 
-        return needsAccessor ? ExpressionHelper.Compose(accessor!, nullcheck) : Expression.Lambda<Func<T, bool>>(nullcheck.Body, false, nullcheck.Parameters.First());
+        return needsAccessor ? ExpressionHelper.Compose(accessor!, nullCheck) : Expression.Lambda<Func<T, bool>>(nullCheck.Body, false, nullCheck.Parameters.First());
     }
 
     /// <summary>
@@ -433,16 +433,16 @@ internal static class FilterExpressionBuilder
     /// <inheritdoc cref="GenerateNumericalPredicate{T}"/>
     public static Expression<Func<T, bool>> GenerateNumericalPredicate<T, TProperty>(TProperty other, ComparisonVariant variant, Expression<Func<T, TProperty?>> accessor) where TProperty : struct
     {
-        Expression<Func<TProperty?, bool>> nullcheck = CreateNotNullCheck<TProperty?>();
+        Expression<Func<TProperty?, bool>> nullCheck = CreateNotNullCheck<TProperty?>();
 
-        Expression<Func<T, bool>> propertyNullcheck = ExpressionHelper.Compose(accessor, nullcheck);
+        Expression<Func<T, bool>> propertyNullCheck = ExpressionHelper.Compose(accessor, nullCheck);
 
         var body = Expression.Convert(accessor.Body, typeof(TProperty));
         Expression<Func<T, TProperty>> notnullAccessor = Expression.Lambda<Func<T, TProperty>>(body, false, accessor.Parameters.First());
 
         Expression<Func<T, bool>> predicate = GenerateNumericalPredicate(other, "", variant, notnullAccessor);
 
-        return ConnectPredicates(propertyNullcheck, predicate, LogicalCombinationVariant.And);
+        return ConnectPredicates(propertyNullCheck, predicate, LogicalCombinationVariant.And);
     }
 
     /// <summary>
@@ -515,13 +515,13 @@ internal static class FilterExpressionBuilder
     {
         var param = expression.Parameters.First();
 
-        Expression<Func<TIn?, bool>> nullcheck = CreateNotNullCheck<TIn?>();
+        Expression<Func<TIn?, bool>> nullCheck = CreateNotNullCheck<TIn?>();
 
         var constNull = Expression.Constant(null, typeof(TOut?));
 
-        var nullcheckBoundParam = nullcheck.Body.ReplaceParameter(nullcheck.Parameters.First(), param);
+        var nullCheckBoundParam = nullCheck.Body.ReplaceParameter(nullCheck.Parameters.First(), param);
 
-        var condition = Expression.Condition(nullcheckBoundParam, expression.Body, constNull);
+        var condition = Expression.Condition(nullCheckBoundParam, expression.Body, constNull);
 
         return Expression.Lambda<Func<TIn?, TOut?>>(condition, false, param);
     }
@@ -529,11 +529,11 @@ internal static class FilterExpressionBuilder
     /// <inheritdoc cref="MakeNullCoalescing{TIn,TOut}"/>
     public static LambdaExpression MakeNullCoalescing(ParameterExpression param, Expression body, Type returnType)
     {
-        var nullcheck = CreateNotNullCheck(param.Type);
+        var nullCheck = CreateNotNullCheck(param.Type);
 
         var constNull = Expression.Constant(null, returnType);
 
-        var nullcheckBoundParam = nullcheck.Body.ReplaceParameter(nullcheck.Parameters.First(), param);
+        var nullCheckBoundParam = nullCheck.Body.ReplaceParameter(nullCheck.Parameters.First(), param);
 
         // body might be value type so we need to convert into the Nullable<> variant
         if (body.Type != returnType)
@@ -541,7 +541,7 @@ internal static class FilterExpressionBuilder
             body = Expression.Convert(body, returnType);
         }
 
-        var condition = Expression.Condition(nullcheckBoundParam, body, constNull);
+        var condition = Expression.Condition(nullCheckBoundParam, body, constNull);
 
         return Expression.Lambda(condition, false, param);
     }
@@ -621,7 +621,7 @@ internal static class FilterExpressionBuilder
 
         if (aggregation == null)
         {
-            throw new FilterBuilderException("Could not create aggregation predicate expression tree, aggregation could not be crated");
+            throw new FilterBuilderException("Could not create aggregation predicate expression tree, aggregation could not be created");
         }
 
         return ExpressionHelper.Compose(accessor, aggregation);

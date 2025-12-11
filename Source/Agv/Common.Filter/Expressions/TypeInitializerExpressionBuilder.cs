@@ -148,7 +148,23 @@ internal static class TypeInitializerExpressionBuilder
 
         var memberMapperExpression = memberMapper.Body.ReplaceParameter(memberMapper.Parameters.First(), memberParam);
 
+        var memberExpression = CreateMemberExpression<T, TInput>(propertyName, memberMapperExpression, baseParam);
+
+        return Expression.Lambda<Func<T, TInput, T>>(memberExpression, false, baseParam, memberParam);
+    }
+
+    /// <summary>
+    /// Creates a member initializer expression.
+    /// </summary>
+    /// <typeparam name="T">The base type.</typeparam>
+    /// <typeparam name="TInput">The input type.</typeparam>
+    /// <param name="propertyName">The name of the property that requires special handling.</param>
+    /// <param name="memberMapperExpression">The specific expression that describes the handling of <paramref name="propertyName"/>.</param>
+    /// <param name="baseParam">Parameter expression to bind for <paramref name="propertyName"/></param>
+    private static MemberInitExpression CreateMemberExpression<T, TInput>(string propertyName, Expression memberMapperExpression, ParameterExpression baseParam) where T : class, new()
+    {
         var constructorInfo = typeof(T).GetConstructor(BindingFlags.Public | BindingFlags.Instance, binder: null, types: Type.EmptyTypes, modifiers: null);
+
         // Valid use of null suppression, due to the new() constraint on T.
         var ctorExpression = Expression.New(constructorInfo!);
 
@@ -185,8 +201,83 @@ internal static class TypeInitializerExpressionBuilder
             memberBindings.Add(Expression.Bind(member, valueExpression));
         }
 
-        var memberExpression = Expression.MemberInit(ctorExpression, memberBindings);
+        return Expression.MemberInit(ctorExpression, memberBindings);
+    }
 
-        return Expression.Lambda<Func<T, TInput, T>>(memberExpression, false, baseParam, memberParam);
+    /// <summary>
+    /// Creates a member initializer expression for re-creating an object with the old values and a collection mixin value.
+    /// </summary>
+    /// <typeparam name="T">Type to add the collection mixin into.</typeparam>
+    /// <typeparam name="TInput">Type of the collection items.</typeparam>
+    /// <param name="propertyName">The name of the collection property on <typeparamref name="T"/>.</param>
+    /// <param name="itemMapper">Expression to convert each <typeparamref name="TInput"/> item into the collection element type.</param>
+    /// <param name="predicate">A predicate to restrict the values of the mixin.</param>
+    public static Expression<Func<T, IEnumerable<TInput>, T>> CreateInitializerWithCollectionMixin<T, TInput>(string propertyName, LambdaExpression itemMapper, LambdaExpression? predicate) where T : class, new()
+    {
+        var baseParam = Expression.Parameter(typeof(T), typeof(T).PrettyParameterName());
+        var collectionParam = Expression.Parameter(typeof(IEnumerable<TInput>), "collection");
+
+        var targetProperty = typeof(T).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        if (targetProperty == null)
+        {
+            throw new FilterParserException($"Could not find property {propertyName} on {typeof(T).FullName}");
+        }
+
+        var targetPropertyType = targetProperty.PropertyType;
+        var targetElementType = targetPropertyType.GetEnumerableContentType();
+        if (targetElementType == null)
+        {
+            throw new FilterParserException($"Property {propertyName} on {typeof(T).FullName} is not a collection type");
+        }
+
+        // Apply Select if we need to project items
+        Expression collectionExpression;
+        if (itemMapper.ReturnType != typeof(TInput))
+        {
+            // collection.Select(itemMapper)
+            var selectMethod = typeof(Enumerable)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(m => m is { Name: nameof(Enumerable.Select), IsGenericMethodDefinition: true })
+                .First(m => m.GetParameters() is [{ ParameterType.IsGenericType: true } p1, { ParameterType.IsGenericType: true } p2] && p1.ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>) && p2.ParameterType.GetGenericTypeDefinition() == typeof(Func<,>))
+                .MakeGenericMethod(typeof(TInput), itemMapper.ReturnType);
+
+            collectionExpression = Expression.Call(null, selectMethod, collectionParam, itemMapper);
+        }
+        else
+        {
+            collectionExpression = collectionParam;
+        }
+
+        if (predicate != null)
+        {
+            var whereMethod = typeof(Enumerable)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(m => m is { Name: nameof(Enumerable.Where), IsGenericMethodDefinition: true })
+                .First(m => m.GetParameters() is [{ ParameterType.IsGenericType: true } p1, { ParameterType.IsGenericType: true } p2] && p1.ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>) && p2.ParameterType.GetGenericTypeDefinition() == typeof(Func<,>))
+                .MakeGenericMethod(itemMapper.ReturnType);
+
+            collectionExpression = Expression.Call(null, whereMethod, collectionExpression, predicate);
+        }
+
+        // Convert to target collection type if needed (e.g., IEnumerable to ICollection/List)
+        if (targetPropertyType != collectionExpression.Type && !collectionExpression.Type.IsAssignableTo(targetPropertyType))
+        {
+            // Try to convert to List<T> if target is ICollection<T> or similar
+            if (targetPropertyType.IsGenericType &&
+                (targetPropertyType.GetGenericTypeDefinition() == typeof(ICollection<>) ||
+                 targetPropertyType.GetGenericTypeDefinition() == typeof(IList<>) ||
+                 targetPropertyType.GetGenericTypeDefinition() == typeof(List<>)))
+            {
+                var toListMethod = typeof(Enumerable)
+                    .GetMethod(nameof(Enumerable.ToList), BindingFlags.Public | BindingFlags.Static)!
+                    .MakeGenericMethod(targetElementType);
+
+                collectionExpression = Expression.Call(null, toListMethod, collectionExpression);
+            }
+        }
+
+        var memberExpression = CreateMemberExpression<T, TInput>(propertyName, collectionExpression, baseParam);
+
+        return Expression.Lambda<Func<T, IEnumerable<TInput>, T>>(memberExpression, false, baseParam, collectionParam);
     }
 }

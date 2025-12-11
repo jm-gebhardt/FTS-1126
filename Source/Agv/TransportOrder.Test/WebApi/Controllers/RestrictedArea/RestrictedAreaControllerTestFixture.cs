@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -23,6 +25,7 @@ public class RestrictedAreaControllerTestFixture: MockRequestClientControllerTes
     private RestrictedAreaAdded _restrictedAreaAdded = null!;
 
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
     protected override void SetupController()
     {
@@ -30,9 +33,12 @@ public class RestrictedAreaControllerTestFixture: MockRequestClientControllerTes
         {
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
+            s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient(_ => new Mock<IBus>().Object);
         });
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
         AddRequestClient<GetRestrictedArea, GotRestrictedArea>(() => _gotRestrictedArea);
         AddRequestClient<AddRestrictedArea, RestrictedAreaAdded>(() => _restrictedAreaAdded);
         AddRequestClient<TryDeleteRestrictedArea, Success>(() => new Success());

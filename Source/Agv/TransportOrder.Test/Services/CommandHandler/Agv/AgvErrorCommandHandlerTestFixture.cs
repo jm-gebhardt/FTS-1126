@@ -1,9 +1,11 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -18,6 +20,7 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
     public readonly Mock<IAgvDb> AgvDbMock = new();
     private readonly List<AgvError> _errors = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new(); 
 
     protected override IEnumerable<Profile> GetProfiles() => [new LogEntryProfile()];
 
@@ -39,6 +42,7 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
         collection.AddTransient(_ => AgvDbMock.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient(_ => _logEntryRepository.Object);
+        collection.AddTransient(_ => _actionGroupRepository.Object);
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
@@ -46,6 +50,13 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
     public AgvErrorCommandHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         AgvDbMock.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
+        return this;
+    }
+    
+    public AgvErrorCommandHandlerTestFixture WithActionGroups(IReadOnlyList<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups)
+    {
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(actionGroups);
         return this;
     }
 

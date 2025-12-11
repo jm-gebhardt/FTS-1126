@@ -13,5 +13,12 @@ public enum CollectionAggregateVariant
     /// <summary>
     /// Any element of a collection needs to fulfill a predicate.
     /// </summary>
-    Any
+    Any,
+
+    /// <summary>
+    /// Instead of applying to the entire result set, this variant will reduce the contents of the targeted collection. <br/>
+    /// Multiple instances targeting the same collection will be combined with and. <br/>
+    /// Nesting this variant has no effect. It will always be treated as a top-level filter on its own. <para/>
+    /// </summary>
+    Where
 }

@@ -27,6 +27,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<INodeRepository> _nodeRepositoryMock = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new(); 
 
     public Mock<IMapRepository> MapRepositoryMock { get; private set; } = null!;
 
@@ -42,7 +43,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
         IRequestClient<GetMapStations> getStationsClient = GetRequestClient<GetMapStations>();
         IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
-        var loggingService = new LoggingService(_logEntryRepository.Object, TestHarness.Bus, Mapper);
+        var loggingService = new LoggingService(_logEntryRepository.Object, TestHarness.Bus, Mapper, _actionGroupRepository.Object);
         var controller = new MapController(Mapper,
             new Mock<ILogger<MapController>>().Object,
             getBackgroundImageRequestClient,
