@@ -403,18 +403,38 @@ public class AgvEventHandler :
         }
         catch (NoChargeStationAvailableException)
         {
-            ICollection<Agv> candidatesToStopCharging = await _agvDb.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel();
-
-            if (candidatesToStopCharging.Count == 0)
-            {
-                await _loggingService.LogBattery(_logger, LogLevel.Warning, LogCodes.BatteryNeedsChargingAllOccupied, agv.CorrelationId, null, "Agv cannot charge", $"Agv {agv.CorrelationId} needs charging but no chargers are available and no charging agv has at least min charge level");
-                return;
-            }
-
-            var highestChargingAgv = candidatesToStopCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? 0).Last();
-
-            await context.Publish(new SwitchChargingAgvs(agv.CorrelationId, highestChargingAgv.CorrelationId));
+            await HandleNoChargingStationAvailableAsync(context, agv);
         }
+    }
+
+    private async Task HandleNoChargingStationAvailableAsync(IPublishEndpoint context, Agv agv, Guid? excludedAgv = null)
+    {
+        ICollection<Agv> candidatesToStopCharging = (await _agvDb.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).Where(c => excludedAgv == null || c.CorrelationId != excludedAgv).ToList();
+        if (candidatesToStopCharging.Count == 0)
+        {
+            ICollection<Agv> agvs = await _agvDb.Agvs.GetAgvsOnChargerWithAtLeastChargeUpLevel(0);
+            await _loggingService.LogBattery(_logger,
+                LogLevel.Warning,
+                LogCodes.BatteryNeedsChargingAllOccupied,
+                agv.CorrelationId,
+                null,
+                "Agv cannot charge",
+                $"Agv {agv.CorrelationId} needs charging but no chargers are available and no charging agv has at least min charge level. " +
+                $"Agvs on charger: {string.Join(", ", agvs.Select(a => $"{a.CorrelationId} ({a.AgvStatus!.LastNodeId} | {a.AgvStatus!.BatteryCharge}%)"))}");
+
+            // only switch if the other Agv is either not charging or already above the critical level to avoid further drawing switches.
+            candidatesToStopCharging = agvs.Where(a => a.AgvStatus?.Charging ?? false).ToList();
+        }
+
+        var highestChargingAgv = candidatesToStopCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? 0).Last();
+
+        _logger.LogInformation("Agv {AgvCorrelationId} with critical battery level needs a charger. " +
+                               "Switching with Agv {HighestChargingAgvCorrelationId} on charger (Charging: {IsCharging}, SOC: {BatteryCharge}%)",
+            agv.CorrelationId,
+            highestChargingAgv.CorrelationId,
+            highestChargingAgv.AgvStatus?.Charging ?? false,
+            highestChargingAgv.AgvStatus?.BatteryCharge ?? 0);
+        await context.Publish(new SwitchChargingAgvs(agv.CorrelationId, highestChargingAgv.CorrelationId));
     }
 
     /// <summary>
@@ -452,17 +472,7 @@ public class AgvEventHandler :
         }
         catch (NoChargeStationAvailableException)
         {
-            ICollection<Agv> candidatesToStopCharging = (await _agvDb.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel()).Where(c => c.CorrelationId != chargingAgv).ToList();
-
-            if (candidatesToStopCharging.Count == 0)
-            {
-                await _loggingService.LogBattery(_logger, LogLevel.Warning, LogCodes.BatteryNeedsChargingAllOccupied, agvWithCriticalBatteryLevel, null, "Agv cannot charge", $"Agv {agvWithCriticalBatteryLevel} needs charging but no chargers are available and no charging agv has at least min charge level");
-                return;
-            }
-
-            var highestChargingAgv = candidatesToStopCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? 0).Last();
-
-            await context.Publish(new SwitchChargingAgvs(agvWithCriticalBatteryLevel, highestChargingAgv.CorrelationId));
+            await HandleNoChargingStationAvailableAsync(context, agv, chargingAgv);
         }
     }
 

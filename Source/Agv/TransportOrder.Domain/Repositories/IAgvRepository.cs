@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -17,36 +18,36 @@ public interface IAgvRepository
     /// <summary>
     /// Get list of all AGVs
     /// </summary>
-    Task<ICollection<Models.Agv.Agv>> GetAllAgvsAsync();
+    Task<ICollection<Agv>> GetAllAgvsAsync();
 
     /// <summary>
     /// Get list of all AGVs where the graph exists
     /// </summary>
-    Task<ICollection<Models.Agv.Agv>> GetAllAgvsWithGraphAsync();
+    Task<ICollection<Agv>> GetAllAgvsWithGraphAsync();
 
     /// <summary>
     /// Get list of AGVs that are ready to be assigned to an order
     /// </summary>
-    Task<ICollection<Models.Agv.Agv>> GetIdleAgvsAsync();
+    Task<ICollection<Agv>> GetIdleAgvsAsync();
 
     /// <summary>
     /// Get specific AGV
     /// </summary>
     /// <returns>Agv object.</returns>
     /// <exception cref="AgvNotFoundException">If the agv with the given correlation id does not exist.</exception>
-    Task<Models.Agv.Agv> GetAgvAsync(Guid correlationId);
+    Task<Agv> GetAgvAsync(Guid correlationId);
 
     /// <summary>
     /// Get an online AGV.
     /// </summary>
     /// <returns>An Agv object.</returns>
-    Task<Models.Agv.Agv?> GetAnyOnlineAgv();
+    Task<Agv?> GetAnyOnlineAgv();
 
     /// <summary>
     /// Get specific AGV
     /// </summary>
     /// <returns>Agv object or null.</returns>
-    Task<Models.Agv.Agv?> TryGetAgvAsync(Guid correlationId);
+    Task<Agv?> TryGetAgvAsync(Guid correlationId);
 
     /// <summary>
     /// Checks if the agv matching the correlation id exists.
@@ -72,49 +73,49 @@ public interface IAgvRepository
     /// <summary>
     /// Select from the given agv ids the ones that exists.
     /// </summary>
-    Task<ICollection<Models.Agv.Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds);
+    Task<ICollection<Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Selects all agvs that have above critical battery level.
     /// </summary>
     /// <param name="agvCorrelationIds">The agvs to select from.</param>
     /// <returns></returns>
-    Task<ICollection<Models.Agv.Agv>> SelectAgvsWithAboveCriticalBatteryLevel(ICollection<Guid> agvCorrelationIds);
+    Task<ICollection<Agv>> SelectAgvsWithAboveCriticalBatteryLevel(ICollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Selects all agvs that have above min charge battery level and that are configured for infinite charging.
     /// </summary>
     /// <param name="agvCorrelationIds">The agvs to select from.</param>
     /// <returns></returns>
-    Task<ICollection<Models.Agv.Agv>> SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(ICollection<Guid> agvCorrelationIds);
+    Task<ICollection<Agv>> SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(ICollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Update an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>
-    Task<bool> UpdateAgvAsync(Models.Agv.Agv agv);
+    Task<bool> UpdateAgvAsync(Agv agv);
 
     /// <summary>
     /// Add an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>
-    Task<bool> AddAgvAsync(Models.Agv.Agv agv);
+    Task<bool> AddAgvAsync(Agv agv);
 
     /// <summary>
     /// Gets all agvs that have a battery level higher than their specified low battery level.
     /// </summary>
     /// <returns>Agvs.</returns>
-    Task<ICollection<Models.Agv.Agv>> GetReadyAgvsWithAtLeastLowBatteryLevel();
+    Task<ICollection<Agv>> GetReadyAgvsWithAtLeastLowBatteryLevel();
 
     /// <summary>
     /// Get all charging agvs with at least their MinChargeUp battery level.
     /// </summary>
-    Task<ICollection<Models.Agv.Agv>> GetChargingAgvsWithMinBatteryLevelAsync();
+    Task<ICollection<Agv>> GetChargingAgvsWithMinBatteryLevelAsync();
 
     /// <summary>
     /// Get all agvs with critical battery level that are not currently charging.
     /// </summary>
-    public Task<ICollection<Models.Agv.Agv>> GetNotChargingAgvsWithCriticalBatteryLevel();
+    public Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevel();
 
     /// <summary>
     /// Get the last node id of the agv with the given correlation id.
@@ -136,8 +137,14 @@ public interface IAgvRepository
     Task<bool> HasOnlineAgvs();
 
     /// <summary>
-    /// Gets all the agvs currently charging with min charge level.
+    /// Gets all the agvs currently on a charger with min charge level.
     /// </summary>
     /// <returns>Charging agvs with at least minimum charge up level.</returns>
-    Task<ICollection<Models.Agv.Agv>> GetChargingAgvsWithAtLeastMinChargeUpLevel();
+    Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastMinChargeUpLevel();
+
+    /// <summary>
+    /// Gets all the agvs currently on a charger with at least the specified level.
+    /// </summary>
+    /// <returns>Charging agvs with at least the specified level.</returns>
+    Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastChargeUpLevel(double chargeLevel);
 }

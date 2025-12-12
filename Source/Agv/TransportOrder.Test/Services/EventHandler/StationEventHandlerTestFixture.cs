@@ -22,7 +22,7 @@ public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<Stat
 
     public StationEventHandlerTestFixture WithChargingAgvs(ICollection<Agv> agvs)
     {
-        _agvDbMock.Setup(x => x.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
+        _agvDbMock.Setup(x => x.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
         return this;
     }
 }

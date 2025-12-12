@@ -79,7 +79,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithMinBatteryAgvs(ICollection<Agv> agvs)
     {
-        _agvDb.Setup(x => x.Agvs.GetChargingAgvsWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
+        _agvDb.Setup(x => x.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
         return this;
     }
 

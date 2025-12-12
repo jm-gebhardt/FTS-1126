@@ -300,7 +300,7 @@ public class AgvEfRepositoryTest
         await fixture.AddChargingAgv(agvLowLevel);
         await fixture.AddChargingAgv(agvMinLevel);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetChargingAgvsWithAtLeastMinChargeUpLevel();
+        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerWithAtLeastMinChargeUpLevel();
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBeEquivalentTo(agvMinLevel.CorrelationId);

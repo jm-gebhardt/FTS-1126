@@ -215,8 +215,7 @@ public class AgvRepository : IAgvRepository
         return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].MinChargeUp).ToList();
     }
 
-    /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetChargingAgvsWithAtLeastMinChargeUpLevel()
+    private async Task<List<Agv>> GetAgvsByChargeCondition(Func<Agv, bool> chargePredicate)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -251,9 +250,20 @@ public class AgvRepository : IAgvRepository
             .ToListAsync();
 
         return agvs
-            .Where(agv => agv.AgvStatus != null &&
-                          agv.AgvStatus.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].MinChargeUp)
+            .Where(agv => agv.AgvStatus != null && chargePredicate(agv))
             .ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastChargeUpLevel(double chargeLevel)
+    {
+        return await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= chargeLevel);
+    }
+
+    /// <inheritdoc />
+    public async Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastMinChargeUpLevel()
+    {
+        return await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].MinChargeUp);
     }
 
     /// <inheritdoc />
