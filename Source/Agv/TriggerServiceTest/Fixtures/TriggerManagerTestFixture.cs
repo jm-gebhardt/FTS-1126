@@ -10,7 +10,7 @@ using Moq;
 
 namespace Gebhardt.Acc.TriggerService.Test.Fixtures;
 
-public class TriggerManagerTestFixture: FixtureBase
+public sealed class TriggerManagerTestFixture: FixtureBase
 {
     private readonly Mock<ITriggerRepository> _triggerRepository = new();
 

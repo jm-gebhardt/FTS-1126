@@ -7,7 +7,7 @@ using Shouldly;
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 [TestClass]
-public class EfNodeStateRepositoryTest
+public class GraphNodeStateRepositoryTest
 {
     private static readonly GraphNode _node = "TestNode".ToGraphNode();
 
@@ -16,7 +16,7 @@ public class EfNodeStateRepositoryTest
     [TestMethod]
     public async Task When_LockNodeAsync_RepositoryEmpty_LockSuccessful()
     {
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNode(_node);
         (await fixture.Repository.LockNodeAsync(NodeId)).ShouldBeTrue();
 
@@ -30,7 +30,7 @@ public class EfNodeStateRepositoryTest
     public async Task When_LockNodeAsync_NodeExists_LockSuccessful_AllOtherParameterUnchanged()
     {
         var initialNodeLock = new NodeLock(_node, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.LockNodeAsync(NodeId)).ShouldBeTrue();
@@ -48,7 +48,7 @@ public class EfNodeStateRepositoryTest
     public async Task When_LockNodeAsync_NodeAlreadyLocked_LockFailed()
     {
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Free, true, Guid.NewGuid(), DateTime.UtcNow);
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.LockNodeAsync(NodeId)).ShouldBeFalse();
@@ -66,7 +66,7 @@ public class EfNodeStateRepositoryTest
     public async Task When_UnLockNodeAsync_NodeLocked_UnlockSuccessful()
     {
         var initialNodeLock = new NodeLock(_node, NodeLockState.Free, true, Guid.NewGuid(), DateTime.UtcNow);
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.UnlockNodeAsync(NodeId)).ShouldBeTrue();
@@ -82,7 +82,7 @@ public class EfNodeStateRepositoryTest
     [TestMethod]
     public async Task When_UnLockNodeAsync_RepositoryEmpty_UnLockFailed()
     {
-        var fixture = new EfNodeStateRepositoryTestFixture();
+        var fixture = new GraphNodeStateRepositoryTestFixture();
         (await fixture.Repository.UnlockNodeAsync(NodeId)).ShouldBeFalse();
 
         var nodeLock = fixture.Get(NodeId);
@@ -93,7 +93,7 @@ public class EfNodeStateRepositoryTest
     public async Task When_UnLockNodeAsync_NodeAlreadyUnLocked_LockFailed()
     {
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.UnlockNodeAsync(NodeId)).ShouldBeFalse();
@@ -106,7 +106,7 @@ public class EfNodeStateRepositoryTest
     [TestMethod]
     public async Task When_ReserveNodeAsync_RepositoryEmpty_Successful()
     {
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNode(_node);
         var agvCorrelationId = Guid.NewGuid();
         (await fixture.Repository.ReserveNodeAsync(NodeId, agvCorrelationId)).ShouldBeTrue();
@@ -124,7 +124,7 @@ public class EfNodeStateRepositoryTest
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
 
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.ReserveNodeAsync(NodeId, agvCorrelationId)).ShouldBeTrue();
@@ -142,7 +142,7 @@ public class EfNodeStateRepositoryTest
     {
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow);
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.ReserveNodeAsync(NodeId, agvCorrelationId)).ShouldBeFalse();
@@ -158,7 +158,7 @@ public class EfNodeStateRepositoryTest
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Free, true, null, DateTime.UtcNow);
 
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.ReserveNodeAsync(NodeId, agvCorrelationId)).ShouldBeFalse();
@@ -174,7 +174,7 @@ public class EfNodeStateRepositoryTest
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Reserved, false, agvCorrelationId, DateTime.UtcNow);
 
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
         (await fixture.Repository.UnReserveNodeAsync(agvCorrelationId)).ShouldBeTrue();
 
@@ -194,7 +194,7 @@ public class EfNodeStateRepositoryTest
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), state, false, Guid.NewGuid(), DateTime.UtcNow);
 
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.UnReserveNodeAsync(agvCorrelationId)).ShouldBeFalse();
@@ -207,7 +207,7 @@ public class EfNodeStateRepositoryTest
     [TestMethod]
     public async Task When_OccupyNodeAsync_RepositoryEmpty_Successful()
     {
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNode(_node);
         var agvCorrelationId = Guid.NewGuid();
         (await fixture.Repository.OccupyNodeAsync(NodeId, agvCorrelationId)).ShouldBeTrue();
@@ -225,7 +225,7 @@ public class EfNodeStateRepositoryTest
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
 
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.OccupyNodeAsync(NodeId, agvCorrelationId)).ShouldBeTrue();
@@ -244,7 +244,7 @@ public class EfNodeStateRepositoryTest
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
 
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.OccupyNodeAsync(NodeId, agvCorrelationId)).ShouldBeTrue();
@@ -265,7 +265,7 @@ public class EfNodeStateRepositoryTest
         var agvCorrelationId = Guid.NewGuid();
         var initialNodeLock = new NodeLock(NodeId.ToGraphNode(), state, false, Guid.NewGuid(), DateTime.UtcNow);
 
-        var fixture = new EfNodeStateRepositoryTestFixture()
+        var fixture = new GraphNodeStateRepositoryTestFixture()
             .WithNodeLock(initialNodeLock);
 
         (await fixture.Repository.UnOccupyNodeAsync(agvCorrelationId)).ShouldBeFalse();

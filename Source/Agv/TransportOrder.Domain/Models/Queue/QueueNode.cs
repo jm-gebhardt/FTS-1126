@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
@@ -30,9 +30,9 @@ public class QueueNode
     }
 
     /// <summary>
-    /// The corresponding <see cref="EfNode"/>.
+    /// The corresponding <see cref="GraphNode"/>.
     /// </summary>
-    public EfNode? Node { get; set; }
+    public GraphNode? Node { get; set; }
 
     /// <summary>
     /// The agv the node is reserved for.

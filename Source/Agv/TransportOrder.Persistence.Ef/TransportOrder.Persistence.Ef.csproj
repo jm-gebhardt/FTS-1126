@@ -32,7 +32,6 @@
         <Compile Remove="Configurations\**" />
         <EmbeddedResource Remove="Configurations\**" />
         <Folder Remove="Configurations\**" />
-        <Folder Include="Migrations\" />
     </ItemGroup>
     <ItemGroup>
         <None Remove="DataAccess\Configuration\o0fbniyx.am4~" />

@@ -20,7 +20,7 @@ using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 
-public class QueueManagerTestFixture : FixtureBase
+public sealed class QueueManagerTestFixture : FixtureBase
 {
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();

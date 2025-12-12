@@ -852,12 +852,12 @@ public class ActionCommandHandler :
             await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, all actions completed."));
             return;
         }
-        var agv = await _agvDb.Agvs.GetAgvAsync((Guid)actionGroup.AssignedAgv!);
+        var agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason(), _timeProvider.GetUtcNow());
 
         if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && agv.IsQueueing)
         {
-            if (await _queueManager.RemoveAgvFromQueueEntry(agv.CorrelationId, action.Target.Node!.Id))
+            if (await _queueManager.RemoveAgvFromQueueEntry(agv.CorrelationId, action.Target.NodeId!.Value))
             {
                 await context.Publish(new LeaveQueue(agv.CorrelationId));
             }
@@ -1130,7 +1130,7 @@ public class ActionCommandHandler :
             {
                 previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agv.CorrelationId, actionGroup.CorrelationId);
             }
-            DockingDirection? nodeDockingDirection = (await _agvDb.Graphs.GetNodeAsync(targetNodeId)).DockingDirection;
+            DockingDirection? nodeDockingDirection = targetNode.DockingDirection;
             actionGroup.SetDockFrontOfAction(actionToUpdate.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
             actionGroup.SetCargoLiftHeightForAction(actionToUpdate.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
@@ -1321,7 +1321,7 @@ public class ActionCommandHandler :
             //Create tuples of AGV and route costs to action group.
             //Skip agvs that are on the target or on the first edge to the next waypoint,
             //as it could already be moving away and running a detour to the target.
-            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)agvs.Zip(agvsData).ToList(), targetNode.Id, true);
+            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) agvs.Zip(agvsData).ToList(), targetNode.Id, true);
             if (closestAgvRoute.agv == null)
             {
                 _logger.LogInformation("Reactivate all parking agvs and agvs at queue heads");
@@ -1423,7 +1423,7 @@ public class ActionCommandHandler :
             {
                 actionGroup.Priority = Priority.Resume;
             }
-           
+
             var agvToAssign = context.Message.AssignedAgv != null ? await _agvDb.Agvs.GetAgvAsync(context.Message.AssignedAgv.Value) : null;
             if (agvToAssign == null)
             {
@@ -1432,7 +1432,7 @@ public class ActionCommandHandler :
 
                 List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.CorrelationId).ToList();
 
-                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>)readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.Node!.Id);
+                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.NodeId!.Value);
 
                 if (closestAgvRoute.agv == null)
                 {
@@ -1561,7 +1561,7 @@ public class ActionCommandHandler :
         {
             targetIsLocked = (await _nodeStateRepository.GetNodeStateAsync(failedAction.Target.Node.Id))?.IsLocked ?? false;
         }
-        
+
         string reason = actionGroup.Fail(failedAction.CorrelationId, targetIsLocked);
         await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
         var actionGroupMessageContent = _mapper.Map<ActionGroup>(actionGroup);

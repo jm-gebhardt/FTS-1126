@@ -198,9 +198,9 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
 
         List<TriggerLocalization> localizations = triggers
             .SelectMany(trigger => trigger.Locations, (trigger, location) => new { trigger, location })
-            .Where(tl => tl.location.Node != null || tl.location.Polygon.Count > 0)
+            .Where(tl => tl.location.NodeId != null || tl.location.Polygon.Count > 0)
             .Select(tl =>
-                tl.location.Node != null ? new TriggerLocalization(tl.trigger.DisplayName, tl.location.Node.Id) : new TriggerLocalization(tl.trigger.DisplayName, tl.location.Node?.Id, tl.location.Id))
+                tl.location.NodeId != null ? new TriggerLocalization(tl.trigger.DisplayName, tl.location.NodeId) : new TriggerLocalization(tl.trigger.DisplayName, tl.location.Node?.Id, tl.location.Id))
             .ToList();
 
         await context.RespondAsync(new GotTriggerMapping(localizations));

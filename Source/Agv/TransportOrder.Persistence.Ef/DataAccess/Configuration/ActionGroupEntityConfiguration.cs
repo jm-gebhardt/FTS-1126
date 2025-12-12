@@ -1,5 +1,4 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +32,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
 
         // Reasons is just an information, we will never want to query it, so we can simply store it as json without introducing new tables
         builder.Property(g => g.Reasons).HasJsonConversion();
+
         builder.OwnsMany(g => g.Actions, a =>
         {
             a.WithOwner().HasForeignKey("ParentId");
@@ -41,32 +41,43 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             a.Ignore(o => o.IsIncomplete);
             a.Ignore(o => o.IsMoveToCoordinate);
             a.Property(e => e.Sequence);
-            a.Property(e => e.Nodes).HasJsonConversion();
+            a.Ignore(o => o.Nodes);
+
+            a.OwnsMany(x => x.AgvActionNodes, n =>
+            {
+                n.ToTable("AgvActionNodes");
+                n.HasKey(x => x.Id);
+
+                n.Property(x => x.Index);
+
+                n.HasOne(x => x.Node)
+                    .WithMany()
+                    .HasForeignKey(x => x.NodeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+                n.Navigation(x => x.Node).AutoInclude();
+            });
+            a.Navigation(o => o.AgvActionNodes).AutoInclude();
+
+            a.Property(e => e.Edges).HasJsonConversion();
             a.Property(e => e.State).HasMaxLength(DbStringLimits.State);
             a.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
             a.Property(e => e.AdditionalInfo).HasMaxLength(DbStringLimits.Description);
+
             a.OwnsOne(e => e.Target, c =>
             {
-                c.OwnsOne<GraphNode>(t => t.Node, n =>
-                {
-                    n.Property(nn => nn.Id);
-                    n.Property(nn => nn.Name).HasMaxLength(DbStringLimits.NodeId);
-                    n.Ignore(nn => nn.TimeStamp);
-                    n.Ignore(nn => nn.Type);
-                    n.Ignore(nn => nn.X);
-                    n.Ignore(nn => nn.Y);
-                    n.Ignore(nn => nn.Z);
-                    n.Ignore(nn => nn.DropLiftHeight);
-                    n.Ignore(nn => nn.PickLiftHeight);
-                    n.Ignore(nn => nn.DockingDirection);
-                    n.Ignore(nn => nn.Theta);
-                });
+                c.HasOne(t => t.Node)
+                    .WithMany()
+                    .HasForeignKey(t => t.NodeId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 c.OwnsOne(t => t.Position, p =>
                 {
                     p.Ignore(pp => pp.PositionInitialized);
                     p.Ignore(pp => pp.DeviationRange);
                 });
+                
+                c.Navigation(t => t.Node).AutoInclude();
             });
             a.Property(o => o.InfoToAgv).HasJsonConversion();
         });

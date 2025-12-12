@@ -47,7 +47,7 @@ public class TriggerTest
         trigger.Locations.First().ShouldBe(location);
         location.EdgeId.ShouldBeNull();
         location.Polygon.ShouldBeEmpty();
-        location.Node.ShouldBe(_node);
+        location.NodeId.ShouldBe(_node.Id);
         location.MapId.ShouldBe(map);
     }
 
@@ -63,7 +63,7 @@ public class TriggerTest
         trigger.Locations.First().ShouldBe(location);
         location.EdgeId.ShouldBeNull();
         location.Polygon.ShouldBeEmpty();
-        location.Node.ShouldBe(_node);
+        location.NodeId.ShouldBe(_node.Id);
         location.MapId.ShouldBe(map);
         location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldBeEquivalentTo(parameter);
     }
@@ -81,7 +81,7 @@ public class TriggerTest
         trigger.Locations.First().ShouldBe(location);
         location.EdgeId.ShouldBeNull();
         location.Polygon.ShouldBeEmpty();
-        location.Node.ShouldBe(_node);
+        location.NodeId.ShouldBe(_node.Id);
         location.MapId.ShouldBe(map);
         location.ConfigurationParameters.Single(p => p.Name == parameter.Name).ShouldNotBe(parameter);
         location.ConfigurationParameters.Single(p => p.Name == parameter.Name).Value.ShouldBe(custom);

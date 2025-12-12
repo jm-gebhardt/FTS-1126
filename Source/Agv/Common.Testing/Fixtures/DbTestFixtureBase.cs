@@ -14,6 +14,7 @@ public class DbTestFixtureBase<TContext> : FixtureBase, IAsyncDisposable where T
     public DbTestFixtureBase()
     {
         AddServices(s => s.AddTestingDb<TContext>(_id));
+        // ReSharper disable once VirtualMemberCallInConstructor
         Build();
         ContextFactory = Provider.GetRequiredService<IDbContextFactory<TContext>>().EnsureDbCreated();
     }

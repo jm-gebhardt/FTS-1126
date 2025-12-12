@@ -18,11 +18,11 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
         builder.OwnsOne(m => m.CustomBackground);
 
         builder.HasMany(m => m.Edges)
-            .WithMany(n => n.Maps)
+            .WithMany()
             .UsingEntity("MapEdges");
 
         builder.HasMany(m => m.Nodes)
-            .WithMany(n => n.Maps)
+            .WithMany()
             .UsingEntity("MapNodes");
 
         builder.HasMany(m => m.MapAgvs)

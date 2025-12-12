@@ -1,7 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
@@ -12,15 +11,15 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
-public class EfNodeStateRepositoryTestFixture : TransportOrderDbFixture
+public class GraphNodeStateRepositoryTestFixture : TransportOrderDbFixture
 {
-    public readonly EfNodeStateRepository Repository;
+    public readonly GraphNodeStateRepository Repository;
 
-    public EfNodeStateRepositoryTestFixture()
+    public GraphNodeStateRepositoryTestFixture()
     {
-        var mockLogger = new Mock<ILogger<EfNodeStateRepository>>();
+        var mockLogger = new Mock<ILogger<GraphNodeStateRepository>>();
 
-        Repository = new EfNodeStateRepository(ContextFactory, new SemaphoreProvider<INodeStateDbSemaphore>(new Mock<ILogger<SemaphoreProvider<INodeStateDbSemaphore>>>().Object), Mapper, mockLogger.Object);
+        Repository = new GraphNodeStateRepository(ContextFactory, new SemaphoreProvider<INodeStateDbSemaphore>(new Mock<ILogger<SemaphoreProvider<INodeStateDbSemaphore>>>().Object), Mapper, mockLogger.Object);
     }
 
     protected override IEnumerable<Profile> GetProfiles()
@@ -34,15 +33,15 @@ public class EfNodeStateRepositoryTestFixture : TransportOrderDbFixture
         return context.Set<NodeLock>().AsNoTracking().SingleOrDefault(n => n.NodeId == nodeId);
     }
 
-    public EfNodeStateRepositoryTestFixture WithNodeLock(NodeLock nodeLock)
+    public GraphNodeStateRepositoryTestFixture WithNodeLock(NodeLock nodeLock)
     {
         Add(nodeLock);
         return WithNode(nodeLock.Node);
     }
 
-    public EfNodeStateRepositoryTestFixture WithNode(GraphNode node)
+    public GraphNodeStateRepositoryTestFixture WithNode(GraphNode node)
     {
-        var efNode = Mapper.Map<EfNode>(node);
+        var efNode = Mapper.Map<GraphNode>(node);
         Add(efNode);
         return this;
     }

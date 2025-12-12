@@ -1,5 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
+using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
@@ -15,8 +16,8 @@ public static class MapGenerator
         double xOffset = 0,
         double yOffset = 0,
         DateTime modificationDate = default,
-        ICollection<EfNode>? nodes = null,
-        ICollection<EfEdge>? edges = null,
+        ICollection<GraphNode>? nodes = null,
+        ICollection<GraphEdge>? edges = null,
         ICollection<MapAgv>? mapAgvs = null
     )
     {
@@ -29,8 +30,8 @@ public static class MapGenerator
             MapBackgroundGenerator.Generate(image, correlationId, width, height, resolution, xOffset, yOffset),
             modificationDate)
         {
-            Nodes = nodes ?? new List<EfNode>(),
-            Edges = edges ?? new List<EfEdge>(),
+            Nodes = nodes ?? new List<GraphNode>(),
+            Edges = edges ?? new List<GraphEdge>(),
             MapAgvs = mapAgvs ?? new List<MapAgv>()
         };
     }
@@ -44,8 +45,8 @@ public static class MapGenerator
     {
         return new Map(correlationId, mapId, background, modificationDate)
         {
-            Nodes = new List<EfNode>(),
-            Edges = new List<EfEdge>(),
+            Nodes = new List<GraphNode>(),
+            Edges = new List<GraphEdge>(),
             MapAgvs = new List<MapAgv>()
         };
     }

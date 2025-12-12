@@ -8,7 +8,7 @@ using Moq;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.PrismatApi.TelegramApi.Processors;
 
-public class TelegramProcessorFactoryTestFixture : FixtureBase
+public sealed class TelegramProcessorFactoryTestFixture : FixtureBase
 {
     public readonly TelegramProcessorFactory Factory;
 

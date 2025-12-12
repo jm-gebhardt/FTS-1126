@@ -636,7 +636,7 @@ public class ActionGroup
             Actions
                 .Where((action, index) => !action.IsIncomplete &&
                                           (index == 0 || (!Actions[index - 1].IsIncomplete && action.Sequence == Actions[index - 1].Sequence + 1)))
-                .Select(action => action.Target.Node!.Id)
+                .Select(action => action.Target.NodeId!.Value)
                 .ToArray();
     }
 
@@ -665,7 +665,7 @@ public class ActionGroup
     /// Skips the provided action and updates the previous one with its type and the new target.
     /// </summary>
     /// <param name="actionId">The action id to skip.</param>
-    /// <param name="targetNode">The id of the new target node.</param>
+    /// <param name="targetNode">The new target node.</param>
     /// <param name="route">The route, if any.</param>
     public AgvAction SetTargetForActionWithUpdate(Guid actionId, GraphNode targetNode, Route? route = null)
     {

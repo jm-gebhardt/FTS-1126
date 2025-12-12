@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Filter.Api;
@@ -9,9 +8,7 @@ using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
-using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
@@ -26,22 +23,15 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 [TestClass]
 public class ActionGroupRetrievalServiceTest
 {
-    private static Mapper GetMapper()
-    {
-        return MappingHelper.GetMapper(new GraphProfile());
-    }
-
     private static async Task AddDefaultAgvGraph(ActionGroupRetrievalServiceTestFixture fixture, Guid? correlationId = null)
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
-        var mapper = GetMapper();
-        var efGraph = mapper.Map<EfAgvGraph>(graph);
-        await fixture.AddAsync(efGraph,
+        await fixture.AddAsync(graph,
             context =>
             {
-                foreach (var node in efGraph.Nodes)
+                foreach (var node in graph.Nodes)
                 {
-                    DbSet<EfNode> dbSet = context.Set<EfNode>();
+                    DbSet<GraphNode> dbSet = context.Set<GraphNode>();
                     if (!dbSet.Any(n => n.Name == node.Name))
                     {
                         dbSet.Add(node);
@@ -51,9 +41,9 @@ public class ActionGroupRetrievalServiceTest
                         dbSet.Attach(node);
                     }
                 }
-                foreach (var edge in efGraph.Edges)
+                foreach (var edge in graph.Edges)
                 {
-                    DbSet<EfEdge> dbSet = context.Set<EfEdge>();
+                    DbSet<GraphEdge> dbSet = context.Set<GraphEdge>();
                     if (!dbSet.Any(n => n.Id == edge.Id))
                     {
                         dbSet.Add(edge);
@@ -140,11 +130,11 @@ public class ActionGroupRetrievalServiceTest
     [TestMethod]
     public async Task GetActionGroupsWithNodesAsync_UnknownTargetNodeId_GetsActionGroupReadModelEnrichedWithWayPointType()
     {
-        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
-
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId");
         actionGroup.InvalidateActionGroup([], DateTimeOffset.Now);
-        await fixture.AddAsync(actionGroup);
+        var fixture = await new ActionGroupRetrievalServiceTestFixture()
+            .WithActionGroups([actionGroup])
+            .BuildAsync();
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
         IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
@@ -243,11 +233,11 @@ public class ActionGroupRetrievalServiceTest
     [TestMethod]
     public async Task GetActionGroupsWithNodesAsync_LimitReturnValueCount_ReturnsNumberOfActionGroupsGivenByLimit()
     {
-        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
-
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var chargeActionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        await fixture.AddRangeAsync(pickDropActionGroup, chargeActionGroup);
+        var fixture = await new ActionGroupRetrievalServiceTestFixture()
+            .WithActionGroups([pickDropActionGroup, chargeActionGroup])
+            .BuildAsync();
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
         const int limit = 1;
@@ -259,13 +249,13 @@ public class ActionGroupRetrievalServiceTest
     [TestMethod]
     public async Task GetActionGroupsWithNodesAsync_MultipleActionGroupsDefaultSortedByAndSortingDirection_ReturnsSortedActionGroups()
     {
-        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
-
         var actionGroupCreatedFirst = AgvActionGenerator.GeneratePickDropActionGroup();
         var actionGroupCreatedSecond = AgvActionGenerator.GenerateChargeActionGroup();
         var actionGroupCreatedManually = AgvActionGenerator.GenerateMoveActionGroup(isManual: true);
 
-        await fixture.AddRangeAsync(actionGroupCreatedFirst, actionGroupCreatedSecond, actionGroupCreatedManually);
+        var fixture = await new ActionGroupRetrievalServiceTestFixture()
+            .WithActionGroups([actionGroupCreatedFirst, actionGroupCreatedSecond, actionGroupCreatedManually])
+            .BuildAsync();
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
         IReadOnlyCollection<ActionGroupReadModel> actionGroupReadModel = await fixture.ActionGroupRetrievalService
@@ -533,11 +523,12 @@ public class ActionGroupRetrievalServiceTest
     [TestMethod]
     public async Task GetActionGroupWithNodesAsync_GroupCorrelationIdUnknownTargetNodeId_ReturnsActionGroupWithTargetNodeTypes()
     {
-        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
-
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId");
         actionGroup.InvalidateActionGroup(Enumerable.Empty<Reason>(), DateTimeOffset.Now);
-        await fixture.AddAsync(actionGroup);
+
+        var fixture = await new ActionGroupRetrievalServiceTestFixture()
+            .WithActionGroups([actionGroup])
+            .BuildAsync();
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
         var actualActionGroup = await fixture.ActionGroupRetrievalService
@@ -619,11 +610,12 @@ public class ActionGroupRetrievalServiceTest
     [TestMethod]
     public async Task GetCurrentAgvActionGroupWithNodesAsync_NoActionGroupInStateStarted_ReturnsNull()
     {
-        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
         var agv = Guid.NewGuid();
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup("UnknownTargetNodeId", assignedAgv: agv);
         actionGroup.CompleteAction(actionGroup.Actions[0].CorrelationId, DateTimeOffset.Now);
-        await fixture.AddAsync(actionGroup);
+        var fixture = await new ActionGroupRetrievalServiceTestFixture()
+            .WithActionGroups([actionGroup])
+            .BuildAsync();
         await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
 
         var actualActionGroup = await fixture.ActionGroupRetrievalService

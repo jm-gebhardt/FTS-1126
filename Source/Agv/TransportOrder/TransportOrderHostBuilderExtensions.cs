@@ -85,11 +85,12 @@ public static class TransportOrderHostBuilderExtensions
             string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
 
             builder.UseSqlServer(connectionString, m =>
-            {
-                m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
-                // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
-                m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
-            }).LogTo(Console.WriteLine, LogLevel.Information);
+                {
+                    m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
+                    // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                    m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                })
+                .LogTo(Console.WriteLine, LogLevel.Information);
         });
 
         services.AddHealthChecks()
@@ -162,10 +163,10 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IMapRepository, EfMapRepository>();
 
         services.AddTransient<IGraphRepository, EfGraphRepository>();
-        services.AddTransient<INodeRepository, EfNodeRepository>();
+        services.AddTransient<INodeRepository, GraphNodeRepository>();
         services.AddTransient<IMaintenanceLogRepository, EfMaintenanceLogRepository>();
 
-        services.AddTransient<INodeStateRepository, EfNodeStateRepository>();
+        services.AddTransient<INodeStateRepository, GraphNodeStateRepository>();
 
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, Lazy<List<AgvError>>>, AgvErrorDictionaryProvider>();

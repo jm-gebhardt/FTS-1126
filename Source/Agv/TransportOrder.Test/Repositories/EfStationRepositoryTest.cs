@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
@@ -27,7 +26,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
@@ -59,7 +58,7 @@ public class EfStationRepositoryTest
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateGraphWithAdditionalStationType(agvId);
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
@@ -92,7 +91,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).OrderBy(n => n.Name).Skip(1).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).OrderBy(n => n.Name).Skip(1).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
@@ -126,7 +125,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<EfNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<EfNode>(n)).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
         const string expectedMapName = "map";
         await fixture.AddMap(expectedMapName, [agvId], nodes);
 
@@ -155,13 +154,13 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
         var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()), NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
         var fixture = await new EfStationRepositoryTestFixture()
-            .WithNodeLockAsync(nodeLock);
+            .WithNodeLockAsync(nodeLock)
+            .BuildAsync();
 
         string destination = graph.Nodes.First(n => n.IsStation()).Name;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
         actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], [], DateTimeOffset.Now);
-        await fixture.AddAsync(actionGroup);
-
+        await fixture.AddActionGroupAsync(actionGroup, true);
         await fixture.Repository.AddStations(graph);
 
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
@@ -176,7 +175,7 @@ public class EfStationRepositoryTest
             station.LockedBy.ShouldBeNull();
             if (station.Id == nodeLock.NodeId)
             {
-                station.NodeLock.ShouldBe(nodeLock);
+                station.NodeLock.ShouldBeEquivalentTo(nodeLock);
             }
             else
             {
@@ -198,12 +197,13 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
         var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()), NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
         var fixture = await new EfStationRepositoryTestFixture()
-            .WithNodeLockAsync(nodeLock);
+            .WithNodeLockAsync(nodeLock)
+            .BuildAsync();
 
         string destination = graph.Nodes.First(n => n.IsStation()).Name;
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: "source", destination: destination, assignedAgv: agvId);
         actionGroup.StartAction(actionGroup.Actions.First(a => a.Target.Node!.Name == destination).CorrelationId, [], [], DateTimeOffset.Now);
-        await fixture.AddAsync(actionGroup);
+        await fixture.AddActionGroupAsync(actionGroup, true);
 
         await fixture.Repository.AddStations(graph);
 

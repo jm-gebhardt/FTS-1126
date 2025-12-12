@@ -26,6 +26,16 @@ public class ActionProfileTest
     }
 
     [TestMethod]
+    public void Map_MessagesActionToDomainAction_MapsProperly()
+    {
+        var mapper = MappingHelper.GetMapper(new ActionProfile());
+
+        var messagesAction = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: "target").Actions.First();
+        var action = mapper.Map<Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction>(messagesAction);
+        action.Nodes.Length.ShouldBe(messagesAction.Nodes.Count);
+    }
+
+    [TestMethod]
     public void Map_IncompleteActionGroupToActionGroupDto_MapsActionsInOrderBySequence()
     {
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile(), new AgvProfile(), new TransportOrder.WebApi.Profiles.ActionProfile(), new AgvErrorProfile(), new ActionProfile());
@@ -41,7 +51,7 @@ public class ActionProfileTest
     {
         var mapper = MappingHelper.GetMapper(new TransportOrder.WebApi.Profiles.ActionProfile());
 
-        var action = AgvActionGenerator.GeneratePickDropActionGroup(additionalPickInfo:"SAP:1020").Actions.First().ConvertFromAgvActionWithFakeNodeType();
+        var action = AgvActionGenerator.GeneratePickDropActionGroup(additionalPickInfo: "SAP:1020").Actions.First().ConvertFromAgvActionWithFakeNodeType();
         var actionDto = mapper.Map<AgvActionDto>(action);
         actionDto.CorrelationId.ShouldBe(action!.CorrelationId);
         actionDto.ParentId.ShouldBe(action.ParentId);
@@ -87,7 +97,7 @@ public class ActionProfileTest
         var durationStatistics = new DurationStatistics(ActionType.Pick, 12, 1, 42);
 
         var dto = mapper.Map<ActionDurationStatisticsDto>(durationStatistics);
-       
+
         dto.ActionType.ShouldBe(durationStatistics.ActionType);
         dto.MaxDuration.ShouldBe(durationStatistics.MaxDuration);
         dto.MinDuration.ShouldBe(durationStatistics.MinDuration);

@@ -472,7 +472,9 @@ public class ActionGroupRequestHandlerTest
     public async Task Consume_TriggerSetTarget_ActionShouldSkip_ThrowsActionGroupStateInvalidException()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Completed);
-        actionGroup.SetTargetForActionWithUpdate(actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "target".ToGraphNode());
+        var actionToUpdate = actionGroup.Actions.First(a => a.IsIncomplete);
+        var targetNode = "target".ToGraphNode();
+        actionGroup.SetTargetForActionWithUpdate(actionToUpdate.CorrelationId, targetNode);
         ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture =
             await new ActionGroupRequestHandlerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
                 .WithActionGroups(actionGroup)

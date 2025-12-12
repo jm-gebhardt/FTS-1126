@@ -6,6 +6,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using ActionTarget = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionTarget;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 

@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -77,17 +78,17 @@ public class ActionCommandHelper
 
         bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
         Route? route = null;
-        if (action is { IsMoveToCoordinate: false, Target.Node: not null })
+        if (action is { IsMoveToCoordinate: false, Target.NodeId: not null })
         {
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
-            route = await _routeService.GetRouteAsync(assignedAgv, action.Target.Node.Id, null, agvData, cancellationToken);
-            action.Nodes = action.ActionType == ActionType.Charge ? [action.Target.Node] : route.Nodes;
+            route = await _routeService.GetRouteAsync(assignedAgv, action.Target.NodeId.Value, null, agvData, cancellationToken);
+            action.Nodes = action.ActionType == ActionType.Charge ? [action.Target.Node!] : route.Nodes;
             action.Edges = route.Edges;
         }
 
         if (lastActionWasMoveToCoordinate)
         {
-            action.Nodes = route == null ? [action.Target.Node!] : route.Nodes;
+            action.Nodes = route == null ? action.Target.Node != null ? [action.Target.Node] : [] : route.Nodes;
             action.Edges = route == null ? [] : route.Edges;
         }
 
@@ -128,7 +129,7 @@ public class ActionCommandHelper
     /// <returns></returns>
     public async Task LogStationUpdate(Agv agv, AgvAction action, ActionGroup actionGroup)
     {
-        if (action.Target.Node == null)
+        if (action.Target.Node == null || !action.Target.Node.IsStation())
         {
             return;
         }
@@ -139,7 +140,7 @@ public class ActionCommandHelper
             switch (action.ActionType)
             {
                 case ActionType.Drop:
-                   await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationAgvDropping, station.Id, "AGV Dropping",
+                    await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationAgvDropping, station.Id, "AGV Dropping",
                         $"AGV {agv.SerialNumber} is heading towards station to drop order {actionGroup.OrderId}",
                         new Dictionary<string, object?>
                         {

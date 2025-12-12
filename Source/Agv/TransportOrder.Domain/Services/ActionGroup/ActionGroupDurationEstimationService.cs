@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
-using JetBrains.Annotations;
 using System.Numerics;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
@@ -35,7 +34,6 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="targetNodes">The target nodes.</param>
     /// <returns>The deviation in seconds.</returns>
-    [PublicAPI]
     public async Task<double> GetAverageDurationEstimateDeviationAsync(Guid agvCorrelationId, Guid[] targetNodes)
     {
         string key = GetKey(agvCorrelationId, targetNodes);
@@ -59,7 +57,7 @@ public class ActionGroupDurationEstimationService : IActionGroupDurationEstimati
         {
             return EstimateDurationFromDistance((action.Target.Position!.X, action.Target.Position!.Y), (agvPosition.X, agvPosition.Y), agvVelocity);
         }
-        var node = await _graphRepository.GetNodeAsync(action.Target.Node!.Id);
+        var node = await _graphRepository.GetNodeAsync(action.Target.NodeId!.Value);
         return EstimateDurationFromDistance((agvPosition.X, agvPosition.Y), (node.X, node.Y), agvVelocity);
     }
 

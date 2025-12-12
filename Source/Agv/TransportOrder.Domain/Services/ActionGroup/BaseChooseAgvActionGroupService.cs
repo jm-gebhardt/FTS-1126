@@ -74,7 +74,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         var nextActionGroup = notStartedActionGroups.FirstOrDefault(a => a.AssignedAgv == agv.CorrelationId && (a.IsManual || !a.IsMovingCargo));
         if (nextActionGroup != null)
         {
-            if (lockedNodeIds is { Count: > 0 } && nextActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.Node!.Id)))
+            if (lockedNodeIds is { Count: > 0 } && nextActionGroup.Actions.Any(a => lockedNodeIds.Contains(a.Target.NodeId!.Value)))
             {
                 await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderWithLockedStation, agv.CorrelationId, nextActionGroup.CorrelationId, "Order Contains Locked Station",
                     $"Order {nextActionGroup.OrderId} contains locked station.",

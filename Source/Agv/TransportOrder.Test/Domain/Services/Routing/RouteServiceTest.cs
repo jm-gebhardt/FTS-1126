@@ -43,7 +43,7 @@ public class RouteServiceTest
         var actualRoute = await fixture.RouteService.GetRouteAsync(agv, actionGroup.GetTargets(), null, agvData);
 
         actualRoute.Costs.ShouldNotBe(0);
-        actualRoute.Nodes.Last().Id.ShouldBe(actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id);
+        actualRoute.Nodes.Last().Id.ShouldBe(actionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.NodeId!.Value);
         actualRoute.Nodes.First().Name.ShouldBe(node);
     }
 
@@ -317,7 +317,7 @@ public class RouteServiceTest
         var fixture = new RouteServiceTestFixture()
             .WithAgv(agv, agvGraph);
 
-        double? costs = await fixture.RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, data, [actionGroup.Actions.First().Target.Node!.Id], CancellationToken.None);
+        double? costs = await fixture.RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, data, [actionGroup.Actions.First().Target.NodeId!.Value], CancellationToken.None);
         costs.ShouldBeNull();
     }
 }

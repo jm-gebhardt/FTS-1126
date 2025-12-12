@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -14,9 +13,10 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
-public class EfStationRepositoryTestFixture : TransportOrderDbFixture
+public class EfStationRepositoryTestFixture : ActionGroupRepositoryTestFixture
 {
     private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
+    private readonly List<(NodeLock, bool)> _nodeLocks = [];
 
     public EfStationRepository Repository { get; }
 
@@ -30,7 +30,7 @@ public class EfStationRepositoryTestFixture : TransportOrderDbFixture
         yield return new GraphProfile();
     }
 
-    public async Task AddMap(string mapName, List<Guid> agvs, List<EfNode> nodes)
+    public async Task AddMap(string mapName, List<Guid> agvs, List<GraphNode> nodes)
     {
         var map = MapGenerator.Generate(mapId: mapName,
             nodes: nodes,
@@ -41,16 +41,28 @@ public class EfStationRepositoryTestFixture : TransportOrderDbFixture
         await AddAsync(map);
     }
 
-    public async Task<EfStationRepositoryTestFixture> WithNodeLockAsync(NodeLock nodeLock)
+    public EfStationRepositoryTestFixture WithNodeLockAsync(NodeLock nodeLock, bool addNode = true)
     {
-        await AddAsync(nodeLock);
-        return await WithNodeAsync(nodeLock.Node);
+        _nodeLocks.Add((nodeLock, addNode));
+
+        return this;
     }
 
-    private async Task<EfStationRepositoryTestFixture> WithNodeAsync(GraphNode node)
+    public new async Task<EfStationRepositoryTestFixture> BuildAsync()
     {
-        var efNode = Mapper.Map<EfNode>(node);
-        await AddAsync(efNode);
+        Build();
+        foreach (var nl in _nodeLocks)
+        {
+            AddInitTask(Task.Run(async () =>
+            {
+                if (nl.Item2)
+                {
+                    await AddAsync(nl.Item1);
+                }
+                await AddNodesAsync([nl.Item1.Node]);
+            }));
+        }
+        await base.BuildAsync();
         return this;
     }
 }

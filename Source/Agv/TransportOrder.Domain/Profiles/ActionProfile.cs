@@ -16,8 +16,15 @@ public class ActionProfile : Profile
             .ForMember(a => a.ShouldEscapeQueue, a => a.Ignore())
             .ForMember(a => a.LogEntries, a => a.Ignore())
             .ReverseMap();
+
+        CreateMap<AgvAction, Models.ActionGroup.AgvAction>()
+            .ForMember(p => p.ShouldSkip, p => p.MapFrom(src => src.IsSkipped))
+            .ForMember(p => p.AgvActionNodes, p => p.Ignore());
+
         CreateMap<Models.ActionGroup.AgvAction, AgvAction>()
-            .ForMember(p => p.IsSkipped, p => p.MapFrom(src => src.ShouldSkip))
-            .ReverseMap();
+            .ForMember(p => p.IsSkipped, p => p.MapFrom(src => src.ShouldSkip));
+
+        CreateMap<ActionTarget, Models.ActionGroup.ActionTarget>();
+        CreateMap<Models.ActionGroup.ActionTarget, ActionTarget>();
     }
 }

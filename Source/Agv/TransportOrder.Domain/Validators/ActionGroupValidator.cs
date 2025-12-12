@@ -65,7 +65,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
                     RuleForEach(p => p.Actions).ChildRules(action =>
                     {
                         action.When(a => !a.IsMoveToCoordinate, () =>
-                            action.RuleFor(a => a.Target.Node!.Id)
+                            action.RuleFor(a => a.Target.NodeId!.Value)
                                 .MustAsync(async (nodeId, _) => await TargetNodeExists(nodeId))
                                 .WithReason(a => a.ActionType switch
                                 {

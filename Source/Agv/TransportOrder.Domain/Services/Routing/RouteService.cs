@@ -119,7 +119,7 @@ public class RouteService : IRouteService
 
         foreach (var action in actionGroup.Actions.Where(a => a is { IsIncomplete: false, IsMoveToCoordinate: false }))
         {
-            double? costs = await GetCostsAsync(agv, action.Target.Node!.Id, agvData, cancellationToken);
+            double? costs = await GetCostsAsync(agv, action.Target.NodeId!.Value, agvData, cancellationToken);
             if (costs == null)
             {
                 return null; // Break if a target node is not reachable
@@ -150,7 +150,7 @@ public class RouteService : IRouteService
 
         foreach (var action in actionGroup.Actions.Where(a => a is { IsIncomplete: false, IsMoveToCoordinate: false }))
         {
-            var route = await GetRouteIfExistingAsync(agv, action.Target.Node!.Id, null, true, agvData, cancellationToken);
+            var route = await GetRouteIfExistingAsync(agv, action.Target.NodeId!.Value, null, true, agvData, cancellationToken);
             if (route == null)
             {
                 return null; // Break if a target node is not reachable

@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
@@ -37,9 +38,22 @@ public class EfTriggerRepository : ITriggerRepository
         return context.Set<Location>().AsSplitQuery().SingleOrDefaultAsync(l => l.Id == location.Id);
     }
 
+    /// <summary>
+    /// GraphNode is just a reference and always existing.
+    /// </summary>
+    /// <param name="trigger"></param>
+    private static void StripNodes(Trigger trigger)
+    {
+        foreach (var location in trigger.Locations)
+        {
+            location.Node = null;
+        }
+    }
+
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task AddOrUpdate(Trigger trigger, bool updateLocations)
     {
+        StripNodes(trigger);
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         if (await context.Set<Trigger>()
                 .Include(t => t.ConfigurationParameters)
@@ -98,6 +112,7 @@ public class EfTriggerRepository : ITriggerRepository
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task Update(Trigger trigger, bool updateLocations)
     {
+        StripNodes(trigger);
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var triggerToUpdate = await context.Set<Trigger>()
             .Include(t => t.ConfigurationParameters)
@@ -183,15 +198,20 @@ public class EfTriggerRepository : ITriggerRepository
 
     private void AddTriggerLocationToDictionary(Trigger trigger, Location location)
     {
+        if (location is { NodeId: not null, Node: null } && !_triggerLocationDictionaryProvider.ConcurrentDict.ContainsKey(location.Id))
+        {
+            // load Node
+            location.Node = _dbContextFactory.CreateDbContext().Set<GraphNode>().AsNoTracking().SingleOrDefault(n => n.Id == location.NodeId);
+        }
         _triggerLocationDictionaryProvider.ConcurrentDict.AddOrUpdate(location.Id, location, (_, _) => location);
         _logger.LogDebug("{Method}: Added trigger {TriggerId} to location {LocationId} (NodeId: {NodeId}, EdgeId: {EdgeId}, Polygon: {IsPolygon}, Number of AGVs: {AgvCount})",
-            nameof(AddTriggerLocationToDictionary), trigger.Id, location.Id, location.Node, location.EdgeId, location.Polygon.Count > 0, location.Agvs.Count);
+            nameof(AddTriggerLocationToDictionary), trigger.Id, location.Id, location.NodeId, location.EdgeId, location.Polygon.Count > 0, location.Agvs.Count);
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
     public ICollection<Location> GetNodeTriggerLocations(Guid nodeId)
     {
-        return _triggerLocationDictionaryProvider.ConcurrentDict.Values.Where(l => l.Node?.Id == nodeId).ToList();
+        return _triggerLocationDictionaryProvider.ConcurrentDict.Values.Where(l => l.NodeId == nodeId).ToList();
     }
 
     /// <inheritdoc  cref="ITriggerRepository"/>>

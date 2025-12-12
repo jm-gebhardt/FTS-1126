@@ -34,9 +34,9 @@ public class InMemoryCacheInitializer(ITriggerRepository triggerRepository, ICar
 
     private object CreateTriggerAssignment(Trigger trigger, Location location)
     {
-        if (location.Node != null)
+        if (location.NodeId != null)
         {
-            return new TriggerAssignedToNode(trigger.Id, trigger.DisplayName, location.Node.Id);
+            return new TriggerAssignedToNode(trigger.Id, trigger.DisplayName, location.NodeId.Value);
         }
 
         if (location.Polygon.Count > 0)

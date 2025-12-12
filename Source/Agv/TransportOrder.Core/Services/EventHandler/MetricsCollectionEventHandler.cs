@@ -47,7 +47,7 @@ public class MetricsCollectionEventHandler(IMetricCollectionService metricCollec
         if (action.ActionType == ActionType.Charge)
         {
             // collect metrics for aborted charge actions
-            await metricCollectionService.CollectStationOrderCompletionMetrics(action.ActionType, action.Target.Node!.Id);
+            await metricCollectionService.CollectStationOrderCompletionMetrics(action.ActionType, action.Target.NodeId!.Value);
         }
     }
 
@@ -139,6 +139,6 @@ public class MetricsCollectionEventHandler(IMetricCollectionService metricCollec
     {
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
-        await metricCollectionService.CollectStationOrderCompletionMetrics(action.ActionType, action.Target.Node!.Id);
+        await metricCollectionService.CollectStationOrderCompletionMetrics(action.ActionType, action.Target.NodeId!.Value);
     }
 }

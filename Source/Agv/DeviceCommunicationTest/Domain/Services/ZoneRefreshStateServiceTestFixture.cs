@@ -6,7 +6,7 @@ using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Domain.Services;
 
-public class ZoneRefreshStateServiceTestFixture : FixtureBase
+public sealed class ZoneRefreshStateServiceTestFixture : FixtureBase
 {
     public readonly IZoneRefreshStateService Service;
 

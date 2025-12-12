@@ -8,7 +8,7 @@ using Moq;
 
 namespace Gebhardt.Acc.KaeserSidecar.Test.Domain.Services;
 
-public class AgvSettingsServiceTestFixture: FixtureBase
+public sealed class AgvSettingsServiceTestFixture: FixtureBase
 {
     private readonly Mock<ITransportOrderAgvSettingsProvider> _settingsProvider = new();
     private readonly Mock<ITransportOrderAgvRepository> _agvRepository = new();

@@ -5,7 +5,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
-public class EfLogEntryRepositoryTestFixture : TransportOrderDbFixture
+public sealed class EfLogEntryRepositoryTestFixture : TransportOrderDbFixture
 {
     public EfLogEntryRepository Repository { get; }
 

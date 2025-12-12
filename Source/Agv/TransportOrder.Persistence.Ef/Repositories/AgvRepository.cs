@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -229,7 +228,7 @@ public class AgvRepository : IAgvRepository
         List<Guid> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
 
         // Nodes corresponding to locks to get which are chargers
-        List<EfNode> efNodes = await context.Set<EfNode>()
+        List<GraphNode> efNodes = await context.Set<GraphNode>()
             .Where(en => nodeIds.Contains(en.Id))
             .ToListAsync();
         var lockedNodes = _mapper.Map<List<GraphNode>>(efNodes);
@@ -270,7 +269,7 @@ public class AgvRepository : IAgvRepository
         List<Guid> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
 
         // Nodes corresponding to locks to get which are chargers
-        List<EfNode> efNodes = await context.Set<EfNode>()
+        List<GraphNode> efNodes = await context.Set<GraphNode>()
             .Where(en => nodeIds.Contains(en.Id))
             .ToListAsync();
         var lockedNodes = _mapper.Map<List<GraphNode>>(efNodes);

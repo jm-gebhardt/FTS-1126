@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -110,8 +109,8 @@ public class EfStationRepository(
                 (x, nl) => new { x.s, nl }
             )
             .GroupJoin(
-                context.Set<EfNode>().AsNoTracking(),
-                x => x.nl != null ? x.nl.NodeId : (Guid?) null,
+                context.Set<GraphNode>().AsNoTracking(),
+                x => x.nl != null ? x.nl.NodeId : (Guid?)null,
                 g => g.Id,
                 (x, graphNodes) => new { x.s, x.nl, graphNodes }
             )
@@ -133,7 +132,7 @@ public class EfStationRepository(
                 stationWithNode.NodeLock.AgvCorrelationId, stationWithNode.NodeLock.ModifiedDate);
 
         station.Agvs = await context.Set<ActionGroup>()
-            .Where(a => a.Actions.Any(ac => ac.Target.Node!.Id == station.Id && ac.State == ActionState.Started))
+            .Where(a => a.Actions.Any(ac => ac.Target.NodeId!.Value == station.Id && ac.State == ActionState.Started))
             .Select(a => a.AssignedAgv.GetValueOrDefault())
             .ToListAsync();
 
@@ -166,8 +165,8 @@ public class EfStationRepository(
                 (x, nl) => new { x.s, nl }
             )
             .GroupJoin(
-                context.Set<EfNode>().AsNoTracking(),
-                x => x.nl != null ? x.nl.NodeId : (Guid?) null,
+                context.Set<GraphNode>().AsNoTracking(),
+                x => x.nl != null ? x.nl.NodeId : (Guid?)null,
                 g => g.Id,
                 (x, graphNodes) => new { x.s, x.nl, graphNodes }
             )
@@ -180,7 +179,7 @@ public class EfStationRepository(
                     GraphNode = g,
                     // ReSharper disable once AccessToDisposedClosure
                     Agvs = context.Set<ActionGroup>()
-                        .Where(a => a.Actions.Any(ac => ac.Target.Node!.Id == x.s.Id && ac.State == ActionState.Started))
+                        .Where(a => a.Actions.Any(ac => ac.Target.NodeId!.Value == x.s.Id && ac.State == ActionState.Started))
                         .Select(a => a.AssignedAgv.GetValueOrDefault())
                         .Distinct()
                         .ToList()

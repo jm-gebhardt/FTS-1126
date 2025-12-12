@@ -32,6 +32,11 @@ public class Location : IEquatable<Location>
     /// <summary>
     /// The node id, if set.
     /// </summary>
+    public Guid? NodeId { get; set; }
+
+    /// <summary>
+    /// The node, if set.
+    /// </summary>
     public GraphNode? Node { get; set; }
 
     /// <summary>
@@ -70,6 +75,7 @@ public class Location : IEquatable<Location>
         Id = Guid.NewGuid();
         Polygon = [];
         Agvs = [];
+        NodeId = node?.Id;
         Node = node;
         EdgeId = edgeId;
         MapId = mapId ?? null;
@@ -153,7 +159,7 @@ public class Location : IEquatable<Location>
         {
             return false;
         }
-        if (Node?.Id != other.Node?.Id)
+        if (NodeId != other.NodeId)
         {
             return false;
         }
@@ -195,6 +201,6 @@ public class Location : IEquatable<Location>
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, TriggerId, EdgeId, Node, MapId, Agvs, ConfigurationParameters, Polygon);
+        return HashCode.Combine(Id, TriggerId, EdgeId, NodeId, MapId, Agvs, ConfigurationParameters, Polygon);
     }
 }

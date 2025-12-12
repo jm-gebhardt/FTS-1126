@@ -2,7 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;

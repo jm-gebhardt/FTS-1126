@@ -1,7 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Shouldly;
 
@@ -15,17 +14,17 @@ public class GraphProfileTest
         return MappingHelper.GetMapper(new GraphProfile());
     }
 
-    private static void VerifyAgvGraph(EfAgvGraph efAgvGraph, AgvGraph agvGraph)
+    private static void VerifyAgvGraph(AgvGraph agvGraph1, AgvGraph agvGraph2)
     {
-        efAgvGraph.ShouldNotBeNull();
-        efAgvGraph.ShouldSatisfyAllConditions(
-            e => e.CorrelationId.ShouldBe(agvGraph.CorrelationId),
-            e => e.Usability.ToString().ShouldBe(agvGraph.Usability.ToString()));
-        efAgvGraph.Nodes.Count.ShouldBe(agvGraph.Nodes.Count);
-        efAgvGraph.Edges.Count.ShouldBe(agvGraph.Edges.Count);
+        agvGraph1.ShouldNotBeNull();
+        agvGraph1.ShouldSatisfyAllConditions(
+            e => e.CorrelationId.ShouldBe(agvGraph2.CorrelationId),
+            e => e.Usability.ToString().ShouldBe(agvGraph2.Usability.ToString()));
+        agvGraph1.Nodes.Count.ShouldBe(agvGraph2.Nodes.Count);
+        agvGraph1.Edges.Count.ShouldBe(agvGraph2.Edges.Count);
     }
 
-    private static void VerifyGraphEdge(EfEdge efEdge, GraphEdge graphEdge)
+    private static void VerifyGraphEdge(GraphEdge efEdge, GraphEdge graphEdge)
     {
         efEdge.ShouldNotBeNull();
         efEdge.ShouldSatisfyAllConditions(
@@ -35,7 +34,7 @@ public class GraphProfileTest
             e => e.Length.ShouldBe(graphEdge.Length));
     }
 
-    private static void VerifyGraphNode(EfNode efNode, GraphNode graphNode)
+    private static void VerifyGraphNode(GraphNode efNode, GraphNode graphNode)
     {
         efNode.ShouldNotBeNull();
         efNode.ShouldSatisfyAllConditions(
@@ -47,19 +46,19 @@ public class GraphProfileTest
             n => n.Theta.ShouldBe(graphNode.Theta));
     }
 
-    private static void VerifyGraphEdges(EfAgvGraph efAgvGraph, AgvGraph agvGraph)
+    private static void VerifyGraphEdges(AgvGraph agvGraph1, AgvGraph agvGraph2)
     {
-        for (int i = 0; i < efAgvGraph.Edges.Count; i++)
+        for (int i = 0; i < agvGraph1.Edges.Count; i++)
         {
-            VerifyGraphEdge(efAgvGraph.Edges.ElementAt(i), agvGraph.Edges.ElementAt(i));
+            VerifyGraphEdge(agvGraph1.Edges.ElementAt(i), agvGraph2.Edges.ElementAt(i));
         }
     }
 
-    private static void VerifyGraphNodes(EfAgvGraph efAgvGraph, AgvGraph agvGraph)
+    private static void VerifyGraphNodes(AgvGraph agvGraph1, AgvGraph agvGraph2)
     {
-        for (int i = 0; i < efAgvGraph.Nodes.Count; i++)
+        for (int i = 0; i < agvGraph1.Nodes.Count; i++)
         {
-            VerifyGraphNode(efAgvGraph.Nodes.ElementAt(i), agvGraph.Nodes.ElementAt(i));
+            VerifyGraphNode(agvGraph1.Nodes.ElementAt(i), agvGraph2.Nodes.ElementAt(i));
         }
     }
 
@@ -70,7 +69,7 @@ public class GraphProfileTest
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph(agvCorrelationId);
         var mapper = GetMapper();
 
-        var efGraph = mapper.Map<EfAgvGraph>(agvGraph);
+        var efGraph = mapper.Map<AgvGraph>(agvGraph);
 
         VerifyAgvGraph(efGraph, agvGraph);
         efGraph.CorrelationId.ShouldBe(agvCorrelationId);
@@ -79,23 +78,23 @@ public class GraphProfileTest
     }
 
     [TestMethod]
-    public void Map_WhereGraphEdgeIsMappedToEfEdge_ShouldMapAllPropertiesCorrectly()
+    public void Map_WhereGraphEdgeIsMappedToGraphEdge_ShouldMapAllPropertiesCorrectly()
     {
         var graphEdge = AgvGraphGenerator.Edges.First();
         var mapper = GetMapper();
 
-        var efEdge = mapper.Map<EfEdge>(graphEdge);
+        var efEdge = mapper.Map<GraphEdge>(graphEdge);
 
         VerifyGraphEdge(efEdge, graphEdge);
     }
 
     [TestMethod]
-    public void Map_WhereGraphNodeIsMappedToEfNode_ShouldMapAllPropertiesCorrectly()
+    public void Map_WhereGraphNodeIsMappedToGraphNode_ShouldMapAllPropertiesCorrectly()
     {
         var graphNode = AgvGraphGenerator.Nodes.First();
         var mapper = GetMapper();
 
-        var efNode = mapper.Map<EfNode>(graphNode);
+        var efNode = mapper.Map<GraphNode>(graphNode);
 
         VerifyGraphNode(efNode, graphNode);
     }

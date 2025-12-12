@@ -7,7 +7,7 @@ using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 
-public class ExportedGraphGeneratorTestFixture: FixtureBase
+public sealed class ExportedGraphGeneratorTestFixture: FixtureBase
 {
     private readonly Mock<IMapGenerator> _mapGenerator = new();
 

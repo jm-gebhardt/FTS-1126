@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.WCSCommunicationTest.Fixtures;
 
-public class WcsCommunicatorTestFixture : DbTestFixtureBase<WcsHostDbContext>
+public sealed class WcsCommunicatorTestFixture : DbTestFixtureBase<WcsHostDbContext>
 {
     public IHostCommunicator Communicator { get; }
 

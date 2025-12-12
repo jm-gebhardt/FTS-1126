@@ -173,7 +173,7 @@ public class TriggerCommandHandlerTest
 
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
-        fixture.UpdatedTrigger.Locations.First().Node.ShouldBe(command.Node);
+        fixture.UpdatedTrigger.Locations.First().NodeId.ShouldBe(command.Node?.Id);
 
         await fixture.ShouldHavePublishedAsync<TriggerChanged>();
         await fixture.ShouldHavePublishedAsync<TriggerAssignedToNode>();

@@ -6,6 +6,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using JetBrains.Annotations;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
+using ActionTarget = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionTarget;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 

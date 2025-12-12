@@ -1,7 +1,7 @@
 ﻿using AutoFixture;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -20,7 +20,7 @@ public class QueueProfileTest
         var mapper = MappingHelper.GetMapper(new QueueProfile());
         var queue = new Queue("a queue");
         const string nodeName = "node name";
-        var efNode = new EfNode
+        var efNode = new GraphNode
         {
             Id = nodeName.ToGuid(),
             Name = nodeName

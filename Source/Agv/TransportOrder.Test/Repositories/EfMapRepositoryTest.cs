@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
@@ -110,9 +109,9 @@ public class EfMapRepositoryTest
     public async Task AddOrUpdate_WithNodesAndEdges_AddsMapWithNodesAndEdges()
     {
         var fixture = new EfMapRepositoryTestFixture();
-        var n1 = fixture.Mapper.Map<EfNode>(NodeGenerator.GenerateNode(nodeName: "1"));
-        var n2 = fixture.Mapper.Map<EfNode>(NodeGenerator.GenerateNode(nodeName: "2"));
-        var e = fixture.Mapper.Map<EfEdge>(EdgeGenerator.Generate("1", "2"));
+        var n1 = fixture.Mapper.Map<GraphNode>(NodeGenerator.GenerateNode(nodeName: "1"));
+        var n2 = fixture.Mapper.Map<GraphNode>(NodeGenerator.GenerateNode(nodeName: "2"));
+        var e = fixture.Mapper.Map<GraphEdge>(EdgeGenerator.Generate("1", "2"));
         var agv = AgvGenerator.GenerateIdleAgv(0, "1");
 
         fixture.Add(n1);
@@ -134,7 +133,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(0, "1");
-        var graph = fixture.Mapper.Map<EfAgvGraph>(AgvGraphGenerator.CreateDefaultGraph(agv.CorrelationId));
+        var graph = AgvGraphGenerator.CreateDefaultGraph(agv.CorrelationId);
 
         fixture.Add(graph);
         fixture.Add(agv);
@@ -155,7 +154,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(0, "1");
-        var graph = fixture.Mapper.Map<EfAgvGraph>(AgvGraphGenerator.CreateDefaultGraph(agv.CorrelationId));
+        var graph = AgvGraphGenerator.CreateDefaultGraph(agv.CorrelationId);
 
         fixture.Add(graph);
         fixture.Add(agv);
@@ -181,14 +180,14 @@ public class EfMapRepositoryTest
         var fixture = new EfMapRepositoryTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(0, "1");
         var otherAgv = AgvGenerator.GenerateIdleAgv(1, "3");
-        var graph = fixture.Mapper.Map<EfAgvGraph>(AgvGraphGenerator.CreateDefaultGraph(agv.CorrelationId));
+        var graph = AgvGraphGenerator.CreateDefaultGraph(agv.CorrelationId);
 
         fixture.Add(graph);
         fixture.Add(agv);
         fixture.Add(otherAgv);
 
-        List<EfEdge> edges = graph.Edges.Take(2).ToList();
-        List<EfNode> nodes = graph.Nodes.Take(2).ToList();
+        List<GraphEdge> edges = graph.Edges.Take(2).ToList();
+        List<GraphNode> nodes = graph.Nodes.Take(2).ToList();
 
         var map = MapGenerator.Generate(nodes: nodes, edges: edges);
 
@@ -198,9 +197,9 @@ public class EfMapRepositoryTest
 
         await fixture.Repository.AssignAgvGraphToMapsAsync(agv.CorrelationId);
 
-        List<EfNode> newNodes = nodes.Select(n => fixture.Mapper.Map<EfNode>(new GraphNode(n.Id, n.Name, n.X, n.Y, n.Z, AgvGraph.NodeType.Maintenance, 1337, 1337, DockingDirection.Both))).ToList();
+        List<GraphNode> newNodes = nodes.Select(n => fixture.Mapper.Map<GraphNode>(new GraphNode(n.Id, n.Name, n.X, n.Y, n.Z, AgvGraph.NodeType.Maintenance, 1337, 1337, DockingDirection.Both))).ToList();
         newNodes = newNodes.Take(1).ToList();
-        var newNode = fixture.Mapper.Map<EfNode>(new GraphNode("testNode".ToGuid(), "testNode", 42, 42, 42, AgvGraph.NodeType.Maintenance, null, null, DockingDirection.Both));
+        var newNode = fixture.Mapper.Map<GraphNode>(new GraphNode("testNode".ToGuid(), "testNode", 42, 42, 42, AgvGraph.NodeType.Maintenance, null, null, DockingDirection.Both));
 
         fixture.Add(newNode);
         newNodes.Add(newNode);

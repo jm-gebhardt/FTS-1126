@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Testing.RequestHandlers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -24,15 +23,10 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     private readonly ActionGroupRepositoryTestFixture _actionGroupRepositoryFixture = new();
     private readonly EfAgvGraphRepositoryTestFixture _graphRepositoryTestFixture = new();
     private readonly EfLogEntryRepositoryTestFixture _logEntryRepositoryTestFixture = new();
-    private EfAgvGraph? _efGraph;
+    private AgvGraph? _graph;
     private TransportOrder.Domain.Models.ActionGroup.ActionGroup[]? _actionGroups;
 
     protected override IEnumerable<Profile> GetProfiles() => [new GraphProfile(), new LogEntryProfile(), new ActionProfile()];
-
-    private static Mapper GetMapper()
-    {
-        return MappingHelper.GetMapper(new GraphProfile(), new LogEntryProfile());
-    }
 
     public ActionGroupState[] AllActionGroupStates => Enum.GetValues(typeof(ActionGroupState)).Cast<ActionGroupState>().ToArray();
 
@@ -47,34 +41,36 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
     {
         correlationId = correlationId == Guid.Empty ? Guid.NewGuid() : correlationId;
         var graph = AgvGraphGenerator.CreateDefaultGraph(correlationId, nodes);
-        var mapper = GetMapper();
-        _efGraph = mapper.Map<EfAgvGraph>(graph);
+        _graph = graph;
 
         return this;
     }
 
     public new async Task<ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer>> BuildAsync()
     {
-        if (_actionGroups != null)
-        {
-            await _actionGroupRetrievalServiceTestFixture.AddRangeAsync(_actionGroups.ToList());
-            _actionGroupRepositoryFixture.WithActionGroups(_actionGroups);
-        }
-
-        if (_efGraph != null)
-        {
-            await _actionGroupRetrievalServiceTestFixture.AddAsync(_efGraph);
-            await _graphRepositoryTestFixture.AddAsync(_efGraph);
-        }
-        await _actionGroupRepositoryFixture.BuildAsync();
         AddServices(s => s.AddTransient<IActionGroupRetrievalService>(_ => _actionGroupRetrievalServiceTestFixture.ActionGroupRetrievalService));
         AddServices(s => s.AddTransient<IActionGroupRepository>(_ => _actionGroupRepositoryFixture.ActionGroupRepository));
         AddServices(s => s.AddTransient<IGraphRepository>(_ => _graphRepositoryTestFixture.Repository));
         AddServices(s => s.AddTransient<ILogEntryRepository>(_ => _logEntryRepositoryTestFixture.Repository));
         AddServices(s => s.AddTransient<ILoggingService, LoggingService>());
 
-        await base.BuildAsync();
+        if (_actionGroups != null)
+        {
+            _actionGroupRetrievalServiceTestFixture.WithActionGroups(_actionGroups.ToList());
+            _actionGroupRepositoryFixture.WithActionGroups(_actionGroups);
+        }
+
         Build();
+        await base.BuildAsync();
+
+        if (_graph != null)
+        {
+            await _actionGroupRetrievalServiceTestFixture.AddAsync(_graph);
+            await _graphRepositoryTestFixture.AddAsync(_graph);
+        }
+        
+        await _actionGroupRepositoryFixture.BuildAsync();
+        await _actionGroupRetrievalServiceTestFixture.BuildAsync();
 
         return this;
     }
@@ -99,7 +95,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
 
     public Guid GetExistingNode(AgvGraph.NodeType? nodeType = null)
     {
-        return (Guid) _efGraph?.Nodes.First(n => nodeType == null || (AgvGraph.NodeType) n.Type == nodeType).Id!;
+        return (Guid)_graph?.Nodes.First(n => nodeType == null || (AgvGraph.NodeType)n.Type == nodeType).Id!;
     }
 
     public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggeredActionCompletion()

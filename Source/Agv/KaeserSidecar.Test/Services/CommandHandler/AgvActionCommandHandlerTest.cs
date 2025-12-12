@@ -73,7 +73,7 @@ public class AgvActionCommandHandlerTest
         var abortedDate = DateTime.UtcNow.AddMinutes(2);
         var completedActionGroup = AgvActionGenerator.GenerateChargeActionGroup("charger2", assignedAgv: agv, completedDate: abortedDate.AddMinutes(-5), actionStateCharge: ActionState.Completed);
         var abortedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, source: stationId, pickActionState: ActionState.Aborted, completedDate: abortedDate);
-       
+
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false);
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var fixture = new AgvActionCommandHandlerTestFixture()
@@ -238,7 +238,7 @@ public class AgvActionCommandHandlerTest
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         string station = OrderGenerator.KaeserConfiguration.StationMapping[orderDetails.Source];
         var prismatStation = new Station(orderDetails.Source, orderDetails.Destination, station.ToGuid(), station);
-        
+
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: station);
         actionGroup.Actions.First().Nodes = [station.ToGraphNode()];
         actionGroup.IsManual = true;
@@ -265,8 +265,11 @@ public class AgvActionCommandHandlerTest
         var moveAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Move);
         actionGroup.StartAction(moveAction.CorrelationId, [], [], DateTimeOffset.Now);
         var pickAction = actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick);
-        actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, station.ToGraphNode());
-        actionGroup.SetTargetForAction(pickAction.CorrelationId, station.ToGraphNode());
+        var targetNode = station.ToGraphNode();
+        actionGroup.SetTargetForActionWithUpdate(pickAction.CorrelationId, targetNode);
+        actionGroup.SetTargetForAction(pickAction.CorrelationId, targetNode);
+        // we need to manually set the Node property, because EF would normally do that during retrieval
+        actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).Target.Node = targetNode;
         var fixture = new AgvActionCommandHandlerTestFixture()
             .WithHostOrder(order)
             .WithActionGroup(actionGroup);

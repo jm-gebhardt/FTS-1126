@@ -73,7 +73,7 @@ public class AgvCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<AbortActionGroup>();
         var abortedCharging = fixture.TestHarness.Published.Select<AbortActionGroup>().Select(m => m.Context.Message).First();
-        abortedCharging.CorrelationId.ShouldBe(actionGroup.CorrelationId); 
+        abortedCharging.CorrelationId.ShouldBe(actionGroup.CorrelationId);
     }
 
     [TestMethod]
@@ -1695,9 +1695,11 @@ public class AgvCommandHandlerTest
     {
         var fixture = new AgvCommandHandlerTestFixture()
             .WithAgvsAtQueueHead([])
-            .AddAgvs([AgvGenerator.GenerateIdleAgv(index: 1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow),
+            .AddAgvs([
+                AgvGenerator.GenerateIdleAgv(index: 1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow),
                 AgvGenerator.GenerateIdleAgv(index: 2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow + 10),
-                AgvGenerator.GenerateIdleAgv(index: 3, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow + 5)])
+                AgvGenerator.GenerateIdleAgv(index: 3, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow + 5)
+            ])
             .WithClosestAgv(null);
 
         await fixture.TestHarness.Bus.Publish(new TryReactivateParkingAgvs());
@@ -1705,7 +1707,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<TryReactivateParkingAgvs>();
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         var firstIdleAgv = fixture.TestHarness.Published.Select<AgvBecameIdle>().Select(m => m.Context.Message).First();
-        firstIdleAgv.CorrelationId.ShouldBe("AGV002".ToGuid()); 
+        firstIdleAgv.CorrelationId.ShouldBe("AGV002".ToGuid());
     }
 
     [TestMethod]

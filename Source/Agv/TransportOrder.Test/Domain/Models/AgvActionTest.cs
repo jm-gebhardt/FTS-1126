@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
+using ActionTarget = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionTarget;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models;
 
@@ -81,15 +82,17 @@ public class AgvActionTest
     }
 
     [TestMethod]
-    public void SetTarget_ValidData_TargetSet()
+    public void SetTarget_ValidData_TargetNodeSet()
     {
         var action = AgvActionGenerator.GenerateAction(Guid.NewGuid(), string.Empty);
         const string target = "target";
+        var targetNode = target.ToGraphNode();
 
-        action.SetTarget(target.ToGraphNode());
+        action.SetTarget(targetNode);
 
+        action.Target.NodeId.ShouldBe(targetNode.Id);
         action.Target.Node.ShouldNotBeNull();
-        action.Target.Node.Name.ShouldBe(target);
+        action.Target.Node.Name.ShouldBe(targetNode.Name);
         action.IsIncomplete.ShouldBeFalse();
     }
 

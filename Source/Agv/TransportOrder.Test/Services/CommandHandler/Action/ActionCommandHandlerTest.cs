@@ -28,6 +28,7 @@ using ReassignActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.Action
 using Route = Gebhardt.Acc.TransportOrder.Routing.Models.Route;
 using SaveActionGroupAbortion = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.SaveActionGroupAbortion;
 using ValidationResult = FluentValidation.Results.ValidationResult;
+using ActionTarget = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionTarget;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 
@@ -1064,7 +1065,7 @@ public class ActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
-       
+
         await fixture.PublishMessageAsync(new CreateActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup)));
 
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
@@ -1641,7 +1642,7 @@ public class ActionCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "A node");
         agv.HasError = true;
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isManual: true);
-       
+
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
             .AddActionGroup(actionGroup, hasUnfinishedAction: false, isManual: true)
@@ -1946,7 +1947,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[2].Target.Node!.Name == _parkNode.Name)), Times.Once);
+            ag.Actions[2].Target.NodeId == _parkNode.Id)), Times.Once);
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }
@@ -2011,9 +2012,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         incompleteAction.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
-        actionGroup.Actions[1].Target.Node.ShouldNotBeNull();
-        actionGroup.Actions[1].Target.Node.ShouldNotBeNull();
-        actionGroup.Actions[1].Target.Node!.Name.ShouldBe(_parkNode.Name);
+        actionGroup.Actions[1].Target.NodeId.ShouldBe(_parkNode.Id);
         actionGroup.Actions[1].ActionType.ShouldBe(ActionType.Drop);
 
         var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
@@ -2047,8 +2046,7 @@ public class ActionCommandHandlerTest
 
         pickAction.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
-        pickAction.Target.Node.ShouldNotBeNull();
-        pickAction.Target.Node.Name.ShouldBe(_parkNode.Name);
+        pickAction.Target.NodeId.ShouldBe(_parkNode.Id);
 
         var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
         updateActionCommand.Action.CorrelationId.ShouldBe(pickAction.CorrelationId);
@@ -2102,8 +2100,7 @@ public class ActionCommandHandlerTest
 
         action.IsIncomplete.ShouldBeFalse();
         actionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
-        action.Target.Node.ShouldNotBeNull();
-        action.Target.Node.Name.ShouldBe(_parkNode.Name);
+        action.Target.NodeId.ShouldBe(_parkNode.Id);
 
         var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
         updateActionCommand.Action.CorrelationId.ShouldBe(action.CorrelationId);
@@ -2157,7 +2154,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[1].Target.Node!.Name == _parkNode.Name &&
+            ag.Actions[1].Target.NodeId == _parkNode.Id &&
             ag.Actions[2].ShouldSkip
         )), Times.Once);
     }
@@ -2182,7 +2179,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[1].Target.Node!.Name == _stationNode.Name
+            ag.Actions[1].Target.NodeId == _stationNode.Id
         )), Times.Once);
     }
 
@@ -2207,7 +2204,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[1].Target.Node!.Name == _stationNode.Name
+            ag.Actions[1].Target.NodeId == _stationNode.Id
         )), Times.Once);
     }
 

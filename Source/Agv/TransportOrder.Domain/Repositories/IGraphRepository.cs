@@ -1,7 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -119,7 +118,7 @@ public interface IGraphRepository
     /// Get nodes , but only which are included in the predicate filter.
     /// </summary>
     /// <param name="predicate">Optional Linq predicate. If null, there will be no filtering</param>
-    Task<IEnumerable<GraphNode>> GetNodesAsync(Expression<Func<EfNode, bool>>? predicate = null);
+    Task<IEnumerable<GraphNode>> GetNodesAsync(Expression<Func<GraphNode, bool>>? predicate = null);
 
     /// <summary>
     /// Updates the Graph.

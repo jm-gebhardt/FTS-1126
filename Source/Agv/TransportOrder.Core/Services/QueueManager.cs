@@ -438,6 +438,6 @@ public class QueueManager(
         ICollection<Queue> queues = await queueRepository.GetQueues();
         IEnumerable<Guid> queueNodes = queues.SelectMany(q => q.Nodes.Where(n => n.Node != null).Select(n => n.Node!.Id)).ToList();
         return currentActionGroups.Where(ag => ag.Actions.Count == 1 && !ag.IsManual)
-            .Any(a => a.Actions.Single().ActionType == ActionType.Move && a.Actions.Single().Target.Node != null && queueNodes.Contains(a.Actions.Single().Target.Node!.Id));
+            .Any(a => a.Actions.Single().ActionType == ActionType.Move && a.Actions.Single().Target.Node != null && queueNodes.Contains(a.Actions.Single().Target.NodeId!.Value));
     }
 }

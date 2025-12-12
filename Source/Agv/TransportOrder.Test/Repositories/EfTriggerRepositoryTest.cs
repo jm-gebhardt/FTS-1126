@@ -311,11 +311,11 @@ public class EfTriggerRepositoryTest
         triggers[1].AddLocation(otherNode, null, null);
         triggers[2].AddLocation(nodeToUse, null, null);
 
-        ITriggerRepository repo = fixture.Repository;
-        await repo.AddOrUpdate(triggers[0]);
-        await repo.AddOrUpdate(triggers[1]);
-        await repo.AddOrUpdate(triggers[2]);
-        await repo.AddOrUpdate(triggers[3]);
+        await fixture.AddNodesAsync([nodeToUse, otherNode]);
+        await fixture.AddTriggerAsync(triggers[0]);
+        await fixture.AddTriggerAsync(triggers[1]);
+        await fixture.AddTriggerAsync(triggers[2]);
+        await fixture.AddTriggerAsync(triggers[3]);
 
         ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
         triggerLocations.Count.ShouldBe(2);
@@ -358,7 +358,7 @@ public class EfTriggerRepositoryTest
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
         var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var triggers = new List<Trigger>()
+        var triggers = new List<Trigger>
         {
             new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
             new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
@@ -369,11 +369,10 @@ public class EfTriggerRepositoryTest
         triggers[2].AddLocation(otherNode, null, null);
         triggers[3].AddLocation(otherNode, null, null);
 
-        ITriggerRepository repo = fixture.Repository;
-        await repo.AddOrUpdate(triggers[0]);
-        await repo.AddOrUpdate(triggers[1]);
-        await repo.AddOrUpdate(triggers[2]);
-        await repo.AddOrUpdate(triggers[3]);
+        await fixture.AddTriggerAsync(triggers[0]);
+        await fixture.AddTriggerAsync(triggers[1]);
+        await fixture.AddTriggerAsync(triggers[2]);
+        await fixture.AddTriggerAsync(triggers[3]);
 
         ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
         triggerLocations.Count.ShouldBe(0);
@@ -399,12 +398,12 @@ public class EfTriggerRepositoryTest
         triggers[1].AddLocation(otherNode, null, null);
         triggers[2].AddLocation(nodeToUse, null, null);
 
-        ITriggerRepository repo = fixture.Repository;
-        await repo.AddOrUpdate(triggers[0]);
-        await repo.AddOrUpdate(triggers[1]);
-        await repo.AddOrUpdate(triggers[2]);
-        await repo.AddOrUpdate(triggers[3]);
-        await repo.LoadTriggerToLocationDictionary();
+        await fixture.AddNodesAsync([nodeToUse, otherNode]);
+        await fixture.AddTriggerAsync(triggers[0]);
+        await fixture.AddTriggerAsync(triggers[1]);
+        await fixture.AddTriggerAsync(triggers[2]);
+        await fixture.AddTriggerAsync(triggers[3]);
+        await fixture.Repository.LoadTriggerToLocationDictionary();
 
         ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
         triggerLocations.Count.ShouldBe(2);

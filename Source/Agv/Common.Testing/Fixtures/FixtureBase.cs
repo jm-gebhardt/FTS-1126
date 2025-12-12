@@ -91,7 +91,7 @@ public class FixtureBase
     /// <summary>
     /// Builds the service provider based on the service collection, in order to be able to register services lazy
     /// </summary>
-    protected void Build()
+    protected virtual void Build()
     {
         AddServices(s =>
         {

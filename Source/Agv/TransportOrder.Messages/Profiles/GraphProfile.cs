@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 using Graph = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Graph;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Profiles;
 
 /// <summary>
-/// The profile for mapping between <see cref="AgvGraph"/> and <see cref="EfAgvGraph"/>
+/// The profile for mapping of <see cref="AgvGraph"/>.
 /// </summary>
 [UsedImplicitly]
 public class GraphProfile : Profile
@@ -16,21 +15,6 @@ public class GraphProfile : Profile
     /// <inheritdoc cref="GraphProfile"/>
     public GraphProfile()
     {
-        CreateMap<AgvGraph, EfAgvGraph>().ReverseMap()
-            ;
-
-        CreateMap<GraphEdge, EfEdge>()
-            .ForMember(n => n.Maps, opt => opt.Ignore())
-            .ForMember(n => n.AgvGraphs, opt => opt.Ignore())
-            .ReverseMap()
-            ;
-
-        CreateMap<GraphNode, EfNode>()
-            .ForMember(n => n.Maps, opt => opt.Ignore())
-            .ForMember(n => n.AgvGraphs, opt => opt.Ignore())
-            .ReverseMap()
-            ;
-
         CreateMap<GraphNode, MessageContent.GraphNode>()
             .ForMember(n => n.Type, opt => opt.MapFrom(gn => gn.GetPrimaryType()));
         CreateMap<IGraph, Graph>()

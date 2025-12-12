@@ -51,7 +51,35 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// The nodes of the trip.
     /// </summary>
-    public GraphNode[] Nodes { get; set; } = [];
+    public GraphNode[] Nodes
+    {
+        get => AgvActionNodes
+            .OrderBy(n => n.Index)
+            .Select(n => n.Node)
+            .ToArray();
+
+        set
+        {
+            AgvActionNodes.Clear();
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                var node = value[i];
+                AgvActionNodes.Add(new AgvActionNode
+                {
+                    AgvActionId = Guid.NewGuid(),
+                    NodeId = node.Id,
+                    Node = node,
+                    Index = i
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// The AgvActionNodes (not ordered).
+    /// </summary>
+    public ICollection<AgvActionNode> AgvActionNodes { get; set; } = new List<AgvActionNode>();
 
     /// <summary>
     /// The edges (Guids) of the trip.
@@ -111,7 +139,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// True if the action is complete, i.e. its target is not defined.
     /// </summary>
-    public bool IsIncomplete => Target.Node?.Id == null && Target.Position == null;
+    public bool IsIncomplete => Target.NodeId == null && Target.Position == null;
 
     /// <summary>
     /// True, if Dockfront has been set externally.
@@ -234,9 +262,9 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 
         if (State == ActionState.Paused && PausedDate != null)
         {
-            var pauseTimeSpan = (TimeSpan) (now.UtcDateTime - PausedDate);
-            var previousRunTime = (TimeSpan) (PausedDate - StartedDate.GetValueOrDefault());
-            PriorRunAndPauseDuration += (long) pauseTimeSpan.TotalSeconds + (long) previousRunTime.TotalSeconds;
+            var pauseTimeSpan = (TimeSpan)(now.UtcDateTime - PausedDate);
+            var previousRunTime = (TimeSpan)(PausedDate - StartedDate.GetValueOrDefault());
+            PriorRunAndPauseDuration += (long)pauseTimeSpan.TotalSeconds + (long)previousRunTime.TotalSeconds;
 
             PausedDate = null;
         }
@@ -258,11 +286,11 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// <summary>
     /// Sets a target for the action.
     /// </summary>
-    /// <param name="targetNode">The target node</param>
+    /// <param name="targetNode">The target node.</param>
     public void SetTarget(GraphNode targetNode)
     {
-        // this is needed for EF
         Target.Node = new GraphNode(targetNode.Id, targetNode.Name);
+        Target.NodeId = targetNode.Id;
     }
 
     private void SetDates(DateTimeOffset now)
@@ -474,7 +502,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         {
             return false;
         }
-        return Equals((AgvAction) obj);
+        return Equals((AgvAction)obj);
     }
 
     /// <inheritdoc cref="IEquatable{T}"/>>

@@ -9,7 +9,7 @@ using Moq;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 
-public class TelegramQueuePersistenceServiceTestFixture: FixtureBase
+public sealed class TelegramQueuePersistenceServiceTestFixture: FixtureBase
 {
     public readonly ObservableConcurrentQueue<PrismatTelegram> Queue;
     public readonly TelegramQueuePersistenceService Service;
