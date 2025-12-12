@@ -53,13 +53,17 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
             if (actionGroups.Count > 0)
             {
                 actionGroupCorrelationId = actionGroups.First().CorrelationId;
+                object? errorDescription = null;
+                additionalLabels?.TryGetValue(LogLabels.ErrorDescription, out errorDescription);
                 if (severity is LogLevel.Error)
                 {
-                    await LogOrder(logger, LogLevel.Error, LogCodes.OrderAgvError, agvId, (Guid)actionGroupCorrelationId, "Order AGV Error", $"AGV reports error {errorCode} during execution of order.", new Dictionary<string, object?>());
+                    await LogOrder(logger, LogLevel.Error, LogCodes.OrderAgvError, agvId, (Guid)actionGroupCorrelationId, "Order AGV Error", $"AGV reports error '{errorDescription}' during execution of order.", 
+                        errorDescription != null  ? new Dictionary<string, object?> { {LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
                 } 
                 else
                 {
-                    await LogOrder(logger, LogLevel.Warning, LogCodes.OrderAgvWarning, agvId, (Guid)actionGroupCorrelationId, "Order AGV Warning", $"AGV reports warning {errorCode} during execution of order.", new Dictionary<string, object?>());
+                    await LogOrder(logger, LogLevel.Warning, LogCodes.OrderAgvWarning, agvId, (Guid)actionGroupCorrelationId, "Order AGV Warning", $"AGV reports warning '{errorDescription}' during execution of order.", 
+                        errorDescription != null  ? new Dictionary<string, object?> { {LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
                 }
             }
         }
