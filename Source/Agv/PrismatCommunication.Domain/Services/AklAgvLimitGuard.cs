@@ -46,7 +46,7 @@ public sealed class AklAgvLimitGuard : IAklAgvLimitGuard
         var stationGroup = await _stationRepository.GetStationGroup(hostOrder.Source, hostOrder.Target);
         if (stationGroup == null)
         {
-            _logger.LogWarning("HostOrder {CorrelationId} is not within AKL AGV limit because station group for target {Target} could not be found", hostOrder.CorrelationId, hostOrder.Target);
+            _logger.LogWarning("HostOrder {CorrelationId} is within AKL AGV limit because source {Source} and target {Target} are not part of a station group", hostOrder.CorrelationId, hostOrder.Source, hostOrder.Target);
             return true;
         }
         if (stationGroup.IsOccupied)
