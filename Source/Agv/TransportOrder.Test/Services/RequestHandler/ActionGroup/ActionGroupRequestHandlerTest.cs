@@ -238,6 +238,7 @@ public class ActionGroupRequestHandlerTest
             new TriggerActionGroupAbortion(actionGroup.CorrelationId, AbortReason.ReactivatedFromCharging, "user")));
     }
 
+    [DataRow(ActionState.Failed)]
     [DataRow(ActionState.Paused)]
     [DataRow(ActionState.Started)]
     [TestMethod]
