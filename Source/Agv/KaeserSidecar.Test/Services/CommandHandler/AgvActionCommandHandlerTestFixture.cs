@@ -56,6 +56,7 @@ public class AgvActionCommandHandlerTestFixture : MassTransitConsumerTestFixture
     public AgvActionCommandHandlerTestFixture WithPrismatStation(Station station)
     {
         _prismatStationRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(station);
+        _prismatStationRepository.Setup(x => x.GetStationByNodeId(It.IsAny<Guid>())).ReturnsAsync(station);
         return this;
     }
 

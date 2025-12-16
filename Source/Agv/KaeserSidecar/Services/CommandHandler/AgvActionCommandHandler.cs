@@ -89,7 +89,7 @@ public class AgvActionCommandHandler(
                 return;
             }
         }
-        if (action.Target.Node != null && action.ActionType == ActionType.Drop)
+        if (action.Target.Node != null && (action.ActionType is ActionType.Drop or ActionType.Move || (actionGroup.IsManual && action.ActionType == ActionType.Pick)))
         {
             var prismatStation = await prismatStationRepository.GetStationByNodeId(action.Target.Node.Id);
             if (prismatStation != null)
