@@ -40,7 +40,7 @@ public class NodeChangedConsumer :
     {
         var (nodeLock, stationId, modifyingUser, lockReason, lockDescription) = context.Message;
 
-        if (stationId != null)
+        if (stationId != null && !nodeLock.IsLocked)
         {
             await _loggingService.LogStation(_logger, LogLevel.Information,
                  LogCodes.StationStateChanged,
