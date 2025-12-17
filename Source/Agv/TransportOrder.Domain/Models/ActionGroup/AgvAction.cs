@@ -67,7 +67,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
                 var node = value[i];
                 AgvActionNodes.Add(new AgvActionNode
                 {
-                    AgvActionId = Guid.NewGuid(),
+                    AgvActionId = CorrelationId,
                     NodeId = node.Id,
                     Node = node,
                     Index = i

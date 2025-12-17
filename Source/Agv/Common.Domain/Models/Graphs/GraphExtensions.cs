@@ -45,5 +45,56 @@ public static class GraphExtensions
             }
             return totalLength;
         }
+
+        /// <summary>
+        /// Get the length [m] of a route given by edge ids.
+        /// </summary>
+        /// <param name="routeEdges">The route (collection of edge ids).</param>
+        /// <param name="lastNodeId">The id of the last node passed.</param>
+        /// <returns>Length of the route [m].</returns>
+        /// <exception cref="ArgumentNullException">Ambiguous route.</exception>
+        /// <exception cref="InvalidOperationException">If any of the subsequent nodes do not match an edge.</exception>
+        public double GetRouteLength(Guid[] routeEdges, Guid? lastNodeId)
+        {
+            double totalLength = 0.0;
+            List<Guid> lastEdge = graph.Edges.Where(e => e.ToNodeId == lastNodeId).Select(e => e.Id).ToList(); 
+            foreach(var edgeId in routeEdges)
+            {
+                totalLength += graph.Edges.SingleOrDefault(edge => edge.Id == edgeId)?.Length ?? 0;
+                if (lastEdge.Contains(edgeId))
+                {
+                    break;
+                }
+            }
+            return totalLength;
+        }
+
+        /// <summary>
+        /// Get a collection of arbitrary neighboring edges (for unit testing).
+        /// <param name="count">The number of edges.</param>
+        /// </summary>
+        /// <returns>A collection of neighboring edges.</returns>
+        public ICollection<GraphEdge> GetNeighboringEdges(int count)
+        {
+            if (graph.Edges.Count < count)
+            {
+                throw new Exception($"Graph contains less then {count} edges");
+            }
+            List<GraphEdge> neighboringEdges = [graph.Edges.First()];
+            var lastEdge = neighboringEdges.First();
+            foreach (var edge in graph.Edges.Except(neighboringEdges))
+            {
+                if (edge.FromNodeId == lastEdge.ToNodeId)
+                {
+                    neighboringEdges.Add(edge);
+                    lastEdge = edge;
+                }
+                if (neighboringEdges.Count == count)
+                {
+                    break;
+                }
+            }
+            return neighboringEdges;
+        }
     }
 }

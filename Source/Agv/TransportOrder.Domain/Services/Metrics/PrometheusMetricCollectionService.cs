@@ -152,17 +152,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
     public async Task CollectTravelDistance(Models.ActionGroup.ActionGroup actionGroup, Guid agvCorrelationId, Guid? lastNodeId)
     {
         var graph = await agvDb.Graphs.GetAgvGraphAsync(agvCorrelationId);
-        double travelDistance = actionGroup.Actions.Sum(action =>
-        {
-            GraphNode[] route = action.Nodes;
-            if (lastNodeId == null || route.All(n => n.Id != lastNodeId))
-            {
-                return graph.GetRouteLength(route);
-            }
-            int nodeIndex = Array.FindIndex(route, node => node.Id == lastNodeId);
-            route = route.Take(nodeIndex + 1).ToArray();
-            return graph.GetRouteLength(route);
-        });
+        double travelDistance = actionGroup.Actions.Sum(action => graph.GetRouteLength(action.Edges, lastNodeId));
         PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvCorrelationId.ToString()).Set(travelDistance);
     }
 

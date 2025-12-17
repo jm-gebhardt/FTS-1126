@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
+using Gebhardt.Acc.TransportOrder.Test.Extensions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
@@ -38,7 +39,9 @@ public class PrometheusMetricCollectionServiceTest
             creator: ActionGroupCreator.TransportOrder,
             priority: Priority.Default
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
+        GraphNode[] nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
+        actionGroup.Actions.First().Nodes = nodes;
+        actionGroup.Actions.First().Edges = graph.GetEdgesForNodes(nodes);
 
         var fixture = new PrometheusMetricCollectionServiceTestFixture()
             .AddGraph(graph);
@@ -61,7 +64,9 @@ public class PrometheusMetricCollectionServiceTest
             assignedAgv: agvId,
             creator: ActionGroupCreator.TransportOrder
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
+        GraphNode[] nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
+        actionGroup.Actions.First().Nodes = nodes;
+        actionGroup.Actions.First().Edges = graph.GetEdgesForNodes(nodes);
         var fixture = new PrometheusMetricCollectionServiceTestFixture()
             .AddGraph(graph);
 
@@ -92,8 +97,12 @@ public class PrometheusMetricCollectionServiceTest
             assignedAgv: agvId,
             source: AgvGraphGenerator.Src1,
             destination: AgvGraphGenerator.Dst1);
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Src1Node];
-        actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Way3Node, AgvGraphGenerator.Dst1Node];
+        GraphNode[] nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Src1Node];
+        actionGroup.Actions.First().Nodes = nodes;
+        actionGroup.Actions.First().Edges = graph.GetEdgesForNodes(nodes);
+        nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Way3Node, AgvGraphGenerator.Dst1Node];
+        actionGroup.Actions.Last().Nodes = nodes;
+        actionGroup.Actions.Last().Edges = graph.GetEdgesForNodes(nodes);
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 
@@ -134,8 +143,11 @@ public class PrometheusMetricCollectionServiceTest
             actionStateCharge: chargeActionState,
             actionStateMove: ActionState.Completed,
             assignedAgv: agvId);
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Way3Node, AgvGraphGenerator.Crg1Node];
+        GraphNode[] nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Way3Node, AgvGraphGenerator.Crg1Node];
+        actionGroup.Actions.First().Nodes = nodes;
+        actionGroup.Actions.First().Edges = graph.GetEdgesForNodes(nodes);
         actionGroup.Actions.Last().Nodes = [AgvGraphGenerator.Crg1Node];
+        actionGroup.Actions.Last().Edges = [];
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 
@@ -203,7 +215,9 @@ public class PrometheusMetricCollectionServiceTest
             assignedAgv: agvId,
             creator: ActionGroupCreator.TransportOrder
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
+        GraphNode[] nodes = [AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node];
+        actionGroup.Actions.First().Nodes = nodes;
+        actionGroup.Actions.First().Edges = graph.GetEdgesForNodes(nodes);
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 
@@ -247,7 +261,9 @@ public class PrometheusMetricCollectionServiceTest
             creator: ActionGroupCreator.TransportOrder,
             isManual: true
         );
-        actionGroup.Actions.First().Nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Src1Node];
+        GraphNode[] nodes = [AgvGraphGenerator.Prk1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Src1Node];
+        actionGroup.Actions.First().Nodes = nodes;
+        actionGroup.Actions.First().Edges = graph.GetEdgesForNodes(nodes);
         actionGroup.SetFixedDatesFromDurations(actionDuration, startedDate, idleTimeBetweenActions);
         actionGroup.StartedDate = startedDate;
 
