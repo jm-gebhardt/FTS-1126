@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -79,7 +80,7 @@ public class AgvErrorCommandHandler :
                 });
         }
 
-        foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Information))
+        foreach (var agvError in errors.Where(e => e.ErrorLevel == ErrorLevel.Information && !e.IsWifiMessage()))
         {
             await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvInformation, agv.CorrelationId, null, "AGV Information",
                 $"AGV {agv.SerialNumber} sent information {agvError.ErrorDescription}",
@@ -93,7 +94,18 @@ public class AgvErrorCommandHandler :
 
     private async Task HandleErrorChangesAsync(IPublishEndpoint publishEndpoint, List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid correlationId, AgvPosition? position)
     {
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        Agv? agv;
+
+        try
+        {
+            agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        }
+        catch(AgvNotFoundException)
+        {
+            _logger.LogWarning("Agv {AgvCorrelationId} not yet available, not storing errors", correlationId);
+            return;
+        }
+       
         bool changed = newErrors.Count > 0 || resolvedErrors.Count > 0;
         if (changed)
         {
@@ -129,6 +141,18 @@ public class AgvErrorCommandHandler :
         if (errors.Count != 0)
         {
             newErrors = errors.Where(e => !previousErrors.Any(e.IsSameError)).ToList();
+        }
+        if (previousErrors.Any(e => e.IsWifiMessage()) && errors.Any(e => e.IsWifiMessage()) && !resolvedErrors.Any(e => e.IsWifiMessage()))
+        {
+            // Resolve previous wifi information even if parts of the message are not identical
+            // to ensure only one wifi message is shown at a time.
+            IEnumerable<AgvError> previousWifiMessages = previousErrors.Where(e => e.IsWifiMessage());
+            resolvedErrors.AddRange(previousWifiMessages);
+            if (!newErrors.Any(e => e.IsWifiMessage()))
+            {
+                IEnumerable<AgvError> newWifiMessages = errors.Where(e => e.IsWifiMessage());
+                newErrors.AddRange(newWifiMessages);
+            }
         }
 
         await HandleErrorChangesAsync(context, newErrors, resolvedErrors, correlationId, position);

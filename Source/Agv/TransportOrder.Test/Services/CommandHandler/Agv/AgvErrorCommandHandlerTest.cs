@@ -58,6 +58,23 @@ public class AgvErrorCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateErrorStatus_WifiMessage_AgvErrorReceivedPublished()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(2, agv.CorrelationId, errorType: "WIFI", errorLevel: ErrorLevel.Information);
+        var fixture = new AgvErrorCommandHandlerTestFixture()
+            .WithActiveAgvErrors([errorStatus.Errors.First()])
+            .WithAgv(agv)
+            .WithActionGroups([]);
+
+        var errorChanged = await fixture.PublishAndGetFirstMessageAsync<UpdateErrorStatus, AgvErrorChanged>(new UpdateErrorStatus(agv.CorrelationId, [errorStatus.Errors.Last()], errorStatus.AgvPosition));
+        errorChanged.NewErrors.Count.ShouldBe(1);
+        errorChanged.ResolvedErrors.Count.ShouldBe(1);
+        var errorReceived = await fixture.GetFirstPublishedMessageAsync<AgvErrorReceived>();
+        errorReceived.Error.CorrelationId.ShouldBe(errorStatus.Errors.Last().CorrelationId);
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateSystemAgvErrors_JoyStickWarningResolved_TryRemoveQueueBlockingPublished()
     {
         var agv = AgvGenerator.GenerateIdleAgv();

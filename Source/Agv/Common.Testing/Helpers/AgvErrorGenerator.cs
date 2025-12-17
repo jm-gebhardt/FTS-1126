@@ -18,7 +18,8 @@ public static class AgvErrorGenerator
         AgvPosition? position = null,
         ErrorFlag errorFlag = ErrorFlag.Agv,
         AgvErrorSource errorSource = AgvErrorSource.Agv,
-        string? description = null
+        string? description = null,
+        string? errorType = null
     )
     {
         var errors = new List<AgvError>();
@@ -30,7 +31,7 @@ public static class AgvErrorGenerator
                 description ?? $"error description#{i}",
                 errorCode,
                 errorLevel,
-                $"error type#{i}",
+                errorType ?? $"error type#{i}",
                 errorCategory,
                 new List<ErrorReference>(),
                 DateTime.UtcNow,

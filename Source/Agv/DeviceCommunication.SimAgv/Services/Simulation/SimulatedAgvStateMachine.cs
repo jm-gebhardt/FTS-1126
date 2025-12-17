@@ -636,6 +636,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 context.Saga.SerialNumber,
                 context.Saga.AgvStatus
             ), context.CancellationToken);
+            await PublishAgvWifiMessage(context);
         }
 
         if (wasOnline && !context.Saga.IsOnline)
@@ -814,6 +815,17 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     {
         _logger.LogDebug("Publish {Message} for Agv with Correlation Id: {AgvCorrelationId}", nameof(AgvErrorStatusReceived), context.Saga.CorrelationId);
         await context.Publish(new AgvErrorStatusReceived(context.Saga.CorrelationId, context.Saga.Errors, context.Saga.Position!), context.CancellationToken);
+    }
+
+    private readonly Random _random = Random.Shared;
+
+    private async Task PublishAgvWifiMessage(BehaviorContext<SimulatedAgvSaga> context) 
+    {
+        _logger.LogDebug("Publish random wifi message for Agv with Correlation Id: {AgvCorrelationId}", context.Saga.CorrelationId);
+        int wifiStrength = _random.Next(70, 90);
+        var wifiMessage = new AgvError(context.Saga.CorrelationId, "WIFI", $"Signal strength {wifiStrength}", "", ErrorLevel.Information, "WIFI", ErrorCategory.General, [], DateTime.UtcNow, ErrorFlag.Agv, AgvErrorSource.Agv);
+        await context.Publish(new AgvErrorStatusReceived(context.Saga.CorrelationId, [wifiMessage], context.Saga.Position!), context.CancellationToken);
+        await context.Publish(new AgvWifiMetricsReceived(context.Saga.CorrelationId, context.Saga.SerialNumber, context.Saga.Position!, new WifiMetrics("ssid", null, null, null, -wifiStrength, null, null, DateTime.UtcNow)));
     }
 
     private EventActivityBinder<SimulatedAgvSaga> UpdateTimeOfStateTransition(EventActivityBinder<SimulatedAgvSaga> eventActivity)

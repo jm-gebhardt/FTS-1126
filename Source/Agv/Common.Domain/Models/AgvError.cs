@@ -15,6 +15,8 @@ public record AgvError : CorrelatedBy<Guid>
 
     private const string PushMode = "Schiebemodus";
 
+    private const string Wifi = "WIFI";
+
     /// <summary>
     /// The correlation id of the agv error.
     /// </summary>
@@ -128,10 +130,18 @@ public record AgvError : CorrelatedBy<Guid>
     /// <returns>True if the error type, category, and level is the same.</returns>
     public bool IsSameError(AgvError error2)
     {
-        return ErrorType == error2.ErrorType &&
-               ErrorLevel == error2.ErrorLevel &&
-               ErrorCategory == error2.ErrorCategory &&
-               ErrorFlag == error2.ErrorFlag;
+        return  ErrorType == error2.ErrorType &&
+                ErrorLevel == error2.ErrorLevel &&
+                ErrorCategory == error2.ErrorCategory &&
+                ErrorFlag == error2.ErrorFlag;
+    }
+
+    /// <summary>
+    /// True, if the error is a Wifi message.
+    /// </summary>
+    public bool IsWifiMessage()
+    {
+        return ErrorLevel == ErrorLevel.Information && ErrorType.ToUpper().Contains(Wifi);
     }
 
     /// <summary>
