@@ -149,7 +149,7 @@ public static class FilterApiExtensions
             [nameof(CollectionFilterDto.Aggregation)] = new OpenApiString(dto.Aggregation.ToString())
         };
 
-        result.Add(nameof(CollectionFilterDto.Child), ToOpenApiObject(dto.Child));
+        result.Add(nameof(CollectionFilterDto.Child), dto.Child.ToOpenApiObject());
 
         return result;
     }
