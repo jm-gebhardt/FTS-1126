@@ -72,12 +72,12 @@ public abstract class BaseEdge : GraphEdge
     public float AgvOrientation { get; protected init; }
 
     /// <inheritdoc cref="BaseEdge"/>>
-    protected BaseEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge.FromNodeId, edge.ToNodeId, (float)edge.Length, edge.Id, edge.Variant, edge.VariantParameters)
+    protected BaseEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false, double maxVelocity = 1000) : base(edge.FromNodeId, edge.ToNodeId, (float)edge.Length, edge.Id, edge.Variant, edge.VariantParameters)
     {
         SourceNode = sourceNode;
         TargetNode = targetNode;
         ReferenceTarget = targetNode;
-        MaxVelocity = 1000;
+        MaxVelocity = maxVelocity;
         AgvOrientation = agvGoesBackwards ? GetAgvOrientation(targetNode, sourceNode) : GetAgvOrientation(sourceNode, targetNode);
     }
 

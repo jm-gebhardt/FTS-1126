@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Travel;
 public class DirectEdge : SimpleEdge
 {
     /// <inheritdoc cref="DirectEdge"/>
-    public DirectEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode, agvGoesBackwards)
+    public DirectEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false, double maxVelocity = 1000) : base(edge, sourceNode, targetNode, agvGoesBackwards, maxVelocity)
     {
     }
 

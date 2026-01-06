@@ -72,6 +72,59 @@ public class DirectEdgeTest
     }
 
     [TestMethod]
+    public void SetAngles_NextSourceAndNextTargetZero_ExitAngleIsNaN_TravelTimeEstimated()
+    {
+        var sourceNodeId = "Source".ToGuid();
+        var targetNodeId = "Target".ToGuid();
+        var edge = GraphEdge.CreateDirect(sourceNodeId, targetNodeId, length:1);
+        var agvData = AgvDataGenerator.GenerateAgvData(maxVelocityStraight: 1.5, maxVelocityTurn: 0.9);
+        double maxEdgeVelocity = agvData.MaxVelocityStraight;
+        var directEdge = new DirectEdge(edge,
+            new GraphNode("Source".ToGuid(),
+                "Source",
+                0,
+                0,
+                0,
+                AgvGraph.NodeType.WayPoint,
+                null,
+                null,
+                null),
+            new GraphNode("Target".ToGuid(),
+                "Target",
+                1,
+                1,
+                0,
+                AgvGraph.NodeType.WayPoint,
+                null,
+                null,
+                null), maxVelocity: maxEdgeVelocity);
+        directEdge.Length.ShouldBeGreaterThan(0);
+        directEdge.SetAngles(0, 
+            new GraphNode("NextSource".ToGuid(),
+                "Source",
+                0,
+                0,
+                0,
+                AgvGraph.NodeType.WayPoint,
+                null,
+                null,
+                null),
+            new GraphNode("NextTarget".ToGuid(),
+                "Target",
+                0,
+                0,
+                0,
+                AgvGraph.NodeType.WayPoint,
+                null,
+                null,
+                null));
+        directEdge.ExitAngle.ShouldBe(double.NaN);
+       
+        directEdge.EstimateTravelTime(agvData, 0, DateTime.UtcNow);
+        directEdge.ExitVelocity.ShouldNotBe(0); // Target is waypoint and travel time estimation can handle NaN exit angle
+    }
+
+    [TestMethod]
     [DataRow("Source", "Target", 0, 0, 1, 0, 90, DisplayName = "SourceNodeAtZero_OrientationSet")]
     [DataRow("Source", "Target", 1, 0, 0, 0, 270, DisplayName = "TargetNodeAtZero_OrientationSet")]
     public void GetAgvOrientation(string source, string target,

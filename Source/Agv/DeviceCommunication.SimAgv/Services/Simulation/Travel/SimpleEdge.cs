@@ -43,7 +43,7 @@ public class SimpleEdge : BaseEdge
     public double DecelerationSection { get; private set; }
 
     /// <inheritdoc cref="SimpleEdge"/>
-    protected SimpleEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode, agvGoesBackwards)
+    protected SimpleEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false, double maxVelocity = 1000) : base(edge, sourceNode, targetNode, agvGoesBackwards, maxVelocity)
     {
     }
 

@@ -36,7 +36,17 @@ public static class Mathematics
     /// <param name="v2">The second vector.</param>
     public static double AngleBetween(Vector2 v1, Vector2 v2)
     {
-        return Math.Acos(Vector2.Dot(v1, v2) / (Vector2.Distance(Vector2.Zero, v1) * Vector2.Distance(Vector2.Zero, v2)));
+        float length1 = v1.Length();
+        float length2 = v2.Length();
+
+        if (length1 == 0f || length2 == 0f)
+        {
+            return double.NaN;
+        }
+
+        float cosAngle = Vector2.Dot(v1, v2) / (length1 * length2);
+        cosAngle = Math.Clamp(cosAngle, -1f, 1f);
+        return Math.Acos(cosAngle);
     }
 
     /// <summary>
@@ -50,24 +60,20 @@ public static class Mathematics
     /// </returns>
     /// <remarks>
     /// - If both vectors are equal, the method returns π/2 (90 degrees).
-    /// - If either vector is Zero, the method uses the other vector to calculate the tangent.
     /// - The angle is measured counterclockwise from the positive X-axis.
     /// - The result is adjusted by adding π/2 (90 degrees) to the calculated angle.
     /// </remarks>
     [PublicAPI]
     public static double OrientationToXAxis(Vector2 start, Vector2 end)
     {
-        if (end == Vector2.Zero && start != Vector2.Zero)
+        var direction = end - start;
+
+        if (direction == Vector2.Zero)
         {
-            // use tangent
-            end -= start;
+            return double.NaN;
         }
-        if (start == Vector2.Zero && end != Vector2.Zero)
-        {
-            // use tangent
-            start -= end;
-        }
-        return (float)(Math.Atan2(end.Y - start.Y, end.X - start.X) + Math.PI / 2);
+
+        return Math.Atan2(direction.Y, direction.X) + Math.PI / 2;
     }
 
     /// <summary>
@@ -96,7 +102,7 @@ public static class Mathematics
     /// <summary>
     /// Rotates a <see cref="Vector3"/> projected to the plane and moves it a set distance.
     /// </summary>
-    /// <param name="vector">^The <see cref="Vector3"/> to rotate and move.</param>
+    /// <param name="vector">The <see cref="Vector3"/> to rotate and move.</param>
     /// <param name="angle">The (clockwise) angle to rotate the vector by in [rad].</param>
     /// <param name="distance">The distance to move the vector.</param>
     [PublicAPI]
