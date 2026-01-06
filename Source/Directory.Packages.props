@@ -11,8 +11,8 @@
     <PackageVersion Include="AutoMapper" Version="[14.0.0]" />
     <PackageVersion Include="AutoMapper.Extensions" Version="2.1.0" />
     <PackageVersion Include="Azure.Identity" Version="1.17.1" />
-    <PackageVersion Include="FluentValidation" Version="12.1.0" />
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- VERSION LOCKED at v8.5.5: Do not update to v9+ (commercial license required). Stay on v8.x (open source) -->
     <PackageVersion Include="MassTransit" Version="[8.5.5]" />
     <PackageVersion Include="MassTransit.Abstractions" Version="[8.5.5]" />
