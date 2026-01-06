@@ -46,47 +46,40 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
 
         var agvCorrelationId = (message.SerialNumber ?? throw new SerialNumberNotSetException(nameof(MqttOrderEvent))).ToGuid();
 
-        int logCode;
         int orderLogCode;
 
         switch (message.OrderEventType)
         {
             case OrderEventType.Started:
                 await context.Publish(new ActionStartedByAgv(actionId, agvCorrelationId));
-                logCode = LogCodes.AgvSentActionStarted;
                 orderLogCode = LogCodes.AgvSentActionStartedForOrder;
                 break;
 
             case OrderEventType.Completed:
                 await context.Publish(new ActionCompletedByAgv(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
-                logCode = LogCodes.AgvSentActionCompleted;
                 orderLogCode = LogCodes.AgvSentActionCompletedForOrder;
                 break;
 
             case OrderEventType.Canceled:
                 await context.Publish(new ActionAbortedByAgv(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
-                logCode = LogCodes.AgvSentActionAborted;
                 orderLogCode = LogCodes.AgvSentActionAbortedForOrder;
                 break;
 
             case OrderEventType.CancelFailed:
                 await context.Publish(new ActionAbortionFailedByAgv(actionId, agvCorrelationId));
-                logCode = LogCodes.AgvSentActionAbortionFailed;
                 orderLogCode = LogCodes.AgvSentActionAbortionFailedForOrder;
                 break;
 
             case OrderEventType.Failed:
                 await context.Publish(new ActionFailedByAgv(actionId, agvCorrelationId));
                 await TryRemoveMapping(internalOrderId, message.OrderId.ToGuid());
-                logCode = LogCodes.AgvSentActionFailed;
                 orderLogCode = LogCodes.AgvSentActionFailedForOrder;
                 break;
 
             case OrderEventType.Updated:
                 await context.Publish(new ActionUpdatedByAgv(actionId, agvCorrelationId));
-                logCode = LogCodes.AgvSentActionUpdated;
                 orderLogCode = LogCodes.AgvSentActionUpdatedForOrder;
                 break;
 
@@ -95,7 +88,7 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
         }
         var logEntry = new LogEntryDto
         {
-            ActionGroupCorrelationId = actionId, AgvCorrelationId = agvCorrelationId, Category = Categories.Agv, LogCode = logCode, LogLevel = nameof(LogLevel.Information), Timestamp = DateTime.UtcNow, Id = Guid.Empty,
+            ActionGroupCorrelationId = actionId, AgvCorrelationId = agvCorrelationId, Category = Categories.Order, LogCode = orderLogCode, LogLevel = nameof(LogLevel.Information), Timestamp = DateTime.UtcNow, Id = Guid.Empty,
             Variables = new Dictionary<string, string>
             {
                 { LogLabels.OriginalActionId, message.OrderId.ToGuid().ToString() },
@@ -103,12 +96,7 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
             }
         };
         
-        await context.Publish(new LogOccurred(logEntry, [Categories.Agv, Categories.Order]));
-
-        logEntry.Category = Categories.Order;
-        logEntry.LogCode = orderLogCode;
-
-        await context.Publish(new LogOccurred(logEntry, [Categories.Agv, Categories.Order]));
+        await context.Publish(new LogOccurred(logEntry, [Categories.Order]));
     }
 
     private async Task TryRemoveMapping(Guid? internalOrderId, Guid vehicleOrderId)

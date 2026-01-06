@@ -48,12 +48,6 @@ public static class LogCodes
     public const int AgvRemoveFromZone = 327;
     public const int AgvRemoveFromNode = 328;
     public const int AgvOperatorInteraction = 329;
-    public const int AgvSentActionStarted = 330;
-    public const int AgvSentActionCompleted = 331;
-    public const int AgvSentActionAborted = 332;
-    public const int AgvSentActionAbortionFailed = 333;
-    public const int AgvSentActionUpdated = 334;
-    public const int AgvSentActionFailed = 335;
     public const int AgvRemoveFromQueue = 336;
 
     // Order
