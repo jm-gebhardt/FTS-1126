@@ -70,6 +70,6 @@
     <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.6.2" />
     <PackageVersion Include="NSwag.MSBuild" Version="14.6.2" />
     <PackageVersion Include="MQTTnet" Version="5.0.1.1416" />
-    <PackageVersion Include="Polly" Version="8.6.4" />
+    <PackageVersion Include="Polly" Version="8.6.5" />
   </ItemGroup>
 </Project>
