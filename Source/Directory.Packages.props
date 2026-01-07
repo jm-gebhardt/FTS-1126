@@ -66,9 +66,9 @@
     <PackageVersion Include="Sarif.Sdk" Version="4.6.0" />
     <!-- Packages specific to IntegrationTest -->
     <PackageVersion Include="IdentityModel" Version="7.0.0" />
-    <PackageVersion Include="NSwag.Annotations" Version="14.6.2" />
-    <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.6.2" />
-    <PackageVersion Include="NSwag.MSBuild" Version="14.6.2" />
+    <PackageVersion Include="NSwag.Annotations" Version="14.6.3" />
+    <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.6.3" />
+    <PackageVersion Include="NSwag.MSBuild" Version="14.6.3" />
     <PackageVersion Include="MQTTnet" Version="5.0.1.1416" />
     <PackageVersion Include="Polly" Version="8.6.5" />
   </ItemGroup>
