@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.OrderTranslator.Messages</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="MassTransit.Abstractions" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
+      <ProjectReference Include="..\OrderTranslator.Domain\OrderTranslator.Domain.csproj" />
+    </ItemGroup>
+</Project>

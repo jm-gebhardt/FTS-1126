@@ -142,6 +142,50 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     public bool IsIncomplete => Target.NodeId == null && Target.Position == null;
 
     /// <summary>
+    /// True, if the action is registered for a Doppelspiel
+    /// </summary>
+    public bool IsRegisteredForDoppelspiel { get; private set; }
+
+    /// <summary>
+    /// The correlation id of the Doppelspiel partner order, if any.
+    /// </summary>
+    public Guid? DoppelspielPartner { get; private set; }
+
+    /// <summary>
+    /// Register the action for Doppelspiel
+    /// </summary>
+    public void RegisterForDoppelspiel()
+    {
+        IsRegisteredForDoppelspiel = true;
+    }
+
+    /// <summary>
+    /// Set a Doppelspiel partner.
+    /// </summary>
+    public void SetDoppelspielPartner(Guid doppelspielPartner)
+    {
+        IsRegisteredForDoppelspiel = true;
+        DoppelspielPartner = doppelspielPartner;
+    }
+
+    /// <summary>
+    /// Remove the Doppelspiel association.
+    /// </summary>
+    public void ResetDoppelspielPartner()
+    {
+        DoppelspielPartner = null;
+    }
+
+    /// <summary>
+    /// Unregister from Doppelspiel.
+    /// </summary>
+    public void UnregisterFromDoppelspiel()
+    {
+        IsRegisteredForDoppelspiel = false;
+        DoppelspielPartner = null;
+    }
+
+    /// <summary>
     /// True, if Dockfront has been set externally.
     /// </summary>
     public bool HasDockFront()
@@ -329,7 +373,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// Change the type of the action.
     /// </summary>
     /// <param name="newType">The new type of the action.</param>
-    public void ChangeActiontype(ActionType newType)
+    public void ChangeActionType(ActionType newType)
     {
         ActionType = newType;
     }

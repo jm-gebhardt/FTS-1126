@@ -1,10 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.PrismatCommunication.Domain.Exceptions;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
@@ -12,6 +8,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 /// <summary>
 /// Represents an incoming host order
 /// </summary>
+[PublicAPI]
 public class HostOrder
 {
     private readonly List<Action> _actions = new();
@@ -62,21 +59,6 @@ public class HostOrder
     public DateTime? FailedDate { get; private set; }
 
     /// <summary>
-    /// True, if the host order can be considered for Doppelspiel.
-    /// </summary>
-    public bool CanRunDoppelspiel { get; private set; }
-
-    /// <summary>
-    /// The time since when the order can be considered for Doppelspiel.
-    /// </summary>
-    public DateTime? ConsideredForDoppelspielDate { get; private set; }
-
-    /// <summary>
-    /// True, if the host order has been queued.
-    /// </summary>
-    public bool IsQueued { get; set; }
-
-    /// <summary>
     /// The assigned agv.
     /// </summary>
     public Guid? AssignedAgv { get; private set; }
@@ -86,12 +68,7 @@ public class HostOrder
     /// </summary>
     public string TransportOrderId => GetTransportOrderId(Hu);
 
-    /// <summary>
-    /// True, if the orders Doppelspiel partner has been queued yet.
-    /// </summary>
-    public bool HasQueuedDoppelspielpartner => Actions.Any(a => a is { ActionType: ActionType.Drop, DoppelspielPartner: not null });
-
-    /// <summary>
+  /// <summary>
     /// The drop of the order.
     /// </summary>
     public Action? Drop => Actions.FirstOrDefault(a => a.ActionType == ActionType.Drop);
@@ -100,21 +77,6 @@ public class HostOrder
     /// The pick of the order.
     /// </summary>
     public Action? Pick => Actions.FirstOrDefault(a => a.ActionType == ActionType.Pick);
-
-    /// <summary>
-    /// True, if the order should be delayed for Doppelspiel.
-    /// </summary>
-    public bool Delay => Actions.Any(a => a is { ActionType: ActionType.Pick, DoppelspielPartner: null, IsRegisteredForDoppelspiel: true });
-
-    /// <summary>
-    /// True, if the order is registered for  Doppelspiel during drop.
-    /// </summary>
-    public bool IsRegisteredForDoppelspielDrop => Actions.Any(a => a is { ActionType: ActionType.Drop, IsRegisteredForDoppelspiel: true });
-
-    /// <summary>
-    /// True, if the order is registered for  Doppelspiel during pick.
-    /// </summary>
-    public bool IsRegisteredForDoppelspielPick => Actions.Any(a => a is { ActionType: ActionType.Pick, IsRegisteredForDoppelspiel: true });
 
     /// <summary>
     /// The source of the host order.
@@ -135,6 +97,15 @@ public class HostOrder
         Hu = hu;
         CreatedDate = createdDate;
         CorrelationId = Guid.NewGuid();
+    }
+
+    /// <inheritdoc cref="HostOrder"/>>
+    public HostOrder(Guid correlationId, string orderId, string hu, DateTime createdDate)
+    {
+        OrderId = orderId;
+        Hu = hu;
+        CreatedDate = createdDate;
+        CorrelationId = correlationId;
     }
 
     [UsedImplicitly]
@@ -166,42 +137,6 @@ public class HostOrder
     {
         var action = new Action(Guid.NewGuid(), CorrelationId, node, actionType, _actions.Count, infoToAgv);
         _actions.Add(action);
-    }
-
-    /// <summary>
-    /// Register order for Doppelspiel.
-    /// </summary>
-    public void RegisterDoppelspiel(ActionType actionType)
-    {
-        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
-        if (action != null)
-        {
-            action.RegisterForDoppelspiel();
-        }
-    }
-
-    /// <summary>
-    /// Unregister order from Doppelspiel.
-    /// </summary>
-    public void UnregisterFromDoppelspiel(ActionType actionType)
-    {
-        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
-        if (action != null)
-        {
-            action.UnregisterFromDoppelspiel();
-        }
-    }
-
-    /// <summary>
-    /// Register order as Doppelspiel partner.
-    /// </summary>
-    public void SetDoppelspielpartner(Guid partnerOrder, ActionType actionType)
-    {
-        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
-        if (action != null)
-        {
-            action.SetDoppelspielPartner(partnerOrder);
-        }
     }
 
     /// <summary>
@@ -267,158 +202,5 @@ public class HostOrder
             throw new HostOrderInformationOutdatedException($"Order completion information from {timestamp} outdated, already finished {FinishedDate}/ canceled {CanceledDate} / failed {FailedDate}.");
         }
         FailedDate = timestamp;
-    }
-
-    /// <summary>
-    /// Consider the order for Doppelspiel.
-    /// </summary>
-    public void ConsiderForDoppelspiel()
-    {
-        CanRunDoppelspiel = true;
-        ConsideredForDoppelspielDate = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// True, if a host order runs on the short circuit.
-    /// </summary>
-    /// <param name="configuration">The Kaeser graph configuration.</param>
-    public bool IsShortCircuitOrder(KaeserGraphConfiguration configuration)
-    {
-        return Actions.All(a => configuration.PrismatKnownTargets.Contains(a.Node));
-    }
-
-    /// <summary>
-    /// Create an action group from the host order.
-    /// </summary>
-    /// <param name="configuration">The graph configuration.</param>
-    /// <param name="assignedAgv">The assigned agv, if any.</param>
-    /// <param name="pickNode">The pick node, if given after Doppelspiel.</param>
-    /// <returns>The action group.</returns>
-    public ActionGroup CreateActionGroup(KaeserGraphConfiguration configuration, Guid? assignedAgv = null, GraphNode? pickNode = null)
-    {
-        if (pickNode != null && HasUnknownPickTarget(configuration))
-        {
-            // Doppelspiel at APL
-            return CreatePickDropActionGroupForAgv(pickNode, assignedAgv, configuration);
-        }
-
-        if (pickNode != null && IsShortCircuitOrder(configuration) && !configuration.IsPickAtAkl(Source))
-        {
-            // Doppelspiel at PSX for AKL drop
-            return CreatePickDropActionGroupForAgv(pickNode, assignedAgv, configuration);
-        }
-
-        if (HasUnknownPickTarget(configuration))
-        {
-            // PSX-> APL
-            return CreateMovePickDropActionGroup(configuration, configuration.LongLoopMoveTargetNode, assignedAgv: assignedAgv);
-        }
-
-        if (HasUnknownDropTarget(configuration))
-        {
-            // APL-> PSX
-            return CreatePickMoveDropActionGroup(configuration, configuration.LongLoopMoveTargetNode, assignedAgv: assignedAgv);
-        }
-
-        if (IsShortCircuitOrder(configuration) && configuration.IsPickAtAkl(Source))
-        {
-            // AKL -> PSX
-            return CreatePickMoveDropActionGroup(configuration, configuration.WaitingPositionByAklSource[Source], assignedAgv: assignedAgv);
-        }
-
-        // PSX-> AKL
-        return CreateMovePickDropActionGroup(configuration, configuration.WaitingPositionByAklTarget[Target], assignedAgv: assignedAgv);
-    }
-
-    /// <summary>
-    /// Try to create an action group with a move, pick, and a drop action from the host order.
-    /// </summary>
-    /// <param name="configuration">The graph configuration.</param>
-    /// <param name="moveTarget">The target of the move action.</param>
-    /// <param name="assignedAgv">The agv that should run the order.</param>
-    /// <returns>Action group with move, pick, drop actions, whereby the pick action has no target.</returns>
-    private ActionGroup CreateMovePickDropActionGroup(KaeserGraphConfiguration configuration, string moveTarget, Guid? assignedAgv = null)
-    {
-        return new ActionGroup(
-            CorrelationId,
-            TransportOrderId,
-            [
-                new AgvAction(Guid.NewGuid(), ActionType.Move, moveTarget.ToGraphNode(), CorrelationId),
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, targetNode: null, CorrelationId, a.InfoToAgv) { Sequence = 1 }).First(),
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node].ToGraphNode(), CorrelationId, a.InfoToAgv) { Sequence = 2 }).First()
-            ],
-            ActionGroupCreator.Wms,
-            Priority.Default,
-            false,
-            CreatedDate,
-            assignedAgv) { HandlingUnit = Hu };
-    }
-
-    /// <summary>
-    /// Try to create an action group with a move, pick, and a drop action from the host order.
-    /// </summary>
-    /// <param name="configuration">The graph configuration.</param>
-    /// <param name="assignedAgv">The assigned agv.</param>
-    /// <param name="moveTarget">The target of the move action.</param>
-    /// <returns>Action group with move, pick, drop actions, whereby the drop action has no target.</returns>
-    private ActionGroup CreatePickMoveDropActionGroup(KaeserGraphConfiguration configuration, string moveTarget, Guid? assignedAgv = null)
-    {
-        return new ActionGroup(
-            CorrelationId,
-            TransportOrderId,
-            [
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node].ToGraphNode(), CorrelationId, a.InfoToAgv) { Sequence = 0 }).First(),
-                new AgvAction(Guid.NewGuid(), ActionType.Move, moveTarget.ToGraphNode(), CorrelationId) { Sequence = 1 },
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, targetNode: null, CorrelationId, a.InfoToAgv) { Sequence = 2 }).First()
-            ],
-            ActionGroupCreator.Wms,
-            Priority.Default,
-            false,
-            CreatedDate) { AssignedAgv = assignedAgv, HandlingUnit = Hu };
-    }
-
-    /// <summary>
-    /// Creates an action group from the given pick node to the target of the order for
-    /// the assigned agv.
-    /// </summary>
-    /// <param name="pickNode">The pick node.</param>
-    /// <param name="agv">Optional correlation id of the agv.</param>
-    /// <param name="configuration">The graph configuration</param>
-    /// <returns>ActionGroup with pick and drop actions, assigned to the given agv.</returns>
-    private ActionGroup CreatePickDropActionGroupForAgv(GraphNode pickNode, Guid? agv, KaeserGraphConfiguration configuration)
-    {
-        AssignedAgv = agv;
-        return new ActionGroup(CorrelationId,
-            TransportOrderId,
-            [
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, pickNode, CorrelationId, a.InfoToAgv) { Sequence = 0 }).First(),
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, configuration.StationMapping[a.Node].ToGraphNode(), CorrelationId, a.InfoToAgv) { Sequence = 1 }).First()
-            ],
-            ActionGroupCreator.Wms,
-            Priority.Default,
-            false,
-            CreatedDate) { AssignedAgv = agv, HandlingUnit = Hu };
-    }
-
-    /// <summary>
-    /// Checks if the host order has an unknown drop target.
-    /// </summary>
-    /// <param name="configuration">The Kaeser graph configuration.</param>
-    public bool HasUnknownDropTarget(KaeserGraphConfiguration configuration)
-    {
-        bool isAplSource = Actions.Single(a => a.ActionType == ActionType.Pick).Node == configuration.PrismatAplSource;
-        bool isUnknownDrop = configuration.PrismatOutputLanes.Contains(Actions.Single(a => a.ActionType == ActionType.Drop).Node);
-        return isAplSource && isUnknownDrop;
-    }
-
-    /// <summary>
-    /// Checks if the host order has an unknown pick target.
-    /// </summary>
-    /// <param name="configuration">The Kaeser graph configuration.</param>
-    public bool HasUnknownPickTarget(KaeserGraphConfiguration configuration)
-    {
-        bool isAplTarget = Actions.Single(a => a.ActionType == ActionType.Drop).Node == configuration.PrismatAplTarget;
-        bool isUnknownPick = configuration.PrismatInputLanes.Contains(Actions.Single(a => a.ActionType == ActionType.Pick).Node);
-        return isUnknownPick && isAplTarget;
     }
 }

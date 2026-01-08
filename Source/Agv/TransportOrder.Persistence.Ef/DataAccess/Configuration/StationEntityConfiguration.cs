@@ -23,6 +23,7 @@ public class StationEntityConfiguration : IEntityTypeConfiguration<Station>
         builder.Property(e => e.PalletJamChangedDate);
         builder.Property(e => e.PrimaryType);
         builder.Property(e => e.AdditionalTypes).HasJsonConversion();
+        builder.Property(e => e.StationGroup).HasJsonConversion();
         builder.Ignore(e => e.NodeLock);
         builder.Ignore(e => e.Agvs);
         builder.Ignore(e => e.IsLocked);

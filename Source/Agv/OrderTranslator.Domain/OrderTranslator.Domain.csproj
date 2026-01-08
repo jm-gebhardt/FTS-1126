@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.OrderTranslator.Domain</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="YamlDotNet" />
+        <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="FluentValidation" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+      <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
+      <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
+    </ItemGroup>
+</Project>

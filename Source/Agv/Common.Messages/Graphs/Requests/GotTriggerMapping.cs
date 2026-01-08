@@ -6,6 +6,7 @@ namespace Gebhardt.Acc.Common.Messages.Graphs.Requests;
 /// Represents the response to <see cref="GetTriggerMapping"/>.
 /// </summary>
 /// <param name="TriggerLocalizations">The localizations of the triggers.</param>
+[PublicAPI]
 public record GotTriggerMapping(ICollection<TriggerLocalization> TriggerLocalizations);
 
 /// <summary>

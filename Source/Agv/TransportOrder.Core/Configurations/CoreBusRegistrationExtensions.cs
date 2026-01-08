@@ -3,11 +3,13 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -196,6 +198,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<LockStation, StationCommandHandler>(c);
             partitioner.PartitionMessageById<UnlockStation, StationCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateStationJamState, StationCommandHandler>(c);
+            partitioner.PartitionMessageById<StationConfigurationReceived, StationCommandHandler>(c);
         });
 
         busRegistrationConfigurator.AddConsumer<NodeCommandHandler>(c =>
@@ -239,6 +242,7 @@ public static class CoreBusRegistrationExtensions
 
     private static void RegisterCoreActionGroupHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
     {
+        busRegistrationConfigurator.AddConsumer<TargetSelectionCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<RetractHostOrder>();
         busRegistrationConfigurator.AddConsumer<ActionEventHandler>();
         busRegistrationConfigurator.AddConsumer<ActionCommandHandler>(c =>
@@ -285,6 +289,7 @@ public static class CoreBusRegistrationExtensions
             actionPartitioner.PartitionMessageById<CancelActionGroup, ActionCommandHandler>(c);
             actionPartitioner.PartitionMessageById<ReassignActionGroup, ActionCommandHandler>(c);
         });
+        busRegistrationConfigurator.AddConsumer<DoppelspielCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
     }
 

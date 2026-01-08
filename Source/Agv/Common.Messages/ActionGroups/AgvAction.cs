@@ -95,6 +95,16 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public string? AdditionalInfo { get; set; }
 
     /// <summary>
+    /// True, if the action is registered for a Doppelspiel
+    /// </summary>
+    public bool IsRegisteredForDoppelspiel { get; set; }
+
+    /// <summary>
+    /// The correlation id of the Doppelspiel partner order, if any.
+    /// </summary>
+    public Guid? DoppelspielPartner { get; set; }
+
+    /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="correlationId">Unique correlation ID of this action (see order action repository)</param>

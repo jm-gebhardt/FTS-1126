@@ -92,6 +92,16 @@ public class Station
     /// </summary>
     public bool IsLocked => LockedBy != null;
 
+    /// <summary>
+    /// True, if there is no agv reserved for or occupying the station
+    /// </summary>
+    public bool IsEmpty => NodeLock?.AgvCorrelationId == null;
+
+    /// <summary>
+    /// Other stations in the same agv limited station group.
+    /// </summary>
+    public ICollection<Guid> StationGroup { get; set; } = [];
+
     /// <inheritdoc cref="Station"/>>
     public Station(string name, AgvGraph.NodeType primaryType, ICollection<AgvGraph.NodeType> additionalTypes)
     {
@@ -153,6 +163,15 @@ public class Station
         LockDescription = null;
         LockReason = null;
         LockedOrderHandling = null;
+    }
+
+    /// <summary>
+    /// Configure the station.
+    /// </summary>
+    /// <param name="configuration"></param>
+    public void Configure(Common.Messages.Graphs.Events.StationConfiguration configuration)
+    {
+        StationGroup = configuration.StationGroup.Select(s => s.ToGuid()).ToList();
     }
 }
 

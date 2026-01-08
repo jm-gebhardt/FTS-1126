@@ -9,7 +9,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -2713,7 +2713,6 @@ public class ActionCommandHandlerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithHostOrderRetracted(true)
             .WithMultipleRequiredActionGroups([actionGroup, actionGroup]);
 
         await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
@@ -2728,7 +2727,6 @@ public class ActionCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
         var startedActionGroup = new ActionGroup(actionGroup.CorrelationId, actionGroup.OrderId, actionGroup.Actions, actionGroup.Creator) { StartedDate = DateTime.UtcNow };
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithHostOrderRetracted(true)
             .WithMultipleRequiredActionGroups([actionGroup, startedActionGroup]);
 
         await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
@@ -2742,7 +2740,6 @@ public class ActionCommandHandlerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithHostOrderRetracted(true)
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
@@ -2756,21 +2753,6 @@ public class ActionCommandHandlerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true, startedDate: DateTime.UtcNow, assignedAgv: Guid.NewGuid());
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithHostOrderRetracted(true)
-            .AddActionGroup(actionGroup);
-
-        await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));
-
-        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
-        actionGroup.IsQueued.ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public async Task TryRetractActionGroup_HostOrderNotRetracted_DoesNotPublishActionGroupChanged()
-    {
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true);
-        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
-            .WithHostOrderRetracted(false)
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new TryRetractActionGroup(actionGroup.CorrelationId));

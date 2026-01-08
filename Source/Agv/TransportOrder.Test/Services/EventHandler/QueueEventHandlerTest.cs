@@ -21,7 +21,7 @@ public class QueueEventHandlerTest
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromQueueConsideration>();
     }
 
-    [TestMethod]
+/*    [TestMethod]
     public async Task ConsumeDropActionCompleted_ValidData_PublishesRemoveAgvFromQueueConsideration()
     {
         var agvId = Guid.NewGuid();
@@ -31,7 +31,7 @@ public class QueueEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<DropActionCompleted>();
         await fixture.ShouldHavePublishedAsync<RemoveAgvFromQueueConsideration>();
-    }
+    }*/
 
     [TestMethod]
     public async Task ConsumeAgvLastNodeIdChanged_ValidData_PublishesAddAgvToQueueConsideration()

@@ -24,7 +24,6 @@ public class CargoCheckTrigger(IBus bus) : IFfcTrigger
     /// <inheritdoc cref="IFfcTrigger"/>>
     public void UpdateDefaultConfigurationParameter(string name, string value)
     {
-        throw new NotImplementedException();
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>
@@ -37,7 +36,7 @@ public class CargoCheckTrigger(IBus bus) : IFfcTrigger
     /// <inheritdoc cref="IFfcTrigger"/>>
     public async Task Invoke(Dictionary<string, ConfigurationParameter> parameters, AgvData agvData, AgvStatus agvStatus, ActionGroup? actionGroup, ICollection<Cargo> cargo, ICollection<AgvError> errors)
     {
-        await bus.Publish(new AgvPassedCargoTriggerPoint(agvStatus.CorrelationId, actionGroup?.CorrelationId, cargo.Count > 0));
+        await bus.Publish(new AgvPassedCargoTriggerPoint(agvStatus.CorrelationId, actionGroup?.CorrelationId, actionGroup?.Actions.Single(a => a.State == ActionState.Started), cargo.Count > 0));
     }
 
     /// <inheritdoc cref="IFfcTrigger"/>>

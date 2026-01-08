@@ -1,0 +1,59 @@
+﻿using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
+using Gebhardt.Acc.ConveyorTelegramApi.Processors;
+using Gebhardt.Acc.ConveyorTelegramApi.Telegrams;
+using Gebhardt.Acc.StationCommunication.Domain.Configuration;
+using Gebhardt.Acc.StationCommunication.Domain.Services;
+using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace Gebhardt.Acc.ConveyorTelegramApi.Services;
+
+/// <inheritdoc cref="IConveyorCommunicator"/>>
+[PublicAPI]
+public class TelegramConveyorCommunicator(
+    ILogger<TelegramConveyorCommunicator> logger,
+    [FromKeyedServices(ServiceKeyProvider.AplWeStation)]
+    ToWePlcTelegramProcessor toWePlcTelegramProcessor,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    AgvAplCargoStateProcessor agvCargoStateTelegramProcessor,
+    [FromKeyedServices(ServiceKeyProvider.FromWeStation)] TelegramCommunicationConfiguration configuration) : IConveyorCommunicator
+{
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void ReportAplCargoState(bool cargo)
+    {
+        var agvAplCargoState = new AgvAplCargoState(cargo, DateTime.UtcNow);
+        agvCargoStateTelegramProcessor.EnqueueTelegram(agvAplCargoState);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvAplCargoState.ToString(), ServiceKeyProvider.AgvCargoState);
+    }
+    
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void ReportPalletPickDropStation(string targetStation, string? pickStation, string? dropStation, string? hu)
+    {
+        var agvWeStation = new AgvWeStation(targetStation, dropStation, pickStation, hu, DateTime.UtcNow);
+        toWePlcTelegramProcessor.EnqueueTelegram(agvWeStation);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", agvWeStation.ToString(), ServiceKeyProvider.AplWeStation);
+    }
+
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void ReportPalletDrop(string source, string destination, string hu)
+    {
+        var tord = new Tord(source, destination, hu, DateTime.UtcNow);
+        toWePlcTelegramProcessor.EnqueueTelegram(tord);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor server {Server}", tord.ToString(), ServiceKeyProvider.AplWeStation);
+    }
+
+    /// <inheritdoc cref="IConveyorCommunicator"/>>
+    public void RequestStationState(string station)
+    {
+        var posStateReq = new PosStateReq(station, DateTime.UtcNow);
+        if (!configuration.UseConnection)
+        {
+            logger.LogDebug("Not queuing telegram '{Telegram}' for sending to conveyor, connection disabled", posStateReq.ToString());
+            return;
+        }
+       
+        toWePlcTelegramProcessor.EnqueueTelegram(posStateReq);
+        logger.LogDebug("Queuing telegram '{Telegram}' for sending to conveyor", posStateReq.ToString());
+    }
+}

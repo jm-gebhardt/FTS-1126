@@ -162,7 +162,7 @@ public class ActionGroupTest
         var agvToAssign = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = null;
 
-        actionGroup.Assign(agvToAssign);
+        actionGroup.Assign(agvToAssign.CorrelationId);
 
         actionGroup.AssignedAgv.ShouldNotBeNull();
         actionGroup.AssignedAgv.ShouldBe(agvToAssign.CorrelationId);
@@ -176,7 +176,7 @@ public class ActionGroupTest
         var agvToAssign = AgvGenerator.GenerateIdleAgv();
         actionGroup.AssignedAgv = actionGroupAssignedAgv;
 
-        Should.Throw<ActionGroupAlreadyAssignedException>(() => actionGroup.Assign(agvToAssign));
+        Should.Throw<ActionGroupAlreadyAssignedException>(() => actionGroup.Assign(agvToAssign.CorrelationId));
     }
 
     [TestMethod]

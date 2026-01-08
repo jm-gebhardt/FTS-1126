@@ -30,7 +30,8 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
     IConsumer<UnlockStation>,
     IConsumer<Common.Messages.Maps.MapSaved>,
     IConsumer<UpdateStationJamState>,
-    IConsumer<GetLockedStations>
+    IConsumer<GetLockedStations>,
+    IConsumer<StationConfigurationReceived>
 {
     /// <summary>
     /// Handles the <see cref="LockStation"/> command.
@@ -139,5 +140,17 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
         ICollection<Station> stations = await stationRepository.GetStations();
 
         await context.RespondAsync(new GotLockedStations(stations.Where(s => s.IsLocked).Select(s => s.Name).ToList()));
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<StationConfigurationReceived> context)
+    {
+        var (stationId, stationConfiguration) = context.Message;
+
+        var station = await stationRepository.GetStation(stationId);
+        station.Configure(stationConfiguration);
+        await stationRepository.Update(station);
+
+        logger.LogInformation("Configured station {Station}", station.Name);
     }
 }

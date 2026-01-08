@@ -1,7 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
@@ -16,7 +14,7 @@ namespace Gebhardt.Acc.WCSCommunicationTest.Services;
 public class HostOrderCommandHandlerTest
 {
     [TestMethod]
-    public async Task Consume_CreateHostOrder_ValidData_CreatesOrderPublishesQueueActionGroupWithPickDropActions()
+    public async Task Consume_CreateHostOrder_ValidData_CreatesOrderPublishesHostOrderCreated()
     {
         using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
@@ -26,16 +24,14 @@ public class HostOrderCommandHandlerTest
         var correlationId = orderId.ToGuid();
         var orderDetails = new OrderDetails(correlationId, orderId, "SRC1", "DST1", "LeNo123", HostOrderCreator.Simulation);
 
-        var queueActionGroup = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, QueueActionGroup>(
+        var hostOrderCreated = await fixture.PublishAndGetFirstMessageAsync<CreateHostOrder, HostOrderCreated>(
             new CreateHostOrder(orderDetails));
         
         await fixture.ShouldHaveConsumedAsync<CreateHostOrder>();
         fixture.VerifyHostOrderAdded();
         
-        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
-        queueActionGroup.ActionGroup.Actions.First().ActionType.ShouldBe(ActionType.Pick);
-        queueActionGroup.ActionGroup.Actions.Last().ActionType.ShouldBe(ActionType.Drop);
-        queueActionGroup.CorrelationId.ShouldBe(correlationId);
+        await fixture.ShouldHavePublishedAsync<HostOrderCreated>();
+        hostOrderCreated.Hu.ShouldBe(orderDetails.LeNo);
     }
 
     [TestMethod]

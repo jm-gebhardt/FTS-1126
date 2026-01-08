@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 
@@ -50,6 +51,7 @@ public class Zone : IEquatable<Zone>
     /// </summary>
     /// <param name="position">The position of the agv.</param>
     /// <returns>True, if it is inside the zone.</returns>
+    [PublicAPI]
     public bool IsAgvInside(AgvPosition position)
     {
         return Polygon.PointIsInPolygon(position.X, position.Y);

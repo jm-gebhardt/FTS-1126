@@ -1,8 +1,7 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.CustomerConfiguration;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Helper;
@@ -20,19 +19,9 @@ public static class OrderGenerator
     [PublicAPI]
     public const string ShortLoopTriggerNode = "Waypoint3";
 
-    private static KaeserGraphConfiguration Configuration { get; } = new(new InMemoryTriggerPointMapping());
+    private static CustomerConfiguration Configuration { get; } = new();
 
-    public static KaeserGraphConfiguration KaeserConfiguration
-    {
-        get
-        {
-            Configuration.UpdateTriggerPointNodeId(Configuration.DecisionPoint1TriggerName, DecisionNode.ToGuid());
-            Configuration.UpdateLongLoopMoveTargetNode(DecisionNode);
-            Configuration.UpdateTriggerPointNodeId(Configuration.CheckCargoTriggerName, CheckCargoTriggerNode.ToGuid());
-            Configuration.UpdateTriggerPointNodeId(Configuration.DoppelspielTriggerName, ShortLoopTriggerNode.ToGuid());
-            return Configuration;
-        }
-    }
+    public static CustomerConfiguration CustomerConfiguration => Configuration;
 
     public static OrderDetails GenerateShortCircuitOrder(bool pickAt1020 = true, int huRotation = 1)
     {
@@ -41,14 +30,14 @@ public static class OrderGenerator
             return new OrderDetails(Guid.NewGuid(),
                 "OrderId",
                 "1020",
-                KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2') && t.EndsWith("10")),
+                "2110",
                 Guid.NewGuid().ToString(),
                 HostOrderCreator.Wms,
                 huRotation);
         }
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatKnownTargets.First(t => t.StartsWith('2') && t.EndsWith("30")),
+             "2130",
             "1050",
             Guid.NewGuid().ToString(),
             HostOrderCreator.Wms, huRotation);
@@ -64,22 +53,22 @@ public static class OrderGenerator
             HostOrderCreator.Wms);
     }
 
-    public static OrderDetails GenerateUnknownPickTargetOrder(int pickTarget = 0)
+    public static OrderDetails GenerateUnknownPickTargetOrder()
     {
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatInputLanes[pickTarget],
-            KaeserConfiguration.PrismatAplTarget,
+            "1020",
+            "9070",
             Guid.NewGuid().ToString(),
             HostOrderCreator.Wms);
     }
 
-    public static OrderDetails GenerateUnknownDropTargetOrder(string? hu = null, int dropTarget = 0)
+    public static OrderDetails GenerateUnknownDropTargetOrder(string? hu = null)
     {
         return new OrderDetails(Guid.NewGuid(),
             "OrderId",
-            KaeserConfiguration.PrismatAplSource,
-            KaeserConfiguration.PrismatOutputLanes[dropTarget],
+            "9060",
+            "1050",
             hu ?? Guid.NewGuid().ToString(),
             HostOrderCreator.Wms);
     }

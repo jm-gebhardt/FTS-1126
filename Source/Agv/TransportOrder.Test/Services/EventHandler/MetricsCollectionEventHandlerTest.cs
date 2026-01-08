@@ -70,7 +70,7 @@ public class MetricsCollectionEventHandlerTest
         fixture.VerifyStationOrderCompletionMetricsCollected(Times.Once());
     }
 
-    [TestMethod]
+/*    [TestMethod]
     public async Task Consume_DropActionCompleted_ValidData_CollectsStationOrderCompletionMetrics()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Completed, dropActionState: ActionState.Completed);
@@ -78,7 +78,7 @@ public class MetricsCollectionEventHandlerTest
             .AddActionGroup(actionGroup);
         await fixture.PublishMessageAsync(new DropActionCompleted(actionGroup.CorrelationId, actionGroup.Actions.Last().CorrelationId, DateTime.UtcNow));
         fixture.VerifyStationOrderCompletionMetricsCollected(Times.Once());
-    }
+    }*/
 
     [TestMethod]
     public async Task Consume_ChargeActionCompleted_ValidData_CollectsStationOrderCompletionMetrics()

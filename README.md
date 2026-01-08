@@ -268,13 +268,138 @@ To provision a trigger location, you must stored the desired data under data\Tri
 ### Order selection policies
 When an agv becomes idle, the next action group is selected based on charging needs, whether there is a manual
 action that needs to be priorised, and if both does not apply based on the policy for automatic pick drop action group selection.
-Following action group selection policies can be chosen by configuration of transportorder  
+Following action group selection policies can be chosen by configuration of transportorder
 - *FASTESTROUTE* - Take the order with the fastest route based on a* (default)
-- *DYNAMIC* - Take order with smallest score : Score = cost[s] / (1 + waiting time[min]**2) 
+- *DYNAMIC* - Take order with smallest score : Score = cost[s] / (1 + waiting time[min]**2)
 - *OLDESTORDER* - Take the oldest order
-- *ALTERNATING* - Alternate between: fastest route and oldest order mode 
+- *ALTERNATING* - Alternate between: fastest route and oldest order mode
 - *FASTESTOFXOLDEST* - Take the fastest of the x (=2) oldest
 - *THRESHOLD* - Take the fastest order, if there are orders older than 2min, take the oldest of those
 
-Configuration of transportorder can be done by setting the environment variable `ORDERSELECTION__MODE` to one of 
+Configuration of transportorder can be done by setting the environment variable `ORDERSELECTION__MODE` to one of
 `DYNAMIC|FASTESTROUTE|OLDESTORDER|ALTERNATING|FASTESTOFXOLDEST|THRESHOLD`
+
+## Station Configuration
+
+The station configuration file ([station-configuration.yml](Source/Agv/OrderTranslator/Configuration/station-configuration.yml)) defines station-specific settings for the AGV system, including Doppelspiel behavior, routing, and reporting requirements. This configuration is used by both the OrderTranslator and StationCommunication services.
+
+### Configuration File Location
+
+The configuration file is located at:
+- `Source/Agv/OrderTranslator/Configuration/station-configuration.yml`
+- `Source/Agv/StationCommunication/Configuration/station-configuration.yml`
+
+### Station Properties
+
+Each station in the configuration file supports the following properties:
+
+#### Basic Properties
+
+- **Name** (string, required): Unique identifier for the station (e.g., "PS01", "APL1", "AP01")
+- **HasJamState** (boolean): Indicates whether the station can report jam states
+- **NeedsCargoReporting** (boolean): Indicates whether the station requires cargo state reporting (needs to be combined with the DP, cargo check trigger.)
+- **NeedsPalletReporting** (boolean): Indicates whether the station requires pallet reporting (needs to be combined with the DP3, Doppelspieltrigger.)
+
+#### Routing Configuration
+
+Routine configurations allow to define an intermediate stop at a waypoint before picking or dropping at a station.
+This can be used for station constellations where the target is decided at DP1 (decision point trigger) or for waiting constellations in combination with the SLW (short loop waiting) point trigger.
+
+- **PickRouting** (list): Defines routing rules for approaching the station for pick operations
+  - **Station** (string): The source or destination station name
+  - **MoveTarget** (string): Intermediate move target node (e.g., "map/NODE-9")
+- **DropRouting** (list): Defines routing rules for approaching the station for drop operations
+  - Same structure as PickRouting
+
+#### Station Grouping
+
+- **StationGroup** (list of strings): Other stations in the same logical group, used for AGV limitation and resource management. If stations are in a group only one agv can approach occupy them at a time.
+
+#### Doppelspiel Configuration
+
+Doppelspiel is an optimization technique where an AGV performs a combined pick-and-drop operation, picking up cargo at the drop location to minimize empty travel. The system supports four Doppelspiel modes:
+
+- **PickDoppelspielMode** (enum): Controls Doppelspiel behavior when picking at this station
+- **DropDoppelspielMode** (enum): Controls Doppelspiel behavior when dropping at this station
+
+**Doppelspiel Modes:**
+
+1. **None**: No Doppelspiel operations
+2. **Order**: Doppelspiel is triggered only when a matching pick order is available
+   - When an AGV drops cargo, the system checks if there's a pick order waiting at the same station
+   - If a matching order exists, the AGV picks it up immediately after dropping
+3. **Always**: Always wait for a Doppelspiel pick
+   - AGV must pick up cargo after completing the drop operation
+   - Pick orders with this mode are not queued independently but only as Doppelspiel partners
+4. **OrderOrQueueHead**: Doppelspiel depending on next pick availability and queue state
+   - Similar to "Order" mode, but only triggers if no AGVs are waiting in queues on the route
+   - Prevents blocking queues with Doppelspiel operations
+
+**Doppelspiel Trigger Points:**
+
+Doppelspiel operations are coordinated using trigger points in the map graph. The [DoppelspielTrigger](Source/Agv/TriggerDoppelspiel/DoppelspielTrigger.cs) (URN: "www.gebhardt-group.com:kaeser.DP3") must be placed before the station where Doppelspiel should occur. When an AGV passes this trigger point:
+- The system evaluates whether a Doppelspiel operation is possible based on the station's configuration
+- If eligible, a pick order is queued for the AGV to execute after the drop
+- The [DoppelspielCommandHandler](Source/Agv/TransportOrder.Core/Services/CommandHandler/ActionGroupHandlers/DoppelspielCommandHandler.cs) manages the matching logic
+
+**Doppelspiel Timing:**
+
+The system supports three timing strategies for Doppelspiel:
+1. **Early Doppelspiel**: Pick order is matched when the drop order is created (DoppelspielMode: Order)
+2. **Late Doppelspiel**: Pick order is matched when the AGV passes the Doppelspiel trigger point (DoppelspielMode: Order or OrderOrQueueHead)
+3. **Post-Drop Doppelspiel**: Pick order is matched after the pick action completes (DoppelspielMode: Always)
+
+#### Conveyor Lane Configuration
+
+- **InputLanes** (list of strings): Conveyor input lane IDs leading to the station (e.g., ["1020", "1040"])
+- **OutputLanes** (list of strings): Conveyor output lane IDs leading from the station (e.g., ["1050", "1060"])
+
+### Configuration Example
+
+```yaml
+Stations:
+- Name: "PS01"
+  HasJamState: True
+  NeedsCargoReporting: False
+  NeedsPalletReporting: True
+  PickRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  - Station: "AP01"
+    MoveTarget: "map/NODE-27"
+  DropRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  StationGroup:
+  PickDoppelspielMode: "Order"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "1020"
+  - "1040"
+  OutputLanes:
+  - "1050"
+  - "1060"
+
+- Name: "AP01"
+  NeedsPalletReporting: False
+  HasJamState: False
+  NeedsCargoReporting: False
+  PickRouting:
+  DropRouting:
+  StationGroup:
+  - "AP02"
+  PickDoppelspielMode: "Always"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "2130"
+  OutputLanes:
+  - "2110"
+```
+
+### Usage Notes
+
+- Station names must match the node names in the AGV graph
+- Routing configurations are optional and can be empty lists if no special routing is required
+- Station groups should be symmetric (if AP01 lists AP02 in its group, AP02 should list AP01)
+- Doppelspiel modes affect order queuing behavior and AGV assignment logic
+

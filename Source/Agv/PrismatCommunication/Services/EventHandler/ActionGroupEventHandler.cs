@@ -1,8 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.Triggers;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
+using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
 using JetBrains.Annotations;
@@ -15,15 +14,14 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
 /// Provides handlers for action group related events.
 /// </summary>
 [UsedImplicitly]
-public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, ILogger<ActionGroupEventHandler> logger, KaeserGraphConfiguration configuration) :
+public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, ILogger<ActionGroupEventHandler> logger) :
     IConsumer<ActionGroupCompleted>,
     IConsumer<ActionGroupStarted>,
     IConsumer<ActionGroupInvalid>,
     IConsumer<PickActionCompleted>,
     IConsumer<ActionAborted>,
     IConsumer<ActionGroupCanceled>,
-    IConsumer<DroppingAgvPassedDoppelspielTriggerPoint>,
-    IConsumer<ActionGroupReassignedOrReset>
+    IConsumer<HostOrderValidationFailed>
 {
     /// <summary>
     /// Handles the <see cref="ActionGroupCompleted"/> event.
@@ -57,31 +55,13 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
         var (correlationId, actionCorrelationId, timestamp) = context.Message;
         try
         {
-            var hostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
-            if (configuration.IsDropAtAkl(hostOrder.Target))
-            {
-                string? pickTarget = configuration.GetDoppelspielPickTargetForDrop(hostOrder.Target);
-                if (pickTarget != null && hostOrder.AssignedAgv != null)
-                {
-                    logger.LogInformation("Pick action of drop at akl target {Target} run by agv {AgvCorrelationId} finished, try queuing next pick for {PickTarget}", hostOrder.Target, hostOrder.AssignedAgv, pickTarget);
-                    await context.Publish(new TryQueueNextAklPick(pickTarget, hostOrder.AssignedAgv.Value));
-                }
-            }
+            await hostOrderRepository.GetByIdAsync(correlationId);
             await context.Publish(new FinishPick(correlationId, actionCorrelationId, timestamp));
         }
         catch (InvalidOperationException)
         {
             logger.LogDebug("Order {CorrelationId} not created by prismat", correlationId);
         }
-    }
-
-    /// <summary>
-    /// Handles the <see cref="DroppingAgvPassedDoppelspielTriggerPoint"/> message.
-    /// </summary>
-    public async Task Consume(ConsumeContext<DroppingAgvPassedDoppelspielTriggerPoint> context)
-    {
-        (_, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId, bool shouldPickNext, var pickNode) = context.Message;
-        await context.Publish(new TryQueueDoppelspielPartner(agvCorrelationId, droppingHostOrderCorrelationId, nextPickHostOrderCorrelationId, shouldPickNext, pickNode));
     }
 
     /// <summary>
@@ -112,27 +92,27 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
     }
 
     /// <summary>
-    /// Handles the <see cref="ActionGroupReassignedOrReset"/> message.
-    /// </summary>
-    public async Task Consume(ConsumeContext<ActionGroupReassignedOrReset> context)
-    {
-        var (actionGroupId, creator) = context.Message;
-
-        if (creator != ActionGroupCreator.Wms)
-        {
-            return;
-        }
-
-        await context.Publish(new ResetDoppelspielPartner(actionGroupId));
-    }
-
-    /// <summary>
     /// Handles the <see cref="ActionGroupCanceled"/> message.
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCanceled> context)
     {
         var (_, correlationId, _) = context.Message;
-        logger.LogInformation("Action group cancelled {ActionGroupCorrelationId}", correlationId);
-        await context.Publish(new AbortHostOrder(correlationId));
+      
+        try
+        {
+            await hostOrderRepository.GetByIdAsync(correlationId);
+            logger.LogInformation("Action group cancelled {ActionGroupCorrelationId}", correlationId);
+            await context.Publish(new AbortHostOrder(correlationId));
+        }
+        catch (InvalidOperationException)
+        {
+            logger.LogDebug("Order {CorrelationId} not created by prismat", correlationId);
+        }
+    }
+
+    /// <inheritdoc/>>
+    public async Task Consume(ConsumeContext<HostOrderValidationFailed> context)
+    {
+        await context.Publish(new InvalidateHosterOrder(context.Message.CorrelationId, context.Message.Error));
     }
 }

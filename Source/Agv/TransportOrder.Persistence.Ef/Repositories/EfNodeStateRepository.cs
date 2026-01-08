@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -13,6 +14,7 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 /// <summary>
 /// Entity framework implementation of <see cref="INodeStateRepository"/>
 /// </summary>
+[CanBeCaptiveDependency]
 public class GraphNodeStateRepository : INodeStateRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;

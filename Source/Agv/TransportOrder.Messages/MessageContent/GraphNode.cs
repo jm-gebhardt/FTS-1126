@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 /// <summary>
 /// Message content for a node in the graph.
 /// </summary>
-[UsedImplicitly]
+[PublicAPI]
 public record GraphNode
 {
     /// <summary>

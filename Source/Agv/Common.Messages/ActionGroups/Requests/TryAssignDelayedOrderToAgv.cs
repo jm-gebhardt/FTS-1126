@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
@@ -10,4 +11,5 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 /// <param name="AssignableAgv">The correlation id of the agv to be assigned to the order.</param>
 /// <param name="PickStation">The pick station of the delayed order.</param>
 /// <param name="OrdersToIgnore">Order that should be ignored during assignment.</param>
+[PublicAPI]
 public record TryAssignDelayedOrderToAgv(Guid CorrelationId, Guid AssignableAgv, GraphNode PickStation, ICollection<Guid>? OrdersToIgnore = null) : CorrelatedBy<Guid>;

@@ -54,48 +54,4 @@ public record Action
 
     /// <summary>The time the action has been finished.</summary>
     public DateTime? FinishedDate { get; private set; }
-
-    /// <summary>
-    /// True, if the action is registered for a Doppelspiel
-    /// </summary>
-    public bool IsRegisteredForDoppelspiel { get; private set; }
-
-    /// <summary>
-    /// The correlation id of the Doppelspiel partner order, if any.
-    /// </summary>
-    public Guid? DoppelspielPartner { get; private set; }
-
-    /// <summary>
-    /// Register the action for Doppelspiel
-    /// </summary>
-    public void RegisterForDoppelspiel()
-    {
-        IsRegisteredForDoppelspiel = true;
-    }
-
-    /// <summary>
-    /// Set a Doppelspiel partner.
-    /// </summary>
-    public void SetDoppelspielPartner(Guid doppelspielPartner)
-    {
-        IsRegisteredForDoppelspiel = true;
-        DoppelspielPartner = doppelspielPartner;
-    }
-
-    /// <summary>
-    /// Remove the Doppelspiel association.
-    /// </summary>
-    public void ResetDoppelspielPartner()
-    {
-        DoppelspielPartner = null;
-    }
-
-    /// <summary>
-    /// Unregister from Doppelspiel.
-    /// </summary>
-    public void UnregisterFromDoppelspiel()
-    {
-        IsRegisteredForDoppelspiel = false;
-        DoppelspielPartner = null;
-    }
 }

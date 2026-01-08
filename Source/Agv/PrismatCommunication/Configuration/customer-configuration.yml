@@ -1,0 +1,4 @@
+OrderValidationErrors:
+    1000: "Quell-Station nicht bekannt"
+    2000: "Ziel-Station nicht bekannt"
+    3000: "Route von Quelle zu Ziel nicht bekannt"

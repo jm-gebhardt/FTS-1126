@@ -11,6 +11,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using JetBrains.Annotations;
 using MassTransit;
@@ -112,15 +113,10 @@ public class NodeCommandHandler(
             }
             else
             {
-                var node = await graphRepository.GetNodeAsync(oldLastNodeId!.Value);
-                if (node.IsDropStation() || node.IsPickStation())
-                {
-                    logger.LogInformation("Not un-occupying station {StationId} based on last node id, only explicit freeing via command", oldLastNodeId);
-                    return;
-                }
                 logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);
                 await nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
-                await PublishNodeStateChange(context, oldLastNodeId.Value);
+                await PublishNodeStateChange(context, oldLastNodeId.GetValueOrDefault());
+                await context.Publish(new AgvLeftStation(oldLastNodeId.GetValueOrDefault(), agvCorrelationId));
                 nodeLocksForAgv.Remove(oldLastNode);
             }
         }
@@ -279,12 +275,12 @@ public class NodeCommandHandler(
             logger.LogWarning("Could not retrieve node state for station {StationName}", stationId);
             return;
         }
-
+        Guid? agvCorrelationId = nodeState.AgvCorrelationId;
         if (!await nodeStateRepository.FreeNodeAsync(stationId))
         {
             logger.LogWarning("Could not unblock node {NodeId}, node is locked", stationId);
         }
-
+        await context.Publish(new AgvLeftStation(station.Id, agvCorrelationId.GetValueOrDefault()));
         await PublishNodeStateChange(context, stationId);
     }
 

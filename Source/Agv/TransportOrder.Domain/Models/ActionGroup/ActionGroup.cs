@@ -147,6 +147,26 @@ public class ActionGroup
     /// Shadow property for log entries. Used by filterables for one-to-many joins.
     /// </summary>
     public virtual ICollection<LogEntry.LogEntry>? LogEntries { get; init; }
+    
+    /// <summary>
+    /// True, if the order is registered for  Doppelspiel during drop.
+    /// </summary>
+    public bool IsRegisteredForDoppelspielDrop => Actions.Any(a => a is { ActionType: ActionType.Drop, IsRegisteredForDoppelspiel: true });
+
+    /// <summary>
+    /// True, if the host order can be considered for Doppelspiel.
+    /// </summary>
+    public bool CanRunDoppelspiel { get; set; }
+
+    /// <summary>
+    /// The time since when the order can be considered for Doppelspiel.
+    /// </summary>
+    public DateTime? ConsideredForDoppelspielDate { get; set; }
+    
+    /// <summary>
+    /// True, if the orders Doppelspiel partner has been queued yet.
+    /// </summary>
+    public bool HasQueuedDoppelspielpartner => Actions.Any(a => a is { ActionType: ActionType.Drop, DoppelspielPartner: not null });
 
     /// <inheritdoc cref="ActionGroup"/>
     public ActionGroup(Guid correlationId, string orderId, IEnumerable<AgvAction> actions, ActionGroupCreator creator, Priority priority = Priority.Default, bool shouldEscapeQueue = false, bool isQueued = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool doNotPause = false) : this(correlationId, orderId)
@@ -190,12 +210,95 @@ public class ActionGroup
     }
 
     /// <summary>
-    /// Retract the action group.
+    /// Register order for Doppelspiel.
     /// </summary>
-    public void Retract()
+    public void RegisterDoppelspiel(ActionType actionType)
     {
+        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
+        if (action != null)
+        {
+            action.RegisterForDoppelspiel();
+        }
+    }
+
+    /// <summary>
+    /// Unregister order from Doppelspiel.
+    /// </summary>
+    public void UnregisterFromDoppelspiel(ActionType actionType)
+    {
+        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
+        if (action != null)
+        {
+            action.UnregisterFromDoppelspiel();
+        }
+    }
+
+    /// <summary>
+    /// Register order as Doppelspiel partner.
+    /// </summary>
+    public void SetDoppelspielpartner(Guid partnerOrder, ActionType actionType, GraphNode? node=null)
+    {
+        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
+        if (action == null)
+        {
+            return;
+        }
+        action.SetDoppelspielPartner(partnerOrder);
+        if (action.IsIncomplete && node != null)
+        {
+            action.SetTarget(node);
+            var priorAction = Actions.SingleOrDefault(a => a.Sequence == action.Sequence - 1);
+            action.InfoToAgv = priorAction?.InfoToAgv;
+            priorAction?.Skip();
+        }
+    }
+
+    /// <summary>
+    /// Set a target and assign to an agv.
+    /// </summary>
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="actionType"></param>
+    /// <param name="node"></param>
+    public void SetTargetAndAssign(Guid agvCorrelationId, ActionType actionType, GraphNode? node = null)
+    {
+        AssignedAgv = agvCorrelationId;
+        var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
+        if (action == null)
+        {
+            return;
+        }
+        if (action.IsIncomplete && node != null)
+        {
+            action.SetTarget(node);
+            var priorAction = Actions.SingleOrDefault(a => a.Sequence == action.Sequence - 1);
+            action.InfoToAgv = priorAction?.InfoToAgv;
+            priorAction?.Skip();
+        }
+    }
+
+    /// <summary>
+    /// Consider the order for Doppelspiel.
+    /// </summary>
+    public void ConsiderForDoppelspiel()
+    {
+        CanRunDoppelspiel = true;
+        ConsideredForDoppelspielDate = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// TryRetract the action group.
+    /// </summary>
+    public bool TryRetract()
+    {
+        var pickAction = Actions.First(a => a is { ActionType: ActionType.Pick, ShouldSkip: false });
+        if (pickAction is { IsRegisteredForDoppelspiel: true, DoppelspielPartner: not null })
+        {
+            return false;
+        }
+        RegisterDoppelspiel(ActionType.Pick);
         IsQueued = false;
         AssignedAgv = null;
+        return true;
     }
 
     /// <summary>
@@ -257,15 +360,15 @@ public class ActionGroup
     /// </summary>
     /// <param name="agvToAssign">The agv to assign.</param>
     /// <exception cref="ActionGroupAlreadyAssignedException">If the action group was already assigned.</exception>
-    public void Assign(Agv.Agv agvToAssign)
+    public void Assign(Guid agvToAssign)
     {
         if (AssignedAgv == null)
         {
-            AssignedAgv = agvToAssign.CorrelationId;
+            AssignedAgv = agvToAssign;
         }
-        else if (AssignedAgv != agvToAssign.CorrelationId)
+        else if (AssignedAgv != agvToAssign)
         {
-            throw new ActionGroupAlreadyAssignedException(this, agvToAssign.CorrelationId);
+            throw new ActionGroupAlreadyAssignedException(this, agvToAssign);
         }
     }
 
@@ -495,7 +598,12 @@ public class ActionGroup
             action.SetDockFront(palletNeedsRotation, dockFrontPreviousActionGroup, nodeDockingDirection, !startIsStation);
             return;
         }
-        var previousAction = Actions.OrderBy(a => a.Sequence).Last(a => !a.ShouldSkip && a.Sequence < action.Sequence);
+        var previousAction = Actions.OrderBy(a => a.Sequence).LastOrDefault(a => !a.ShouldSkip && a.Sequence < action.Sequence);
+        if(previousAction == null) // Doppelspiel pick and move action is skipped
+        {
+            action.SetDockFront(palletNeedsRotation, dockFrontPreviousActionGroup, nodeDockingDirection, !startIsStation);
+            return;
+        }
         noTurning = previousAction.ActionType == ActionType.Move;
         action.SetDockFront(palletNeedsRotation, previousAction.InfoToAgv!.GetDockFront(), nodeDockingDirection, noTurning);
     }
@@ -634,8 +742,8 @@ public class ActionGroup
         return !Actions.Any() ?
             [] :
             Actions
-                .Where((action, index) => !action.IsIncomplete &&
-                                          (index == 0 || (!Actions[index - 1].IsIncomplete && action.Sequence == Actions[index - 1].Sequence + 1)))
+                .Where((action, index) => action.Target.NodeId.HasValue &&
+                                          (index == 0 || (Actions[index - 1].Target.NodeId.HasValue && action.Sequence == Actions[index - 1].Sequence + 1)))
                 .Select(action => action.Target.NodeId!.Value)
                 .ToArray();
     }
@@ -676,8 +784,9 @@ public class ActionGroup
 
         var toSkip = Actions.First(a => a.CorrelationId == actionId);
         var toUpdate = Actions.OrderBy(a => a.Sequence).Last(a => a.Sequence < toSkip.Sequence);
-        toUpdate.ChangeActiontype(toSkip.ActionType);
+        toUpdate.ChangeActionType(toSkip.ActionType);
         toUpdate.SetTarget(targetNode);
+        toUpdate.Target.DoppelspielMode = toSkip.Target.DoppelspielMode;
         if (toSkip.ActionType == ActionType.Pick)
         {
             toUpdate.SetInfoToAgv(toSkip.InfoToAgv);

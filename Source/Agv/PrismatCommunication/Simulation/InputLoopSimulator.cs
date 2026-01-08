@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.PrismatCommunication.CmdOptions;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -12,9 +11,8 @@ public class InputLoopSimulator(
     IBus bus,
     ILogger<SimulatorBase> logger,
     SimulateOptions simOptions,
-    KaeserGraphConfiguration kaeserGraphConfiguration,
     bool includeAplTargets = false)
-    : SimulatorBase(bus, logger, kaeserGraphConfiguration)
+    : SimulatorBase(bus, logger)
 {
     /// <inheritdoc />
     protected override List<Tuple<List<string>, List<string>>> SourceDestinationPools

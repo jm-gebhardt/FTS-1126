@@ -34,3 +34,18 @@ public interface IParkingSemaphore;
 /// Provides an interface for the queueing semaphore service.
 /// </summary>
 public interface IQueueingSemaphore;
+
+/// <summary>
+/// Provides an interface for the Doppelspiel semaphore service.
+/// </summary>
+public interface IDoppelspielSemaphore;
+
+/// <summary>
+/// Provides an interface for the target selector semaphore service.
+/// </summary>
+public interface ITargetSelectionSemaphore;
+
+/// <summary>
+/// Provides an interface for the waiting handler semaphore service.
+/// </summary>
+public interface IWaitingHandlerSemaphore;

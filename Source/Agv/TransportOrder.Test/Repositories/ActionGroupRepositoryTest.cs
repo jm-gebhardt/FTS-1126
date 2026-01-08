@@ -1186,8 +1186,7 @@ public class ActionGroupRepositoryTest
 
         List<ActionGroup> runningActions = (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ToList();
         runningActions.Count.ShouldBe(2);
-        runningActions[0].CorrelationId.ShouldBe(runningParkingActionGroup.CorrelationId);
-        runningActions[1].CorrelationId.ShouldBe(runningChargeActionGroup.CorrelationId);
+        runningActions.Select(a => a.CorrelationId).ToList().ShouldBe([runningParkingActionGroup.CorrelationId, runningChargeActionGroup.CorrelationId], ignoreOrder:true);
     }
 
     [DataRow(true)]
@@ -1374,5 +1373,341 @@ public class ActionGroupRepositoryTest
         retrievedAction.ShouldNotBeNull();
         retrievedAction.ParentId.ShouldBe(abortedActionGroup.CorrelationId);
         retrievedAction.ActionType.ShouldBe(ActionType.Pick);
+    }
+
+    [TestMethod]
+    public async Task GetNextPicksAtTarget_ValidData_ReturnsActionGroups()
+    {
+        Guid[] agvs = [Guid.NewGuid(), Guid.NewGuid()];
+        const string pickStationName = "station";
+        var queuedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvs.First(), source: pickStationName, isQueued: true);
+        var canceledActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvs.First(), source: pickStationName, isQueued: false, pickActionState: ActionState.Canceled);
+        var differentSource = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvs.First(), source: "another station", isQueued: false);
+        var nextPick = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvs.First(), source: pickStationName, isQueued: false);
+        var differentAgv = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), source: pickStationName, isQueued: false);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([canceledActionGroup, queuedActionGroup, differentSource, differentAgv, nextPick])
+            .BuildAsync();
+
+        ICollection<ActionGroup> gotNextPicks = await fixture.ActionGroupRepository.GetNextPicksAtTarget(pickStationName.ToGuid(), agvs);
+
+        gotNextPicks.Count.ShouldBe(1);
+        gotNextPicks.First().CorrelationId.ShouldBe(nextPick.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextDropActionGroupEligibleForDoppelspiel_KnownTargetStation_ReturnsActionGroup()
+    {
+        const string station = "APL1";
+        var notConsideredForDoppelspiel = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: false);
+        var unqueuedDrop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: false);
+        var alreadyRegisteredForDoppelspiel = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+        alreadyRegisteredForDoppelspiel.RegisterDoppelspiel(ActionType.Drop);
+        var dropAtDifferentStation = AgvActionGenerator.GeneratePickDropActionGroup(destination: "another station", isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+        var nextDropAction = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Completed, canRunDoppelspiel: true);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([notConsideredForDoppelspiel, unqueuedDrop, nextDropAction, alreadyRegisteredForDoppelspiel, dropAtDifferentStation])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextDropActionGroupEligibleForDoppelspiel([station]))?.CorrelationId.ShouldBe(nextDropAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextDropActionGroupEligibleForDoppelspiel_MultiplePossibleDrops_ReturnsActionGroupConsideredForDoppelspielFirst()
+    {
+        const string station = "APL1";
+        var now = DateTime.UtcNow;
+        var nextDropAction = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Completed, canRunDoppelspiel: true, considerForDoppelspielDate: now, startedDate: now);
+        var laterDropAction = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Completed, canRunDoppelspiel: true, considerForDoppelspielDate: now.AddMinutes(1), startedDate: now);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([laterDropAction, nextDropAction])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextDropActionGroupEligibleForDoppelspiel([station]))?.CorrelationId.ShouldBe(nextDropAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextDropActionGroupEligibleForDoppelspiel_NoNextDrop_ReturnsNull()
+    {
+        const string station = "APL1";
+        var notConsideredForDoppelspiel = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: false);
+        var unqueuedDrop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: false);
+        var alreadyRegisteredForDoppelspiel = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+        alreadyRegisteredForDoppelspiel.RegisterDoppelspiel(ActionType.Drop);
+        var dropAtDifferentStation = AgvActionGenerator.GeneratePickDropActionGroup(destination: "another station", isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([notConsideredForDoppelspiel, unqueuedDrop, alreadyRegisteredForDoppelspiel, dropAtDifferentStation])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextDropActionGroupEligibleForDoppelspiel([station])).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetNextDropActionGroupEligibleForDoppelspiel_UnKnownTargetStation_ReturnsActionGroup()
+    {
+        List<string> stationOptions = ["PS01", "PS02"];
+        var dropAtDifferentStation = AgvActionGenerator.GeneratePickDropActionGroup(destination: "another station", isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+        var nextDropAction = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(isQueued: true, pickActionState: ActionState.Completed, canRunDoppelspiel: true, stationOptions: stationOptions);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([nextDropAction, dropAtDifferentStation])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextDropActionGroupEligibleForDoppelspiel([stationOptions.First()]))?.CorrelationId.ShouldBe(nextDropAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextDelayedDropForStations_KnownTargetStation_ReturnsDelayedDrop()
+    {
+        const string station = "APL1";
+        var queuedDrop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true);
+        var started = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: true, pickActionState: ActionState.Started);
+        var dropAtDifferentStation = AgvActionGenerator.GeneratePickDropActionGroup(destination: "another station", isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+        var delayedDropAction = AgvActionGenerator.GeneratePickDropActionGroup(destination: station, isQueued: false);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([queuedDrop, delayedDropAction, started, dropAtDifferentStation])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextDelayedDropForStations([station.ToGuid()]))?.CorrelationId.ShouldBe(delayedDropAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextDelayedDropForStations_UnKnownTargetStation_ReturnsDelayedDrop()
+    {
+        List<string> stationOptions = ["PS01", "PS02"];
+        var dropAtDifferentStation = AgvActionGenerator.GeneratePickDropActionGroup(destination: "another station", isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+        var delayedDropAction = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(isQueued: false, stationOptions: stationOptions);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([dropAtDifferentStation, delayedDropAction])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextDelayedDropForStations([stationOptions.First().ToGuid()]))?.CorrelationId.ShouldBe(delayedDropAction.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextPickForStation_KnownTargetStation_ReturnsNextPick()
+    {
+        var station = "APL1".ToGraphNode();
+        var queuedPick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: true);
+        var pickAtDifferentStation = AgvActionGenerator.GeneratePickDropActionGroup(source: "another station", isQueued: false);
+        var nextPick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+        var ignored = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([queuedPick, ignored, pickAtDifferentStation, nextPick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextPickForStation(station, [ignored.CorrelationId]))?.CorrelationId.ShouldBe(nextPick.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextPickForStation_UnKnownTargetStation_ReturnsNextPick()
+    {
+        List<string> stationOptions = ["PS01", "PS02"];
+        var pickAtDifferentStation = AgvActionGenerator.GeneratePickDropActionGroup(destination: "another station", isQueued: true, pickActionState: ActionState.Started, canRunDoppelspiel: true);
+        var nextPick = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(isQueued: false, stationOptions: stationOptions);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([nextPick, pickAtDifferentStation])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextPickForStation(stationOptions.First().ToGraphNode()))?.CorrelationId.ShouldBe(nextPick.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielPick_ValidData_ReturnsUnmatchedPick()
+    {
+        var station = "APL1".ToGraphNode();
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+        var drop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station.Name, isQueued: true);
+        pick.RegisterDoppelspiel(ActionType.Pick);
+        pick.SetDoppelspielpartner(drop.CorrelationId, ActionType.Pick, station);
+        drop.RegisterDoppelspiel(ActionType.Drop);
+        drop.SetDoppelspielpartner(pick.CorrelationId, ActionType.Drop, station);
+        var unmatchedPick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+        unmatchedPick.RegisterDoppelspiel(ActionType.Pick);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick, drop, unmatchedPick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextUnmatchedDoppelspielPick(station, null))?.CorrelationId.ShouldBe(unmatchedPick.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielPick_OnlyIgnoredOrderUnmatched_ReturnsNull()
+    {
+        var station = "APL1".ToGraphNode();
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+        var drop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station.Name, isQueued: true);
+        pick.RegisterDoppelspiel(ActionType.Pick);
+        pick.SetDoppelspielpartner(drop.CorrelationId, ActionType.Pick, station);
+        drop.RegisterDoppelspiel(ActionType.Drop);
+        drop.SetDoppelspielpartner(pick.CorrelationId, ActionType.Drop, station);
+        var unmatchedPick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+        unmatchedPick.RegisterDoppelspiel(ActionType.Pick);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick, drop, unmatchedPick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextUnmatchedDoppelspielPick(station, unmatchedPick.CorrelationId)).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielPick_UnknownTarget_ReturnsUnmatchedPick()
+    {
+        List<string> stationOptions = ["PS01", "PS02"];
+        var doppelspielStation = stationOptions.Last().ToGraphNode();
+        var pick = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(isQueued: false, stationOptions: stationOptions);
+        var drop = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(isQueued: true, stationOptions: stationOptions);
+        pick.RegisterDoppelspiel(ActionType.Pick);
+        pick.SetDoppelspielpartner(drop.CorrelationId, ActionType.Pick, doppelspielStation);
+        drop.RegisterDoppelspiel(ActionType.Drop);
+        drop.SetDoppelspielpartner(pick.CorrelationId, ActionType.Drop, doppelspielStation);
+        var unmatchedPick = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(isQueued: false, stationOptions: stationOptions);
+        unmatchedPick.RegisterDoppelspiel(ActionType.Pick);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick, drop, unmatchedPick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextUnmatchedDoppelspielPick(doppelspielStation, null))?.CorrelationId.ShouldBe(unmatchedPick.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielDrop_ValidData_ReturnsUnmatchedDrop()
+    {
+        var station = "APL1".ToGraphNode();
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+        var drop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station.Name, isQueued: true);
+        pick.RegisterDoppelspiel(ActionType.Pick);
+        pick.SetDoppelspielpartner(drop.CorrelationId, ActionType.Pick, station);
+        drop.RegisterDoppelspiel(ActionType.Drop);
+        drop.SetDoppelspielpartner(pick.CorrelationId, ActionType.Drop, station);
+        var unmatchedDrop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station.Name, isQueued: false);
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick, drop, unmatchedDrop])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextUnmatchedDoppelspielDrop(station, null))?.CorrelationId.ShouldBe(unmatchedDrop.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielDrop_OnlyIgnoredOrderUnmatched_ReturnsNull()
+    {
+        var station = "APL1".ToGraphNode();
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: station.Name, isQueued: false);
+        var drop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station.Name, isQueued: true);
+        pick.RegisterDoppelspiel(ActionType.Pick);
+        pick.SetDoppelspielpartner(drop.CorrelationId, ActionType.Pick, station);
+        drop.RegisterDoppelspiel(ActionType.Drop);
+        drop.SetDoppelspielpartner(pick.CorrelationId, ActionType.Drop, station);
+        var unmatchedDrop = AgvActionGenerator.GeneratePickDropActionGroup(destination: station.Name, isQueued: false);
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick, drop, unmatchedDrop])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextUnmatchedDoppelspielDrop(station, unmatchedDrop.CorrelationId)).ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetNextUnmatchedDoppelspielDrop_UnknownTarget_ReturnsUnmatchedDrop()
+    {
+        List<string> stationOptions = ["PS01", "PS02"];
+        var doppelspielStation = stationOptions.Last().ToGraphNode();
+        var pick = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(isQueued: false, stationOptions: stationOptions);
+        var drop = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(isQueued: true, stationOptions: stationOptions);
+        pick.RegisterDoppelspiel(ActionType.Pick);
+        pick.SetDoppelspielpartner(drop.CorrelationId, ActionType.Pick, doppelspielStation);
+        drop.RegisterDoppelspiel(ActionType.Drop);
+        drop.SetDoppelspielpartner(pick.CorrelationId, ActionType.Drop, doppelspielStation);
+        var unmatchedDrop = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(isQueued: false, stationOptions: stationOptions);
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick, drop, unmatchedDrop])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.GetNextUnmatchedDoppelspielDrop(doppelspielStation, null))?.CorrelationId.ShouldBe(unmatchedDrop.CorrelationId);
+    }
+
+    [DataRow(false)]
+    [DataRow(true)]
+    [TestMethod]
+    public async Task HasActionGroupsForStationGroup_NoAGVGiven_Pick_ReturnsTrue(bool assignAgv)
+    {
+        List<string> stationGroup = ["AP01", "AP02"];
+
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: stationGroup.First(), isQueued: true, assignedAgv: assignAgv ? Guid.NewGuid() : null);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.HasActionGroupsForStationGroup(stationGroup.Select(s => s.ToGuid()).ToList(), null)).ShouldBeTrue();
+    }
+
+    [DataRow(false)]
+    [DataRow(true)]
+    [TestMethod]
+    public async Task HasActionGroupsForStationGroup_NoAGVGiven_Drop_ReturnsTrue(bool assignAgv)
+    {
+        List<string> stationGroup = ["AP01", "AP02"];
+
+        var drop = AgvActionGenerator.GeneratePickDropActionGroup(destination: stationGroup.First(), isQueued: true, assignedAgv: assignAgv ? Guid.NewGuid() : null);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([drop])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.HasActionGroupsForStationGroup(stationGroup.Select(s => s.ToGuid()).ToList(), null)).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasActionGroupsForStationGroup_AGVGiven_NonAssigned_ReturnsTrue()
+    {
+        List<string> stationGroup = ["AP01", "AP02"];
+
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: stationGroup.First(), isQueued: true, assignedAgv: null);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.HasActionGroupsForStationGroup(stationGroup.Select(s => s.ToGuid()).ToList(), Guid.NewGuid())).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasActionGroupsForStationGroup_AGVGiven_AssignedToDifferentAgv_ReturnsTrue()
+    {
+        List<string> stationGroup = ["AP01", "AP02"];
+
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: stationGroup.First(), isQueued: true, assignedAgv: Guid.NewGuid());
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.HasActionGroupsForStationGroup(stationGroup.Select(s => s.ToGuid()).ToList(), Guid.NewGuid())).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task HasActionGroupsForStationGroup_AGVGiven_AssignedToSameAgv_ReturnsFalse()
+    {
+        List<string> stationGroup = ["AP01", "AP02"];
+
+        var pick = AgvActionGenerator.GeneratePickDropActionGroup(source: stationGroup.First(), isQueued: true, assignedAgv: Guid.NewGuid());
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([pick])
+            .BuildAsync();
+
+        (await fixture.ActionGroupRepository.HasActionGroupsForStationGroup(stationGroup.Select(s => s.ToGuid()).ToList(), pick.AssignedAgv)).ShouldBeFalse();
     }
 }

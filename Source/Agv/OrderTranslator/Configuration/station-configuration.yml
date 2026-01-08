@@ -1,0 +1,174 @@
+Stations:
+- Name: "PS01"
+  HasJamState: True
+  NeedsCargoReporting: False
+  NeedsPalletReporting: True
+  PickRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  - Station: "AP01"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP02"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP03"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP04"
+    MoveTarget: "map/NODE-27"
+  DropRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  - Station: "AP01"
+    MoveTarget: "map/NODE-32"
+  - Station: "AP02"
+    MoveTarget: "map/NODE-32"
+  - Station: "AP03"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP04"
+    MoveTarget: "map/NODE-27"
+  StationGroup:
+  PickDoppelspielMode: "Order"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "1020"
+  - "1040"
+  OutputLanes:
+  - "1050"
+  - "1060"
+- Name: "PS02"
+  HasJamState: True
+  NeedsPalletReporting: True
+  NeedsCargoReporting: False
+  PickRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  - Station: "AP01"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP02"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP03"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP04"
+    MoveTarget: "map/NODE-27"
+  DropRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  - Station: "AP01"
+    MoveTarget: "map/NODE-32"
+  - Station: "AP02"
+    MoveTarget: "map/NODE-32"
+  - Station: "AP03"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP04"
+    MoveTarget: "map/NODE-27"
+  StationGroup:
+  PickDoppelspielMode: "Order"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "1020"
+  - "1040"
+  OutputLanes:
+  - "1050"
+  - "1060"
+- Name: "PS03"
+  HasJamState: True
+  NeedsCargoReporting: False
+  PickRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  - Station: "AP01"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP02"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP03"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP04"
+    MoveTarget: "map/NODE-27"
+  DropRouting:
+  - Station: "APL1"
+    MoveTarget: "map/NODE-9"
+  - Station: "AP01"
+    MoveTarget: "map/NODE-32"
+  - Station: "AP02"
+    MoveTarget: "map/NODE-32"
+  - Station: "AP03"
+    MoveTarget: "map/NODE-27"
+  - Station: "AP04"
+    MoveTarget: "map/NODE-27"
+  StationGroup:
+  PickDoppelspielMode: "Order"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "1020"
+  - "1040"
+  OutputLanes:
+  - "1050"
+  - "1060"
+- Name: "APL1"
+  NeedsPalletReporting: False
+  HasJamState: False
+  NeedsCargoReporting: True
+  PickRouting:
+  DropRouting:
+  StationGroup:
+  DropDoppelspielMode: "OrderOrQueueHead"
+  PickDoppelspielMode: "Order"
+  InputLanes:
+  - "9060"
+  OutputLanes:
+  - "9070"
+- Name: "AP01"
+  NeedsPalletReporting: False
+  HasJamState: False
+  NeedsCargoReporting: False
+  PickRouting:
+  DropRouting:
+  StationGroup:
+  - "AP02"
+  PickDoppelspielMode: "Always"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "2130"
+  OutputLanes:
+  - "2110"
+- Name: "AP02"
+  NeedsPalletReporting: False
+  HasJamState: False
+  NeedsCargoReporting: False
+  PickRouting:
+  DropRouting:
+  StationGroup:
+  - "AP01"
+  PickDoppelspielMode: "Always"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "2230"
+  OutputLanes:
+  - "2210"
+- Name: "AP03"
+  NeedsPalletReporting: False
+  HasJamState: False
+  NeedsCargoReporting: False
+  PickRouting:
+  DropRouting:
+  StationGroup:
+  - "AP04"
+  PickDoppelspielMode: "Always"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "2330"
+  OutputLanes:
+  - "2310"
+- Name: "AP04"
+  NeedsPalletReporting: False
+  HasJamState: False
+  NeedsCargoReporting: False
+  PickRouting:
+  DropRouting:
+  StationGroup:
+  - "AP03"
+  PickDoppelspielMode: "Always"
+  DropDoppelspielMode: "Order"
+  InputLanes:
+  - "2430"
+  OutputLanes:
+  - "2410"

@@ -1,7 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
 using Gebhardt.Acc.WCSCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.WCSCommunication.Domain.Repositories;
@@ -50,16 +47,7 @@ public class HostOrderCommandHandler :
 
         await _hostOrderRepository.AddAsync(hostOrder);
 
-        var actionGroup = new ActionGroup(
-            hostOrder.CorrelationId,
-            hostOrder.OrderId,
-            hostOrder.Actions.Select(a => new AgvAction(a.CorrelationId, a.ActionType, a.Node.ToGraphNode(), hostOrder.CorrelationId)
-                { Sequence = a.SequenceNumber }).ToList(),
-            orderDetails.Creator.ConvertToActionGroupCreator(),
-            Priority.Default,
-            false,
-            orderDetails.CreationDate);
-        await context.Publish(new QueueActionGroup(actionGroup, false));
+        await context.Publish(new HostOrderCreated(orderDetails.LeNo, orderDetails));
     }
 
     /// <summary>

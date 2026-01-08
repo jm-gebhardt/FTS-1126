@@ -1,0 +1,16 @@
+Stations:
+- Name: "PS01"
+  HasJamState: True
+- Name: "PS02"
+  HasJamState: True
+- Name: "PS03"
+  HasJamState: True
+- Name: "APL1"
+  HasJamState: False
+- Name: "AP02"
+  HasJamState: False
+- Name: "AP03"
+  HasJamState: False
+- Name: "AP04"
+  HasJamState: False
+

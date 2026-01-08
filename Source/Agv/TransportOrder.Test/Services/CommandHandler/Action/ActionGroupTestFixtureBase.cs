@@ -6,7 +6,7 @@ using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
@@ -44,7 +44,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     private readonly Mock<IQueueManager> _queueManager = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
     private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
-    
+
     protected Mock<IRouteService> RouteService { get; } = new();
 
     public Mock<IActionGroupRepository> ActionGroupRepository { get; } = new();
@@ -53,7 +53,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     protected override IEnumerable<Profile> GetProfiles() => [new ActionProfile(), new AgvProfile(), new LogEntryProfile()];
 
-    public readonly AgvSettingsReadModel SettingsReadModel = new();
+    public AgvSettingsReadModel SettingsReadModel = new();
 
     protected ActionGroupTestFixtureBase()
     {
@@ -107,9 +107,9 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         Build();
         if (inactivityTimeout != null)
         {
-            TestHarness.TestInactivityTimeout = (TimeSpan) inactivityTimeout;
+            TestHarness.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
-        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?) null);
+        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
         ActionGroupRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>())).Verifiable();
         ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
     }
@@ -260,6 +260,9 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         RouteService.Setup(r => r.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), null, It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Route(12, nodes.Select(n => new GraphNode(n, "name")).ToArray(), []));
 
+        RouteService.Setup(r => r.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Route(12, nodes.Select(n => new GraphNode(n, "name")).ToArray(), []));
+
         return this;
     }
 
@@ -301,7 +304,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> AddRoute(string[] nodes, Guid[] edges)
     {
-        _agvDb.AddAgvData((AgvData?) null);
+        _agvDb.AddAgvData((AgvData?)null);
         RouteService.WithRoute(0f, nodes, edges);
         return this;
     }
@@ -324,7 +327,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         return this;
     }
 
-    public ActionGroupTestFixtureBase<T> WithNodeState(NodeLock? nodeLock )
+    public ActionGroupTestFixtureBase<T> WithNodeState(NodeLock? nodeLock)
     {
         _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeLock);
         return this;
@@ -348,5 +351,15 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         IRequestClient<TRequest> client = TestHarness.Bus!.CreateRequestClient<TRequest>();
         Response<TResult> response = await client.GetResponse<TResult>(request);
         return response;
+    }
+
+    public Common.Messages.ActionGroups.ActionGroup ActionGroupAsMessage(ActionGroup actionGroup)
+    {
+        return Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
+    }
+
+    public ActionGroup ActionGroupAsDomainObject(Common.Messages.ActionGroups.ActionGroup actionGroup)
+    {
+        return Mapper.Map<ActionGroup>(actionGroup);
     }
 }

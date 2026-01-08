@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
-using Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -100,13 +99,10 @@ public static class HostBuilderExtension
 
             services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
             services.AddTransient<ISystemStatusRepository, EfSystemStatusRepository>();
-            services.AddTransient<IStationRepository, EfStationRepository>();
-            services.AddTransient<IShortLoopWeTargetStationRepository, EfShortLoopWeTargetStationRepository>();
             services.AddTransient<ITelegramRepository, EfTelegramRepository>();
-            services.TryAddKaeserGraphConfiguration(simulateOptions != null);
+            services.TryAddCustomerConfiguration();
             services.AddSingleton<ObservableConcurrentQueue<PrismatTelegram>>();
             services.AddSingleton<TelegramQueuePersistenceService>();
-            services.AddHostedService<InitializationProvider>();
 
             // Filters
             services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
@@ -118,10 +114,6 @@ public static class HostBuilderExtension
 
             services.AddSingleton<ISignificanceChecker<PickActionCompleted>, ActionGroupEventSignificanceChecker<PickActionCompleted>>();
             services.AddSingleton<UnTimedInMemoryFilter<PickActionCompleted>>();
-
-            services.AddTransient<IAklAgvLimitGuard, AklAgvLimitGuard>();
-
-            services.RegisterValidators();
 
             if (simulateOptions == null)
             {

@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 
@@ -7,6 +8,7 @@ namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 /// </summary>
 /// <param name="NodeId">The node Id of the station.</param>
 /// <param name="AgvCorrelationId">The correlation id of the agv.</param>
+[PublicAPI]
 public record FreeStationOccupancy(Guid NodeId, Guid AgvCorrelationId) : CorrelatedBy<Guid>
 {
     /// <inheritdoc cref="CorrelatedBy{Key}"/>>

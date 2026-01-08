@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
@@ -16,6 +17,7 @@ using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.Action
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IStationRepository"/>>
+[CanBeCaptiveDependency]
 public class EfStationRepository(
     IDbContextFactory<TransportOrderDbContext> dbContextFactory,
     ISemaphoreProvider<IGraphRepositorySemaphore> semaphoreProvider,
@@ -208,11 +210,72 @@ public class EfStationRepository(
         return stations;
     }
 
+    /// <inheritdoc cref="IStationRepository"/>>
+    public async Task<ICollection<Station>> GetStationsById(ICollection<Guid> ids)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+
+        List<Guid> idsList = ids.ToList();
+
+        List<Station> stations = await context.Set<Station>()
+            .Where(s => ids.Contains(s.Id))
+            .ToListAsync();
+
+        return stations
+            .OrderBy(s => idsList.IndexOf(s.Id))
+            .ToList();
+    }
+
     /// <inheritdoc cref="IStationRepository"/>
     public async Task Update(Station station)
     {
         var context = await dbContextFactory.CreateDbContextAsync();
         context.Update(station);
         await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc cref="IStationRepository"/>
+    public async Task<bool> IsStationGroupOccupied(Guid stationId)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+
+        var stationWithLock = await context.Set<Station>()
+            .GroupJoin(
+                context.Set<NodeLock>(),
+                s => s.Id,
+                nl => nl.NodeId,
+                (s, nodeLocks) => new { Station = s, NodeLock = nodeLocks.FirstOrDefault() })
+            .Where(x => x.Station.Id == stationId)
+            .SingleOrDefaultAsync();
+
+        if (stationWithLock == null)
+        {
+            return false;
+        }
+
+        var station = stationWithLock.Station;
+        if (station.StationGroup.IsNullOrEmpty())
+        {
+            // no station group, just single station
+            return false;
+        }
+
+        var nodeLock = stationWithLock.NodeLock;
+
+        if (nodeLock is { NodeState: NodeLockState.Reserved or NodeLockState.Occupied })
+        {
+            return true;
+        }
+
+        var stationsInGroup = await context.Set<Station>()
+            .GroupJoin(
+                context.Set<NodeLock>(),
+                s => s.Id,
+                nl => nl.NodeId,
+                (s, nodeLocks) => new { Station = s, NodeLock = nodeLocks.FirstOrDefault() })
+            .Where(x => station.StationGroup.Contains(x.Station.Id))
+            .ToListAsync();
+
+        return stationsInGroup.Any(sg => sg.NodeLock is { NodeState: NodeLockState.Reserved or NodeLockState.Occupied });
     }
 }

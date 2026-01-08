@@ -40,7 +40,7 @@
         <ProjectReference Include="..\PrismatCommunication.TelegramApi\PrismatCommunication.TelegramApi.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <None Update="Configuration\graph-configuration.yml">
+        <None Update="Configuration\customer-configuration.yml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

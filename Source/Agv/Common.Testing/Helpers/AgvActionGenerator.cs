@@ -346,6 +346,21 @@ public static class AgvActionGenerator
         return actionGroup;
     }
 
+    [UsedImplicitly]
+    public static ActionGroup GenerateMoveToCoordinateActionGroup(string? targetNodeId = null, bool isManual = false)
+    {
+        const string orderId = "orderId-move";
+        var groupId = Guid.NewGuid();
+        var moveAction = new AgvAction() { ActionType = ActionType.Move, CorrelationId = Guid.NewGuid(), Target = new ActionTarget(1, 1, 0) };
+
+        var actionGroup = new ActionGroup(groupId, orderId, new List<AgvAction> { moveAction }, isManual: isManual, creator: ActionGroupCreator.TransportOrderWebApi)
+        {
+            State = ActionGroupState.Created
+        };
+
+        return actionGroup;
+    }
+
     public static ActionGroup GenerateActionGroup(IList<AgvAction> actions, ActionGroupState actionGroupState = ActionGroupState.Created)
     {
         var groupId = Guid.NewGuid();

@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -11,9 +12,9 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
 using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
@@ -21,6 +22,7 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 /// Repository to access ActionGroups
 /// </summary>
 [PublicAPI]
+[CanBeCaptiveDependency]
 public class EfActionGroupRepository : IActionGroupRepository
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
@@ -458,7 +460,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         context.Entry(actionToUpdate).CurrentValues.SetValues(action);
         if (agv != null && actionGroup.AssignedAgv == null)
         {
-            actionGroup.Assign(agv);
+            actionGroup.Assign(agv.CorrelationId);
         }
 
         actionGroup.UpdateActionGroupState();
@@ -637,10 +639,14 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Set<ActionGroup>().Update(actionGroup);
         int result = await context.SaveChangesAsync();
-        _logger.LogInformation("Update action group async save affected {RowsAffected} rows", result);
+        _logger.LogDebug("Update action group async save affected {RowsAffected} rows", result);
         await context.Entry(actionGroup).ReloadAsync();
         RestoreNodes(actionGroup, savedNodes);
-        _logger.LogInformation("Action group {ActionGroupCorrelationId} state after saving update {State}", actionGroup.CorrelationId, actionGroup.State);
+        _logger.LogDebug("Action group {ActionGroupCorrelationId} state after saving update {State}", actionGroup.CorrelationId, actionGroup.State);
+        foreach (var action in actionGroup.Actions)
+        {
+            _logger.LogDebug("Action {ActionType} of group {ActionGroupCorrelationId} has DoppelspielPartner {Partner} and is registered {IsRegistered}", action.ActionType, actionGroup.CorrelationId, action.DoppelspielPartner, action.IsRegisteredForDoppelspiel);
+        }
     }
 
     /// <inheritdoc />
@@ -703,23 +709,6 @@ public class EfActionGroupRepository : IActionGroupRepository
             .FirstOrDefaultAsync();
         bool? dockFront = actionGroup?.Actions.OrderByDescending(a => a.Sequence).First(a => !a.ShouldSkip).InfoToAgv?.GetDockFront();
         return dockFront;
-    }
-
-    /// <inheritdoc/>
-    public async Task<AgvAction?> GetLastCompletedActionAsync(Guid agvCorrelationId)
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        var actionGroup = await queryable
-            .Where(ag => ag.AssignedAgv == agvCorrelationId)
-            .OrderByDescending(ag => ag.StartedDate)
-            .ThenByDescending(ag => ag.CompletedDate)
-            .Include(ag => ag.Actions)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(ag => ag.Actions.Any(a => a.State == ActionState.Completed));
-
-        var action = actionGroup?.Actions.OrderByDescending(a => a.CompletedDate).FirstOrDefault(a => a.CompletedDate != null);
-        return action;
     }
 
     /// <inheritdoc/>
@@ -855,6 +844,178 @@ public class EfActionGroupRepository : IActionGroupRepository
                 assignedAgvs.Contains(ag.AssignedAgv.Value) &&
                 ag.Actions.Any(a => a.ActionType == ActionType.Pick && a.Target.NodeId!.Value == targetId))
             .ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetNextDropActionGroupEligibleForDoppelspiel(ICollection<string> stations)
+    {
+        IEnumerable<string> targets = stations;
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        List<ActionGroup> candidates = await context.Set<ActionGroup>()
+            .Where(o => o.CanRunDoppelspiel
+                        && o.CompletedDate == null
+                        && o.IsQueued
+                        && o.Actions.Any(a => a.ActionType == ActionType.Drop)
+                        && !o.Actions.Any(a => a.ActionType == ActionType.Drop && a.IsRegisteredForDoppelspiel)
+                        && o.Actions.Any(a => a.ActionType == ActionType.Pick && a.CompletedDate != null))
+            .ToListAsync();
+
+        return candidates.Where(o =>
+            o.Actions.Any(a => a.ActionType == ActionType.Drop &&
+                               ((a.Target.Node != null && targets.Contains(a.Target.Node.Name)) ||
+                                targets.All(t => a.Target.StationOptions.Contains(t)))))
+            .OrderBy(o => o.StartedDate)
+            .ThenBy(o => o.ConsideredForDoppelspielDate).FirstOrDefault();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetNextDelayedDropForStations(ICollection<Guid> stations)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<ActionGroup>()
+            .Where(a => !a.IsQueued
+            && a.CompletedDate == null
+            && a.StartedDate == null
+            && a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id)))
+            .OrderBy(a => a.CreatedDate).FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null)
+    {
+        ordersToIgnore ??= [];
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        List<ActionGroup> candidates = await context.Set<ActionGroup>()
+            .Where(a => !a.IsQueued
+                        && !ordersToIgnore.Contains(a.CorrelationId)
+                        && a.CompletedDate == null
+                        && a.StartedDate == null
+                        && a.AssignedAgv == null
+                        && a.Actions.Any(ac => ac.ActionType == ActionType.Pick))
+            .OrderBy(h => h.CreatedDate)
+            .ToListAsync();
+
+        return candidates.FirstOrDefault(a =>
+            a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
+                                ((ac.Target.Node != null && ac.Target.Node.Id == pickNode.Id) ||
+                                 ac.Target.StationOptions.Contains(pickNode.Name))));
+    }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetNextUnmatchedDoppelspielDrop(GraphNode node, Guid? orderToIgnore)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // Step 1: Fetch pick candidates from database (without StationOptions check)
+        List<ActionGroup> pickCandidates = await context.Set<ActionGroup>()
+            .Where(a => !a.IsQueued &&
+                        a.CorrelationId != orderToIgnore &&
+                        a.CompletedDate == null &&
+                        a.StartedDate == null &&
+                        a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
+                                           ac.IsRegisteredForDoppelspiel &&
+                                           ac.DoppelspielPartner == null))
+            .OrderBy(h => h.CreatedDate)
+            .ToListAsync();
+
+        // Step 2: Filter in memory with StationOptions check
+        int pickCount = pickCandidates.Count(a =>
+            a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
+                                ((ac.Target.Node != null && ac.Target.Node.Id == node.Id) ||
+                                 ac.Target.StationOptions.Contains(node.Name)) &&
+                                ac is { IsRegisteredForDoppelspiel: true, DoppelspielPartner: null }));
+
+        // Step 3: Fetch drop candidates from database (without StationOptions check)
+        List<ActionGroup> dropCandidates = await context.Set<ActionGroup>()
+            .Where(a => a.CanRunDoppelspiel &&
+                        a.CompletedDate == null &&
+                        a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
+                                           ac.IsRegisteredForDoppelspiel &&
+                                           ac.DoppelspielPartner == null))
+            .OrderBy(h => h.ConsideredForDoppelspielDate)
+            .ToListAsync();
+
+        // Step 4: Filter in memory with StationOptions check
+        List<ActionGroup> dropOrders = dropCandidates
+            .Where(a => a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
+                                            ((ac.Target.Node != null && ac.Target.Node.Id == node.Id) ||
+                                             ac.Target.StationOptions.Contains(node.Name)) &&
+                                            ac is { IsRegisteredForDoppelspiel: true, DoppelspielPartner: null }))
+            .ToList();
+
+        if (pickCount >= dropOrders.Count)
+        {
+            // All drops will be part of a Doppelspiel
+            return null;
+        }
+
+        return dropOrders.Skip(pickCount).FirstOrDefault();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ActionGroup?> GetNextUnmatchedDoppelspielPick(GraphNode node, Guid? orderToIgnore)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        // Step 1: Fetch pick candidates from database (without StationOptions check)
+        List<ActionGroup> pickCandidates = await context.Set<ActionGroup>()
+            .Where(a => !a.IsQueued
+                        && a.CompletedDate == null
+                        && a.StartedDate == null
+                        && a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
+                                              ac.IsRegisteredForDoppelspiel &&
+                                              ac.DoppelspielPartner == null && 
+                                              ac.Target.DoppelspielMode != DoppelspielMode.Always &&
+                                              ac.Target.DoppelspielMode != DoppelspielMode.None))
+            .OrderBy(h => h.CreatedDate)
+            .ToListAsync();
+
+        // Step 2: Filter in memory with StationOptions check
+        List<ActionGroup> pickOrders = pickCandidates
+            .Where(a => a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
+                                            ((ac.Target.Node != null && ac.Target.Node.Id == node.Id) ||
+                                             ac.Target.StationOptions.Contains(node.Name)) &&
+                                            ac is { IsRegisteredForDoppelspiel: true, DoppelspielPartner: null }))
+            .ToList();
+
+        // Step 3: Fetch drop candidates from database (without StationOptions check)
+        List<ActionGroup> dropCandidates = await context.Set<ActionGroup>()
+            .Where(a => a.CanRunDoppelspiel &&
+                        a.CorrelationId != orderToIgnore &&
+                        a.CompletedDate == null &&
+                        a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
+                                           ac.DoppelspielPartner == null))
+            .OrderBy(h => h.ConsideredForDoppelspielDate)
+            .ToListAsync();
+
+        // Step 4: Filter in memory and count
+        int drops = dropCandidates
+            .Count(a => a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
+                                            ((ac.Target.Node != null && ac.Target.Node.Id == node.Id) ||
+                                             ac.Target.StationOptions.Contains(node.Name)) &&
+                                            ac.DoppelspielPartner == null));
+
+        if (pickOrders.Count <= drops)
+        {
+            // All picks will be part of a Doppelspiel
+            return null;
+        }
+
+        return pickOrders.Skip(drops).FirstOrDefault();
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> HasActionGroupsForStationGroup(ICollection<Guid> stations, Guid? agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Set<ActionGroup>()
+            .Where(a => a.IsQueued
+             && a.CompletedDate == null
+             && (a.AssignedAgv == null || a.AssignedAgv != agvCorrelationId)
+             &&  (a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null) ||
+                  a.Actions.Any(ac => ac.ActionType == ActionType.Pick && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null)))
+            .AnyAsync();
     }
 
     private async Task<IReadOnlyList<ActionGroup>> GetAgvActionGroupsInState(Guid agvCorrelationId, List<ActionGroupState> actionGroupStates)

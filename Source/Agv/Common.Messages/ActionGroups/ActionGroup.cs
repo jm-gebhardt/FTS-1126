@@ -97,8 +97,18 @@ public record ActionGroup : CorrelatedBy<Guid>
     /// </summary>
     public bool IsQueued { get; set; }
 
+    /// <summary>
+    /// True, if the host order can be considered for Doppelspiel.
+    /// </summary>
+    public bool CanRunDoppelspiel { get; init; }
+
+    /// <summary>
+    /// The time since when the order can be considered for Doppelspiel.
+    /// </summary>
+    public DateTime? ConsideredForDoppelspielDate { get; init; }
+
     /// <inheritdoc cref="ActionGroup"/>
-    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, Priority priority = Priority.Default, bool shouldEscapeQueue = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool isQueued = false, bool doNotPause = false) : this(correlationId, orderId)
+    public ActionGroup(Guid correlationId, string orderId, ICollection<AgvAction> actions, ActionGroupCreator creator, Priority priority = Priority.Default, bool shouldEscapeQueue = false, DateTime? createdDate = null, Guid? assignedAgv = null, bool isManual = false, bool isQueued = false, bool doNotPause = false, bool canRunDoppelspiel = false, DateTime? consideredForDoppelspielDate = null) : this(correlationId, orderId)
     {
         AssignedAgv = assignedAgv;
         IsManual = isManual;
@@ -109,6 +119,8 @@ public record ActionGroup : CorrelatedBy<Guid>
         DoNotPause = doNotPause;
         Priority = priority;
         ShouldEscapeQueue = shouldEscapeQueue;
+        CanRunDoppelspiel = canRunDoppelspiel;
+        ConsideredForDoppelspielDate = consideredForDoppelspielDate;
     }
 
     /// <summary>

@@ -14,7 +14,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
 using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 using QueueNode = Gebhardt.Acc.Common.Messages.Queue.QueueNode;
 

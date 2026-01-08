@@ -37,8 +37,21 @@ public interface IStationRepository
     Task<ICollection<Station>> GetStations(string? mapName=null);
 
     /// <summary>
+    /// Get a stations ordered in the order of the given ids.
+    /// </summary>
+    /// <param name="ids">The ids of the stations.</param>
+    /// <returns>A collection of stations with the given ids.</returns>
+    Task<ICollection<Station>> GetStationsById(ICollection<Guid> ids);
+
+    /// <summary>
     /// Update a station.
     /// </summary>
     /// <param name="station">The station to update.</param>
     Task Update(Station station);
+
+    /// <summary>
+    /// True if the station group for the given station is occupied by an agv.
+    /// </summary>
+    /// <param name="stationId">The id of the station.</param>
+    Task<bool> IsStationGroupOccupied(Guid stationId);
 }

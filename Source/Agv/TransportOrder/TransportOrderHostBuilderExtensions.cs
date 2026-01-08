@@ -12,7 +12,7 @@ using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.Core.Services;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
-using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -24,6 +24,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Validators;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
@@ -159,6 +160,8 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IQueueRepository, EfQueueRepository>();
         services.AddTransient<ILogEntryRepository, EfLogEntryRepository>();
         services.AddTransient<ILoggingService, LoggingService>();
+        services.AddTransient<IDecisionPointActionRepository, EfDecisionPointActionRepository>();
+        services.AddTransient<IWaitingPointActionRepository, EfWaitingPointActionRepository>();
 
         services.AddTransient<IMapRepository, EfMapRepository>();
 
@@ -198,6 +201,12 @@ public static class TransportOrderHostBuilderExtensions
 
     private static void RegisterMiscellaneousServices(IServiceCollection services)
     {
+        services.AddSingleton<PriorityAwareTargetSelector>();
+        services.AddSingleton<PriorityAwareWaitingHandler>();
+        services.AddSingleton<UnifiedTargetSelector>();
+        services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
+        services.AddSingleton<ITargetSelector>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
+        services.AddSingleton<IWaitingHandler>(sp => sp.GetRequiredService<UnifiedTargetSelector>());
         services.AddTransient(typeof(IMessageReceiver<>), typeof(MessageReceiver<>));
         services.AddTransient(typeof(IMessageAwaiter<>), typeof(MessageAwaiter<>));
         services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
@@ -207,5 +216,6 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IActionGroupDurationEstimationService, ActionGroupDurationEstimationService>();
         services.AddTransient<IMetricCollectionService, PrometheusMetricCollectionService>();
         services.AddTransient<ActionCommandHelper>();
+        services.AddTransient<IStationAgvLimitGuard, StationAgvLimitGuard>();
     }
 }

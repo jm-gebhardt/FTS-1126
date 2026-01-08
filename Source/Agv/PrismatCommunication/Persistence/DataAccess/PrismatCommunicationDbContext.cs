@@ -22,8 +22,6 @@ public class PrismatCommunicationDbContext : BaseDbContext<PrismatCommunicationD
     {
         modelBuilder.ApplyConfiguration(new HostOrderEntityConfiguration());
         modelBuilder.ApplyConfiguration(new SystemStatusEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new ShortLoopTargetStationEntityConfiguration());
         modelBuilder.ApplyConfiguration(new TelegramEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new StationEntityConfiguration());
     }
 }

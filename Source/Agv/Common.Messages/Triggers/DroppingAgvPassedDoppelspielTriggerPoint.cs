@@ -10,6 +10,4 @@ namespace Gebhardt.Acc.Common.Messages.Triggers;
 /// <param name="AgvCorrelationId">The correlation id of the agv.</param>
 /// <param name="DroppingHostOrderCorrelationId">The correlation id of the host order of the drop.</param>
 /// <param name="NextPickHostOrderCorrelationId">The correlation id of the host order of the next pick.</param>
-/// <param name="ShouldPickNext">If true the agv is going to pick next.</param>
-/// <param name="PickNode">The pick node.</param>
-public record DroppingAgvPassedDoppelspielTriggerPoint(GraphNode DropActionTarget, Guid AgvCorrelationId, Guid DroppingHostOrderCorrelationId, Guid? NextPickHostOrderCorrelationId, bool ShouldPickNext, GraphNode? PickNode);
+public record DroppingAgvPassedDoppelspielTriggerPoint(GraphNode DropActionTarget, Guid AgvCorrelationId, Guid DroppingHostOrderCorrelationId, Guid? NextPickHostOrderCorrelationId);

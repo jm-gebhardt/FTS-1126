@@ -20,6 +20,8 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.Duration);
         builder.Ignore(e => e.IsQueueingOrder);
         builder.Ignore(e => e.LogEntries);
+        builder.Ignore(e => e.IsRegisteredForDoppelspielDrop);
+        builder.Ignore(e => e.HasQueuedDoppelspielpartner);
         builder.Property(e => e.ShouldEscapeQueue);
         builder.Property(e => e.Priority).HasConversion<int>().HasDefaultValue(Priority.Default);
         builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);
@@ -29,6 +31,8 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Property(e => e.DoNotPause);
         builder.Property(e => e.HandlingUnit).HasMaxLength(DbStringLimits.OrderId);
         builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
+        builder.Property(e => e.CanRunDoppelspiel);
+        builder.Property(e => e.ConsideredForDoppelspielDate);
 
         // Reasons is just an information, we will never want to query it, so we can simply store it as json without introducing new tables
         builder.Property(g => g.Reasons).HasJsonConversion();
@@ -60,6 +64,8 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
             a.Navigation(o => o.AgvActionNodes).AutoInclude();
 
             a.Property(e => e.Edges).HasJsonConversion();
+            a.Property(e => e.IsRegisteredForDoppelspiel);
+            a.Property(e => e.DoppelspielPartner);
             a.Property(e => e.State).HasMaxLength(DbStringLimits.State);
             a.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
             a.Property(e => e.AdditionalInfo).HasMaxLength(DbStringLimits.Description);
@@ -70,7 +76,8 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
                     .WithMany()
                     .HasForeignKey(t => t.NodeId)
                     .OnDelete(DeleteBehavior.Restrict);
-
+                c.Property(t => t.DoppelspielMode);
+                c.Property(t => t.StationOptions).HasJsonConversion();
                 c.OwnsOne(t => t.Position, p =>
                 {
                     p.Ignore(pp => pp.PositionInitialized);

@@ -144,7 +144,9 @@ public static class AgvActionGenerator
         Dictionary<InfoToAgvKey, string>? dropInfoToAgv = null,
         string orderId = "orderId",
         string? handlingUnit = null,
-        bool isManual = false
+        bool isManual = false,
+        bool canRunDoppelspiel = false,
+        DateTime? considerForDoppelspielDate = null
     )
     {
         var groupId = Guid.NewGuid();
@@ -181,8 +183,11 @@ public static class AgvActionGenerator
             Priority = priority,
             HandlingUnit = handlingUnit,
             IsManual = isManual,
-            ShouldEscapeQueue = isManual
+            ShouldEscapeQueue = isManual,
+            ConsideredForDoppelspielDate = considerForDoppelspielDate,
+            CanRunDoppelspiel = canRunDoppelspiel
         };
+
         if (isQueued)
         {
             actionGroup.Queue();
@@ -288,7 +293,8 @@ public static class AgvActionGenerator
         DateTime? startedDate = null,
         TimeSpan? duration = null,
         bool isQueued = true,
-        Dictionary<InfoToAgvKey, string>? infoToAgv = null
+        Dictionary<InfoToAgvKey, string>? infoToAgv = null,
+        ICollection<string>? stationOptions = null
     )
     {
         const string orderId = "orderId";
@@ -304,7 +310,7 @@ public static class AgvActionGenerator
         };
         moveAction.UpdateActionState(moveActionState, DateTimeOffset.Now);
 
-        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, targetNode: null, groupId)
+        var pickAction = new AgvAction(pickActionGuid, ActionType.Pick, new ActionTarget(null, null, stationOptions, DoppelspielMode.Order), groupId)
         {
             Sequence = 1,
             InfoToAgv = infoToAgv
@@ -357,8 +363,9 @@ public static class AgvActionGenerator
         DateTime? startedDate = null,
         TimeSpan? duration = null,
         bool isQueued = true,
-        Dictionary<InfoToAgvKey, string>? infoToAgv = null
-    )
+        Dictionary<InfoToAgvKey, string>? infoToAgv = null,
+        ICollection<string>? stationOptions = null,
+        bool canRunDoppelspiel = false)
     {
         const string orderId = "orderId";
         var groupId = Guid.NewGuid();
@@ -380,7 +387,7 @@ public static class AgvActionGenerator
         };
         moveAction.UpdateActionState(moveActionState, DateTimeOffset.Now);
 
-        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, targetNode: null, groupId)
+        var dropAction = new AgvAction(dropActionGuid, ActionType.Drop, new ActionTarget(null, null, stationOptions, DoppelspielMode.Order), groupId)
         {
             Sequence = 2
         };
@@ -392,7 +399,8 @@ public static class AgvActionGenerator
         {
             AssignedAgv = assignedAgv,
             EstimatedDuration = duration,
-            Priority = Priority.Default
+            Priority = Priority.Default,
+            CanRunDoppelspiel = canRunDoppelspiel
         };
         if (isQueued)
         {

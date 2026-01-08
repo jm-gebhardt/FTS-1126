@@ -18,7 +18,6 @@ public class SimulationHostOrderService : IPollable
     /// </summary>
     public int PollingInterval { get; }
 
-    private readonly string _runtimeIdentifierOrder = DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
     private readonly ILogger<SimulationHostOrderService> _logger;
     private readonly IBus _bus;
     private readonly string[] _simSources;
@@ -59,6 +58,7 @@ public class SimulationHostOrderService : IPollable
     /// </summary>
     private async Task SimulateHostOrders(CancellationToken cancellationToken)
     {
+        string leNo = $"{_orderIdCounter:D8}";
         string orderId = NextOrderId();
 
         string src = _modeSequential ? _simSources[_currentSourceIndex] : _simSources[_random.Next(_simSources.Length)];
@@ -69,7 +69,6 @@ public class SimulationHostOrderService : IPollable
             _currentDestinationIndex = (_currentDestinationIndex + 1) % _simDestinations.Length;
         }
 
-        const string leNo = "9999";
         var correlationId = orderId.ToGuid();
         var orderDetails = new OrderDetails(correlationId, orderId, src, dst, leNo, HostOrderCreator.Simulation);
 
@@ -80,6 +79,6 @@ public class SimulationHostOrderService : IPollable
 
     private string NextOrderId()
     {
-        return $"SIM_{_runtimeIdentifierOrder}_{_orderIdCounter++:D8}";
+        return $"HU({_orderIdCounter++:D8})";
     }
 }

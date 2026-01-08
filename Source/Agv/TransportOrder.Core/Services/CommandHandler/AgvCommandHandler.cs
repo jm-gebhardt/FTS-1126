@@ -36,7 +36,6 @@ using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Utilities;
-using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -163,7 +162,7 @@ public class AgvCommandHandler :
         }
 
         // Let's see if there is a created charge action group
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
         var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
         if (actionGroup != null)
         {
@@ -1574,7 +1573,7 @@ public class AgvCommandHandler :
     {
         _logger.LogInformation("Preparing nodes for AGV {AgvCorrelationId}. Last node id of AGV is {LastNodeId}", agv.CorrelationId, agvStatus.LastNodeId);
 
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agv.CorrelationId);
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agv.CorrelationId);
         if (actionGroups.Count < 1 && agvStatus.LastNodeId == Guid.Empty)
         {
             return;
@@ -1698,7 +1697,7 @@ public class AgvCommandHandler :
             _logger.LogInformation("Using fallback of LastNodeId {LastNodeId} to switch out {ChargingAgvCorrelationId} with {NonChargingAgvCorrelationId}", fallbackSwitchPosition, chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
 
             var groupCorrelationId = Guid.NewGuid();
-            var actionGroup = new ActionGroup(
+            var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
                 groupCorrelationId,
                 $"Move agv {chargingAgv.SerialNumber}",
                 actions: new List<Domain.Models.ActionGroup.AgvAction> { new(Guid.NewGuid(), ActionType.Move, fallbackSwitchPosition, groupCorrelationId) },
@@ -1807,7 +1806,7 @@ public class AgvCommandHandler :
 
         bool hasCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
 
-        IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Paused, ActionGroupState.Started], assignedAgvCorrelationId: agvCorrelationId, maxItems: 3, sortBy: SortBy.StartedDate);
+        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Paused, ActionGroupState.Started], assignedAgvCorrelationId: agvCorrelationId, maxItems: 3, sortBy: SortBy.StartedDate);
 
         var actionGroup = actionGroups.SingleOrDefault(a => a.State == ActionGroupState.Started) ?? actionGroups.OrderBy(a => a.StartedDate).LastOrDefault();
 

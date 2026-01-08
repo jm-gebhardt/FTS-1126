@@ -1,19 +1,14 @@
-using FluentValidation;
 using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
+using Gebhardt.Acc.PrismatCommunication.Domain.Models.CustomerConfiguration;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
-using Gebhardt.Acc.PrismatCommunication.Domain.Models.KaeserGraph;
-using Gebhardt.Acc.PrismatCommunication.Domain.Services;
-using Gebhardt.Acc.PrismatCommunication.Domain.Validators;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Action = Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder.Action;
 
 namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 
@@ -22,11 +17,11 @@ namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 /// </summary>
 public static class ServiceCollectionExtension
 {
-    private static readonly Lazy<KaeserGraphConfiguration> _config = new(() =>
+    private static readonly Lazy<CustomerConfiguration> _config = new(() =>
     {
-        var config = new KaeserGraphConfiguration(new InMemoryTriggerPointMapping());
+        var config = new CustomerConfiguration();
         string configFile = GetConfigFile();
-        Console.WriteLine($"Using Kaeser graph configuration from {configFile}.");
+        Console.WriteLine($"Using customer configuration from {configFile}.");
         config.UpdateFromFile(configFile);
         return config;
     });
@@ -97,19 +92,6 @@ public static class ServiceCollectionExtension
         }
 
         /// <summary>
-        /// Register host order validators.
-        /// </summary>
-        // ReSharper disable once UnusedMethodReturnValue.Global
-        // ReSharper disable once UnusedMethodReturnValue.Local
-        public IServiceCollection RegisterValidators()
-        {
-            serviceCollection.AddTransient<IHostOrderValidationService, HostOrderValidationService>();
-            serviceCollection.AddTransient<IValidator<HostOrder>, HostOrderValidator>();
-            serviceCollection.AddTransient<IValidator<Action>, HostOrderActionValidator>();
-            return serviceCollection;
-        }
-
-        /// <summary>
         /// Add telegram processors
         /// </summary>
         // ReSharper disable once UnusedMethodReturnValue.Global
@@ -127,19 +109,12 @@ public static class ServiceCollectionExtension
         }
 
         /// <summary>
-        /// Adds a <see cref="KaeserGraphConfiguration" /> as singleton to the service collection provided.
+        /// Adds a <see cref="CustomerConfiguration" /> as singleton to the service collection provided.
         /// </summary>
-        /// <param name="isSimulationMode">Whether this function is called from the simulation mode.</param>
         /// <returns></returns>
         // ReSharper disable once UnusedMethodReturnValue.Global
-        public IServiceCollection TryAddKaeserGraphConfiguration(bool isSimulationMode)
+        public IServiceCollection TryAddCustomerConfiguration()
         {
-            if (isSimulationMode)
-            {
-                _config.Value.UpdateTriggerPointNodeId(_config.Value.DecisionPoint1TriggerName, Guid.Empty);
-                _config.Value.UpdateTriggerPointNodeId(_config.Value.CheckCargoTriggerName, Guid.Empty);
-                _config.Value.UpdateTriggerPointNodeId(_config.Value.DoppelspielTriggerName, Guid.Empty);
-            }
             serviceCollection.TryAddSingleton(_config.Value);
             return serviceCollection;
         }
@@ -147,7 +122,7 @@ public static class ServiceCollectionExtension
 
     private static string GetConfigFile()
     {
-        const string configFile = "graph-configuration.yml";
+        const string configFile = "customer-configuration.yml";
         const string configDirectory = "Configuration";
         string[] files = [];
         string? current = Path.Join(Directory.GetCurrentDirectory(), configDirectory);

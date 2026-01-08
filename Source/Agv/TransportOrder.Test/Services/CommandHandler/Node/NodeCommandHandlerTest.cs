@@ -126,31 +126,6 @@ public class NodeCommandHandlerTest
         fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
     }
 
-    /// <summary>
-    /// Test case for chain of park nodes used as agv queue. Current agv passes parking one.
-    /// </summary>
-    [TestMethod]
-    public async Task Consume_UpdateNodeOccupancy_OldLastNodeNotChargeOrParkNode_UnOccupyNodeNotCalled()
-    {
-        var oldNode = new GraphNode("old".ToGuid(), "old") { Type = AgvGraph.NodeType.Pick };
-        var oldLastNodeState = new NodeLock(oldNode, NodeLockState.Occupied, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
-        var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([oldLastNodeState])
-            .WithNodeOccupied(AgvSerialNumber.ToGuid())
-            .WithStation(oldLastNodeState.Node.Name)
-            .WithNode(new GraphNode(Guid.NewGuid(), "name") { Type = AgvGraph.NodeType.Pick })
-            .WithQueue(null);
-
-        await fixture.PublishMessageAsync(
-            new UpdateNodeOccupancy(
-                AgvSerialNumber.ToGuid(),
-                oldNode.Id,
-                "new".ToGuid()));
-
-        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
-    }
-
     [TestMethod]
     public async Task Consume_UpdateNodeOccupancy_NewLastNodeReservedForAgv_NewLastNodeOccupied()
     {

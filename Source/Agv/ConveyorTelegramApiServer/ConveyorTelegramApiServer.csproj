@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.ConveyorTelegramApiServer</AssemblyName>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Common.TelegramCommunication\Common.TelegramCommunication.csproj" />
+      <ProjectReference Include="..\ConveyorTelegramApi\ConveyorTelegramApi.csproj" />
+      <ProjectReference Include="..\StationCommunication.Domain\StationCommunication.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,7 +1,6 @@
-using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
-using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using JetBrains.Annotations;
 using MassTransit;
 using Moq;
@@ -21,34 +20,11 @@ public class ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null)
         }
     }
 
-    private static bool _respondsSuccess;
-
-    [UsedImplicitly]
-    private class RetractHostOrderConsumer : IConsumer<RetractHostOrder>
-    {
-        public async Task Consume(ConsumeContext<RetractHostOrder> context)
-        {
-            if (_respondsSuccess)
-            {
-                await context.RespondAsync(new Success());
-                return;
-            }
-            await context.RespondAsync(new Failed());
-        }
-    }
-
     protected override void ConfigureMassTransitTestHarness(IBusRegistrationConfigurator busRegistrationConfigurator)
     {
         base.ConfigureMassTransitTestHarness(busRegistrationConfigurator);
         busRegistrationConfigurator.AddConsumer<MockRequestConsumer>();
-        busRegistrationConfigurator.AddConsumer<RetractHostOrderConsumer>();
         busRegistrationConfigurator.AddRequestClient<RetractHostOrder>();
-    }
-
-    public ActionCommandHandlerTestFixture WithHostOrderRetracted(bool retracted)
-    {
-        _respondsSuccess = retracted;
-        return this;
     }
 
     public ActionCommandHandlerTestFixture WithMultipleRequiredActionGroups(ICollection<ActionGroup> actionGroups)

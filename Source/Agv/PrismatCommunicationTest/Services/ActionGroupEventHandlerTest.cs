@@ -1,8 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
@@ -138,19 +136,6 @@ public class ActionGroupEventHandlerTest
     }
 
     [TestMethod]
-    public async Task DroppingAgvPassedDoppelspielTriggerPoint_ValidData_PublishesTryQueueDoppelspielPartner()
-    {
-        var agvPassedDoppelspielTriggerPoint = new DroppingAgvPassedDoppelspielTriggerPoint("drop target of action".ToGraphNode(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), true, "pickNode".ToGraphNode());
-
-        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
-
-        await fixture.TestHarness.Bus.Publish(agvPassedDoppelspielTriggerPoint);
-
-        await fixture.ShouldHaveConsumedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
-        await fixture.ShouldHavePublishedAsync<TryQueueDoppelspielPartner>();
-    }
-
-    [TestMethod]
     public async Task Consume_ActionGroupInvalid_RouteValidationError_PublishesCancelInvalidHostOrder()
     {
         var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>();
@@ -174,56 +159,5 @@ public class ActionGroupEventHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<ActionGroupInvalid>();
         await fixture.ShouldNotHavePublishedAsync<CancelInvalidHostOrder>();
-    }
-
-    [TestMethod]
-    public async Task Consume_PickActionCompleted_DropAtAkl_PublishesTryQueueNextAklPick()
-    {
-        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
-        order.Start(DateTime.UtcNow, Guid.NewGuid());
-        HostOrderConsumerTestFixture<ActionGroupEventHandler> fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
-            .WithHostOrders([order]);
-
-        var orderEvent = new PickActionCompleted(order.CorrelationId, order.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(orderEvent);
-
-        await fixture.ShouldHaveConsumedAsync<PickActionCompleted>();
-        await fixture.ShouldHavePublishedAsync<TryQueueNextAklPick>();
-        await fixture.ShouldHavePublishedAsync<FinishPick>();
-    }
-
-    [TestMethod]
-    public async Task Consume_PickActionCompleted_PickAtAkl_DoesNotPublishTryQueueNextAklPick()
-    {
-        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
-        order.Start(DateTime.UtcNow, Guid.NewGuid());
-        HostOrderConsumerTestFixture<ActionGroupEventHandler> fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
-            .WithHostOrders([order]);
-
-        var orderEvent = new PickActionCompleted(order.CorrelationId, order.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(orderEvent);
-
-        await fixture.ShouldHaveConsumedAsync<PickActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<TryQueueNextAklPick>();
-        await fixture.ShouldHavePublishedAsync<FinishPick>();
-    }
-
-    [TestMethod]
-    public async Task Consume_PickActionCompleted_LongLoopOrder_DoesNotPublishTryQueueNextAklPick()
-    {
-        var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder());
-        order.Start(DateTime.UtcNow, Guid.NewGuid());
-        HostOrderConsumerTestFixture<ActionGroupEventHandler> fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
-            .WithHostOrders([order]);
-
-        var orderEvent = new PickActionCompleted(order.CorrelationId, order.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, DateTime.UtcNow);
-
-        await fixture.TestHarness.Bus.Publish(orderEvent);
-
-        await fixture.ShouldHaveConsumedAsync<PickActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<TryQueueNextAklPick>();
-        await fixture.ShouldHavePublishedAsync<FinishPick>();
     }
 }

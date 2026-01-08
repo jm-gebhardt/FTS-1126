@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -268,13 +269,6 @@ public interface IActionGroupRepository
     Task<bool?> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId, Guid currentActionGroupCorrelationId);
 
     /// <summary>
-    /// Gets the last completed action of an AGV. This is independent of the action group.
-    /// </summary>
-    /// <param name="agvCorrelationId">The agv correlation id.</param>
-    /// <returns>The last completed action.</returns>
-    Task<AgvAction?> GetLastCompletedActionAsync(Guid agvCorrelationId);
-
-    /// <summary>
     /// Gets the last aborted pick or drop action of an AGV.
     /// </summary>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
@@ -357,4 +351,50 @@ public interface IActionGroupRepository
     /// <param name="assignedAgvs">A collection of agv correlation id.</param>
     /// <returns>A collection of action groups.</returns>
     Task<ICollection<ActionGroup>> GetNextPicksAtTarget(Guid targetId, ICollection<Guid> assignedAgvs);
+
+    /// <summary>
+    /// Get the next dropping action group that can run a Doppelspiel at one of the given station names.
+    /// </summary>
+    /// <param name="stations">The Doppelspiel stations.</param>
+    /// <returns>An action group.</returns>
+    Task<ActionGroup?> GetNextDropActionGroupEligibleForDoppelspiel(ICollection<string> stations);
+
+    /// <summary>
+    /// Get the next delayed drop for the given stations.
+    /// </summary>
+    /// <param name="stations">The station ids.</param>
+    /// <returns></returns>
+    Task<ActionGroup?> GetNextDelayedDropForStations(ICollection<Guid> stations);
+
+    /// <summary>
+    /// Get the next delayed action group picking the given stations.
+    /// </summary>
+    /// <param name="pickNode">The station id.</param>
+    /// <param name="ordersToIgnore">The orders that should not be considered.</param>
+    /// <returns></returns>
+    Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null);
+
+    /// <summary>
+    /// Get the next drop order that was registered for Doppelspiel, but has no matching partner.
+    /// </summary>
+    /// <param name="node">The Doppelspiel station node.</param>
+    /// <param name="orderToIgnore">The drop order to ignore.</param>
+    /// <returns></returns>
+    Task<ActionGroup?> GetNextUnmatchedDoppelspielDrop(GraphNode node, Guid? orderToIgnore);
+
+    /// <summary>
+    /// Get the next pick order that was registered for Doppelspiel, but has no matching partner.
+    /// </summary>
+    /// <param name="node">The Doppelspiel station node.</param>
+    /// <param name="orderToIgnore">The drop order to ignore.</param>
+    /// <returns></returns>
+    Task<ActionGroup?> GetNextUnmatchedDoppelspielPick(GraphNode node, Guid? orderToIgnore);
+
+    /// <summary>
+    /// Check if there are any queued or currently running host orders for a station group given by sources and targets.
+    /// </summary>
+    /// <param name="stations">The stations of the station group.</param>
+    /// <param name="agvCorrelationId">The correlation id of the AGV that is excluded from the check.</param>
+    /// <returns>True, if there are host orders (of a different or unassigned Agv) to this station group already queued or running. This includes not running, but queued orders.</returns>
+    Task<bool> HasActionGroupsForStationGroup(ICollection<Guid> stations, Guid? agvCorrelationId);
 }

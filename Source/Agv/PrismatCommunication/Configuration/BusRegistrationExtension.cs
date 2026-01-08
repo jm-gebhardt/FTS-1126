@@ -1,15 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
-using Gebhardt.Acc.Common.Messages.Graphs.Events;
-using Gebhardt.Acc.Common.Messages.Graphs.Requests;
-using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
-using Gebhardt.Acc.Common.Messages.Queue;
-using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.Common.Messages.System;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.HostOrder;
-using Gebhardt.Acc.PrismatCommunication.Messages.Commands.KaeserGraph;
-using Gebhardt.Acc.PrismatCommunication.Messages.Commands.Station;
 using Gebhardt.Acc.PrismatCommunication.Messages.Commands.SystemStatus;
 using Gebhardt.Acc.PrismatCommunication.Services.CommandHandler;
 using Gebhardt.Acc.PrismatCommunication.Services.EventHandler;
@@ -38,11 +30,6 @@ public static class BusRegistrationExtension
             partitioner.PartitionMessageById<FinishPick, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<CancelInvalidHostOrder, HostOrderCommandHandler>(c);
             partitioner.PartitionMessageById<AbortHostOrder, HostOrderCommandHandler>(c);
-            partitioner.PartitionMessageById<ConsiderForDoppelspiel, HostOrderCommandHandler>(c);
-            partitioner.PartitionMessageById<RetractHostOrder, HostOrderCommandHandler>(c);
-            partitioner.PartitionMessageById<ResetDoppelspielPartner, HostOrderCommandHandler>(c);
-            partitioner.PartitionMessageById<TriggerDoppelspielPartnerQueueing, HostOrderCommandHandler>(c);
-            c.Message<TryQueueDoppelspielPartner>(x => x.UsePartitioner(partitioner, p => p.Message.DroppingHostOrderCorrelationId));
 
             var huPartitioner = c.CreatePartitioner(16);
             c.Message<CreateHostOrder>(x => x.UsePartitioner(huPartitioner, p => p.Message.Hu));
@@ -58,24 +45,7 @@ public static class BusRegistrationExtension
         });
         cfg.AddConsumer<AgvEventHandler>();
         cfg.AddConsumer<ActionGroupEventHandler>();
-        cfg.AddConsumer<TriggerEventHandler>();
-        cfg.AddConsumer<StationEventHandler>(c =>
-        {
-            var partitioner = c.CreatePartitioner(16);
-            c.Message<StationLocked>(x => x.UsePartitioner(partitioner, m => m.Message.StationNodeId));
-            c.Message<StationUnlocked>(x => x.UsePartitioner(partitioner, m => m.Message.CorrelationId));
-        });
-        cfg.AddConsumer<StationCommandHandler>(c =>
-        {
-            var partitioner = c.CreatePartitioner(16);
-            partitioner.PartitionMessageById<RemoveAgvFromStation, StationCommandHandler>(c);
-            partitioner.PartitionMessageById<AddAgvToStation, StationCommandHandler>(c);
-        });
 
-        cfg.AddRequestClient<AddOrUpdateStationGroup>();
-        cfg.AddRequestClient<GetTriggerMapping>();
-        cfg.AddRequestClient<GetQueueFillQuantities>();
-        cfg.AddRequestClient<GetLockedStations>();
         cfg.AddRequestClient<RequestHostOrderGeneration>();
 
         if (isSimulationMode)

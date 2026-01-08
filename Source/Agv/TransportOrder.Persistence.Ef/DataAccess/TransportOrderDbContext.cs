@@ -26,6 +26,8 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new WaitingPointActionEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new DecisionPointActionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ActionGroupEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvDataEntityConfiguration());
