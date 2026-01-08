@@ -17,16 +17,5 @@
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Compile Remove="Models\Graph\EfAgvGraph.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Models\Graph\" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Models\Graph\" />
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Remove="Models\Graph\EfNode.cs" />
-    </ItemGroup>
+
 </Project>

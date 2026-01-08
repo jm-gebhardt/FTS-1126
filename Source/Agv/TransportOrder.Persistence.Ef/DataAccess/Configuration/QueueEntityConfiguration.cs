@@ -17,6 +17,10 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
             .IsRequired()
             .HasMaxLength(DbStringLimits.Description);
 
+        builder.Property(q => q.RowVersion)
+            .IsRowVersion()
+            .IsConcurrencyToken();
+
         builder.Ignore(e => e.Head);
         builder.Ignore(e => e.NonEntryNodes);
         builder.Ignore(e => e.Tail);

@@ -55,6 +55,13 @@ public static class ServiceCollectionExtensions
                 rabbitMqConfiguration?.Invoke(context, cfg);
                 cfg.UseConsumeFilter<AgvTracingConsumeFilters>(context);
                 cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(context);
+
+                cfg.UseMessageRetry(r =>
+                {
+                    r.Intervals(100, 200, 500);
+                    r.Handle<Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException>();
+                });
+
                 cfg.ConfigureEndpoints(context, new DefaultEndpointNameFormatter(includeNamespace: true));
                 cfg.Host(massTransitConfig.Url);
                 cfg.UsePrometheusMetrics();

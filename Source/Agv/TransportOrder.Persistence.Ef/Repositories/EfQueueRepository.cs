@@ -4,11 +4,14 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IQueueRepository"/>>
-public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory) : IQueueRepository
+public class EfQueueRepository(
+    IDbContextFactory<TransportOrderDbContext> dbContextFactory,
+    ILogger<EfQueueRepository> logger) : IQueueRepository
 {
     /// <inheritdoc cref="IQueueRepository"/>>
     public async Task AddQueue(Queue queue)
@@ -35,8 +38,20 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     public async Task<bool> UpdateQueueAsync(Queue queue)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        context.Set<Queue>().Update(queue);
-        return await context.SaveChangesAsync() > 0;
+
+        try
+        {
+            context.Set<Queue>().Update(queue);
+            return await context.SaveChangesAsync() > 0;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            logger.LogWarning(ex,
+                "Concurrency conflict when updating queue {QueueId} {QueueName}. Another operation modified this queue. Retry configured",
+                queue.Id, queue.Name);
+
+           throw;
+        }
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
@@ -44,13 +59,23 @@ public class EfQueueRepository(IDbContextFactory<TransportOrderDbContext> dbCont
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        var queue = await context.Set<Queue>().FindAsync(queueId);
-        if (queue == null)
+        try
         {
-            throw new QueueNotFoundException(queueId);
+            var queue = await context.Set<Queue>().FindAsync(queueId);
+            if (queue == null)
+            {
+                throw new QueueNotFoundException(queueId);
+            }
+            context.Entry(queue).Property(q => q.AgvFillQuantity).CurrentValue = newSize;
+            await context.SaveChangesAsync();
         }
-        context.Entry(queue).Property(q => q.AgvFillQuantity).CurrentValue = newSize;
-        await context.SaveChangesAsync();
+        catch (DbUpdateConcurrencyException ex)
+        {
+            logger.LogWarning(ex,
+                "Concurrency conflict when updating queue size for queue {QueueId}. Retry configured",
+                queueId);
+            throw;
+        }
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Utilities;
@@ -68,6 +69,12 @@ public class Queue
     /// The agv fill quantity.
     /// </summary>
     public int AgvFillQuantity { get; set; }
+
+    /// <summary>
+    /// Concurrency token for optimistic concurrency control.
+    /// </summary>
+    [Timestamp]
+    public byte[]? RowVersion { get; init; }
 
     /// <summary>
     /// True, if the queue is full.
