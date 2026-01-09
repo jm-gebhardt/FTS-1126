@@ -4,9 +4,7 @@ using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Extensions;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Gebhardt.Acc.Common.Filter.Api.Swagger;
@@ -18,45 +16,53 @@ namespace Gebhardt.Acc.Common.Filter.Api.Swagger;
 internal class SwaggerFilterableSchemaExtender(
     IOptions<JsonOptions>? mvcJsonOptions,
     IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>? httpJsonOptions
-    ) : ISchemaFilter
+) : ISchemaFilter
 {
     private JsonSerializerOptions? SerializerOptions => mvcJsonOptions?.Value.JsonSerializerOptions ?? httpJsonOptions?.Value.SerializerOptions;
 
     /// <inheritdoc cref="ISchemaFilter"/>
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
-        if (schema.Properties == null || schema.Properties.Count == 0)
+        if (schema is OpenApiSchema openApiSchema)
         {
-            return;
-        }
-
-        foreach (var property in context.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            bool isFilterable = Attribute.IsDefined(property, typeof(SwaggerFilterableProperty));
-            bool supportsWhereAggregation = Attribute.IsDefined(property, typeof(SwaggerSupportsWhereAggregationFilter));
-
-            if (!isFilterable && !supportsWhereAggregation)
+            if (openApiSchema.Properties == null || openApiSchema.Properties.Count == 0)
             {
-                continue;
+                return;
             }
 
-            string jsonName = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? SerializerOptions?.PropertyNamingPolicy?.ConvertName(property.Name) ?? property.Name;
-
-            if (!schema.Properties.TryGetValue(jsonName, out var propSchema) && !schema.Properties.TryGetValue(property.Name, out propSchema))
+            foreach (var property in context.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                continue;
-            }
+                bool isFilterable = Attribute.IsDefined(property, typeof(SwaggerFilterableProperty));
+                bool supportsWhereAggregation = Attribute.IsDefined(property, typeof(SwaggerSupportsWhereAggregationFilter));
 
-            if (isFilterable)
-            {
-                propSchema.AddExtension("x-IsFilterableProperty", new OpenApiBoolean(true));
-                propSchema.AddExtension("x-FilterablePropertyName", new OpenApiString(property.Name));
-            }
+                if (!isFilterable && !supportsWhereAggregation)
+                {
+                    continue;
+                }
 
-            if (supportsWhereAggregation)
-            {
-                propSchema.AddExtension("x-SupportsWhereAggregationFilter", new OpenApiBoolean(true));
-                propSchema.AddExtension("x-FilterablePropertyName", new OpenApiString(property.Name));
+                string jsonName = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? SerializerOptions?.PropertyNamingPolicy?.ConvertName(property.Name) ?? property.Name;
+
+                if (!openApiSchema.Properties.TryGetValue(jsonName, out var propSchema) && !openApiSchema.Properties.TryGetValue(property.Name, out propSchema))
+                {
+                    continue;
+                }
+
+                if (propSchema is OpenApiSchema propertySchema)
+                {
+                    if (isFilterable)
+                    {
+                        propertySchema.Extensions ??= new Dictionary<string, IOpenApiExtension>();
+                        propertySchema.Extensions.Add("x-IsFilterableProperty", new JsonNodeExtension(true));
+                        propertySchema.Extensions.Add("x-FilterablePropertyName", new JsonNodeExtension(property.Name));
+                    }
+
+                    if (supportsWhereAggregation)
+                    {
+                        propertySchema.Extensions ??= new Dictionary<string, IOpenApiExtension>();
+                        propertySchema.Extensions.Add("x-SupportsWhereAggregationFilter", new JsonNodeExtension(true));
+                        propertySchema.Extensions.Add("x-FilterablePropertyName", new JsonNodeExtension(property.Name));
+                    }
+                }
             }
         }
     }

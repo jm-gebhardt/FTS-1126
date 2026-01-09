@@ -37,7 +37,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Logging;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using AgvPositionSignificanceChecker = Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
@@ -161,10 +161,7 @@ public static class WebHostBuilderExtensions
                 opt.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
-                        },
+                        new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
                         []
                     }
                 });
@@ -191,14 +188,11 @@ public static class WebHostBuilderExtensions
                 Scheme = JwtBearerDefaults.AuthenticationScheme
             };
             options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
-                    },
-                    []
+                    new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                    new List<string>()
                 }
             });
             options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);

@@ -1,5 +1,5 @@
 ﻿using JetBrains.Annotations;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Gebhardt.Acc.Common.WebApi;
@@ -12,22 +12,29 @@ namespace Gebhardt.Acc.Common.WebApi;
 public class EnumDictionaryOptionalSchemaFilter : ISchemaFilter
 {
     /// <inheritdoc />
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
-        if (context.Type.IsGenericType &&
-            context.Type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        if (schema is OpenApiSchema openApiSchema)
         {
-            var keyType = context.Type.GetGenericArguments()[0];
-
-            if (keyType.IsEnum)
+            if (context.Type.IsGenericType &&
+                context.Type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
             {
-                schema.Required.Clear();
+                var keyType = context.Type.GetGenericArguments()[0];
 
-                foreach (string key in keyType.GetEnumNames())
+                if (keyType.IsEnum)
                 {
-                    if (schema.Properties.TryGetValue(key, out var property))
+                    openApiSchema.Required ??= new HashSet<string>();
+                    openApiSchema.Required.Clear();
+                    if (openApiSchema.Properties is null)
                     {
-                        property.Nullable = false;
+                        return;
+                    }
+                    foreach (string key in keyType.GetEnumNames())
+                    {
+                        if (openApiSchema.Properties.TryGetValue(key, out var property) && property is OpenApiSchema { Type: not null } propertySchema)
+                        {
+                            propertySchema.Type = propertySchema.Type.Value & ~JsonSchemaType.Null;
+                        }
                     }
                 }
             }

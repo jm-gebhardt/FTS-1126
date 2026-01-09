@@ -7,7 +7,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 using JetBrains.Annotations;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
@@ -93,6 +93,9 @@ public class ActionGroupFilterExample : IOperationFilter
             return;
         }
         
-        operation.RequestBody.Content["application/json"].Example = ExampleDto.ToOpenApiObject();
+        if (operation.RequestBody?.Content != null)
+        {
+            operation.RequestBody.Content["application/json"].Example = ExampleDto.ToOpenApiObject();
+        }
     }
 }

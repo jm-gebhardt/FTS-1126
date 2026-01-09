@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Linq.Expressions;
+using System.Text.Json.Nodes;
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Api.Swagger;
 using Gebhardt.Acc.Common.Filter.Exceptions;
@@ -8,7 +9,6 @@ using Gebhardt.Acc.Common.Filter.FilterableParser;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Any;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Gebhardt.Acc.Common.Filter.Api;
@@ -39,9 +39,9 @@ public static class FilterApiExtensions
         }
 
         /// <summary>
-        /// Translates this filter dto into an <see cref="OpenApiObject"/>.
+        /// Translates this filter dto into an <see cref="JsonObject"/>.
         /// </summary>
-        public OpenApiObject ToOpenApiObject()
+        public JsonObject ToOpenApiObject()
         {
             return dto switch
             {
@@ -141,12 +141,12 @@ public static class FilterApiExtensions
         return leaf;
     }
 
-    private static OpenApiObject ToOpenApiObject(CollectionFilterDto dto)
+    private static JsonObject ToOpenApiObject(CollectionFilterDto dto)
     {
-        var result = new OpenApiObject
+        var result = new JsonObject
         {
-            [nameof(CollectionFilterDto.Name)] = new OpenApiString(dto.Name),
-            [nameof(CollectionFilterDto.Aggregation)] = new OpenApiString(dto.Aggregation.ToString())
+            [nameof(CollectionFilterDto.Name)] = dto.Name,
+            [nameof(CollectionFilterDto.Aggregation)] = dto.Aggregation.ToString()
         };
 
         result.Add(nameof(CollectionFilterDto.Child), dto.Child.ToOpenApiObject());
@@ -154,25 +154,28 @@ public static class FilterApiExtensions
         return result;
     }
 
-    private static OpenApiObject ToOpenApiObject(CombinationFilterDto dto)
+    private static JsonObject ToOpenApiObject(CombinationFilterDto dto)
     {
-        var children = new OpenApiArray();
-        children.AddRange(dto.Children.Select(ToOpenApiObject));
+        var children = new JsonArray();
+        foreach (var jsonObject in dto.Children.Select(ToOpenApiObject))
+        {
+            children.Add(jsonObject);
+        }
 
-        return new OpenApiObject
+        return new JsonObject
         {
             [nameof(CombinationFilterDto.Children)] = children,
-            [nameof(CombinationFilterDto.Combination)] = new OpenApiString(dto.Combination.ToString())
+            [nameof(CombinationFilterDto.Combination)] = dto.Combination.ToString()
         };
     }
 
-    private static OpenApiObject ToOpenApiObject(ValueComparisonFilterDto dto)
+    private static JsonObject ToOpenApiObject(ValueComparisonFilterDto dto)
     {
-        return new OpenApiObject
+        return new JsonObject
         {
-            [nameof(ValueComparisonFilterDto.Name)] = new OpenApiString(dto.Name),
-            [nameof(ValueComparisonFilterDto.Content)] = new OpenApiString(dto.Content),
-            [nameof(ValueComparisonFilterDto.Variant)] = new OpenApiString(dto.Variant.ToString())
+            [nameof(ValueComparisonFilterDto.Name)] = dto.Name,
+            [nameof(ValueComparisonFilterDto.Content)] = dto.Content,
+            [nameof(ValueComparisonFilterDto.Variant)] = dto.Variant.ToString()
         };
     }
 

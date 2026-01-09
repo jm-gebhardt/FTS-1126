@@ -1,5 +1,5 @@
 using JetBrains.Annotations;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Gebhardt.Acc.Common.WebApi;
@@ -15,14 +15,24 @@ public class RequireNonNullablePropertiesSchemaFilter : ISchemaFilter
     /// <summary>
     /// Add to model. Required all properties where Nullable is false.
     /// </summary>
-    public void Apply(OpenApiSchema model, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
-        IEnumerable<string> additionalRequiredProps = model.Properties
-            .Where(x => !x.Value.Nullable && !model.Required.Contains(x.Key))
-            .Select(x => x.Key);
-        foreach (string propKey in additionalRequiredProps)
+        if (schema is OpenApiSchema model)
         {
-            model.Required.Add(propKey);
+            if (model.Properties is null)
+            {
+                return;
+            }
+
+            model.Required ??= new HashSet<string>();
+
+            IEnumerable<string> additionalRequiredProps = model.Properties
+                .Where(x => x.Value.Type.HasValue && !x.Value.Type.Value.HasFlag(JsonSchemaType.Null) && !model.Required.Contains(x.Key))
+                .Select(x => x.Key);
+            foreach (string propKey in additionalRequiredProps)
+            {
+                model.Required.Add(propKey);
+            }
         }
     }
 }

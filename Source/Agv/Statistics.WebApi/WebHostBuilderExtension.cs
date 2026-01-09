@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -86,14 +86,11 @@ public static class WebHostBuilderExtension
                     Scheme = JwtBearerDefaults.AuthenticationScheme
                 };
                 options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
                 {
                     {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
-                        },
-                        new string[] { }
+                        new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                        new List<string>()
                     }
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);

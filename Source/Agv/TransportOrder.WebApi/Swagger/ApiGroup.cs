@@ -1,5 +1,5 @@
 using JetBrains.Annotations;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 

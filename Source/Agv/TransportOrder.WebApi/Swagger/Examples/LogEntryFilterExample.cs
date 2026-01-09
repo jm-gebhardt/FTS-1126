@@ -2,7 +2,7 @@
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers.LogEntry;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using JetBrains.Annotations;
@@ -31,6 +31,9 @@ public class LogEntryFilterExample : IOperationFilter
             new ValueComparisonFilterDto(nameof(LogEntryDto.LogLevel), ComparisonVariant.Equals, nameof(LogLevel.Information))
         ],
         LogicalCombinationVariant.And);
-        operation.RequestBody.Content["application/json"].Example = example.ToOpenApiObject();
+        if (operation.RequestBody?.Content != null)
+        {
+            operation.RequestBody.Content["application/json"].Example = example.ToOpenApiObject();
+        }
     }
 }

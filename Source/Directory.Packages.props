@@ -48,9 +48,9 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.1" />
-    <PackageVersion Include="SignalRSwaggerGen" Version="4.8.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore.Filters" Version="9.0.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+    <PackageVersion Include="SignalRSwaggerGen" Version="4.9.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.Filters" Version="10.0.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
     <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
