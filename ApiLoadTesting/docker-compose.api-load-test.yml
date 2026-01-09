@@ -1,0 +1,53 @@
+########################################################################################################################
+# x-def
+########################################################################################################################
+x-aliases: &aliases
+  - k6.agv.localhost
+
+x-fluent-json-logging: &fluent-json-logging
+  driver: "fluentd"
+  options:
+    fluentd-address: 127.0.0.1:24224
+    fluentd-async: 'true'
+    tag: json
+
+########################################################################################################################
+# Services 
+########################################################################################################################
+services:
+  k6:
+    hostname: k6.agv
+    image: grafana/k6:1.4.2
+    ports:
+      - "127.0.0.1:6565:6565"
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus.agv:9090/prometheus/api/v1/write
+      - K6_PROMETHEUS_RW_TREND_STATS=p(95),p(99),min,max,avg
+      - KEYCLOAK_URL=http://keycloak.agv:${KEYCLOAK_PORT:-8080}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_CLIENT=${KEYCLOAK_CLIENTID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-}
+      - KEYCLOAK_REALM_USER=${KEYCLOAK_REALM_USER}
+      - KEYCLOAK_REALM_USER_PWD=${KEYCLOAK_REALM_USER_PWD}
+      - KEYCLOAK_REALM_SU=${KEYCLOAK_REALM_SU}
+      - KEYCLOAK_REALM_SU_PWD=${KEYCLOAK_REALM_SU_PWD}
+      - TRANSPORTORDER_API=${TRANSPORTORDER_API}
+    volumes:
+      - ./k6:/scripts
+    command: run --out experimental-prometheus-rw /scripts/script.ts 
+    logging: *fluent-json-logging
+    profiles:
+      - loadtest
+    deploy:
+      resources:
+        limits:
+          cpus: '1.01'
+          memory: 600M
+
+########################################################################################################################
+# Networks
+########################################################################################################################
+networks:
+  default:
+    external: true
+    name: agv_net

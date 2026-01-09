@@ -4,6 +4,11 @@ dotnet-tools.json -text
 Directory.Packages.props -text
 IntegrationTest.csproj -text
 
+# Files that run in Linux containers need LF line endings
+*.sh text eol=lf encoding=UTF-8
+*.js text eol=lf encoding=UTF-8
+*.ts text eol=lf encoding=UTF-8
+
 # Files declared as binary at the end
 # Remaining untouched
 *.ez binary
