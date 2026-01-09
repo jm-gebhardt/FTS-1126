@@ -3,6 +3,7 @@
 dotnet-tools.json -text
 Directory.Packages.props -text
 IntegrationTest.csproj -text
+*.sh text eol=lf
 
 # Files that run in Linux containers need LF line endings
 *.sh text eol=lf encoding=UTF-8

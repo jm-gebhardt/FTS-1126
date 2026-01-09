@@ -1,21 +1,31 @@
 trigger: none # Disable CI trigger
 
 schedules:
-  - cron: '0 3 * * *' # daily at 3 am
-    always: true # run even when there are no code changes
-    branches:
-      include:
-        - master
-    batch: true
-    displayName: Daily dependency check
+- cron: '0 3 * * *' # daily at 3 am
+  always: true # run even when there are no code changes
+  branches:
+    include:
+    - master
+  batch: true
+  displayName: Daily dependency check
 
 pool:
   vmImage: 'ubuntu-latest'
 
 jobs:
-  - job:
-    timeoutInMinutes: 0
-    steps:
-      - task: dependabot@2
-        inputs:
-          experiments: 'allow-refresh-group-with-all-dependencies=false,nuget-native-updater=false'
+- job:
+  timeoutInMinutes: 0
+  steps:
+  - task: dependabot@2
+    inputs:
+      experiments: 'allow-refresh-group-with-all-dependencies=false,nuget-native-updater=false'
+
+  - bash: |
+      # Make script executable and run it
+      chmod +x pipelines/scripts/dependabot-postprocess.sh
+      ./pipelines/scripts/dependabot-postprocess.sh
+    displayName: 'Post-process Dependabot PR'
+    condition: succeeded()
+    env:
+      # Configure git for the pipeline
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
