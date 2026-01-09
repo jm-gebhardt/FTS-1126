@@ -1,0 +1,50 @@
+﻿# Specific project
+**/Agv.IntegrationTest/
+**/Agv.Karis/
+**/Agv.Logimat/
+
+# .NET specific exclusions
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Log and temp files
+**/*.log
+**/*.user
+**/*.suo
+**/*.cache
+
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+.github/
+.gitlab/
+
+# AI Assistants
+**/.claude/
+**/.anthropic/
+**/.copilot/
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sln.dotSettings
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker-specific (ignore the dockerfiles themselves)
+**/*.Dockerfile
+**/*.dockerignore
+**/docker-compose*
+
+# Other common exclusions
+**/.config
+NuGet.Config
+**/Resharper/
+dependabot-helper.csproj
