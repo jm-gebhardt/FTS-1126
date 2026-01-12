@@ -390,7 +390,7 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
         bool dockFront;
 
         bool isDoppelspiel = Nodes.Length == 1 && ActionType == ActionType.Pick;
-        if ((IsFirstAction && isDoppelspiel) || ActionType == ActionType.Charge || (IsFirstAction && noTurning))
+        if (isDoppelspiel || ActionType == ActionType.Charge || (IsFirstAction && noTurning))
         {
             dockFront = previousDockFront ?? true; // Fallback to avoid exceptions
             SetDockFrontValue(nodeDockingDirection.GetDockfront(dockFront));

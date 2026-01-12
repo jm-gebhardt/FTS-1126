@@ -671,7 +671,7 @@ public class DoppelspielCommandHandlerTest
         var droppingAgvPassedDoppelspielTriggerPoint = await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
         droppingAgvPassedDoppelspielTriggerPoint.NextPickHostOrderCorrelationId.ShouldBeNull();
         droppingAgvPassedDoppelspielTriggerPoint.DropActionTarget.Id.ShouldBe(dropAction.Target.Node!.Id);
-        droppingAgvPassedDoppelspielTriggerPoint.AgvCorrelationId.ShouldBe(actionGroup.AssignedAgv.GetValueOrDefault());
+        droppingAgvPassedDoppelspielTriggerPoint.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         droppingAgvPassedDoppelspielTriggerPoint.DroppingHostOrderCorrelationId.ShouldBe(actionGroup.CorrelationId);
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
         unmatchPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick).IsRegisteredForDoppelspiel.ShouldBeFalse();

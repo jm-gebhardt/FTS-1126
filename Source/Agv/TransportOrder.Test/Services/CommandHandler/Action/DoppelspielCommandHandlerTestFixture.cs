@@ -41,6 +41,7 @@ public class DoppelspielCommandHandlerTestFixture(TimeSpan? inactivityTimeout = 
 
     public DoppelspielCommandHandlerTestFixture WithNextPickForStation(ActionGroup? actionGroup)
     {
+        ActionGroupRepository.Setup(x => x.GetNextPickForStation(It.IsAny<GraphNode>(), null, It.IsAny<Guid?>())).ReturnsAsync(actionGroup);
         ActionGroupRepository.Setup(x => x.GetNextPickForStation(It.IsAny<GraphNode>())).ReturnsAsync(actionGroup);
         return this;
     }

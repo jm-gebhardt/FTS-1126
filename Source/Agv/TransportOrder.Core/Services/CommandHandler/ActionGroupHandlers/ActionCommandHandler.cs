@@ -139,7 +139,7 @@ public class ActionCommandHandler :
         if (agvActionCanBeStarted)
         {
             bool? previousActionGroupDockFront = null;
-            if (action.IsFirstAction)
+            if (action.IsFirstAction ||  actionGroup.Actions.OrderBy(a => a.Sequence).LastOrDefault(a => !a.ShouldSkip && a.Sequence < action.Sequence) == null)
             {
                 previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agvCorrelationId, actionGroup.CorrelationId);
             }

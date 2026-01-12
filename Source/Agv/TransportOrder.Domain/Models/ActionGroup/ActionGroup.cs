@@ -231,6 +231,7 @@ public class ActionGroup
         {
             action.UnregisterFromDoppelspiel();
         }
+        AssignedAgv = null;
     }
 
     /// <summary>
@@ -787,6 +788,7 @@ public class ActionGroup
         toUpdate.ChangeActionType(toSkip.ActionType);
         toUpdate.SetTarget(targetNode);
         toUpdate.Target.DoppelspielMode = toSkip.Target.DoppelspielMode;
+        toUpdate.Target.StationOptions = toSkip.Target.StationOptions;
         if (toSkip.ActionType == ActionType.Pick)
         {
             toUpdate.SetInfoToAgv(toSkip.InfoToAgv);

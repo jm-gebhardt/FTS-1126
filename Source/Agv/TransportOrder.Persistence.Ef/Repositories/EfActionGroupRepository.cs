@@ -881,7 +881,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null)
+    public async Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null, Guid? assignedAgv=null)
     {
         ordersToIgnore ??= [];
         await using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -891,7 +891,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                         && !ordersToIgnore.Contains(a.CorrelationId)
                         && a.CompletedDate == null
                         && a.StartedDate == null
-                        && a.AssignedAgv == null
+                        && a.AssignedAgv == assignedAgv
                         && a.Actions.Any(ac => ac.ActionType == ActionType.Pick))
             .OrderBy(h => h.CreatedDate)
             .ToListAsync();

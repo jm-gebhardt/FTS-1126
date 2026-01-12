@@ -67,13 +67,13 @@ public class DoppelspielCommandHandler(
             return;
         }
 
-        var nextActionToStart = actionGroup.FirstNotStartedAction;
-        if (nextActionToStart == null)
+        var nextPickToStart = actionGroup.Actions.FirstOrDefault(a => a.ActionType == ActionType.Pick);
+        if (nextPickToStart == null)
         {
             return;
         }
 
-        if (nextActionToStart.Target.DoppelspielMode == DoppelspielMode.Always)
+        if (nextPickToStart.Target.DoppelspielMode == DoppelspielMode.Always)
         {
             logger.LogInformation("Not queueing action group, it will be only picked with Doppelspiel {ActionGroupCorrelationId}", actionGroup.CorrelationId);
             return;
@@ -87,7 +87,7 @@ public class DoppelspielCommandHandler(
         bool delayOrder = false;
         await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
-            ICollection<string> stations = nextActionToStart.Target.Node == null ? nextActionToStart.Target.StationOptions : [nextActionToStart.Target.Node.Name];
+            ICollection<string> stations = nextPickToStart.Target.Node == null ? nextPickToStart.Target.StationOptions : [nextPickToStart.Target.Node.Name];
             var dropActionGroup = await actionGroupRepository.GetNextDropActionGroupEligibleForDoppelspiel(stations);
             if (dropActionGroup != null)
             {
@@ -307,7 +307,7 @@ public class DoppelspielCommandHandler(
             await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, actionGroup.CorrelationId, null));
             return;
         }
-        var delayedOrder = await actionGroupRepository.GetNextPickForStation(action.Target.Node!);
+        var delayedOrder = await actionGroupRepository.GetNextPickForStation(action.Target.Node!, assignedAgv: actionGroup.AssignedAgv);
         if (delayedOrder == null)
         {
             logger.LogInformation("Order {OrderCorrelationId} has no next Doppelspiel pick at station {StationName}", actionGroup.CorrelationId, dropTarget.Name);
@@ -321,7 +321,7 @@ public class DoppelspielCommandHandler(
             actionGroup.UnregisterFromDoppelspiel(ActionType.Drop);
             await actionGroupRepository.UpdateAsync(actionGroup);
             logger.LogInformation("Order {OrderCorrelationId} has next Doppelspiel pick at station {StationName}, but agv {AgvCorrelationId} must charge", actionGroup.CorrelationId, dropTarget.Name, agv.CorrelationId);
-            await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, actionGroup.CorrelationId, null));
+            await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, agv.CorrelationId, actionGroup.CorrelationId, null));
             await QueueUnmatchedDoppelspielPicks(context, action.Target.Node, actionGroup.CorrelationId);
             return;
         }

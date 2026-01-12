@@ -371,8 +371,9 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="pickNode">The station id.</param>
     /// <param name="ordersToIgnore">The orders that should not be considered.</param>
+    /// <param name="assignedAgv">The agv that is assigned to it.</param>
     /// <returns></returns>
-    Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null);
+    Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null, Guid? assignedAgv = null);
 
     /// <summary>
     /// Get the next drop order that was registered for Doppelspiel, but has no matching partner.
